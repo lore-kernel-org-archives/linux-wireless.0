@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:32206 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431Ab0LZS1v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 13:27:51 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/3] iwlwifi: remove reference to Gen2
-Date: Sun, 26 Dec 2010 10:17:58 -0800
-Message-Id: <1293387478-3297-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1293387478-3297-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1293387478-3297-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.bugwerft.de ([212.112.241.193]:56862 "EHLO
+	mail.bugwerft.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756860Ab0LIOFl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 09:05:41 -0500
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sven Neumann <s.neumann@raumfeld.com>
+Subject: [PATCH] cfg80211: update information elements in cached BSS struct
+Date: Thu,  9 Dec 2010 15:05:24 +0100
+Message-Id: <1291903524-8000-1-git-send-email-s.neumann@raumfeld.com>
+In-Reply-To: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
+References: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+When a cached BSS struct is updated because a new beacon was received,
+the code replaces the cached information elements by the IEs from the
+new beacon. However it did not update the pub.information_elements
+and pub.len_information_elements fields leaving them either pointing
+to the old beacon IEs or in an inconsistent state where the data is
+replaced by the new beacon IEs but len_information_elements still has
+its value from the first beacon.
 
-The correct name should be used for the newer devices, remove
-reference to Gen2
+Fix this by updating the information elements fields if they are
+pointing to beacon IEs.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ net/wireless/scan.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b54d74d..5f11dc2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4412,7 +4412,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x4239, 0x1311, iwl6000i_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x4239, 0x1316, iwl6000i_2abg_cfg)},
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 503ebb8..ea427f4 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -464,6 +464,9 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 		if (res->pub.beacon_ies) {
+ 			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
+ 			size_t ielen = res->pub.len_beacon_ies;
++			bool information_elements_is_beacon_ies =
++				(found->pub.information_elements ==
++				 found->pub.beacon_ies);
  
--/* 6x00 Series Gen2a */
-+/* 6x05 Series */
- 	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6005_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0082, 0x1306, iwl6005_2abg_cfg)},
- 	{IWL_PCI_DEVICE(0x0082, 0x1307, iwl6005_2bg_cfg)},
-@@ -4421,7 +4421,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6005_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6005_2abg_cfg)},
+ 			if (found->pub.beacon_ies &&
+ 			    !found->beacon_ies_allocated &&
+@@ -487,6 +490,14 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 					found->pub.len_beacon_ies = ielen;
+ 				}
+ 			}
++
++			/* Override IEs if they were from a beacon before */
++			if (information_elements_is_beacon_ies) {
++				found->pub.information_elements =
++					found->pub.beacon_ies;
++				found->pub.len_information_elements =
++					found->pub.len_beacon_ies;
++			}
+ 		}
  
--/* 6x00 Series Gen2b */
-+/* 6x30 Series */
- 	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl1030_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x008A, 0x5307, iwl1030_bg_cfg)},
- 	{IWL_PCI_DEVICE(0x008A, 0x5325, iwl1030_bgn_cfg)},
-@@ -4447,7 +4447,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0089, 0x1311, iwl6050_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0089, 0x1316, iwl6050_2abg_cfg)},
- 
--/* 6x50 WiFi/WiMax Series Gen2 */
-+/* 6150 WiFi/WiMax Series */
- 	{IWL_PCI_DEVICE(0x0885, 0x1305, iwl6150_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0885, 0x1306, iwl6150_bgn_cfg)},
- 	{IWL_PCI_DEVICE(0x0885, 0x1325, iwl6150_bgn_cfg)},
+ 		kref_put(&res->ref, bss_release);
 -- 
-1.7.0.4
+1.7.1
 
