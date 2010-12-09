@@ -1,91 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:62782 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237Ab0LPLQW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 06:16:22 -0500
+Received: from cantor.suse.de ([195.135.220.2]:42279 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757311Ab0LIVn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 16:43:56 -0500
+Date: Thu, 9 Dec 2010 13:43:47 -0800
+From: Greg KH <gregkh@suse.de>
+To: Dave Hansen <dave@sr71.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mike Rapoport <mike.rapoport@gmail.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: brcm80211 hangs when disabling wireless
+Message-ID: <20101209214347.GA15172@suse.de>
+References: <1291930010.7960.30.camel@nimitz>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <AANLkTi=t0VqSiZ=k9rBxPBVnHxy6v3JvTwW-n6ngM1f0@mail.gmail.com>
-References: <AANLkTinbhb-_v+8tJBPeoLcDo0mFzwo2EZAy3bnvErFT@mail.gmail.com>
-	<AANLkTi=t0VqSiZ=k9rBxPBVnHxy6v3JvTwW-n6ngM1f0@mail.gmail.com>
-Date: Thu, 16 Dec 2010 12:16:21 +0100
-Message-ID: <AANLkTimRmJBF+6EcJHyf7pSgj49C5D0WWmOS1fp1Ag0v@mail.gmail.com>
-Subject: Re: linux-next: Tree for December 16 (broken iwlwifi)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	John Linville <linville@tuxdriver.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1291930010.7960.30.camel@nimitz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 16, 2010 at 12:05 PM, Sedat Dilek
-<sedat.dilek@googlemail.com> wrote:
-> On Thu, Dec 16, 2010 at 11:54 AM, Sedat Dilek
-> <sedat.dilek@googlemail.com> wrote:
->> Hi,
->>
->> Just FYI (didn't look at the code right now, sorry for German output):
->>
->> [ build.log ]
->> ...
->> /home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:
->> In function ‘iwl_rs_rate_init’:
->> /home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2876:8:
->> error: ‘struct iwl_lq_sta’ has no member named ‘dbg_fixed_rate’
->> make[8]: *** [drivers/net/wireless/iwlwifi/iwl-agn-rs.o] Fehler 1
->> make[7]: *** [drivers/net/wireless/iwlwifi] Fehler 2
->> make[6]: *** [drivers/net/wireless] Fehler 2
->> make[6]: *** Warte auf noch nicht beendete Prozesse...
->> ...
->>
->> Regards,
->> - Sedat -
->>
->
-> Looks like dbg_fixed_rate is only set when CONFIG_MAC80211_DEBUGFS is set:
->
-> [ drivers/net/wireless/iwlwifi/iwl-agn-rs.h ]
-> ...
-> #ifdef CONFIG_MAC80211_DEBUGFS
->        struct dentry *rs_sta_dbgfs_scale_table_file;
->        struct dentry *rs_sta_dbgfs_stats_table_file;
->        struct dentry *rs_sta_dbgfs_rate_scale_data_file;
->        struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
->        u32 dbg_fixed_rate;
-> #endif
-> ...
->
-> So I have no CONFIG_MAC80211_DEBUGFS... :-).
-> Can someone fix that, please?
->
-> - Sedat -
->
+On Thu, Dec 09, 2010 at 01:26:50PM -0800, Dave Hansen wrote:
+> I've been getting hard hangs when I toggle the wireless on a Lenovo
+> S10-3.  It happens both with the physical switch and the Fn-F5 key
+> combo.  It's quite repeatable.  The system is quite stable when I'm not
+> trying to disable the wireless, though.
 
-Untested !
+What kernel version is this?
 
------ SNIP -----
+Linus's latest tree has a known bug when the wireless is suspended and
+then resumed.  Broadcom is working on it but no patch is forthcoming
+yet.  Perhaps this is the same issue.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 5083dba..75fcd30 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2873,7 +2873,9 @@ void iwl_rs_rate_init(struct iwl_priv *priv,
-struct ieee80211_sta *sta, u8 sta_i
-                lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
-        lq_sta->is_agg = 0;
+thanks,
 
-+#ifdef CONFIG_MAC80211_DEBUGFS
-        lq_sta->dbg_fixed_rate = 0;
-+#endif
-
-        rs_initialize_lq(priv, conf, sta, lq_sta);
- }
-
------ SNAP -----
+greg k-h
