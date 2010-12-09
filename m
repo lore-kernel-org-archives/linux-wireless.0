@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:17666 "EHLO mail.atheros.com"
+Received: from mail.perches.com ([173.55.12.10]:2387 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192Ab0LGCtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 21:49:10 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 18:48:55 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	<amod.bodas@atheros.com>, <pstew@google.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/5] ath9k_hw: warn if we cannot change the power to the chip
-Date: Mon, 6 Dec 2010 18:48:53 -0800
-Message-ID: <1291690135-4535-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1756981Ab0LIUEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 15:04:11 -0500
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org, uclinux-dist-devel@blackfin.uclinux.org,
+	rtc-linux@googlegroups.com, linux-s390@vger.kernel.org,
+	osd-dev@open-osd.org, linux-arm-msm@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-mm@kvack.org
+Cc: Jiri Kosina <trivial@kernel.org>, dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [trivial PATCH 00/15] remove duplicate unlikely from IS_ERR
+Date: Thu,  9 Dec 2010 12:03:53 -0800
+Message-Id: <cover.1291923888.git.joe@perches.com>
+In-Reply-To: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
+References: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Suspend requires the device to be in fullsleep otherwise upon
-resume the device becomes unresponsive. We need to ensure
-that when we want the device to go to sleep it yields to
-the request, otherwise we'll have a useless devices upon
-resume. Warn when changing the power fails as we need
-to look into these issues.
+Tobias Klauser <tklauser@distanz.ch> sent a patch to remove
+an unnecessary unlikely from drivers/misc/c2port/core.c,
+https://lkml.org/lkml/2010/12/9/199
 
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Here are the other instances treewide.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9b1ee7f..8e87113 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1615,6 +1615,8 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 	}
- 	ah->power_mode = mode;
+I think it'd be good if people would, when noticing defects in a
+specific subsystem, look for and correct the same defect treewide.
+
+IS_ERR already has an unlikely test so remove unnecessary
+unlikelys from the call sites.
+
+from: include/linux/err.h
+#define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
+[...]
+static inline long __must_check IS_ERR(const void *ptr)
+{
+	return IS_ERR_VALUE((unsigned long)ptr);
+}
+
+Sending directly to maintainers for now, will resend in a month
+or so only to trivial if not picked up.
  
-+	WARN_ON(!status);
-+
- 	return status;
- }
- EXPORT_SYMBOL(ath9k_hw_setpower);
+Joe Perches (15):
+  drm: Remove duplicate unlikely from IS_ERR
+  stmmac: Remove duplicate unlikely from IS_ERR
+  rtc: Remove duplicate unlikely from IS_ERR
+  s390: Remove duplicate unlikely from IS_ERR
+  osd: Remove duplicate unlikely from IS_ERR
+  serial: Remove duplicate unlikely from IS_ERR
+  brcm80211: Remove duplicate unlikely from IS_ERR
+  gadget: Remove duplicate unlikely from IS_ERR
+  exofs: Remove duplicate unlikely from IS_ERR
+  ext2: Remove duplicate unlikely from IS_ERR
+  ext3: Remove duplicate unlikely from IS_ERR
+  ext4: Remove duplicate unlikely from IS_ERR
+  nfs: Remove duplicate unlikely from IS_ERR
+  mm: Remove duplicate unlikely from IS_ERR
+  ipv6: Remove duplicate unlikely from IS_ERR
+
+ drivers/gpu/drm/ttm/ttm_tt.c                     |    4 ++--
+ drivers/net/stmmac/stmmac_main.c                 |    2 +-
+ drivers/rtc/rtc-bfin.c                           |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                     |    4 ++--
+ drivers/scsi/osd/osd_initiator.c                 |    2 +-
+ drivers/serial/msm_serial.c                      |    2 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    2 +-
+ drivers/usb/gadget/f_fs.c                        |    4 ++--
+ fs/exofs/super.c                                 |    2 +-
+ fs/ext2/namei.c                                  |    2 +-
+ fs/ext3/namei.c                                  |    2 +-
+ fs/ext4/namei.c                                  |    2 +-
+ fs/nfs/mount_clnt.c                              |    2 +-
+ mm/vmalloc.c                                     |    2 +-
+ net/ipv6/af_inet6.c                              |    2 +-
+ 15 files changed, 18 insertions(+), 18 deletions(-)
+
 -- 
-1.7.3.2.90.gd4c43
+1.7.3.3.464.gf80b6
 
