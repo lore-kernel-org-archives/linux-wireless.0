@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59495 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:40439 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754622Ab0LJURD (ORCPT
+	with ESMTP id S1755005Ab0LIPZo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 15:17:03 -0500
-Subject: Re: [RFC v2 0/2] implementation of scheduled scan
+	Thu, 9 Dec 2010 10:25:44 -0500
+Subject: Re: [PATCH 0/4] Make N-PHY support experimental
 From: Johannes Berg <johannes@sipsolutions.net>
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1292010802.3531.6.camel@jlt3.sipsolutions.net>
-References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-	 <1292010802.3531.6.camel@jlt3.sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+In-Reply-To: <4D00F3C3.6040801@lwfinger.net>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	 <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+	 <4CFEFD8D.1080808@lwfinger.net>
+	 <AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
+	 <4D00F3C3.6040801@lwfinger.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Dec 2010 21:17:03 +0100
-Message-ID: <1292012223.3531.32.camel@jlt3.sipsolutions.net>
+Date: Thu, 09 Dec 2010 16:25:38 +0100
+Message-ID: <1291908338.3540.16.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-10 at 20:53 +0100, Johannes Berg wrote:
-> On Fri, 2010-12-10 at 17:07 +0200, luciano.coelho@nokia.com wrote:
-> 
-> > * I kept the return value in the sched_scan_stop chain, because, at least with
-> >   wl12xx, the call can fail (due to OOM for instance).  I think it's cleaner
-> >   this way.
-> 
-> What's going to happen then though? Would it make sense to pre-allocate
-> this at start() time, so it can cleanly stop regardless of what's going
-> on? I can see start() failing, but stop() failing seems a bit hard to
-> work with in wpa_supplicant?
+On Thu, 2010-12-09 at 09:20 -0600, Larry Finger wrote:
 
-Actually so the nl80211 interface has to be able to return something
-like "no such operation in progress" or whatever, but I'm not sure about
-the driver interface -- -ENOMEM seems like a stupid failure for stopping
-something, and then the above applies ...
+> It has a rev 2 PHY, and a rev 4 0x2055 radio.
+> 
+> I am willing to buy a higher PHY rev device for testing. Any idea what is in a
+> 4324A-BRCM1036?
+
+It says BCM94322 on the image, and if that's any indication, I have a
+4322 with pci ID 14e4:432b (but it's an Apple build):
+
+b43-phy0: Broadcom 4322 WLAN found (core revision 16)
+b43-phy0 debug: Found PHY: Analog 8, Type 4, Revision 4
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2056, Revision 3
 
 johannes
 
