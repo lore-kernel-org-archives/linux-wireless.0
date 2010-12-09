@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:44298 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755874Ab0LNHpU (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41659 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993Ab0LIOJQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 02:45:20 -0500
-Received: by pva4 with SMTP id 4so52206pva.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 23:45:20 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 9 Dec 2010 09:09:16 -0500
+Received: by vws16 with SMTP id 16so1562137vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 06:09:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19719.8288.322475.954293@gargle.gargle.HOWL>
-Date: Tue, 14 Dec 2010 13:14:32 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC] mac80211: Change BA timeout
+In-Reply-To: <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+Date: Thu, 9 Dec 2010 15:09:15 +0100
+Message-ID: <AANLkTimU1wJo1tDpa+g-_p1fgZqDeNHp5TPH-7Yghqe_@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Make N-PHY support experimental
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The BlockAck session timout value is currently an arbitrary 5000.
-This results in BA sessions being created and torn down incessantly
-when mac80211 is used with a driver (say ath9k) in AP mode.
+W dniu 7 grudnia 2010 23:57 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2010/12/7 Rafał Miłecki <zajec5@gmail.com>:
+>> Finally, thanks for Larry and Francesco I got b43 working with BCM4328 chipset!
+>
+> Do you mean BCM4321 (14e4:4328)? BCM4328 is AFAIK handled by brcmfmac.
 
-The 802.11 standard doesn't specify any default value for the timeout field.
-And there is no benefit to be gained by tearing down BA sessions and
-recreating them. The current value of 5000 doesn't cause any problems,
-but it is hard to find an AP/STA in the field that uses a non-zero timeout.
+Yeah, I removed following hack some time ago:
+-       } else if (bus->chip_id == 0x4321) {
+-               /* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
+and got lost what is my chipset. You're right.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- net/mac80211/agg-tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index d4679b2..e5e6311 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -342,7 +342,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- 	/* send AddBA request */
- 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
- 				     tid_tx->dialog_token, start_seq_num,
--				     0x40, 5000);
-+				     0x40, 0);
- }
- 
- int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
 -- 
-1.7.3.3
-
+Rafał
