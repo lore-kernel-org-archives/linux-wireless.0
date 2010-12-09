@@ -1,47 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f66.google.com ([209.85.210.66]:52337 "EHLO
-	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750872Ab0LaGzB (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34298 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944Ab0LIR1J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 01:55:01 -0500
-Message-ID: <4D1D7A74.3030803@gmail.com>
-Date: Thu, 30 Dec 2010 22:38:44 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Thu, 9 Dec 2010 12:27:09 -0500
+Message-ID: <4D011165.7060800@candelatech.com>
+Date: Thu, 09 Dec 2010 09:27:01 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Dan Carpenter <error27@gmail.com>, trivial@kernel.org,
-	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
-	spi-devel-general@lists.sourceforge.net,
-	linux-media@vger.kernel.org
-Subject: Re: [PATCH 15/15]drivers:spi:dw_spi.c Typo change diable to disable.
-References: <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com> <1293750484-1161-13-git-send-email-justinmattock@gmail.com> <1293750484-1161-14-git-send-email-justinmattock@gmail.com> <1293750484-1161-15-git-send-email-justinmattock@gmail.com> <20101231063433.GB1886@bicker>
-In-Reply-To: <20101231063433.GB1886@bicker>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Tejun Heo <htejun@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org>	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>	 <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost>	 <4CE4D41F.1080005@kernel.org>	 <1290099585.3801.1.camel@jlt3.sipsolutions.net>	 <4CE68AF4.8060507@kernel.org>	 <1290189452.3768.3.camel@jlt3.sipsolutions.net>	 <4CE6E430.6080804@candelatech.com>	 <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com>	 <4CFFC214.6000608@candelatech.com> <4CFFCC31.1050408@candelatech.com>	 <4CFFCE47.8040305@candelatech.com>  <4D00E8E2.1030201@kernel.org> <1291905750.3540.14.camel@jlt3.sipsolutions.net> <4D00EBD8.4090805@kernel.org> <4D010114.5020604@gmail.com>
+In-Reply-To: <4D010114.5020604@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/2010 10:34 PM, Dan Carpenter wrote:
-> On Thu, Dec 30, 2010 at 03:08:04PM -0800, Justin P. Mattock wrote:
->> The below patch fixes a typo "diable" to "disable". Please let me know if this
->> is correct or not.
+On 12/09/2010 08:17 AM, Tejun Heo wrote:
+> On 12/09/2010 03:46 PM, Tejun Heo wrote:
+>>> Right, so we're flushing here under RTNL ... I believe this is the one
+>>> that Ben hacked up to not flush or so?
 >>
->> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>
->> ---
->>   drivers/spi/dw_spi.c |    6 +++---
+>> He made it to cancel instead of flush.
 >
-> You missed one from this file:
+> This makes me think that it's more likely to be a problem in the
+> flush_work() implementation.  I went over the code carefully again but
+> couldn't find anything suspicious.  Plus, most of the implementation
+> is shared between cancel and flush.
 >
-> /* Set the interrupt mask, for poll mode just diable all int */
->                                                ^^^^^^
-> regards,
-> dan carpenter
->
->
+> I'm gonna write some test code and see whether the flush code behaves
+> as expected but in the mean time can you please apply the following
+> patch, trigger the problem and report the kernel log?  Also, please
+> include the sysrq task dump.  Let's see whether the worker is always
+> stuck at the same spot.
 
-oh-man... my grepping wasn't so grepping after all.. thanks for that 
-I'll resend this one
+I'll test this later today and let you know how it turns out..
 
-Justin P. Mattock
+Thanks,
+Ben
+
+>
+> Thanks.
+>
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index b80c386..0ebc386 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -933,6 +933,10 @@ struct ieee80211_local {
+>   	struct net_device napi_dev;
+>
+>   	struct napi_struct napi;
+> +
+> +	struct timer_list iface_work_timer;
+> +	unsigned long iface_work_tstmp;
+> +	unsigned int iface_work_runcnt;
+>   };
+>
+>   static inline struct ieee80211_sub_if_data *
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index 7aa8559..074d5bd 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -715,6 +715,14 @@ static void ieee80211_if_setup(struct net_device *dev)
+>   	dev->destructor = free_netdev;
+>   }
+>
+> +static void dbg_watchdog_timer(unsigned long __arg)
+> +{
+> +	struct ieee80211_local *local = (void *)__arg;
+> +
+> +	pr_warning("ieee80211_iface_work ran for>  5secs, processed %u\n",
+> +		   local->iface_work_runcnt);
+> +}
+> +
+>   static void ieee80211_iface_work(struct work_struct *work)
+>   {
+>   	struct ieee80211_sub_if_data *sdata =
+> @@ -738,10 +746,21 @@ static void ieee80211_iface_work(struct work_struct *work)
+>   		 "interface work scheduled while going to suspend\n"))
+>   		return;
+>
+> +	local->iface_work_tstmp = jiffies;
+> +	local->iface_work_runcnt = 0;
+> +
+> +	init_timer(&local->iface_work_timer);
+> +	local->iface_work_timer.function = dbg_watchdog_timer;
+> +	local->iface_work_timer.data = (unsigned long)local;
+> +	local->iface_work_timer.expires = local->iface_work_tstmp + 5 * HZ;
+> +	add_timer(&local->iface_work_timer);
+> +
+>   	/* first process frames */
+>   	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+>   		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+>
+> +		local->iface_work_runcnt++;
+> +
+>   		if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
+>   			ra_tid = (void *)&skb->cb;
+>   			ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra,
+> @@ -843,6 +862,12 @@ static void ieee80211_iface_work(struct work_struct *work)
+>   	default:
+>   		break;
+>   	}
+> +
+> +	del_timer_sync(&local->iface_work_timer);
+> +	if (time_after(jiffies, local->iface_work_tstmp + 4 * HZ))
+> +		pr_warning("iee80211_iface_work ran for %lu seconds, runcnt=%u\n",
+> +			   (jiffies - local->iface_work_tstmp) / HZ,
+> +			   local->iface_work_runcnt);
+>   }
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
