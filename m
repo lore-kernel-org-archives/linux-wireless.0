@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:25819 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755805Ab0LJPGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 10:06:00 -0500
-From: luciano.coelho@nokia.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [RFC v2 0/2] implementation of scheduled scan
-Date: Fri, 10 Dec 2010 17:07:10 +0200
-Message-Id: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail-iw0-f172.google.com ([209.85.214.172]:43700 "EHLO
+	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228Ab0LIAPm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 19:15:42 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 8 Dec 2010 16:15:11 -0800
+Message-ID: <AANLkTim5HQGNL-vSapeQw_-dJue89pYz7zc8eiShma8j@mail.gmail.com>
+Subject: compat-wireless-2.6.37-rc5 released
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@nokia.com>
+We're closing in on the 2.6.37 release, now at rc5, so I'll start
+making two releases, a vanilla release and one which has more stuff.
+For now I'll just suck in all pending stable patches (all patches
+marked with Cc: stable@kernel.org on linux-next.git, not only
+Atheros', everyone's). This is:
 
-Hi,
+pending-stable/0001-cfg80211-pass-the-reg-hint-initiator-to-helpers.patch
+pending-stable/0002-cfg80211-fix-allowing-country-IEs-for-WIPHY_FLAG_STR.patch
+pending-stable/0003-cfg80211-fix-disabling-channels-based-on-hints.patch
+pending-stable/0004-ath9k_hw-fix-potential-spurious-tx-error-bit-interpr.patch
+pending-stable/0005-ath9k-simplify-hw-reset-locking.patch
+pending-stable/0006-ath9k-move-the-PCU-lock-to-the-sc-structure.patch
+pending-stable/0007-ath9k-content-DMA-start-stop-through-the-PCU-lock.patch
+pending-stable/0008-ath9k_hw-Fix-XPABIAS-level-configuration-for-AR9003.patch
+pending-stable/0009-ath9k-Fix-bug-in-delimiter-padding-computation.patch
+pending-stable/0010-ath9k-Disable-SWBA-interrupt-on-remove_interface.patch
+pending-stable/0011-mac80211-Fix-STA-disconnect-due-to-MIC-failure.patch
+pending-stable/0012-ath9k-Fix-STA-disconnect-issue-due-to-received-MIC-f.patch
+pending-stable/0013-ath9k-Fix-bug-in-reading-input-gpio-state-for-ar9003.patch
+pending-stable/0014-ath9k_hw-fix-endian-issues-with-CTLs-on-AR9003.patch
 
-So, here's my second RFC for the scheduled scan implementation (which we used
-to call periodic scan earlier).  I have applied all Johannes's comments, except
-for two things:
+You can find the vanilla [1] and extra pending-stable [2] releass on
+the stable download page [3] along with the respective ChangeLog of
+all:
 
-* I kept the return value in the sched_scan_stop chain, because, at least with
-  wl12xx, the call can fail (due to OOM for instance).  I think it's cleaner
-  this way.
+  * The kernel components
+  * compat-wireless
+  * compat
 
-* I have not implemented support for passing the scan interval from userspace
-  yet.  I'll work on it next week and send it as a separate patch.
+In later releases we will have to consider if we want to cherry pick
+anything extra or leave them as is. These few patches seem tempting to
+suck in:
 
-One of the main things you'll notice is that I merged the patches into two
-patches instead of 15, which caused some people to whip me before.  :P
+01-ath9k-OTP.patch
+03-ath9k-no-aggr-VO.patch
+04-mac80211-no-aggr-VO.patch
+05-ath9k-Reintroduce-modparam-to-enable-btcoex.patch
+06-ath9k_hw-fix-A-MPDU-key-search-issues-on-AR9003.patch
 
-Please give me some comments, if you have the time (and bother).
+Particularly it is now known AR9003 devices will only ship with OTP
+so.. it seems to make sense to actually disable AR9003 on 36 and even
+37 and only have it available with the OTP patch and above EEPROM
+fixes. I'm inclined to just disregard all these and just let us get
+AR9003 from 2.6.38.... but we already have users of AR9003 coming up
+so this can't wait in practice now. This now goes compile-tested and
+fixed for 2.6.31.
 
-Cheers,
-Luca.
+[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc5-2.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc5-2-s.tar.bz2
+[3] http://wireless.kernel.org/en/users/Download/stable
+[4] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/ChangeLog-2.6.37-wireless
 
-Luciano Coelho (2):
-  cfg80211/nl80211: add support for scheduled scans
-  mac80211: add support for HW scheduled scan
-
- include/linux/nl80211.h     |    9 ++
- include/net/cfg80211.h      |   48 ++++++++
- include/net/mac80211.h      |   40 +++++++
- net/mac80211/cfg.c          |   26 ++++
- net/mac80211/driver-ops.h   |   30 +++++
- net/mac80211/driver-trace.h |   63 ++++++++++
- net/mac80211/ieee80211_i.h  |    8 ++
- net/mac80211/rx.c           |    4 +-
- net/mac80211/scan.c         |   80 +++++++++++++
- net/wireless/core.c         |    6 +
- net/wireless/core.h         |    3 +
- net/wireless/nl80211.c      |  271 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h      |    6 +
- net/wireless/scan.c         |   18 +++
- 14 files changed, 611 insertions(+), 1 deletions(-)
-
+  Luis
