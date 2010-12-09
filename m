@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42087 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993Ab0LHRAN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab0LIOR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 12:00:13 -0500
-Date: Wed, 8 Dec 2010 11:56:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Bruno Randolf <br1@einfach.org>,
-	Jonathan Guerin <jonathan@guerin.id.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@venema.h4ckr.net>, nbd@openwrt.org
-Subject: Re: ath5k: Weird Retransmission Behaviour
-Message-ID: <20101208165607.GE2423@tuxdriver.com>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
- <201012061714.15863.br1@einfach.org>
- <AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
- <AANLkTi=95mO085Y1PJ3brMMpHa=QvkxSB3SUpQysvKr+@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=95mO085Y1PJ3brMMpHa=QvkxSB3SUpQysvKr+@mail.gmail.com>
+	Thu, 9 Dec 2010 09:17:57 -0500
+Subject: Re: [PATCH] ath: fix build break with ATH_DBG_WARN_ON_ONCE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Ben Greear <greearb@candelatech.com>
+In-Reply-To: <1291903927-5406-1-git-send-email-linville@tuxdriver.com>
+References: <4D00DDEA.7040907@hauke-m.de>
+	 <1291903927-5406-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 15:17:52 +0100
+Message-ID: <1291904272.3540.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 08, 2010 at 11:45:39AM -0500, Bob Copeland wrote:
-> On Wed, Dec 8, 2010 at 11:08 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> > On Mon, Dec 6, 2010 at 3:14 AM, Bruno Randolf <br1@einfach.org> wrote:
-> >> But it seems weird that there are so many retransmissions. The default maximum
-> >> numbers of retransmissions should be 7 for short frames and 4 for long frames
-> >> (dot11[Short|Long]RetryLimit), and this is what is set as defaults in mac80211
-> >> (local->hw.conf.short_frame_max_tx_count). Seems we are getting many
-> >> retransmissions from minstel, i added some debug prints:
-> >>
-> >
-> > I posted a patch for this about a week ago to linux-wireless.
-> >
-> > AFAICT minstrel doesn't use these configuration parrameters
-> > at all (but PID does).
-> >
-> > --
-> > Bob Copeland %% www.bobcopeland.com
-> >
-> 
-> Found the patch:
-> 
-> https://patchwork.kernel.org/patch/359722/
+On Thu, 2010-12-09 at 09:12 -0500, John W. Linville wrote:
 
-Are you posting that for merging?  Or just for testing?
+> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+> index 3eb95e2..45d4d91 100644
+> --- a/drivers/net/wireless/ath/ath.h
+> +++ b/drivers/net/wireless/ath/ath.h
+> @@ -272,7 +272,7 @@ ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
+>  	return 0;
+>  }
+>  #define ATH_DBG_WARN(foo, arg...) do {} while (0)
+> -#define ATH_DBG_WARN_ON_ONCE(foo) do {} while (0)
+> +#define ATH_DBG_WARN_ON_ONCE(foo) ({ 0; })
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+That'll fix the build error, but wouldn't you need (foo) for correctness
+instead?
+
+johannes
+
