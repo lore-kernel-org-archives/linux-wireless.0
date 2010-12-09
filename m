@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53322 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758552Ab0LMRna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 12:43:30 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 09:43:14 -0800
-Date: Mon, 13 Dec 2010 09:43:21 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Dave Vasilevsky <dave@vasilevsky.ca>
-CC: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: compat-wireless-2.6: out of date b43 config option in config.mk
-Message-ID: <20101213174321.GB637@tux>
-References: <AANLkTin-JwhK_SRhSPrzWJM6fJ9p_rEWVeTLGKk1pyUw@mail.gmail.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:4270 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756410Ab0LIMwl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 07:52:41 -0500
+Date: Thu, 9 Dec 2010 07:38:41 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Jonathan Guerin <jonathan@guerin.id.au>,
+	Bruno Randolf <br1@einfach.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>, nbd@openwrt.org
+Subject: Re: ath5k: Weird Retransmission Behaviour
+Message-ID: <20101209123841.GA31566@hash.localnet>
+References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com> <201012061714.15863.br1@einfach.org> <AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com> <AANLkTimwprBJpnLM6_Qap1wSVboVJPQecAUgmzAnQhu-@mail.gmail.com> <AANLkTim5hESSHAMYNryUwak=D4tQetZJuDEK41Yq3A+L@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <AANLkTin-JwhK_SRhSPrzWJM6fJ9p_rEWVeTLGKk1pyUw@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTim5hESSHAMYNryUwak=D4tQetZJuDEK41Yq3A+L@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 10, 2010 at 07:46:16PM -0800, Dave Vasilevsky wrote:
-> Hi Luis,
+On Thu, Dec 09, 2010 at 10:21:34AM +0100, Helmut Schaa wrote:
+> On Wed, Dec 8, 2010 at 10:53 PM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
+> > I only seem to have Minstrel as the only available Rate Control
+> > algorithm in my kernel config?
 > 
-> Thanks for your work on compat-wireless, you are officially awesome :)
->  I just noticed that recent changes in the b43 driver have renamed
-> CONFIG_B43_NPHY to CONFIG_B43_PHY_N, but config.mk in
-> compat-wireless-2.6 is still using the old config option name. Thought
-> I should let you know.
+> PID is only selectable on embedded platforms:
+> 
+> config MAC80211_RC_PID
+>         bool "PID controller based rate control algorithm" if EMBEDDED
+> 
+> Just remove the "if EMBEDDED" from net/mac8011/Kconfig and retry.
 
-CONFIG_B43_NPHY is still used, and we have CONFIG_B43_PHY_LP=y as well.
-I don't see any CONFIG_B43_PHY_N on upstream.
+For what it's worth, I tested pid and minstrel a while ago with a
+modified mac80211_hwsim, and found minstrel to be quite a bit better
+at rate adaptation.  So while it may be worth testing out for this
+particular use case, minstrel is probably the way to go in general.
 
-  Luis
+-- 
+Bob Copeland %% www.bobcopeland.com
+
