@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:36778 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752753Ab0LaB5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 20:57:44 -0500
-Subject: Re: 2.6.37-rc7: Regression: b43: crashes in hwrng_register()
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <20101230204522.GC23219@darkside.kls.lan> (sfid-20101230_214555_989234_FFFFFFFFCC2D4737)
-References: <4D1A8200.4010609@lwfinger.net>
-	 <20101229195440.GD5838@darkside.kls.lan> <4D1BD2B0.4020101@lwfinger.net>
-	 <20101230012003.GA2665@darkside.kls.lan> <4D1BF056.3060909@lwfinger.net>
-	 <20101230143406.GA23219@darkside.kls.lan> <4D1CD161.4040107@lwfinger.net>
-	 <20101230204522.GC23219@darkside.kls.lan>
-	 (sfid-20101230_214555_989234_FFFFFFFFCC2D4737)
+Received: from mail.perches.com ([173.55.12.10]:2453 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752713Ab0LIUcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 15:32:55 -0500
+Subject: Re: [trivial PATCH 00/15] remove duplicate unlikely from IS_ERR
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org, Tobias Klauser <tklauser@distanz.ch>
+Cc: uclinux-dist-devel@blackfin.uclinux.org,
+	rtc-linux@googlegroups.com, linux-s390@vger.kernel.org,
+	osd-dev@open-osd.org, linux-arm-msm@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-mm@kvack.org,
+	Jiri Kosina <trivial@kernel.org>,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+In-Reply-To: <cover.1291923888.git.joe@perches.com>
+References: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
+	 <cover.1291923888.git.joe@perches.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 31 Dec 2010 02:57:33 +0100
-Message-ID: <1293760653.6528.78.camel@maggie>
+Date: Thu, 09 Dec 2010 12:32:53 -0800
+Message-ID: <1291926773.20677.26.camel@Joe-Laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-30 at 21:45 +0100, Mario 'BitKoenig' Holbe wrote: 
-> On Thu, Dec 30, 2010 at 12:37:21PM -0600, Larry Finger wrote:
-> > The head of the rng_list is damaged. It is initialized at compile time and
-> > should be OK. To help discover the order in which hwrng_register() is called,
-> > apply the attached patch. Run it once with commit 84c164a34ffe67908a installed,
-> > and once with it reverted.
-> 
-> All right, 3 dmesg excerpts attached...
-> 2.6.37-rc7-vanilla.dmesg:
-> 	2.6.37-rc7 vanilla (i.e. with 84c164a34ffe67908a), crashing
-> 	via-rng is registered first, b43-rng second
-> 2.6.37-rc7-without.dmesg:
-> 	2.6.37-rc7 with 84c164a34ffe67908a reverted, not crashing
-> 	b43-rng is registered first, via-rng second
-> 2.6.37-rc7-without+modprobe.dmesg:
-> 	2.6.37-rc7 with 84c164a34ffe67908a reverted, b43 blacklisted and
-> 	manually modprobed after via-rng, crashing
-> 	via-rng is registered first, b43-rng second
-> 
-> Seems like the crash shows up when b43-rng is registered second, but not
-> when via-rng is registered second.
-> Btw.: `cat rng_available' does also not crash when via-rng is registered
-> second.
+On Thu, 2010-12-09 at 12:03 -0800, Joe Perches wrote:
+> Tobias Klauser <tklauser@distanz.ch> sent a patch to remove
+> an unnecessary unlikely from drivers/misc/c2port/core.c,
+> https://lkml.org/lkml/2010/12/9/199
 
+It seems that Tobias did send all the appropriate patches,
+not as a series, but as individual patches to kernel-janitor.
 
-I suspect that there is some "hw_random.h" header version mixup is going
-on here. The layout of struct hwrng was changed recently.
+c2port was the only one that went to lkml.
 
-Your crash seems to happen on the list head embedded in struct hwrng.
+Please ignore this series and apply Tobias' patches.
 
-Please make sure that your build environment is clean and you're not
-using any external stuff such as compat-wireless. All of hwrng-core,
-rng-via and b43 must be compiled against the same hw_random.h.
-
--- 
-Greetings Michael.
 
