@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:62183 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003Ab0LCEHf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 23:07:35 -0500
-Received: by eye27 with SMTP id 27so4779063eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 20:07:33 -0800 (PST)
-Date: Fri, 3 Dec 2010 06:07:13 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
-	sedat.dilek@googlemail.com
-Subject: [PATCH 3/6] ath5k: Disable ANI during reset
-Message-ID: <20101203040713.GC2988@makis.mantri>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56900 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753410Ab0LINr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 08:47:28 -0500
+Message-ID: <4D00DDEA.7040907@hauke-m.de>
+Date: Thu, 09 Dec 2010 14:47:22 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Compile problem in ath9k with ATH_DBG_WARN_ON_ONCE
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Stop ANI durring reset to prevent false PHY error reports
+Hi,
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+I got an compile problem in drivers/net/wireless/ath/ath9k/main.c
 
----
- drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+This is caused by commit ff9f0b639f33c92a89b0799263ab625444be6ee1
+	ath9k: skip ATH9K_INT_TIM_TIMER when we are idle
+and d7fd1b50a51be3fe6554fbab8953fa8a3ff4009b
+	ath9k: Make DMA warning in ath_stoprecv WARN_ON_ONCE.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 047b2a0..6edfa9f 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2504,7 +2504,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
- 							bool skip_pcu)
- {
- 	struct ath5k_hw *ah = sc->ah;
--	int ret;
-+	int ret, ani_mode;
- 
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
- 
-@@ -2512,6 +2512,12 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
- 	synchronize_irq(sc->pdev->irq);
- 	stop_tasklets(sc);
- 
-+	/* Save ani mode and disable ANI durring
-+	 * reset. If we don't we might get false
-+	 * PHY error interrupts. */
-+	ani_mode = ah->ah_sc->ani_state.ani_mode;
-+	ath5k_ani_init(ah, ATH5K_ANI_MODE_OFF);
-+
- 	/* We are going to empty hw queues
- 	 * so we should also free any remaining
- 	 * tx buffers */
-@@ -2533,7 +2539,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
- 		goto err;
- 	}
- 
--	ath5k_ani_init(ah, ah->ah_sc->ani_state.ani_mode);
-+	ath5k_ani_init(ah, ani_mode);
- 
- 	ah->ah_cal_next_full = jiffies;
- 	ah->ah_cal_next_ani = jiffies;
+If CONFIG_ATH_DEBUG=y is set ATH_DBG_WARN_ON_ONCE uses WARN_ON_ONCE and
+returns something, but if CONFIG_ATH_DEBUG is not set it does not return
+anything. Now ATH_DBG_WARN_ON_ONCE is used in the boolean expression in
+an if case and is not returning anything and causes a compile error.
+
+  CC [M]  /drivers/net/wireless/ath/ath9k/main.o
+/drivers/net/wireless/ath/ath9k/main.c: In function ‘ath_isr’:
+/drivers/net/wireless/ath/ath9k/main.c:769: error: expected expression
+before ‘do’
+make[5]: *** [/drivers/net/wireless/ath/ath9k/main.o] Error 1
+make[4]: *** [/drivers/net/wireless/ath/ath9k] Error 2
+
+Hauke
