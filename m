@@ -1,142 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754504Ab0L1Rhf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49641 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377Ab0LIBvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:37:35 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:34 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 14/18] wl1271: AP mode - record TX configuration settings
-Date: Tue, 28 Dec 2010 19:36:44 +0200
-Message-Id: <1293557808-27068-15-git-send-email-arik@wizery.com>
-In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
+	Wed, 8 Dec 2010 20:51:04 -0500
+Date: Wed, 8 Dec 2010 20:48:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/3] iwlagn: implement layout-agnostic EEPROM reading
+Message-ID: <20101209014850.GA2915@tuxdriver.com>
+References: <1291743428-19642-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1291743428-19642-3-git-send-email-wey-yi.w.guy@intel.com>
+ <20101207192806.GF2700@tuxdriver.com>
+ <1291751118.20668.8.camel@wwguy-ubuntu>
+ <20101208201926.GF2423@tuxdriver.com>
+ <1291851191.10280.174.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1291851191.10280.174.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Record TX configuration settings in the "conf" member of our global
-structure (struct wl1271) if conf_tx is called when the firmware is
-not loaded.
+On Wed, Dec 08, 2010 at 03:33:11PM -0800, Guy, Wey-Yi wrote:
+> On Wed, 2010-12-08 at 12:19 -0800, John W. Linville wrote:
+> > On Tue, Dec 07, 2010 at 11:45:18AM -0800, Guy, Wey-Yi wrote:
 
-Later on when the firmware is loaded, we apply the tx conf as part of
-the init sequence.
+> > > So it is really judgment call, we plan to release both 6005 and 6030
+> > > uCode in the next few weeks and hardware should be on the market early
+> > > next year. If by the time when hardware become available, distro already
+> > > move to .38, then I am ok with it. What you think?
+> > 
+> > What about a patch to disable those devices in 2.6.37, and leave the
+> > existing EEPROM code alone for that release?
+> > 
+> 
+> I don't think it is an option to disable all the new devices for .37
+> since we commit to support them in .37 kernel, 
 
-Important for AP mode since conf_tx is called before add_interface
-(where the firmware is initialized).
+It certainly is an option.  Missing hardware support for one release
+versus potentially destabilizing all existing iwlwifi users seems
+like an obvious trade-off to me.  I trust Johannes, of course, but
+we all make subtle mistakes from time to time.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   74 ++++++++++++++++++++++++------------
- 1 files changed, 50 insertions(+), 24 deletions(-)
+> How about re-work the patch to keep the orig. EEPROM reading method for
+> older devices, but using new EEPROM method for the newer devices
+> (6005/6030/...). it that work for .37 kernel?
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 3747d98..ea61ae7 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1433,6 +1433,8 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		goto out;
- 	}
- 
-+	is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
-+
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
- 		goto out;
-@@ -2312,42 +2314,66 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- {
- 	struct wl1271 *wl = hw->priv;
- 	u8 ps_scheme;
--	int ret;
-+	int ret = 0;
- 
- 	mutex_lock(&wl->mutex);
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
- 
--	if (unlikely(wl->state == WL1271_STATE_OFF)) {
--		ret = -EAGAIN;
--		goto out;
--	}
--
--	ret = wl1271_ps_elp_wakeup(wl, false);
--	if (ret < 0)
--		goto out;
--
--	/* the txop is confed in units of 32us by the mac80211, we need us */
--	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
--				params->cw_min, params->cw_max,
--				params->aifs, params->txop << 5);
--	if (ret < 0)
--		goto out_sleep;
--
- 	if (params->uapsd)
- 		ps_scheme = CONF_PS_SCHEME_UPSD_TRIGGER;
- 	else
- 		ps_scheme = CONF_PS_SCHEME_LEGACY;
- 
--	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
--				 CONF_CHANNEL_TYPE_EDCF,
--				 wl1271_tx_get_queue(queue),
--				 ps_scheme, CONF_ACK_POLICY_LEGACY, 0, 0);
--	if (ret < 0)
--		goto out_sleep;
-+	if (wl->state == WL1271_STATE_OFF) {
-+		/*
-+		 * If the state is off, the parameters will be recorded and
-+		 * configured on init. This happens in AP-mode.
-+		 */
-+		struct conf_tx_ac_category *conf_ac =
-+			&wl->conf.tx.ac_conf[wl1271_tx_get_queue(queue)];
-+		struct conf_tx_tid *conf_tid =
-+			&wl->conf.tx.tid_conf[wl1271_tx_get_queue(queue)];
-+
-+		conf_ac->ac = wl1271_tx_get_queue(queue);
-+		conf_ac->cw_min = (u8)params->cw_min;
-+		conf_ac->cw_max = params->cw_max;
-+		conf_ac->aifsn = params->aifs;
-+		conf_ac->tx_op_limit = params->txop << 5;
-+
-+		conf_tid->queue_id = wl1271_tx_get_queue(queue);
-+		conf_tid->channel_type = CONF_CHANNEL_TYPE_EDCF;
-+		conf_tid->tsid = wl1271_tx_get_queue(queue);
-+		conf_tid->ps_scheme = ps_scheme;
-+		conf_tid->ack_policy = CONF_ACK_POLICY_LEGACY;
-+		conf_tid->apsd_conf[0] = 0;
-+		conf_tid->apsd_conf[1] = 0;
-+	} else {
-+		ret = wl1271_ps_elp_wakeup(wl, false);
-+		if (ret < 0)
-+			goto out;
-+
-+		/*
-+		 * the txop is confed in units of 32us by the mac80211,
-+		 * we need us
-+		 */
-+		ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
-+					params->cw_min, params->cw_max,
-+					params->aifs, params->txop << 5);
-+		if (ret < 0)
-+			goto out_sleep;
-+
-+		ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
-+					 CONF_CHANNEL_TYPE_EDCF,
-+					 wl1271_tx_get_queue(queue),
-+					 ps_scheme, CONF_ACK_POLICY_LEGACY,
-+					 0, 0);
-+		if (ret < 0)
-+			goto out_sleep;
- 
- out_sleep:
--	wl1271_ps_elp_sleep(wl);
-+		wl1271_ps_elp_sleep(wl);
-+	}
- 
- out:
- 	mutex_unlock(&wl->mutex);
+I suppose this could work, although it sounds like an even bigger
+patch.  I guess we would need to see the patch.
+
+John
 -- 
-1.7.1
-
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
