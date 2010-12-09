@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44431 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753409Ab0LGXN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 18:13:27 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 15:13:12 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
-	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 0/5] ath9k: few power save / suspend fixes
-Date: Tue, 7 Dec 2010 15:13:18 -0800
-Message-ID: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:53629 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab0LIVVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 16:21:35 -0500
+Subject: Re: [PATCH RFC] mac80211 default tx_last_beacon false (congestion)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Harvey <harvey.tim@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291929345-8066-1-git-send-email-harvey.tim@gmail.com>
+References: <1291929345-8066-1-git-send-email-harvey.tim@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 22:21:34 +0100
+Message-ID: <1291929694.3540.39.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon further review with Johannes on the semantics of mac80211's
-idle notifications we decided its best to leave it up to the drivers
-to ensure idle state after mac80211 issues a stop() callback to
-the drivers. This means if you are relying on the IDLE notification
-you should not expect it after a stop() callback to disable your
-radio. The implications of this means you need to ensure you keep
-your 802.11 device idle after stop() and anything in between.
+On Thu, 2010-12-09 at 13:15 -0800, Tim Harvey wrote:
+> The 802.11 spec states that the STA that generated the last Beacon frame shall
+> be the STA that response to a probe request.  This is important for congestion
+> reduction when a probe request is received - only 1 node in an adhoc BSS
+> will transmit a response.  While mac80211 drivers should provide the
+> tx_last_beacon function to report if they transmitted the last beacon many
+> do not.  As an attempt to reduce probe response congestion default this
+> to 0 such that a node not implementing this capability does not contribute
+> to unnecessary congestion.
+> 
+> In a modern medium sized office environment I see upwards of 100 probe
+> requests per second received at a given node from various hardware/OS/drivers
+> doing zeroconf 'active probing' as opposed to passively listening for beacons.
+> With a modest 10-node adhoc network consisting of drivers that do not implement
+> this tx_last_beacon feature, I have seen this result in the simultaneous xmit
+> of probe responses accumulating to 500 probe responses per second because of
+> collisions which brings the adhoc network to its knees as well as causes
+> needless congestion.
 
-The other patches are a few debug warn once messages which will
-only be enabled when you have debugging turned on, I also
-integrated Ben's patch into the series as it added the Atheros
-debug WARN_ON_ONCE() which I reuse in my other patches..
+FWIW, I'm OK with this. It shouldn't really have much adverse effect.
 
-Ben Greear (1):
-  ath9k: Make DMA warning in ath_stoprecv WARN_ON_ONCE.
-
-Luis R. Rodriguez (4):
-  ath9k: Fix power save count imbalance on ath_radio_enable()
-  ath9k: fix assumptions for idle calls on suspend/resume
-  ath9k: skip ATH9K_INT_TIM_TIMER when we are idle
-  ath9k_hw: warn if we cannot change the power to the chip
-
- drivers/net/wireless/ath/ath9k/hw.c   |    7 +++
- drivers/net/wireless/ath/ath9k/main.c |   10 ++--
- drivers/net/wireless/ath/ath9k/pci.c  |    3 +
- drivers/net/wireless/ath/debug.h      |   94 +++++++++++++++++++++++++++++++++
- 4 files changed, 110 insertions(+), 4 deletions(-)
- create mode 100644 drivers/net/wireless/ath/debug.h
-
--- 
-1.7.3.2.90.gd4c43
+johannes
 
