@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51687 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754259Ab0LGTPe (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:62022 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369Ab0LIJBB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 14:15:34 -0500
-Date: Tue, 7 Dec 2010 14:06:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH 3/3] nl80211/mac80211: Report signal average
-Message-ID: <20101207190631.GE2700@tuxdriver.com>
-References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
- <20101202101242.22988.56087.stgit@localhost6.localdomain6>
+	Thu, 9 Dec 2010 04:01:01 -0500
+Received: by qyk12 with SMTP id 12so1711057qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 01:01:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101202101242.22988.56087.stgit@localhost6.localdomain6>
+In-Reply-To: <20101209013003.GB2243@broadcom.com>
+References: <20101020004743.GB31965@kroah.com>
+	<20101020005546.GL10832@broadcom.com>
+	<20101020010320.GA370@kroah.com>
+	<20101021170810.GA15357@broadcom.com>
+	<1288621739.26983.32.camel@macbook.infradead.org>
+	<20101208205000.GA30861@broadcom.com>
+	<AANLkTin70oBFYq8LMJYw6zc7oVF9-UXv=nn_ophx+L2S@mail.gmail.com>
+	<20101208222349.GA31641@kroah.com>
+	<20101208233527.GA2148@broadcom.com>
+	<AANLkTimXjLCLwznMDzT-KdX1qfHvdbpNpJPcNpmuZkOS@mail.gmail.com>
+	<20101209013003.GB2243@broadcom.com>
+Date: Thu, 9 Dec 2010 10:01:00 +0100
+Message-ID: <AANLkTimtSdpD0Tu+eKBBWEbBFn2-XmrMaq_c0G4VbX=f@mail.gmail.com>
+Subject: Re: [PATCH v2] linux-firmware: brcm: Removed codeversion from
+ firmware filenames.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Greg KH <greg@kroah.com>, David Woodhouse <dwmw2@infradead.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"dcbw@redhat.com" <dcbw@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 02, 2010 at 07:12:43PM +0900, Bruno Randolf wrote:
-> Extend nl80211 to report an exponential weighted moving average (EWMA) of the
-> signal value. Since the signal value usually fluctuates between different
-> packets, an average can be more useful than the value of the last packet.
-> 
-> This uses the recently added generic EWMA library function.
-> 
-> --
-> v2:	fix ABI breakage and change factor to be a power of 2.
-> 
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+W dniu 9 grudnia 2010 02:30 użytkownik Henry Ptasinski
+<henryp@broadcom.com> napisał:
+> Yes, I omitted the earlier part since those comments were not directly about
+> the existing Broadcom license.   But to be complete:
 
-Jouni and Johannes, are you satisfied with this version?
+Yes, this part explained why I mentioned distos problems.
 
-John
+
+> Obviously that's taking some time,
+> and I don't have any resolution yet, but I'll keep working on it.
+
+Great, thanks :)
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
