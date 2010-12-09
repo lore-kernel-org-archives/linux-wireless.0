@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:41497 "EHLO lo.gmane.org"
+Received: from www.sr71.net ([198.145.64.142]:52938 "EHLO blackbird.sr71.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758452Ab0LMRZS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 12:25:18 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PSC9B-00087Q-Bs
-	for linux-wireless@vger.kernel.org; Mon, 13 Dec 2010 18:25:13 +0100
-Received: from 77.119.210.143.wireless.dyn.drei.com ([77.119.210.143])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 18:25:13 +0100
-Received: from messier31 by 77.119.210.143.wireless.dyn.drei.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 18:25:13 +0100
-To: linux-wireless@vger.kernel.org
-From: Thomas <messier31@gmx.net>
-Subject: Re: carl9170 802.11n-AP
-Date: Mon, 13 Dec 2010 18:24:57 +0100
-Message-ID: <ie5kt9$vfp$1@dough.gmane.org>
-References: <loom.20101212T101545-636@post.gmane.org> <loom.20101212T110657-413@post.gmane.org> <AANLkTimiNLZ8EFPEwbKW3UA7FMSxmJOV-B9pWY4h9c34@mail.gmail.com>
+	id S1756154Ab0LIVeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 16:34:16 -0500
+Subject: brcm80211 hangs when disabling wireless
+From: Dave Hansen <dave@sr71.net>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mike Rapoport <mike.rapoport@gmail.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Date: Thu, 09 Dec 2010 13:26:50 -0800
+Message-ID: <1291930010.7960.30.camel@nimitz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Today I tried a different wifi card on the client side, instead of the Intel 
-5100, but the problem remains the same. The carl9170 driver on my server 
-crashes at some point randomly (only in 802.11n mode). The traceback shows 
-the error at tx.c but everytime in a different line. So I guess there must 
-be a race condition somewhere.
+I've been getting hard hangs when I toggle the wireless on a Lenovo
+S10-3.  It happens both with the physical switch and the Fn-F5 key
+combo.  It's quite repeatable.  The system is quite stable when I'm not
+trying to disable the wireless, though.
 
-Here you can find the error report of some crashes: 
-http://www.mikrocontroller.net/attachment/95144/bugreport.txt
+I've been able to get some screenshots, but the console messages don't
+make it out to the disk:
 
-Server hardware is a Seagate Dockstar with OpenWrt running on it. I heard 
-from another user with Debian, who has the same problem.
+	http://picasaweb.google.com/hansendc/BrcmOops#
 
-Regards,
+netconsole also isn't working on this hardware.  Any other suggestions
+for getting an oops out of a serial-port-challenged netbook?
 
-Thomas
+It isn't completely clear to me where this bug actually is.  The stack
+dump looks almost completely confined to net/mac80211/ functions, but
+there are a few error printk's from brcm80211.
 
+The first printk's are from this code, but it's apparently trying to
+transmit in the mac80211 stack anyway:
+        
+        static int wl_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+        {
+                int status;
+                wl_info_t *wl = hw->priv;
+                WL_LOCK(wl);
+                if (!wl->pub->up) {
+                        WL_ERROR(("ops->tx called while down\n"));
+                        status = -ENETDOWN;
+                        goto done;
+                }
+                status = wl_start(skb, wl);
+         done:
+                WL_UNLOCK(wl);
+                return status;
+        }
+
+I'm not completely sure that this is what is causing the hang that I'm
+seeing, but it's certainly the last thing I see on the console.  
+
+With the hardware driver in -staging, I don't expect anybody to jump out
+of their seats to fix this, I just figured someone might want to see the
+bug report.
+
+-- Dave
 
