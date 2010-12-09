@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13861 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753086Ab0LAHf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:35:26 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:35:12 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 23/26] ath9k_hw: Program appropriate register for temperature compensation cal for AR9485
-Date: Tue, 30 Nov 2010 23:32:52 -0800
-Message-ID: <1291188775-13707-24-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47470 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab0LIOXg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 09:23:36 -0500
+Received: by vws16 with SMTP id 16so1576478vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 06:23:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1291904384.2905.2.camel@maggie>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	<1291755360-21570-3-git-send-email-zajec5@gmail.com>
+	<1291756117.27497.101.camel@maggie>
+	<AANLkTinN_12RwWiugzxn5dB1he3b6h_y7K3C=8vFPyXO@mail.gmail.com>
+	<AANLkTin14p=3=SA_4oVj24z+8NuS_y6hWqQmEEiXaSqr@mail.gmail.com>
+	<1291904384.2905.2.camel@maggie>
+Date: Thu, 9 Dec 2010 15:23:35 +0100
+Message-ID: <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com>
+Subject: Re: [PATCH 2/4] b43: set TMS to work with current band width for N-PHY
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+W dniu 9 grudnia 2010 15:19 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Thu, 2010-12-09 at 15:13 +0100, Rafał Miłecki wrote:
+>> W dniu 9 grudnia 2010 15:12 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+>> > W dniu 7 grudnia 2010 22:08 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+>> >> On Tue, 2010-12-07 at 21:55 +0100, Rafał Miłecki wrote:
+>> >>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> >>> ---
+>> >>>  drivers/net/wireless/b43/main.c       |    6 ++++++
+>> >>>  drivers/net/wireless/b43/phy_common.c |    7 +++++++
+>> >>>  drivers/net/wireless/b43/phy_common.h |    2 ++
+>> >>>  drivers/net/wireless/b43/phy_n.c      |    7 -------
+>> >>>  4 files changed, 15 insertions(+), 7 deletions(-)
+>> >>>
+>> >>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+>> >>> index fa48803..670fd7b 100644
+>> >>> --- a/drivers/net/wireless/b43/main.c
+>> >>> +++ b/drivers/net/wireless/b43/main.c
+>> >>> @@ -1150,6 +1150,12 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+>> >>>
+>> >>>       flags |= B43_TMSLOW_PHYCLKEN;
+>> >>>       flags |= B43_TMSLOW_PHYRESET;
+>> >>> +     if (dev->phy.type == B43_PHYTYPE_N) {
+>> >>> +             if (b43_channel_type_is_40mhz(dev->phy.channel_type))
+>> >>
+>> >> Is channel_type already set at this time?
+>> >
+>> > Yeah, that core switching seems to be a little tricky. I didn't figure
+>> > it out completely yet. We may need to fix that, or fix calls to this
+>> > function.
+>> >
+>> > Thanks for reviewing!
+>>
+>> In other words: it will work for now, but we need to fix that in
+>> future if we want to get 40 MHz channels working.
+>
+> That's exactly what I was saying. ;)
+> To answer my original question: No, channel_type is not set, but the
+> code will work for non-40mhz.
+>
+> This seems a bit tricky to fix, though. Maybe we should reset the
+> wireless core twice. Once initially and once again after the
+> configuration was set. The first reset would just be to be able
+> to access the PHY and wireless core at all to probe it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 74e0da9..00cd3e5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -586,7 +586,7 @@
- #define AR_PHY_65NM_CH0_BIAS2       0x160c4
- #define AR_PHY_65NM_CH0_BIAS4       0x160cc
- #define AR_PHY_65NM_CH0_RXTX4       0x1610c
--#define AR_PHY_65NM_CH0_THERM       0x16290
-+#define AR_PHY_65NM_CH0_THERM       (AR_SREV_9485(ah) ? 0x1628c : 0x16290)
- 
- #define AR_PHY_65NM_CH0_THERM_LOCAL   0x80000000
- #define AR_PHY_65NM_CH0_THERM_LOCAL_S 31
+Even more tricky is that we already reset code twice... At least in
+b43_wireless_core_attach. Will have to redesign that a little.
+
 -- 
-1.7.0.4
-
+Rafał
