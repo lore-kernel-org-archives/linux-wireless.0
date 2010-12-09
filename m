@@ -1,48 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:59254 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab0L3XIJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:08:09 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:07:51 -0800
-Message-Id: <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59008 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757327Ab0LIWXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 17:23:13 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: make patch apply again
+Date: Thu,  9 Dec 2010 23:23:05 +0100
+Message-Id: <1291933385-18217-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this 
-is correct or not.
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/spi/dw_spi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ patches/24-pcmcia.patch |   50 ++++++++++++++++++++++++----------------------
+ 1 files changed, 26 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/spi/dw_spi.c b/drivers/spi/dw_spi.c
-index 0838c79..7c3cf21 100644
---- a/drivers/spi/dw_spi.c
-+++ b/drivers/spi/dw_spi.c
-@@ -592,7 +592,7 @@ static void pump_transfers(unsigned long data)
- 		spi_set_clk(dws, clk_div ? clk_div : chip->clk_div);
- 		spi_chip_sel(dws, spi->chip_select);
- 
--		/* Set the interrupt mask, for poll mode just diable all int */
-+		/* Set the interrupt mask, for poll mode just disable all int */
- 		spi_mask_intr(dws, 0xff);
- 		if (imask)
- 			spi_umask_intr(dws, imask);
+diff --git a/patches/24-pcmcia.patch b/patches/24-pcmcia.patch
+index 9614d78..775c969 100644
+--- a/patches/24-pcmcia.patch
++++ b/patches/24-pcmcia.patch
+@@ -1134,21 +1134,10 @@
+  	ret = pcmcia_loop_config(link, orinoco_cs_config_check, NULL);
+  	if (ret) {
+  		if (!ignore_cis_vcc)
+-@@ -151,15 +260,23 @@ orinoco_cs_config(struct pcmcia_device *
++@@ -151,8 +260,12 @@ orinoco_cs_config(struct pcmcia_device *
+  		goto failed;
+  	}
+  
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 	ret = pcmcia_request_irq(link, orinoco_interrupt);
+-+#else
+-+	ret = pcmcia_request_irq(link, &link->irq);
+-+#endif
+- 	if (ret)
+- 		goto failed;
+- 
+- 	/* We initialize the hermes structure before completing PCMCIA
+- 	 * configuration just in case the interrupt handler gets
+- 	 * called. */
+ +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+  	mem = ioport_map(link->resource[0]->start,
+  			resource_size(link->resource[0]));
+@@ -1158,6 +1147,18 @@
+  	if (!mem)
+  		goto failed;
+  
++@@ -161,7 +274,11 @@ orinoco_cs_config(struct pcmcia_device *
++ 	 * called. */
++ 	hermes_struct_init(hw, mem, HERMES_16BIT_REGSPACING);
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	ret = pcmcia_request_irq(link, orinoco_interrupt);
+++#else
+++	ret = pcmcia_request_irq(link, &link->irq);
+++#endif
++ 	if (ret)
++ 		goto failed;
++ 
+ @@ -176,8 +293,16 @@ orinoco_cs_config(struct pcmcia_device *
+  	}
+  
+@@ -1328,21 +1329,10 @@
+  	ret = pcmcia_loop_config(link, spectrum_cs_config_check, NULL);
+  	if (ret) {
+  		if (!ignore_cis_vcc)
+-@@ -214,15 +319,23 @@ spectrum_cs_config(struct pcmcia_device
++@@ -214,8 +319,12 @@ spectrum_cs_config(struct pcmcia_device
+  		goto failed;
+  	}
+  
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 	ret = pcmcia_request_irq(link, orinoco_interrupt);
+-+#else
+-+	ret = pcmcia_request_irq(link, &link->irq);
+-+#endif
+- 	if (ret)
+- 		goto failed;
+- 
+- 	/* We initialize the hermes structure before completing PCMCIA
+- 	 * configuration just in case the interrupt handler gets
+- 	 * called. */
+ +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+  	mem = ioport_map(link->resource[0]->start,
+  			resource_size(link->resource[0]));
+@@ -1352,6 +1342,18 @@
+  	if (!mem)
+  		goto failed;
+  
++@@ -225,7 +334,11 @@ spectrum_cs_config(struct pcmcia_device
++ 	hermes_struct_init(hw, mem, HERMES_16BIT_REGSPACING);
++ 	hw->eeprom_pda = true;
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	ret = pcmcia_request_irq(link, orinoco_interrupt);
+++#else
+++	ret = pcmcia_request_irq(link, &link->irq);
+++#endif
++ 	if (ret)
++ 		goto failed;
++ 
+ @@ -244,8 +357,16 @@ spectrum_cs_config(struct pcmcia_device
+  	}
+  
 -- 
-1.6.5.2.180.gc5b3e
+1.7.1
 
