@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:46268 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753882Ab0LaUEV (ORCPT
+Received: from mail-iw0-f172.google.com ([209.85.214.172]:57140 "EHLO
+	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321Ab0LIFqe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 15:04:21 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 94F50542498
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2010 15:05:33 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-31 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101231200419.9088A40F97@repository3.orbit-lab.org>
-Date: Fri, 31 Dec 2010 15:04:19 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 9 Dec 2010 00:46:34 -0500
+Received: by iwn40 with SMTP id 40so2860505iwn.3
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 21:46:34 -0800 (PST)
+Message-ID: <4D006D31.4000604@gmail.com>
+Date: Thu, 09 Dec 2010 16:46:25 +1100
+From: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: carl9170 connect/disconnect loop
+References: <AANLkTingL2eooC2+jH6nQVADKZBFemE=6eTQ_Vhx_Swx@mail.gmail.com> <201012070032.23135.chunkeey@googlemail.com>
+In-Reply-To: <201012070032.23135.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   dc86c6c..9b210cb  history    -> origin/history
- + e635401...bfa221f master     -> origin/master  (forced update)
-   387c31c..3643e0e  stable     -> origin/stable
- * [new tag]         next-20101231 -> next-20101231
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
 
-compat-wireless code metrics
+On 07/12/10 10:32, Christian Lamparter wrote:
+> mac80211 comes with some powerful debug tools.
+> Since you get the disconnects fairly quickly, you should
+> setup a wlan monitor.
+>
+> <http://linuxwireless.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
+>   iw dev wlan1 interface add mon type monitor flags otherbss control
+>   ifconfig mon up
+>
+I'm getting a kernel panic just after bringing up the interface with 
+ifconfig. It mentions this info:
 
-    774936 - Total upstream lines of code being pulled
+skb_under_panic ...
+kernel BUG at net/core/skbuff.c:146!
+Call Trace:
+<IRQ>
+   skb_defer_rx_timestamp
+   netif_receive_skb
+
+
+$ uname -vmpir
+2.6.36-ARCH #1 SMP PREEMPT Wed Nov 24 00:39:57 CET 2010 x86_64 AMD 
+Phenom(tm) II X4 955 Processor AuthenticAMD
+
