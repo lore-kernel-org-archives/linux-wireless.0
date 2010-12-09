@@ -1,305 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754805Ab0LHRNn (ORCPT
+Received: from mail-ew0-f45.google.com ([209.85.215.45]:44051 "EHLO
+	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581Ab0LIA2d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 12:13:43 -0500
-Received: by mail-pw0-f46.google.com with SMTP id 3so322374pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:13:43 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 04/22] rtl8192ce: Add files to rtlwifi - Part 4: debug.{c,h}
-Date: Wed,  8 Dec 2010 11:12:34 -0600
-Message-Id: <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 8 Dec 2010 19:28:33 -0500
+Received: by ewy10 with SMTP id 10so1345941ewy.4
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 16:28:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101208233527.GA2148@broadcom.com>
+References: <20101019233520.GA12510@kroah.com>
+	<FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
+	<20101020004743.GB31965@kroah.com>
+	<20101020005546.GL10832@broadcom.com>
+	<20101020010320.GA370@kroah.com>
+	<20101021170810.GA15357@broadcom.com>
+	<1288621739.26983.32.camel@macbook.infradead.org>
+	<20101208205000.GA30861@broadcom.com>
+	<AANLkTin70oBFYq8LMJYw6zc7oVF9-UXv=nn_ophx+L2S@mail.gmail.com>
+	<20101208222349.GA31641@kroah.com>
+	<20101208233527.GA2148@broadcom.com>
+Date: Thu, 9 Dec 2010 01:28:31 +0100
+Message-ID: <AANLkTimXjLCLwznMDzT-KdX1qfHvdbpNpJPcNpmuZkOS@mail.gmail.com>
+Subject: Re: [PATCH v2] linux-firmware: brcm: Removed codeversion from
+ firmware filenames.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Greg KH <greg@kroah.com>, David Woodhouse <dwmw2@infradead.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>, dcbw@redhat.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/debug.c |   50 ++++++++
- drivers/net/wireless/rtlwifi/debug.h |  212 ++++++++++++++++++++++++++++++++++
- 2 files changed, 262 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/debug.c
- create mode 100644 drivers/net/wireless/rtlwifi/debug.h
+2010/12/9 Henry Ptasinski <henryp@broadcom.com>:
+> On Wed, Dec 08, 2010 at 02:23:49PM -0800, Greg KH wrote:
+>> On Wed, Dec 08, 2010 at 11:07:53PM +0100, Rafał Miłecki wrote:
+>> > 2010/12/8 Henry Ptasinski <henryp@broadcom.com>:
+>> > > Second attempt at cleaning up firmware filenames.
+>> > >
+>> > > The basename-apiversion-codeversion construction for firmware filenames is not
+>> > > used by most other firmware files, adds complexity, and is not providing any
+>> > > value.  Renamed the firmware files using just basename-apiversion.  Also, fixed
+>> > > WHENCE to have correct path to brcmfmac files.
+>> > >
+>> > > Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+>> >
+>> > Henry, I believe we got report that Red Hat can not include your
+>> > firmware anyway because of licensing. Can you change license to some
+>> > common one which allows providing your firmware with distributions?
+>>
+>> That's news to me, what specific licensing issue have you heard about
+>> here?  Last I saw, the issues were resolved and everyone could
+>> redistribute this firmware.
+>
+> On a thread about other firmware, Dan Williams wrote:
+>
+>> There's an existing Broadcom license in linux-firmware.git, and it *may*
+>> be OK, but it's really, really long and given that other major companies
+>> adopted the "shorter is better" approach, it's hard to believe that all
+>> the existing Broadcom license text is actually needed.
+>
+> I'm not sure that translates to "can not include your firmware". Regardless, I
+> am trying to get our license simplified.  Obviously that's taking some time,
+> and I don't have any resolution yet, but I'll keep working on it.
 
-diff --git a/drivers/net/wireless/rtlwifi/debug.c b/drivers/net/wireless/rtlwifi/debug.c
-new file mode 100644
-index 0000000..5fa7385
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/debug.c
-@@ -0,0 +1,50 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * Tmis program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * Tmis program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * tmis program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * Tme full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *****************************************************************************/
-+
-+#include "wifi.h"
-+
-+void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 i;
-+
-+	rtlpriv->dbg.global_debuglevel = DBG_EMERG;
-+
-+	rtlpriv->dbg.global_debugcomponents =
-+	    COMP_ERR | COMP_FW | COMP_INIT | COMP_RECV | COMP_SEND |
-+	    COMP_MLME | COMP_SCAN | COMP_INTR | COMP_LED | COMP_SEC |
-+	    COMP_BEACON | COMP_RATE | COMP_RXDESC | COMP_DIG | COMP_TXAGC |
-+	    COMP_POWER | COMP_POWER_TRACKING | COMP_BB_POWERSAVING | COMP_SWAS |
-+	    COMP_RF | COMP_TURBO | COMP_RATR | COMP_CMD |
-+	    COMP_EFUSE | COMP_QOS | COMP_MAC80211 | COMP_REGD | COMP_CHAN;
-+
-+	for (i = 0; i < DBGP_TYPE_MAX; i++)
-+		rtlpriv->dbg.dbgp_type[i] = 0;
-+
-+	/*Init Debug flag enable condition */
-+}
-diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
-new file mode 100644
-index 0000000..08bdec2
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/debug.h
-@@ -0,0 +1,212 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * Tmis program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * Tmis program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * tmis program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * Tme full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *****************************************************************************/
-+
-+#ifndef __RTL_DEBUG_H__
-+#define __RTL_DEBUG_H__
-+
-+/*--------------------------------------------------------------
-+			Debug level
-+--------------------------------------------------------------*/
-+/*
-+ *Fatal bug.
-+ *For example, Tx/Rx/IO locked up,
-+ *memory access violation,
-+ *resource allocation failed,
-+ *unexpected HW behavior, HW BUG
-+ *and so on.
-+ */
-+#define DBG_EMERG			0
-+
-+/*
-+ *Abnormal, rare, or unexpeted cases.
-+ *For example, Packet/IO Ctl canceled,
-+ *device suprisely unremoved and so on.
-+ */
-+#define	DBG_WARNING			2
-+
-+/*
-+ *Normal case driver developer should
-+ *open, we can see link status like
-+ *assoc/AddBA/DHCP/adapter start and
-+ *so on basic and useful infromations.
-+ */
-+#define DBG_DMESG			3
-+
-+/*
-+ *Normal case with useful information
-+ *about current SW or HW state.
-+ *For example, Tx/Rx descriptor to fill,
-+ *Tx/Rx descriptor completed status,
-+ *SW protocol state change, dynamic
-+ *mechanism state change and so on.
-+ */
-+#define DBG_LOUD			4
-+
-+/*
-+ *Normal case with detail execution
-+ *flow or information.
-+ */
-+#define	DBG_TRACE			5
-+
-+/*--------------------------------------------------------------
-+		Define the rt_trace components
-+--------------------------------------------------------------*/
-+#define COMP_ERR			BIT(0)
-+#define COMP_FW				BIT(1)
-+#define COMP_INIT			BIT(2)	/*For init/deinit */
-+#define COMP_RECV			BIT(3)	/*For Rx. */
-+#define COMP_SEND			BIT(4)	/*For Tx. */
-+#define COMP_MLME			BIT(5)	/*For MLME. */
-+#define COMP_SCAN			BIT(6)	/*For Scan. */
-+#define COMP_INTR			BIT(7)	/*For interrupt Related. */
-+#define COMP_LED			BIT(8)	/*For LED. */
-+#define COMP_SEC			BIT(9)	/*For sec. */
-+#define COMP_BEACON			BIT(10)	/*For beacon. */
-+#define COMP_RATE			BIT(11)	/*For rate. */
-+#define COMP_RXDESC			BIT(12)	/*For rx desc. */
-+#define COMP_DIG			BIT(13)	/*For DIG */
-+#define COMP_TXAGC			BIT(14)	/*For Tx power */
-+#define COMP_HIPWR			BIT(15)	/*For High Power Mechanism */
-+#define COMP_POWER			BIT(16)	/*For lps/ips/aspm. */
-+#define COMP_POWER_TRACKING	BIT(17)	/*For TX POWER TRACKING */
-+#define COMP_BB_POWERSAVING	BIT(18)
-+#define COMP_SWAS			BIT(19)	/*For SW Antenna Switch */
-+#define COMP_RF				BIT(20)	/*For RF. */
-+#define COMP_TURBO			BIT(21)	/*For EDCA TURBO. */
-+#define COMP_RATR			BIT(22)
-+#define COMP_CMD			BIT(23)
-+#define COMP_EFUSE			BIT(24)
-+#define COMP_QOS			BIT(25)
-+#define COMP_MAC80211		BIT(26)
-+#define COMP_REGD			BIT(27)
-+#define COMP_CHAN			BIT(28)
-+
-+/*--------------------------------------------------------------
-+		Define the rt_print components
-+--------------------------------------------------------------*/
-+/* Define EEPROM and EFUSE  check module bit*/
-+#define EEPROM_W			BIT(0)
-+#define EFUSE_PG			BIT(1)
-+#define EFUSE_READ_ALL		BIT(2)
-+
-+/* Define init check for module bit*/
-+#define	INIT_EEPROM			BIT(0)
-+#define	INIT_TxPower		BIT(1)
-+#define	INIT_IQK			BIT(2)
-+#define	INIT_RF				BIT(3)
-+
-+/* Define PHY-BB/RF/MAC check module bit */
-+#define	PHY_BBR				BIT(0)
-+#define	PHY_BBW				BIT(1)
-+#define	PHY_RFR				BIT(2)
-+#define	PHY_RFW				BIT(3)
-+#define	PHY_MACR			BIT(4)
-+#define	PHY_MACW			BIT(5)
-+#define	PHY_ALLR			BIT(6)
-+#define	PHY_ALLW			BIT(7)
-+#define	PHY_TXPWR			BIT(8)
-+#define	PHY_PWRDIFF			BIT(9)
-+
-+enum dbgp_flag_e {
-+	FQOS = 0,
-+	FTX = 1,
-+	FRX = 2,
-+	FSEC = 3,
-+	FMGNT = 4,
-+	FMLME = 5,
-+	FRESOURCE = 6,
-+	FBEACON = 7,
-+	FISR = 8,
-+	FPHY = 9,
-+	FMP = 10,
-+	FEEPROM = 11,
-+	FPWR = 12,
-+	FDM = 13,
-+	FDBGCtrl = 14,
-+	FC2H = 15,
-+	FBT = 16,
-+	FINIT = 17,
-+	FIOCTL = 18,
-+	DBGP_TYPE_MAX
-+};
-+
-+#define RT_ASSERT(_exp, fmt)				\
-+	do {						\
-+		if (!(_exp)) {			\
-+			printk(KERN_DEBUG "%s:%s(): ", KBUILD_MODNAME, \
-+			__func__);			\
-+			printk fmt;			\
-+		} \
-+	} while (0);
-+
-+#define RT_TRACE(rtlpriv, comp, level, fmt)\
-+	do { \
-+		if (unlikely(((comp) & rtlpriv->dbg.global_debugcomponents) && \
-+			((level) <= rtlpriv->dbg.global_debuglevel))) {\
-+			printk(KERN_DEBUG "%s:%s():<%lx-%x> ", KBUILD_MODNAME, \
-+			__func__, in_interrupt(), in_atomic());	\
-+			printk fmt;				\
-+		} \
-+	} while (0);
-+
-+#define RTPRINT(rtlpriv, dbgtype, dbgflag, printstr)	\
-+	do {						\
-+		if (unlikely(rtlpriv->dbg.dbgp_type[dbgtype] & dbgflag)) { \
-+			printk(KERN_DEBUG "%s: ", KBUILD_MODNAME);	\
-+			printk printstr;		\
-+		}					\
-+	} while (0);
-+
-+#define RT_PRINT_DATA(rtlpriv, _comp, _level, _titlestring, _hexdata, \
-+		_hexdatalen) \
-+	do {\
-+		if (unlikely(((_comp) & rtlpriv->dbg.global_debugcomponents) &&\
-+			(_level <= rtlpriv->dbg.global_debuglevel)))	{ \
-+			int __i;					\
-+			u8*	ptr = (u8 *)_hexdata;			\
-+			printk(KERN_DEBUG "%s: ", KBUILD_MODNAME);	\
-+			printk("In process \"%s\" (pid %i):", current->comm,\
-+					current->pid); \
-+			printk(_titlestring);		\
-+			for (__i = 0; __i < (int)_hexdatalen; __i++) {	\
-+				printk("%02X%s", ptr[__i], (((__i + 1) % 4)\
-+							== 0) ? "  " : " ");\
-+				if (((__i + 1) % 16) == 0)		\
-+					printk("\n");			\
-+			}				\
-+			printk(KERN_DEBUG "\n");			\
-+		} \
-+	} while (0);
-+
-+#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
-+#define MAC_ARG(x) \
-+	((u8 *)(x))[0], ((u8 *)(x))[1], ((u8 *)(x))[2],\
-+	((u8 *)(x))[3], ((u8 *)(x))[4], ((u8 *)(x))[5]
-+
-+void rtl_dbgp_flag_init(struct ieee80211_hw *hw);
-+#endif
--- 
-1.7.1
+You quoted just a selected part of Dan's message. Earlier he mentioned
+about Fedora's problems (sorry, I misremembered distro)
 
+
+---------- Wiadomość przekazana dalej ----------
+Od: Dan Williams <dcbw@redhat.com>
+Data: 21 października 2010 17:21
+Temat: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+Do: Rafał Miłecki <zajec5@gmail.com>
+DW: Henry Ptasinski <henryp@broadcom.com>, Brett Rudley
+<brudley@broadcom.com>, Nohee Ko <noheek@broadcom.com>, Greg
+Kroah-Hartman <gregkh@suse.de>, "linux-wireless@vger.kernel.org"
+<linux-wireless@vger.kernel.org>, b43-dev
+<b43-dev@lists.infradead.org>
+
+That's not enough to allow Fedora to ship it.  We'd need a clear license
+from Broadcom (ex the existing Intel or Marvell firmware licenses)
+before Fedora could feel comfortable about shipping it legally in all
+jurisdictions.
+
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob;f=LICENCE.mwl8k;h=3224e1bbfba8ccd1d980f57eb88378f20bb2d146;hb=HEAD
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob;f=LICENCE.libertas;h=1fd8766c26a170b50605455ae6f54b607baa12cf;hb=HEAD
+
+There's an existing Broadcom license in linux-firmware.git, and it *may*
+be OK, but it's really, really long and given that other major companies
+adopted the "shorter is better" approach, it's hard to believe that all
+the existing Broadcom license text is actually needed.
