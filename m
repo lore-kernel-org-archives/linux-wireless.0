@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:38391 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876Ab0LCWXG convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2657 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754734Ab0LIROm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 17:23:06 -0500
-Received: by qyk11 with SMTP id 11so1392617qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 14:23:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101203145558.GA2348@tuxdriver.com>
-References: <20101203040300.GA2988@makis.mantri>
-	<20101203145558.GA2348@tuxdriver.com>
-Date: Fri, 3 Dec 2010 17:23:05 -0500
-Message-ID: <AANLkTi=iixqOgRhgGwwuz+oVzO78yXZ7C=Y8uX+3M_VZ@mail.gmail.com>
-Subject: Re: [PATCH 1/6] ath5k: Always write tx powertable on hw
+	Thu, 9 Dec 2010 12:14:42 -0500
+Date: Thu, 9 Dec 2010 12:00:40 -0500
 From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	mcgrof@gmail.com, jirislaby@gmail.com, nbd@openwrt.org,
-	br1@einfach.org, sedat.dilek@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Bruno Randolf <br1@einfach.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>, nbd@openwrt.org
+Subject: Re: ath5k: Weird Retransmission Behaviour
+Message-ID: <20101209170040.GA24840@hash.localnet>
+References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com> <201012061714.15863.br1@einfach.org> <AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com> <AANLkTimwprBJpnLM6_Qap1wSVboVJPQecAUgmzAnQhu-@mail.gmail.com> <AANLkTim5hESSHAMYNryUwak=D4tQetZJuDEK41Yq3A+L@mail.gmail.com> <20101209123841.GA31566@hash.localnet> <AANLkTinmsG9NhiiigOrFZQUS+pdDaHSvxpN7JnjdUXs=@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTinmsG9NhiiigOrFZQUS+pdDaHSvxpN7JnjdUXs=@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 3, 2010 at 9:55 AM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Fri, Dec 03, 2010 at 06:03:00AM +0200, Nick Kossifidis wrote:
->>  * By skipping tx power table calibration we also skip setting
->>  tx power table on hw. Make sure we always write tx power table
->>  on hw since it gets cleared on reset.
->>
->>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->
-> Hey, Nick -- just a process note...
->
-> All your patches have " Signed-off-by..." (notice the leading space),
-> which looks a bit funny.  Could you figure-out why this is happening
-> and change it to remove the leading space?
-
-Also the "*" thing is a bit weird as kernel commit messages go.
+On Fri, Dec 10, 2010 at 12:34:19AM +1000, Jonathan Guerin wrote:
+> > For what it's worth, I tested pid and minstrel a while ago with a
+> > modified mac80211_hwsim, and found minstrel to be quite a bit better
+> > at rate adaptation.  So while it may be worth testing out for this
+> > particular use case, minstrel is probably the way to go in general.
+> 
+> So, while I say this with no idea how to do it, might it be worth
+> fixing Minstrel so that it adheres to mac80211's maximum retry values?
+ 
+Yeah, so that's what the linked patch I posted tries to do :)
 
 -- 
 Bob Copeland %% www.bobcopeland.com
+
