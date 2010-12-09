@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45147 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab0LAH7g (ORCPT
+Received: from vwp2514.webpack.hosteurope.de ([87.230.42.24]:43412 "EHLO
+	vwp2514.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751369Ab0LIJBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:59:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
- <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
- <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
- <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
- <1291148375.18026.342.camel@Joe-Laptop> <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 30 Nov 2010 23:59:15 -0800
-Message-ID: <AANLkTinuVWuiVpKrz_oEAFKt6Hgxu4kU13iKthj8E0m1@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to ath_debug
-To: Joe Perches <joe@perches.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, peter@stuge.se,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 9 Dec 2010 04:01:09 -0500
+Subject: [PATCH] libertas: fix potential NULL-pointer dereference
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 09:38:36 +0100
+Message-ID: <1291883916.1924.0.camel@sven>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 30, 2010 at 11:56 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
->> On Tue, 2010-11-30 at 03:43 +0100, Felix Fietkau wrote:
->>> On 2010-11-30 2:39 AM, Joe Perches wrote:
->>> > I gauge my willingness to spend time on subsystems on
->>> > the maintainers willingness to merge things that improve
->>> > readability and correctness.
->>> I'm not trying to discourage you from spending time on improving this
->>> code, just doubting the usefulness of such simple function renames.
->>
->> Poor function naming is just that.
->> It reduces readability and the uses are counter expectation.
->
-> The name is perfect, we use it to print anything, even non-debugging stuff.
+The code wants to check if there's a channel and it is not disabled,
+but it used to check if channel is not NULL and accessed the channel
+struct if this check failed.
 
-If you are writing trivial patches please be ready to accept trivial
-NACKs for them as well. IMHO its best if the large diffstat trivial
-patches had more purpose than just scratch a small tiny itch.
+Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+---
+ drivers/net/wireless/libertas/cfg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 373930a..113f4f2 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -619,7 +619,7 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+ 				     print_ssid(ssid_buf, ssid, ssid_len),
+ 				     LBS_SCAN_RSSI_TO_MBM(rssi)/100);
+ 
+-			if (channel ||
++			if (channel &&
+ 			    !(channel->flags & IEEE80211_CHAN_DISABLED))
+ 				cfg80211_inform_bss(wiphy, channel,
+ 					bssid, le64_to_cpu(*(__le64 *)tsfdesc),
+-- 
+1.7.2.3
+
+
+
+
