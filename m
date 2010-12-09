@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2103 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752447Ab0LBAsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 19:48:06 -0500
-Subject: Re: [ath9k-devel] [PATCH wireless-next] MAINTAINERS: Add ATH
- GENERIC UTILITIES
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+Received: from he.sipsolutions.net ([78.46.109.217]:52902 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563Ab0LIPd6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 10:33:58 -0500
+Subject: Re: [PATCH 0/4] Make N-PHY support experimental
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"peter@stuge.se" <peter@stuge.se>
-In-Reply-To: <20101201204149.GC2359@tux>
-References: <20101129060732.5130.qmail@stuge.se>
-	 <4CF42C17.2070500@openwrt.org> <1291081185.16349.133.camel@Joe-Laptop>
-	 <4CF464D6.2020507@openwrt.org> <1291148375.18026.342.camel@Joe-Laptop>
-	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
-	 <1291225075.1845.177.camel@Joe-Laptop>
-	 <AANLkTinU+jWBXUdW2v9WSL2SZWQn8FHai4+=dAPTASe6@mail.gmail.com>
-	 <1291234615.1845.196.camel@Joe-Laptop>
-	 <AANLkTim+ayPBhBiKtuhgxKt645YT_o=5w_ckrq71j-ES@mail.gmail.com>
-	 <20101201204149.GC2359@tux>
+	b43-dev@lists.infradead.org
+In-Reply-To: <AANLkTimZTzMbQenxs6-1awdoGBhbJz2kyGBSO9v2+fzn@mail.gmail.com>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	 <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+	 <4CFEFD8D.1080808@lwfinger.net>
+	 <AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
+	 <4D00F3C3.6040801@lwfinger.net>
+	 <1291908338.3540.16.camel@jlt3.sipsolutions.net>
+	 <AANLkTimZTzMbQenxs6-1awdoGBhbJz2kyGBSO9v2+fzn@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 16:48:04 -0800
-Message-ID: <1291250884.14803.3.camel@Joe-Laptop>
+Date: Thu, 09 Dec 2010 16:33:53 +0100
+Message-ID: <1291908833.3540.18.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-01 at 12:41 -0800, Luis R. Rodriguez wrote:
-> But you sent it as part of an old thread, not sure if John will see it.
+On Thu, 2010-12-09 at 16:28 +0100, Rafał Miłecki wrote:
 
-He was on the To: list, I think he'll see it eventually.
+> I actually asked for some hardware donations on my blog and in news on
+> polish portal, but didn't receive any serious offer.
+
+There probably are still money donations left to buy some ... ?
+
+> Johannes: is there any chance you could put this card in some machine
+> I could get ssh access to? Or is that some daily-user-card or you
+> don't really have free machine? Of course I don't need that now, first
+> we have to make PHY 2 support more complete. But maybe after
+> Christmas/new year I could focus on that.
+
+I can't, unless I magically get a new laptop -- this card is built into
+my macbook that I use all the time. I'd have a mostly-free machine, and
+I don't use the card, but it's not a replacable part.
+
+johannes
 
