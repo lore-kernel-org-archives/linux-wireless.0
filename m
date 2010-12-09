@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43179 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757180Ab0LBTpU (ORCPT
+Received: from mail-gw0-f42.google.com ([74.125.83.42]:61142 "EHLO
+	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954Ab0LIPh7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 14:45:20 -0500
-Date: Thu, 2 Dec 2010 14:33:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>
-Subject: Re: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <20101202193317.GD2358@tuxdriver.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+	Thu, 9 Dec 2010 10:37:59 -0500
+Received: by gwb20 with SMTP id 20so2128150gwb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 07:37:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1291908833.3540.18.camel@jlt3.sipsolutions.net>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+	<4CFEFD8D.1080808@lwfinger.net>
+	<AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
+	<4D00F3C3.6040801@lwfinger.net>
+	<1291908338.3540.16.camel@jlt3.sipsolutions.net>
+	<AANLkTimZTzMbQenxs6-1awdoGBhbJz2kyGBSO9v2+fzn@mail.gmail.com>
+	<1291908833.3540.18.camel@jlt3.sipsolutions.net>
+Date: Thu, 9 Dec 2010 16:37:57 +0100
+Message-ID: <AANLkTin133Lq1z1paMboMczaATkAE6zv3gVfXCPSB=hq@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Make N-PHY support experimental
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 01, 2010 at 05:31:56PM -0800, Bing Zhao wrote:
-> The mwifiex driver for Marvell 802.11n chipset SD8787 is available at
-> git://git.marvell.com/mwifiex.git. Both STA mode and Mobile hotspot
-> mode are supported.
-> 
-> git pull git://git.marvell.com/mwifiex.git master
-> 
-> 
-> The firmware image for SD8787 is also available at:
-> git://git.marvell.com/mwifiex-firmware.git
+2010/12/9 Johannes Berg <johannes@sipsolutions.net>:
+> On Thu, 2010-12-09 at 16:28 +0100, Rafał Miłecki wrote:
+>> I actually asked for some hardware donations on my blog and in news on
+>> polish portal, but didn't receive any serious offer.
+>
+> There probably are still money donations left to buy some ... ?
 
-All,
+The problem I was afraid of was recognizing PHY revision without
+buying a card, just from looking at photos. It seems however, that
+will be the only solution.
 
-I would like to merge this in this cycle.  If you are interested in
-reviewing this driver, please do so soon.
 
-Thanks,
+>> Johannes: is there any chance you could put this card in some machine
+>> I could get ssh access to? Or is that some daily-user-card or you
+>> don't really have free machine? Of course I don't need that now, first
+>> we have to make PHY 2 support more complete. But maybe after
+>> Christmas/new year I could focus on that.
+>
+> I can't, unless I magically get a new laptop -- this card is built into
+> my macbook that I use all the time. I'd have a mostly-free machine, and
+> I don't use the card, but it's not a replacable part.
 
-John
-
-> The following changes since commit 56174316 or tag "master-2010-11-30":
-> 
-> Amitkumar Karwar (17):
->   mwifiex: move netdev init code out of _cfg80211
->   mwifiex: uAP: bring up uAP interface
->   mwifiex: uAP: add basic uAP support
->   mwifiex: uAP: add data path support
->   mwifiex: uAP: fix kernel crash while loading the driver
->   mwifiex: do not hold off cfg80211 callback for scan
->   mwifiex: make tx_buf_size alignment
->   mwifiex: correct short_time_slot setting for B-only mode
->   mwifiex: catch failure status in cmd response handler
->   mwifiex: change default settings of aggrpriotbl
->   mwifiex: fill in HT cap info correctly
->   mwifiex: correct WEP status setting
->   mwifiex: update copyright descriptions
->   mwifiex: improve re-transmit handling
->   mwifiex: prevent spurious error messages
->   mwifiex: accept hex values for debugfs command drvdbg
->   mwifiex: fix errors found by checkpatch.pl
-> 
-> Bing Zhao (12):
->   wireless: mwifiex: initial commit for Marvell mwifiex driver
->   mwifiex: fix error and warning after rebased to 2.6.37-rc1
->   mwifiex: add WPS support
->   mwifiex: fix coding style warning: suspect code indent
->   mwifiex: handle error cases if init commands fail
->   mwifiex: move re-order table cleanup out of TX spinlock
->   mwifiex: fix warm-reset crash issue
->   mwifiex: get power save status in STA-AP mode
->   mwifiex: set sysfs physical device reference for netdev
->   mwifiex: fix checkpatch.pl warning
->   mwifiex: remove MWIFIEX_PACK_START
->   mwifiex: remove mwifiex_ prefix from the filenames
-> 
-> Kiran Divekar (2):
->   mwifiex: handle erroneous response of sleep confirm
->   mwifiex: set card quirk MMC_QUIRK_BLKSZ_FOR_BYTE_MODE
-> 
-> 
+OK, I'll just think about buying some card :)
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
