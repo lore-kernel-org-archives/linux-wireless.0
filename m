@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51041 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043Ab0LBKUl (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:46839 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363Ab0LJCYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 05:20:41 -0500
-Subject: Re: [PATCH 2/3] lib: Improve EWMA efficiency by using bitshifts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, randy.dunlap@oracle.com, br1@thinktube.com,
-	peterz@infradead.org, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, j@w1.fi, stefanr@s5r6.in-berlin.de,
-	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
-	kevin.granade@gmail.com
-In-Reply-To: <20101202101236.22988.1691.stgit@localhost6.localdomain6>
-References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
-	 <20101202101236.22988.1691.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Dec 2010 11:20:22 +0100
-Message-ID: <1291285222.3481.45.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 9 Dec 2010 21:24:44 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] ieee80211: add Parameter Set Count bitmask
+Date: Thu,  9 Dec 2010 18:24:41 -0800
+Message-Id: <1291947882-9124-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-02 at 19:12 +0900, Bruno Randolf wrote:
+WMM IE QoS Info field lower 4 bits: Parameter Set Count
 
-> +	/* get bitshift for weight */
-> +	for (n = 0; !(weight & 1); n++)
-> +		weight = weight >> 1;
-> +	WARN_ON(weight > 1 || n < 1);
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/ieee80211.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-I'm sure there's something like log2() (and is_power_of_2() for the
-warning) in the kernel already -- no need to reimplement it...
-
-johannes
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 351c0ab..7f23545 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -122,6 +122,7 @@
+ 
+ /* U-APSD queue for WMM IEs sent by AP */
+ #define IEEE80211_WMM_IE_AP_QOSINFO_UAPSD	(1<<7)
++#define IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK	0x0f
+ 
+ /* U-APSD queues for WMM IEs sent by STA */
+ #define IEEE80211_WMM_IE_STA_QOSINFO_AC_VO	(1<<0)
+-- 
+1.7.0.2
 
