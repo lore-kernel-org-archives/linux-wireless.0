@@ -1,69 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49554 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138Ab0LYGDh (ORCPT
+Received: from mail-bw0-f45.google.com ([209.85.214.45]:50360 "EHLO
+	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558Ab0LJPLJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Dec 2010 01:03:37 -0500
-From: Akinobu Mita <akinobu.mita@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] airo: use simple_write_to_buffer
-Date: Sat, 25 Dec 2010 15:03:58 +0900
-Message-Id: <1293257039-2580-3-git-send-email-akinobu.mita@gmail.com>
-In-Reply-To: <n>
-References: <n>
+	Fri, 10 Dec 2010 10:11:09 -0500
+Received: by bwz16 with SMTP id 16so4093333bwz.4
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 07:11:07 -0800 (PST)
+Message-ID: <4D024307.2060108@gmail.com>
+Date: Fri, 10 Dec 2010 16:11:03 +0100
+From: Tejun Heo <htejun@gmail.com>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org>	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>	 <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost>	 <4CE4D41F.1080005@kernel.org>	 <1290099585.3801.1.camel@jlt3.sipsolutions.net>	 <4CE68AF4.8060507@kernel.org>	 <1290189452.3768.3.camel@jlt3.sipsolutions.net>	 <4CE6E430.6080804@candelatech.com>	 <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com>	 <4CFFC214.6000608@candelatech.com> <4CFFCC31.1050408@candelatech.com>	 <4CFFCE47.8040305@candelatech.com>  <4D00E8E2.1030201@kernel.org> <1291905750.3540.14.camel@jlt3.sipsolutions.net> <4D00EBD8.4090805@kernel.org> <4D010114.5020604@gmail.com> <4D0156F6.4000306@candelate
+ ch.com>
+In-Reply-To: <4D0156F6.4000306@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify write file operation for /proc files by using
-simple_write_to_buffer().
+Hello, Ben.
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/airo.c |   20 +++++++-------------
- 1 files changed, 7 insertions(+), 13 deletions(-)
+On 12/09/2010 11:23 PM, Ben Greear wrote:
+> I saw a brief hang today, and did a sysrq-t, and then saw the timer
+> printout you added here.  But, I think that was caused by sysrq-t.
+> The system recovered and ran fine.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index a36e787..57a79b0 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -4652,24 +4652,18 @@ static ssize_t proc_write( struct file *file,
- 			   size_t len,
- 			   loff_t *offset )
- {
--	loff_t pos = *offset;
-+	ssize_t ret;
- 	struct proc_data *priv = file->private_data;
- 
- 	if (!priv->wbuffer)
- 		return -EINVAL;
- 
--	if (pos < 0)
--		return -EINVAL;
--	if (pos >= priv->maxwritelen)
--		return 0;
--	if (len > priv->maxwritelen - pos)
--		len = priv->maxwritelen - pos;
--	if (copy_from_user(priv->wbuffer + pos, buffer, len))
--		return -EFAULT;
--	if ( pos + len > priv->writelen )
--		priv->writelen = len + file->f_pos;
--	*offset = pos + len;
--	return len;
-+	ret = simple_write_to_buffer(priv->wbuffer, priv->maxwritelen, offset,
-+					buffer, len);
-+	if (ret > 0)
-+		priv->writelen = max_t(int, priv->writelen, *offset);
+It would be nice if you turn on printk timestamp.  How brief is brief?
+Can you please turn on printk timestamp?  @115200, the dump would have
+taken ~25 seconds so yes it was mostly caused by sysrq-t dump.  In the
+dump, iface_work is at the same position in R state.  It looks like
+the ifmgd->mtx.  Can you please confirm this with gdb?  This would
+only happen if the lock is highly contended.  Would this be the case
+Johaness?
+
+> The second time (after several hours of rebooting), the hang was worse
+> and the system ran OOM after maybe 30 seconds.  I did a sysrq-t then.
+> 
+> I see quite a few printouts from your debug message, but all of them
+> after things start going OOM, and after sysrq-t.
+> 
+> Here's the console capture:
+> 
+> http://www.candelatech.com/~greearb/minicom_ath9k_log4.txt
+> 
+> Let me know if you need more traces like this if I hit it again.
+
+I don't know the code very well but it looks very suspicious.  A task
+ends up trying to flush a work which can run for extended period of
+time during which memory is aggressively used for buffering (looks
+like skb's are piling up without any limit), which is likely to
+further slow down other stuff.  This sounds like an extremely fragile
+mechanism to me.  When the work is being constantly being rescheduled,
+cancel ends up waiting one fewer time then flush.  If the work is
+running and pending, flush waits for the pending one to finish, while
+cancel would kill the pending one and waits for only the current one
+to finish.  I think it could be that that difference is acting as a
+threshold between going bonkers and staying alive.
+
+Can you please test whether the following patch makes any difference?
+If flush_work() is misbehaving, the following wouldn't fix anything
+but if this livelock is indeed caused by iface_work running too long,
+the problem should go away.
+
+One way or the other, Johannes, please consider fixing the behavior
+here.  It's way too fragile.
+
+Thanks.
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 7aa8559..86bdfdd 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -723,6 +723,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+ 	struct ieee80211_ra_tid *ra_tid;
++	unsigned int cnt = 0;
+
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+@@ -825,6 +826,11 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 		}
+
+ 		kfree_skb(skb);
 +
-+	return ret;
- }
- 
- static int proc_status_open(struct inode *inode, struct file *file)
--- 
-1.7.3.4
++		if (++cnt > 100) {
++			ieee80211_queue_work(&local->hw, work);
++			break;
++		}
+ 	}
 
+ 	/* then other type-dependent work */
