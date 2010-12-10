@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([188.94.250.25]:10417 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755805Ab0LPNM5 (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:49374 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab0LJXC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 08:12:57 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Start dropping PCMCIA from compat-wireless for 2.6.38+
-Date: Thu, 16 Dec 2010 14:17:42 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com> <201012130846.16522.holgerschurig@gmail.com> <AANLkTimWaopJnU5T6OZvqm4YSvSZeXs0dh7oMfU+ERJ8@mail.gmail.com>
-In-Reply-To: <AANLkTimWaopJnU5T6OZvqm4YSvSZeXs0dh7oMfU+ERJ8@mail.gmail.com>
+	Fri, 10 Dec 2010 18:02:57 -0500
+Subject: [PATCH] compat-wireless: copy new bluetooth header file
+From: Timo Lindhorst <TimoLindhorst@web.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Date: Sat, 11 Dec 2010 00:02:49 +0100
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <201012161417.42268.holgerschurig@gmail.com>
+Message-Id: <201012110002.49704.TimoLindhorst@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> You use libertas_cs on an embedded device with compat-wireless, OK,
-> thanks for the feedback. If you can help with patches when PCMCIA crap
-> is advanced that would help too.
+Add the header file for the new bluetooth management interface to the
+list of bluetooth include files.
 
-The problem is that I work on this in an on-off way. If a customer 
-notices some heavy bug with the current kernel on our devices, I'll do 
-the upgrade dance. As long as everything works, I'm lazy --- or busy 
-doing other things.
+Signed-off-by: Timo Lindhorst <TimoLindhorst@web.de>
+---
+ scripts/admin-update.sh |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-And I'm looking for a new job anyway :-)
-
-Greetings,
-Holger
-
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 703d132..2547928 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -18,7 +18,7 @@
+ GIT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+ GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
+ 
+-INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h"
++INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h mgmt.h"
+ NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
+ 
+ INCLUDE_LINUX="ieee80211.h nl80211.h"
 -- 
-Homepage: http://www.holgerschurig.de
+1.7.2.3
+
