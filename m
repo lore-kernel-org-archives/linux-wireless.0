@@ -1,46 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59102 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755394Ab0LBLKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:10:17 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:10:03 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 07/27] ath9k_hw: Disable LDPC for AR9485
-Date: Thu, 2 Dec 2010 03:06:51 -0800
-Message-ID: <1291288031-3409-8-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59080 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755858Ab0LJWD2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 17:03:28 -0500
+Received: by qwa26 with SMTP id 26so4351860qwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 14:03:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <21458014.1292018042407.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
+References: <21458014.1292018042407.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
+Date: Fri, 10 Dec 2010 23:03:27 +0100
+Message-ID: <AANLkTi=Z59Dw_j4PNcPadqy1hFj=sN2sAM0mrnAR7bCw@mail.gmail.com>
+Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: ikorot@earthlink.net
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+W dniu 10 grudnia 2010 22:54 użytkownik  <ikorot@earthlink.net> napisał:
+> Rafal,
+>
+>
+> -----Original Message-----
+>>From: Rafał Miłecki <zajec5@gmail.com>
+>>Sent: Dec 10, 2010 11:33 AM
+>>To: ikorot@earthlink.net
+>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>
+>>W dniu 10 grudnia 2010 20:09 użytkownik  <ikorot@earthlink.net> napisał:
+>>> Rafal,
+>>>
+>>>
+>>> -----Original Message-----
+>>>>From: Rafał Miłecki <zajec5@gmail.com>
+>>>>Sent: Dec 9, 2010 10:36 PM
+>>>>To: ikorot@earthlink.net
+>>>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>>
+>>>>W dniu 10 grudnia 2010 03:26 użytkownik  <ikorot@earthlink.net> napisał:
+>>>>> -----Original Message-----
+>>>>>>From: Rafał Miłecki <zajec5@gmail.com>
+>>>>>>Sent: Dec 9, 2010 6:06 AM
+>>>>>>To: ikorot@earthlink.net
+>>>>>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>>>>
+>>>>>>2010/12/8  <ikorot@earthlink.net>:
+>>>>>>> Larry,
+>>>>>>>
+>>>>>>>
+>>>>>>> -----Original Message-----
+>>>>>>>>From: Larry Finger <Larry.Finger@lwfinger.net>
+>>>>>>>>Sent: Dec 7, 2010 12:00 PM
+>>>>>>>>To: ikorot@earthlink.net
+>>>>>>>>Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>>>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>>>>>>
+>>>>>>>>On 12/07/2010 01:49 PM, ikorot@earthlink.net wrote:
+>>>>>>>>>> One reason is that these tables changed from non-zero to zero values between
+>>>>>>>>>> Broadcom driver 4.174.64.19 and 5.10.56.46. As they might change again, I think
+>>>>>>>>>> we should retain the full version.
+>>>>>>>>>
+>>>>>>>>> Is there a way to check for version of the driver?
+>>>>>>>>> This way whoever uses old one won't be screwed...
+>>>>>>>>
+>>>>>>>>That will not be a problem as no older version of b43 works at all with b43. To
+>>>>>>>>help you understand this change, when the 4.174.64.19 Broadcom driver was
+>>>>>>>>reverse-engineered, the tables had non-zero values. Rafel later compared the
+>>>>>>>>trace dumps of b43 with the latest version of wl and found that the values are
+>>>>>>>>now zero. When I rechecked driver 5.10.56.46, I found them to be zero there as
+>>>>>>>>well and changed the specs.
+>>>>>>>
+>>>>>>> Well, it maybe feasible to keep the old values and check
+>>>>>>> the version of the driver, since you are saying yourself
+>>>>>>> that the value might be changing in the future.
+>>>>>>> Maybe for couple of releases only?
+>>>>>>
+>>>>>>Sorry, but I don't understand that at all. What do you mean by version
+>>>>>>of the driver? What driver?
+>>>>>
+>>>>> #if B43_VERSION <= x.x.x.x
+>>>>> // table initialized to some values
+>>>>> #else
+>>>>> //table initialized to 0's
+>>>>> #endif
+>>>>
+>>>>You want to put condition checking b43 version in... b43 driver? I
+>>>>can't follow you.
+>>>
+>>> Yes.
+>>> And what you can't follow?
+>>>
+>>> For historical purposes and to better understand the changes and ease the
+>>> debugging I proposed this addition.
+>>> Besides if for some reason in future versions Broadcom will decide to return to
+>>> the same values for init tables, the changes will be very simple.
+>>
+>>So I guess you meant using "#if 0" for commenting old values?
+>>
+>>I guess we could do that instead deleting old values, but fortunately
+>>it's git so we always can browse history and restore old values
+>>without problems :)
+>
+> Well, after 5 or 6 month will you remember the commit that introduced
+> the change?
+> Yes, you can browse the history, but it will be an extra effort to find
+> it.
+>
+> I understand that the code will be bigger in size, but if it takes
+> just adding 2 lines of code comparing to looking thru history and
+> then copying the values to sources.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f533aad..513ae64 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1941,8 +1941,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
--		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_LDPC |
--				 ATH9K_HW_CAP_FASTCLOCK;
-+		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
-+		if (!AR_SREV_9485(ah))
-+			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
-+
- 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
- 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
- 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
+Yeah, that's the minus of that solution. However wl changes it's
+operations in many places, we would get unreadable code while keeping
+old code commented out. It's matter what do you find more important.
+Maintainable code or browsing through old changes when reverting
+something.
+
+With git you can easily checkout old revision, browse history of
+selected file, bisect and do other tricks. In that situation I decided
+to have easy maintainable code.
+
+You could still argue to have commented code in tables and remove old
+code in init... but that would lead to real chaos. So I'm really for
+keeping the current way for that.
+
 -- 
-1.7.0.4
-
+Rafał
