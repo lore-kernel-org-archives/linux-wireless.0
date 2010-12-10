@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42274 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:46660 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab0L2JRM (ORCPT
+	with ESMTP id S1753613Ab0LJSsA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 04:17:12 -0500
-Subject: Re: [PATCH 4/4] mwl8k: Enable HW encryption for AP mode
+	Fri, 10 Dec 2010 13:48:00 -0500
+Subject: Re: b43 N PHY status report
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, mwl8k-devel@cozybit.com,
-	buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-In-Reply-To: <1293577297-25755-5-git-send-email-thomas@cozybit.com>
-References: <1293577297-25755-1-git-send-email-thomas@cozybit.com>
-	 <1293577297-25755-5-git-send-email-thomas@cozybit.com>
+To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <885729A3-72D4-4EFC-AAFE-D2B573E00ED9@ing.unibs.it>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	 <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+	 <4CFFA112.7030800@lwfinger.net>
+	 <885729A3-72D4-4EFC-AAFE-D2B573E00ED9@ing.unibs.it>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Dec 2010 10:17:10 +0100
-Message-ID: <1293614230.3546.4.camel@jlt3.sipsolutions.net>
+Date: Fri, 10 Dec 2010 19:47:54 +0100
+Message-ID: <1292006874.3531.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-28 at 15:01 -0800, Thomas Pedersen wrote:
+On Fri, 2010-12-10 at 19:30 +0100, Francesco Gringoli wrote:
 
-> @@ -824,15 +827,22 @@ static void mwl8k_encapsulate_tx_frame(struct sk_buff *skb)
->  	header_pad = 0;
->  	data_pad = 0;
->  	if (key_conf != NULL) {
-> -		if (key_conf->alg == ALG_WEP) {
-> +		switch (key_conf->cipher) {
+> [ 1117.516031] unregister_netdevice: waiting for wlan1 to become free. Usage count = 1
+> 
+> and the device is never release (by who?). I have to reboot.
 
-how can this patch possibly apply? key_conf->alg hasn't existed in a
-LONG time, so I don't see how you can be removing a line containing it?!
+That's a bug in the ipv6 code, upgrade your kernel :-)
 
 johannes
 
