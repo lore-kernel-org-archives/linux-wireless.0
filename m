@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:24727 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752438Ab0LFDr2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Dec 2010 22:47:28 -0500
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0807857246
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Dec 2010 12:47:26 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
-Date: Mon, 6 Dec 2010 12:47:24 +0900
-Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org
-References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <1290192337.3768.6.camel@jlt3.sipsolutions.net> <1290192578.3768.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290192578.3768.7.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012061247.24886.br1@einfach.org>
+Received: from smtp.nokia.com ([147.243.1.47]:25819 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755805Ab0LJPGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 10:06:00 -0500
+From: luciano.coelho@nokia.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC v2 0/2] implementation of scheduled scan
+Date: Fri, 10 Dec 2010 17:07:10 +0200
+Message-Id: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat November 20 2010 03:49:38 Johannes Berg wrote:
-> On Fri, 2010-11-19 at 10:45 -0800, Johannes Berg wrote:
-> > You'll need to provide documentation updates for this ASAP.
-> 
-> I also expect a patch that adds discoverability of the availability of
-> these commands, using a flag through mac80211 so that the commands are
-> only discovered as available when the _driver_ implements them, not just
-> if _mac80211_ implements them. Also with checking that the flag is set
-> and rejecting them if not in the nl80211 functions.
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-I just mailed a patch implementing this. I don't use a flag but a variable 
-available_antennas in wiphy, just like with the number of queues. I hope this 
-is what you had in mind.
+Hi,
 
-bruno
+So, here's my second RFC for the scheduled scan implementation (which we used
+to call periodic scan earlier).  I have applied all Johannes's comments, except
+for two things:
+
+* I kept the return value in the sched_scan_stop chain, because, at least with
+  wl12xx, the call can fail (due to OOM for instance).  I think it's cleaner
+  this way.
+
+* I have not implemented support for passing the scan interval from userspace
+  yet.  I'll work on it next week and send it as a separate patch.
+
+One of the main things you'll notice is that I merged the patches into two
+patches instead of 15, which caused some people to whip me before.  :P
+
+Please give me some comments, if you have the time (and bother).
+
+Cheers,
+Luca.
+
+Luciano Coelho (2):
+  cfg80211/nl80211: add support for scheduled scans
+  mac80211: add support for HW scheduled scan
+
+ include/linux/nl80211.h     |    9 ++
+ include/net/cfg80211.h      |   48 ++++++++
+ include/net/mac80211.h      |   40 +++++++
+ net/mac80211/cfg.c          |   26 ++++
+ net/mac80211/driver-ops.h   |   30 +++++
+ net/mac80211/driver-trace.h |   63 ++++++++++
+ net/mac80211/ieee80211_i.h  |    8 ++
+ net/mac80211/rx.c           |    4 +-
+ net/mac80211/scan.c         |   80 +++++++++++++
+ net/wireless/core.c         |    6 +
+ net/wireless/core.h         |    3 +
+ net/wireless/nl80211.c      |  271 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h      |    6 +
+ net/wireless/scan.c         |   18 +++
+ 14 files changed, 611 insertions(+), 1 deletions(-)
+
