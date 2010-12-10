@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48736 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932743Ab0LTSUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 13:20:07 -0500
-Message-ID: <4D0F9E4C.7090208@openwrt.org>
-Date: Mon, 20 Dec 2010 19:19:56 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k_hw: Fix incorrect macversion and macrev checks
-References: <1292866656-2253-1-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1292866656-2253-1-git-send-email-senthilkumar@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36881
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754150Ab0LJRrU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 12:47:20 -0500
+Date: Fri, 10 Dec 2010 09:47:47 -0800 (PST)
+Message-Id: <20101210.094747.193727608.davem@davemloft.net>
+To: mroos@linux.ee
+Cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] fix hostap registration order
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.SOC.1.00.1012100918300.15996@math.ut.ee>
+References: <alpine.SOC.1.00.1012100020110.26229@math.ut.ee>
+	<20101209.195315.193716225.davem@davemloft.net>
+	<alpine.SOC.1.00.1012100918300.15996@math.ut.ee>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-20 6:37 PM, Senthil Balasubramanian wrote:
-> There are few places where we are checking for macversion and revsions
-> before RTC is powered ON. However we are reading the macversion and
-> revisions only after RTC is powered ON and so both macversion and
-> revisions are actully zero and this leads to incorrect srev checks.
-> 
-> fix this by reading the macversion and revisisons even before we start
-> using them. There is no reason why should we delay reading this info
-> until RTC is powered on as this is just a register information.
-> 
-> Cc: Stable Kernel <stable@kernel.org>
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index ddda76f..c9b7f1e 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -1078,13 +1078,13 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
->  		return false;
->  	}
->  
-> -	ath9k_hw_read_revisions(ah);
-> -
->  	return ath9k_hw_set_reset(ah, ATH9K_RESET_WARM);
->  }
->  
->  static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
->  {
-> +	ath9k_hw_read_revisions(ah);
-> +
->  	if (AR_SREV_9300_20_OR_LATER(ah)) {
->  		REG_WRITE(ah, AR_WA, ah->WARegVal);
->  		udelay(10);
-Why re-read the revision on every reset?
+From: Meelis Roos <mroos@linux.ee>
+Date: Fri, 10 Dec 2010 09:19:51 +0200 (EET)
 
-- Felix
+>> > In 2.6.37-rc4, hostap_pci init gives a WARNING with backtrace telling 
+>> > that netif_stop_queue is called before register_netdev. Fix it by moving 
+>> > this call after register_netdev. Removes the warning and seems to work, 
+>> > but why is the call to netif_stop_queue needed at all after 
+>> > register_netdev?
+>> 
+>> It should simply not touch the queue state at all at this point.
+>> 
+>> Your change would add a race.  At the moment the device is registered
+>> it can be brought up, and then your code will eroneously modify
+>> the queue state.
+> 
+> OK, I can make a simpler patch for that but I would like to understand 
+> the original reasons for having netif_stop_queue there. Just a relict or 
+> still somehow important?
+
+I think it was neither.
+
+The queue state is "don't care" at this point, and always has been,
+and a lot of drivers had this unnecessary netif_stop_queue() call
+there.
