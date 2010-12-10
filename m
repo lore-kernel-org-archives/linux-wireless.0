@@ -1,113 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from router-304.cs.umd.edu ([128.8.127.145]:4306 "EHLO
-	sausage.cs.umd.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755347Ab0LMU3G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 15:29:06 -0500
-Message-ID: <a31a76030a2d5aa4578500d648863293.squirrel@webmail.cs.umd.edu>
-In-Reply-To: <016c01cb9afe$27bd5000$7737f000$@gmx.net>
-References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
-    <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
-    <AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>
-    <E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it>
-    <AANLkTimUdX1duphd=QYRz_i-TERfXbjOM1QEXaTUO13M@mail.gmail.com>
-    <016c01cb9afe$27bd5000$7737f000$@gmx.net>
-Date: Mon, 13 Dec 2010 14:53:34 -0500
-Subject: Re: AW: Release of Maranello firmware source code for Broadcom
- cards
-From: "Bo Han" <bohan@cs.umd.edu>
-To: "h2o-post" <h2o-post@gmx.net>
-Cc: "=?iso-8859-1?Q?=22'Rafa=C5=82_Mi=C5=82ecki'=22?=" <zajec5@gmail.com>,
-	francesco.gringoli@ing.unibs.it,
-	"'linux-wireless'" <linux-wireless@vger.kernel.org>,
-	b43-dev@lists.infradead.org, "'Bo Han'" <bohan@cs.umd.edu>
-Reply-To: "Bo Han" <bohan@cs.umd.edu>
-MIME-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:49874 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750799Ab0LJP1a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 10:27:30 -0500
+Subject: Re: BUG: Microcode SW error detected / Frequent disconnects
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+Cc: Florian Kriener <florian@kriener.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikb1Pmk3F6BL1ewrKpQaOxrG-McxbfnfTGNcZKo@mail.gmail.com>
+References: <201012101409.38146.florian@kriener.org>
+	 <AANLkTikb1Pmk3F6BL1ewrKpQaOxrG-McxbfnfTGNcZKo@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 10 Dec 2010 07:26:14 -0800
+Message-Id: <1291994774.10280.183.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Thomas,
+Hi 
 
-As Francesco said in the previous email, the source code of Maranello,
-including both firmware and kernel patches, is now available at
+On Fri, 2010-12-10 at 07:27 -0700, Sedat Dilek wrote:
+> On Fri, Dec 10, 2010 at 2:09 PM, Florian Kriener <florian@kriener.org> wrote:
+> > Dear Intel wireless experts,
+> >
+> > when connecting to a certain network I always get a lot of network
+> > hangs, which can sometimes be solved temporarily by reconnecting to that
+> > network. The cause seems to be a microcode software error. At leat, that
+> > is what dmesg shows. I attached a piece of it.
+> >
+> > The access point in question is a speedport w503v, which is a Telekom
+> > (German ISP) branded AVM or Arcadyan dsl router. It is located in a WLAN
+> > polluted area with approx. 45 networks nearby. Most of them are between
+> > channels 6 and 11. The access point in question is somehow seated at
+> > channel 10, which I cannot change.
+> >
+> > % uname -a
+> > Linux nanuk 2.6.36-trunk-amd64 #1 SMP Wed Oct 27 14:28:29 UTC 2010
+> > x86_64 GNU/Linux
+> >
+> 
+> Guessing you are using a Debian kernel from experimental.
+> 'uname -a' is normally not enough, we need the Debian version string.
+> (As there was only one 2.6.36 kernel, it is clear which version you have).
+> There is now a 2.6.37-rc4 in experimental, please try that.
+> bwh has prepared -rc5 a few hours ago and it will be uploaded to
+> experimental soonish.
+> (You check out from SVN and build by yourself or wait, see
+> instructions on Debian kernel team wiki).
+> 
+> Another possibility is you use compat-wireless stable or bleeding-edge
+> (in addition to your host 2.6.36 kernel).
+> 
+> All these "experiments" only to see if it is a problem in 2.6.36.
+> (Might be the Intel developers know where the problem is exactly).
+> 
+> Next question is: You have latest firmware file(s) from non-free?
+> (Or look at Intel's iwlwifi download website).
+> 
+> BTW, sometimes a full dmesg log is more helpful than a truncated one.
 
-http://www.cs.umd.edu/projects/maranello/
 
-Feel free to give it a try and let us know if you have any problems.
+Looks like you have 5000 NIC device based on the firmware version.
+Please let me know the problem still happen in 2.6.36. If does, we can
+look into possible firmware problem
 
-Thanks,
--Bo
-
-On Mon, December 13, 2010 2:44 pm, h2o-post wrote:
-> Hi Francesco,
->
-> We are running a mesh network with 45 nodes all by Linksys wrt54g routers
-> in our village to get somehow internet connectivity.
-> As I saw your maranello paper  I am curious to test your Broadcom firmware
-> in our productive net.
-> Is the firmware already available that supports this kind of crc frame
-> checking ?
->
-> Regards Thomas
->
-> -----Ursprüngliche Nachricht-----
-> Von: b43-dev-bounces@lists.infradead.org
-> [mailto:b43-dev-bounces@lists.infradead.org] Im Auftrag von Rafal Milecki
-> Gesendet: Sonntag, 10. Oktober 2010 19:36
-> An: francesco.gringoli@ing.unibs.it
-> Cc: linux-wireless; b43-dev@lists.infradead.org; Bo Han
-> Betreff: Re: Release of Maranello firmware source code for Broadcom cards
->
-> W dniu 10 października 2010 18:53 użytkownik
-> <francesco.gringoli@ing.unibs.it> napisał:
->> On Oct 10, 2010, at 4:47 PM, Rafał Miłecki wrote:
->>
->>> 2010/10/10  <francesco.gringoli@ing.unibs.it>:
->>>> Hello there,
->>>>
->>>> we released the source code of the Maranello firmware and all the
->>>> necessary kernel patches. It was tested on Broadcom 4318/4306 pci
->>>> cards on PC architecture. Find all the necessary files browsing from
->>>>
->>>> http://www.ing.unibs.it/openfwwf
->>>>
->>>> or go directly here
->>>>
->>>> http://www.cs.umd.edu/projects/maranello
->>>>
->>>>
->>>> Maranello is an enhancement of the 802.11 DCF standard: it
->>>> implements a Partial Packet Recovery technique to retransmit only
->>>> the corrupt parts of failed packets. This reduces the airtime and
->>>> contributes to enhance the throughput. It was written starting from
->>>> OpenFWWF5.2 by adding a number of new features.
->>>>
->>> Did you just add recovery feature to OpenFWWF 5.2 or did you improve
->>> basic OpenFWWF as well?
->>>
->>> My 4318 with OpenFWWF 5.2 stops transmitting after few MB. Can
->>> Maranello contain any fix for this? I'll able to test this later next
->>> week.
->>
->> No, I don't think so. OpenFWWF5.2 does not handle correctly fifo
->> overflow conditions. We have a testing firmware that handles them (and
->> that works perfectly on WRT54GL): I hope we can release it soon.
->
-> Wow, that's great! If you need more testing, I'm willing to do some.
-> If you need full root access to machine with 4318 running
-> wireless-testing, just mail me privately.
->
-> Really hope you will manage to release that soon :)
->
-> --
-> Rafał
->
-> _______________________________________________
-> b43-dev mailing list
-> b43-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/b43-dev
->
->
-
+Thanks
+Wey
 
