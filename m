@@ -1,87 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60651 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942Ab0LGRNr (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:61229 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340Ab0LJTdy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 12:13:47 -0500
-Message-ID: <4CFE6B42.8000806@candelatech.com>
-Date: Tue, 07 Dec 2010 09:13:38 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 10 Dec 2010 14:33:54 -0500
+Received: by qwa26 with SMTP id 26so4209778qwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 11:33:54 -0800 (PST)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"greearb@gmail.com" <greearb@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
-References: <1291698829-22765-1-git-send-email-greearb@candelatech.com> <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com> <4CFDC7D8.3080100@candelatech.com> <20101207074237.GA2179@vasanth-laptop> <4CFDE702.3020301@candelatech.com> <20101207083147.GA19720@vasanth-laptop>
-In-Reply-To: <20101207083147.GA19720@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <3300273.1292008199474.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
+References: <3300273.1292008199474.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
+Date: Fri, 10 Dec 2010 20:33:53 +0100
+Message-ID: <AANLkTikZckiQBb+nZMFySFsA1K1fAjCRPCAwE9jOutwu@mail.gmail.com>
+Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: ikorot@earthlink.net
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/07/2010 12:31 AM, Vasanthakumar Thiagarajan wrote:
-> On Tue, Dec 07, 2010 at 01:19:22PM +0530, Ben Greear wrote:
->> On 12/06/2010 11:42 PM, Vasanthakumar Thiagarajan wrote:
->>> On Tue, Dec 07, 2010 at 11:06:24AM +0530, Ben Greear wrote:
->>>> On 12/06/2010 09:21 PM, Luis R. Rodriguez wrote:
->>>>> On Mon, Dec 6, 2010 at 9:13 PM,<greearb@gmail.com>    wrote:
->>>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>>
->>>>>> It can be NULL according to docs, and logging showed it
->>>>>> to be NULL in practice.
->>>>>>
->>>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+W dniu 10 grudnia 2010 20:09 użytkownik  <ikorot@earthlink.net> napisał:
+> Rafal,
+>
+>
+> -----Original Message-----
+>>From: Rafał Miłecki <zajec5@gmail.com>
+>>Sent: Dec 9, 2010 10:36 PM
+>>To: ikorot@earthlink.net
+>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>
+>>W dniu 10 grudnia 2010 03:26 użytkownik  <ikorot@earthlink.net> napisał:
+>>> -----Original Message-----
+>>>>From: Rafał Miłecki <zajec5@gmail.com>
+>>>>Sent: Dec 9, 2010 6:06 AM
+>>>>To: ikorot@earthlink.net
+>>>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>>
+>>>>2010/12/8  <ikorot@earthlink.net>:
+>>>>> Larry,
 >>>>>
->>>>> Does this fix an oops? If so can you explain and provide the trace and
->>>>> resubmit and cc stable in the commit log?
+>>>>>
+>>>>> -----Original Message-----
+>>>>>>From: Larry Finger <Larry.Finger@lwfinger.net>
+>>>>>>Sent: Dec 7, 2010 12:00 PM
+>>>>>>To: ikorot@earthlink.net
+>>>>>>Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>>>>
+>>>>>>On 12/07/2010 01:49 PM, ikorot@earthlink.net wrote:
+>>>>>>>> One reason is that these tables changed from non-zero to zero values between
+>>>>>>>> Broadcom driver 4.174.64.19 and 5.10.56.46. As they might change again, I think
+>>>>>>>> we should retain the full version.
+>>>>>>>
+>>>>>>> Is there a way to check for version of the driver?
+>>>>>>> This way whoever uses old one won't be screwed...
+>>>>>>
+>>>>>>That will not be a problem as no older version of b43 works at all with b43. To
+>>>>>>help you understand this change, when the 4.174.64.19 Broadcom driver was
+>>>>>>reverse-engineered, the tables had non-zero values. Rafel later compared the
+>>>>>>trace dumps of b43 with the latest version of wl and found that the values are
+>>>>>>now zero. When I rechecked driver 5.10.56.46, I found them to be zero there as
+>>>>>>well and changed the specs.
+>>>>>
+>>>>> Well, it maybe feasible to keep the old values and check
+>>>>> the version of the driver, since you are saying yourself
+>>>>> that the value might be changing in the future.
+>>>>> Maybe for couple of releases only?
 >>>>
->>>> I think it fixes the TID corruption I posted about earlier.  It seems
->>>> so obvious though, that I'm curious why no one else sees problems,
->>>> and why I didn't see more crashes in my setup.
->>>>
->>>> (The paprd code appears to send with null STA, for instance, and my
->>>> printks showed lots of NULL stas in my 16-sta test setup, though I
->>>> don't think I'm using the paprd code path.)
+>>>>Sorry, but I don't understand that at all. What do you mean by version
+>>>>of the driver? What driver?
 >>>
->>> paprd is used only with>= AR9003.
+>>> #if B43_VERSION <= x.x.x.x
+>>> // table initialized to some values
+>>> #else
+>>> //table initialized to 0's
+>>> #endif
 >>
->> Whoever coded it up hopefully had that hardware...so why didn't
->> they see lots of crashes?
+>>You want to put condition checking b43 version in... b43 driver? I
+>>can't follow you.
 >
-> I myself tested it lot of times, but did not see any crash, weird.
-
-Looks like the offending change when in recently (11/4/10, one of Felix's
-patches).
-
-That is probably why no one else is hitting this yet, and it
-isn't needed for stable I'm guessing....
-
-Thanks,
-Ben
-
+> Yes.
+> And what you can't follow?
 >
-> Vasanth
->
->>
->> Thanks,
->> Ben
->>
->>>
->>> Vasanth
->>
->>
->> --
->> Ben Greear<greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> For historical purposes and to better understand the changes and ease the
+> debugging I proposed this addition.
+> Besides if for some reason in future versions Broadcom will decide to return to
+> the same values for init tables, the changes will be very simple.
 
+So I guess you meant using "#if 0" for commenting old values?
+
+I guess we could do that instead deleting old values, but fortunately
+it's git so we always can browse history and restore old values
+without problems :)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Rafał
