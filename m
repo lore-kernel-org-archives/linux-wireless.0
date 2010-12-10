@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:61348 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756379Ab0LJQUd (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52666
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753877Ab0LJDwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 11:20:33 -0500
-Received: by yxt3 with SMTP id 3so2157612yxt.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 08:20:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikFnb=ErjA0VeS6oekExHxT1-Mh5_wa28UqEZZ4@mail.gmail.com>
-References: <AANLkTim5HQGNL-vSapeQw_-dJue89pYz7zc8eiShma8j@mail.gmail.com> <AANLkTikFnb=ErjA0VeS6oekExHxT1-Mh5_wa28UqEZZ4@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 10 Dec 2010 08:20:12 -0800
-Message-ID: <AANLkTi=T_oGkRowjaoPAhSMFGNeiioji8RdtdrdJqLv4@mail.gmail.com>
-Subject: Re: compat-wireless-2.6.37-rc5 released
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 9 Dec 2010 22:52:47 -0500
+Date: Thu, 09 Dec 2010 19:53:15 -0800 (PST)
+Message-Id: <20101209.195315.193716225.davem@davemloft.net>
+To: mroos@linux.ee
+Cc: netdev@vger.kernel.org, j@w1.fi, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] fix hostap registration order
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.SOC.1.00.1012100020110.26229@math.ut.ee>
+References: <alpine.SOC.1.00.1012100020110.26229@math.ut.ee>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 9, 2010 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> 01-ath9k-OTP.patch
->> 03-ath9k-no-aggr-VO.patch
->> 04-mac80211-no-aggr-VO.patch
+From: Meelis Roos <mroos@linux.ee>
+Date: Fri, 10 Dec 2010 01:19:23 +0200 (EET)
 
->> 05-ath9k-Reintroduce-modparam-to-enable-btcoex.patch
+> In 2.6.37-rc4, hostap_pci init gives a WARNING with backtrace telling 
+> that netif_stop_queue is called before register_netdev. Fix it by moving 
+> this call after register_netdev. Removes the warning and seems to work, 
+> but why is the call to netif_stop_queue needed at all after 
+> register_netdev?
+> 
+> Signed-off-by: Meelis Roos <mroos@linux.ee>
 
-I'll skip this one, better synch the modparam with a kernel release
-rather than an update like compat-wireless.
+It should simply not touch the queue state at all at this point.
 
->> 06-ath9k_hw-fix-A-MPDU-key-search-issues-on-AR9003.patch
-
-I'm going to start sucking the reset in for a compat-wireless-2.6.37
-release. Please let me know if you believe any other patches are
-worthy, even if they are for other drivers, etc.
-
-  Luis
+Your change would add a race.  At the moment the device is registered
+it can be brought up, and then your code will eroneously modify
+the queue state.
