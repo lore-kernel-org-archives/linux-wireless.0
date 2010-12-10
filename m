@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753613Ab0LJSsA (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40036
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756855Ab0LJUwY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 13:48:00 -0500
-Subject: Re: b43 N PHY status report
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <885729A3-72D4-4EFC-AAFE-D2B573E00ED9@ing.unibs.it>
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-	 <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
-	 <4CFFA112.7030800@lwfinger.net>
-	 <885729A3-72D4-4EFC-AAFE-D2B573E00ED9@ing.unibs.it>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Dec 2010 19:47:54 +0100
-Message-ID: <1292006874.3531.4.camel@jlt3.sipsolutions.net>
+	Fri, 10 Dec 2010 15:52:24 -0500
+Date: Fri, 10 Dec 2010 12:52:52 -0800 (PST)
+Message-Id: <20101210.125252.212677124.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-12-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101210202902.GG4296@tuxdriver.com>
+References: <20101210202902.GG4296@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-10 at 19:30 +0100, Francesco Gringoli wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 10 Dec 2010 15:29:03 -0500
 
-> [ 1117.516031] unregister_netdevice: waiting for wlan1 to become free. Usage count = 1
+> Here is the latest round of wireless bits intended for 2.6.37...
 > 
-> and the device is never release (by who?). I have to reboot.
+> Included are some orinoco fixes, one to avoid the crash in bug 23932 and
+> two others that render TKIP countermeasures ineffective (i.e. decreased
+> security).  Helmut has provided us a fix to avoid a BUG when using
+> shared skbs.  The ath9k team gives us a fix for failed resumes on
+> ath9k_htc, a fix for detecting broadcast frames with a MIC failure, a
+> fix for a null pointer access when generating beacons, and a DMA issue
+> that can lead to memory corruption.  Matteo Croce pitches-in with a fix
+> to prevent transmitting with too much power.  Finally,  Javier Cardona
+> provides a trio of ath5k fixes that restore mesh function on those
+> devices.
+> 
+> Please let me know if there are problems!
 
-That's a bug in the ipv6 code, upgrade your kernel :-)
-
-johannes
-
+Pulled, thanks John.
