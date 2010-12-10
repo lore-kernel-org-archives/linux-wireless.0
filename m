@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:57801 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751696Ab0LLJUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 04:20:06 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PRi68-0002i0-Co
-	for linux-wireless@vger.kernel.org; Sun, 12 Dec 2010 10:20:04 +0100
-Received: from 194.48.133.8 ([194.48.133.8])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 10:20:04 +0100
-Received: from messier31 by 194.48.133.8 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 10:20:04 +0100
-To: linux-wireless@vger.kernel.org
-From: thomas <messier31@gmx.net>
-Subject: carl9170 802.11n-AP
-Date: Sun, 12 Dec 2010 09:17:32 +0000 (UTC)
-Message-ID: <loom.20101212T101545-636@post.gmane.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:33868 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756066Ab0LJTxX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 14:53:23 -0500
+Subject: Re: [RFC v2 0/2] implementation of scheduled scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
+References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 10 Dec 2010 20:53:22 +0100
+Message-ID: <1292010802.3531.6.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2010-12-10 at 17:07 +0200, luciano.coelho@nokia.com wrote:
 
-I am using carl9170 as driver for my TP-Link WN821n wifi USB-stick. The stick 
-works well in 802.11g master mode but frequently hangs up in 802.11n master 
-mode. 
-Now I read here http://wireless.kernel.org/en/users/Drivers/carl9170
-that a "real" 802.11 AP is not supported by the hardware. What exactly means 
-"real" and has this something to do with the frequently crashes in 802.11n 
-master mode? 
+> * I kept the return value in the sched_scan_stop chain, because, at least with
+>   wl12xx, the call can fail (due to OOM for instance).  I think it's cleaner
+>   this way.
 
-I will post more specific information (hardware, driver version, logs, etc..) 
-later. But if you can tell me already, this behaviour is expected because of 
-hardware incompatibility, there is no need for this.
+What's going to happen then though? Would it make sense to pre-allocate
+this at start() time, so it can cleanly stop regardless of what's going
+on? I can see start() failing, but stop() failing seems a bit hard to
+work with in wpa_supplicant?
 
-Kind regards,
-
-Thomas
+johannes
 
