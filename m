@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:35566 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752222Ab0LIOTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 09:19:52 -0500
-Subject: Re: [PATCH 2/4] b43: set TMS to work with current band width for
- N-PHY
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <AANLkTin14p=3=SA_4oVj24z+8NuS_y6hWqQmEEiXaSqr@mail.gmail.com> (sfid-20101209_151338_363925_536AF3B3)
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-	 <1291755360-21570-3-git-send-email-zajec5@gmail.com>
-	 <1291756117.27497.101.camel@maggie>
-	 <AANLkTinN_12RwWiugzxn5dB1he3b6h_y7K3C=8vFPyXO@mail.gmail.com>
-	 <AANLkTin14p=3=SA_4oVj24z+8NuS_y6hWqQmEEiXaSqr@mail.gmail.com>
-	 (sfid-20101209_151338_363925_536AF3B3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 15:19:44 +0100
-Message-ID: <1291904384.2905.2.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55742 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750718Ab0LJO1D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 09:27:03 -0500
+Received: by vws16 with SMTP id 16so2231271vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 06:27:01 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <201012101409.38146.florian@kriener.org>
+References: <201012101409.38146.florian@kriener.org>
+Date: Fri, 10 Dec 2010 15:27:01 +0100
+Message-ID: <AANLkTikb1Pmk3F6BL1ewrKpQaOxrG-McxbfnfTGNcZKo@mail.gmail.com>
+Subject: Re: BUG: Microcode SW error detected / Frequent disconnects
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Florian Kriener <florian@kriener.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 15:13 +0100, Rafał Miłecki wrote: 
-> W dniu 9 grudnia 2010 15:12 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> > W dniu 7 grudnia 2010 22:08 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> >> On Tue, 2010-12-07 at 21:55 +0100, Rafał Miłecki wrote:
-> >>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> >>> ---
-> >>>  drivers/net/wireless/b43/main.c       |    6 ++++++
-> >>>  drivers/net/wireless/b43/phy_common.c |    7 +++++++
-> >>>  drivers/net/wireless/b43/phy_common.h |    2 ++
-> >>>  drivers/net/wireless/b43/phy_n.c      |    7 -------
-> >>>  4 files changed, 15 insertions(+), 7 deletions(-)
-> >>>
-> >>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> >>> index fa48803..670fd7b 100644
-> >>> --- a/drivers/net/wireless/b43/main.c
-> >>> +++ b/drivers/net/wireless/b43/main.c
-> >>> @@ -1150,6 +1150,12 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
-> >>>
-> >>>       flags |= B43_TMSLOW_PHYCLKEN;
-> >>>       flags |= B43_TMSLOW_PHYRESET;
-> >>> +     if (dev->phy.type == B43_PHYTYPE_N) {
-> >>> +             if (b43_channel_type_is_40mhz(dev->phy.channel_type))
-> >>
-> >> Is channel_type already set at this time?
-> >
-> > Yeah, that core switching seems to be a little tricky. I didn't figure
-> > it out completely yet. We may need to fix that, or fix calls to this
-> > function.
-> >
-> > Thanks for reviewing!
-> 
-> In other words: it will work for now, but we need to fix that in
-> future if we want to get 40 MHz channels working.
+On Fri, Dec 10, 2010 at 2:09 PM, Florian Kriener <florian@kriener.org> wrote:
+> Dear Intel wireless experts,
+>
+> when connecting to a certain network I always get a lot of network
+> hangs, which can sometimes be solved temporarily by reconnecting to that
+> network. The cause seems to be a microcode software error. At leat, that
+> is what dmesg shows. I attached a piece of it.
+>
+> The access point in question is a speedport w503v, which is a Telekom
+> (German ISP) branded AVM or Arcadyan dsl router. It is located in a WLAN
+> polluted area with approx. 45 networks nearby. Most of them are between
+> channels 6 and 11. The access point in question is somehow seated at
+> channel 10, which I cannot change.
+>
+> % uname -a
+> Linux nanuk 2.6.36-trunk-amd64 #1 SMP Wed Oct 27 14:28:29 UTC 2010
+> x86_64 GNU/Linux
+>
 
-That's exactly what I was saying. ;)
-To answer my original question: No, channel_type is not set, but the
-code will work for non-40mhz.
+Guessing you are using a Debian kernel from experimental.
+'uname -a' is normally not enough, we need the Debian version string.
+(As there was only one 2.6.36 kernel, it is clear which version you have).
+There is now a 2.6.37-rc4 in experimental, please try that.
+bwh has prepared -rc5 a few hours ago and it will be uploaded to
+experimental soonish.
+(You check out from SVN and build by yourself or wait, see
+instructions on Debian kernel team wiki).
 
-This seems a bit tricky to fix, though. Maybe we should reset the
-wireless core twice. Once initially and once again after the
-configuration was set. The first reset would just be to be able
-to access the PHY and wireless core at all to probe it.
+Another possibility is you use compat-wireless stable or bleeding-edge
+(in addition to your host 2.6.36 kernel).
 
--- 
-Greetings Michael.
+All these "experiments" only to see if it is a problem in 2.6.36.
+(Might be the Intel developers know where the problem is exactly).
 
+Next question is: You have latest firmware file(s) from non-free?
+(Or look at Intel's iwlwifi download website).
+
+BTW, sometimes a full dmesg log is more helpful than a truncated one.
+
+- Sedat -
