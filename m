@@ -1,41 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37448 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318Ab0LHRG0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 12:06:26 -0500
-Received: by vws16 with SMTP id 16so1201392vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:06:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101208165607.GE2423@tuxdriver.com>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
-	<201012061714.15863.br1@einfach.org>
-	<AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
-	<AANLkTi=95mO085Y1PJ3brMMpHa=QvkxSB3SUpQysvKr+@mail.gmail.com>
-	<20101208165607.GE2423@tuxdriver.com>
-Date: Wed, 8 Dec 2010 12:06:25 -0500
-Message-ID: <AANLkTikmZZuD1h45RkX3QE2xAQLfoZzwSecDXvojSw5=@mail.gmail.com>
-Subject: Re: ath5k: Weird Retransmission Behaviour
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bruno Randolf <br1@einfach.org>,
-	Jonathan Guerin <jonathan@guerin.id.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@venema.h4ckr.net>, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from elasmtp-banded.atl.sa.earthlink.net ([209.86.89.70]:57912 "EHLO
+	elasmtp-banded.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756383Ab0LJTLr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 14:11:47 -0500
+Message-ID: <3300273.1292008199474.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
+Date: Fri, 10 Dec 2010 11:09:58 -0800 (GMT-08:00)
+From: ikorot@earthlink.net
+Reply-To: ikorot@earthlink.net
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 8, 2010 at 11:56 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
->> Found the patch:
->>
->> https://patchwork.kernel.org/patch/359722/
+Rafal,
+
+
+-----Original Message-----
+>From: Rafał Miłecki <zajec5@gmail.com>
+>Sent: Dec 9, 2010 10:36 PM
+>To: ikorot@earthlink.net
+>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
 >
-> Are you posting that for merging? �Or just for testing?
+>W dniu 10 grudnia 2010 03:26 użytkownik  <ikorot@earthlink.net> napisał:
+>> -----Original Message-----
+>>>From: Rafał Miłecki <zajec5@gmail.com>
+>>>Sent: Dec 9, 2010 6:06 AM
+>>>To: ikorot@earthlink.net
+>>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>
+>>>2010/12/8  <ikorot@earthlink.net>:
+>>>> Larry,
+>>>>
+>>>>
+>>>> -----Original Message-----
+>>>>>From: Larry Finger <Larry.Finger@lwfinger.net>
+>>>>>Sent: Dec 7, 2010 12:00 PM
+>>>>>To: ikorot@earthlink.net
+>>>>>Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+>>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>>>
+>>>>>On 12/07/2010 01:49 PM, ikorot@earthlink.net wrote:
+>>>>>>> One reason is that these tables changed from non-zero to zero values between
+>>>>>>> Broadcom driver 4.174.64.19 and 5.10.56.46. As they might change again, I think
+>>>>>>> we should retain the full version.
+>>>>>>
+>>>>>> Is there a way to check for version of the driver?
+>>>>>> This way whoever uses old one won't be screwed...
+>>>>>
+>>>>>That will not be a problem as no older version of b43 works at all with b43. To
+>>>>>help you understand this change, when the 4.174.64.19 Broadcom driver was
+>>>>>reverse-engineered, the tables had non-zero values. Rafel later compared the
+>>>>>trace dumps of b43 with the latest version of wl and found that the values are
+>>>>>now zero. When I rechecked driver 5.10.56.46, I found them to be zero there as
+>>>>>well and changed the specs.
+>>>>
+>>>> Well, it maybe feasible to keep the old values and check
+>>>> the version of the driver, since you are saying yourself
+>>>> that the value might be changing in the future.
+>>>> Maybe for couple of releases only?
+>>>
+>>>Sorry, but I don't understand that at all. What do you mean by version
+>>>of the driver? What driver?
+>>
+>> #if B43_VERSION <= x.x.x.x
+>> // table initialized to some values
+>> #else
+>> //table initialized to 0's
+>> #endif
+>
+>You want to put condition checking b43 version in... b43 driver? I
+>can't follow you.
 
-Testing -- I only compile tested it but it seemed relevant
-to this thread.
+Yes.
+And what you can't follow?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+For historical purposes and to better understand the changes and ease the 
+debugging I proposed this addition.
+Besides if for some reason in future versions Broadcom will decide to return to
+the same values for init tables, the changes will be very simple.
+
+Thank you.
+
+>
+>-- 
+>Rafał
+
