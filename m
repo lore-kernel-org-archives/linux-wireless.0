@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13867 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753086Ab0LAHfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:35:46 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:35:32 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 26/26] ath9k: Add device id of AR9485 to pci table
-Date: Tue, 30 Nov 2010 23:32:55 -0800
-Message-ID: <1291188775-13707-27-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45807
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755146Ab0LJSBO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 13:01:14 -0500
+Date: Fri, 10 Dec 2010 10:01:41 -0800 (PST)
+Message-Id: <20101210.100141.183065894.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-12-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101208210432.GH2423@tuxdriver.com>
+References: <20101208210432.GH2423@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 8 Dec 2010 16:04:32 -0500
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c5a523d..842c38d 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -30,6 +30,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ 0 }
- };
- 
--- 
-1.7.0.4
+> Here is the latest batch of updates intended for 2.6.38.  It also
+> includes my last wireless-2.6 pull request that you just added
+> to net-2.6.
+> 
+> This includes the usual batch of drivers updates, with ath9k and
+> iwlwifi as the usual standouts.  This also includes some mac80211
+> documentation updates from Johannes, and a flurry of ath5k updates
+> from Nick.  This also includes a collection of bluetooth updates by
+> way of Gustavo, a couple of libertas updates, some more work on b43
+> N-phy support, and a variety of other patches.
 
+So I pulled this in.
+
+Since I did the net-2.6 --> net-next-2.6 merge first, I ended up having
+to deal with the ar9003_eeprom.c conflicts in the ath9k driver even
+though you took care of that as well in this tree of your's.
+
+But it was a good gut check since we both resolved the conflict pretty
+much the same way, so I have confidence in the merge resolution :-)
+
+Anyways, please take a look at net-next-2.6 and double-check what I
+did.
+
+Thanks!
