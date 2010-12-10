@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:15411 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753655Ab0LFTxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 14:53:52 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 11:53:37 -0800
-Date: Mon, 6 Dec 2010 11:53:48 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-Message-ID: <20101206195348.GF21442@tux>
-References: <4CF44543.9070605@candelatech.com>
- <20101130004424.GC1901@tux>
- <4CF6D8C8.2000308@candelatech.com>
- <4CF8A6DE.4020804@candelatech.com>
- <4CFAFBE1.3080505@openwrt.org>
- <4CFB20BA.5090300@candelatech.com>
- <20101206193600.GC21442@tux>
- <4CFD3DE3.4000207@candelatech.com>
- <20101206195313.GE21442@tux>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54168 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365Ab0LJSaG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 13:30:06 -0500
+Date: Fri, 10 Dec 2010 13:20:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-12-08
+Message-ID: <20101210182045.GD4296@tuxdriver.com>
+References: <20101208210432.GH2423@tuxdriver.com>
+ <20101210.100141.183065894.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101206195313.GE21442@tux>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101210.100141.183065894.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 06, 2010 at 11:53:13AM -0800, Luis Rodriguez wrote:
-> On Mon, Dec 06, 2010 at 11:47:47AM -0800, Ben Greear wrote:
-> > On 12/06/2010 11:36 AM, Luis R. Rodriguez wrote:
-> > 
-> > > Can you clarify the status of this issue. It remains unclear to me from
-> > > your above description how things are going. As I read it some things
-> > > look OK now but you still get a warning.
-> > 
-> > Ok, since you asked :)
-> > 
-> > I worked on this over the weekend and this morning.  I had all sorts of
-> > issues until I realized that I had one STA with non-configured SSID.
-> > It sometimes connected to one /a AP and the other STAs attempted to connect
-> > to another /n (on entirely different band) AP.  I basically got zero stations associated for any length
-> > of time due to constant channel switching.  No crashes, but lots of
-> > warnings about DMA failing to stop.
-> > 
-> > Now..I've fixed this configuration issue (and adding steps to help prevent this mis-configuration
-> > again).
-> > 
-> > With 16 properly configured non-encrypted stations, running with wpa-supplicant
-> > with netlink driver & sharing scan results,  the interfaces quickly associate.
-> > 
-> > However, I do continue to see DMA warnings such as these (I had picked up my
-> > portable phone, and it knocked all the interfaces offline ..here
-> > they are coming back up after I hung up the phone).
-> > 
-> > Please note that I ported Felix's 2.6.37 patch he posted this morning
-> > to wireless-testing and have applied it.
-> > 
-> > I'm highly tempted to just make that a WARN_ON_ONCE so at least my logs
-> > aren't spammed so heavily with the recv.c:531 DMA warning.
+On Fri, Dec 10, 2010 at 10:01:41AM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 8 Dec 2010 16:04:32 -0500
 > 
-> You can send this change upstream as well.
+> > Here is the latest batch of updates intended for 2.6.38.  It also
+> > includes my last wireless-2.6 pull request that you just added
+> > to net-2.6.
+> > 
+> > This includes the usual batch of drivers updates, with ath9k and
+> > iwlwifi as the usual standouts.  This also includes some mac80211
+> > documentation updates from Johannes, and a flurry of ath5k updates
+> > from Nick.  This also includes a collection of bluetooth updates by
+> > way of Gustavo, a couple of libertas updates, some more work on b43
+> > N-phy support, and a variety of other patches.
+> 
+> So I pulled this in.
+> 
+> Since I did the net-2.6 --> net-next-2.6 merge first, I ended up having
+> to deal with the ar9003_eeprom.c conflicts in the ath9k driver even
+> though you took care of that as well in this tree of your's.
+> 
+> But it was a good gut check since we both resolved the conflict pretty
+> much the same way, so I have confidence in the merge resolution :-)
+> 
+> Anyways, please take a look at net-next-2.6 and double-check what I
+> did.
 
-Also, feel free to limit the number of STAs you can have up
-physically by setting this to a number you bless yourself.
+Looks good to me...thanks!
 
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
