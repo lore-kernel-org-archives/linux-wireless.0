@@ -1,23 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33658 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709Ab0LCVaL (ORCPT
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:44224 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754811Ab0LJVHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 16:30:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 0/3] mwifiex: remove some stuff...
-Date: Fri,  3 Dec 2010 16:17:27 -0500
-Message-Id: <1291411051-12916-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20101203191130.GD2348@tuxdriver.com>
-References: <20101203191130.GD2348@tuxdriver.com>
+	Fri, 10 Dec 2010 16:07:34 -0500
+Date: Fri, 10 Dec 2010 13:07:30 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: Jon Mason <jon.mason@exar.com>
+Cc: linux-pci@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+	linux-media@vger.kernel.org, Andrew Gallatin <gallatin@myri.com>,
+	Brice Goglin <brice@myri.com>, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	Steve Hodgson <shodgson@solarflare.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Stephen Hemminger <shemminger@linux-foundation.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org, Brian King <brking@us.ibm.com>,
+	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
+	linux-scsi@vger.kernel.org, Jaya Kumar <jayakumar.alsa@gmail.com>,
+	boyod.yang@siliconmotion.com.cn
+Subject: Re: PCI: make pci_restore_state return void
+Message-ID: <20101210130730.29d07c2d@jbarnes-desktop>
+In-Reply-To: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+References: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series remvoes lots of stuff -- some bits might even be necessary,
-but if so it is worth thinking about why that may be.
+On Tue, 30 Nov 2010 17:43:26 -0600
+Jon Mason <jon.mason@exar.com> wrote:
 
-Not tested...YMMV...
+> pci_restore_state only ever returns 0, thus there is no benefit in
+> having it return any value.  Also, a large majority of the callers do
+> not check the return code of pci_restore_state.  Make the
+> pci_restore_state a void return and avoid the overhead.
+> 
+> Signed-off-by: Jon Mason <jon.mason@exar.com>
+> ---
 
-John
+Applied to linux-next, thanks.
+
+-- 
+Jesse Barnes, Intel Open Source Technology Center
