@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42325 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab0LYVyU convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f172.google.com ([209.85.214.172]:44844 "EHLO
+	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298Ab0LJWnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Dec 2010 16:54:20 -0500
+	Fri, 10 Dec 2010 17:43:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
-References: <AANLkTi=aHU57xDq+-DWrN2sJsAwx_9bZ_ofy1rOmp0VH@mail.gmail.com>
-	<Pine.LNX.4.44L0.1012251046060.5079-100000@netrider.rowland.org>
-	<AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
-Date: Sat, 25 Dec 2010 22:54:18 +0100
-Message-ID: <AANLkTinBpuPZGrOZww=DbW8Z9A0qAZGNswcanSaQKOKp@mail.gmail.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-From: Vitaly Wool <vitalywool@gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 10 Dec 2010 14:43:32 -0800
+Message-ID: <AANLkTikNgTObTt7nfxymn+3_B1+xDOB9X1wE2bgJRnA9@mail.gmail.com>
+Subject: compat-wireless-2.6.37-rc5-3-sn.tar.bz2 release
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ohad,
+I've sucked in all pending-stable patches from linux-next.git into a
+compat-wireless release based on upstream 2.6.37-rc5. A few patches
+required a manual backport. On top of that I've sucked in a few cherry
+picked patches:
 
-On Sat, Dec 25, 2010 at 9:58 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> On Sat, Dec 25, 2010 at 6:21 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
->> Right.  You may or may not realize it, but this requirement means that
->> the driver _must_ bypass runtime PM sometimes.
->
-> http://www.spinics.net/lists/linux-pm/msg22864.html
->
->> Now you've lost me.  Which of the driver's handlers are you talking
->> about?
->
-> The driver's handler, which is called by mac80211, and is responsible
-> to power off the device.
-> The _same_ handler is being called either during runtime or during a
-> system transition to suspend
->
->> What races?
->
-> Driver thinks power is off and device is now fully reset, but it's isn't really
+mcgrof@tux ~/tmp/compat-wireless-2.6.37-rc5-3-sn $ ls -1
+linux-next-cherry-picks/
+01-ath9k-OTP.patch
+02-ath9k-no-aggr-VO.patch
+03-mac80211-no-aggr-VO.patch
+04-ath9k_hw-fix-A-MPDU-key-search-issues-on-AR9003.patch
+05-Bluetooth-Add-new-PID-for-Atheros-3011.patch
+README
 
-maybe it's worth starting off with the description of chip power
-states and how they are mapped to runtime PM and static PM?
+If you have a need for any other other patches please feel free to
+send over. This is closing in on the first formal release for a
+compat-wireless-2.6.37, please give this a good try and report any
+issues. These release are aimed at being very stable given that we are
+sucking all pending stable patches, and cherry picking a few patches
+we choose to support. Particularly you will see we have added the OTP
+stuff for AR9003. If you happen to have an AR9003 card your card may
+have either an EEPROM or OTP, and this release will support both
+cards. Both types of cards will be supported upstream as of 2.6.38.
 
-Most of the WLAN chips have some very low power modes, but you're
-talking about _complete_ shutdown as a suspended state for both
-runtime PM and static PM, is that correct?
+Greg, if you have an issue with applying a stable patch on 2.6.37 you
+can find the respective backport in the pending-stable/backports/
+directory of the compat-wireless.git linux-2.6.37.y branch. I can
+refer you to this once gitweb has it up on the link:
 
-Thanks,
-   Vitaly
+http://wireless.kernel.org/en/developers/stable-pending
+
+I should note, I have backported *all* patches that failed to apply,
+but the last one, the orinoco one is not applicable to stable as it
+failed for other reasons (compat-wireless patches/ dir)
+
+The juicy link:
+
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc5-3-sn.tar.bz2
+
+  Luis
