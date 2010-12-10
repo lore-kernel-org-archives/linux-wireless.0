@@ -1,135 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13831 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752736Ab0LAHdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:33:31 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:17 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/26] ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
-Date: Tue, 30 Nov 2010 23:32:34 -0800
-Message-ID: <1291188775-13707-6-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:48226 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab0LJShd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 13:37:33 -0500
+Subject: Re: b43 N PHY status report
+Mime-Version: 1.0 (Apple Message framework v1082)
+Content-Type: text/plain; charset=utf-8
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+In-Reply-To: <4CFFA112.7030800@lwfinger.net>
+Date: Fri, 10 Dec 2010 19:30:57 +0100
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Message-Id: <885729A3-72D4-4EFC-AAFE-D2B573E00ED9@ing.unibs.it>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com> <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com> <4CFFA112.7030800@lwfinger.net>
+To: Larry Finger <larry.finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   82 +++++++++++++++++++++-------
- 1 files changed, 62 insertions(+), 20 deletions(-)
+On Dec 8, 2010, at 4:15 PM, Larry Finger wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index f01c289..21a5bfe 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -175,22 +175,52 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
--			       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
--			       5);
-+		if (AR_SREV_9485(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9485Modes_lowest_ob_db_tx_gain_1_0,
-+				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
-+				       5);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
-+				       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
-+				       5);
- 		break;
- 	case 1:
--		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			       ar9300Modes_high_ob_db_tx_gain_table_2p2,
--			       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
--			       5);
-+		if (AR_SREV_9485(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9485Modes_high_ob_db_tx_gain_1_0,
-+				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
-+				       5);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9300Modes_high_ob_db_tx_gain_table_2p2,
-+				       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
-+				       5);
- 		break;
- 	case 2:
--		INIT_INI_ARRAY(&ah->iniModesTxGain,
--			       ar9300Modes_low_ob_db_tx_gain_table_2p2,
--			       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
--			       5);
-+		if (AR_SREV_9485(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9485Modes_low_ob_db_tx_gain_1_0,
-+				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
-+				       5);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9300Modes_low_ob_db_tx_gain_table_2p2,
-+				       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
-+				       5);
-+		break;
-+	case 3:
-+		if (AR_SREV_9485(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9485Modes_high_power_tx_gain_1_0,
-+				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_0),
-+				       5);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       ar9300Modes_high_power_tx_gain_table_2p2,
-+				       ARRAY_SIZE(ar9300Modes_high_power_tx_gain_table_2p2),
-+				       5);
- 		break;
- 	}
- }
-@@ -200,16 +230,28 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
- 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
- 	case 0:
- 	default:
--		INIT_INI_ARRAY(&ah->iniModesRxGain,
--			       ar9300Common_rx_gain_table_2p2,
--			       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
--			       2);
-+		if (AR_SREV_9485(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9485Common_rx_gain_1_0,
-+				       ARRAY_SIZE(ar9485Common_rx_gain_1_0),
-+				       2);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9300Common_rx_gain_table_2p2,
-+				       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
-+				       2);
- 		break;
- 	case 1:
--		INIT_INI_ARRAY(&ah->iniModesRxGain,
--			       ar9300Common_wo_xlna_rx_gain_table_2p2,
--			       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
--			       2);
-+		if (AR_SREV_9485(ah))
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9485Common_wo_xlna_rx_gain_1_0,
-+				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_0),
-+				       2);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesRxGain,
-+				       ar9300Common_wo_xlna_rx_gain_table_2p2,
-+				       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
-+				       2);
- 		break;
- 	}
- }
--- 
-1.7.0.4
+> Rafał,
+> 
+> The N PHY driver is remarkably stable. So far, my link has been up for nearly 16
+> hours under normal conditions - I have not yet tried any stress tests. Other
+> than the PHY errors that you noted, my link has only reported 2 other unusual
+> events. I have had 3 "Deauthentication for reason 3" from which it recovered in
+> one try. Also logged are 9 instances of "RX: Packet size underrun (2)/Packet
+> dropped" events. Again, these caused no problems.
+Hi Rafał,
+
+I confirm Larry's feedbacks. I tried both on a 32bit and a 64bit architectures (the first is frodo), and it works. I too see only CCK packets. On 64bit arch (Atom) it works but when I try to unload the module I get this
+
+[ 1117.516031] unregister_netdevice: waiting for wlan1 to become free. Usage count = 1
+
+and the device is never release (by who?). I have to reboot.
+
+I'm using two cards, one reports
+
+[  311.439406] b43-phy0: Broadcom 4321 WLAN found (core revision 12)
+[  311.480046] b43-phy0 debug: Found PHY: Analog 5, Type 4, Revision 2
+[  311.480075] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2055, Revision 4
+
+The other (an Apple original card) reports
+
+[   82.726931] b43-phy0: Broadcom 4321 WLAN found (core revision 11)
+[   82.768030] b43-phy0 debug: Found PHY: Analog 5, Type 4, Revision 1
+[   82.768062] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2055, Revision 4
+
+Thanks,
+-Francesco
+
+
+Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
+
 
