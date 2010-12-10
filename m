@@ -1,93 +1,544 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:51869 "EHLO mail.atheros.com"
+Received: from kramwerk.de ([62.75.162.77]:43756 "EHLO mail.kramwerk.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932504Ab0LCMlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 07:41:10 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 04:40:55 -0800
-Date: Fri, 3 Dec 2010 18:10:51 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of
-	AR_PHY_65NM_CH0_SYNTH7 from an array for AR9485
-Message-ID: <20101203124050.GR12908@vasanth-laptop>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com> <4CF84BB8.8090007@openwrt.org> <20101203045054.GP12908@vasanth-laptop> <4CF8DF08.2060307@openwrt.org>
+	id S1756069Ab0LJNSz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Dec 2010 08:18:55 -0500
+Received: from mail.kramwerk.de (localhost.localdomain [127.0.0.1])
+	by mail.kramwerk.de (Postfix) with ESMTP id 54C051410F0C
+	for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 13:12:10 +0000 (UTC)
+Received: from nanuk.localnet (p5799E65F.dip.t-dialin.net [87.153.230.95])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.kramwerk.de (Postfix) with ESMTPSA
+	for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 13:12:10 +0000 (UTC)
+From: Florian Kriener <florian@kriener.org>
+To: linux-wireless@vger.kernel.org
+Subject: BUG: Microcode SW error detected / Frequent disconnects
+Date: Fri, 10 Dec 2010 14:09:37 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CF8DF08.2060307@openwrt.org>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_RaiANxRGgCSoAso"
+Message-Id: <201012101409.38146.florian@kriener.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 03, 2010 at 05:44:00PM +0530, Felix Fietkau wrote:
-> On 2010-12-03 5:50 AM, Vasanthakumar Thiagarajan wrote:
-> > On Fri, Dec 03, 2010 at 07:15:28AM +0530, Felix Fietkau wrote:
-> >> On 2010-12-02 12:06 PM, Vasanthakumar Thiagarajan wrote:
-> >> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> >> > ---
-> >> >  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
-> >> >  1 files changed, 24 insertions(+), 1 deletions(-)
-> >> > 
-> >> > diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> >> > index b34a9e9..136e64a 100644
-> >> > --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> >> > +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> >> > @@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
-> >> >  /* level:  0   1   2   3   4   5   6   7   8  */
-> >> >  	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
-> >> >  
-> >> > +/* Chansel table used by ar9485 */
-> >> > +static const u32 ar9003_chansel_xtal_40M[] = {
-> >> > +	0xa0ccbe,
-> >> > +	0xa12213,
-> >> > +	0xa17769,
-> >> > +	0xa1ccbe,
-> >> > +	0xa22213,
-> >> > +	0xa27769,
-> >> > +	0xa2ccbe,
-> >> > +	0xa32213,
-> >> > +	0xa37769,
-> >> > +	0xa3ccbe,
-> >> > +	0xa42213,
-> >> > +	0xa47769,
-> >> > +	0xa4ccbe,
-> >> > +	0xa5998b,
-> >> > +};
-> >> > +
-> >> >  /*
-> >> >   * register values to turn OFDM weak signal detection OFF
-> >> >   */
-> >> > @@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
-> >> >  	freq = centers.synth_center;
-> >> >  
-> >> >  	if (freq < 4800) {     /* 2 GHz, fractional mode */
-> >> > -		channelSel = CHANSEL_2G(freq);
-> >> > +		if (AR_SREV_9485(ah)) {
-> >> > +			int ichan = ieee80211_frequency_to_channel(freq);
-> >> > +
-> >> > +			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
-> >> How about using this formula for AR9485:
-> >> 
-> >> #define CHANSEL_2G_AR9485(_freq)	(((_freq) * 0x10000 - 215) / CHANSEL_DIV)
-> >> 
-> >> While I don't know where the 215 comes from (the calculation does not
-> >> appear to be documented anywhere and I found it by trial & error),
-> >> I do think it's better to have a simple formula than a long table
-> >> of hardcoded values.
-> > 
-> > I don't know, having some arbitrary formula would
-> > complicate things especially if we want to integrate
-> > changes from internal code base. I prefer the table.
-> How would it complicate things? Right now the resulting values are
-> exactly the same. If we get a new table from the HAL, I'll either come
-> up with a new formula, or we switch to the table then. But in the mean
-> time we'll have better code.
+--Boundary-00=_RaiANxRGgCSoAso
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-In that case, I'm not comfortable with the magic number. I'll try to
-ask people about the relation between the older one and the newer
-one.
+Dear Intel wireless experts,
 
-Vasanth
+when connecting to a certain network I always get a lot of network 
+hangs, which can sometimes be solved temporarily by reconnecting to that 
+network. The cause seems to be a microcode software error. At leat, that 
+is what dmesg shows. I attached a piece of it.
+
+The access point in question is a speedport w503v, which is a Telekom 
+(German ISP) branded AVM or Arcadyan dsl router. It is located in a WLAN 
+polluted area with approx. 45 networks nearby. Most of them are between 
+channels 6 and 11. The access point in question is somehow seated at 
+channel 10, which I cannot change.
+ 
+% uname -a
+Linux nanuk 2.6.36-trunk-amd64 #1 SMP Wed Oct 27 14:28:29 UTC 2010 
+x86_64 GNU/Linux
+
+I am not on this list, so please CC me in the replies and/or contact me 
+directly if I can help you somehow.
+
+Sincerely,
+Florian Kriener.
+
+--Boundary-00=_RaiANxRGgCSoAso
+Content-Type: text/x-log;
+  charset="UTF-8";
+  name="dmesg.log"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="dmesg.log"
+
+[   14.249192] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
+[   14.249199] iwlagn: Copyright(c) 2003-2010 Intel Corporation
+[   14.249324] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[   14.249338] iwlagn 0000:03:00.0: setting latency timer to 64
+[   14.249394] iwlagn 0000:03:00.0: Detected Intel(R) Ultimate N WiFi Link 5300 AGN, REV=0x24
+[   14.269929] iwlagn 0000:03:00.0: device EEPROM VER=0x11f, CALIB=0x4
+[   14.269964] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+[   14.270239] iwlagn 0000:03:00.0: irq 47 for MSI/MSI-X
+[   14.291466] iwlagn 0000:03:00.0: loaded firmware version 8.24.2.12
+[   14.329687] phy0: Selected rate control algorithm 'iwl-agn-rs'
+[   21.898873] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   54.654673] wlan0: authenticate with 00:1f:3f:62:fd:83 (try 1)
+[   54.662825] wlan0: authenticated
+[   54.662854] wlan0: associate with 00:1f:3f:62:fd:83 (try 1)
+[   54.669637] wlan0: RX AssocResp from 00:1f:3f:62:fd:83 (capab=0x431 status=0 aid=1)
+[   54.669641] wlan0: associated
+[   54.677600] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   65.284013] wlan0: no IPv6 routers present
+[   77.035644] iwlagn 0000:03:00.0: Aggregation not enabled for tid 0 because load = 10
+[   81.274698] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[   81.274702] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[   81.274717] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[   81.274719] iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
+[   81.274863] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[   81.274866] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 1947531076 0x00008035 0x00006902 1364
+[   81.274868] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[   81.274871] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x446004E
+[   81.274873] iwlagn 0000:03:00.0: CSR values:
+[   81.274874] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[   81.274879] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[   81.274884] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[   81.274888] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[   81.274893] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[   81.274904] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[   81.274908] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[   81.274913] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[   81.274918] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[   81.274923] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[   81.274927] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[   81.274932] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[   81.274936] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[   81.274941] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[   81.274946] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X0000553e
+[   81.274950] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[   81.274955] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[   81.274960] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[   81.274964] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000058
+[   81.274969] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[   81.274973] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[   81.274978] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[   81.274983] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[   81.274987] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[   81.274989] iwlagn 0000:03:00.0: FH register values:
+[   81.275005] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[   81.275020] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[   81.275033] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000b8
+[   81.275047] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[   81.275060] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[   81.275073] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[   81.275087] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[   81.275101] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[   81.275116] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[   81.275171] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[   81.275190] iwlagn 0000:03:00.0: EVT_LOGT:0059393352:0x01000110:0211
+[   81.275201] iwlagn 0000:03:00.0: EVT_LOGT:0059393358:0x00000000:0212
+[   81.275211] iwlagn 0000:03:00.0: EVT_LOGT:0059393442:0x00000000:0215
+[   81.275222] iwlagn 0000:03:00.0: EVT_LOGT:0059393446:0x00000008:0220
+[   81.275232] iwlagn 0000:03:00.0: EVT_LOGT:0059393542:0x0214001c:0206
+[   81.275243] iwlagn 0000:03:00.0: EVT_LOGT:0059393544:0x00000001:0204
+[   81.275255] iwlagn 0000:03:00.0: EVT_LOGT:0059393547:0x00000001:0219
+[   81.275266] iwlagn 0000:03:00.0: EVT_LOGT:0059393549:0x01000110:0211
+[   81.275276] iwlagn 0000:03:00.0: EVT_LOGT:0059393555:0x00000000:0212
+[   81.275287] iwlagn 0000:03:00.0: EVT_LOGT:0059393639:0x00000000:0215
+[   81.275297] iwlagn 0000:03:00.0: EVT_LOGT:0059393643:0x00000008:0220
+[   81.275307] iwlagn 0000:03:00.0: EVT_LOGT:0059394000:0x0214001c:0206
+[   81.275318] iwlagn 0000:03:00.0: EVT_LOGT:0059394002:0x00000001:0204
+[   81.275328] iwlagn 0000:03:00.0: EVT_LOGT:0059394005:0x00000001:0219
+[   81.275339] iwlagn 0000:03:00.0: EVT_LOGT:0059394007:0x01000110:0211
+[   81.275349] iwlagn 0000:03:00.0: EVT_LOGT:0059394013:0x00000000:0212
+[   81.275359] iwlagn 0000:03:00.0: EVT_LOGT:0059394097:0x00000000:0215
+[   81.275370] iwlagn 0000:03:00.0: EVT_LOGT:0059394101:0x00000008:0220
+[   81.275380] iwlagn 0000:03:00.0: EVT_LOGT:0059394412:0x0446004e:0401
+[   81.275391] iwlagn 0000:03:00.0: EVT_LOGT:0059394424:0x00000000:0125
+[   81.434036] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[   81.434039] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[   81.434055] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[   81.434057] iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
+[   81.434194] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[   81.434197] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 1947690316 0x00008035 0x00012902 1364
+[   81.434200] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[   81.434202] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x42E004E
+[   81.434204] iwlagn 0000:03:00.0: CSR values:
+[   81.434206] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[   81.434211] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[   81.434216] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[   81.434220] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[   81.434225] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[   81.434229] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[   81.434234] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[   81.434239] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[   81.434243] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[   81.434248] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[   81.434252] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[   81.434257] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[   81.434262] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[   81.434266] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[   81.434271] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00000079
+[   81.434275] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[   81.434280] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[   81.434285] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[   81.434289] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000078
+[   81.434294] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[   81.434298] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[   81.434303] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[   81.434308] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[   81.434312] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[   81.434314] iwlagn 0000:03:00.0: FH register values:
+[   81.434327] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[   81.434340] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[   81.434353] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000050
+[   81.434366] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[   81.434379] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[   81.434392] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[   81.434405] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[   81.434417] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[   81.434430] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[   81.434481] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[   81.434499] iwlagn 0000:03:00.0: EVT_LOGT:0000147048:0x00000000:0212
+[   81.434509] iwlagn 0000:03:00.0: EVT_LOGT:0000148076:0x00000000:0215
+[   81.434520] iwlagn 0000:03:00.0: EVT_LOGT:0000148080:0x00000008:0220
+[   81.434530] iwlagn 0000:03:00.0: EVT_LOGT:0000148091:0x00000000:0301
+[   81.434540] iwlagn 0000:03:00.0: EVT_LOGT:0000148362:0x000000d4:0303
+[   81.434551] iwlagn 0000:03:00.0: EVT_LOGT:0000148396:0x00000007:0217
+[   81.434561] iwlagn 0000:03:00.0: EVT_LOGT:0000148397:0x0206001c:0217
+[   81.434572] iwlagn 0000:03:00.0: EVT_LOGT:0000148501:0x0207001c:0206
+[   81.434582] iwlagn 0000:03:00.0: EVT_LOGT:0000148503:0x00000001:0204
+[   81.434593] iwlagn 0000:03:00.0: EVT_LOGT:0000148506:0x00000001:0219
+[   81.434603] iwlagn 0000:03:00.0: EVT_LOGT:0000148508:0x01000111:0211
+[   81.434613] iwlagn 0000:03:00.0: EVT_LOGT:0000148513:0x00000000:0212
+[   81.434624] iwlagn 0000:03:00.0: EVT_LOGT:0000149837:0x00000000:0215
+[   81.434634] iwlagn 0000:03:00.0: EVT_LOGT:0000149841:0x00000008:0220
+[   81.434645] iwlagn 0000:03:00.0: EVT_LOGT:0000149852:0x00000000:0301
+[   81.434655] iwlagn 0000:03:00.0: EVT_LOGT:0000150123:0x000000d4:0303
+[   81.434666] iwlagn 0000:03:00.0: EVT_LOGT:0000150157:0x00000008:0217
+[   81.434676] iwlagn 0000:03:00.0: EVT_LOGT:0000150158:0x0207001c:0217
+[   81.434686] iwlagn 0000:03:00.0: EVT_LOGT:0000150558:0x042e004e:0401
+[   81.434697] iwlagn 0000:03:00.0: EVT_LOGT:0000150570:0x00000000:0125
+[   99.516346] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[   99.516349] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[   99.516364] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[   99.516366] iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
+[   99.516505] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[   99.516508] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 1965763517 0x00008035 0x0000C908 1364
+[   99.516511] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[   99.516513] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x4CF004E
+[   99.516515] iwlagn 0000:03:00.0: CSR values:
+[   99.516517] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[   99.516522] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[   99.516527] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[   99.516531] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[   99.516536] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[   99.516541] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[   99.516545] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[   99.516550] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[   99.516554] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[   99.516559] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[   99.516564] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[   99.516568] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[   99.516573] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[   99.516578] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[   99.516582] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00001c95
+[   99.516587] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[   99.516591] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[   99.516596] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[   99.516601] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000058
+[   99.516605] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[   99.516610] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[   99.516615] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[   99.516619] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[   99.516624] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[   99.516626] iwlagn 0000:03:00.0: FH register values:
+[   99.516639] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[   99.516652] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[   99.516665] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000b0
+[   99.516678] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[   99.516691] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[   99.516704] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[   99.516718] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[   99.516731] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[   99.516744] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[   99.516796] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[   99.516813] iwlagn 0000:03:00.0: EVT_LOGT:0018047644:0x00000000:0212
+[   99.516824] iwlagn 0000:03:00.0: EVT_LOGT:0018047740:0x00000000:0215
+[   99.516835] iwlagn 0000:03:00.0: EVT_LOGT:0018047744:0x00000008:0220
+[   99.516845] iwlagn 0000:03:00.0: EVT_LOGT:0018047760:0x00000000:0302
+[   99.516856] iwlagn 0000:03:00.0: EVT_LOGT:0018047805:0x000000d4:0303
+[   99.516866] iwlagn 0000:03:00.0: EVT_LOGT:0018047810:0x0000006d:0217
+[   99.516877] iwlagn 0000:03:00.0: EVT_LOGT:0018047811:0x026c001c:0217
+[   99.516887] iwlagn 0000:03:00.0: EVT_LOGT:0018062298:0x026d001c:0206
+[   99.516898] iwlagn 0000:03:00.0: EVT_LOGT:0018062300:0x00000001:0204
+[   99.516908] iwlagn 0000:03:00.0: EVT_LOGT:0018062304:0x00000001:0219
+[   99.516919] iwlagn 0000:03:00.0: EVT_LOGT:0018062305:0x01000110:0211
+[   99.516929] iwlagn 0000:03:00.0: EVT_LOGT:0018062310:0x00000000:0212
+[   99.516940] iwlagn 0000:03:00.0: EVT_LOGT:0018062410:0x00000000:0215
+[   99.516951] iwlagn 0000:03:00.0: EVT_LOGT:0018062414:0x00000008:0220
+[   99.516962] iwlagn 0000:03:00.0: EVT_LOGT:0018062431:0x00000000:0302
+[   99.516972] iwlagn 0000:03:00.0: EVT_LOGT:0018062475:0x000000d4:0303
+[   99.516983] iwlagn 0000:03:00.0: EVT_LOGT:0018062480:0x0000006e:0217
+[   99.516994] iwlagn 0000:03:00.0: EVT_LOGT:0018062481:0x026d001c:0217
+[   99.517004] iwlagn 0000:03:00.0: EVT_LOGT:0018064622:0x04cf004e:0401
+[   99.517015] iwlagn 0000:03:00.0: EVT_LOGT:0018064634:0x00000000:0125
+[   99.635879] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[   99.635882] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[   99.635899] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[   99.635901] iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
+[   99.636066] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[   99.636070] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 1965882964 0x00008035 0x00014908 1364
+[   99.636072] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[   99.636075] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x42C004E
+[   99.636077] iwlagn 0000:03:00.0: CSR values:
+[   99.636078] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[   99.636083] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[   99.636088] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[   99.636093] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[   99.636098] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[   99.636102] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[   99.636107] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[   99.636112] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[   99.636116] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[   99.636121] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[   99.636126] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[   99.636130] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[   99.636134] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[   99.636139] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[   99.636144] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00000044
+[   99.636148] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[   99.636153] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[   99.636158] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[   99.636162] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000078
+[   99.636167] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[   99.636172] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[   99.636176] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[   99.636181] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[   99.636186] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[   99.636188] iwlagn 0000:03:00.0: FH register values:
+[   99.636203] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[   99.636218] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[   99.636233] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000060
+[   99.636248] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[   99.636263] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[   99.636278] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[   99.636293] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[   99.636308] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[   99.636323] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[   99.636379] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[   99.636397] iwlagn 0000:03:00.0: EVT_LOGT:0000108856:0x00000000:0212
+[   99.636407] iwlagn 0000:03:00.0: EVT_LOGT:0000109787:0x00000000:0215
+[   99.636418] iwlagn 0000:03:00.0: EVT_LOGT:0000109791:0x00000008:0220
+[   99.636428] iwlagn 0000:03:00.0: EVT_LOGT:0000109803:0x00000000:0301
+[   99.636439] iwlagn 0000:03:00.0: EVT_LOGT:0000110073:0x000000d4:0303
+[   99.636449] iwlagn 0000:03:00.0: EVT_LOGT:0000110107:0x00000008:0217
+[   99.636459] iwlagn 0000:03:00.0: EVT_LOGT:0000110108:0x0207001c:0217
+[   99.636470] iwlagn 0000:03:00.0: EVT_LOGT:0000110358:0x0000010f:0106
+[   99.636480] iwlagn 0000:03:00.0: EVT_LOGT:0000110359:0x00000000:0302
+[   99.636491] iwlagn 0000:03:00.0: EVT_LOGT:0000110391:0x000000b4:0303
+[   99.636501] iwlagn 0000:03:00.0: EVT_LOGT:0000110399:0x000000c4:0322
+[   99.636511] iwlagn 0000:03:00.0: EVT_LOGT:0000110448:0x00000000:0302
+[   99.636522] iwlagn 0000:03:00.0: EVT_LOGT:0000110476:0x00000436:0323
+[   99.636532] iwlagn 0000:03:00.0: EVT_LOGT:0000110497:0x00000000:1350
+[   99.636543] iwlagn 0000:03:00.0: EVT_LOGT:0000110497:0x00000000:1351
+[   99.636553] iwlagn 0000:03:00.0: EVT_LOGT:0000110498:0x00000001:1352
+[   99.636563] iwlagn 0000:03:00.0: EVT_LOGT:0000110498:0x00000002:1353
+[   99.636574] iwlagn 0000:03:00.0: EVT_LOGT:0000110660:0x000000d4:0322
+[   99.636584] iwlagn 0000:03:00.0: EVT_LOGT:0000110924:0x042c004e:0401
+[   99.636595] iwlagn 0000:03:00.0: EVT_LOGT:0000110935:0x00000000:0125
+[  104.881792] iwlagn 0000:03:00.0: iwlagn_tx_agg_start on ra = 00:1f:3f:62:fd:83 tid = 0
+[  140.703932] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[  140.703935] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[  140.703950] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[  140.703952] iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
+[  140.704094] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[  140.704097] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 2006930345 0x00008035 0x00004903 1364
+[  140.704100] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[  140.704102] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x41D004E
+[  140.704104] iwlagn 0000:03:00.0: CSR values:
+[  140.704106] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[  140.704111] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[  140.704116] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[  140.704120] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[  140.704125] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[  140.704130] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[  140.704134] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[  140.704139] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[  140.704144] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[  140.704148] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[  140.704153] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[  140.704158] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[  140.704162] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[  140.704167] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[  140.704172] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00005997
+[  140.704176] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[  140.704181] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[  140.704186] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[  140.704190] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000058
+[  140.704195] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[  140.704200] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[  140.704204] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[  140.704209] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[  140.704214] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[  140.704215] iwlagn 0000:03:00.0: FH register values:
+[  140.704228] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[  140.704242] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[  140.704255] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000a0
+[  140.704268] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[  140.704281] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[  140.704294] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[  140.704308] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[  140.704321] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[  140.704334] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[  140.704386] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[  140.704403] iwlagn 0000:03:00.0: EVT_LOGT:0041035840:0xc0000000:0228
+[  140.704414] iwlagn 0000:03:00.0: EVT_LOGT:0041035841:0x00000001:0204
+[  140.704424] iwlagn 0000:03:00.0: EVT_LOGT:0041035845:0x00000001:0214
+[  140.704435] iwlagn 0000:03:00.0: EVT_LOGT:0041035845:0x01041110:0205
+[  140.704445] iwlagn 0000:03:00.0: EVT_LOGT:0041035875:0x00000020:0208
+[  140.704456] iwlagn 0000:03:00.0: EVT_LOGT:0041035895:0x00000000:0302
+[  140.704466] iwlagn 0000:03:00.0: EVT_LOGT:0041035927:0x000000c4:0303
+[  140.704477] iwlagn 0000:03:00.0: EVT_LOGT:0041035934:0x00000001:0203
+[  140.704487] iwlagn 0000:03:00.0: EVT_LOGT:0041035938:0x0ac9001c:0206
+[  140.704498] iwlagn 0000:03:00.0: EVT_LOGT:0041035939:0x00000040:0204
+[  140.704508] iwlagn 0000:03:00.0: EVT_LOGT:0041035942:0x01040110:0211
+[  140.704519] iwlagn 0000:03:00.0: EVT_LOGT:0041036292:0x00000000:0212
+[  140.704529] iwlagn 0000:03:00.0: EVT_LOGT:0041036419:0x00000000:0215
+[  140.704540] iwlagn 0000:03:00.0: EVT_LOGT:0041036423:0x00000008:0220
+[  140.704550] iwlagn 0000:03:00.0: EVT_LOGT:0041036441:0x00000000:0302
+[  140.704561] iwlagn 0000:03:00.0: EVT_LOGT:0041036473:0x000000d4:0303
+[  140.704571] iwlagn 0000:03:00.0: EVT_LOGT:0041036477:0x000012ca:0217
+[  140.704582] iwlagn 0000:03:00.0: EVT_LOGT:0041036478:0x0ac9001c:0217
+[  140.704592] iwlagn 0000:03:00.0: EVT_LOGT:0041038623:0x041d004e:0401
+[  140.704603] iwlagn 0000:03:00.0: EVT_LOGT:0041038635:0x00000000:0125
+[  140.741115] iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+[  140.741120] iwlagn 0000:03:00.0: queue number out of range: 0, must be 10 to 19
+[  476.640915] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[  476.640925] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[  476.640945] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[  476.640951] iwlagn 0000:03:00.0: Status: 0x0002B2E4, count: 5
+[  476.641110] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[  476.641120] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 2342698155 0x01808035 0x0000C908 1364
+[  476.641126] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[  476.641134] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x47F004E
+[  476.641140] iwlagn 0000:03:00.0: CSR values:
+[  476.641145] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[  476.641155] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[  476.641164] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[  476.641173] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[  476.641181] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[  476.641190] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[  476.641198] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[  476.641207] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[  476.641215] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[  476.641224] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[  476.641232] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[  476.641241] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[  476.641250] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[  476.641258] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[  476.641267] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X0000ba6f
+[  476.641275] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[  476.641284] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[  476.641293] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[  476.641301] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000058
+[  476.641310] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[  476.641318] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[  476.641327] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[  476.641336] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[  476.641344] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[  476.641350] iwlagn 0000:03:00.0: FH register values:
+[  476.641368] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[  476.641387] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[  476.641405] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000f8
+[  476.641424] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[  476.641442] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[  476.641461] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[  476.641479] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[  476.641498] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[  476.641516] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[  476.641578] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[  476.641602] iwlagn 0000:03:00.0: EVT_LOGT:0335757278:0xc0000000:0228
+[  476.641618] iwlagn 0000:03:00.0: EVT_LOGT:0335757279:0x00000001:0204
+[  476.641633] iwlagn 0000:03:00.0: EVT_LOGT:0335757283:0x00000001:0214
+[  476.641649] iwlagn 0000:03:00.0: EVT_LOGT:0335757283:0x01041110:0205
+[  476.641665] iwlagn 0000:03:00.0: EVT_LOGT:0335757329:0x00000020:0208
+[  476.641680] iwlagn 0000:03:00.0: EVT_LOGT:0335757349:0x00000000:0302
+[  476.641696] iwlagn 0000:03:00.0: EVT_LOGT:0335757393:0x000000c4:0303
+[  476.641711] iwlagn 0000:03:00.0: EVT_LOGT:0335757400:0x00000001:0203
+[  476.641727] iwlagn 0000:03:00.0: EVT_LOGT:0335757404:0x0212001c:0206
+[  476.641742] iwlagn 0000:03:00.0: EVT_LOGT:0335757405:0x00000040:0204
+[  476.641758] iwlagn 0000:03:00.0: EVT_LOGT:0335757408:0x01040110:0211
+[  476.641773] iwlagn 0000:03:00.0: EVT_LOGT:0335757412:0x00000000:0212
+[  476.641789] iwlagn 0000:03:00.0: EVT_LOGT:0335757513:0x00000000:0215
+[  476.641805] iwlagn 0000:03:00.0: EVT_LOGT:0335757517:0x00000008:0220
+[  476.641820] iwlagn 0000:03:00.0: EVT_LOGT:0335757535:0x00000000:0302
+[  476.641835] iwlagn 0000:03:00.0: EVT_LOGT:0335757579:0x000000d4:0303
+[  476.641851] iwlagn 0000:03:00.0: EVT_LOGT:0335757583:0x00001213:0217
+[  476.641867] iwlagn 0000:03:00.0: EVT_LOGT:0335757584:0x0212001c:0217
+[  476.641882] iwlagn 0000:03:00.0: EVT_LOGT:0335758039:0x047f004e:0401
+[  476.641898] iwlagn 0000:03:00.0: EVT_LOGT:0335758051:0x00000000:0125
+[  483.372110] iwlagn 0000:03:00.0: iwlagn_tx_agg_start on ra = 00:1f:3f:62:fd:83 tid = 0
+[  585.299189] iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+[  585.312556] wlan0: deauthenticating from 00:1f:3f:62:fd:83 by local choice (reason=3)
+[  585.315659] iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+[  586.945592] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  590.212288] wlan0: authenticate with 00:1f:3f:62:fd:83 (try 1)
+[  590.215480] wlan0: authenticated
+[  590.215527] wlan0: associate with 00:1f:3f:62:fd:83 (try 1)
+[  590.223530] wlan0: RX AssocResp from 00:1f:3f:62:fd:83 (capab=0x431 status=0 aid=1)
+[  590.223535] wlan0: associated
+[  590.235279] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[  600.648248] wlan0: no IPv6 routers present
+[  931.683252] iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
+[  931.683256] iwlagn 0000:03:00.0: Loaded firmware version: 8.24.2.12
+[  931.683273] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[  931.683276] iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
+[  931.683419] iwlagn 0000:03:00.0: Desc                                  Time       data1      data2      line
+[  931.683423] iwlagn 0000:03:00.0: SYSASSERT                    (0x0005) 2797511542 0x01808035 0x0000C90F 1364
+[  931.683425] iwlagn 0000:03:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+[  931.683427] iwlagn 0000:03:00.0: 0x03AE8 0x039B8 0x039B8 0x008B2 0x00000 0x46E004E
+[  931.683429] iwlagn 0000:03:00.0: CSR values:
+[  931.683431] iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+[  931.683435] iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+[  931.683440] iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
+[  931.683444] iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
+[  931.683449] iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
+[  931.683453] iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
+[  931.683458] iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
+[  931.683462] iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
+[  931.683467] iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
+[  931.683471] iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
+[  931.683476] iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
+[  931.683480] iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
+[  931.683485] iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
+[  931.683489] iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
+[  931.683494] iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00002f25
+[  931.683498] iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+[  931.683503] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+[  931.683507] iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+[  931.683512] iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000058
+[  931.683516] iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88139fcc
+[  931.683521] iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+[  931.683525] iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+[  931.683530] iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+[  931.683534] iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+[  931.683536] iwlagn 0000:03:00.0: FH register values:
+[  931.683549] iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X139a9600
+[  931.683562] iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0139ad60
+[  931.683575] iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000018
+[  931.683588] iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
+[  931.683600] iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+[  931.683613] iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[  931.683626] iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[  931.683639] iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+[  931.683652] iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+[  931.683703] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
+[  931.683720] iwlagn 0000:03:00.0: EVT_LOGT:0344585191:0x01000110:0211
+[  931.683730] iwlagn 0000:03:00.0: EVT_LOGT:0344585195:0x00000000:0212
+[  931.683740] iwlagn 0000:03:00.0: EVT_LOGT:0344585235:0x00000000:0215
+[  931.683751] iwlagn 0000:03:00.0: EVT_LOGT:0344585239:0x00000008:0220
+[  931.683761] iwlagn 0000:03:00.0: EVT_LOGT:0344585441:0x0246001c:0206
+[  931.683772] iwlagn 0000:03:00.0: EVT_LOGT:0344585443:0x00000001:0204
+[  931.683782] iwlagn 0000:03:00.0: EVT_LOGT:0344585447:0x00000001:0214
+[  931.683792] iwlagn 0000:03:00.0: EVT_LOGT:0344585447:0x01001110:0205
+[  931.683802] iwlagn 0000:03:00.0: EVT_LOGT:0344585470:0x00000020:0208
+[  931.683813] iwlagn 0000:03:00.0: EVT_LOGT:0344585489:0x00000000:0302
+[  931.683823] iwlagn 0000:03:00.0: EVT_LOGT:0344585519:0x000000c4:0303
+[  931.683833] iwlagn 0000:03:00.0: EVT_LOGT:0344585526:0x00000001:0203
+[  931.683844] iwlagn 0000:03:00.0: EVT_LOGT:0344585529:0x0246001c:0206
+[  931.683854] iwlagn 0000:03:00.0: EVT_LOGT:0344585530:0x00000040:0204
+[  931.683864] iwlagn 0000:03:00.0: EVT_LOGT:0344585533:0x01000110:0211
+[  931.683875] iwlagn 0000:03:00.0: EVT_LOGT:0344585538:0x00000000:0212
+[  931.683885] iwlagn 0000:03:00.0: EVT_LOGT:0344585578:0x00000000:0215
+[  931.683895] iwlagn 0000:03:00.0: EVT_LOGT:0344585582:0x00000008:0220
+[  931.683905] iwlagn 0000:03:00.0: EVT_LOGT:0344585621:0x046e004e:0401
+[  931.683916] iwlagn 0000:03:00.0: EVT_LOGT:0344585632:0x00000000:0125
+
+--Boundary-00=_RaiANxRGgCSoAso--
