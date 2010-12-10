@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58840 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152Ab0LPLFe convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:36740 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755401Ab0LJEF1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 06:05:34 -0500
+	Thu, 9 Dec 2010 23:05:27 -0500
+Received: by qyk12 with SMTP id 12so2844244qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 20:05:26 -0800 (PST)
+Message-ID: <4D01A71D.7060206@lwfinger.net>
+Date: Thu, 09 Dec 2010 22:05:49 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <AANLkTinbhb-_v+8tJBPeoLcDo0mFzwo2EZAy3bnvErFT@mail.gmail.com>
-References: <AANLkTinbhb-_v+8tJBPeoLcDo0mFzwo2EZAy3bnvErFT@mail.gmail.com>
-Date: Thu, 16 Dec 2010 12:05:32 +0100
-Message-ID: <AANLkTi=t0VqSiZ=k9rBxPBVnHxy6v3JvTwW-n6ngM1f0@mail.gmail.com>
-Subject: Re: linux-next: Tree for December 16 (broken iwlwifi)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	John Linville <linville@tuxdriver.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>
+To: Jon Saul <rectifier04@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 0/4] Make N-PHY support experimental
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>	<4CFEFD8D.1080808@lwfinger.net>	<AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>	<4D00F3C3.6040801@lwfinger.net>	<1291908338.3540.16.camel@jlt3.sipsolutions.net>	<AANLkTimZTzMbQenxs6-1awdoGBhbJz2kyGBSO9v2+fzn@mail.gmail.com>	<1291908833.3540.18.camel@jlt3.sipsolutions.net>	<AANLkTin133Lq1z1paMboMczaATkAE6zv3gVfXCPSB=hq@mail.gmail.com> <4D00FDD4.3050705@lwfinger.net> <4D01A3EC.9000408@gmail.com>
+In-Reply-To: <4D01A3EC.9000408@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 16, 2010 at 11:54 AM, Sedat Dilek
-<sedat.dilek@googlemail.com> wrote:
-> Hi,
->
-> Just FYI (didn't look at the code right now, sorry for German output):
->
-> [ build.log ]
-> ...
-> /home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:
-> In function ‘iwl_rs_rate_init’:
-> /home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2876:8:
-> error: ‘struct iwl_lq_sta’ has no member named ‘dbg_fixed_rate’
-> make[8]: *** [drivers/net/wireless/iwlwifi/iwl-agn-rs.o] Fehler 1
-> make[7]: *** [drivers/net/wireless/iwlwifi] Fehler 2
-> make[6]: *** [drivers/net/wireless] Fehler 2
-> make[6]: *** Warte auf noch nicht beendete Prozesse...
-> ...
->
-> Regards,
-> - Sedat -
->
+On 12/09/2010 09:52 PM, Jon Saul wrote:
+> On 12/09/2010 10:03 AM, Larry Finger wrote:
+>> I sent a question to the seller of the card I mentioned earlier asking them to
+>> tell me the PCI IDs and explaining why I needed to know. If they answer, we will
+>> at least know if it is a 14e4:432b. If so, then it certainly will have a PHY rev
+>>> 2. At that price, I'm willing to buy it myself, but there should be money
+>> available to get things for Rafał. Who has those funds? I think the last time I
+>> got something though the donations, it was Stefano, but that was a long time ago.
+>>
+>> Rafał: If I get a rev > 2 card, you can certainly ssh into my computer for
+>> testing, or I can do the runs here and send you the dumps.
+>>
+>> Larry
+> I have a 14e4:432b card and am willing to help any way I can.
 
-Looks like dbg_fixed_rate is only set when CONFIG_MAC80211_DEBUGFS is set:
+Thanks for the offer. I bought one that should have those ID values on Ebay
+today. If it is not a 432b, or some other N PHY with rev > 2, I have the right
+to return it. The seller did not know the IDs. In that case, I will contact you
+to see what we can arrange.
 
-[ drivers/net/wireless/iwlwifi/iwl-agn-rs.h ]
-...
-#ifdef CONFIG_MAC80211_DEBUGFS
-        struct dentry *rs_sta_dbgfs_scale_table_file;
-        struct dentry *rs_sta_dbgfs_stats_table_file;
-        struct dentry *rs_sta_dbgfs_rate_scale_data_file;
-        struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
-        u32 dbg_fixed_rate;
-#endif
-...
+Larry
 
-So I have no CONFIG_MAC80211_DEBUGFS... :-).
-Can someone fix that, please?
-
-- Sedat -
