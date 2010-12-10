@@ -1,74 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55755 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108Ab0LCBJu (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:61348 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756379Ab0LJQUd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 20:09:50 -0500
-Received: by vws16 with SMTP id 16so1489912vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 17:09:49 -0800 (PST)
-Message-ID: <4CF84354.1090803@lwfinger.net>
-Date: Thu, 02 Dec 2010 19:09:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 10 Dec 2010 11:20:33 -0500
+Received: by yxt3 with SMTP id 3so2157612yxt.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 08:20:33 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] ssb: Attempt to recover from SPROM CRC error
-References: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net>	 (sfid-20101202_173713_192185_FFFFFFFF949EBC0D) <1291328154.13801.0.camel@maggie>
-In-Reply-To: <1291328154.13801.0.camel@maggie>
+In-Reply-To: <AANLkTikFnb=ErjA0VeS6oekExHxT1-Mh5_wa28UqEZZ4@mail.gmail.com>
+References: <AANLkTim5HQGNL-vSapeQw_-dJue89pYz7zc8eiShma8j@mail.gmail.com> <AANLkTikFnb=ErjA0VeS6oekExHxT1-Mh5_wa28UqEZZ4@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 10 Dec 2010 08:20:12 -0800
+Message-ID: <AANLkTi=T_oGkRowjaoPAhSMFGNeiioji8RdtdrdJqLv4@mail.gmail.com>
+Subject: Re: compat-wireless-2.6.37-rc5 released
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2010 04:15 PM, Michael Büsch wrote:
-> On Thu, 2010-12-02 at 10:36 -0600, Larry Finger wrote: 
->> Current code defaults to SPROM revision 1 if there is a CRC error. In at
->> least one known case, most of the corrupt contents are reasonable and
->> it is possible to extract the correct MAC address and TX power settings
->> from what is read. With this patch, an attempt is made to match the
->> apparent revision number with certain SPROM signatures. For those revisions
->> without such a feature, a reasonable guess is made. If the apparent
->> revision is invalid, or if the signature does not match, the previous
->> behavior is kept.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> John,
->>
->> Could you please test this patch with your card?
->>
->> Thanks,
->>
->> Larry
->> ---
->>
->> Index: linux-2.6/drivers/ssb/pci.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/ssb/pci.c
->> +++ linux-2.6/drivers/ssb/pci.c
->> @@ -620,6 +620,7 @@ static int ssb_pci_sprom_get(struct ssb_
->>  	const struct ssb_sprom *fallback;
->>  	int err = -ENOMEM;
->>  	u16 *buf;
->> +	u16 revision;
->>  
->>  	if (!ssb_is_sprom_available(bus)) {
->>  		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
->> @@ -671,6 +672,50 @@ static int ssb_pci_sprom_get(struct ssb_
->>  			}
->>  			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
->>  				   " SPROM CRC (corrupt SPROM)\n");
->> +			/* At this point, we have a faulty SPROM image.
->> +			 * In case only part of it is corrupt, try to
->> +			 * determine what rev we might have */
->> +			revision = buf[SSB_SPROMSIZE_WORDS_R4 - 1] & 0x00FF;
-> 
-> I think this could possibly overrun the buffer, or did I get something
-> wrong?
+On Thu, Dec 9, 2010 at 5:08 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> 01-ath9k-OTP.patch
+>> 03-ath9k-no-aggr-VO.patch
+>> 04-mac80211-no-aggr-VO.patch
 
-At this point, we have gotten a CRC error with the small SPROM and expanded the
-memory for the 440 byte size, and gotten a second CRC error. This test will be
-OK here.
+>> 05-ath9k-Reintroduce-modparam-to-enable-btcoex.patch
 
-Larry
+I'll skip this one, better synch the modparam with a kernel release
+rather than an update like compat-wireless.
+
+>> 06-ath9k_hw-fix-A-MPDU-key-search-issues-on-AR9003.patch
+
+I'm going to start sucking the reset in for a compat-wireless-2.6.37
+release. Please let me know if you believe any other patches are
+worthy, even if they are for other drivers, etc.
+
+  Luis
