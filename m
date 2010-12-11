@@ -1,607 +1,618 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57549 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754575Ab0L2Xc1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:27 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4753430eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:27 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 04/18] wl1271: AP-mode high level commands
-Date: Thu, 30 Dec 2010 01:31:59 +0200
-Message-Id: <1293665533-7599-5-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:42426 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752319Ab0LKXvg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Dec 2010 18:51:36 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 3/8] ath9k_hw: merge ath9k_hw_get_gain_boundaries_pdadcs between eeprom_def.c and eeprom_4k.c
+Date: Sun, 12 Dec 2010 00:51:09 +0100
+Message-Id: <1292111474-70939-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292111474-70939-2-git-send-email-nbd@openwrt.org>
+References: <1292111474-70939-1-git-send-email-nbd@openwrt.org>
+ <1292111474-70939-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add commands to start/stop BSS, add/remove STA and configure encryption
-keys. Split the encryption commands "set key" and "set default key" into
-AP and STA specific versions.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/cmd.c    |  276 +++++++++++++++++++++++++++++++++-
- drivers/net/wireless/wl12xx/cmd.h    |  139 ++++++++++++++++-
- drivers/net/wireless/wl12xx/init.c   |    2 +-
- drivers/net/wireless/wl12xx/main.c   |    6 +-
- drivers/net/wireless/wl12xx/tx.c     |    2 +-
- drivers/net/wireless/wl12xx/wl12xx.h |    8 +
- 6 files changed, 419 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom.c     |  190 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/eeprom.h     |    8 +
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c  |  169 +-----------------------
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |  164 +-----------------------
+ 4 files changed, 200 insertions(+), 331 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 15f4077..eb723f0 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -36,6 +36,7 @@
- #include "wl12xx_80211.h"
- #include "cmd.h"
- #include "event.h"
-+#include "tx.h"
- 
- #define WL1271_CMD_FAST_POLL_COUNT       50
- 
-@@ -702,9 +703,9 @@ int wl1271_build_qos_null_data(struct wl1271 *wl)
- 				       wl->basic_rate);
- }
- 
--int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id)
-+int wl1271_cmd_set_sta_default_wep_key(struct wl1271 *wl, u8 id)
- {
--	struct wl1271_cmd_set_keys *cmd;
-+	struct wl1271_cmd_set_sta_keys *cmd;
- 	int ret = 0;
- 
- 	wl1271_debug(DEBUG_CMD, "cmd set_default_wep_key %d", id);
-@@ -731,11 +732,42 @@ out:
- 	return ret;
- }
- 
--int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
-+int wl1271_cmd_set_ap_default_wep_key(struct wl1271 *wl, u8 id)
-+{
-+	struct wl1271_cmd_set_ap_keys *cmd;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd set_ap_default_wep_key %d", id);
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd->hlid = WL1271_AP_BROADCAST_HLID;
-+	cmd->key_id = id;
-+	cmd->lid_key_type = WEP_DEFAULT_LID_TYPE;
-+	cmd->key_action = cpu_to_le16(KEY_SET_ID);
-+	cmd->key_type = KEY_WEP;
-+
-+	ret = wl1271_cmd_send(wl, CMD_SET_KEYS, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_warning("cmd set_ap_default_wep_key failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(cmd);
-+
-+	return ret;
-+}
-+
-+int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 		       u8 key_size, const u8 *key, const u8 *addr,
- 		       u32 tx_seq_32, u16 tx_seq_16)
- {
--	struct wl1271_cmd_set_keys *cmd;
-+	struct wl1271_cmd_set_sta_keys *cmd;
- 	int ret = 0;
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-@@ -788,6 +820,67 @@ out:
- 	return ret;
- }
- 
-+int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
-+			u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
-+			u16 tx_seq_16)
-+{
-+	struct wl1271_cmd_set_ap_keys *cmd;
-+	int ret = 0;
-+	u8 lid_type;
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd)
-+		return -ENOMEM;
-+
-+	if (hlid == WL1271_AP_BROADCAST_HLID) {
-+		if (key_type == KEY_WEP)
-+			lid_type = WEP_DEFAULT_LID_TYPE;
-+		else
-+			lid_type = BROADCAST_LID_TYPE;
-+	} else {
-+		lid_type = UNICAST_LID_TYPE;
-+	}
-+
-+	wl1271_debug(DEBUG_CRYPT, "ap key action: %d id: %d lid: %d type: %d"
-+		     " hlid: %d", (int)action, (int)id, (int)lid_type,
-+		     (int)key_type, (int)hlid);
-+
-+	cmd->lid_key_type = lid_type;
-+	cmd->hlid = hlid;
-+	cmd->key_action = cpu_to_le16(action);
-+	cmd->key_size = key_size;
-+	cmd->key_type = key_type;
-+	cmd->key_id = id;
-+	cmd->ac_seq_num16[0] = cpu_to_le16(tx_seq_16);
-+	cmd->ac_seq_num32[0] = cpu_to_le32(tx_seq_32);
-+
-+	if (key_type == KEY_TKIP) {
-+		/*
-+		 * We get the key in the following form:
-+		 * TKIP (16 bytes) - TX MIC (8 bytes) - RX MIC (8 bytes)
-+		 * but the target is expecting:
-+		 * TKIP - RX MIC - TX MIC
-+		 */
-+		memcpy(cmd->key, key, 16);
-+		memcpy(cmd->key + 16, key + 24, 8);
-+		memcpy(cmd->key + 24, key + 16, 8);
-+	} else {
-+		memcpy(cmd->key, key, key_size);
-+	}
-+
-+	wl1271_dump(DEBUG_CRYPT, "TARGET AP KEY: ", cmd, sizeof(*cmd));
-+
-+	ret = wl1271_cmd_send(wl, CMD_SET_KEYS, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_warning("could not set ap keys");
-+		goto out;
-+	}
-+
-+out:
-+	kfree(cmd);
-+	return ret;
-+}
-+
- int wl1271_cmd_disconnect(struct wl1271 *wl)
- {
- 	struct wl1271_cmd_disconnect *cmd;
-@@ -850,3 +943,178 @@ out_free:
- out:
- 	return ret;
- }
-+
-+int wl1271_cmd_start_bss(struct wl1271 *wl)
-+{
-+	struct wl1271_cmd_bss_start *cmd;
-+	struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd start bss");
-+
-+	/*
-+	 * FIXME: We currently do not support hidden SSID. The real SSID
-+	 * should be fetched from mac80211 first.
-+	 */
-+	if (wl->ssid_len == 0) {
-+		wl1271_warning("Hidden SSID currently not supported for AP");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	memcpy(cmd->bssid, bss_conf->bssid, ETH_ALEN);
-+
-+	cmd->aging_period = WL1271_AP_DEF_INACTIV_SEC;
-+	cmd->bss_index = WL1271_AP_BSS_INDEX;
-+	cmd->global_hlid = WL1271_AP_GLOBAL_HLID;
-+	cmd->broadcast_hlid = WL1271_AP_BROADCAST_HLID;
-+	cmd->basic_rate_set = cpu_to_le32(wl->basic_rate_set);
-+	cmd->beacon_interval = cpu_to_le16(wl->beacon_int);
-+	cmd->dtim_interval = bss_conf->dtim_period;
-+	cmd->beacon_expiry = WL1271_AP_DEF_BEACON_EXP;
-+	cmd->channel = wl->channel;
-+	cmd->ssid_len = wl->ssid_len;
-+	cmd->ssid_type = SSID_TYPE_PUBLIC;
-+	memcpy(cmd->ssid, wl->ssid, wl->ssid_len);
-+
-+	switch (wl->band) {
-+	case IEEE80211_BAND_2GHZ:
-+		cmd->band = RADIO_BAND_2_4GHZ;
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		cmd->band = RADIO_BAND_5GHZ;
-+		break;
-+	default:
-+		wl1271_warning("bss start - unknown band: %d", (int)wl->band);
-+		cmd->band = RADIO_BAND_2_4GHZ;
-+		break;
-+	}
-+
-+	ret = wl1271_cmd_send(wl, CMD_BSS_START, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to initiate cmd start bss");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(cmd);
-+
-+out:
-+	return ret;
-+}
-+
-+int wl1271_cmd_stop_bss(struct wl1271 *wl)
-+{
-+	struct wl1271_cmd_bss_start *cmd;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd stop bss");
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd->bss_index = WL1271_AP_BSS_INDEX;
-+
-+	ret = wl1271_cmd_send(wl, CMD_BSS_STOP, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to initiate cmd stop bss");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(cmd);
-+
-+out:
-+	return ret;
-+}
-+
-+int wl1271_cmd_add_sta(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
-+{
-+	struct wl1271_cmd_add_sta *cmd;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd add sta %d", (int)hlid);
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/* currently we don't support UAPSD */
-+	cmd->sp_len = 0;
-+
-+	memcpy(cmd->addr, sta->addr, ETH_ALEN);
-+	cmd->bss_index = WL1271_AP_BSS_INDEX;
-+	cmd->aid = sta->aid;
-+	cmd->hlid = hlid;
-+
-+	/*
-+	 * FIXME: Does STA support QOS? We need to propagate this info from
-+	 * hostapd. Currently not that important since this is only used for
-+	 * sending the correct flavor of null-data packet in response to a
-+	 * trigger.
-+	 */
-+	cmd->wmm = 0;
-+
-+	cmd->supported_rates = cpu_to_le32(wl1271_tx_enabled_rates_get(wl,
-+						sta->supp_rates[wl->band]));
-+
-+	wl1271_debug(DEBUG_CMD, "new sta rates: 0x%x", cmd->supported_rates);
-+
-+	ret = wl1271_cmd_send(wl, CMD_ADD_STA, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to initiate cmd add sta");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(cmd);
-+
-+out:
-+	return ret;
-+}
-+
-+int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid)
-+{
-+	struct wl1271_cmd_remove_sta *cmd;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd remove sta %d", (int)hlid);
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd->hlid = hlid;
-+	/* We never send a deauth, mac80211 is in charge of this */
-+	cmd->reason_opcode = 0;
-+	cmd->send_deauth_flag = 0;
-+
-+	ret = wl1271_cmd_send(wl, CMD_REMOVE_STA, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to initiate cmd remove sta");
-+		goto out_free;
-+	}
-+
-+	ret = wl1271_cmd_wait_for_event(wl, STA_REMOVE_COMPLETE_EVENT_ID);
-+	if (ret < 0)
-+		wl1271_error("cmd remove sta event completion error");
-+
-+out_free:
-+	kfree(cmd);
-+
-+out:
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
-index 2a1d9db..072bf3c 100644
---- a/drivers/net/wireless/wl12xx/cmd.h
-+++ b/drivers/net/wireless/wl12xx/cmd.h
-@@ -54,12 +54,20 @@ struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
- int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr);
- int wl1271_build_qos_null_data(struct wl1271 *wl);
- int wl1271_cmd_build_klv_null_data(struct wl1271 *wl);
--int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
--int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
--		       u8 key_size, const u8 *key, const u8 *addr,
--		       u32 tx_seq_32, u16 tx_seq_16);
-+int wl1271_cmd_set_sta_default_wep_key(struct wl1271 *wl, u8 id);
-+int wl1271_cmd_set_ap_default_wep_key(struct wl1271 *wl, u8 id);
-+int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
-+			   u8 key_size, const u8 *key, const u8 *addr,
-+			   u32 tx_seq_32, u16 tx_seq_16);
-+int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
-+			  u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
-+			  u16 tx_seq_16);
- int wl1271_cmd_disconnect(struct wl1271 *wl);
- int wl1271_cmd_set_sta_state(struct wl1271 *wl);
-+int wl1271_cmd_start_bss(struct wl1271 *wl);
-+int wl1271_cmd_stop_bss(struct wl1271 *wl);
-+int wl1271_cmd_add_sta(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid);
-+int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid);
- 
- enum wl1271_commands {
- 	CMD_INTERROGATE     = 1,    /*use this to read information elements*/
-@@ -98,6 +106,12 @@ enum wl1271_commands {
- 	CMD_STOP_PERIODIC_SCAN       = 51,
- 	CMD_SET_STA_STATE            = 52,
- 
-+	/* AP mode commands */
-+	CMD_BSS_START                = 60,
-+	CMD_BSS_STOP                 = 61,
-+	CMD_ADD_STA                  = 62,
-+	CMD_REMOVE_STA               = 63,
-+
- 	NUM_COMMANDS,
- 	MAX_COMMAND_ID = 0xFFFF,
- };
-@@ -289,7 +303,7 @@ enum wl1271_cmd_key_type {
- 
- /* FIXME: Add description for key-types */
- 
--struct wl1271_cmd_set_keys {
-+struct wl1271_cmd_set_sta_keys {
- 	struct wl1271_cmd_header header;
- 
- 	/* Ignored for default WEP key */
-@@ -318,6 +332,57 @@ struct wl1271_cmd_set_keys {
- 	__le32 ac_seq_num32[NUM_ACCESS_CATEGORIES_COPY];
- } __packed;
- 
-+enum wl1271_cmd_lid_key_type {
-+	UNICAST_LID_TYPE     = 0,
-+	BROADCAST_LID_TYPE   = 1,
-+	WEP_DEFAULT_LID_TYPE = 2
-+};
-+
-+struct wl1271_cmd_set_ap_keys {
-+	struct wl1271_cmd_header header;
-+
-+	/*
-+	 * Indicates whether the HLID is a unicast key set
-+	 * or broadcast key set. A special value 0xFF is
-+	 * used to indicate that the HLID is on WEP-default
-+	 * (multi-hlids). of type wl1271_cmd_lid_key_type.
-+	 */
-+	u8 hlid;
-+
-+	/*
-+	 * In WEP-default network (hlid == 0xFF) used to
-+	 * indicate which network STA/IBSS/AP role should be
-+	 * changed
-+	 */
-+	u8 lid_key_type;
-+
-+	/*
-+	 * Key ID - For TKIP and AES key types, this field
-+	 * indicates the value that should be inserted into
-+	 * the KeyID field of frames transmitted using this
-+	 * key entry. For broadcast keys the index use as a
-+	 * marker for TX/RX key.
-+	 * For WEP default network (HLID=0xFF), this field
-+	 * indicates the ID of the key to add or remove.
-+	 */
-+	u8 key_id;
-+	u8 reserved_1;
-+
-+	/* key_action_e */
-+	__le16 key_action;
-+
-+	/* key size in bytes */
-+	u8 key_size;
-+
-+	/* key_type_e */
-+	u8 key_type;
-+
-+	/* This field holds the security key data to add to the STA table */
-+	u8 key[MAX_KEY_SIZE];
-+	__le16 ac_seq_num16[NUM_ACCESS_CATEGORIES_COPY];
-+	__le32 ac_seq_num32[NUM_ACCESS_CATEGORIES_COPY];
-+} __packed;
-+
- struct wl1271_cmd_test_header {
- 	u8 id;
- 	u8 padding[3];
-@@ -412,4 +477,68 @@ struct wl1271_cmd_set_sta_state {
- 	u8 padding[3];
- } __packed;
- 
-+enum wl1271_ssid_type {
-+	SSID_TYPE_PUBLIC = 0,
-+	SSID_TYPE_HIDDEN = 1
-+};
-+
-+struct wl1271_cmd_bss_start {
-+	struct wl1271_cmd_header header;
-+
-+	/* wl1271_ssid_type */
-+	u8 ssid_type;
-+	u8 ssid_len;
-+	u8 ssid[IW_ESSID_MAX_SIZE];
-+	u8 padding_1[2];
-+
-+	/* Basic rate set */
-+	__le32 basic_rate_set;
-+	/* Aging period in seconds*/
-+	__le16 aging_period;
-+
-+	/*
-+	 * This field specifies the time between target beacon
-+	 * transmission times (TBTTs), in time units (TUs).
-+	 * Valid values are 1 to 1024.
-+	 */
-+	__le16 beacon_interval;
-+	u8 bssid[ETH_ALEN];
-+	u8 bss_index;
-+	/* Radio band */
-+	u8 band;
-+	u8 channel;
-+	/* The host link id for the AP's global queue */
-+	u8 global_hlid;
-+	/* The host link id for the AP's broadcast queue */
-+	u8 broadcast_hlid;
-+	/* DTIM count */
-+	u8 dtim_interval;
-+	/* Beacon expiry time in ms */
-+	u8 beacon_expiry;
-+	u8 padding_2[3];
-+} __packed;
-+
-+struct wl1271_cmd_add_sta {
-+	struct wl1271_cmd_header header;
-+
-+	u8 addr[ETH_ALEN];
-+	u8 hlid;
-+	u8 aid;
-+	u8 psd_type[NUM_ACCESS_CATEGORIES_COPY];
-+	__le32 supported_rates;
-+	u8 bss_index;
-+	u8 sp_len;
-+	u8 wmm;
-+	u8 padding1;
-+} __packed;
-+
-+struct wl1271_cmd_remove_sta {
-+	struct wl1271_cmd_header header;
-+
-+	u8 hlid;
-+	u8 reason_opcode;
-+	u8 send_deauth_flag;
-+	u8 padding1;
-+} __packed;
-+
- #endif /* __WL1271_CMD_H__ */
-diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
-index f468d71..799c369 100644
---- a/drivers/net/wireless/wl12xx/init.c
-+++ b/drivers/net/wireless/wl12xx/init.c
-@@ -41,7 +41,7 @@ static int wl1271_init_hwenc_config(struct wl1271 *wl)
- 		return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 3d99b6c..d54cfa4 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -279,6 +279,196 @@ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
  	}
+ }
  
--	ret = wl1271_cmd_set_default_wep_key(wl, wl->default_key);
-+	ret = wl1271_cmd_set_sta_default_wep_key(wl, wl->default_key);
- 	if (ret < 0) {
- 		wl1271_warning("couldn't set default key");
- 		return ret;
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index b40568e..9785b4c 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1712,7 +1712,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	switch (cmd) {
- 	case SET_KEY:
--		ret = wl1271_cmd_set_key(wl, KEY_ADD_OR_REPLACE,
-+		ret = wl1271_cmd_set_sta_key(wl, KEY_ADD_OR_REPLACE,
- 					 key_conf->keyidx, key_type,
- 					 key_conf->keylen, key_conf->key,
- 					 addr, tx_seq_32, tx_seq_16);
-@@ -1723,7 +1723,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 		/* the default WEP key needs to be configured at least once */
- 		if (key_type == KEY_WEP) {
--			ret = wl1271_cmd_set_default_wep_key(wl,
-+			ret = wl1271_cmd_set_sta_default_wep_key(wl,
- 							     wl->default_key);
- 			if (ret < 0)
- 				goto out_sleep;
-@@ -1738,7 +1738,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		if (!is_broadcast_ether_addr(addr))
- 			break;
- 
--		ret = wl1271_cmd_set_key(wl, KEY_REMOVE,
-+		ret = wl1271_cmd_set_sta_key(wl, KEY_REMOVE,
- 					 key_conf->keyidx, key_type,
- 					 key_conf->keylen, key_conf->key,
- 					 addr, 0, 0);
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 0cf210d..442a7bd 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -170,7 +170,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 
- 		/* FIXME: do we have to do this if we're not using WEP? */
- 		if (unlikely(wl->default_key != idx)) {
--			ret = wl1271_cmd_set_default_wep_key(wl, idx);
-+			ret = wl1271_cmd_set_sta_default_wep_key(wl, idx);
- 			if (ret < 0)
- 				return ret;
- 			wl->default_key = idx;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 01711fe..aba8f47 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -129,6 +129,14 @@ extern u32 wl12xx_debug_level;
- #define WL1271_DEFAULT_BEACON_INT  100
- #define WL1271_DEFAULT_DTIM_PERIOD 1
- 
-+#define WL1271_AP_GLOBAL_HLID      0
-+#define WL1271_AP_BROADCAST_HLID   1
-+#define WL1271_AP_STA_HLID_START   2
++void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
++				struct ath9k_channel *chan,
++				void *pRawDataSet,
++				u8 *bChans, u16 availPiers,
++				u16 tPdGainOverlap,
++				u16 *pPdGainBoundaries, u8 *pPDADCValues,
++				u16 numXpdGains)
++{
++	int i, j, k;
++	int16_t ss;
++	u16 idxL = 0, idxR = 0, numPiers;
++	static u8 vpdTableL[AR5416_NUM_PD_GAINS]
++		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
++	static u8 vpdTableR[AR5416_NUM_PD_GAINS]
++		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
++	static u8 vpdTableI[AR5416_NUM_PD_GAINS]
++		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
 +
-+#define WL1271_AP_BSS_INDEX        0
-+#define WL1271_AP_DEF_INACTIV_SEC  300
-+#define WL1271_AP_DEF_BEACON_EXP   20
++	u8 *pVpdL, *pVpdR, *pPwrL, *pPwrR;
++	u8 minPwrT4[AR5416_NUM_PD_GAINS];
++	u8 maxPwrT4[AR5416_NUM_PD_GAINS];
++	int16_t vpdStep;
++	int16_t tmpVal;
++	u16 sizeCurrVpdTable, maxIndex, tgtIndex;
++	bool match;
++	int16_t minDelta = 0;
++	struct chan_centers centers;
++	int pdgain_boundary_default;
++	struct cal_data_per_freq *data_def = pRawDataSet;
++	struct cal_data_per_freq_4k *data_4k = pRawDataSet;
++	bool eeprom_4k = AR_SREV_9285(ah) || AR_SREV_9271(ah);
 +
- #define ACX_TX_DESCRIPTORS         32
++	memset(&minPwrT4, 0, AR5416_NUM_PD_GAINS);
++	ath9k_hw_get_channel_centers(ah, chan, &centers);
++
++	for (numPiers = 0; numPiers < availPiers; numPiers++) {
++		if (bChans[numPiers] == AR5416_BCHAN_UNUSED)
++			break;
++	}
++
++	match = ath9k_hw_get_lower_upper_index((u8)FREQ2FBIN(centers.synth_center,
++							     IS_CHAN_2GHZ(chan)),
++					       bChans, numPiers, &idxL, &idxR);
++
++	if (match) {
++		if (eeprom_4k) {
++			for (i = 0; i < numXpdGains; i++) {
++				minPwrT4[i] = data_4k[idxL].pwrPdg[i][0];
++				maxPwrT4[i] = data_4k[idxL].pwrPdg[i][4];
++				ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
++						data_4k[idxL].pwrPdg[i],
++						data_4k[idxL].vpdPdg[i],
++						AR5416_PD_GAIN_ICEPTS,
++						vpdTableI[i]);
++			}
++		} else {
++			for (i = 0; i < numXpdGains; i++) {
++				minPwrT4[i] = data_def[idxL].pwrPdg[i][0];
++				maxPwrT4[i] = data_def[idxL].pwrPdg[i][4];
++				ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
++						data_def[idxL].pwrPdg[i],
++						data_def[idxL].vpdPdg[i],
++						AR5416_PD_GAIN_ICEPTS,
++						vpdTableI[i]);
++			}
++		}
++	} else {
++		for (i = 0; i < numXpdGains; i++) {
++			if (eeprom_4k) {
++				pVpdL = data_4k[idxL].vpdPdg[i];
++				pPwrL = data_4k[idxL].pwrPdg[i];
++				pVpdR = data_4k[idxR].vpdPdg[i];
++				pPwrR = data_4k[idxR].pwrPdg[i];
++			} else {
++				pVpdL = data_def[idxL].vpdPdg[i];
++				pPwrL = data_def[idxL].pwrPdg[i];
++				pVpdR = data_def[idxR].vpdPdg[i];
++				pPwrR = data_def[idxR].pwrPdg[i];
++			}
++
++			minPwrT4[i] = max(pPwrL[0], pPwrR[0]);
++
++			maxPwrT4[i] =
++				min(pPwrL[AR5416_PD_GAIN_ICEPTS - 1],
++				    pPwrR[AR5416_PD_GAIN_ICEPTS - 1]);
++
++
++			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
++						pPwrL, pVpdL,
++						AR5416_PD_GAIN_ICEPTS,
++						vpdTableL[i]);
++			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
++						pPwrR, pVpdR,
++						AR5416_PD_GAIN_ICEPTS,
++						vpdTableR[i]);
++
++			for (j = 0; j <= (maxPwrT4[i] - minPwrT4[i]) / 2; j++) {
++				vpdTableI[i][j] =
++					(u8)(ath9k_hw_interpolate((u16)
++					     FREQ2FBIN(centers.
++						       synth_center,
++						       IS_CHAN_2GHZ
++						       (chan)),
++					     bChans[idxL], bChans[idxR],
++					     vpdTableL[i][j], vpdTableR[i][j]));
++			}
++		}
++	}
++
++	k = 0;
++
++	for (i = 0; i < numXpdGains; i++) {
++		if (i == (numXpdGains - 1))
++			pPdGainBoundaries[i] =
++				(u16)(maxPwrT4[i] / 2);
++		else
++			pPdGainBoundaries[i] =
++				(u16)((maxPwrT4[i] + minPwrT4[i + 1]) / 4);
++
++		pPdGainBoundaries[i] =
++			min((u16)MAX_RATE_POWER, pPdGainBoundaries[i]);
++
++		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
++			minDelta = pPdGainBoundaries[0] - 23;
++			pPdGainBoundaries[0] = 23;
++		} else {
++			minDelta = 0;
++		}
++
++		if (i == 0) {
++			if (AR_SREV_9280_20_OR_LATER(ah))
++				ss = (int16_t)(0 - (minPwrT4[i] / 2));
++			else
++				ss = 0;
++		} else {
++			ss = (int16_t)((pPdGainBoundaries[i - 1] -
++					(minPwrT4[i] / 2)) -
++				       tPdGainOverlap + 1 + minDelta);
++		}
++		vpdStep = (int16_t)(vpdTableI[i][1] - vpdTableI[i][0]);
++		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
++
++		while ((ss < 0) && (k < (AR5416_NUM_PDADC_VALUES - 1))) {
++			tmpVal = (int16_t)(vpdTableI[i][0] + ss * vpdStep);
++			pPDADCValues[k++] = (u8)((tmpVal < 0) ? 0 : tmpVal);
++			ss++;
++		}
++
++		sizeCurrVpdTable = (u8) ((maxPwrT4[i] - minPwrT4[i]) / 2 + 1);
++		tgtIndex = (u8)(pPdGainBoundaries[i] + tPdGainOverlap -
++				(minPwrT4[i] / 2));
++		maxIndex = (tgtIndex < sizeCurrVpdTable) ?
++			tgtIndex : sizeCurrVpdTable;
++
++		while ((ss < maxIndex) && (k < (AR5416_NUM_PDADC_VALUES - 1))) {
++			pPDADCValues[k++] = vpdTableI[i][ss++];
++		}
++
++		vpdStep = (int16_t)(vpdTableI[i][sizeCurrVpdTable - 1] -
++				    vpdTableI[i][sizeCurrVpdTable - 2]);
++		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
++
++		if (tgtIndex >= maxIndex) {
++			while ((ss <= tgtIndex) &&
++			       (k < (AR5416_NUM_PDADC_VALUES - 1))) {
++				tmpVal = (int16_t)((vpdTableI[i][sizeCurrVpdTable - 1] +
++						    (ss - maxIndex + 1) * vpdStep));
++				pPDADCValues[k++] = (u8)((tmpVal > 255) ?
++							 255 : tmpVal);
++				ss++;
++			}
++		}
++	}
++
++	if (eeprom_4k)
++		pdgain_boundary_default = 58;
++	else
++		pdgain_boundary_default = pPdGainBoundaries[i - 1];
++
++	while (i < AR5416_PD_GAINS_IN_MASK) {
++		pPdGainBoundaries[i] = pdgain_boundary_default;
++		i++;
++	}
++
++	while (k < AR5416_NUM_PDADC_VALUES) {
++		pPDADCValues[k] = pPDADCValues[k - 1];
++		k++;
++	}
++}
++
+ int ath9k_hw_eeprom_init(struct ath_hw *ah)
+ {
+ 	int status;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 833dd0c..1f6b7128 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -691,6 +691,14 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah);
+ int ath9k_hw_eeprom_init(struct ath_hw *ah);
  
- #define WL1271_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
++void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
++				struct ath9k_channel *chan,
++				void *pRawDataSet,
++				u8 *bChans, u16 availPiers,
++				u16 tPdGainOverlap,
++				u16 *pPdGainBoundaries, u8 *pPDADCValues,
++				u16 numXpdGains);
++
+ #define ar5416_get_ntxchains(_txchainmask)			\
+ 	(((_txchainmask >> 2) & 1) +                            \
+ 	 ((_txchainmask >> 1) & 1) + (_txchainmask & 1))
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 6102309..b0f7446 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -227,173 +227,6 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 	}
+ }
+ 
+-static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
+-				struct ath9k_channel *chan,
+-				struct cal_data_per_freq_4k *pRawDataSet,
+-				u8 *bChans, u16 availPiers,
+-				u16 tPdGainOverlap,
+-				u16 *pPdGainBoundaries, u8 *pPDADCValues,
+-				u16 numXpdGains)
+-{
+-#define TMP_VAL_VPD_TABLE \
+-	((vpdTableI[i][sizeCurrVpdTable - 1] + (ss - maxIndex + 1) * vpdStep));
+-	int i, j, k;
+-	int16_t ss;
+-	u16 idxL = 0, idxR = 0, numPiers;
+-	static u8 vpdTableL[AR5416_EEP4K_NUM_PD_GAINS]
+-		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
+-	static u8 vpdTableR[AR5416_EEP4K_NUM_PD_GAINS]
+-		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
+-	static u8 vpdTableI[AR5416_EEP4K_NUM_PD_GAINS]
+-		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
+-
+-	u8 *pVpdL, *pVpdR, *pPwrL, *pPwrR;
+-	u8 minPwrT4[AR5416_EEP4K_NUM_PD_GAINS];
+-	u8 maxPwrT4[AR5416_EEP4K_NUM_PD_GAINS];
+-	int16_t vpdStep;
+-	int16_t tmpVal;
+-	u16 sizeCurrVpdTable, maxIndex, tgtIndex;
+-	bool match;
+-	int16_t minDelta = 0;
+-	struct chan_centers centers;
+-#define PD_GAIN_BOUNDARY_DEFAULT 58;
+-
+-	memset(&minPwrT4, 0, AR5416_NUM_PD_GAINS);
+-	ath9k_hw_get_channel_centers(ah, chan, &centers);
+-
+-	for (numPiers = 0; numPiers < availPiers; numPiers++) {
+-		if (bChans[numPiers] == AR5416_BCHAN_UNUSED)
+-			break;
+-	}
+-
+-	match = ath9k_hw_get_lower_upper_index(
+-					(u8)FREQ2FBIN(centers.synth_center,
+-					IS_CHAN_2GHZ(chan)), bChans, numPiers,
+-					&idxL, &idxR);
+-
+-	if (match) {
+-		for (i = 0; i < numXpdGains; i++) {
+-			minPwrT4[i] = pRawDataSet[idxL].pwrPdg[i][0];
+-			maxPwrT4[i] = pRawDataSet[idxL].pwrPdg[i][4];
+-			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
+-					pRawDataSet[idxL].pwrPdg[i],
+-					pRawDataSet[idxL].vpdPdg[i],
+-					AR5416_PD_GAIN_ICEPTS,
+-					vpdTableI[i]);
+-		}
+-	} else {
+-		for (i = 0; i < numXpdGains; i++) {
+-			pVpdL = pRawDataSet[idxL].vpdPdg[i];
+-			pPwrL = pRawDataSet[idxL].pwrPdg[i];
+-			pVpdR = pRawDataSet[idxR].vpdPdg[i];
+-			pPwrR = pRawDataSet[idxR].pwrPdg[i];
+-
+-			minPwrT4[i] = max(pPwrL[0], pPwrR[0]);
+-
+-			maxPwrT4[i] =
+-				min(pPwrL[AR5416_PD_GAIN_ICEPTS - 1],
+-				    pPwrR[AR5416_PD_GAIN_ICEPTS - 1]);
+-
+-
+-			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
+-						pPwrL, pVpdL,
+-						AR5416_PD_GAIN_ICEPTS,
+-						vpdTableL[i]);
+-			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
+-						pPwrR, pVpdR,
+-						AR5416_PD_GAIN_ICEPTS,
+-						vpdTableR[i]);
+-
+-			for (j = 0; j <= (maxPwrT4[i] - minPwrT4[i]) / 2; j++) {
+-				vpdTableI[i][j] =
+-					(u8)(ath9k_hw_interpolate((u16)
+-					     FREQ2FBIN(centers.
+-						       synth_center,
+-						       IS_CHAN_2GHZ
+-						       (chan)),
+-					     bChans[idxL], bChans[idxR],
+-					     vpdTableL[i][j], vpdTableR[i][j]));
+-			}
+-		}
+-	}
+-
+-	k = 0;
+-
+-	for (i = 0; i < numXpdGains; i++) {
+-		if (i == (numXpdGains - 1))
+-			pPdGainBoundaries[i] =
+-				(u16)(maxPwrT4[i] / 2);
+-		else
+-			pPdGainBoundaries[i] =
+-				(u16)((maxPwrT4[i] + minPwrT4[i + 1]) / 4);
+-
+-		pPdGainBoundaries[i] =
+-			min((u16)MAX_RATE_POWER, pPdGainBoundaries[i]);
+-
+-		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
+-			minDelta = pPdGainBoundaries[0] - 23;
+-			pPdGainBoundaries[0] = 23;
+-		} else {
+-			minDelta = 0;
+-		}
+-
+-		if (i == 0) {
+-			if (AR_SREV_9280_20_OR_LATER(ah))
+-				ss = (int16_t)(0 - (minPwrT4[i] / 2));
+-			else
+-				ss = 0;
+-		} else {
+-			ss = (int16_t)((pPdGainBoundaries[i - 1] -
+-					(minPwrT4[i] / 2)) -
+-				       tPdGainOverlap + 1 + minDelta);
+-		}
+-		vpdStep = (int16_t)(vpdTableI[i][1] - vpdTableI[i][0]);
+-		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
+-
+-		while ((ss < 0) && (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+-			tmpVal = (int16_t)(vpdTableI[i][0] + ss * vpdStep);
+-			pPDADCValues[k++] = (u8)((tmpVal < 0) ? 0 : tmpVal);
+-			ss++;
+-		}
+-
+-		sizeCurrVpdTable = (u8) ((maxPwrT4[i] - minPwrT4[i]) / 2 + 1);
+-		tgtIndex = (u8)(pPdGainBoundaries[i] + tPdGainOverlap -
+-				(minPwrT4[i] / 2));
+-		maxIndex = (tgtIndex < sizeCurrVpdTable) ?
+-			tgtIndex : sizeCurrVpdTable;
+-
+-		while ((ss < maxIndex) && (k < (AR5416_NUM_PDADC_VALUES - 1)))
+-			pPDADCValues[k++] = vpdTableI[i][ss++];
+-
+-		vpdStep = (int16_t)(vpdTableI[i][sizeCurrVpdTable - 1] -
+-				    vpdTableI[i][sizeCurrVpdTable - 2]);
+-		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
+-
+-		if (tgtIndex >= maxIndex) {
+-			while ((ss <= tgtIndex) &&
+-			       (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+-				tmpVal = (int16_t) TMP_VAL_VPD_TABLE;
+-				pPDADCValues[k++] = (u8)((tmpVal > 255) ?
+-							 255 : tmpVal);
+-				ss++;
+-			}
+-		}
+-	}
+-
+-	while (i < AR5416_PD_GAINS_IN_MASK) {
+-		pPdGainBoundaries[i] = PD_GAIN_BOUNDARY_DEFAULT;
+-		i++;
+-	}
+-
+-	while (k < AR5416_NUM_PDADC_VALUES) {
+-		pPDADCValues[k] = pPDADCValues[k - 1];
+-		k++;
+-	}
+-
+-	return;
+-#undef TMP_VAL_VPD_TABLE
+-}
+-
+ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 				  struct ath9k_channel *chan,
+ 				  int16_t *pTxPowerIndexOffset)
+@@ -455,7 +288,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 		if (pEepData->baseEepHeader.txMask & (1 << i)) {
+ 			pRawDataset = pEepData->calPierData2G[i];
+ 
+-			ath9k_hw_get_4k_gain_boundaries_pdadcs(ah, chan,
++			ath9k_hw_get_gain_boundaries_pdadcs(ah, chan,
+ 					    pRawDataset, pCalBChans,
+ 					    numPiers, pdGainOverlap_t2,
+ 					    gainBoundaries,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index da96a78..ad3e234 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -588,168 +588,6 @@ static void ath9k_hw_def_set_addac(struct ath_hw *ah,
+ #undef XPA_LVL_FREQ
+ }
+ 
+-static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
+-				struct ath9k_channel *chan,
+-				struct cal_data_per_freq *pRawDataSet,
+-				u8 *bChans, u16 availPiers,
+-				u16 tPdGainOverlap,
+-				u16 *pPdGainBoundaries, u8 *pPDADCValues,
+-				u16 numXpdGains)
+-{
+-	int i, j, k;
+-	int16_t ss;
+-	u16 idxL = 0, idxR = 0, numPiers;
+-	static u8 vpdTableL[AR5416_NUM_PD_GAINS]
+-		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
+-	static u8 vpdTableR[AR5416_NUM_PD_GAINS]
+-		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
+-	static u8 vpdTableI[AR5416_NUM_PD_GAINS]
+-		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
+-
+-	u8 *pVpdL, *pVpdR, *pPwrL, *pPwrR;
+-	u8 minPwrT4[AR5416_NUM_PD_GAINS];
+-	u8 maxPwrT4[AR5416_NUM_PD_GAINS];
+-	int16_t vpdStep;
+-	int16_t tmpVal;
+-	u16 sizeCurrVpdTable, maxIndex, tgtIndex;
+-	bool match;
+-	int16_t minDelta = 0;
+-	struct chan_centers centers;
+-
+-	memset(&minPwrT4, 0, AR5416_NUM_PD_GAINS);
+-	ath9k_hw_get_channel_centers(ah, chan, &centers);
+-
+-	for (numPiers = 0; numPiers < availPiers; numPiers++) {
+-		if (bChans[numPiers] == AR5416_BCHAN_UNUSED)
+-			break;
+-	}
+-
+-	match = ath9k_hw_get_lower_upper_index((u8)FREQ2FBIN(centers.synth_center,
+-							     IS_CHAN_2GHZ(chan)),
+-					       bChans, numPiers, &idxL, &idxR);
+-
+-	if (match) {
+-		for (i = 0; i < numXpdGains; i++) {
+-			minPwrT4[i] = pRawDataSet[idxL].pwrPdg[i][0];
+-			maxPwrT4[i] = pRawDataSet[idxL].pwrPdg[i][4];
+-			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
+-					pRawDataSet[idxL].pwrPdg[i],
+-					pRawDataSet[idxL].vpdPdg[i],
+-					AR5416_PD_GAIN_ICEPTS,
+-					vpdTableI[i]);
+-		}
+-	} else {
+-		for (i = 0; i < numXpdGains; i++) {
+-			pVpdL = pRawDataSet[idxL].vpdPdg[i];
+-			pPwrL = pRawDataSet[idxL].pwrPdg[i];
+-			pVpdR = pRawDataSet[idxR].vpdPdg[i];
+-			pPwrR = pRawDataSet[idxR].pwrPdg[i];
+-
+-			minPwrT4[i] = max(pPwrL[0], pPwrR[0]);
+-
+-			maxPwrT4[i] =
+-				min(pPwrL[AR5416_PD_GAIN_ICEPTS - 1],
+-				    pPwrR[AR5416_PD_GAIN_ICEPTS - 1]);
+-
+-
+-			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
+-						pPwrL, pVpdL,
+-						AR5416_PD_GAIN_ICEPTS,
+-						vpdTableL[i]);
+-			ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
+-						pPwrR, pVpdR,
+-						AR5416_PD_GAIN_ICEPTS,
+-						vpdTableR[i]);
+-
+-			for (j = 0; j <= (maxPwrT4[i] - minPwrT4[i]) / 2; j++) {
+-				vpdTableI[i][j] =
+-					(u8)(ath9k_hw_interpolate((u16)
+-					     FREQ2FBIN(centers.
+-						       synth_center,
+-						       IS_CHAN_2GHZ
+-						       (chan)),
+-					     bChans[idxL], bChans[idxR],
+-					     vpdTableL[i][j], vpdTableR[i][j]));
+-			}
+-		}
+-	}
+-
+-	k = 0;
+-
+-	for (i = 0; i < numXpdGains; i++) {
+-		if (i == (numXpdGains - 1))
+-			pPdGainBoundaries[i] =
+-				(u16)(maxPwrT4[i] / 2);
+-		else
+-			pPdGainBoundaries[i] =
+-				(u16)((maxPwrT4[i] + minPwrT4[i + 1]) / 4);
+-
+-		pPdGainBoundaries[i] =
+-			min((u16)MAX_RATE_POWER, pPdGainBoundaries[i]);
+-
+-		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
+-			minDelta = pPdGainBoundaries[0] - 23;
+-			pPdGainBoundaries[0] = 23;
+-		} else {
+-			minDelta = 0;
+-		}
+-
+-		if (i == 0) {
+-			if (AR_SREV_9280_20_OR_LATER(ah))
+-				ss = (int16_t)(0 - (minPwrT4[i] / 2));
+-			else
+-				ss = 0;
+-		} else {
+-			ss = (int16_t)((pPdGainBoundaries[i - 1] -
+-					(minPwrT4[i] / 2)) -
+-				       tPdGainOverlap + 1 + minDelta);
+-		}
+-		vpdStep = (int16_t)(vpdTableI[i][1] - vpdTableI[i][0]);
+-		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
+-
+-		while ((ss < 0) && (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+-			tmpVal = (int16_t)(vpdTableI[i][0] + ss * vpdStep);
+-			pPDADCValues[k++] = (u8)((tmpVal < 0) ? 0 : tmpVal);
+-			ss++;
+-		}
+-
+-		sizeCurrVpdTable = (u8) ((maxPwrT4[i] - minPwrT4[i]) / 2 + 1);
+-		tgtIndex = (u8)(pPdGainBoundaries[i] + tPdGainOverlap -
+-				(minPwrT4[i] / 2));
+-		maxIndex = (tgtIndex < sizeCurrVpdTable) ?
+-			tgtIndex : sizeCurrVpdTable;
+-
+-		while ((ss < maxIndex) && (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+-			pPDADCValues[k++] = vpdTableI[i][ss++];
+-		}
+-
+-		vpdStep = (int16_t)(vpdTableI[i][sizeCurrVpdTable - 1] -
+-				    vpdTableI[i][sizeCurrVpdTable - 2]);
+-		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
+-
+-		if (tgtIndex >= maxIndex) {
+-			while ((ss <= tgtIndex) &&
+-			       (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+-				tmpVal = (int16_t)((vpdTableI[i][sizeCurrVpdTable - 1] +
+-						    (ss - maxIndex + 1) * vpdStep));
+-				pPDADCValues[k++] = (u8)((tmpVal > 255) ?
+-							 255 : tmpVal);
+-				ss++;
+-			}
+-		}
+-	}
+-
+-	while (i < AR5416_PD_GAINS_IN_MASK) {
+-		pPdGainBoundaries[i] = pPdGainBoundaries[i - 1];
+-		i++;
+-	}
+-
+-	while (k < AR5416_NUM_PDADC_VALUES) {
+-		pPDADCValues[k] = pPDADCValues[k - 1];
+-		k++;
+-	}
+-}
+-
+ static int16_t ath9k_change_gain_boundary_setting(struct ath_hw *ah,
+ 				u16 *gb,
+ 				u16 numXpdGain,
+@@ -916,7 +754,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 				ath9k_olc_get_pdadcs(ah, pcdacIdx,
+ 						     txPower/2, pdadcValues);
+ 			} else {
+-				ath9k_hw_get_def_gain_boundaries_pdadcs(ah,
++				ath9k_hw_get_gain_boundaries_pdadcs(ah,
+ 							chan, pRawDataset,
+ 							pCalBChans, numPiers,
+ 							pdGainOverlap_t2,
 -- 
-1.7.1
+1.7.3.2
 
