@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55839 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156Ab0L1JIG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 04:08:06 -0500
-Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for
- 802.11j
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, mcgrof@gmail.com
-In-Reply-To: <20101228090102.GA22580@jm.kir.nu>
-References: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
-	 <1293447459.3544.1.camel@jlt3.sipsolutions.net>
-	 <201012281431.46536.br1@einfach.org>
-	 <1293525513.3526.0.camel@jlt3.sipsolutions.net>
-	 <20101228090102.GA22580@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Dec 2010 10:08:02 +0100
-Message-ID: <1293527282.3526.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:42408 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751909Ab0LKXve (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Dec 2010 18:51:34 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 7/8] ath9k_hw: remove ah->beacon_interval
+Date: Sun, 12 Dec 2010 00:51:13 +0100
+Message-Id: <1292111474-70939-7-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292111474-70939-6-git-send-email-nbd@openwrt.org>
+References: <1292111474-70939-1-git-send-email-nbd@openwrt.org>
+ <1292111474-70939-2-git-send-email-nbd@openwrt.org>
+ <1292111474-70939-3-git-send-email-nbd@openwrt.org>
+ <1292111474-70939-4-git-send-email-nbd@openwrt.org>
+ <1292111474-70939-5-git-send-email-nbd@openwrt.org>
+ <1292111474-70939-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-28 at 11:01 +0200, Jouni Malinen wrote:
-> On Tue, Dec 28, 2010 at 09:38:33AM +0100, Johannes Berg wrote:
-> > Not really. I guess it seems fine. Do you know if there are ever any
-> > starting values used other than 4900 and 5000?
-> 
-> Quite a few.. At least 4.85 GHz and 3.0 GHz for 20 MHz channels and more
-> for 5 and 10 MHz channels (4.9375 GHz, 4.89 GHz, 3.0025 GHz, 4.0025 GHz,
-> 5.0025 GHz) in channels defined by IEEE 802.11.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 ---
+ drivers/net/wireless/ath/ath9k/hw.h |    1 -
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
-That's what I kinda thought ... doesn't that mean this patch is
-insufficient?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 06028e3..d44f74e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -407,7 +407,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->sta_id1_defaults =
+ 		AR_STA_ID1_CRPT_MIC_ENABLE |
+ 		AR_STA_ID1_MCAST_KSRCH;
+-	ah->beacon_interval = 100;
+ 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
+ 	ah->slottime = (u32) -1;
+ 	ah->globaltxtimeout = (u32) -1;
+@@ -1628,8 +1627,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
+ {
+ 	int flags = 0;
+ 
+-	ah->beacon_interval = beacon_period;
+-
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+ 	switch (ah->opmode) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e99b395..0db0ef6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -764,7 +764,6 @@ struct ath_hw {
+ 	u8 txpower_limit;
+ 	int16_t txpower_indexoffset;
+ 	int coverage_class;
+-	u32 beacon_interval;
+ 	u32 slottime;
+ 	u32 globaltxtimeout;
+ 
+-- 
+1.7.3.2
 
