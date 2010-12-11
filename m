@@ -1,94 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:50137 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453Ab0LLJDY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 04:03:24 -0500
-Subject: Re: [PATCH 2/2] ssb: Save sprom image for dump of device at
- alternate location
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net> (sfid-20101212_043513_712988_FFFFFFFF9320429C)
-References: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>
-	 (sfid-20101212_043513_712988_FFFFFFFF9320429C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 12 Dec 2010 10:03:12 +0100
-Message-ID: <1292144592.11817.7.camel@maggie>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:44526 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751314Ab0LKUDm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Dec 2010 15:03:42 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id D35EB418D8
+	for <linux-wireless@vger.kernel.org>; Sat, 11 Dec 2010 14:58:09 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101211200340.B4CA240F97@repository3.orbit-lab.org>
+Date: Sat, 11 Dec 2010 15:03:40 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-12-11 at 21:35 -0600, Larry Finger wrote: 
-> @@ -1013,6 +1013,7 @@ void ssb_pci_exit(struct ssb_bus *bus)
->  	if (bus->bustype != SSB_BUSTYPE_PCI)
->  		return;
->  
-> +	kfree(bus->sprom_data);
->  	pdev = bus->host_pci;
->  	device_remove_file(&pdev->dev, &dev_attr_ssb_sprom);
->  }
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   2852e12..9204be5  linux-2.6.37.y -> origin/linux-2.6.37.y
+   f9f0812..c0f962a  master     -> origin/master
+ * [new tag]         compat-wireless-2.6.37-rc5-4 -> compat-wireless-2.6.37-rc5-4
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-2.6.37-rc5-3 -> compat-wireless-2.6.37-rc5-3
+ * [new tag]         compat-wireless-2010-12-10 -> compat-wireless-2010-12-10
 
-Need to put kfree after removing the sprom file. Otherwise there's
-a race condition with userspace.
+compat-wireless code metrics
 
-> Index: wireless-testing/drivers/ssb/sprom.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/sprom.c
-> +++ wireless-testing/drivers/ssb/sprom.c
-> @@ -72,24 +72,29 @@ ssize_t ssb_attr_sprom_show(struct ssb_b
->  	ssize_t count = 0;
->  	size_t sprom_size_words = bus->sprom_size;
->  
-> -	sprom = kcalloc(sprom_size_words, sizeof(u16), GFP_KERNEL);
-> -	if (!sprom)
-> -		goto out;
-> -
-> -	/* Use interruptible locking, as the SPROM write might
-> -	 * be holding the lock for several seconds. So allow userspace
-> -	 * to cancel operation. */
-> -	err = -ERESTARTSYS;
-> -	if (mutex_lock_interruptible(&bus->sprom_mutex))
-> -		goto out_kfree;
-> -	err = sprom_read(bus, sprom);
-> -	mutex_unlock(&bus->sprom_mutex);
-> -
-> +	if (bus->sprom_data) {
-> +		sprom = bus->sprom_data;
-> +		err = 0;
-> +	} else {
+    752722 - Total upstream lines of code being pulled
+      2198 - backport code changes
+      1935 - backport code additions
+       263 - backport code deletions
+      6637 - backport from compat module
+      8835 - total backport code
+    1.1737 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2035 - % of crap code
 
-This branch is dead now, or do I miss something?
-
-> +		sprom = kcalloc(sprom_size_words, sizeof(u16), GFP_KERNEL);
-> +		if (!sprom)
-> +			goto out;
-> +
-> +		/* Use interruptible locking, as the SPROM write might
-> +		 * be holding the lock for several seconds. So allow userspace
-> +		 * to cancel operation. */
-> +		err = -ERESTARTSYS;
-> +		if (mutex_lock_interruptible(&bus->sprom_mutex))
-> +			goto out_kfree;
-> +		err = sprom_read(bus, sprom);
-> +		mutex_unlock(&bus->sprom_mutex);
-> +	}
->  	if (!err)
->  		count = sprom2hex(sprom, buf, PAGE_SIZE, sprom_size_words);
->  
->  out_kfree:
-> -	kfree(sprom);
-> +	if (!bus->sprom_data)
-> +		kfree(sprom);
->  out:
->  	return err ? err : count;
->  }
-
-I agree that caching the SPROM probably is easier than reading it from
-the wireless core at sysfs read time. There are a few concurrency issues
-that are hard to solve with the current ssb-pci MMIO access code.
-Most notably is that the SPROM read would race with wireless interrupts.
-
--- 
-Greetings Michael.
-
+Base tree: linux-next.git
+Base tree version: next-20101210
+compat-wireless release: compat-wireless-2010-12-10-1-gc0f962a-pc
