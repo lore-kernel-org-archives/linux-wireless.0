@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52584 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754208Ab0LGImw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 03:42:52 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so12976195wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 00:42:51 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/4] b43: N-PHY: implement own maskset
-Date: Tue,  7 Dec 2010 09:42:06 +0100
-Message-Id: <1291711327-4690-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1291711327-4690-1-git-send-email-zajec5@gmail.com>
-References: <1291711327-4690-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from nbd.name ([46.4.11.11]:50818 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753151Ab0LLNeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 08:34:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 4/7] ath9k_hw: fix the PA predistortion rate mask
+Date: Sun, 12 Dec 2010 14:34:34 +0100
+Message-Id: <1292160877-50618-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292160877-50618-3-git-send-email-nbd@openwrt.org>
+References: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
+ <1292160877-50618-2-git-send-email-nbd@openwrt.org>
+ <1292160877-50618-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This let us avoid double addressing while still having reg check.
+The EEPROM PAPRD rate mask fields only contain mask values for actual
+rates in the low 25 bits. The upper bits are reserved for tx power
+scale values. Add the proper mask definitions and use them before
+writing the values to the register.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/b43/phy_n.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    6 ++++++
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    4 ++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 905f1d7..f78f4e9 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3705,6 +3705,15 @@ static void b43_nphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
- 	b43_write16(dev, B43_MMIO_PHY_DATA, value);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 620821e..efb6a02 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -31,6 +31,12 @@
+ #define AR9300_ANT_16S               25
+ #define AR9300_FUTURE_MODAL_SZ       6
  
-+static void b43_nphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
-+				 u16 set)
-+{
-+	check_phyreg(dev, reg);
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_PHY_DATA,
-+		    (b43_read16(dev, B43_MMIO_PHY_DATA) & mask) | set);
-+}
++#define AR9300_PAPRD_RATE_MASK		0x01ffffff
++#define AR9300_PAPRD_SCALE_1		0x0e000000
++#define AR9300_PAPRD_SCALE_1_S		25
++#define AR9300_PAPRD_SCALE_2		0x70000000
++#define AR9300_PAPRD_SCALE_2_S		28
 +
- static u16 b43_nphy_op_radio_read(struct b43_wldev *dev, u16 reg)
- {
- 	/* Register 1 is a 32-bit register. */
-@@ -3799,6 +3808,7 @@ const struct b43_phy_operations b43_phyops_n = {
- 	.init			= b43_nphy_op_init,
- 	.phy_read		= b43_nphy_op_read,
- 	.phy_write		= b43_nphy_op_write,
-+	.phy_maskset		= b43_nphy_op_maskset,
- 	.radio_read		= b43_nphy_op_radio_read,
- 	.radio_write		= b43_nphy_op_radio_write,
- 	.software_rfkill	= b43_nphy_op_software_rfkill,
+ /* Delta from which to start power to pdadc table */
+ /* This offset is used in both open loop and closed loop power control
+  * schemes. In open loop power control, it is not really needed, but for
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 74cff43..cdca4c3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -52,8 +52,8 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	else
+ 		hdr = &eep->modalHeader2G;
+ 
+-	am_mask = le32_to_cpu(hdr->papdRateMaskHt20);
+-	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40);
++	am_mask = le32_to_cpu(hdr->papdRateMaskHt20) & AR9300_PAPRD_RATE_MASK;
++	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40) & AR9300_PAPRD_RATE_MASK;
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK, am_mask);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK, am_mask);
 -- 
-1.6.3.3
+1.7.3.2
 
