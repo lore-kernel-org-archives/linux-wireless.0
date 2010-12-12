@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout023.mac.com ([17.148.16.98]:40455 "EHLO
-	asmtpout023.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841Ab0LVUet (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 15:34:49 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII
-Received: from [192.168.1.30] ([87.201.169.175])
- by asmtp023.mac.com (Oracle Communications Messaging Exchange Server 7u4-20.01
- 64bit (built Nov 21 2010)) with ESMTPSA id <0LDU001YLJTXBQ10@asmtp023.mac.com>
- for linux-wireless@vger.kernel.org; Wed, 22 Dec 2010 12:34:49 -0800 (PST)
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <4D125B9F.7090503@hauke-m.de>
-Date: Thu, 23 Dec 2010 00:34:32 +0400
-Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Message-id: <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
- <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
- <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
- <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
- <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
- <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
- <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
- <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
- <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
-To: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from nbd.name ([46.4.11.11]:50820 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753161Ab0LLNer (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 08:34:47 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 6/7] ath9k_hw: update AR9003 initvals for improved radar detection
+Date: Sun, 12 Dec 2010 14:34:36 +0100
+Message-Id: <1292160877-50618-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292160877-50618-5-git-send-email-nbd@openwrt.org>
+References: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
+ <1292160877-50618-2-git-send-email-nbd@openwrt.org>
+ <1292160877-50618-3-git-send-email-nbd@openwrt.org>
+ <1292160877-50618-4-git-send-email-nbd@openwrt.org>
+ <1292160877-50618-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Reduces the likelihood of false pulse detects in the hardware
 
-On Dec 23, 2010, at 12:12 AM, Hauke Mehrtens wrote:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> Is CONFIG_CRC7=y set in your kernel config, the wl12xx module needs
-> this? If it is not set the module will not be build.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index a14a5e4..ec50ca1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -638,6 +638,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+ 	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
++	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+ 	{0x0000a234, 0x00000fff, 0x10000fff, 0x10000fff, 0x00000fff},
+ 	{0x0000a238, 0xffb81018, 0xffb81018, 0xffb81018, 0xffb81018},
+@@ -680,7 +681,7 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+ 	{0x0000981c, 0x00020028},
+ 	{0x00009834, 0x6400a290},
+ 	{0x00009838, 0x0108ecff},
+-	{0x0000983c, 0x14750600},
++	{0x0000983c, 0x0d000600},
+ 	{0x00009880, 0x201fff00},
+ 	{0x00009884, 0x00001042},
+ 	{0x000098a4, 0x00200400},
+@@ -722,7 +723,6 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+ 	{0x0000a220, 0x00000000},
+ 	{0x0000a224, 0x00000000},
+ 	{0x0000a228, 0x10002310},
+-	{0x0000a22c, 0x01036a27},
+ 	{0x0000a23c, 0x00000000},
+ 	{0x0000a244, 0x0c000000},
+ 	{0x0000a2a0, 0x00000001},
+-- 
+1.7.3.2
 
-It wasn't :-). After enabling it in the kernel and recompiling both the kernel and 
-compat-wireless wl12xx, it generated the following modules:
-
-cfg80211.ko
-compat.ko
-compat_firmware_class.ko
-mac80211.ko
-wl1251.ko
-wl1251_sdio.ko
-wl1251_spi.ko
-wl1271.ko
-wl1271_spi.ko
-
-I haven't applied the SDIO runtime PM patches yet. 
-
-http://www.spinics.net/lists/linux-mmc/msg03966.html
-
-So, is a wl1271_sdio.ko also supposed to be generated, but didn't because I didn't add the SDIO pm patches?
-
-To use this at run-time on the target, should I do insmod for multiple modules:
-
-insmod cfg80211.ko
-insmod compat.ko
-insmod compat_firmware_class.ko
-insmod mac80211.ko
-insmod wl1271.ko
-
-
-Elvis Dowson
