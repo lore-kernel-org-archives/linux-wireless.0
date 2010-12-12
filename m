@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42039 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755529Ab0LATzB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 14:55:01 -0500
-Received: by vws16 with SMTP id 16so620217vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 11:55:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4CF69ED1.1070406@lwfinger.net>
-References: <4CF69ED1.1070406@lwfinger.net>
-Date: Wed, 1 Dec 2010 20:55:00 +0100
-Message-ID: <AANLkTin7RkTWggXFoKaqEX7L2MjUKu1OLXFb5NF_BEXR@mail.gmail.com>
-Subject: Re: RFC - removal of SPROM fallback
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:50800 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752557Ab0LLNem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 08:34:42 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 2/7] ath9k_hw: fix the slot time setting for long distance links
+Date: Sun, 12 Dec 2010 14:34:32 +0100
+Message-Id: <1292160877-50618-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
+References: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/1 Larry Finger <Larry.Finger@lwfinger.net>:
-> At one time, we thought that we had found BCM43xx devices with no SPROM. In the
-> one case that I remember, it was because the SPROM had been relocated.
+Testing shows that adjusting the slot time based on the coverage class
+produces very high latencies and very low throughput on long distance links.
 
-That's right.
+Adjusting only the ACK timeout and leaving the slot time at the regular
+values - while technically not optimal for CSMA - works a lot better on
+long links (tested with 10 km distance)
 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> I now have the data from John's device that needs the revision fixup and I know
-> what is wrong - it is rev 2 with corrupted CRC. The defaulting to rev 1 is
-> getting almost everything wrong, including MAC address and vendor. My plan is to
-> write a better fixup routine.
-
-That's interesting... so is that SPROM rev2 with CRC counted like for
-rev1? Are you sure about this case? AFAIR:
-1) John got CRC error when we dropped hack and treated SPROM as
-revision it reports
-2) John got success CRC check when we hacked his SPROM to "be" rev 1
-
-
-> At the moment, we have some SPROM fallback code that has not been fully
-> implemented, and is probably not needed. Are there any objections to stripping
-> this code out of drivers/ssb/pci.c and drivers/ssb/sprom.c?
-
-I don't believe we will find out SSBs without SPROMs and implementing
-support for new Broadcom cards should not depend on SSB code... so I
-do not any problems about that.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 856a76e..3c8db81 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -808,7 +808,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ)
+ 		acktimeout += 64 - sifstime - ah->slottime;
+ 
+-	ath9k_hw_setslottime(ah, slottime);
++	ath9k_hw_setslottime(ah, ah->slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
+ 	ath9k_hw_set_cts_timeout(ah, acktimeout);
+ 	if (ah->globaltxtimeout != (u32) -1)
 -- 
-Rafał
+1.7.3.2
+
