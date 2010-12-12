@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:17654 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192Ab0LGCtD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 21:49:03 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 18:48:48 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	<amod.bodas@atheros.com>, <pstew@google.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/5] ath9k: warn when we get a ATH9K_INT_TIM_TIMER and are idle
-Date: Mon, 6 Dec 2010 18:48:51 -0800
-Message-ID: <1291690135-4535-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41371 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944Ab0LLR3v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 12:29:51 -0500
+Received: by qwa26 with SMTP id 26so5442153qwa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 09:29:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <19716.42722.13272.204029@gargle.gargle.HOWL>
+References: <19716.42722.13272.204029@gargle.gargle.HOWL>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 12 Dec 2010 18:29:29 +0100
+Message-ID: <AANLkTimMAv9e5M+=DG8RVyHjNVc68dHJepUdOuLjr+Dd@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_htc: Add Ubiquity wifistation ext to supported devices
+To: Sujith <m.sujith@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Sujith.Manoharan@atheros.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not be idle when we get the ATH9K_INT_TIM_TIMER,
-otherwise we wake up the chip and that throws off the idle
-state, the driver needs to be in full sleep when idle and
-nothing should turn it awake without turning it back to
-full sleep again. If we leave the chip idle and suspend,
-upon resume the device will become unusable and we get:
+On Sun, Dec 12, 2010 at 11:41 AM, Sujith <m.sujith@gmail.com> wrote:
+> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+>
+> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hif_usb.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> index 45d4b24..f09c1d8 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> @@ -38,6 +38,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
+>        { USB_DEVICE(0x13D3, 0x3350) }, /* Azurewave */
+>        { USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
+>        { USB_DEVICE(0x040D, 0x3801) }, /* VIA */
+> +       { USB_DEVICE(0x0cf3, 0xb003) }, /* Ubiquity WifiStation Ext */
 
-ath: Starting driver with initial channel: 5745 MHz
-ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
+Typo: it's spelled Ubiquiti.
 
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+>
+>        { USB_DEVICE(0x0cf3, 0x7015),
+>          .driver_info = AR9287_USB },  /* Atheros */
+> --
+> 1.7.3.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f026a03..fd27ec9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -770,6 +770,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		if (status & ATH9K_INT_TIM_TIMER) {
- 			/* Clear RxAbort bit so that we can
- 			 * receive frames */
-+			WARN_ON(sc->ps_idle);
- 			ath9k_setpower(sc, ATH9K_PM_AWAKE);
- 			ath9k_hw_setrxabort(sc->sc_ah, 0);
- 			sc->ps_flags |= PS_WAIT_FOR_BEACON;
+
+
 -- 
-1.7.3.2.90.gd4c43
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
