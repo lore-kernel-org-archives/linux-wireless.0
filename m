@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2060 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753340Ab0LARh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 12:37:57 -0500
-Subject: [PATCH wireless-next] MAINTAINERS: Add ATH GENERIC UTILITIES
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, peter@stuge.se,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
-	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
-	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
-	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
-	 <1291148375.18026.342.camel@Joe-Laptop>
-	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:58275 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752537Ab0LLPiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 10:38:46 -0500
+Subject: Re: [PATCH 2/2] ssb: Save sprom image for dump of device at
+ alternate location
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+In-Reply-To: <4D04EB7D.1090009@lwfinger.net> (sfid-20101212_103356_973639_7B7006EC)
+References: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>
+	 (sfid-20101212_043513_712988_FFFFFFFF9320429C) <1292143551.20015.24.camel@maggie>
+	 <4D04EB7D.1090009@lwfinger.net> (sfid-20101212_103356_973639_7B7006EC)
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 09:37:55 -0800
-Message-ID: <1291225075.1845.177.camel@Joe-Laptop>
+Date: Sun, 12 Dec 2010 16:38:39 +0100
+Message-ID: <1292168319.3572.6.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file pattern is not currently shown as maintained
-by atheros.  Perhaps it should be?
+On Sun, 2010-12-12 at 09:34 -0600, Larry Finger wrote: 
+> On 12/12/2010 02:45 AM, Michael Büsch wrote:
+> > On Sat, 2010-12-11 at 21:35 -0600, Larry Finger wrote: 
+> >> Some recent Broadcom devices in netbooks have an SPROM that is located
+> >> at 0x0800, not the normal location of 0x1000. Initial reading of the
+> >> SPROM has been solved in a previous commit; however, dumping to a console
+> >> no longer works. This difficulty is fixed by saving the SPROM image
+> >> from the initial read, and only freeing that memory at module unload.
+> > 
+> > Ah wait. Now I get what you were talking about.
+> > Yes, those devices map the SPROM into the wireless core window.
+> > So, yes, the wireless core has to be mapped for the readout to work,
+> > of course. I don't know what other prerequisites have to be met to
+> > read the data. Maybe IHR region has to be disabled.
+> > I don't know how writing works on these devices.
+> 
+> I do not think it is worthwhile to bother to find out how to rewrite the SPROM.
+> As long as we can read it in case of questions regarding content, that should be
+> enough. In V2, I will return -ENOTSUP rather than -EINVAL as that is more
+> appropriate.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- MAINTAINERS |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+So, do we actually make sure the wireless core is mapped while reading
+SPROM from offset 0x800? I guess not and it just works by accident,
+because the core is still mapped from a previous operation.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b162fbb..b744d08 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1080,6 +1080,12 @@ S:	Supported
- F:	Documentation/aoe/
- F:	drivers/block/aoe/
- 
-+ATHEROS ATH GENERIC UTILITIES
-+M:	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-+L:	linux-wireless@vger.kernel.org
-+S:	Supported
-+F:	drivers/net/wireless/ath/*
-+
- ATHEROS ATH5K WIRELESS DRIVER
- M:	Jiri Slaby <jirislaby@gmail.com>
- M:	Nick Kossifidis <mickflemm@gmail.com>
-
+-- 
+Greetings Michael.
 
