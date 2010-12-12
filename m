@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f172.google.com ([209.85.214.172]:58372 "EHLO
-	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754643Ab0LGU5H (ORCPT
+Received: from mail-gx0-f180.google.com ([209.85.161.180]:62380 "EHLO
+	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752376Ab0LLPd4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 15:57:07 -0500
-Received: by iwn40 with SMTP id 40so370625iwn.3
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:57:06 -0800 (PST)
+	Sun, 12 Dec 2010 10:33:56 -0500
+Received: by gxk19 with SMTP id 19so3424710gxk.11
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 07:33:55 -0800 (PST)
+Message-ID: <4D04EB7D.1090009@lwfinger.net>
+Date: Sun, 12 Dec 2010 09:34:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1291755274.3607.59.camel@jlt3.sipsolutions.net>
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
- <1291690135-4535-6-git-send-email-lrodriguez@atheros.com> <1291714709.3607.2.camel@jlt3.sipsolutions.net>
- <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
- <1291736887.3607.47.camel@jlt3.sipsolutions.net> <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
- <1291737298.3607.48.camel@jlt3.sipsolutions.net> <20101207155916.GA1855@tux>
- <1291743121.3607.50.camel@jlt3.sipsolutions.net> <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
- <1291745567.3607.52.camel@jlt3.sipsolutions.net> <AANLkTimfLGj1=BnRGvJVkP_Ge6KYAtCLcDpBsVoj9o_T@mail.gmail.com>
- <1291755274.3607.59.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 7 Dec 2010 12:56:45 -0800
-Message-ID: <AANLkTik-H0WXWjGjMuc_pE1vvbxFSoD2BoXVG3Wqcorw@mail.gmail.com>
-Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
- count is 0
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	"pstew@google.com" <pstew@google.com>,
-	"stable@kernel.org" <stable@kernel.org>
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ssb: Save sprom image for dump of device at alternate
+ location
+References: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>	 (sfid-20101212_043513_712988_FFFFFFFF9320429C) <1292143551.20015.24.camel@maggie>
+In-Reply-To: <1292143551.20015.24.camel@maggie>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 7, 2010 at 12:54 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2010-12-07 at 12:49 -0800, Luis R. Rodriguez wrote:
->
->> > In what situation? When you just suspend while things are up&running, or
->> > if you suspend with interfaces down?
->>
->> I believe Paul was suspending when the interface is up and running.
->
-> Ok.
->
->> > It doesn't make sense anyway, so
->> > something's going on in the rest of the scan code -- we should be
->> > canceling scans properly when going down and when suspending, well
->> > before any of this becomes relevant.
->>
->> The issue might be we race to stop the device prior to canceling a
->> scan. Do you see that being possible?
->
-> Not really, since we do scan_cancel() within suspend()... I guess I'd
-> like to find out why that doesn't do what I think it does.
+On 12/12/2010 02:45 AM, Michael Büsch wrote:
+> On Sat, 2010-12-11 at 21:35 -0600, Larry Finger wrote: 
+>> Some recent Broadcom devices in netbooks have an SPROM that is located
+>> at 0x0800, not the normal location of 0x1000. Initial reading of the
+>> SPROM has been solved in a previous commit; however, dumping to a console
+>> no longer works. This difficulty is fixed by saving the SPROM image
+>> from the initial read, and only freeing that memory at module unload.
+> 
+> Ah wait. Now I get what you were talking about.
+> Yes, those devices map the SPROM into the wireless core window.
+> So, yes, the wireless core has to be mapped for the readout to work,
+> of course. I don't know what other prerequisites have to be met to
+> read the data. Maybe IHR region has to be disabled.
+> I don't know how writing works on these devices.
 
-Well lets see, this is only reproducible with the new DBUS APIs, and
-frankly I am not sure what these things do. Is it possible we have a
-race between how it brings down an interface for suspend and canceling
-a scan?
+I do not think it is worthwhile to bother to find out how to rewrite the SPROM.
+As long as we can read it in case of questions regarding content, that should be
+enough. In V2, I will return -ENOTSUP rather than -EINVAL as that is more
+appropriate.
 
-  Luis
+Larry
