@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:53792 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab0LQWMf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 17:12:35 -0500
-Received: by qyk12 with SMTP id 12so1318542qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 14:12:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1292620126.22230.12.camel@wwguy-ubuntu>
-References: <1292620126.22230.12.camel@wwguy-ubuntu>
-Date: Fri, 17 Dec 2010 23:12:33 +0100
-Message-ID: <AANLkTinWma9xFSUe9ShdVWWRYsFtDVcAoacZAg4RMXA+@mail.gmail.com>
-Subject: Re: new iwlwifi 6030 uCode available
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:50819 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753160Ab0LLNeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 08:34:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 1/7] ath9k_hw: initialize ah->slottime
+Date: Sun, 12 Dec 2010 14:34:31 +0100
+Message-Id: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/17 Guy, Wey-Yi <wey-yi.w.guy@intel.com>:
-> Version 17.168.5.1 of uCode for Intel Intel@ 6030 Series Wi-Fi Adapters
-> is now available for download from
-> http://intellinuxwireless.org/?n=Downloads
+(u32) -1 is not particularly useful as a slottime default, so even though
+the ath9k_hw default should never get used, it's better to pick something
+sane here.
 
-I want uCode for 5100 to resolve
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214 !
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Damn, do you want us to RE Intel's firmware or what? Is that your policy?
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d44f74e..856a76e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -408,7 +408,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 		AR_STA_ID1_CRPT_MIC_ENABLE |
+ 		AR_STA_ID1_MCAST_KSRCH;
+ 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
+-	ah->slottime = (u32) -1;
++	ah->slottime = 20;
+ 	ah->globaltxtimeout = (u32) -1;
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
+ }
 -- 
-Rafał
+1.7.3.2
+
