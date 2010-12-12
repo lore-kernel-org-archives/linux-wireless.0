@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:44500 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755692Ab0LDVzG (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52726 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753945Ab0LLUCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Dec 2010 16:55:06 -0500
-Received: by qyk11 with SMTP id 11so2285202qyk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 13:55:06 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1291491764-6655-1-git-send-email-kilroyd@googlemail.com>
-References: <1291491764-6655-1-git-send-email-kilroyd@googlemail.com>
-Date: Sat, 4 Dec 2010 22:55:05 +0100
-Message-ID: <AANLkTi=nS+Du=CEk4=zqekJty=XnBjTUAj49L0Njz5BP@mail.gmail.com>
-Subject: Re: [PATCH 1/2] orinoco: fix TKIP countermeasure behaviour
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, comes@naic.edu
-Content-Type: text/plain; charset=UTF-8
+	Sun, 12 Dec 2010 15:02:50 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 6A8CA418D3
+	for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 15:02:43 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-12 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101212200249.2E81440F97@repository3.orbit-lab.org>
+Date: Sun, 12 Dec 2010 15:02:49 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 4, 2010 at 8:42 PM, David Kilroy <kilroyd@googlemail.com> wrote:
-> Enable the port when disabling countermeasures, and disable it on
-> enabling countermeasures.
->
-> This bug causes the response of the system to certain attacks to be
-> ineffective.
->
-> It also prevents wpa_supplicant from getting scan results, as
-> wpa_supplicant disables countermeasures on startup - preventing the
-> hardware from scanning.
->
-> wpa_supplicant works with ap_mode=2 because the commit handler
-> re-enables to port.
->
-> The log tends to look like:
->
-> State: DISCONNECTED -> SCANNING
-> Starting AP scan for wildcard SSID
-> Scan requested (ret=0) - scan timeout 5 seconds
-> EAPOL: disable timer tick
-> EAPOL: Supplicant port status: Unauthorized
-> Scan timeout - try to get results
-> Failed to get scan results
-> Failed to get scan results - try scanning again
-> Setting scan request: 1 sec 0 usec
-> Starting AP scan for wildcard SSID
-> Scan requested (ret=-1) - scan timeout 5 seconds
-> Failed to initiate AP scan.
->
-> Reported by: Giacomo Comes <comes@naic@edu>
-> Signed-off by: David Kilroy <kilroyd@googlemail.com>
-> ---
->
 
-Wrong Email - should be  <comes@naic.edu>?
+compat-wireless code metrics
 
-- Sedat -
+    752722 - Total upstream lines of code being pulled
+      2198 - backport code changes
+      1935 - backport code additions
+       263 - backport code deletions
+      6637 - backport from compat module
+      8835 - total backport code
+    1.1737 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2035 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20101210
+compat-wireless release: compat-wireless-2010-12-10-1-gc0f962a-pc
