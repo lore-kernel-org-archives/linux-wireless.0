@@ -1,63 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60637 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750837Ab0L1TWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 14:22:35 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Ohad Ben-Cohen" <ohad@wizery.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-Date: Tue, 28 Dec 2010 20:21:31 +0100
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com> <201012261935.13238.rjw@sisk.pl> <AANLkTimHHN+GesyhR6Jjnm771XLhn=inn=vrSk=mT6Mh@mail.gmail.com>
-In-Reply-To: <AANLkTimHHN+GesyhR6Jjnm771XLhn=inn=vrSk=mT6Mh@mail.gmail.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:45289 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752655Ab0LLDfH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Dec 2010 22:35:07 -0500
+Date: Sat, 11 Dec 2010 21:35:35 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] ssb: Save sprom image for dump of device at alternate location
+Message-ID: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012282021.31695.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 28, 2010, Ohad Ben-Cohen wrote:
-> On Sun, Dec 26, 2010 at 8:35 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Sunday, December 26, 2010, Ohad Ben-Cohen wrote:
-> >> On Sun, Dec 26, 2010 at 1:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> > Why does the driver need the device to be reset even though it hasn't
-> >> > been suspeneded yet?
-> >>
-> >> Because it is asked to stop the hardware by mac80211.
-> >
-> > So I guess the mac80211 layer should ask it to start it again.
-> 
-> It does...
-> 
-> And at this point the driver will try to boot a new firmware, but it
-> will only succeed if the device was indeed powered off. If it wasn't
-> (system suspend was cancelled before the host controller  suspended),
-> the driver will fail to resume the device (because it can't reset it).
+Some recent Broadcom devices in netbooks have an SPROM that is located
+at 0x0800, not the normal location of 0x1000. Initial reading of the
+SPROM has been solved in a previous commit; however, dumping to a console
+no longer works. This difficulty is fixed by saving the SPROM image
+from the initial read, and only freeing that memory at module unload.
 
-It looks like you could simply do a power down-power up cycle before trying to
-load new firmware, just in case.  I guess that's suboptimal for some reason?
+Uploading a new SPROM image is not supported for these devices.
 
-> We can change man80211 to let us know the system is suspending, and
-> then we will power down the device directly. Or we can use something
-> like your "runtime only" proposal, and then pm_runtime_put_sync() will
-> just work for us regardless of the system state.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-The pm_runtime_put_sync() is irrelevant at this point IMHO.  First, we should
-figure out what needs to be done at the low level and _then_ think how to
-code it.  From that we'll learn if you _really_ need anything new from the PM
-core, but quite frankly I seriously doubt it right now.
+John,
 
-> But that will not solve the /sys/devices/.../power/control problem.
-> For that we will either have always to bypass runtime PM, or introduce
-> something like "always auto"...
+This is 2.6.38 material.
 
-Please pretend that the runtime PM framework doesn't exist for a while.  How
-would you design things in that case?
-
-Rafael
+Larry
+---
+ 
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c
++++ wireless-testing/drivers/ssb/pci.c
+@@ -709,7 +709,7 @@ static int ssb_pci_sprom_get(struct ssb_
+ 			if (fallback) {
+ 				memcpy(sprom, fallback, sizeof(*sprom));
+ 				err = 0;
+-				goto out_free;
++				goto out;
+ 			}
+ 			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
+ 				   " SPROM CRC (corrupt SPROM)\n");
+@@ -763,8 +763,8 @@ static int ssb_pci_sprom_get(struct ssb_
+ 	}
+ 	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
+ 
+-out_free:
+-	kfree(buf);
++out:
++	bus->sprom_data = buf;
+ 	return err;
+ }
+ 
+@@ -1013,6 +1013,7 @@ void ssb_pci_exit(struct ssb_bus *bus)
+ 	if (bus->bustype != SSB_BUSTYPE_PCI)
+ 		return;
+ 
++	kfree(bus->sprom_data);
+ 	pdev = bus->host_pci;
+ 	device_remove_file(&pdev->dev, &dev_attr_ssb_sprom);
+ }
+Index: wireless-testing/drivers/ssb/sprom.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/sprom.c
++++ wireless-testing/drivers/ssb/sprom.c
+@@ -72,24 +72,29 @@ ssize_t ssb_attr_sprom_show(struct ssb_b
+ 	ssize_t count = 0;
+ 	size_t sprom_size_words = bus->sprom_size;
+ 
+-	sprom = kcalloc(sprom_size_words, sizeof(u16), GFP_KERNEL);
+-	if (!sprom)
+-		goto out;
+-
+-	/* Use interruptible locking, as the SPROM write might
+-	 * be holding the lock for several seconds. So allow userspace
+-	 * to cancel operation. */
+-	err = -ERESTARTSYS;
+-	if (mutex_lock_interruptible(&bus->sprom_mutex))
+-		goto out_kfree;
+-	err = sprom_read(bus, sprom);
+-	mutex_unlock(&bus->sprom_mutex);
+-
++	if (bus->sprom_data) {
++		sprom = bus->sprom_data;
++		err = 0;
++	} else {
++		sprom = kcalloc(sprom_size_words, sizeof(u16), GFP_KERNEL);
++		if (!sprom)
++			goto out;
++
++		/* Use interruptible locking, as the SPROM write might
++		 * be holding the lock for several seconds. So allow userspace
++		 * to cancel operation. */
++		err = -ERESTARTSYS;
++		if (mutex_lock_interruptible(&bus->sprom_mutex))
++			goto out_kfree;
++		err = sprom_read(bus, sprom);
++		mutex_unlock(&bus->sprom_mutex);
++	}
+ 	if (!err)
+ 		count = sprom2hex(sprom, buf, PAGE_SIZE, sprom_size_words);
+ 
+ out_kfree:
+-	kfree(sprom);
++	if (!bus->sprom_data)
++		kfree(sprom);
+ out:
+ 	return err ? err : count;
+ }
+@@ -105,6 +110,8 @@ ssize_t ssb_attr_sprom_store(struct ssb_
+ 	size_t sprom_size_words = bus->sprom_size;
+ 	struct ssb_freeze_context freeze;
+ 
++	if (bus->sprom_offset < SSB_SPROM_BASE1)
++		return -EINVAL;
+ 	sprom = kcalloc(bus->sprom_size, sizeof(u16), GFP_KERNEL);
+ 	if (!sprom)
+ 		goto out;
+Index: wireless-testing/include/linux/ssb/ssb.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb.h
++++ wireless-testing/include/linux/ssb/ssb.h
+@@ -311,6 +311,7 @@ struct ssb_bus {
+ 	u16 chip_rev;
+ 	u16 sprom_offset;
+ 	u16 sprom_size;		/* number of words in sprom */
++	u16 *sprom_data;	/* saved sprom raw data */
+ 	u8 chip_package;
+ 
+ 	/* List of devices (cores) on the backplane. */
