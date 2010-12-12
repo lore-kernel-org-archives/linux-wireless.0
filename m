@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:44954 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464Ab0LJDwH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 22:52:07 -0500
-Received: by pva4 with SMTP id 4so653347pva.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 19:52:07 -0800 (PST)
-Message-ID: <4D01A3EC.9000408@gmail.com>
-Date: Thu, 09 Dec 2010 21:52:12 -0600
-From: Jon Saul <rectifier04@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/4] Make N-PHY support experimental
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>	<4CFEFD8D.1080808@lwfinger.net>	<AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>	<4D00F3C3.6040801@lwfinger.net>	<1291908338.3540.16.camel@jlt3.sipsolutions.net>	<AANLkTimZTzMbQenxs6-1awdoGBhbJz2kyGBSO9v2+fzn@mail.gmail.com>	<1291908833.3540.18.camel@jlt3.sipsolutions.net>	<AANLkTin133Lq1z1paMboMczaATkAE6zv3gVfXCPSB=hq@mail.gmail.com> <4D00FDD4.3050705@lwfinger.net>
-In-Reply-To: <4D00FDD4.3050705@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:57801 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751696Ab0LLJUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Dec 2010 04:20:06 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PRi68-0002i0-Co
+	for linux-wireless@vger.kernel.org; Sun, 12 Dec 2010 10:20:04 +0100
+Received: from 194.48.133.8 ([194.48.133.8])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 10:20:04 +0100
+Received: from messier31 by 194.48.133.8 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 10:20:04 +0100
+To: linux-wireless@vger.kernel.org
+From: thomas <messier31@gmx.net>
+Subject: carl9170 802.11n-AP
+Date: Sun, 12 Dec 2010 09:17:32 +0000 (UTC)
+Message-ID: <loom.20101212T101545-636@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2010 10:03 AM, Larry Finger wrote:
-> I sent a question to the seller of the card I mentioned earlier asking them to
-> tell me the PCI IDs and explaining why I needed to know. If they answer, we will
-> at least know if it is a 14e4:432b. If so, then it certainly will have a PHY rev
->> 2. At that price, I'm willing to buy it myself, but there should be money
-> available to get things for Rafał. Who has those funds? I think the last time I
-> got something though the donations, it was Stefano, but that was a long time ago.
->
-> Rafał: If I get a rev > 2 card, you can certainly ssh into my computer for
-> testing, or I can do the runs here and send you the dumps.
->
-> Larry
-I have a 14e4:432b card and am willing to help any way I can.
+Hi,
 
--- 
-0x00
+I am using carl9170 as driver for my TP-Link WN821n wifi USB-stick. The stick 
+works well in 802.11g master mode but frequently hangs up in 802.11n master 
+mode. 
+Now I read here http://wireless.kernel.org/en/users/Drivers/carl9170
+that a "real" 802.11 AP is not supported by the hardware. What exactly means 
+"real" and has this something to do with the frequently crashes in 802.11n 
+master mode? 
+
+I will post more specific information (hardware, driver version, logs, etc..) 
+later. But if you can tell me already, this behaviour is expected because of 
+hardware incompatibility, there is no need for this.
+
+Kind regards,
+
+Thomas
 
