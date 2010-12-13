@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50429 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753844Ab0LINxw (ORCPT
+Received: from mx51.mymxserver.com ([188.94.250.25]:8769 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754317Ab0LMHmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 08:53:52 -0500
-Subject: Re: [PATCH] cfg80211: update information elements in cached BSS
- struct
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Neumann <s.neumann@raumfeld.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291900640.1924.33.camel@sven>
-References: <1291891690-26118-1-git-send-email-s.neumann@raumfeld.com>
-	 <1291898876.3540.4.camel@jlt3.sipsolutions.net>
-	 <1291900640.1924.33.camel@sven>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 14:53:50 +0100
-Message-ID: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 13 Dec 2010 02:42:03 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Start dropping PCMCIA from compat-wireless for 2.6.38+
+Date: Mon, 13 Dec 2010 08:46:16 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	"linux-bluetooth" <linux-bluetooth@vger.kernel.org>
+References: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com>
+In-Reply-To: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201012130846.16522.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 14:17 +0100, Sven Neumann wrote:
-[snip
+Please, if the burden is not too much, keep it for the benefit of 
+embedded people.
 
-> Please review this patch again. I am pretty sure that there's something
-> broken. Perhaps my fix is not totally correct, but it fixes a
-> reproducable association problem for us.
+If you have some embedded device (e.g. ARM based), it's usually not so 
+easy to hieve this device to newest 2.6.3[5-7] kernel. However, it's 
+easy to use your adapted kernel, and compile compat-wireless against it.
 
-You're right, the if catches that.
+I'm in such a situation with libertas_cs.
 
-Can you please make the variable a bool, remove the blank line before
-it? And your line length was way above 80. A comment would also be good
-about why this is done, maybe a one-liner like the probe resp one, just
-saying "Override IEs if they were from a beacon before".
+Greetings,
+Holger
 
-Thanks!
-
-johannes
-
+-- 
+Homepage: http://www.holgerschurig.de
