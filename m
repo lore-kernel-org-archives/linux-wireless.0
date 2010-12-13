@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f194.google.com ([209.85.212.194]:41709 "EHLO
-	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738Ab0LaGwL (ORCPT
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:57638 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343Ab0LMKwB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 01:52:11 -0500
-Message-ID: <4D1D7DAE.7060504@gmail.com>
-Date: Thu, 30 Dec 2010 22:52:30 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Mon, 13 Dec 2010 05:52:01 -0500
+Received: by fxm18 with SMTP id 18so6080562fxm.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 02:52:00 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2 5/7] ath9k_hw: fix PA predistortion training power selection
+Date: Mon, 13 Dec 2010 12:28:48 +0100
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, lrodriguez@atheros.com, vasanth@atheros.com
+References: <1292226056-56008-1-git-send-email-nbd@openwrt.org> <201012131152.50095.chunkeey@googlemail.com> <1292235614.3539.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1292235614.3539.14.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Grant Likely <grant.likely@secretlab.ca>
-CC: trivial@kernel.org, devel@driverdev.osuosl.org,
-	linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-m68k@lists.linux-m68k.org,
-	spi-devel-general@lists.sourceforge.net,
-	linux-media@vger.kernel.org, Dan Carpenter <error27@gmail.com>
-Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <20101231064515.GC3733@angua.secretlab.ca>
-In-Reply-To: <20101231064515.GC3733@angua.secretlab.ca>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012131228.49202.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/2010 10:45 PM, Grant Likely wrote:
-> On Thu, Dec 30, 2010 at 03:07:51PM -0800, Justin P. Mattock wrote:
->> The below patch fixes a typo "diable" to "disable". Please let me know if this
->> is correct or not.
->>
->> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->
-> applied, thanks.
->
-> g.
+On Monday 13 December 2010 11:20:14 Johannes Berg wrote:
+> On Mon, 2010-12-13 at 11:52 +0100, Christian Lamparter wrote:
+> 
+> > > +	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
+> > > +}
+> > > +
+> > I think there's a generic library function for that:
+> > hweight[8|16|32].
+> 
+> but note the !!, which makes this return 0, 1, 2 or 3 only, not the bit
+> weight.
+> 
+what?
 
-ahh.. thanks.. just cleared up the left out diabled that I had thought I 
-forgotten(ended up separating comments and code and forgot)
->
->>
->> ---
->>   drivers/spi/dw_spi.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/spi/dw_spi.c b/drivers/spi/dw_spi.c
->> index 0838c79..7c3cf21 100644
->> --- a/drivers/spi/dw_spi.c
->> +++ b/drivers/spi/dw_spi.c
->> @@ -592,7 +592,7 @@ static void pump_transfers(unsigned long data)
->>   		spi_set_clk(dws, clk_div ? clk_div : chip->clk_div);
->>   		spi_chip_sel(dws, spi->chip_select);
->>
->> -		/* Set the interrupt mask, for poll mode just diable all int */
->> +		/* Set the interrupt mask, for poll mode just disable all int */
->>   		spi_mask_intr(dws, 0xff);
->>   		if (imask)
->>   			spi_umask_intr(dws, imask);
->> --
->> 1.6.5.2.180.gc5b3e
->>
->>
->> ------------------------------------------------------------------------------
->> Learn how Oracle Real Application Clusters (RAC) One Node allows customers
->> to consolidate database storage, standardize their database environment, and,
->> should the need arise, upgrade to a full multi-node Oracle RAC database
->> without downtime or disruption
->> http://p.sf.net/sfu/oracle-sfdevnl
->> _______________________________________________
->> spi-devel-general mailing list
->> spi-devel-general@lists.sourceforge.net
->> https://lists.sourceforge.net/lists/listinfo/spi-devel-general
->
+the "Hamming weight/Population count" returns the
+number of symbols that are different from the zero-symbol.
 
-Justin P. Mattock
+e.g.: The Hamming weight of 0x800000000000000000000000000000000
+is just "1".
+
+Furthermore, if tx_chainmask contains now more than just the available
+tx_chains, then they can always mask the hweight* input with: 
+AR9300_ANT_CHAIN_MASK (for 3x3) or
+AR9300_ANT_COMMON_MASK (for future 4x4)
+
+Regards,
+	Chr
