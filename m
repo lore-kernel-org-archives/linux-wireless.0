@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64065 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753575Ab0LWRem (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 12:34:42 -0500
-Received: by fxm20 with SMTP id 20so7306535fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 09:34:41 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 23 Dec 2010 12:34:40 -0500
-Message-ID: <AANLkTimDPcxSthO=TAqPx4fyrU0U_WPkwMHLGGiCSMKw@mail.gmail.com>
-Subject: carl9170 and debian squeeze
-From: Der Engel <engelster@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:41497 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758452Ab0LMRZS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 12:25:18 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PSC9B-00087Q-Bs
+	for linux-wireless@vger.kernel.org; Mon, 13 Dec 2010 18:25:13 +0100
+Received: from 77.119.210.143.wireless.dyn.drei.com ([77.119.210.143])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 18:25:13 +0100
+Received: from messier31 by 77.119.210.143.wireless.dyn.drei.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 18:25:13 +0100
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Thomas <messier31@gmx.net>
+Subject: Re: carl9170 802.11n-AP
+Date: Mon, 13 Dec 2010 18:24:57 +0100
+Message-ID: <ie5kt9$vfp$1@dough.gmane.org>
+References: <loom.20101212T101545-636@post.gmane.org> <loom.20101212T110657-413@post.gmane.org> <AANLkTimiNLZ8EFPEwbKW3UA7FMSxmJOV-B9pWY4h9c34@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Today I tried a different wifi card on the client side, instead of the Intel 
+5100, but the problem remains the same. The carl9170 driver on my server 
+crashes at some point randomly (only in 802.11n mode). The traceback shows 
+the error at tx.c but everytime in a different line. So I guess there must 
+be a race condition somewhere.
 
-I have a ubiquiti sr71-usb wireless adapter, 'lsusb' shows it as:
-'Atheros Communications, Inc. AR9170 802.11n', the adapter works with
-the ar9170.fw firmware but I'm trying to make it work with the
-carl9170.fw, until now I have tried the following:
+Here you can find the error report of some crashes: 
+http://www.mikrocontroller.net/attachment/95144/bugreport.txt
 
-I have put the carl9170.fw in /lib/firmware (debian default for
-firmware files) without the ar9170.fw, dmesg shows that the system its
-looking for a firmware with the exact name as 'ar9170.fw' or if it
-doesn't find that one it tries to finds the legacy ones(ar9170-1.fw &
-ar9170-2.fw), so it ignores carl9170.fw because is not named
-ar9170.fw, changing the name of carl9170.fw to ar9170.fw shows the
-following:
+Server hardware is a Seagate Dockstar with OpenWrt running on it. I heard 
+from another user with Debian, who has the same problem.
 
-dmesg | grep 9170
-[    2.329719] usb 2-2: New USB device found, idVendor=0cf3, idProduct=9170
-[    8.817173] usb 2-2: firmware: requesting ar9170.fw
-[    9.862192] ar9170usb: probe of 2-2:1.0 failed with error -110
-[    9.862227] usbcore: registered new interface driver ar9170usb
+Regards,
 
-The kernel is debian stock one:Linux laptop 2.6.32-5-686 #1 SMP Fri
-Dec 10 16:12:40 UTC 2010 i686 GNU/Linux
+Thomas
 
-Any ideas how can I make carl9170.fw work in debian squeeze?
 
-Thanks,
-Der
