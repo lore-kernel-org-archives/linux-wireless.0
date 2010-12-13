@@ -1,143 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:47335 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754449Ab0L1RhT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:37:19 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so4468650ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:18 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 08/18] wl1271: Add AP related definitions to HOST-FW interface
-Date: Tue, 28 Dec 2010 19:36:38 +0200
-Message-Id: <1293557808-27068-9-git-send-email-arik@wizery.com>
-In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:51980 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753409Ab0LMHlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 02:41:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 4/7] ath9k_hw: fix the PA predistortion rate mask
+Date: Mon, 13 Dec 2010 08:40:53 +0100
+Message-Id: <1292226056-56008-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292226056-56008-3-git-send-email-nbd@openwrt.org>
+References: <1292226056-56008-1-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-2-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change structures in a non-destructive manner. This means no
-changes in size or location of existing members used by STA.
+The EEPROM PAPRD rate mask fields only contain mask values for actual
+rates in the low 25 bits. The upper bits are reserved for tx power
+scale values. Add the proper mask definitions and use them before
+writing the values to the register.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/event.h  |    7 ++++++-
- drivers/net/wireless/wl12xx/rx.h     |   10 +++++++---
- drivers/net/wireless/wl12xx/tx.h     |    9 +++++++--
- drivers/net/wireless/wl12xx/wl12xx.h |   18 +++++++++++++++++-
- 4 files changed, 37 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    6 ++++++
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    4 ++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
-index fd955f3..1d5ef67 100644
---- a/drivers/net/wireless/wl12xx/event.h
-+++ b/drivers/net/wireless/wl12xx/event.h
-@@ -116,7 +116,12 @@ struct event_mailbox {
- 	u8 scheduled_scan_status;
- 	u8 ps_status;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 620821e..efb6a02 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -31,6 +31,12 @@
+ #define AR9300_ANT_16S               25
+ #define AR9300_FUTURE_MODAL_SZ       6
  
--	u8 reserved_5[29];
-+	/* AP FW only */
-+	u8 hlid_removed;
-+	__le16 sta_aging_status;
-+	__le16 sta_tx_retry_exceeded;
++#define AR9300_PAPRD_RATE_MASK		0x01ffffff
++#define AR9300_PAPRD_SCALE_1		0x0e000000
++#define AR9300_PAPRD_SCALE_1_S		25
++#define AR9300_PAPRD_SCALE_2		0x70000000
++#define AR9300_PAPRD_SCALE_2_S		28
 +
-+	u8 reserved_5[24];
- } __packed;
+ /* Delta from which to start power to pdadc table */
+ /* This offset is used in both open loop and closed loop power control
+  * schemes. In open loop power control, it is not really needed, but for
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 74cff43..cdca4c3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -52,8 +52,8 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
+ 	else
+ 		hdr = &eep->modalHeader2G;
  
- int wl1271_event_unmask(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
-index f695553..8d048b3 100644
---- a/drivers/net/wireless/wl12xx/rx.h
-+++ b/drivers/net/wireless/wl12xx/rx.h
-@@ -86,8 +86,9 @@
- /*
-  * RX Descriptor status
-  *
-- * Bits 0-2 - status
-- * Bits 3-7 - reserved
-+ * Bits 0-2 - error code
-+ * Bits 3-5 - process_id tag (AP mode FW)
-+ * Bits 6-7 - reserved
-  */
- #define WL1271_RX_DESC_STATUS_MASK      0x07
+-	am_mask = le32_to_cpu(hdr->papdRateMaskHt20);
+-	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40);
++	am_mask = le32_to_cpu(hdr->papdRateMaskHt20) & AR9300_PAPRD_RATE_MASK;
++	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40) & AR9300_PAPRD_RATE_MASK;
  
-@@ -110,7 +111,10 @@ struct wl1271_rx_descriptor {
- 	u8  snr;
- 	__le32 timestamp;
- 	u8  packet_class;
--	u8  process_id;
-+	union {
-+		u8  process_id; /* STA FW */
-+		u8  hlid; /* AP FW */
-+	} __packed;
- 	u8  pad_len;
- 	u8  reserved;
- } __packed;
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index 5ccd22e..05722a5 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -29,6 +29,7 @@
- #define TX_HW_BLOCK_SIZE                 252
- 
- #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
-+#define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
- /* The chipset reference driver states, that the "aid" value 1
-  * is for infra-BSS, but is still always used */
- #define TX_HW_DEFAULT_AID                1
-@@ -77,8 +78,12 @@ struct wl1271_tx_hw_descr {
- 	u8 id;
- 	/* The packet TID value (as User-Priority) */
- 	u8 tid;
--	/* Identifier of the remote STA in IBSS, 1 in infra-BSS */
--	u8 aid;
-+	union {
-+		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
-+		u8 aid;
-+		/* AP - host link ID (HLID) */
-+		u8 hlid;
-+	} __packed;
- 	u8 reserved;
- } __packed;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 136e87b..ebb4a4d 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -195,6 +195,11 @@ struct wl1271_stats {
- #define NUM_TX_QUEUES              4
- #define NUM_RX_PKT_DESC            8
- 
-+#define AP_MAX_STATIONS            5
-+
-+/* Broadcast and Global links + links to stations */
-+#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
-+
- /* FW status registers */
- struct wl1271_fw_status {
- 	__le32 intr;
-@@ -205,7 +210,18 @@ struct wl1271_fw_status {
- 	__le32 rx_pkt_descs[NUM_RX_PKT_DESC];
- 	__le32 tx_released_blks[NUM_TX_QUEUES];
- 	__le32 fw_localtime;
--	__le32 padding[2];
-+
-+	/* Next fields valid only in AP FW */
-+
-+	/*
-+	 * A bitmap (where each bit represents a single HLID)
-+	 * to indicate if the station is in PS mode.
-+	 */
-+	__le32 link_ps_bitmap;
-+
-+	/* Number of freed MBs per HLID */
-+	u8 tx_lnk_free_blks[AP_MAX_LINKS];
-+	u8 padding_1[1];
- } __packed;
- 
- struct wl1271_rx_mem_pool_addr {
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK, am_mask);
+ 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK, am_mask);
 -- 
-1.7.1
+1.7.3.2
 
