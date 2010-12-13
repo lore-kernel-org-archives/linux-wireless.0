@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20287 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752641Ab0LPBPF convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.214.194]:46879 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886Ab0LMUID convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 20:15:05 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 17:14:50 -0800
-Date: Wed, 15 Dec 2010 17:15:16 -0800
-From: Vipin Mehta <vmehta@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Vipin Mehta <Vipin.Mehta@Atheros.com>,
-	"greg@kroah.com" <greg@kroah.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH] staging: ath6kl: Fixing device NULL pointer dereference
-Message-ID: <20101216011416.GA388@vmehta-desktop>
-References: <1292375879-32085-1-git-send-email-vmehta@atheros.com>
- <AANLkTin_fw6aRc5Rs1_BTcapTE9kgPHy7_Gex9wRtkWy@mail.gmail.com>
+	Mon, 13 Dec 2010 15:08:03 -0500
+Received: by iwn42 with SMTP id 42so3377015iwn.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 12:08:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTin_fw6aRc5Rs1_BTcapTE9kgPHy7_Gex9wRtkWy@mail.gmail.com>
+In-Reply-To: <4D067919.2000206@tls-tautenburg.de>
+References: <49CFD043.6020708@tls-tautenburg.de> <49CFDB1F.7040902@hauke-m.de>
+ <43e72e890903301147hc09cec7rc8f214450a53efa7@mail.gmail.com>
+ <4BA0FE74.4070906@tls-tautenburg.de> <43e72e891003170914u1b4e4cbdpca2522b5217c077b@mail.gmail.com>
+ <4BA103DE.6010402@tls-tautenburg.de> <43e72e891003170932j7d675742x4bf350d3f5961c7a@mail.gmail.com>
+ <4D04F420.9030802@tls-tautenburg.de> <AANLkTinak1g2w1WA44hDb5c=qaDu41SM=b5od-_+_iMu@mail.gmail.com>
+ <4D067919.2000206@tls-tautenburg.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 13 Dec 2010 12:07:41 -0800
+Message-ID: <AANLkTik01J1N=bewgpNHHY47q8umgTu7Le=quj1eVuo-@mail.gmail.com>
+Subject: Re: iwlcore not in update
+To: Bringfried Stecklum <stecklum@tls-tautenburg.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 14, 2010 at 08:15:24PM -0800, Luis R. Rodriguez wrote:
-> On Tue, Dec 14, 2010 at 5:17 PM, Vipin Mehta <vmehta@atheros.com> wrote:
-> > Fixing the device instance being passed to set_wiphy_dev() from
-> > NULL to the one being returned by the MMC stack probe callback.
-> >
-> > Signed-off-by: Vipin Mehta <vmehta@atheros.com>
-> > ---
-> >  drivers/staging/ath6kl/os/linux/ar6000_drv.c |   19 ++++++++++++-------
-> >  1 files changed, 12 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-> > index a659f70..9f3e928 100644
-> > --- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-> > +++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-> > @@ -1608,6 +1608,15 @@ ar6000_avail_ev(void *context, void *hif_handle)
-> >     struct wireless_dev *wdev;
-> >  #endif /* ATH6K_CONFIG_CFG80211 */
-> >     A_STATUS init_status = A_OK;
-> > +    HIF_DEVICE_OS_DEVICE_INFO osDevInfo;
-> > +
-> > +    A_MEMZERO(&osDevInfo, sizeof(osDevInfo));
-> > +    if ( A_FAILED( HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_OS_DEVICE,
-> > +                    &osDevInfo, sizeof(osDevInfo))) )
-> 
-> while you are adding new code, why not use the direct Linux calls?
+On Mon, Dec 13, 2010 at 11:50 AM, Bringfried Stecklum
+<stecklum@tls-tautenburg.de> wrote:
+> Luis R. Rodriguez wrote:
+>>
+>> On Sun, Dec 12, 2010 at 8:11 AM, Bringfried Stecklum
+>> <stecklum@tls-tautenburg.de> wrote:
+>>>
+>>> Dear Luis,
+>>>
+>>> I tried to install compat-wireless-2010-12-07 a few days ago but failed.
+>>> The
+>>> reason is that iwlcore does not get build and installed in the update
+>>> modules folder which, of course, leads unresolved symbols
+>>>
+>>> stecklum@extragalactix:~/System/src/compat-wireless-2.6.37-rc5-2-s$ sudo
+>>> modprobe -v iwlagn
+>>> insmod /lib/modules/2.6.36-1-generic/updates/compat/compat.ko
+>>> insmod /lib/modules/2.6.36-1-generic/updates/net/wireless/cfg80211.ko
+>>> insmod /lib/modules/2.6.36-1-generic/updates/net/mac80211/mac80211.ko
+>>> insmod
+>>>
+>>> /lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
+>>> WARNING: Error inserting iwlcore
+>>>
+>>> (/lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko):
+>>> Invalid argument
+>>> insmod
+>>>
+>>> /lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
+>>> FATAL: Error inserting iwlagn
+>>>
+>>> (/lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko):
+>>> Unknown symbol in module, or unknown parameter (see
+>>> Â dmesg)
+>>>
+>>> It seems I missed a change. In the past (e.g. compat-wireless-2010-05-22
+>>> Â and kernel 2.6.31), iwlcore.ko was build and installed
+>>>
+>>> stecklum@extragalactix:~/System$ locate iwlcore.ko
+>>>
+>>> /lib/modules/2.6.31-22-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
+>>>
+>>> /lib/modules/2.6.31-22-generic/updates/drivers/net/wireless/iwlwifi/iwlcore.ko
+>>>
+>>> /lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
+>>
+>> Instead of CONFIG_IWLWIFI we use CONFIG_COMPAT_IWLWIFI, and we changed
+>> that the Makefile and config.mk
+>>
+>> mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.36.y)$ grep
+>> _IWLWIFI drivers/net/wireless/iwlwifi/Makefile
+>> obj-$(CONFIG_COMPAT_IWLWIFI) Â  Â += iwlcore.o
+>> iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+>> iwlcore-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
+>> iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-agn-debugfs.o
+>> iwl3945-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-3945-debugfs.o
+>>
+>> mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.36.y)$ grep
+>> CONFIG_COMPAT_IWLWIFI config.mk
+>> CONFIG_COMPAT_IWLWIFI=m
+>>
+>> Can grep like this:
+>>
+>> mcgrof@tux ~/tmp/compat-wireless-2.6.37-rc5-4-sn $ grep
+>> CONFIG_COMPAT_IWLWIFI include/linux/compat_autoconf.h
+>> #ifndef CONFIG_COMPAT_IWLWIFI
+>> #define CONFIG_COMPAT_IWLWIFI 1
+>> #endif /* CONFIG_COMPAT_IWLWIFI *
+>>
+>> Â Luis
+>>
+>
+> This is all fine and iwlcore.o gets build but at MODPOST stage 2
+> iwlcore.ko does _not_ get build, and thus still lacks in update.
 
-I'll change the use of A_MEMZERO(), A_FAILED() macros and A_STATUS
-data type given that we have an incoming patch that cleans the rest
-of the code for similar usage. Changing the use of HIFConfigureDevice()
-will be more useful if we do it across the driver since it will require
-significant changes in the data structures defined in the HIF layer.
-It qualifies for an entirely separate patch and can be done later in a
-systematic way.
+Hmm, odd. So you usee iwlcore.ko built?
+
+  Luis
