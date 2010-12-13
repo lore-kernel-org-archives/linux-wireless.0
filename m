@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59272 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757441Ab0LBLPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:15:05 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:14:51 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 21/27] ath9k_hw: Program appropriate chianmask for AR9485 before starting AGC/IQ cal
-Date: Thu, 2 Dec 2010 03:07:05 -0800
-Message-ID: <1291288031-3409-22-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:33612 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376Ab0LMKEJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 05:04:09 -0500
+Subject: Re: [PATCH 1/2] mac80211: Let userspace enable and configure
+ vendor specific path selection.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1292022251-12616-2-git-send-email-javier@cozybit.com>
+References: <1292022251-12616-1-git-send-email-javier@cozybit.com>
+	 <1292022251-12616-2-git-send-email-javier@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Dec 2010 11:04:03 +0100
+Message-ID: <1292234643.3539.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On Fri, 2010-12-10 at 15:04 -0800, Javier Cardona wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 4c94c9e..f218613 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -723,7 +723,9 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	val = REG_READ(ah, AR_ENT_OTP);
- 	ath_print(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
- 
--	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
-+	if (AR_SREV_9485(ah))
-+		ar9003_hw_set_chain_masks(ah, 0x1, 0x1);
-+	else if (val & AR_ENT_OTP_CHAIN2_DISABLE)
- 		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
- 	else
- 		/*
--- 
-1.7.0.4
+> +++ b/include/net/cfg80211.h
+> @@ -643,6 +643,12 @@ struct mesh_config {
+>  	u16 dot11MeshHWMPpreqMinInterval;
+>  	u16 dot11MeshHWMPnetDiameterTraversalTime;
+>  	u8  dot11MeshHWMPRootMode;
+> +	u8  vendor_path_sel_enabled;
+> +	u8  vendor_metric_enabled;
+> +	struct {
+> +		u8  *data;
+
+const -- and I really wouldn't do a substruct for this.
+
+> +		u8  length;
+> +	} vendor_ie;
+>  };
+
+Should these really be part of mesh_config, rather than mesh_setup? I
+may accept a need to change beacon IEs, but I don't think it makes any
+sense to change the path selection at mesh runtime since changing it
+will change the mesh network the node belongs to per mesh_matches_local.
+
+> @@ -522,6 +528,10 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+>  	ieee80211_mesh_root_setup(ifmsh);
+>  	ieee80211_queue_work(&local->hw, &sdata->work);
+>  	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+> +	sdata->u.mesh.mesh_pp_id = ifmsh->mshcfg.vendor_path_sel_enabled ?
+> +		MESH_PATH_PROTOCOL_VENDOR : MESH_PATH_PROTOCOL_HWMP;
+> +	sdata->u.mesh.mesh_pm_id = ifmsh->mshcfg.vendor_metric_enabled ?
+> +		MESH_PATH_METRIC_VENDOR : MESH_PATH_METRIC_AIRTIME;
+
+In fact, it looks like you only honour changes to them in start_mesh().
+
+> +++ b/net/mac80211/mesh.h
+> @@ -44,6 +44,30 @@ enum mesh_path_flags {
+>  };
+>  
+>  /**
+> + * enum - mesh path selection protocol identifier
+> + *
+> + * @MESH_PATH_PROTOCOL_HWMP: the default path selection protocol
+> + * @MESH_PATH_PROTOCOL_VENDOR: a vendor specific protocol that will be
+> + * specified in a vendor specific information element
+> + */
+> +enum {
+> +	MESH_PATH_PROTOCOL_HWMP = 0,
+> +	MESH_PATH_PROTOCOL_VENDOR = 255,
+> +};
+
+> +/**
+> + * enum - mesh path selection metric identifier
+> + *
+> + * @MESH_PATH_METRIC_AIRTIME: the default path selection metric
+> + * @MESH_PATH_METRIC_VENDOR: a vendor specific metric that will be
+> + * specified in a vendor specific information element
+> + */
+> +enum {
+> +	MESH_PATH_METRIC_AIRTIME = 0,
+> +	MESH_PATH_METRIC_VENDOR = 255,
+> +};
+
+Should these get an IEEE80211 prefix and move to
+include/linux/ieee80211.h?
+
+johannes
 
