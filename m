@@ -1,118 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab0L1RhZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:37:25 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:25 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 10/18] wl1271: AP mode config in ieee80211_ops.config
-Date: Tue, 28 Dec 2010 19:36:40 +0200
-Message-Id: <1293557808-27068-11-git-send-email-arik@wizery.com>
-In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:41255 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757797Ab0LMNr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 08:47:26 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 05:47:10 -0800
+Date: Mon, 13 Dec 2010 19:16:38 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@nbd.name>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH v3 1/8] ath9k_hw: only use the PCIe disable register
+ write sequence for AR5416
+Message-ID: <20101213134638.GA4622@vmraj-lnx.users.atheros.com>
+References: <1292111474-70939-1-git-send-email-nbd@openwrt.org>
+ <20101213111207.GA3121@vmraj-lnx.users.atheros.com>
+ <31A8EB58-AACD-4660-9C7D-6A077152E7C7@nbd.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <31A8EB58-AACD-4660-9C7D-6A077152E7C7@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Separate configuration according to mode. AP has different rate
-set configuration and no handling of idle-state.
+On Mon, Dec 13, 2010 at 07:07:53PM +0530, Felix Fietkau wrote:
+> On 13.12.2010, at 12:12, Rajkumar Manoharan <rmanoharan@atheros.com> wrote:
+> 
+> > On Sun, Dec 12, 2010 at 05:21:07AM +0530, Felix Fietkau wrote:
+> >> Newer chips do not need this, and maybe these register writes could have
+> >> negative side effects on newer hardware.
+> >> 
+> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> >> ---
+> >> drivers/net/wireless/ath/ath9k/hw.c |    6 +-----
+> >> 1 files changed, 1 insertions(+), 5 deletions(-)
+> >> 
+> >> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> >> index 516227f..7bc6d22 100644
+> >> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> >> @@ -284,11 +284,9 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+> >> 
+> >> static void ath9k_hw_disablepcie(struct ath_hw *ah)
+> >> {
+> >> -    if (AR_SREV_9100(ah))
+> >> +    if (!AR_SREV_5416(ah))
+> >>        return;
+> >> 
+> >> -    ENABLE_REGWRITE_BUFFER(ah);
+> > 
+> > Why to disable multiple register write?
+> Because it is only relevant for USB based devices.
+>
+True. This part is also applicable for HTC device like UB91.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   52 ++++++++++++++++++++----------------
- 1 files changed, 29 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 0f16307..43fdf2b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1362,7 +1362,7 @@ static void wl1271_set_band_rate(struct wl1271 *wl)
- 		wl->basic_rate_set = wl->conf.tx.basic_rate_5;
- }
- 
--static int wl1271_handle_idle(struct wl1271 *wl, bool idle)
-+static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
- {
- 	int ret;
- 
-@@ -1403,14 +1403,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	struct wl1271 *wl = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int channel, ret = 0;
-+	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
- 
- 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
- 
--	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
-+		     " changed 0x%x",
- 		     channel,
- 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
- 		     conf->power_level,
--		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
-+		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
-+			 changed);
- 
- 	/*
- 	 * mac80211 will go to idle nearly immediately after transmitting some
-@@ -1439,31 +1442,34 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		wl->band = conf->channel->band;
- 		wl->channel = channel;
- 
--		/*
--		 * FIXME: the mac80211 should really provide a fixed rate
--		 * to use here. for now, just use the smallest possible rate
--		 * for the band as a fixed rate for association frames and
--		 * other control messages.
--		 */
--		if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
--			wl1271_set_band_rate(wl);
--
--		wl->basic_rate = wl1271_tx_min_rate_get(wl);
--		ret = wl1271_acx_sta_rate_policies(wl);
--		if (ret < 0)
--			wl1271_warning("rate policy for update channel "
--				       "failed %d", ret);
-+		if (!is_ap) {
-+			/*
-+			 * FIXME: the mac80211 should really provide a fixed
-+			 * rate to use here. for now, just use the smallest
-+			 * possible rate for the band as a fixed rate for
-+			 * association frames and other control messages.
-+			 */
-+			if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
-+				wl1271_set_band_rate(wl);
- 
--		if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
--			ret = wl1271_join(wl, false);
-+			wl->basic_rate = wl1271_tx_min_rate_get(wl);
-+			ret = wl1271_acx_sta_rate_policies(wl);
- 			if (ret < 0)
--				wl1271_warning("cmd join to update channel "
-+				wl1271_warning("rate policy for channel "
- 					       "failed %d", ret);
-+
-+			if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
-+				ret = wl1271_join(wl, false);
-+				if (ret < 0)
-+					wl1271_warning("cmd join on channel "
-+						       "failed %d", ret);
-+			}
- 		}
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
--		ret = wl1271_handle_idle(wl, conf->flags & IEEE80211_CONF_IDLE);
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE && !is_ap) {
-+		ret = wl1271_sta_handle_idle(wl,
-+					conf->flags & IEEE80211_CONF_IDLE);
- 		if (ret < 0)
- 			wl1271_warning("idle mode change failed %d", ret);
- 	}
--- 
-1.7.1
-
+--
+Rajkumar
