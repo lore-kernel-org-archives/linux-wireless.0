@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756087Ab0LJQKr (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:52756 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751227Ab0LMTod convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 11:10:47 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1PR5YU-0003k1-2p
-	for linux-wireless@vger.kernel.org; Fri, 10 Dec 2010 17:10:46 +0100
-Subject: [RFC] mac80211: support IBSS RSN with SW crypto
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Dec 2010 17:10:44 +0100
-Message-ID: <1291997444.3531.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 13 Dec 2010 14:44:33 -0500
+From: "h2o-post" <h2o-post@gmx.net>
+To: =?UTF-8?Q?'Rafa=C5=82_Mi=C5=82ecki'?= <zajec5@gmail.com>,
+	<francesco.gringoli@ing.unibs.it>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+	<b43-dev@lists.infradead.org>, "'Bo Han'" <bohan@cs.umd.edu>
+References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>	<1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>	<AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>	<E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it> <AANLkTimUdX1duphd=QYRz_i-TERfXbjOM1QEXaTUO13M@mail.gmail.com>
+In-Reply-To: <AANLkTimUdX1duphd=QYRz_i-TERfXbjOM1QEXaTUO13M@mail.gmail.com>
+Subject: AW: Release of Maranello firmware source code for Broadcom cards
+Date: Mon, 13 Dec 2010 20:44:26 +0100
+Message-ID: <016c01cb9afe$27bd5000$7737f000$@gmx.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Francesco,
 
-When software crypto is used, mac80211 will
-support IBSS RSN, it doesn't depend on the
-driver in that case.
+We are running a mesh network with 45 nodes all by Linksys wrt54g routers in our village to get somehow internet connectivity.
+As I saw your maranello paper  I am curious to test your Broadcom firmware in our productive net.
+Is the firmware already available that supports this kind of crc frame checking ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/main.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Regards Thomas
 
---- wireless-testing.orig/net/mac80211/main.c	2010-12-10 17:07:22.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2010-12-10 17:08:25.000000000 +0100
-@@ -517,11 +517,15 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 
- 	wiphy->mgmt_stypes = ieee80211_default_mgmt_stypes;
- 
-+	wiphy->privid = mac80211_wiphy_privid;
-+
- 	wiphy->flags |= WIPHY_FLAG_NETNS_OK |
- 			WIPHY_FLAG_4ADDR_AP |
- 			WIPHY_FLAG_4ADDR_STATION |
- 			WIPHY_FLAG_SUPPORTS_SEPARATE_DEFAULT_KEYS;
--	wiphy->privid = mac80211_wiphy_privid;
-+
-+	if (!ops->set_key)
-+		wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
- 	wiphy->bss_priv_size = sizeof(struct ieee80211_bss);
- 
+-----Ursprüngliche Nachricht-----
+Von: b43-dev-bounces@lists.infradead.org [mailto:b43-dev-bounces@lists.infradead.org] Im Auftrag von Rafal Milecki
+Gesendet: Sonntag, 10. Oktober 2010 19:36
+An: francesco.gringoli@ing.unibs.it
+Cc: linux-wireless; b43-dev@lists.infradead.org; Bo Han
+Betreff: Re: Release of Maranello firmware source code for Broadcom cards
 
+W dniu 10 października 2010 18:53 użytkownik <francesco.gringoli@ing.unibs.it> napisał:
+> On Oct 10, 2010, at 4:47 PM, Rafał Miłecki wrote:
+>
+>> 2010/10/10  <francesco.gringoli@ing.unibs.it>:
+>>> Hello there,
+>>>
+>>> we released the source code of the Maranello firmware and all the 
+>>> necessary kernel patches. It was tested on Broadcom 4318/4306 pci 
+>>> cards on PC architecture. Find all the necessary files browsing from
+>>>
+>>> http://www.ing.unibs.it/openfwwf
+>>>
+>>> or go directly here
+>>>
+>>> http://www.cs.umd.edu/projects/maranello
+>>>
+>>>
+>>> Maranello is an enhancement of the 802.11 DCF standard: it 
+>>> implements a Partial Packet Recovery technique to retransmit only 
+>>> the corrupt parts of failed packets. This reduces the airtime and 
+>>> contributes to enhance the throughput. It was written starting from 
+>>> OpenFWWF5.2 by adding a number of new features.
+>>>
+>> Did you just add recovery feature to OpenFWWF 5.2 or did you improve 
+>> basic OpenFWWF as well?
+>>
+>> My 4318 with OpenFWWF 5.2 stops transmitting after few MB. Can 
+>> Maranello contain any fix for this? I'll able to test this later next 
+>> week.
+>
+> No, I don't think so. OpenFWWF5.2 does not handle correctly fifo overflow conditions. We have a testing firmware that handles them (and that works perfectly on WRT54GL): I hope we can release it soon.
+
+Wow, that's great! If you need more testing, I'm willing to do some.
+If you need full root access to machine with 4318 running wireless-testing, just mail me privately.
+
+Really hope you will manage to release that soon :)
+
+--
+Rafał
+
+_______________________________________________
+b43-dev mailing list
+b43-dev@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/b43-dev
 
