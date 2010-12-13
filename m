@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49641 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377Ab0LIBvE (ORCPT
+Received: from perninha.conectiva.com.br ([187.115.55.249]:50777 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925Ab0LMNn4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 20:51:04 -0500
-Date: Wed, 8 Dec 2010 20:48:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: [PATCH 2/3] iwlagn: implement layout-agnostic EEPROM reading
-Message-ID: <20101209014850.GA2915@tuxdriver.com>
-References: <1291743428-19642-1-git-send-email-wey-yi.w.guy@intel.com>
- <1291743428-19642-3-git-send-email-wey-yi.w.guy@intel.com>
- <20101207192806.GF2700@tuxdriver.com>
- <1291751118.20668.8.camel@wwguy-ubuntu>
- <20101208201926.GF2423@tuxdriver.com>
- <1291851191.10280.174.camel@wwguy-ubuntu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1291851191.10280.174.camel@wwguy-ubuntu>
+	Mon, 13 Dec 2010 08:43:56 -0500
+Date: Mon, 13 Dec 2010 11:43:51 -0200
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John W Linville <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: avoid calling ieee80211_work_work unconditionally
+Message-ID: <20101213114351.47df9333@gotham.conectiva>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 08, 2010 at 03:33:11PM -0800, Guy, Wey-Yi wrote:
-> On Wed, 2010-12-08 at 12:19 -0800, John W. Linville wrote:
-> > On Tue, Dec 07, 2010 at 11:45:18AM -0800, Guy, Wey-Yi wrote:
+On suspend, there might be usb wireless drivers which wrongly trigger
+the warning in ieee80211_work_work. If an usb driver doesn't have a
+suspend hook, the usb stack will disconnect the device. On disconnect,
+a mac80211 driver calls ieee80211_unregister_hw, which calls dev_close,
+which calls ieee80211_stop, and in the end calls ieee80211_work_purge->
+ieee80211_work_work.
 
-> > > So it is really judgment call, we plan to release both 6005 and 6030
-> > > uCode in the next few weeks and hardware should be on the market early
-> > > next year. If by the time when hardware become available, distro already
-> > > move to .38, then I am ok with it. What you think?
-> > 
-> > What about a patch to disable those devices in 2.6.37, and leave the
-> > existing EEPROM code alone for that release?
-> > 
-> 
-> I don't think it is an option to disable all the new devices for .37
-> since we commit to support them in .37 kernel, 
+The problem is that this call to ieee80211_work_purge comes after
+mac80211 is suspended, triggering the warning even when we don't have
+work queued in work_list (the expected case when already suspended),
+because it always calls ieee80211_work_work.
 
-It certainly is an option.  Missing hardware support for one release
-versus potentially destabilizing all existing iwlwifi users seems
-like an obvious trade-off to me.  I trust Johannes, of course, but
-we all make subtle mistakes from time to time.
+So, just call ieee80211_work_work in ieee80211_work_purge if we really
+have to abort work. This addresses the warning reported at
+https://bugzilla.kernel.org/show_bug.cgi?id=24402
 
-> How about re-work the patch to keep the orig. EEPROM reading method for
-> older devices, but using new EEPROM method for the newer devices
-> (6005/6030/...). it that work for .37 kernel?
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+---
+ net/mac80211/work.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-I suppose this could work, although it sounds like an even bigger
-patch.  I guess we would need to see the patch.
-
-John
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index de43753..36305e0 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -1074,11 +1074,13 @@ void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_work *wk;
++	bool cleanup = false;
+ 
+ 	mutex_lock(&local->mtx);
+ 	list_for_each_entry(wk, &local->work_list, list) {
+ 		if (wk->sdata != sdata)
+ 			continue;
++		cleanup = true;
+ 		wk->type = IEEE80211_WORK_ABORT;
+ 		wk->started = true;
+ 		wk->timeout = jiffies;
+@@ -1086,7 +1088,8 @@ void ieee80211_work_purge(struct ieee80211_sub_if_data *sdata)
+ 	mutex_unlock(&local->mtx);
+ 
+ 	/* run cleanups etc. */
+-	ieee80211_work_work(&local->work_work);
++	if (cleanup)
++		ieee80211_work_work(&local->work_work);
+ 
+ 	mutex_lock(&local->mtx);
+ 	list_for_each_entry(wk, &local->work_list, list) {
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+1.7.3.3
+
