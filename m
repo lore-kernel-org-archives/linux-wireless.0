@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:54133 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917Ab0LUUou (ORCPT
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:45263 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340Ab0LMLkJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 15:44:50 -0500
-Subject: [PATCH 5/7] rndis_wlan: remove unused variable from priv structure
+	Mon, 13 Dec 2010 06:40:09 -0500
+Received: by mail-ey0-f171.google.com with SMTP id 5so4064715eyg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 03:40:09 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Dec 2010 22:44:34 +0200
-Message-ID: <20101221204434.12250.70551.stgit@fate.lan>
-In-Reply-To: <20101221204405.12250.35410.stgit@fate.lan>
-References: <20101221204405.12250.35410.stgit@fate.lan>
+Subject: [PATCH 03/17] rt2x00: Add RF chip definition
+Date: Mon, 13 Dec 2010 12:32:22 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201012131231.28313.IvDoorn@gmail.com> <201012131231.59890.IvDoorn@gmail.com>
+In-Reply-To: <201012131231.59890.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012131232.23491.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/rndis_wlan.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+From: RA-Jay Hung <jay_hung@ralinktech.com>
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d0992fc..aa21d86 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -503,7 +503,6 @@ struct rndis_wlan_private {
- 	int infra_mode;
- 	bool connected;
- 	u8 bssid[ETH_ALEN];
--	struct ndis_80211_ssid essid;
- 	__le32 current_command_oid;
+Add RF chip definition
+
+Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 03f9fa1..9ea0961 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -46,8 +46,11 @@
+  * RF2020 2.4G B/G
+  * RF3021 2.4G 1T2R
+  * RF3022 2.4G 2T2R
+- * RF3052 2.4G 2T2R
+- * RF3320 2.4G 1T1R
++ * RF3052 2.4G/5G 2T2R
++ * RF2853 2.4G/5G 3T3R
++ * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
++ * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
++ * RF3853 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+  */
+ #define RF2820				0x0001
+ #define RF2850				0x0002
+@@ -58,7 +61,10 @@
+ #define RF3021				0x0007
+ #define RF3022				0x0008
+ #define RF3052				0x0009
++#define RF2853				0x000a
+ #define RF3320				0x000b
++#define RF3322				0x000c
++#define RF3853				0x000d
  
- 	/* encryption stuff */
-@@ -1026,7 +1025,6 @@ static int set_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
- 		return ret;
- 	}
- 	if (ret == 0) {
--		memcpy(&priv->essid, ssid, sizeof(priv->essid));
- 		priv->radio_on = true;
- 		netdev_dbg(usbdev->net, "%s(): radio_on = true\n", __func__);
- 	}
+ /*
+  * Chipset revisions.
+-- 
+1.7.2.3
 
