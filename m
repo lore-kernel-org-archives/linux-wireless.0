@@ -1,91 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46421 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab0L0WVi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33501 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752933Ab0LMReP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 17:21:38 -0500
-Received: by fxm20 with SMTP id 20so9394399fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 14:21:36 -0800 (PST)
-Subject: [PATCH] mac80211: ignore PSM bit of reordered frames
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Mon, 27 Dec 2010 23:21:26 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201012272321.27690.chunkeey@googlemail.com>
+	Mon, 13 Dec 2010 12:34:15 -0500
+Subject: Re: [PATCH] mac80211: avoid calling ieee80211_work_work
+ unconditionally
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <AANLkTinnhSj=50agjC3mVDKF1Z7-rMdZ4oqZvwmitmmE@mail.gmail.com>
+References: <20101213114351.47df9333@gotham.conectiva>
+	 <AANLkTinnhSj=50agjC3mVDKF1Z7-rMdZ4oqZvwmitmmE@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Dec 2010 18:34:09 +0100
+Message-ID: <1292261649.3539.38.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch tackles one of the problems of my
-reorder release timer patch from August.
+On Mon, 2010-12-13 at 09:29 -0800, Luis R. Rodriguez wrote:
+> On Mon, Dec 13, 2010 at 5:43 AM, Herton Ronaldo Krzesinski
+> <herton@mandriva.com.br> wrote:
+> > On suspend, there might be usb wireless drivers which wrongly trigger
+> > the warning in ieee80211_work_work. If an usb driver doesn't have a
+> > suspend hook, the usb stack will disconnect the device. On disconnect,
+> > a mac80211 driver calls ieee80211_unregister_hw, which calls dev_close,
+> > which calls ieee80211_stop, and in the end calls ieee80211_work_purge->
+> > ieee80211_work_work.
+> >
+> > The problem is that this call to ieee80211_work_purge comes after
+> > mac80211 is suspended, triggering the warning even when we don't have
+> > work queued in work_list (the expected case when already suspended),
+> > because it always calls ieee80211_work_work.
+> >
+> > So, just call ieee80211_work_work in ieee80211_work_purge if we really
+> > have to abort work. This addresses the warning reported at
+> > https://bugzilla.kernel.org/show_bug.cgi?id=24402
+> >
+> > Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> 
+> Cc: stable@kernel.org ?
 
-<http://www.spinics.net/lists/linux-wireless/msg57214.html>
-=>
-What if the reorder release triggers and ap_sta_ps_end
-(called by ieee80211_rx_h_sta_process) accidentally clears
-the WLAN_STA_PS_STA flag, because 100ms ago - when the STA
-was still active - frames were put into the reorder buffer.
+It's just a warning, do we really want to bother?
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-RFC -> PATCH:
-	fix typo: DEFERED -> DEFERRED
----
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/rx.c          |    4 ++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a0cf5ab..bb71fe3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -168,6 +168,7 @@ typedef unsigned __bitwise__ ieee80211_rx_result;
-  * @IEEE80211_RX_FRAGMENTED: fragmented frame
-  * @IEEE80211_RX_AMSDU: a-MSDU packet
-  * @IEEE80211_RX_MALFORMED_ACTION_FRM: action frame is malformed
-+ * @IEEE80211_RX_DEFERRED_RELEASE: frame was subjected to receive reordering
-  *
-  * These are per-frame flags that are attached to a frame in the
-  * @rx_flags field of &struct ieee80211_rx_status.
-@@ -178,6 +179,7 @@ enum ieee80211_packet_rx_flags {
- 	IEEE80211_RX_FRAGMENTED			= BIT(2),
- 	IEEE80211_RX_AMSDU			= BIT(3),
- 	IEEE80211_RX_MALFORMED_ACTION_FRM	= BIT(4),
-+	IEEE80211_RX_DEFERRED_RELEASE		= BIT(5),
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b6c2a30..e612805 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -537,6 +537,7 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
- 					    struct sk_buff_head *frames)
- {
- 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
-+	struct ieee80211_rx_status *status;
- 
- 	lockdep_assert_held(&tid_agg_rx->reorder_lock);
- 
-@@ -546,6 +547,8 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
- 	/* release the frame from the reorder ring buffer */
- 	tid_agg_rx->stored_mpdu_num--;
- 	tid_agg_rx->reorder_buf[index] = NULL;
-+	status = IEEE80211_SKB_RXCB(skb);
-+	status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
- 	__skb_queue_tail(frames, skb);
- 
- no_frame:
-@@ -1185,6 +1188,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	 * exchange sequence.
- 	 */
- 	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-+	    !(status->rx_flags & IEEE80211_RX_DEFERRED_RELEASE) &&
- 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
- 	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
- 		if (test_sta_flags(sta, WLAN_STA_PS_STA)) {
--- 
-1.7.2.3
+johannes
 
