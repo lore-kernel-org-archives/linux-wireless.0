@@ -1,40 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51981 "EHLO nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:25321 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753582Ab0LMHlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 02:41:11 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	vasanth@atheros.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 1/7] ath9k_hw: initialize ah->slottime
-Date: Mon, 13 Dec 2010 08:40:50 +0100
-Message-Id: <1292226056-56008-1-git-send-email-nbd@openwrt.org>
+	id S1757170Ab0LMVin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 16:38:43 -0500
+Subject: new iwlwifi 6005 uCode available
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Dec 2010 13:37:35 -0800
+Message-Id: <1292276255.10280.194.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(u32) -1 is not particularly useful as a slottime default, so even though
-the ath9k_hw default should never get used, it's better to pick something
-sane here.
+Hi,
+ 
+Version 17.168.5.1 of uCode for Intel® 6005 Series Wi-Fi
+Adapters is now available for download from
+http://www.intellinuxwireless.org/?n=Downloads
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d44f74e..856a76e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -408,7 +408,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 		AR_STA_ID1_CRPT_MIC_ENABLE |
- 		AR_STA_ID1_MCAST_KSRCH;
- 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
--	ah->slottime = (u32) -1;
-+	ah->slottime = 20;
- 	ah->globaltxtimeout = (u32) -1;
- 	ah->power_mode = ATH9K_PM_UNDEFINED;
- }
--- 
-1.7.3.2
+ 
+Wey
 
