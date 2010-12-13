@@ -1,90 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52488 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193Ab0LaPda (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 10:33:30 -0500
-Message-ID: <4D1DF7CA.8040504@lwfinger.net>
-Date: Fri, 31 Dec 2010 09:33:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: trivial@kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 07/15]drivers:net:wireless:iwlwifi Typo change diable
- to disable.
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:51982 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753652Ab0LMHlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 02:41:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 7/7] ath9k_hw: update AR9003 initvals to improve carrier leak calibration/correction
+Date: Mon, 13 Dec 2010 08:40:56 +0100
+Message-Id: <1292226056-56008-7-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292226056-56008-6-git-send-email-nbd@openwrt.org>
+References: <1292226056-56008-1-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-2-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-3-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-4-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-5-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/2010 05:07 PM, Justin P. Mattock wrote:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this 
-> is correct or not.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  100 ++++++++++----------
+ 1 files changed, 50 insertions(+), 50 deletions(-)
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-ict.c |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-agn.c     |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl-core.c    |    2 +-
->  3 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ict.c b/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-> index a5dbfea..b5cb3be 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-> @@ -197,7 +197,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
->  
->   none:
->  	/* re-enable interrupts here since we don't have anything to service. */
-> -	/* only Re-enable if diabled by irq  and no schedules tasklet. */
-> +	/* only Re-enable if disabled by irq  and no schedules tasklet. */
->  	if (test_bit(STATUS_INT_ENABLED, &priv->status) && !priv->_agn.inta)
->  		iwl_enable_interrupts(priv);
->  
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index c2636a7..9b912c0 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -1316,7 +1316,7 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
->  	}
->  
->  	/* Re-enable all interrupts */
-> -	/* only Re-enable if diabled by irq */
-> +	/* only Re-enable if disabled by irq */
->  	if (test_bit(STATUS_INT_ENABLED, &priv->status))
->  		iwl_enable_interrupts(priv);
->  
-> @@ -1530,7 +1530,7 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
->  	}
->  
->  	/* Re-enable all interrupts */
-> -	/* only Re-enable if diabled by irq */
-> +	/* only Re-enable if disabled by irq */
->  	if (test_bit(STATUS_INT_ENABLED, &priv->status))
->  		iwl_enable_interrupts(priv);
->  }
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-> index 25fb391..8700ab3 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -1304,7 +1304,7 @@ irqreturn_t iwl_isr_legacy(int irq, void *data)
->  
->   none:
->  	/* re-enable interrupts here since we don't have anything to service. */
-> -	/* only Re-enable if diabled by irq */
-> +	/* only Re-enable if disabled by irq */
->  	if (test_bit(STATUS_INT_ENABLED, &priv->status))
->  		iwl_enable_interrupts(priv);
->  	spin_unlock_irqrestore(&priv->lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index ec50ca1..81f9cf2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -34,9 +34,9 @@ static const u32 ar9300_2p2_radio_postamble[][5] = {
+ 
+ static const u32 ar9300Modes_lowest_ob_db_tx_gain_table_2p2[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
+-	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
+-	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
++	{0x0000a2dc, 0x00033800, 0x00033800, 0x00637800, 0x00637800},
++	{0x0000a2e0, 0x0003c000, 0x0003c000, 0x03838000, 0x03838000},
++	{0x0000a2e4, 0x03fc0000, 0x03fc0000, 0x03fc0000, 0x03fc0000},
+ 	{0x0000a2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
+ 	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -56,21 +56,21 @@ static const u32 ar9300Modes_lowest_ob_db_tx_gain_table_2p2[][5] = {
+ 	{0x0000a538, 0x4702244a, 0x4702244a, 0x34000e24, 0x34000e24},
+ 	{0x0000a53c, 0x4b02244c, 0x4b02244c, 0x38001640, 0x38001640},
+ 	{0x0000a540, 0x4e02246c, 0x4e02246c, 0x3c001660, 0x3c001660},
+-	{0x0000a544, 0x5302266c, 0x5302266c, 0x3f001861, 0x3f001861},
+-	{0x0000a548, 0x5702286c, 0x5702286c, 0x43001a81, 0x43001a81},
+-	{0x0000a54c, 0x5c02486b, 0x5c02486b, 0x47001a83, 0x47001a83},
+-	{0x0000a550, 0x61024a6c, 0x61024a6c, 0x4a001c84, 0x4a001c84},
+-	{0x0000a554, 0x66026a6c, 0x66026a6c, 0x4e001ce3, 0x4e001ce3},
+-	{0x0000a558, 0x6b026e6c, 0x6b026e6c, 0x52001ce5, 0x52001ce5},
+-	{0x0000a55c, 0x7002708c, 0x7002708c, 0x56001ce9, 0x56001ce9},
+-	{0x0000a560, 0x7302b08a, 0x7302b08a, 0x5a001ceb, 0x5a001ceb},
+-	{0x0000a564, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a568, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a56c, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a570, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a574, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a578, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a57c, 0x7702b08c, 0x7702b08c, 0x5d001eec, 0x5d001eec},
++	{0x0000a544, 0x52022470, 0x52022470, 0x3f001861, 0x3f001861},
++	{0x0000a548, 0x55022490, 0x55022490, 0x43001a81, 0x43001a81},
++	{0x0000a54c, 0x59022492, 0x59022492, 0x47001a83, 0x47001a83},
++	{0x0000a550, 0x5d022692, 0x5d022692, 0x4a001c84, 0x4a001c84},
++	{0x0000a554, 0x61022892, 0x61022892, 0x4e001ce3, 0x4e001ce3},
++	{0x0000a558, 0x65024890, 0x65024890, 0x52001ce5, 0x52001ce5},
++	{0x0000a55c, 0x69024892, 0x69024892, 0x56001ce9, 0x56001ce9},
++	{0x0000a560, 0x6e024c92, 0x6e024c92, 0x5a001ceb, 0x5a001ceb},
++	{0x0000a564, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a568, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a56c, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a570, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a574, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a578, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
++	{0x0000a57c, 0x74026e92, 0x74026e92, 0x5d001eec, 0x5d001eec},
+ 	{0x0000a580, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
+ 	{0x0000a584, 0x06800003, 0x06800003, 0x04800002, 0x04800002},
+ 	{0x0000a588, 0x0a800020, 0x0a800020, 0x08800004, 0x08800004},
+@@ -88,44 +88,44 @@ static const u32 ar9300Modes_lowest_ob_db_tx_gain_table_2p2[][5] = {
+ 	{0x0000a5b8, 0x4782244a, 0x4782244a, 0x34800e24, 0x34800e24},
+ 	{0x0000a5bc, 0x4b82244c, 0x4b82244c, 0x38801640, 0x38801640},
+ 	{0x0000a5c0, 0x4e82246c, 0x4e82246c, 0x3c801660, 0x3c801660},
+-	{0x0000a5c4, 0x5382266c, 0x5382266c, 0x3f801861, 0x3f801861},
+-	{0x0000a5c8, 0x5782286c, 0x5782286c, 0x43801a81, 0x43801a81},
+-	{0x0000a5cc, 0x5c82486b, 0x5c82486b, 0x47801a83, 0x47801a83},
+-	{0x0000a5d0, 0x61824a6c, 0x61824a6c, 0x4a801c84, 0x4a801c84},
+-	{0x0000a5d4, 0x66826a6c, 0x66826a6c, 0x4e801ce3, 0x4e801ce3},
+-	{0x0000a5d8, 0x6b826e6c, 0x6b826e6c, 0x52801ce5, 0x52801ce5},
+-	{0x0000a5dc, 0x7082708c, 0x7082708c, 0x56801ce9, 0x56801ce9},
+-	{0x0000a5e0, 0x7382b08a, 0x7382b08a, 0x5a801ceb, 0x5a801ceb},
+-	{0x0000a5e4, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5e8, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5ec, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5f0, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5f4, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5f8, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
+-	{0x0000a5fc, 0x7782b08c, 0x7782b08c, 0x5d801eec, 0x5d801eec},
++	{0x0000a5c4, 0x52822470, 0x52822470, 0x3f801861, 0x3f801861},
++	{0x0000a5c8, 0x55822490, 0x55822490, 0x43801a81, 0x43801a81},
++	{0x0000a5cc, 0x59822492, 0x59822492, 0x47801a83, 0x47801a83},
++	{0x0000a5d0, 0x5d822692, 0x5d822692, 0x4a801c84, 0x4a801c84},
++	{0x0000a5d4, 0x61822892, 0x61822892, 0x4e801ce3, 0x4e801ce3},
++	{0x0000a5d8, 0x65824890, 0x65824890, 0x52801ce5, 0x52801ce5},
++	{0x0000a5dc, 0x69824892, 0x69824892, 0x56801ce9, 0x56801ce9},
++	{0x0000a5e0, 0x6e824c92, 0x6e824c92, 0x5a801ceb, 0x5a801ceb},
++	{0x0000a5e4, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a5e8, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a5ec, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a5f0, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a5f4, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a5f8, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
++	{0x0000a5fc, 0x74826e92, 0x74826e92, 0x5d801eec, 0x5d801eec},
+ 	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
+-	{0x0000a618, 0x01404501, 0x01404501, 0x01404501, 0x01404501},
+-	{0x0000a61c, 0x02008802, 0x02008802, 0x02008501, 0x02008501},
+-	{0x0000a620, 0x0300cc03, 0x0300cc03, 0x0280ca03, 0x0280ca03},
+-	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x03010c04, 0x03010c04},
+-	{0x0000a628, 0x0300cc03, 0x0300cc03, 0x04014c04, 0x04014c04},
+-	{0x0000a62c, 0x03810c03, 0x03810c03, 0x04015005, 0x04015005},
+-	{0x0000a630, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
+-	{0x0000a634, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
+-	{0x0000a638, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
+-	{0x0000a63c, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
+-	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
+-	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
+-	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
++	{0x0000a614, 0x02004000, 0x02004000, 0x01404000, 0x01404000},
++	{0x0000a618, 0x02004801, 0x02004801, 0x01404501, 0x01404501},
++	{0x0000a61c, 0x02808a02, 0x02808a02, 0x02008501, 0x02008501},
++	{0x0000a620, 0x0380ce03, 0x0380ce03, 0x0280ca03, 0x0280ca03},
++	{0x0000a624, 0x04411104, 0x04411104, 0x03010c04, 0x03010c04},
++	{0x0000a628, 0x04411104, 0x04411104, 0x04014c04, 0x04014c04},
++	{0x0000a62c, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
++	{0x0000a630, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
++	{0x0000a634, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
++	{0x0000a638, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
++	{0x0000a63c, 0x04411104, 0x04411104, 0x04015005, 0x04015005},
++	{0x0000b2dc, 0x00033800, 0x00033800, 0x00637800, 0x00637800},
++	{0x0000b2e0, 0x0003c000, 0x0003c000, 0x03838000, 0x03838000},
++	{0x0000b2e4, 0x03fc0000, 0x03fc0000, 0x03fc0000, 0x03fc0000},
+ 	{0x0000b2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000c2dc, 0x0380c7fc, 0x0380c7fc, 0x00637800, 0x00637800},
+-	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03838000, 0x03838000},
+-	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03fc0000, 0x03fc0000},
++	{0x0000c2dc, 0x00033800, 0x00033800, 0x00637800, 0x00637800},
++	{0x0000c2e0, 0x0003c000, 0x0003c000, 0x03838000, 0x03838000},
++	{0x0000c2e4, 0x03fc0000, 0x03fc0000, 0x03fc0000, 0x03fc0000},
+ 	{0x0000c2e8, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
+ 	{0x00016048, 0x62480001, 0x62480001, 0x62480001, 0x62480001},
+-- 
+1.7.3.2
 
