@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f180.google.com ([209.85.161.180]:36139 "EHLO
-	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698Ab0LGFN6 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:54248 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753734Ab0LMUEw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 00:13:58 -0500
-Received: by gxk19 with SMTP id 19so7264653gxk.11
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 21:13:58 -0800 (PST)
-From: greearb@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k:  Check for NULL sta in ath_tx_start
-Date: Mon,  6 Dec 2010 21:13:49 -0800
-Message-Id: <1291698829-22765-1-git-send-email-greearb@candelatech.com>
+	Mon, 13 Dec 2010 15:04:52 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 5A8434061B
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 15:04:51 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101213200451.2513B40F97@repository3.orbit-lab.org>
+Date: Mon, 13 Dec 2010 15:04:50 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   d31ffbc..8290618  history    -> origin/history
+ + 1b1497f...455b710 master     -> origin/master  (forced update)
+ * [new tag]         next-20101213 -> next-20101213
 
-It can be NULL according to docs, and logging showed it
-to be NULL in practice.
+compat-wireless code metrics
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 8b0b076... 5ddca08... M	drivers/net/wireless/ath/ath9k/xmit.c
- drivers/net/wireless/ath/ath9k/xmit.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+    752626 - Total upstream lines of code being pulled
+      2198 - backport code changes
+      1935 - backport code additions
+       263 - backport code deletions
+      6637 - backport from compat module
+      8835 - total backport code
+    1.1739 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2036 - % of crap code
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 8b0b076..5ddca08 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1764,7 +1764,10 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	int frmlen = skb->len + FCS_LEN;
- 	int q;
- 
--	txctl->an = (struct ath_node *)sta->drv_priv;
-+	/* NOTE:  sta can be NULL according to net/mac80211.h */
-+	if (sta)
-+		txctl->an = (struct ath_node *)sta->drv_priv;
-+
- 	if (info->control.hw_key)
- 		frmlen += info->control.hw_key->icv_len;
- 
--- 
-1.7.2.3
-
+Base tree: linux-next.git
+Base tree version: next-20101213
+compat-wireless release: compat-wireless-2010-12-10-1-gc0f962a-pc
