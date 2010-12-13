@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:49418 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754596Ab0LRKjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 05:39:45 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 18 Dec 2010 02:39:30 -0800
-Message-ID: <4D0C8F66.50407@atheros.com>
-Date: Sat, 18 Dec 2010 16:09:34 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:34607 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757906Ab0LMSLD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 13:11:03 -0500
+Received: by fxm18 with SMTP id 18so6570700fxm.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 10:11:01 -0800 (PST)
+Message-ID: <4D0661CF.7010905@lwfinger.net>
+Date: Mon, 13 Dec 2010 12:11:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Properly initialize channel table for 2GHz
-References: <1292598876-8242-1-git-send-email-mshajakhan@atheros.com> <AANLkTiky2ODWt-ocSy_+=9k9_E=7ekvLMLbQtir-cd-r@mail.gmail.com>
-In-Reply-To: <AANLkTiky2ODWt-ocSy_+=9k9_E=7ekvLMLbQtir-cd-r@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+CC: Dave Vasilevsky <dave@vasilevsky.ca>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: compat-wireless-2.6: out of date b43 config option in config.mk
+References: <AANLkTin-JwhK_SRhSPrzWJM6fJ9p_rEWVeTLGKk1pyUw@mail.gmail.com> <20101213174321.GB637@tux>
+In-Reply-To: <20101213174321.GB637@tux>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 18 December 2010 01:21 AM, Luis R. Rodriguez wrote:
-> On Fri, Dec 17, 2010 at 7:14 AM, Mohammed Shafi Shajakhan
-> <mshajakhan@atheros.com>  wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+On 12/13/2010 11:43 AM, Luis R. Rodriguez wrote:
+> On Fri, Dec 10, 2010 at 07:46:16PM -0800, Dave Vasilevsky wrote:
+>> Hi Luis,
 >>
->> ath9k channel table for 2Ghz does not seems to initialize the 'band'
->> parameter.Though it does not seems to cause any visible issue it looks
->> odd when we initialize the 'band' parameter for 5Ghz channel table while
->> not so for 2Ghz.
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/init.c |    1 +
->>   1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
->> index 1238795..b0e5e71 100644
->> --- a/drivers/net/wireless/ath/ath9k/init.c
->> +++ b/drivers/net/wireless/ath/ath9k/init.c
->> @@ -48,6 +48,7 @@ MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
->>   /* We use the hw_value as an index into our private channel structure */
->>
->>   #define CHAN2G(_freq, _idx)  { \
->> +       .band = IEEE80211_BAND_2GHZ, \
->>         .center_freq = (_freq), \
->>         .hw_value = (_idx), \
->>         .max_power = 20, \
->>      
-> That's fine but its not needed at all as the band is already
-> kzalloc()'d so it gets zeroed out and the IEEE80211_BAND_2GHZ enum is
-> 0, so its not required to be explicit and set it. But if it gives you
-> the warm fuzzies sure.
->    
-Oh ok fine, then no problem. I could not trace any  warnings if 'band' 
-parameter was not used, as the code looked suspicious I had sent a patch.
-thanks,
-shafi
+>> Thanks for your work on compat-wireless, you are officially awesome :)
+>>  I just noticed that recent changes in the b43 driver have renamed
+>> CONFIG_B43_NPHY to CONFIG_B43_PHY_N, but config.mk in
+>> compat-wireless-2.6 is still using the old config option name. Thought
+>> I should let you know.
+> 
+> CONFIG_B43_NPHY is still used, and we have CONFIG_B43_PHY_LP=y as well.
+> I don't see any CONFIG_B43_PHY_N on upstream.
 
->    Luis
->    
+It is in wireless-testing since commit 692d2c0fb36c02ad07d54641c26f48e644b27fbd,
+dated December 7.
+
+Larry
