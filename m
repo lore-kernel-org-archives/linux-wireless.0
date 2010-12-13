@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42410 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752193Ab0LKXve (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Dec 2010 18:51:34 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 1/8] ath9k_hw: only use the PCIe disable register write sequence for AR5416
-Date: Sun, 12 Dec 2010 00:51:07 +0100
-Message-Id: <1292111474-70939-1-git-send-email-nbd@openwrt.org>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:49234 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950Ab0LMKMn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 05:12:43 -0500
+Received: by fxm18 with SMTP id 18so6046727fxm.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 02:12:42 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v2 5/7] ath9k_hw: fix PA predistortion training power selection
+Date: Mon, 13 Dec 2010 11:52:49 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, vasanth@atheros.com
+References: <1292226056-56008-1-git-send-email-nbd@openwrt.org> <1292226056-56008-4-git-send-email-nbd@openwrt.org> <1292226056-56008-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292226056-56008-5-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201012131152.50095.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Newer chips do not need this, and maybe these register writes could have
-negative side effects on newer hardware.
+On Monday 13 December 2010 08:40:54 Felix Fietkau wrote:
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> index cdca4c3..69f7792 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> @@ -30,9 +30,69 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
+> +
+> +static int get_streams(int mask)
+> +{
+> +	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
+> +}
+> +
+I think there's a generic library function for that:
+hweight[8|16|32].
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+Also, some CPUs have a special "population count" instruction
+and hweight* takes full advantage of that too. 
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 516227f..7bc6d22 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -284,11 +284,9 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 
- static void ath9k_hw_disablepcie(struct ath_hw *ah)
- {
--	if (AR_SREV_9100(ah))
-+	if (!AR_SREV_5416(ah))
- 		return;
- 
--	ENABLE_REGWRITE_BUFFER(ah);
--
- 	REG_WRITE(ah, AR_PCIE_SERDES, 0x9248fc00);
- 	REG_WRITE(ah, AR_PCIE_SERDES, 0x24924924);
- 	REG_WRITE(ah, AR_PCIE_SERDES, 0x28000029);
-@@ -300,8 +298,6 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PCIE_SERDES, 0x000e1007);
- 
- 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
--
--	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
- /* This should work for all families including legacy */
--- 
-1.7.3.2
-
+Regards,
+	Chr
