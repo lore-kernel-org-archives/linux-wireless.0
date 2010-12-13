@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48524 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:51965 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758318Ab0LCBpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 20:45:33 -0500
-Message-ID: <4CF84BB8.8090007@openwrt.org>
-Date: Fri, 03 Dec 2010 02:45:28 +0100
+	id S1752828Ab0LMHlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 02:41:07 -0500
 From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7
- from an array for AR9485
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-13-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 6/7] ath9k_hw: update AR9003 initvals for improved radar detection
+Date: Mon, 13 Dec 2010 08:40:55 +0100
+Message-Id: <1292226056-56008-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292226056-56008-5-git-send-email-nbd@openwrt.org>
+References: <1292226056-56008-1-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-2-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-3-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-4-git-send-email-nbd@openwrt.org>
+ <1292226056-56008-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-02 12:06 PM, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
->  1 files changed, 24 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index b34a9e9..136e64a 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
->  /* level:  0   1   2   3   4   5   6   7   8  */
->  	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
->  
-> +/* Chansel table used by ar9485 */
-> +static const u32 ar9003_chansel_xtal_40M[] = {
-> +	0xa0ccbe,
-> +	0xa12213,
-> +	0xa17769,
-> +	0xa1ccbe,
-> +	0xa22213,
-> +	0xa27769,
-> +	0xa2ccbe,
-> +	0xa32213,
-> +	0xa37769,
-> +	0xa3ccbe,
-> +	0xa42213,
-> +	0xa47769,
-> +	0xa4ccbe,
-> +	0xa5998b,
-> +};
-> +
->  /*
->   * register values to turn OFDM weak signal detection OFF
->   */
-> @@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
->  	freq = centers.synth_center;
->  
->  	if (freq < 4800) {     /* 2 GHz, fractional mode */
-> -		channelSel = CHANSEL_2G(freq);
-> +		if (AR_SREV_9485(ah)) {
-> +			int ichan = ieee80211_frequency_to_channel(freq);
-> +
-> +			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
-How about using this formula for AR9485:
+Reduces the likelihood of false pulse detects in the hardware
 
-#define CHANSEL_2G_AR9485(_freq)	(((_freq) * 0x10000 - 215) / CHANSEL_DIV)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-While I don't know where the 215 comes from (the calculation does not
-appear to be documented anywhere and I found it by trial & error),
-I do think it's better to have a simple formula than a long table
-of hardcoded values.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index a14a5e4..ec50ca1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -638,6 +638,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+ 	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
++	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+ 	{0x0000a234, 0x00000fff, 0x10000fff, 0x10000fff, 0x00000fff},
+ 	{0x0000a238, 0xffb81018, 0xffb81018, 0xffb81018, 0xffb81018},
+@@ -680,7 +681,7 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+ 	{0x0000981c, 0x00020028},
+ 	{0x00009834, 0x6400a290},
+ 	{0x00009838, 0x0108ecff},
+-	{0x0000983c, 0x14750600},
++	{0x0000983c, 0x0d000600},
+ 	{0x00009880, 0x201fff00},
+ 	{0x00009884, 0x00001042},
+ 	{0x000098a4, 0x00200400},
+@@ -722,7 +723,6 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+ 	{0x0000a220, 0x00000000},
+ 	{0x0000a224, 0x00000000},
+ 	{0x0000a228, 0x10002310},
+-	{0x0000a22c, 0x01036a27},
+ 	{0x0000a23c, 0x00000000},
+ 	{0x0000a244, 0x0c000000},
+ 	{0x0000a2a0, 0x00000001},
+-- 
+1.7.3.2
 
-- Felix
