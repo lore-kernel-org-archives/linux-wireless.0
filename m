@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22941 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197Ab0LFUmd convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54187 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324Ab0LMKUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 15:42:33 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 12:42:18 -0800
-Date: Mon, 6 Dec 2010 12:42:30 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: =?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-Message-ID: <20101206204230.GG21442@tux>
-References: <4CF44543.9070605@candelatech.com>
- <20101130004424.GC1901@tux>
- <4CF6D8C8.2000308@candelatech.com>
- <4CF8A6DE.4020804@candelatech.com>
- <4CFAFBE1.3080505@openwrt.org>
- <4CFB20BA.5090300@candelatech.com>
- <20101206193600.GC21442@tux>
- <4CFD3DE3.4000207@candelatech.com>
- <AANLkTingy7fPH14hW_mg8_YcotX29pYCu910Gw48grrD@mail.gmail.com>
- <4CFD4602.1030304@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <4CFD4602.1030304@candelatech.com>
+	Mon, 13 Dec 2010 05:20:18 -0500
+Subject: Re: [PATCH v2 5/7] ath9k_hw: fix PA predistortion training power
+ selection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, lrodriguez@atheros.com, vasanth@atheros.com
+In-Reply-To: <201012131152.50095.chunkeey@googlemail.com>
+References: <1292226056-56008-1-git-send-email-nbd@openwrt.org>
+	 <1292226056-56008-4-git-send-email-nbd@openwrt.org>
+	 <1292226056-56008-5-git-send-email-nbd@openwrt.org>
+	 <201012131152.50095.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Dec 2010 11:20:14 +0100
+Message-ID: <1292235614.3539.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 06, 2010 at 12:22:26PM -0800, Ben Greear wrote:
-> On 12/06/2010 12:11 PM, Björn Smedman wrote:
-> > On Mon, Dec 6, 2010 at 8:47 PM, Ben Greear<greearb@candelatech.com>  wrote:
-> >> With 16 properly configured non-encrypted stations, running with
-> >> wpa-supplicant
-> >> with netlink driver&  sharing scan results,  the interfaces quickly
-> >> associate.
-> >>
-> >> However, I do continue to see DMA warnings such as these (I had picked up my
-> >> portable phone, and it knocked all the interfaces offline ..here
-> >> they are coming back up after I hung up the phone).
-> >
-> > Is there some theory as to why using multiple interfaces cause so many
-> > problems with DMA?
-> 
-> Seems pretty directly related to channel changes and/or resets, and exacerbated
-> by other interfaces sending data while another is scanning, for instance.
-> 
-> Other issues we've found in the past have been various races that you wouldn't
-> normally see with a single VIF.
+On Mon, 2010-12-13 at 11:52 +0100, Christian Lamparter wrote:
 
-Right, there might be some other hot path we need to lock around over.
-Not sure what it could be though we should be locking stopping RX
-over resets already though. These should all be atomic, in fact
-starting TX too IIRC, hence the name change of the lock to be
-specific to the PCU together. There may be other PCU changes
-we may need to contend against.
+> > +	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
+> > +}
+> > +
+> I think there's a generic library function for that:
+> hweight[8|16|32].
 
-  Luis
+but note the !!, which makes this return 0, 1, 2 or 3 only, not the bit
+weight.
+
+johannes
+
