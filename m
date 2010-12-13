@@ -1,54 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:64607 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753634Ab0LVRV6 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f45.google.com ([209.85.215.45]:47560 "EHLO
+	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754255Ab0LMLkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 12:21:58 -0500
-Received: by iwn9 with SMTP id 9so5425493iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 09:21:58 -0800 (PST)
+	Mon, 13 Dec 2010 06:40:11 -0500
+Received: by mail-ew0-f45.google.com with SMTP id 10so3803451ewy.4
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 03:40:10 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/17] rt2x00: fix hang when unplugging USB device in use
+Date: Mon, 13 Dec 2010 12:32:49 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201012131231.28313.IvDoorn@gmail.com> <201012131231.59890.IvDoorn@gmail.com> <201012131232.23491.IvDoorn@gmail.com>
+In-Reply-To: <201012131232.23491.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4D122B8F.5090302@hauke-m.de>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Dec 2010 12:21:38 -0500
-Message-ID: <AANLkTimRrX1HCmz2EnsA-4=ZBLUJ-86O-bpGgjEw4Lbw@mail.gmail.com>
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Elvis Dowson <elvis.dowson@mac.com>, "Kahn, Gery" <geryk@ti.com>,
-	Oz Krakowski <ozk@ti.com>,
-	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012131232.50201.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 11:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 12/22/2010 05:13 PM, Luis R. Rodriguez wrote:
->> On Wed, Dec 22, 2010 at 11:09 AM, Elvis Dowson <elvis.dowson@mac.com> wrote:
->>> netdev_alloc_skb_ip_align
->>
->> I notice you have an android kernel, is that kernel a vanilla kernel
->> or did it get netdev_alloc_skb_ip_align() cherry picked into it?
->>
->>   Luis
->
-> netdev_alloc_skb_ip_align is not defined in the 2.6.32.27 vanilla
-> kernel. Someone else (google or ti) must have backported it to this
-> kernel and added it to your kernel.
->
-> I do not want to add some special handling into compat-wireless just for
-> some android kernel. Just remove netdev_alloc_skb_ip_align() and
-> NETDEV_POST_INIT from include/linux/compat-2.6.33.h and the compile
-> problems you posted should be fixed.
+From: Johannes Stezenbach <js@sig21.net>
 
-Well we did something to accommodate RHEL, I wouldn't mind supporting
-some fudge for Android so long as someone is willing to submit the
-patch and identify the kernel properly. Android is popular enough and
-I rather reduce the time it takes to use it there than to create an
-extra hurdle.
+When an rt2x00 USB device is unplugged while in use, it reliably
+hangs the whole system.  After some time the watchdog prints:
 
-  Luis
+BUG: soft lockup - CPU#0 stuck for 64s! [kworker/u:0:5]
+...
+[<c01a88d8>] (usb_submit_urb+0x0/0x2ac) from [<bf0e752c>] (rt2x00usb_kick_rx_entry+0xb4/0xe8 [rt2x00usb])
+[<bf0e7478>] (rt2x00usb_kick_rx_entry+0x0/0xe8 [rt2x00usb]) from [<bf0e7588>] (rt2x00usb_clear_entry+x28/0x2c [rt2x00usb])
+[<bf0e7560>] (rt2x00usb_clear_entry+0x0/0x2c [rt2x00usb]) from [<bf0d5bc4>] (rt2x00lib_rxdone+0x2e0/0x2f8 [rt2x00lib])
+[<bf0d58e4>] (rt2x00lib_rxdone+0x0/0x2f8 [rt2x00lib]) from [<bf0e7e00>] (rt2x00usb_work_rxdone+0x54/0x74 [rt2x00usb])
+[<bf0e7dac>] (rt2x00usb_work_rxdone+0x0/0x74 [rt2x00usb]) from [<c00542b4>] (process_one_work+0x20c/0x35c)
+
+Clear the DEVICE_STATE_PRESENT flag when usb_submit_urb()
+returns -ENODEV to fix this.
+
+Signed-off-by: Johannes Stezenbach <js@sig21.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 9ac1459..3a6c83e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -235,6 +235,7 @@ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+ 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
+ 	u32 length;
++	int status;
+ 
+ 	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags))
+ 		return;
+@@ -251,7 +252,10 @@ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+ 			  entry->skb->data, length,
+ 			  rt2x00usb_interrupt_txdone, entry);
+ 
+-	if (usb_submit_urb(entry_priv->urb, GFP_ATOMIC)) {
++	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
++	if (status) {
++		if (status == -ENODEV)
++			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ 		rt2x00lib_dmadone(entry);
+ 	}
+@@ -435,6 +439,7 @@ void rt2x00usb_clear_entry(struct queue_entry *entry)
+ 	    to_usb_device_intf(entry->queue->rt2x00dev->dev);
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
+ 	int pipe;
++	int status;
+ 
+ 	entry->flags = 0;
+ 
+@@ -445,7 +450,12 @@ void rt2x00usb_clear_entry(struct queue_entry *entry)
+ 				rt2x00usb_interrupt_rxdone, entry);
+ 
+ 		set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
+-		if (usb_submit_urb(entry_priv->urb, GFP_ATOMIC)) {
++
++		status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
++		if (status) {
++			if (status == -ENODEV)
++				clear_bit(DEVICE_STATE_PRESENT,
++					  &entry->queue->rt2x00dev->flags);
+ 			set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ 			rt2x00lib_dmadone(entry);
+ 		}
+-- 
+1.7.2.3
+
