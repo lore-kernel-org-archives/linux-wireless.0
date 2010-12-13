@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:65528 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751991Ab0L1QW6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 11:22:58 -0500
-Received: by vws16 with SMTP id 16so3876287vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 08:22:57 -0800 (PST)
-Message-ID: <4D1A0EF1.8060509@lwfinger.net>
-Date: Tue, 28 Dec 2010 10:23:13 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:1317 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751371Ab0LMTbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 14:31:18 -0500
+Date: Mon, 13 Dec 2010 11:31:11 -0800
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Dave Hansen" <dave@sr71.net>
+cc: "Greg KH" <gregkh@suse.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Jason Cooper" <jason@lakedaemon.net>,
+	"Mike Rapoport" <mike.rapoport@gmail.com>,
+	"Andy Shevchenko" <andy.shevchenko@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>, arend@broadcom.com,
+	rvossen@broadcom.com
+Subject: Re: brcm80211 hangs when disabling wireless
+Message-ID: <20101213193111.GK2576@broadcom.com>
+References: <1291930010.7960.30.camel@nimitz>
+ <20101209214347.GA15172@suse.de> <1291931678.7960.32.camel@nimitz>
 MIME-Version: 1.0
-To: Weedy <weedy2887@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Compile error for the last week inside rtlwifi/base.c
-References: <loom.20101228T075242-208@post.gmane.org>
-In-Reply-To: <loom.20101228T075242-208@post.gmane.org>
-Content-Type: multipart/mixed;
- boundary="------------070806000806080000040707"
+In-Reply-To: <1291931678.7960.32.camel@nimitz>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070806000806080000040707
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+On Thu, Dec 09, 2010 at 01:54:38PM -0800, Dave Hansen wrote:
+> On Thu, 2010-12-09 at 13:43 -0800, Greg KH wrote:
+> > On Thu, Dec 09, 2010 at 01:26:50PM -0800, Dave Hansen wrote:
+> > > I've been getting hard hangs when I toggle the wireless on a Lenovo
+> > > S10-3.  It happens both with the physical switch and the Fn-F5 key
+> > > combo.  It's quite repeatable.  The system is quite stable when I'm not
+> > > trying to disable the wireless, though.
+> > 
+> > What kernel version is this?
+> > 
+> > Linus's latest tree has a known bug when the wireless is suspended and
+> > then resumed.  Broadcom is working on it but no patch is forthcoming
+> > yet.  Perhaps this is the same issue.
+> 
+> Yeah, it's 2.6.37-rc5 plus a pull from:
+> 
+> 	http://kernel.ubuntu.com/git?p=ikepanhc/ideapad-laptop.git;a=summary
+> 
+> That could easily be it.  Thanks, Greg.
 
-On 12/28/2010 12:58 AM, Weedy wrote:
-> I'm not sure if my kernel is too old or what but since nothing has changed I'm
-> going to ask.
+Actually, I think it's the rfkill support (or lack thereof) that's causing you
+trouble.  But we're looking at that as well.
 
-Older kernels used create_workqueue(), which is replaced by alloc_workqueue().
-If you really need the driver for RTL8192CE/RTL8188CE, then apply the patch
-shown below. If you do not need the driver, then disable it in the configuration.
+The outstanding reported issues that I'm aware of are:
+	- 43224 crashes
+	- missing rfkill support
+	- suspend/resume problems
+	- 4313 infinite loop in some cases
 
-Larry
----
+In terms of process, should these all get filed in bugzilla.kernel.org (or
+somewhere else), or just track them via email and our TODO list?
 
-diff --git a/drivers/net/wireless/rtlwifi/base.c
-b/drivers/net/wireless/rtlwifi/base.c
-index 77fa59a..f6cc073 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -225,7 +225,7 @@ static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
-
- 	/* <2> work queue */
- 	rtlpriv->works.hw = hw;
-`	rtlpriv->works.rtl_wq = alloc_workqueue(rtlpriv->cfg->name, 0, 0);
-+	rtlpriv->works.rtl_wq = create_workqueue(rtlpriv->cfg->name);
- 	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
- 			  (void *)rtl_watchdog_wq_callback);
- 	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
+Thanks,
+- Henry
 
 
---------------070806000806080000040707
-Content-Type: text/plain;
- name="reverse_alloc"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="reverse_alloc"
-
-Y29tbWl0IDNkOTg2YjI1YjVmYWE1MGJhNmFmZDk0ZjYwZjI3MGI2YzMwNjFlNWUKQXV0aG9y
-OiBKb2huIFcuIExpbnZpbGxlIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPgpEYXRlOiAgIFRo
-dSBEZWMgMTYgMTQ6NTk6NDkgMjAxMCAtMDUwMAoKICAgIHJ0bHdpZmk6IHVzZSBhbGxvY193
-b3JrcXVldWUKICAgIAogICAgY3JlYXRlX3dvcmtxdWV1ZSBpcyBkZXByZWNhdGVkLiAgVGhl
-IHdvcmtxdWV1ZSB1c2FnZSBkb2VzIG5vdCBzZWVtIHRvCiAgICBkZW1hbmQgYW55IHNwZWNp
-YWwgdHJlYXRtZW50LCBzbyBkbyBub3Qgc2V0IGFueSBmbGFncyBlaXRoZXIuCiAgICAKICAg
-IFNpZ25lZC1vZmYtYnk6IEpvaG4gVy4gTGludmlsbGUgPGxpbnZpbGxlQHR1eGRyaXZlci5j
-b20+CiAgICBUZXN0ZWQtYnk6IExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3ZmluZ2Vy
-Lm5ldD4KICAgIEFja2VkLWJ5OiBUZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+CgpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS9iYXNlLmMgYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9ydGx3aWZpL2Jhc2UuYwppbmRleCA3N2ZhNTlhLi5mNmNjMDczIDEwMDY0
-NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL2Jhc2UuYworKysgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL2Jhc2UuYwpAQCAtMjI1LDcgKzIyNSw3IEBAIHN0
-YXRpYyB2b2lkIF9ydGxfaW5pdF9kZWZlcnJlZF93b3JrKHN0cnVjdCBpZWVlODAyMTFfaHcg
-Kmh3KQogCiAJLyogPDI+IHdvcmsgcXVldWUgKi8KIAlydGxwcml2LT53b3Jrcy5odyA9IGh3
-OwotCXJ0bHByaXYtPndvcmtzLnJ0bF93cSA9IGNyZWF0ZV93b3JrcXVldWUocnRscHJpdi0+
-Y2ZnLT5uYW1lKTsKKwlydGxwcml2LT53b3Jrcy5ydGxfd3EgPSBhbGxvY193b3JrcXVldWUo
-cnRscHJpdi0+Y2ZnLT5uYW1lLCAwLCAwKTsKIAlJTklUX0RFTEFZRURfV09SSygmcnRscHJp
-di0+d29ya3Mud2F0Y2hkb2dfd3EsCiAJCQkgICh2b2lkICopcnRsX3dhdGNoZG9nX3dxX2Nh
-bGxiYWNrKTsKIAlJTklUX0RFTEFZRURfV09SSygmcnRscHJpdi0+d29ya3MuaXBzX25pY19v
-ZmZfd3EsCg==
---------------070806000806080000040707--
