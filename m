@@ -1,162 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:50704 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943Ab0LQBXs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 20:23:48 -0500
-Received: by pxi20 with SMTP id 20so36683pxi.10
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 17:23:48 -0800 (PST)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mac80211: Remove unused third address from mesh address extension header.
-Date: Thu, 16 Dec 2010 17:23:34 -0800
-Message-Id: <1292549014-1489-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <AANLkTimpmCdAx_8OqfqALwbWkX3NVaP98FzbxS4yJUFm@mail.gmail.com>
-References: <AANLkTimpmCdAx_8OqfqALwbWkX3NVaP98FzbxS4yJUFm@mail.gmail.com>
+Received: from mail.perches.com ([173.55.12.10]:2609 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758795Ab0LNA5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:57:16 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 3/8] staging: brcm80211: Remove unused ether_<foo> #defines and struct
+Date: Mon, 13 Dec 2010 16:56:59 -0800
+Message-Id: <499374d1530aa26f69954d20a3506250d3b9d6f4.1292287723.git.joe@perches.com>
+In-Reply-To: <cover.1292287720.git.joe@perches.com>
+References: <cover.1292287720.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Mesh Control header only includes 0, 1 or 2 addresses. If there is
-one address, it should be interpreted as Address 4.  If there are 2,
-they are interpreted as Addresses 5 and 6 (Address 4 being the 4th
-address in the 802.11 header).
+These are unused, just remove them.
 
-The address extension used to hold up to 3 addresses instead of the current 2.
-I'm not sure which draft version changed this, but it is very unlikely that it
-will change again given the state of the approval process of this draft.  See
-section 7.1.3.6.3 in current draft (8.0).
-
-Also, note that the extra address that I'm removing was not being used, so this
-change has no effect on over-the-air frame formats.  But I thought I better
-remove it before someone does start using it.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-v2: - more detailed patch description
-    - changed ieee80211_fill_mesh_addresses() to just accept at most 2
-      addresses and avoid confusions.
+ drivers/staging/brcm80211/include/proto/ethernet.h |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
 
- include/linux/ieee80211.h |    1 -
- net/mac80211/mesh.c       |   32 +++++++++++++-------------------
- net/mac80211/mesh.h       |    4 ++--
- net/mac80211/tx.c         |    4 +---
- 4 files changed, 16 insertions(+), 25 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index cd68168..6042228 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -536,7 +536,6 @@ struct ieee80211s_hdr {
- 	__le32 seqnum;
- 	u8 eaddr1[6];
- 	u8 eaddr2[6];
--	u8 eaddr3[6];
- } __attribute__ ((packed));
+diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
+index a2353a5..1b352c5 100644
+--- a/drivers/staging/brcm80211/include/proto/ethernet.h
++++ b/drivers/staging/brcm80211/include/proto/ethernet.h
+@@ -64,17 +64,7 @@ BWL_PRE_PACKED_STRUCT struct ether_addr {
  
- /* Mesh flags */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 8b5906c..ca3af46 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -410,39 +410,33 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-  * ieee80211_new_mesh_header - create a new mesh header
-  * @meshhdr:    uninitialized mesh header
-  * @sdata:	mesh interface to be used
-- * @addr4:	addr4 of the mesh frame (1st in ae header)
-- *              may be NULL
-- * @addr5:	addr5 of the mesh frame (1st or 2nd in ae header)
-- *              may be NULL unless addr6 is present
-- * @addr6:	addr6 of the mesh frame (2nd or 3rd in ae header)
-- * 		may be NULL unless addr5 is present
-+ * @addr4or5:   1st address in the ae header, which may correspond to address 4
-+ *              (if addr6 is NULL) or address 5 (if addr6 is present). It may
-+ *              be NULL.
-+ * @addr6:	2nd address in the ae header, which corresponds to addr6 of the
-+ *              mesh frame
-  *
-  * Return the header length.
-  */
- int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
--		struct ieee80211_sub_if_data *sdata, char *addr4,
--		char *addr5, char *addr6)
-+		struct ieee80211_sub_if_data *sdata, char *addr4or5,
-+		char *addr6)
- {
- 	int aelen = 0;
-+	BUG_ON(!addr4or5 && addr6);
- 	memset(meshhdr, 0, sizeof(*meshhdr));
- 	meshhdr->ttl = sdata->u.mesh.mshcfg.dot11MeshTTL;
- 	put_unaligned(cpu_to_le32(sdata->u.mesh.mesh_seqnum), &meshhdr->seqnum);
- 	sdata->u.mesh.mesh_seqnum++;
--	if (addr4) {
-+	if (addr4or5 && !addr6) {
- 		meshhdr->flags |= MESH_FLAGS_AE_A4;
- 		aelen += ETH_ALEN;
--		memcpy(meshhdr->eaddr1, addr4, ETH_ALEN);
--	}
--	if (addr5 && addr6) {
-+		memcpy(meshhdr->eaddr1, addr4or5, ETH_ALEN);
-+	} else if (addr4or5 && addr6) {
- 		meshhdr->flags |= MESH_FLAGS_AE_A5_A6;
- 		aelen += 2 * ETH_ALEN;
--		if (!addr4) {
--			memcpy(meshhdr->eaddr1, addr5, ETH_ALEN);
--			memcpy(meshhdr->eaddr2, addr6, ETH_ALEN);
--		} else {
--			memcpy(meshhdr->eaddr2, addr5, ETH_ALEN);
--			memcpy(meshhdr->eaddr3, addr6, ETH_ALEN);
--		}
-+		memcpy(meshhdr->eaddr1, addr4or5, ETH_ALEN);
-+		memcpy(meshhdr->eaddr2, addr6, ETH_ALEN);
- 	}
- 	return 6 + aelen;
- }
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 890dd19..b99e230 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -187,8 +187,8 @@ struct mesh_rmc {
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
- 				  const u8 *da, const u8 *sa);
- int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
--		struct ieee80211_sub_if_data *sdata, char *addr4,
--		char *addr5, char *addr6);
-+		struct ieee80211_sub_if_data *sdata, char *addr4or5,
-+		char *addr6);
- int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
- 		struct ieee80211_sub_if_data *sdata);
- bool mesh_matches_local(struct ieee802_11_elems *ie,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b97f603..10a81b8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1814,7 +1814,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			hdrlen = ieee80211_fill_mesh_addresses(&hdr, &fc,
- 					skb->data, skb->data + ETH_ALEN);
- 			meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr,
--					sdata, NULL, NULL, NULL);
-+					sdata, NULL, NULL);
- 		} else {
- 			/* packet from other interface */
- 			struct mesh_path *mppath;
-@@ -1847,13 +1847,11 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 					ieee80211_new_mesh_header(&mesh_hdr,
- 							sdata,
- 							skb->data + ETH_ALEN,
--							NULL,
- 							NULL);
- 			else
- 				meshhdrlen =
- 					ieee80211_new_mesh_header(&mesh_hdr,
- 							sdata,
--							NULL,
- 							skb->data,
- 							skb->data + ETH_ALEN);
+ #define ETHER_SET_UNICAST(ea)	(((u8 *)(ea))[0] = (((u8 *)(ea))[0] & ~1))
  
+-#define	ether_cmp(a, b)	(!(((short *)a)[0] == ((short *)b)[0]) | \
+-			 !(((short *)a)[1] == ((short *)b)[1]) | \
+-			 !(((short *)a)[2] == ((short *)b)[2]))
+-
+-#define	ether_copy(s, d) { \
+-		((short *)d)[0] = ((short *)s)[0]; \
+-		((short *)d)[1] = ((short *)s)[1]; \
+-		((short *)d)[2] = ((short *)s)[2]; }
+-
+ static const struct ether_addr ether_bcast = { {255, 255, 255, 255, 255, 255} };
+-static const struct ether_addr ether_null = { {0, 0, 0, 0, 0, 0} };
+ 
+ #define ETHER_ISBCAST(ea)	((((u8 *)(ea))[0] &		\
+ 	((u8 *)(ea))[1] &		\
 -- 
-1.7.1
+1.7.3.3.398.g0b0cd.dirty
 
