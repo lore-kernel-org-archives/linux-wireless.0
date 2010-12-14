@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54310 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754621Ab0LQTYj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 14:24:39 -0500
-Received: by wyb28 with SMTP id 28so1000228wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 11:24:38 -0800 (PST)
-Message-ID: <4D0BB8EC.7070907@lwfinger.net>
-Date: Fri, 17 Dec 2010 13:24:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8192ce: Update MAINTAINERS
-References: <4d0a2c91.Nuemy+kBaD1fOuX+%Larry.Finger@lwfinger.net> <4D0BB739.3020700@hauke-m.de>
-In-Reply-To: <4D0BB739.3020700@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.perches.com ([173.55.12.10]:2602 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758770Ab0LNA5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:57:12 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 1/8] staging: brcm80211: Remove unused #defines ETHER_<foo>_LOCALADDR
+Date: Mon, 13 Dec 2010 16:56:57 -0800
+Message-Id: <b5bfe566dc136f354a483f99888ffc1849239de5.1292287721.git.joe@perches.com>
+In-Reply-To: <cover.1292287720.git.joe@perches.com>
+References: <cover.1292287720.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/17/2010 01:17 PM, Hauke Mehrtens wrote:
-> On 12/16/2010 04:13 PM, Larry Finger wrote:
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> Index: wireless-testing/MAINTAINERS
->> ===================================================================
->> --- wireless-testing.orig/MAINTAINERS
->> +++ wireless-testing/MAINTAINERS
->> @@ -5055,6 +5055,16 @@ T:	git git://git.kernel.org/pub/scm/linu
->>  S:	Maintained
->>  F:	drivers/net/wireless/rtl818x/rtl8187*
->>  
->> +RTL8192CE WIRELESS DRIVER
->> +M:	Larry Finger <Larry.Finger@lwfinger.net>
->> +M:	Chaoming Li <chaoming_li@realsil.com.cn>
->> +L:	linux-wireless@vger.kernel.org
->> +W:	http://linuxwireless.org/
->> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->> +S:	Maintained
->> +F:	drivers/net/wireless/rtlwifi/
->> +F:	drivers/net/wireless/rtl8192ce/
-> This path is wrong, it should be drivers/net/wireless/rtlwifi/rtl8192ce/
-> at least the driver is not in rivers/net/wireless/rtl8192ce/.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/staging/brcm80211/include/proto/ethernet.h |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-Yes, it should be drivers/net/wireless/rtlwifi/rtl8192ce/.
+diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
+index cc17b42..a8981f6 100644
+--- a/drivers/staging/brcm80211/include/proto/ethernet.h
++++ b/drivers/staging/brcm80211/include/proto/ethernet.h
+@@ -62,13 +62,6 @@ BWL_PRE_PACKED_STRUCT struct ether_addr {
+ 	u8 octet[ETHER_ADDR_LEN];
+ } BWL_POST_PACKED_STRUCT;
+ 
+-#define ETHER_SET_LOCALADDR(ea)	(((u8 *)(ea))[0] = (((u8 *)(ea))[0] | 2))
+-#define ETHER_IS_LOCALADDR(ea) 	(((u8 *)(ea))[0] & 2)
+-#define ETHER_CLR_LOCALADDR(ea)	(((u8 *)(ea))[0] = \
+-	(((u8 *)(ea))[0] & 0xd))
+-#define ETHER_TOGGLE_LOCALADDR(ea)	(((u8 *)(ea))[0] = \
+-	(((u8 *)(ea))[0] ^ 2))
+-
+ #define ETHER_SET_UNICAST(ea)	(((u8 *)(ea))[0] = (((u8 *)(ea))[0] & ~1))
+ 
+ #define ETHER_ISMULTI(ea) (((const u8 *)(ea))[0] & 1)
+-- 
+1.7.3.3.398.g0b0cd.dirty
 
-Thanks,
-
-Larry
