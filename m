@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64197 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754812Ab0LISna (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 13:43:30 -0500
-Received: by yxt3 with SMTP id 3so1572666yxt.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 10:43:30 -0800 (PST)
-From: Tim Harvey <harvey.tim@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Tim Harvey <harvey.tim@gmail.com>
-Subject: [PATCH v3] mac80211: Fix NULL-pointer deference on ibss merge when not ready
-Date: Thu,  9 Dec 2010 10:43:13 -0800
-Message-Id: <1291920193-28228-1-git-send-email-harvey.tim@gmail.com>
+Received: from mail.perches.com ([173.55.12.10]:2599 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758699Ab0LNA5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:57:11 -0500
+From: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 0/8] staging: brcm80211: Cleanup include/proto/ethernet.h
+Date: Mon, 13 Dec 2010 16:56:56 -0800
+Message-Id: <cover.1292287720.git.joe@perches.com>
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_open will eventually call ieee80211_ibss_join which sets up the
-skb used for beacons/probe-responses however it is possible to
-receive beacons that attempt to merge before this occurs causing
-a null pointer dereference.  Check ssid_len as that is the last
-thing set in ieee80211_ibss_join.
+Use the standard kernel mechanisms and remove some entries from this file.
 
-This occurs quite easily in the presence of adhoc nodes with hidden SSID's
+Joe Perches (8):
+  staging: brcm80211: Remove unused #defines ETHER_<foo>_LOCALADDR
+  staging: brcm80211: Convert ETHER_IS_MULTI to is_multicast_ether_addr
+  staging: brcm80211: Remove unused ether_<foo> #defines and struct
+  staging: brcm80211: Convert ETHER_IS<FOO> to is_<foo>_ether_addr
+  staging: brcm80211: Convert ETHER_ADDR_LEN to ETH_ALEN
+  staging: brcm80211: Remove ETHER_HDR_LEN, use ETH_HLEN
+  staging: brcm80211: Remove unused ETHER_TYPE_<foo> #defines
+  staging: brcm80211: Convert ETHER_TYPE_802_1X to ETH_P_PAE
 
-revised previous patch to check further up based on irc feedback
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |    8 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   32 +++++-----
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   38 ++++++------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |    2 +-
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c         |   63 ++++++++++----------
+ drivers/staging/brcm80211/include/proto/ethernet.h |   54 +++--------------
+ drivers/staging/brcm80211/sys/wl_mac80211.c        |    2 +-
+ drivers/staging/brcm80211/sys/wlc_ampdu.c          |    2 +-
+ drivers/staging/brcm80211/sys/wlc_bmac.c           |    9 ++-
+ drivers/staging/brcm80211/sys/wlc_mac80211.c       |   40 +++++++------
+ drivers/staging/brcm80211/util/bcmsrom.c           |   15 +++--
+ 12 files changed, 118 insertions(+), 149 deletions(-)
 
-Signed-off-by: Tim Harvey <harvey.tim@gmail.com>
----
- net/mac80211/ibss.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 410d104..53c7077 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -780,6 +780,9 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 
- 	mutex_lock(&sdata->u.ibss.mtx);
- 
-+	if (!sdata->u.ibss.ssid_len)
-+		goto mgmt_out; /* not ready to merge yet */
-+
- 	switch (fc & IEEE80211_FCTL_STYPE) {
- 	case IEEE80211_STYPE_PROBE_REQ:
- 		ieee80211_rx_mgmt_probe_req(sdata, mgmt, skb->len);
-@@ -797,6 +800,7 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	}
- 
-+ mgmt_out:
- 	mutex_unlock(&sdata->u.ibss.mtx);
- }
- 
 -- 
-1.7.0.4
+1.7.3.3.398.g0b0cd.dirty
 
