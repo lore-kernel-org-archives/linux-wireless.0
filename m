@@ -1,194 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57549 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754283Ab0L2Xco (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42418 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756718Ab0LNHrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:44 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4753430eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:43 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 12/18] wl1271: AP mode - add STA add/remove ops
-Date: Thu, 30 Dec 2010 01:32:07 +0200
-Message-Id: <1293665533-7599-13-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+	Tue, 14 Dec 2010 02:47:20 -0500
+Date: Tue, 14 Dec 2010 09:46:53 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl80211: Add notification for dropped Deauth/Disassoc
+Message-ID: <20101214074653.GA28072@jm.kir.nu>
+References: <20101213220048.GA24752@jm.kir.nu>
+ <1292310907.3569.1.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1292310907.3569.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allocate and free host link IDs (HLIDs) for each link. A per-STA
-data structure keeps the HLID of each STA.
+On Tue, Dec 14, 2010 at 08:15:07AM +0100, Johannes Berg wrote:
+> On Tue, 2010-12-14 at 00:00 +0200, Jouni Malinen wrote:
+> > + * @NL80211_CMD_UNPROT_DEAUTHENTICATE: Unprotected deauthentication frame
+> > + * @NL80211_CMD_UNPROT_DISASSOCIATE: Unprotected disassociation frame
+> 
+> I don't mind, but if we add the frame body should we really have two
+> commands? Or should we have just one? Are we likely to need similar
+> functionality for other frames? The only ones I can think of are class 3
+> frames from unassociated stations, but that seems like it should be
+> separate anyway.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |  112 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    7 ++
- 2 files changed, 119 insertions(+), 0 deletions(-)
+This one followed the existing example of NL80211_CMD_DEAUTH/DISASSOC,
+but well, those are for both notification and requests, so I can see the
+difference there.. For these notification-only ones, I would be fine
+having a single command if that is desirable. Though, I would probably
+not go as far as merging any other frames to this list since
+deauth/disassoc are special case for the AP starting to send these as
+replies to any Class 2 or 3 frame.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8e5d435..739fee6 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1192,6 +1192,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 	wl->flags = 0;
- 	wl->vif = NULL;
- 	wl->filters = 0;
-+	memset(wl->ap_hlid_map, 0, sizeof(wl->ap_hlid_map));
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
- 		wl->tx_blocks_freed[i] = 0;
-@@ -2401,6 +2402,113 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
- 
-+static int wl1271_allocate_hlid(struct wl1271 *wl,
-+			     struct ieee80211_sta *sta,
-+			     u8 *hlid)
-+{
-+	struct wl1271_station *wl_sta;
-+	int id;
-+
-+	id = find_first_zero_bit(wl->ap_hlid_map, AP_MAX_STATIONS);
-+	if (id >= AP_MAX_STATIONS) {
-+		wl1271_warning("could not allocate HLID - too much stations");
-+		return -EBUSY;
-+	}
-+
-+	wl_sta = (struct wl1271_station *)sta->drv_priv;
-+
-+	__set_bit(id, wl->ap_hlid_map);
-+	wl_sta->hlid = WL1271_AP_STA_HLID_START + id;
-+	*hlid = wl_sta->hlid;
-+	return 0;
-+}
-+
-+static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
-+{
-+	int id = hlid - WL1271_AP_STA_HLID_START;
-+
-+	__clear_bit(id, wl->ap_hlid_map);
-+}
-+
-+static int wl1271_op_sta_add(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret = 0;
-+	u8 hlid;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	if (wl->bss_type != BSS_TYPE_AP_BSS)
-+		goto out;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
-+
-+	ret = wl1271_allocate_hlid(wl, sta, &hlid);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_cmd_add_sta(wl, sta, hlid);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+out_sleep:
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+}
-+
-+static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl1271_station *wl_sta;
-+	int ret = 0, id;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	if (wl->bss_type != BSS_TYPE_AP_BSS)
-+		goto out;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 remove sta %d", (int)sta->aid);
-+
-+	wl_sta = (struct wl1271_station *)sta->drv_priv;
-+	id = wl_sta->hlid - WL1271_AP_STA_HLID_START;
-+	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_cmd_remove_sta(wl, wl_sta->hlid);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+	wl1271_free_hlid(wl, wl_sta->hlid);
-+
-+out_sleep:
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+}
-+
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_rate wl1271_rates[] = {
- 	{ .bitrate = 10,
-@@ -2647,6 +2755,8 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.conf_tx = wl1271_op_conf_tx,
- 	.get_tsf = wl1271_op_get_tsf,
- 	.get_survey = wl1271_op_get_survey,
-+	.sta_add = wl1271_op_sta_add,
-+	.sta_remove = wl1271_op_sta_remove,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
-@@ -2840,6 +2950,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 
- 	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
- 
-+	wl->hw->sta_data_size = sizeof(struct wl1271_station);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index a378d52..3bd03af 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -435,6 +435,13 @@ struct wl1271 {
- 
- 	/* Most recently reported noise in dBm */
- 	s8 noise;
-+
-+	/* map for HLIDs of associated stations - when operating in AP mode */
-+	unsigned long ap_hlid_map[BITS_TO_LONGS(AP_MAX_STATIONS)];
-+};
-+
-+struct wl1271_station {
-+	u8 hlid;
- };
- 
- int wl1271_plt_start(struct wl1271 *wl);
 -- 
-1.7.1
-
+Jouni Malinen                                            PGP id EFC895FA
