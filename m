@@ -1,51 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38996 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237Ab0LOQpH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 11:45:07 -0500
-Date: Wed, 15 Dec 2010 11:37:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/22] rtl8192ce: Initial upload of driver
-Message-ID: <20101215163730.GF2377@tuxdriver.com>
-References: <4D08EA6D.6070106@lwfinger.net>
- <1292430400.3678.10.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:35834 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756477Ab0LNTFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 14:05:07 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PSaBN-0006BF-1j
+	for linux-wireless@vger.kernel.org; Tue, 14 Dec 2010 20:05:05 +0100
+Received: from i5E86C328.versanet.de ([94.134.195.40])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 20:05:05 +0100
+Received: from stecklum by i5E86C328.versanet.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 20:05:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Bringfried Stecklum <stecklum@tls-tautenburg.de>
+Subject: Re: unresolved symbols due to missing iwlcore.ko
+Date: Tue, 14 Dec 2010 19:01:43 +0000 (UTC)
+Message-ID: <loom.20101214T195434-788@post.gmane.org>
+References: <4D07434F.6070006@tls-tautenburg.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1292430400.3678.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 15, 2010 at 05:26:40PM +0100, Johannes Berg wrote:
+Turns out that the error is due to a fault of the configuration script. If I
+_don't_ select the iwlwifi driver via driver_select and build all drivers
+instead, iwlcore.ko will be build as well and properly installed. 
 
-> > If you prefer that it go to staging first, I will send it to GregKH, but since
-> > it uses mac80211, I think it is ready for wireless.
-> 
-> It looks pretty clean -- so personally, I don't think I'd mind it going
-> in directly.
-> 
-> Are you or somebody else planning to make changes to it though? It looks
-> like for example the config semaphore could easily be replaced by a
-> mutex for better debug, for example. Potentially, rate control could be
-> internalised with IEEE80211_HW_HAS_RATE_CONTROL as well, and some
-> similar minor things.
-
-Sorry for the delay, Larry!  I've been meaning to post a thorough
-review, but...busy, busy...
-
-Anyway, I think Johannes is right -- whatever issues remain, it
-would be better to get it in place now than to leave it out or push
-it to staging.
-
-I intend to mash the series together into a single patch when I merge
-it -- I hope you don't mind.
-
-Thanks,
-
-JOhn
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
