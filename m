@@ -1,340 +1,664 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2048 "EHLO mail.perches.com"
+Received: from mga14.intel.com ([143.182.124.37]:43486 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754972Ab0LARRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 12:17:07 -0500
-Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
- ath_debug
-From: Joe Perches <joe@perches.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, peter@stuge.se,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <4CF65DB9.3050007@openwrt.org>
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
-	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
-	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
-	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
-	 <1291148375.18026.342.camel@Joe-Laptop>
-	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
-	 <1291213675.1845.12.camel@Joe-Laptop>  <4CF65DB9.3050007@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 09:17:05 -0800
-Message-ID: <1291223825.1845.170.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S1758409Ab0LNARM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:17:12 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/14] iwlagn: code clean up to remove duplicate code
+Date: Mon, 13 Dec 2010 16:09:32 -0800
+Message-Id: <1292285372-11373-15-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-01 at 15:37 +0100, Felix Fietkau wrote:
-> On 2010-12-01 3:27 PM, Joe Perches wrote:
-> > On Tue, 2010-11-30 at 23:56 -0800, Luis R. Rodriguez wrote:
-> >> On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
-> >> > Poor function naming is just that.
-> >> > It reduces readability and the uses are counter expectation.
-> >> The name is perfect, we use it to print anything, even non-debugging stuff.
-> > 
-> > 'fraid not.
-> > 
-> > ath/debug.h
-> > 
-> > #ifdef CONFIG_ATH_DEBUG
-> > void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
-> > 	__attribute__ ((format (printf, 3, 4)));
-> > #else
-> > static inline void __attribute__ ((format (printf, 3, 4)))
-> > ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
-> > {
-> > }
-> > #endif /* CONFIG_ATH_DEBUG */
-> Now we're getting closer to something worth fixing. IMHO we should
-> change the code so that ath_print(common, ATH_DBG_FATAL, ...) prints
-> something even with CONFIG_ATH_DEBUG unset. To get this done, some
-> renaming would make sense here.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Perhaps the function name is bad after all
-if Luis believed it be be always active.
+Multiple devices use almost the same .cfg with minor differences.
+Use macro and remove the duplication. By doing this, reduce
+the chance for mistake while modify .cfg parameters
 
-If there are going to be other non-debug uses,
-I suggest adding the more standard styles of
-ath_printk and ath_<level> similar to
-dev_printk and dev_<level> from device.h
-
-Something like this for a start, then a more
-gradual rename of ath_print to ath_dbg (or
-ath_debug) as the original patch suggested.
-
-This basically removes debug.h leaving
-only an #define ath_printk ath_dbg
-there and moving all the ATH_DBG_<foo>
-enums to ath.h
-
-I do not think there's much purpose for struct
-ath_common * being passed to the ath_printk
-functions, but perhaps there might be.
-
-Signed-off-by: Joe Perches <joe@perches.com>
-
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |   65 +++----
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   89 +++------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |  319 +++++++++----------------------
+ 3 files changed, 151 insertions(+), 322 deletions(-)
 
- drivers/net/wireless/ath/ath.h   |  103 ++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/debug.c |   20 -------
- drivers/net/wireless/ath/debug.h |   72 +--------------------------
- drivers/net/wireless/ath/main.c  |   20 +++++++
- 4 files changed, 124 insertions(+), 91 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 26bdbee..5a598b9 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -186,4 +186,107 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
- void ath_hw_cycle_counters_update(struct ath_common *common);
- int32_t ath_hw_get_listen_time(struct ath_common *common);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 94521d4..ba78bc8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -276,60 +276,49 @@ static struct iwl_ht_params iwl1000_ht_params = {
+ 	.use_rts_for_aggregation = true, /* use rts/cts protection */
+ };
  
-+extern __attribute__ ((format (printf, 3, 4))) int
-+ath_printk(const char *level, struct ath_common *common, const char *fmt, ...);
++#define IWL_DEVICE_1000						\
++	.fw_name_pre = IWL1000_FW_PRE,				\
++	.ucode_api_max = IWL1000_UCODE_API_MAX,			\
++	.ucode_api_min = IWL1000_UCODE_API_MIN,			\
++	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
++	.ops = &iwl1000_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl1000_base_params,			\
++	.led_mode = IWL_LED_BLINK
 +
-+#define ath_emerg(common, fmt, ...)				\
-+	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS)
-+#define ath_alert(common, fmt, ...)				\
-+	ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS)
-+#define ath_crit(common, fmt, ...)				\
-+	ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS)
-+#define ath_err(common, fmt, ...)				\
-+	ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS)
-+#define ath_warn(common, fmt, ...)				\
-+	ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS)
-+#define ath_notice(common, fmt, ...)				\
-+	ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS)
-+#define ath_info(common, fmt, ...)				\
-+	ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS)
+ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BGN",
+-	.fw_name_pre = IWL1000_FW_PRE,
+-	.ucode_api_max = IWL1000_UCODE_API_MAX,
+-	.ucode_api_min = IWL1000_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
+-	.ops = &iwl1000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl1000_base_params,
++	IWL_DEVICE_1000,
+ 	.ht_params = &iwl1000_ht_params,
+-	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BG",
+-	.fw_name_pre = IWL1000_FW_PRE,
+-	.ucode_api_max = IWL1000_UCODE_API_MAX,
+-	.ucode_api_min = IWL1000_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
+-	.ops = &iwl1000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl1000_base_params,
+-	.led_mode = IWL_LED_BLINK,
++	IWL_DEVICE_1000,
+ };
+ 
++#define IWL_DEVICE_100						\
++	.fw_name_pre = IWL100_FW_PRE,				\
++	.ucode_api_max = IWL100_UCODE_API_MAX,			\
++	.ucode_api_min = IWL100_UCODE_API_MIN,			\
++	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
++	.ops = &iwl1000_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl1000_base_params,			\
++	.led_mode = IWL_LED_RF_STATE,				\
++	.rx_with_siso_diversity = true
 +
-+/**
-+ * enum ath_debug_level - atheros wireless debug level
-+ *
-+ * @ATH_DBG_RESET: reset processing
-+ * @ATH_DBG_QUEUE: hardware queue management
-+ * @ATH_DBG_EEPROM: eeprom processing
-+ * @ATH_DBG_CALIBRATE: periodic calibration
-+ * @ATH_DBG_INTERRUPT: interrupt processing
-+ * @ATH_DBG_REGULATORY: regulatory processing
-+ * @ATH_DBG_ANI: adaptive noise immunitive processing
-+ * @ATH_DBG_XMIT: basic xmit operation
-+ * @ATH_DBG_BEACON: beacon handling
-+ * @ATH_DBG_CONFIG: configuration of the hardware
-+ * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
-+ * @ATH_DBG_PS: power save processing
-+ * @ATH_DBG_HWTIMER: hardware timer handling
-+ * @ATH_DBG_BTCOEX: bluetooth coexistance
-+ * @ATH_DBG_BSTUCK: stuck beacons
-+ * @ATH_DBG_ANY: enable all debugging
-+ *
-+ * The debug level is used to control the amount and type of debugging output
-+ * we want to see. Each driver has its own method for enabling debugging and
-+ * modifying debug level states -- but this is typically done through a
-+ * module parameter 'debug' along with a respective 'debug' debugfs file
-+ * entry.
-+ */
-+enum ATH_DEBUG {
-+	ATH_DBG_RESET		= 0x00000001,
-+	ATH_DBG_QUEUE		= 0x00000002,
-+	ATH_DBG_EEPROM		= 0x00000004,
-+	ATH_DBG_CALIBRATE	= 0x00000008,
-+	ATH_DBG_INTERRUPT	= 0x00000010,
-+	ATH_DBG_REGULATORY	= 0x00000020,
-+	ATH_DBG_ANI		= 0x00000040,
-+	ATH_DBG_XMIT		= 0x00000080,
-+	ATH_DBG_BEACON		= 0x00000100,
-+	ATH_DBG_CONFIG		= 0x00000200,
-+	ATH_DBG_FATAL		= 0x00000400,
-+	ATH_DBG_PS		= 0x00000800,
-+	ATH_DBG_HWTIMER		= 0x00001000,
-+	ATH_DBG_BTCOEX		= 0x00002000,
-+	ATH_DBG_WMI		= 0x00004000,
-+	ATH_DBG_BSTUCK		= 0x00008000,
-+	ATH_DBG_ANY		= 0xffffffff
+ struct iwl_cfg iwl100_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 100 BGN",
+-	.fw_name_pre = IWL100_FW_PRE,
+-	.ucode_api_max = IWL100_UCODE_API_MAX,
+-	.ucode_api_min = IWL100_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
+-	.ops = &iwl1000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl1000_base_params,
++	IWL_DEVICE_100,
+ 	.ht_params = &iwl1000_ht_params,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.rx_with_siso_diversity = true,
+ };
+ 
+ struct iwl_cfg iwl100_bg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 100 BG",
+-	.fw_name_pre = IWL100_FW_PRE,
+-	.ucode_api_max = IWL100_UCODE_API_MAX,
+-	.ucode_api_min = IWL100_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
+-	.ops = &iwl1000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl1000_base_params,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.rx_with_siso_diversity = true,
++	IWL_DEVICE_100,
+ };
+ 
+ MODULE_FIRMWARE(IWL1000_MODULE_FIRMWARE(IWL1000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 34af9e0..79ab0a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -520,65 +520,44 @@ static struct iwl_ht_params iwl5000_ht_params = {
+ 	.use_rts_for_aggregation = true, /* use rts/cts protection */
+ };
+ 
++#define IWL_DEVICE_5000						\
++	.fw_name_pre = IWL5000_FW_PRE,				\
++	.ucode_api_max = IWL5000_UCODE_API_MAX,			\
++	.ucode_api_min = IWL5000_UCODE_API_MIN,			\
++	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,	\
++	.ops = &iwl5000_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl5000_base_params,			\
++	.led_mode = IWL_LED_BLINK
++
+ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.name = "Intel(R) Ultimate N WiFi Link 5300 AGN",
+-	.fw_name_pre = IWL5000_FW_PRE,
+-	.ucode_api_max = IWL5000_UCODE_API_MAX,
+-	.ucode_api_min = IWL5000_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.ops = &iwl5000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl5000_base_params,
++	IWL_DEVICE_5000,
+ 	.ht_params = &iwl5000_ht_params,
+-	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5100_bgn_cfg = {
+ 	.name = "Intel(R) WiFi Link 5100 BGN",
+-	.fw_name_pre = IWL5000_FW_PRE,
+-	.ucode_api_max = IWL5000_UCODE_API_MAX,
+-	.ucode_api_min = IWL5000_UCODE_API_MIN,
++	IWL_DEVICE_5000,
+ 	.valid_tx_ant = ANT_B,		/* .cfg overwrite */
+ 	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */
+-	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.ops = &iwl5000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
+-	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.name = "Intel(R) WiFi Link 5100 ABG",
+-	.fw_name_pre = IWL5000_FW_PRE,
+-	.ucode_api_max = IWL5000_UCODE_API_MAX,
+-	.ucode_api_min = IWL5000_UCODE_API_MIN,
++	IWL_DEVICE_5000,
+ 	.valid_tx_ant = ANT_B,		/* .cfg overwrite */
+ 	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */
+-	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.ops = &iwl5000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl5000_base_params,
+-	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.name = "Intel(R) WiFi Link 5100 AGN",
+-	.fw_name_pre = IWL5000_FW_PRE,
+-	.ucode_api_max = IWL5000_UCODE_API_MAX,
+-	.ucode_api_min = IWL5000_UCODE_API_MIN,
++	IWL_DEVICE_5000,
+ 	.valid_tx_ant = ANT_B,		/* .cfg overwrite */
+ 	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */
+-	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+-	.ops = &iwl5000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
+-	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5350_agn_cfg = {
+@@ -596,35 +575,29 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.internal_wimax_coex = true,
+ };
+ 
++#define IWL_DEVICE_5150						\
++	.fw_name_pre = IWL5150_FW_PRE,				\
++	.ucode_api_max = IWL5150_UCODE_API_MAX,			\
++	.ucode_api_min = IWL5150_UCODE_API_MIN,			\
++	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,	\
++	.ops = &iwl5150_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl5000_base_params,			\
++	.need_dc_calib = true,					\
++	.led_mode = IWL_LED_BLINK,				\
++	.internal_wimax_coex = true
++
+ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.name = "Intel(R) WiMAX/WiFi Link 5150 AGN",
+-	.fw_name_pre = IWL5150_FW_PRE,
+-	.ucode_api_max = IWL5150_UCODE_API_MAX,
+-	.ucode_api_min = IWL5150_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
+-	.ops = &iwl5150_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl5000_base_params,
++	IWL_DEVICE_5150,
+ 	.ht_params = &iwl5000_ht_params,
+-	.need_dc_calib = true,
+-	.led_mode = IWL_LED_BLINK,
+-	.internal_wimax_coex = true,
++
+ };
+ 
+ struct iwl_cfg iwl5150_abg_cfg = {
+ 	.name = "Intel(R) WiMAX/WiFi Link 5150 ABG",
+-	.fw_name_pre = IWL5150_FW_PRE,
+-	.ucode_api_max = IWL5150_UCODE_API_MAX,
+-	.ucode_api_min = IWL5150_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
+-	.ops = &iwl5150_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl5000_base_params,
+-	.need_dc_calib = true,
+-	.led_mode = IWL_LED_BLINK,
+-	.internal_wimax_coex = true,
++	IWL_DEVICE_5150,
+ };
+ 
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index fe5f6d0..f4bec32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -554,235 +554,156 @@ static struct iwl_bt_params iwl6000_bt_params = {
+ 	.bt_sco_disable = true,
+ };
+ 
++#define IWL_DEVICE_6005						\
++	.fw_name_pre = IWL6000G2A_FW_PRE,			\
++	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
++	.ucode_api_min = IWL6000G2_UCODE_API_MIN,		\
++	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,	\
++	.ops = &iwl6000_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl6000_g2_base_params,			\
++	.need_dc_calib = true,					\
++	.need_temp_offset_calib = true,				\
++	.led_mode = IWL_LED_RF_STATE
++
+ struct iwl_cfg iwl6005_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
+-	.fw_name_pre = IWL6000G2A_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
++	IWL_DEVICE_6005,
+ 	.ht_params = &iwl6000_ht_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ struct iwl_cfg iwl6005_2abg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6205 ABG",
+-	.fw_name_pre = IWL6000G2A_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
++	IWL_DEVICE_6005,
+ };
+ 
+ struct iwl_cfg iwl6005_2bg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6205 BG",
+-	.fw_name_pre = IWL6000G2A_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-};
++	IWL_DEVICE_6005,
 +};
 +
-+#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
++#define IWL_DEVICE_6030						\
++	.fw_name_pre = IWL6000G2B_FW_PRE,			\
++	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
++	.ucode_api_min = IWL6000G2_UCODE_API_MIN,		\
++	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,	\
++	.ops = &iwl6000g2b_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl6000_g2_base_params,			\
++	.bt_params = &iwl6000_bt_params,			\
++	.need_dc_calib = true,					\
++	.need_temp_offset_calib = true,				\
++	.led_mode = IWL_LED_RF_STATE,				\
++	.adv_pm = true,						\
++	/*							\
++	 *Due to bluetooth, we transmit 2.4 GHz probes		\
++	 * only on antenna A					\
++	 */							\
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A
+ 
+ struct iwl_cfg iwl6030_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
++	IWL_DEVICE_6030,
+ 	.ht_params = &iwl6000_ht_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+ 
+ struct iwl_cfg iwl6030_2abg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 ABG",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	IWL_DEVICE_6030,
+ };
+ 
+ struct iwl_cfg iwl6030_2bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 BGN",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
++	IWL_DEVICE_6030,
+ 	.ht_params = &iwl6000_ht_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+ 
+ struct iwl_cfg iwl6030_2bg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 BG",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	IWL_DEVICE_6030,
+ };
+ 
+ struct iwl_cfg iwl1030_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BGN",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
++	IWL_DEVICE_6030,
+ 	.ht_params = &iwl6000_ht_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+ 
+ struct iwl_cfg iwl1030_bg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BG",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
+-	.need_dc_calib = true,
+-	.need_temp_offset_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	IWL_DEVICE_6030,
++};
 +
-+#ifdef CONFIG_ATH_DEBUG
++struct iwl_cfg iwl130_bgn_cfg = {
++	.name = "Intel(R) Centrino(R) Wireless-N 130 BGN",
++	IWL_DEVICE_6030,
++	.ht_params = &iwl6000_ht_params,
++	.rx_with_siso_diversity = true,
++};
 +
-+#define ath_dbg(common, dbg_mask, fmt, ...)			\
-+({								\
-+	int rtn;						\
-+	if ((common)->debug_mask & dbg_mask)			\
-+		rtn = ath_printk(KERN_DEBUG, common, fmt,	\
-+				 ##__VA_ARGS__);		\
-+	else							\
-+		rtn = 0;					\
-+								\
-+	rtn;							\
-+})
-+#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
-+
-+#else
-+
-+static inline  __attribute__ ((format (printf, 3, 4))) int
-+ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
-+	const char *fmt, ...)
-+{
-+	return 0;
-+}
-+#define ATH_DBG_WARN(foo, arg) do {} while (0)
-+
-+#endif /* CONFIG_ATH_DEBUG */
-+
-+/** Returns string describing opmode, or NULL if unknown mode. */
-+#ifdef CONFIG_ATH_DEBUG
-+const char *ath_opmode_to_string(enum nl80211_iftype opmode);
-+#else
-+static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
-+{
-+	return "UNKNOWN";
-+}
-+#endif
-+
- #endif /* ATH_H */
-diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
-index a9600ba..5367b10 100644
---- a/drivers/net/wireless/ath/debug.c
-+++ b/drivers/net/wireless/ath/debug.c
-@@ -15,26 +15,6 @@
++struct iwl_cfg iwl130_bg_cfg = {
++	.name = "Intel(R) Centrino(R) Wireless-N 130 BG",
++	IWL_DEVICE_6030,
++	.rx_with_siso_diversity = true,
+ };
+ 
+ /*
+  * "i": Internal configuration, use internal Power Amplifier
   */
++#define IWL_DEVICE_6000i					\
++	.fw_name_pre = IWL6000_FW_PRE,				\
++	.ucode_api_max = IWL6000_UCODE_API_MAX,			\
++	.ucode_api_min = IWL6000_UCODE_API_MIN,			\
++	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */	\
++	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */	\
++	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
++	.ops = &iwl6000_ops,					\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl6000_base_params,			\
++	.pa_type = IWL_PA_INTERNAL,				\
++	.led_mode = IWL_LED_BLINK
++
+ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6200 AGN",
+-	.fw_name_pre = IWL6000_FW_PRE,
+-	.ucode_api_max = IWL6000_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000_UCODE_API_MIN,
+-	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */
+-	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
+-	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	IWL_DEVICE_6000i,
+ 	.ht_params = &iwl6000_ht_params,
+-	.pa_type = IWL_PA_INTERNAL,
+-	.led_mode = IWL_LED_BLINK,
+ };
  
- #include "ath.h"
--#include "debug.h"
--
--void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	if (likely(!(common->debug_mask & dbg_mask)))
--		return;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk(KERN_DEBUG "ath: %pV", &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ath_print);
+ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6200 ABG",
+-	.fw_name_pre = IWL6000_FW_PRE,
+-	.ucode_api_max = IWL6000_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000_UCODE_API_MIN,
+-	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */
+-	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
+-	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
+-	.pa_type = IWL_PA_INTERNAL,
+-	.led_mode = IWL_LED_BLINK,
++	IWL_DEVICE_6000i,
+ };
  
- const char *ath_opmode_to_string(enum nl80211_iftype opmode)
- {
-diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
-index f207007..cec951c 100644
---- a/drivers/net/wireless/ath/debug.h
-+++ b/drivers/net/wireless/ath/debug.h
-@@ -17,76 +17,6 @@
- #ifndef ATH_DEBUG_H
- #define ATH_DEBUG_H
+ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6200 BG",
+-	.fw_name_pre = IWL6000_FW_PRE,
+-	.ucode_api_max = IWL6000_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000_UCODE_API_MIN,
+-	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */
+-	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */
+-	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
+-	.ops = &iwl6000_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
+-	.pa_type = IWL_PA_INTERNAL,
+-	.led_mode = IWL_LED_BLINK,
+-};
++	IWL_DEVICE_6000i,
++};
++
++#define IWL_DEVICE_6050						\
++	.fw_name_pre = IWL6050_FW_PRE,				\
++	.ucode_api_max = IWL6050_UCODE_API_MAX,			\
++	.ucode_api_min = IWL6050_UCODE_API_MIN,			\
++	.ops = &iwl6050_ops,					\
++	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,		\
++	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,	\
++	.mod_params = &iwlagn_mod_params,			\
++	.base_params = &iwl6050_base_params,			\
++	.need_dc_calib = true,					\
++	.led_mode = IWL_LED_BLINK,				\
++	.internal_wimax_coex = true
  
--#include "ath.h"
--
--/**
-- * enum ath_debug_level - atheros wireless debug level
-- *
-- * @ATH_DBG_RESET: reset processing
-- * @ATH_DBG_QUEUE: hardware queue management
-- * @ATH_DBG_EEPROM: eeprom processing
-- * @ATH_DBG_CALIBRATE: periodic calibration
-- * @ATH_DBG_INTERRUPT: interrupt processing
-- * @ATH_DBG_REGULATORY: regulatory processing
-- * @ATH_DBG_ANI: adaptive noise immunitive processing
-- * @ATH_DBG_XMIT: basic xmit operation
-- * @ATH_DBG_BEACON: beacon handling
-- * @ATH_DBG_CONFIG: configuration of the hardware
-- * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
-- * @ATH_DBG_PS: power save processing
-- * @ATH_DBG_HWTIMER: hardware timer handling
-- * @ATH_DBG_BTCOEX: bluetooth coexistance
-- * @ATH_DBG_BSTUCK: stuck beacons
-- * @ATH_DBG_ANY: enable all debugging
-- *
-- * The debug level is used to control the amount and type of debugging output
-- * we want to see. Each driver has its own method for enabling debugging and
-- * modifying debug level states -- but this is typically done through a
-- * module parameter 'debug' along with a respective 'debug' debugfs file
-- * entry.
-- */
--enum ATH_DEBUG {
--	ATH_DBG_RESET		= 0x00000001,
--	ATH_DBG_QUEUE		= 0x00000002,
--	ATH_DBG_EEPROM		= 0x00000004,
--	ATH_DBG_CALIBRATE	= 0x00000008,
--	ATH_DBG_INTERRUPT	= 0x00000010,
--	ATH_DBG_REGULATORY	= 0x00000020,
--	ATH_DBG_ANI		= 0x00000040,
--	ATH_DBG_XMIT		= 0x00000080,
--	ATH_DBG_BEACON		= 0x00000100,
--	ATH_DBG_CONFIG		= 0x00000200,
--	ATH_DBG_FATAL		= 0x00000400,
--	ATH_DBG_PS		= 0x00000800,
--	ATH_DBG_HWTIMER		= 0x00001000,
--	ATH_DBG_BTCOEX		= 0x00002000,
--	ATH_DBG_WMI		= 0x00004000,
--	ATH_DBG_BSTUCK		= 0x00008000,
--	ATH_DBG_ANY		= 0xffffffff
+ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN",
+-	.fw_name_pre = IWL6050_FW_PRE,
+-	.ucode_api_max = IWL6050_UCODE_API_MAX,
+-	.ucode_api_min = IWL6050_UCODE_API_MIN,
+-	.ops = &iwl6050_ops,
+-	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6050_base_params,
++	IWL_DEVICE_6050,
+ 	.ht_params = &iwl6000_ht_params,
+-	.need_dc_calib = true,
+-	.led_mode = IWL_LED_BLINK,
+-	.internal_wimax_coex = true,
++};
++
++struct iwl_cfg iwl6050_2abg_cfg = {
++	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 ABG",
++	IWL_DEVICE_6050,
+ };
+ 
+ struct iwl_cfg iwl6150_bgn_cfg = {
+@@ -801,21 +722,6 @@ struct iwl_cfg iwl6150_bgn_cfg = {
+ 	.internal_wimax_coex = true,
+ };
+ 
+-struct iwl_cfg iwl6050_2abg_cfg = {
+-	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 ABG",
+-	.fw_name_pre = IWL6050_FW_PRE,
+-	.ucode_api_max = IWL6050_UCODE_API_MAX,
+-	.ucode_api_min = IWL6050_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
+-	.ops = &iwl6050_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6050_base_params,
+-	.need_dc_calib = true,
+-	.led_mode = IWL_LED_BLINK,
+-	.internal_wimax_coex = true,
 -};
 -
--#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
--
--#ifdef CONFIG_ATH_DEBUG
--void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--	__attribute__ ((format (printf, 3, 4)));
--#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
--#else
--static inline void __attribute__ ((format (printf, 3, 4)))
--ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--{
--}
--#define ATH_DBG_WARN(foo, arg)
--#endif /* CONFIG_ATH_DEBUG */
--
--/** Returns string describing opmode, or NULL if unknown mode. */
--#ifdef CONFIG_ATH_DEBUG
--const char *ath_opmode_to_string(enum nl80211_iftype opmode);
--#else
--static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
--{
--	return "UNKNOWN";
--}
--#endif
-+#define ath_print ath_dbg
+ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Ultimate-N 6300 AGN",
+ 	.fw_name_pre = IWL6000_FW_PRE,
+@@ -831,45 +737,6 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.led_mode = IWL_LED_BLINK,
+ };
  
- #endif /* ATH_DEBUG_H */
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 487193f..c325202 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -56,3 +56,23 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
- 	return skb;
- }
- EXPORT_SYMBOL(ath_rxbuf_alloc);
-+
-+int ath_printk(const char *level, struct ath_common *common,
-+	       const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+	int rtn;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	rtn = printk("%sath: %pV", level, &vaf);
-+
-+	va_end(args);
-+
-+	return rtn;
-+}
-+EXPORT_SYMBOL(ath_printk);
-
+-struct iwl_cfg iwl130_bgn_cfg = {
+-	.name = "Intel(R) Centrino(R) Wireless-N 130 BGN",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
+-	.ht_params = &iwl6000_ht_params,
+-	.need_dc_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+-	.rx_with_siso_diversity = true,
+-};
+-
+-struct iwl_cfg iwl130_bg_cfg = {
+-	.name = "Intel(R) Centrino(R) Wireless-N 130 BG",
+-	.fw_name_pre = IWL6000G2B_FW_PRE,
+-	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+-	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
+-	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+-	.ops = &iwl6000g2b_ops,
+-	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_g2_base_params,
+-	.bt_params = &iwl6000_bt_params,
+-	.need_dc_calib = true,
+-	.led_mode = IWL_LED_RF_STATE,
+-	.adv_pm = true,
+-	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+-	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+-	.rx_with_siso_diversity = true,
+-};
+-
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6000G2A_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+-- 
+1.7.0.4
 
