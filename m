@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40360 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757817Ab0LBQYP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:24:15 -0500
-Received: by iwn42 with SMTP id 42so1123275iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 08:24:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikcngkX=a24r=uQKXgBjABQzZn_Hz3H2bvuiU8e@mail.gmail.com>
-References: <AANLkTi=6NGw3GTnX+vEqx_iHcDb4SUmPc5vvndyMc=5s@mail.gmail.com>
- <AANLkTinMBx=5J4ZAaO7qkmJAxp4xbjoJxq+m+Bjz+K1e@mail.gmail.com>
- <AANLkTimUpxb+qaCerwgxqcz5iOmFz7MaZFhFPSOxJd1M@mail.gmail.com>
- <AANLkTikCrcpbyNEL94Jo9OsvcaEguKfN6-9nheZ=Sa8Q@mail.gmail.com> <AANLkTikcngkX=a24r=uQKXgBjABQzZn_Hz3H2bvuiU8e@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Thu, 2 Dec 2010 18:23:54 +0200
-Message-ID: <AANLkTikccdMeLE-V2-pATqzj8mg3DKyN7SVCi-RX-vdn@mail.gmail.com>
-Subject: Re: wl1271: power down/up sequence
-To: Joerie de Gram <j.de.gram@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:3691 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758042Ab0LNARH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:17:07 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/14] iwlwifi: clear dbg_fixed_rate during init
+Date: Mon, 13 Dec 2010 16:09:20 -0800
+Message-Id: <1292285372-11373-3-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 1, 2010 at 12:40 PM, Joerie de Gram <j.de.gram@gmail.com> wrote:
-> I have pushed my development tree to:
-> http://h1.pargon.nl/gitweb/gitweb.cgi?p=kernel.git;a=shortlog;h=refs/heads/wireless
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-You forgot to apply 516d5cc "mmc: add runtime PM handlers":
+This prevent bad fixed_rate keeps crashing uCode in an endless loop.
 
-http://www.spinics.net/lists/linux-mmc/msg03970.html
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Without that patch, MMC core doesn't tell PM core how to control the
-power of the wl1271 device, so you're left with it powered on after
-boot.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index f450adc..ee12348 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2873,6 +2873,8 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
+ 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 	lq_sta->is_agg = 0;
+ 
++	lq_sta->dbg_fixed_rate = 0;
++
+ 	rs_initialize_lq(priv, conf, sta, lq_sta);
+ }
+ 
+-- 
+1.7.0.4
+
