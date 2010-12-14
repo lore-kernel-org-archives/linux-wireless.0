@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:63437 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193Ab0LFXut (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42967 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752407Ab0LNVpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 18:50:49 -0500
-Date: Mon, 6 Dec 2010 15:50:41 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Chris Ball <cjb@laptop.org>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH] omap: zoom: wl1271 slot is MMC_CAP_POWER_OFF_CARD
-Message-ID: <20101206235041.GT8345@atomide.com>
-References: <1290815964-30088-1-git-send-email-ohad@wizery.com>
- <20101128023924.GA6019@void.printf.net>
+	Tue, 14 Dec 2010 16:45:08 -0500
+Date: Tue, 14 Dec 2010 16:33:48 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Eduardo Costa <ecosta.tmp@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: another device working
+Message-ID: <20101214213348.GD2389@tuxdriver.com>
+References: <AANLkTimQQ5dbFjiZD993OGTHp8Qvb9+N6n4ZhGuG3HTQ@mail.gmail.com>
+ <4D07D678.8030903@lwfinger.net>
+ <1292361712.26726.31.camel@Joe-Laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101128023924.GA6019@void.printf.net>
+In-Reply-To: <1292361712.26726.31.camel@Joe-Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Chris Ball <cjb@laptop.org> [101127 18:29]:
-> Hi,
+On Tue, Dec 14, 2010 at 01:21:52PM -0800, Joe Perches wrote:
+> On Tue, 2010-12-14 at 14:41 -0600, Larry Finger wrote:
+> > On 12/14/2010 11:09 AM, Eduardo Costa wrote:
+> > >  {USB_DEVICE (0x15a9, 0x0002)},   /* Gemtek WUBI-100GW 802.11g */
+> > > And about the firmware, it does work with stock p54's
+> > > `2.13.24.0.lm87.arm' found on the website, so I just had to copy it to
+> > > `/lib/firmware' while renaming it to `isl3887usb'.
+> > Thanks for the report. I just submitted a patch to wireless-testing with a copy
+> > to you for this change to be included in kernel 2.6.37, and to be backported to
+> > all stable and long-term kernels.
 > 
-> On Sat, Nov 27, 2010 at 01:59:24AM +0200, Ohad Ben-Cohen wrote:
-> > This patch complements ed919b0 "mmc: sdio: fix runtime PM anomalies by
-> > introducing MMC_CAP_POWER_OFF_CARD" by declaring MMC_CAP_POWER_OFF_CARD
-> > on the ZOOM's wl1271 mmc slot.
-> > 
-> > This is required in order not to break runtime PM support for the wl1271
-> > sdio driver.
-> > 
-> > Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
-> 
-> Looks good.  Tony, feel free to take this for .37 through your tree.
-> 
-> Signed-off-by: Chris Ball <cjb@laptop.org>
+> Perhaps it'd be sensible to add a
+> module_param option like usb_device=x,y
+> so new devices could be supported without recompilation.
 
-OK will merge thanks.
+Isn't that what new_id is for?
 
-Tony
+At any rate, it isn't a great substitute for a device id in the driver's table. :-)
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
