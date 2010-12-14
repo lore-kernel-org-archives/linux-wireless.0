@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:37084 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752020Ab0LZOua (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52027 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738Ab0LNIV2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 09:50:30 -0500
-Message-ID: <20101226165023.81872js0gqshj2uo@hayate.sektori.org>
-Date: Sun, 26 Dec 2010 16:50:23 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: =?utf-8?b?UmFmYcWCIA==?= =?utf-8?b?TWnFgmVja2k=?=
-	<zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	zd1211-devs@lists.sourceforge.net,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: [RFC PATCH 3/6] zd1211rw: let zd_set_beacon_interval() set
- dtim_period and add AP-beacon flag
-References: <20101226112404.31775.77854.stgit@fate.lan>
- <20101226112433.31775.89617.stgit@fate.lan>
- <AANLkTikFrH0P+A-tZU1hULNja4yvWkwqb22csHtrKO76@mail.gmail.com>
-In-Reply-To: <AANLkTikFrH0P+A-tZU1hULNja4yvWkwqb22csHtrKO76@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
+	Tue, 14 Dec 2010 03:21:28 -0500
+Subject: Re: [RFC] mac80211: Change BA timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <19719.10364.75022.257291@gargle.gargle.HOWL>
+References: <19719.8288.322475.954293@gargle.gargle.HOWL>
+	 <1292312835.3569.5.camel@jlt3.sipsolutions.net>
+	 <19719.10364.75022.257291@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Dec 2010 09:21:26 +0100
+Message-ID: <1292314886.3569.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Rafał Miłecki <zajec5@gmail.com>:
+On Tue, 2010-12-14 at 13:49 +0530, Sujith wrote:
+> Johannes Berg wrote:
+> > On Tue, 2010-12-14 at 13:14 +0530, Sujith wrote:
+> > > The BlockAck session timout value is currently an arbitrary 5000.
+> > > This results in BA sessions being created and torn down incessantly
+> > > when mac80211 is used with a driver (say ath9k) in AP mode.
+> > > 
+> > > The 802.11 standard doesn't specify any default value for the timeout field.
+> > > And there is no benefit to be gained by tearing down BA sessions and
+> > > recreating them. The current value of 5000 doesn't cause any problems,
+> > > but it is hard to find an AP/STA in the field that uses a non-zero timeout.
+> > 
+> > Please make it configurable in the request API. Each session consumes
+> > one of a very limited number of hardware queues on iwlwifi, and once we
+> > go to having multiple connected stations to it as an AP, it would be
+> > good to time out idle sessions.
+> 
+> Something like this ?
 
-> 2010/12/26 Jussi Kivilinna <jussi.kivilinna@mbnet.fi>:
->> -static int set_beacon_interval(struct zd_chip *chip, u32 interval)
->> +static int set_beacon_interval(struct zd_chip *chip, u32 interval,
->> +                              u16 dtim_period)
->
-> That gets messy. We have interval in interval, flags in interval and
-> period in dtim_period :|
->
-> Do you have idea what is maximum value for dtim_period? It sounds like
-> it should be 0xff.
->
-> Could we maybe try sth like:
-> u16 interval, u8 dtim_period, u8 flags? Then we would have
-> flags << 24 | dtim_period << 16 | interval
->
-> Or maybe to avoid problems with shifting flags (re-defining defines?),
-> we could use a little more messy
-> flags | dtim_period << 16 | interval
->
-> Or do you have better idea? Proposed one doesn't seem really clear for me.
->
-Vendor driver uses u16 interval, u8 dtim_p, u8 mode and selects right  
-flags based on interval. I'll something like change to that, I think  
-caller shouldn't be setting hw flags here anyway.
+[snip]
 
--Jussi
+yeah, looks good, thanks
+
+johannes
 
