@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61681 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389Ab0L2QTx (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61709 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205Ab0LNSog convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 11:19:53 -0500
-Received: by fxm20 with SMTP id 20so10567855fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 08:19:52 -0800 (PST)
-Message-ID: <4D1B5FA3.9010908@lwfinger.net>
-Date: Wed, 29 Dec 2010 10:19:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 14 Dec 2010 13:44:36 -0500
+Received: by qyk12 with SMTP id 12so1069084qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 10:44:35 -0800 (PST)
 MIME-Version: 1.0
-To: Christoph Paasch <christoph.paasch@uclouvain.be>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	chunkeey@googlemail.com
-Subject: Re: [PATCH] p54: fix compiler-warning when no P54_LEDS are configured
-References: <1293635679-9783-1-git-send-email-christoph.paasch@uclouvain.be>
-In-Reply-To: <1293635679-9783-1-git-send-email-christoph.paasch@uclouvain.be>
+In-Reply-To: <201012141849.48488.helmut.schaa@googlemail.com>
+References: <201012131231.28313.IvDoorn@gmail.com>
+	<201012131236.19791.IvDoorn@gmail.com>
+	<201012131236.39071.IvDoorn@gmail.com>
+	<201012141849.48488.helmut.schaa@googlemail.com>
+Date: Tue, 14 Dec 2010 19:44:35 +0100
+Message-ID: <AANLkTimMGtZsY-ZhbR4Nt7Mh4W8KSAfAhbe3yF07ezaO@mail.gmail.com>
+Subject: Re: [PATCH 14/17] rt2x00: Fix WMM Queue naming
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Johannes Stezenbach <js@sig21.net>, jay.weihung@gmail.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/29/2010 09:14 AM, Christoph Paasch wrote:
-> The priv-variable is unused when compiling without CONFIG_P54_LEDS.
-> 
-> Signed-off-by: Christoph Paasch <christoph.paasch@uclouvain.be>
-> ---
->  drivers/net/wireless/p54/main.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-> index 622d27b..a6802f5 100644
-> --- a/drivers/net/wireless/p54/main.c
-> +++ b/drivers/net/wireless/p54/main.c
-> @@ -611,7 +611,9 @@ EXPORT_SYMBOL_GPL(p54_init_common);
->  
->  int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
->  {
-> +#ifdef CONFIG_P54_LEDS
->  	struct p54_common *priv = dev->priv;
-> +#endif /* CONFIG_P54_LEDS */
->  	int err;
->  
->  	err = ieee80211_register_hw(dev);
-> @@ -653,9 +655,9 @@ EXPORT_SYMBOL_GPL(p54_free_common);
->  
->  void p54_unregister_common(struct ieee80211_hw *dev)
->  {
-> +#ifdef CONFIG_P54_LEDS
->  	struct p54_common *priv = dev->priv;
->  
-> -#ifdef CONFIG_P54_LEDS
->  	p54_unregister_leds(priv);
->  #endif /* CONFIG_P54_LEDS */
->  
+Hi,
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> The Queue names were incorrectly copied from the legacy drivers,
+>> as a result the queue names were inversed to what was expected.
+>>
+>> This renames the queues using this mapping:
+>>       QID_AC_BK -> QID_AC_VO (priority 0)
+>>       QID_AC_BE -> QID_AC_VI (priority 1)
+>>       QID_AC_VI -> QID_AC_BE (priority 2)
+>>       QID_AC_VO -> QID_AC_BK (priority 3)
+>>
+>> Note that this was a naming problem only, which didn't affect
+>> the assignment of frames to their respective queues.
+>>
+>> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+>
+> Ivo, due to the latest info from Ralink I'd say we should drop this patch
+> and instead introduce a mac80211_to_rt2x00_qid mapper that maps from
+> ieee80211_ac_numbers to data_queue_qid.
+>
+> This patch doesn't cause any harm, but we would have to revert it partly
+> if we introduce the queue mapping as needed by the rt2x00 devices.
 
+I don't agree, this patch can safely be applied, since the mapping
+is in the endpoint assignment, rather the register value usage,
+I think the more optimal solution is fixing rt2x00usb_assign_endpoints.
+In there it currently assigns endpoints assuming the first endpoint
+is the highest priority, while we should be able to simply swap that
+to invert the logic.
+
+Ivo
