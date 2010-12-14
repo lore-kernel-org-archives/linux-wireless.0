@@ -1,54 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754413Ab0LGKF0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 05:05:26 -0500
-Subject: Re: build error without  CONFIG_MAC80211_MESH
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linville@tuxdriver.com
-In-Reply-To: <201012071123.03046.br1@einfach.org>
-References: <201012071123.03046.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Dec 2010 11:05:23 +0100
-Message-ID: <1291716323.3607.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:3691 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758028Ab0LNARH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:17:07 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/14] iwlagn: change led compensation for 6005 and 6030 devices
+Date: Mon, 13 Dec 2010 16:09:19 -0800
+Message-Id: <1292285372-11373-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-07 at 11:23 +0900, Bruno Randolf wrote:
-> Hi!
-> 
-> Building current wireless-testing (master-2010-12-06) without the Mesh option 
-> is broken:
-> 
->   CC [M]  net/mac80211/main.o
-> /home/br1/ath/wireless-testing/net/mac80211/main.c: In function 
-> ‘ieee80211_bss_info_change_notify’:
-> /home/br1/ath/wireless-testing/net/mac80211/main.c:250: error: ‘union 
-> <anonymous>’ has no member named ‘mesh’
-> make[3]: *** [net/mac80211/main.o] Error 1
-> make[2]: *** [net/mac80211] Error 2
-> make[1]: *** [net] Error 2
-> make: *** [sub-make] Error 2
-> 
-> It needs something like:
-> 
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 40bd12e..3d988ca 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -245,10 +245,12 @@ void ieee80211_bss_info_change_notify(struct 
-> ieee80211_sub_if_data *sdata,
->                                 sdata->vif.bss_conf.enable_beacon =
->                                         !!sdata->u.ibss.presp;
->                                 break;
-> +#ifdef CONFIG_MAC80211_MESH
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Indeed, care to submit a patch?
+For both 6005 and 6030 devices, change the led compensation to 57
 
-thx,
-johannes
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 808942c..10a5369 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -511,7 +511,7 @@ static struct iwl_base_params iwl6050_base_params = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.shadow_reg_enable = true,
+ };
+-static struct iwl_base_params iwl6000_coex_base_params = {
++static struct iwl_base_params iwl6000_g2_base_params = {
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.num_of_queues = IWLAGN_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
+@@ -520,7 +520,7 @@ static struct iwl_base_params iwl6000_coex_base_params = {
+ 	.use_bsm = false,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+-	.led_compensation = 51,
++	.led_compensation = 57,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+@@ -559,7 +559,7 @@ struct iwl_cfg iwl6005_2agn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -575,7 +575,7 @@ struct iwl_cfg iwl6005_2abg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+ 	.led_mode = IWL_LED_RF_STATE,
+@@ -590,7 +590,7 @@ struct iwl_cfg iwl6005_2bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+ 	.led_mode = IWL_LED_RF_STATE,
+@@ -605,7 +605,7 @@ struct iwl_cfg iwl6030_2agn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -625,7 +625,7 @@ struct iwl_cfg iwl6030_2abg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -644,7 +644,7 @@ struct iwl_cfg iwl6030_2bgn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -664,7 +664,7 @@ struct iwl_cfg iwl6030_2bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -683,7 +683,7 @@ struct iwl_cfg iwl1030_bgn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -703,7 +703,7 @@ struct iwl_cfg iwl1030_bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -833,7 +833,7 @@ struct iwl_cfg iwl130_bgn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -852,7 +852,7 @@ struct iwl_cfg iwl130_bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_coex_base_params,
++	.base_params = &iwl6000_g2_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.led_mode = IWL_LED_RF_STATE,
+-- 
+1.7.0.4
 
