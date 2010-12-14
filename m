@@ -1,71 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53403 "EHLO mail.atheros.com"
+Received: from mga14.intel.com ([143.182.124.37]:1317 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053Ab0LBFGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 00:06:16 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 21:06:02 -0800
-Date: Thu, 2 Dec 2010 10:35:49 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/26] ath9k: Configure pll control for AR9485
-Message-ID: <20101202050549.GI12908@vasanth-laptop>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com> <1291188775-13707-11-git-send-email-vasanth@atheros.com> <4CF67A3C.4060105@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CF67A3C.4060105@openwrt.org>
+	id S1758072Ab0LNARI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:17:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/14] iwlagn: rx antenna diversity
+Date: Mon, 13 Dec 2010 16:09:23 -0800
+Message-Id: <1292285372-11373-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 01, 2010 at 10:09:24PM +0530, Felix Fietkau wrote:
-> On 2010-12-01 8:32 AM, Vasanthakumar Thiagarajan wrote:
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   16 ++++++++++------
-> >  drivers/net/wireless/ath/ath9k/hw.c         |    7 ++++++-
-> >  drivers/net/wireless/ath/ath9k/reg.h        |    2 ++
-> >  3 files changed, 18 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> > index b34a9e9..4e35bda 100644
-> > --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> > +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> > @@ -390,14 +390,18 @@ static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
-> >  {
-> >  	u32 pll;
-> >  
-> > -	pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
-> > +	if (AR_SREV_9485(ah))
-> > +		pll = 0x142c;
-> > +	else {
-> > +		pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
-> >  
-> > -	if (chan && IS_CHAN_HALF_RATE(chan))
-> > -		pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
-> > -	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-> > -		pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
-> > +		if (chan && IS_CHAN_HALF_RATE(chan))
-> > +			pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
-> > +		else if (chan && IS_CHAN_QUARTER_RATE(chan))
-> > +			pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
-> >  
-> > -	pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
-> > +		pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
-> > +	}
-> >  
-> >  	return pll;
-> >  }
-> NACK for this part. Take a look at what gets set for the older chips:
-> 
-> 0x5 << AR_RTC_9300_PLL_REFDIV_S == 0x1400
-> 0x2c << AR_RTC_9300_PLL_DIV_S == 0x002c
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-True, but older ar9003 chips have half/quarter rate support (which is not
-implemented right now), in that case pll configuration would differ
-for AR9485.
+For the new 1x1 devices, hw and uCode will support rx
+antenna diversity, but we need to indicate 1x1 device to
+AccessPoint to make sure it won't use MIMO.
 
-Vasanth
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    8 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    8 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
+ 3 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 3c983e4..94521d4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -147,7 +147,11 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+-	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
++	if (priv->cfg->rx_with_siso_diversity)
++		priv->hw_params.rx_chains_num = 1;
++	else
++		priv->hw_params.rx_chains_num =
++			num_of_ant(priv->cfg->valid_rx_ant);
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 
+@@ -311,6 +315,7 @@ struct iwl_cfg iwl100_bgn_cfg = {
+ 	.base_params = &iwl1000_base_params,
+ 	.ht_params = &iwl1000_ht_params,
+ 	.led_mode = IWL_LED_RF_STATE,
++	.rx_with_siso_diversity = true,
+ };
+ 
+ struct iwl_cfg iwl100_bg_cfg = {
+@@ -324,6 +329,7 @@ struct iwl_cfg iwl100_bg_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl1000_base_params,
+ 	.led_mode = IWL_LED_RF_STATE,
++	.rx_with_siso_diversity = true,
+ };
+ 
+ MODULE_FIRMWARE(IWL1000_MODULE_FIRMWARE(IWL1000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 10a5369..8a78924 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -182,7 +182,11 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+-	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
++	if (priv->cfg->rx_with_siso_diversity)
++		priv->hw_params.rx_chains_num = 1;
++	else
++		priv->hw_params.rx_chains_num =
++			num_of_ant(priv->cfg->valid_rx_ant);
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 
+@@ -841,6 +845,7 @@ struct iwl_cfg iwl130_bgn_cfg = {
+ 	.adv_pm = true,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.rx_with_siso_diversity = true,
+ };
+ 
+ struct iwl_cfg iwl130_bg_cfg = {
+@@ -859,6 +864,7 @@ struct iwl_cfg iwl130_bg_cfg = {
+ 	.adv_pm = true,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.rx_with_siso_diversity = true,
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 568920a..d0b86f5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -364,6 +364,7 @@ struct iwl_ht_params {
+  * @scan_antennas: available antenna for scan operation
+  * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
+  * @adv_pm: advance power management
++ * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -412,6 +413,7 @@ struct iwl_cfg {
+ 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
+ 	enum iwl_led_mode led_mode;
+ 	const bool adv_pm;
++	const bool rx_with_siso_diversity;
+ };
+ 
+ /***************************
+-- 
+1.7.0.4
+
