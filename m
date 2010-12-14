@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54974
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753318Ab0LORxq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 12:53:46 -0500
-Date: Wed, 15 Dec 2010 09:54:14 -0800 (PST)
-Message-Id: <20101215.095414.193705657.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-12-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101215155642.GE2377@tuxdriver.com>
-References: <20101215155642.GE2377@tuxdriver.com>
+Received: from mail.perches.com ([173.55.12.10]:2657 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760000Ab0LNVVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 16:21:53 -0500
+Subject: Re: another device working
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Eduardo Costa <ecosta.tmp@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4D07D678.8030903@lwfinger.net>
+References: <AANLkTimQQ5dbFjiZD993OGTHp8Qvb9+N6n4ZhGuG3HTQ@mail.gmail.com>
+	 <4D07D678.8030903@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Dec 2010 13:21:52 -0800
+Message-ID: <1292361712.26726.31.camel@Joe-Laptop>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 15 Dec 2010 10:56:42 -0500
+On Tue, 2010-12-14 at 14:41 -0600, Larry Finger wrote:
+> On 12/14/2010 11:09 AM, Eduardo Costa wrote:
+> >  {USB_DEVICE (0x15a9, 0x0002)},   /* Gemtek WUBI-100GW 802.11g */
+> > And about the firmware, it does work with stock p54's
+> > `2.13.24.0.lm87.arm' found on the website, so I just had to copy it to
+> > `/lib/firmware' while renaming it to `isl3887usb'.
+> Thanks for the report. I just submitted a patch to wireless-testing with a copy
+> to you for this change to be included in kernel 2.6.37, and to be backported to
+> all stable and long-term kernels.
 
-> This is a batch of fixes intended for 2.6.37.
-> 
-> The biggest changes fix an issue where the iwlagn driver will misread
-> the EEPROM information for some devices that will soon be in the wild.
-> The initial impulse was to rewrite the EEPROM code, but I pushed back on
-> that for 2.6.37.  The compromise is to add the new EEPROM reading code,
-> but only to invoke it for the new devices.  Older devices will still use
-> the existing (and tested) EEPROM code.  Note that all devices will use
-> the new code in 2.6.38 and beyond.
-> 
-> This also includes a pull of bluetooth fixes from Gustavo Padovan.  That
-> includes a null pointer fix and a fix for a regression that broke the
-> DUN profile -- say goodbye to your emergency cell-phone Internet
-> connection without that!
-> 
-> Other patches include some device ID additions for p54usb, a fix to
-> avoid log spam resulting from suspend/resume with USB-based wireless
-> devices that don't define their own suspend hook, a null ptr fix for the
-> libertas driver, and another null pointer fix related to IBSS merges.
-> 
-> Please let me know if there are problems!
+Perhaps it'd be sensible to add a
+module_param option like usb_device=x,y
+so new devices could be supported without recompilation.
 
-Looks good, pulled, thanks John.
