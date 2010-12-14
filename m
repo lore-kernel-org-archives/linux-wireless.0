@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38026 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52887 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555Ab0LGR0U (ORCPT
+	with ESMTP id S1759131Ab0LNCXa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 12:26:20 -0500
-Received: by iwn9 with SMTP id 9so126312iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 09:26:19 -0800 (PST)
+	Mon, 13 Dec 2010 21:23:30 -0500
+Received: by iwn9 with SMTP id 9so176962iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 18:23:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <19709.62713.669075.259794@gargle.gargle.HOWL>
-References: <19701.62091.644444.121284@gargle.gargle.HOWL> <20101202193024.GC2358@tuxdriver.com>
- <19704.23185.565826.890275@gargle.gargle.HOWL> <AANLkTinPLPoAHxauaXj8Sj=zjyHQPyxO0ku342ersZQ4@mail.gmail.com>
- <19709.45926.38551.25130@gargle.gargle.HOWL> <AANLkTinNF2dnacLof_knM3OAf6ADCCPsb8DO1VE6c31U@mail.gmail.com>
- <19709.46740.86437.390791@gargle.gargle.HOWL> <AANLkTinJLRMSSvLHgPP1Dw5BXsC3utAudJ=oSAsUUD8T@mail.gmail.com>
- <19709.59888.682471.11803@gargle.gargle.HOWL> <AANLkTimq7F1UmRV=thdyRy1TozDGc4RbfniDYvBr2KUK@mail.gmail.com>
- <19709.62713.669075.259794@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 7 Dec 2010 09:25:58 -0800
-Message-ID: <AANLkTindJEbDowF4D46XGL3t3D8whn=LF2FG=3w3DdiV@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
-To: Sujith <m.sujith@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+In-Reply-To: <20101214022018.2343.8216.stgit@localhost6.localdomain6>
+References: <20101214022018.2343.8216.stgit@localhost6.localdomain6>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Mon, 13 Dec 2010 18:23:09 -0800
+Message-ID: <AANLkTinS35SU=RZ+G=b6Q1729Zpfm5cfqjTNOCr6zSe4@mail.gmail.com>
+Subject: Re: [PATCH 1/2] nl80211: Export available antennas
+To: Bruno Randolf <br1@einfach.org>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 7, 2010 at 12:48 AM, Sujith <m.sujith@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->> Hm, well I was thinking more along the lines of what
->> ath9k_htc_config() already does with IEEE80211_CONF_CHANGE_IDLE when
->> enabling the radio. That seems right.
+On Mon, Dec 13, 2010 at 6:20 PM, Bruno Randolf <br1@einfach.org> wrote:
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 >
-> Not sure, maybe ath9k has issues handling CONF_IDLE.
+> ---
+>
+> v2:     rebased
+> ---
+>  include/linux/nl80211.h |    5 +++++
+>  net/wireless/nl80211.c  |    2 ++
+>  2 files changed, 7 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> index b8fa25d..63b603c 100644
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -841,6 +841,9 @@ enum nl80211_commands {
+>  *     the hardware should not be configured to receive on this antenna.
+>  *     For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
+>  *
+> + * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL: Bitmap of antennas which are available for
+> + *     configuration via the above parameters.
+> + *
 
-Well ath9k was fine with enabling the radio, the issue was with it not
-getting a now we're idle notification later on in certain cases.
+Not clear exactly what the point of this is -- there's no commit
+message -- but should not this API distinguish between TX and RX?
+E.g., several chipsets can only TX from a subset of RX antennas.
 
-  Luis
+Dan
