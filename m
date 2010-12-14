@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63450 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932891Ab0LTRCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 12:02:40 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 09:02:24 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <kathy.giori@atheros.com>, <amod.bodas@atheros.com>,
-	<david.quan@atheros.com>, <michael.green@atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/8] wireless: DFS region support
-Date: Mon, 20 Dec 2010 12:02:26 -0500
-Message-ID: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:57320 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759986Ab0LNUh2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 15:37:28 -0500
+Date: Tue, 14 Dec 2010 14:37:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: ecosta.tmp@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] p54usb: New USB ID for Gemtek WUBI-100GW
+Message-ID: <4d07d5a7.FnajdVI89jsmLq/B%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series has a list of changes to kernel and userspace to start addressing
-DFS region support. I've cheated and figured out a way to alter the current
-regulatory database in such a way that it remains backwards compatible with
-older databases so that no new CRDAs are required and we don't have to provide
-two releases for old kernels and newer kernels for wireless-regdb updates.
+From: Eduardo Costa <ecosta.tmp@gmail.com>
 
-In the end we end up passing the DFS region to the drivers. In terms of our DFS
-development roadmap this covers parts I and II as promissed that I would take care
-of by tomorrow, and leaves open now the chance for developers to start working
-on part III: "Where do we stuff DFS parameters for each region":
+This USB ID is for the WUBI-100GW 802.11g Wireless LAN USB Device that
+uses p54usb.
 
-http://wireless.kernel.org/en/developers/DFS
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Eduardo Costa <ecosta.tmp@gmail.com>
+Cc: Stable <stable@kernel.org>
+---
 
-In tomorrow's meeting we can cover who is going to work on part III. People who
-want to work on part III can start using these patches on their systems.
+John,
 
-John, lets wait to merge these until Wednesday, I post these in patch form as I
-think they are ready but tomorrow's discussions may push us to alter this a
-bit, not sure. I will also review what we have done here with Michael Green so
-he is on the same page.
+2.6.37 material.
 
-  Luis
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
++++ wireless-testing/drivers/net/wireless/p54/p54usb.c
+@@ -61,6 +61,7 @@ static struct usb_device_id p54u_table[]
+ 	{USB_DEVICE(0x107b, 0x55f2)},	/* Gateway WGU-210 (Gemtek) */
+ 	{USB_DEVICE(0x124a, 0x4023)},	/* Shuttle PN15, Airvast WM168g, IOGear GWU513 */
+ 	{USB_DEVICE(0x1435, 0x0210)},	/* Inventel UR054G */
++	{USB_DEVICE(0x15a9, 0x0002)},	/* Gemtek WUBI-100GW 802.11g */
+ 	{USB_DEVICE(0x1630, 0x0005)},	/* 2Wire 802.11g USB (v1) / Z-Com */
+ 	{USB_DEVICE(0x182d, 0x096b)},	/* Sitecom WL-107 */
+ 	{USB_DEVICE(0x1915, 0x2234)},	/* Linksys WUSB54G OEM */
