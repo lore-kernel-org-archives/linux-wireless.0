@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55196 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752288Ab0LHRQb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 12:16:31 -0500
-Received: by vws16 with SMTP id 16so1211610vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:16:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikmZZuD1h45RkX3QE2xAQLfoZzwSecDXvojSw5=@mail.gmail.com>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
-	<201012061714.15863.br1@einfach.org>
-	<AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
-	<AANLkTi=95mO085Y1PJ3brMMpHa=QvkxSB3SUpQysvKr+@mail.gmail.com>
-	<20101208165607.GE2423@tuxdriver.com>
-	<AANLkTikmZZuD1h45RkX3QE2xAQLfoZzwSecDXvojSw5=@mail.gmail.com>
-Date: Wed, 8 Dec 2010 12:11:01 -0500
-Message-ID: <AANLkTi=5a=LBTUcjyi0je3XYNG+=xsbA_MjtDU_dZat_@mail.gmail.com>
-Subject: Re: ath5k: Weird Retransmission Behaviour
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bruno Randolf <br1@einfach.org>,
-	Jonathan Guerin <jonathan@guerin.id.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@venema.h4ckr.net>, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.perches.com ([173.55.12.10]:2626 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758827Ab0LNA51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:57:27 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 7/8] staging: brcm80211: Remove unused ETHER_TYPE_<foo> #defines
+Date: Mon, 13 Dec 2010 16:57:03 -0800
+Message-Id: <a4230e57e7c1b246d7047c77349c95c749e62392.1292287725.git.joe@perches.com>
+In-Reply-To: <cover.1292287720.git.joe@perches.com>
+References: <cover.1292287720.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 8, 2010 at 12:06 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Wed, Dec 8, 2010 at 11:56 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->>> Found the patch:
->>>
->>> https://patchwork.kernel.org/patch/359722/
->>
->> Are you posting that for merging?  Or just for testing?
->
-> Testing -- I only compile tested it but it seemed relevant
-> to this thread.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/staging/brcm80211/include/proto/ethernet.h |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-Also, I should note that the retry limits are fixed at
-minstrel initialization time; I don't know if that's the
-right time to take the config parameters into account
-or if it should be done later (and if later, how that fits in
-with minstrel's MRR strategy).
-
+diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
+index 888165e..ad55b56 100644
+--- a/drivers/staging/brcm80211/include/proto/ethernet.h
++++ b/drivers/staging/brcm80211/include/proto/ethernet.h
+@@ -28,13 +28,8 @@
+ #define	ETHER_MAX_LEN		1518
+ #define	ETHER_MAX_DATA		1500
+ 
+-#define ETHER_TYPE_MIN		0x0600
+-#define	ETHER_TYPE_IP		0x0800
+-#define ETHER_TYPE_ARP		0x0806
+-#define ETHER_TYPE_8021Q	0x8100
+ #define	ETHER_TYPE_BRCM		0x886c
+ #define	ETHER_TYPE_802_1X	0x888e
+-#define	ETHER_TYPE_802_1X_PREAUTH 0x88c7
+ 
+ #define ETHER_DEST_OFFSET	(0 * ETH_ALEN)
+ #define ETHER_SRC_OFFSET	(1 * ETH_ALEN)
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.3.3.398.g0b0cd.dirty
+
