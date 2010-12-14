@@ -1,431 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:25601 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754832Ab0LJPF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 10:05:56 -0500
-From: luciano.coelho@nokia.com
+Received: from kso.tls-tautenburg.de ([194.94.209.8]:19978 "EHLO
+	kso.tls-tautenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756270Ab0LNKZa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 05:25:30 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by kso.tls-tautenburg.de (Postfix) with ESMTP id 493C9506FF
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 11:13:40 +0100 (CET)
+Received: from kso.tls-tautenburg.de ([127.0.0.1])
+	by localhost (kso.tls-tautenburg.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id jVNTTXehxZ7U for <linux-wireless@vger.kernel.org>;
+	Tue, 14 Dec 2010 11:13:35 +0100 (CET)
+Received: from [194.94.209.168] (unknown [194.94.209.168])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by kso.tls-tautenburg.de (Postfix) with ESMTP
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 11:13:35 +0100 (CET)
+Message-ID: <4D07434F.6070006@tls-tautenburg.de>
+Date: Tue, 14 Dec 2010 11:13:35 +0100
+From: Bringfried Stecklum <stecklum@tls-tautenburg.de>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [RFC v2 2/2] mac80211: add support for HW scheduled scan
-Date: Fri, 10 Dec 2010 17:07:12 +0200
-Message-Id: <1291993632-6921-3-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
+Subject: unresolved symbols due to missing iwlcore.ko
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@nokia.com>
+I am having trouble installing iwlagn from the recent compat-wireless. My system 
+is Ubuntu 8.10 running kernel 2.6.36-1. The reason is that iwlcore.ko does not 
+get build and installed in the update modules folder which, of course, leads 
+unresolved symbols. Here is a short log
 
-Implement support for HW scheduled scan.  The mac80211 code doesn't perform
-scheduled scans itself, but calls the driver to start and stop scheduled
-scans.
+stecklum@extragalactix:~/System/src/compat-wireless-2010-12-12$ 
+./scripts/driver-select iwlwifi
+make
+...
+   Building modules, stage 2.
+   MODPOST 7 modules
+   CC      /home/stecklum/System/src/compat-wireless-2010-12-12/compat/compat.mod.o
+   LD [M]  /home/stecklum/System/src/compat-wireless-2010-12-12/compat/compat.ko
+   CC 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atl1c/atl1c.mod.o
+   LD [M] 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atl1c/atl1c.ko
+   CC 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atl1e/atl1e.mod.o
+   LD [M] 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atl1e/atl1e.ko
+   CC 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atlx/atl1.mod.o
+   LD [M] 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atlx/atl1.ko
+   CC 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atlx/atl2.mod.o
+   LD [M] 
+/home/stecklum/System/src/compat-wireless-2010-12-12/drivers/net/atlx/atl2.ko
+   CC 
+/home/stecklum/System/src/compat-wireless-2010-12-12/net/mac80211/mac80211.mod.o
+   LD [M] 
+/home/stecklum/System/src/compat-wireless-2010-12-12/net/mac80211/mac80211.ko
+   CC 
+/home/stecklum/System/src/compat-wireless-2010-12-12/net/wireless/cfg80211.mod.o
+   LD [M] 
+/home/stecklum/System/src/compat-wireless-2010-12-12/net/wireless/cfg80211.ko
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.36-1-generic'
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- include/net/mac80211.h      |   40 +++++++++++++++++++++
- net/mac80211/cfg.c          |   26 ++++++++++++++
- net/mac80211/driver-ops.h   |   30 ++++++++++++++++
- net/mac80211/driver-trace.h |   63 +++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h  |    8 ++++
- net/mac80211/rx.c           |    4 ++-
- net/mac80211/scan.c         |   80 +++++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 250 insertions(+), 1 deletions(-)
+So no iwlcore.ko at this stage.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e411cf8..2378ca9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -528,6 +528,21 @@ struct ieee80211_tx_info {
- 	};
- };
- 
-+/**
-+ * ieee80211_sched_scan_ies - scheduled scan IEs
-+ *
-+ * This structure is used to pass the appropriate IEs to be used in scheduled
-+ * scans for all bands.  It contains both the IEs passed from the userspace
-+ * and the ones generated by mac80211.
-+ *
-+ * @ie: array with the IEs for each supported band
-+ * @len: array with the total length of the IEs for each band
-+ */
-+struct ieee80211_sched_scan_ies {
-+	u8 *ie[IEEE80211_NUM_BANDS];
-+	size_t len[IEEE80211_NUM_BANDS];
-+};
-+
- static inline struct ieee80211_tx_info *IEEE80211_SKB_CB(struct sk_buff *skb)
- {
- 	return (struct ieee80211_tx_info *)skb->cb;
-@@ -1650,6 +1665,15 @@ enum ieee80211_ampdu_mlme_action {
-  *	any error unless this callback returned a negative error code.
-  *	The callback can sleep.
-  *
-+ * @sched_scan_start: Ask the hardware to start scanning repeatedly at
-+ * 	specific intervals.  The driver must call the
-+ * 	ieee80211_sched_scan_results() function whenever it finds results.
-+ * 	This process will continue until sched_scan_stop is called.
-+ *
-+ * @sched_scan_stop: Tell the hardware to stop an ongoing periodic scan.
-+ * 
-+ * ieee80211_sched_scan_results() each time it finds some results.
-+ *
-  * @sw_scan_start: Notifier function that is called just before a software scan
-  *	is started. Can be NULL, if the driver doesn't need this notification.
-  *	The callback can sleep.
-@@ -1787,6 +1811,12 @@ struct ieee80211_ops {
- 				u32 iv32, u16 *phase1key);
- 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct cfg80211_scan_request *req);
-+	int (*sched_scan_start)(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct cfg80211_sched_scan_request *req,
-+				struct ieee80211_sched_scan_ies *ies);
-+	int (*sched_scan_stop)(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif);
- 	void (*sw_scan_start)(struct ieee80211_hw *hw);
- 	void (*sw_scan_complete)(struct ieee80211_hw *hw);
- 	int (*get_stats)(struct ieee80211_hw *hw,
-@@ -2369,6 +2399,16 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw);
- void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted);
- 
- /**
-+ * ieee80211_sched_scan_results - got results from periodic scan
-+ *
-+ * When a periodic scan is running, this function needs to be called by the
-+ * driver whenever there are new scan results availble.
-+ *
-+ * @hw: the hardware that is performing periodic scans
-+ */
-+void ieee80211_sched_scan_results(struct ieee80211_hw *hw);
-+
-+/**
-  * ieee80211_iterate_active_interfaces - iterate active interfaces
-  *
-  * This function iterates over the interfaces associated with a given
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c30b8b7..f870c9e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1255,6 +1255,30 @@ static int ieee80211_scan(struct wiphy *wiphy,
- 	return ieee80211_request_scan(sdata, req);
- }
- 
-+static int
-+ieee80211_sched_scan_start(struct wiphy *wiphy,
-+			   struct net_device *dev,
-+			   struct cfg80211_sched_scan_request *req)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (!sdata->local->ops->sched_scan_start)
-+		return -EOPNOTSUPP;
-+
-+	return ieee80211_request_sched_scan_start(sdata, req);
-+}
-+
-+static int
-+ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (!sdata->local->ops->sched_scan_stop)
-+		return -EOPNOTSUPP;
-+
-+	return ieee80211_request_sched_scan_stop(sdata);
-+}
-+
- static int ieee80211_auth(struct wiphy *wiphy, struct net_device *dev,
- 			  struct cfg80211_auth_request *req)
- {
-@@ -1797,6 +1821,8 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.suspend = ieee80211_suspend,
- 	.resume = ieee80211_resume,
- 	.scan = ieee80211_scan,
-+	.sched_scan_start = ieee80211_sched_scan_start,
-+	.sched_scan_stop = ieee80211_sched_scan_stop,
- 	.auth = ieee80211_auth,
- 	.assoc = ieee80211_assoc,
- 	.deauth = ieee80211_deauth,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 4244554..83f2963 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -191,6 +191,36 @@ static inline int drv_hw_scan(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+static inline int
-+drv_sched_scan_start(struct ieee80211_local *local,
-+		     struct ieee80211_sub_if_data *sdata,
-+		     struct cfg80211_sched_scan_request *req,
-+		     struct ieee80211_sched_scan_ies *ies)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_sched_scan_start(local, sdata, req);
-+	ret = local->ops->sched_scan_start(&local->hw, &sdata->vif,
-+					      req, ies);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
-+static inline int drv_sched_scan_stop(struct ieee80211_local *local,
-+				      struct ieee80211_sub_if_data *sdata)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_sched_scan_stop(local, sdata);
-+	ret = local->ops->sched_scan_stop(&local->hw, &sdata->vif);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline void drv_sw_scan_start(struct ieee80211_local *local)
- {
- 	might_sleep();
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index c2772f2..3b19d2c 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -439,6 +439,51 @@ TRACE_EVENT(drv_hw_scan,
- 	)
- );
- 
-+TRACE_EVENT(drv_sched_scan_start,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct cfg80211_sched_scan_request *req),
-+
-+	    TP_ARGS(local, sdata, req),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT VIF_PR_FMT,
-+		LOCAL_PR_ARG, VIF_PR_ARG
-+	)
-+);
-+
-+TRACE_EVENT(drv_sched_scan_stop,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+
-+	TP_ARGS(local, sdata),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT VIF_PR_FMT,
-+		LOCAL_PR_ARG, VIF_PR_ARG
-+	)
-+);
-+
- TRACE_EVENT(drv_sw_scan_start,
- 	TP_PROTO(struct ieee80211_local *local),
- 
-@@ -475,6 +520,24 @@ TRACE_EVENT(drv_sw_scan_complete,
- 	)
- );
- 
-+TRACE_EVENT(drv_sched_scan_results,
-+	TP_PROTO(struct ieee80211_local *local),
-+
-+	TP_ARGS(local),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT, LOCAL_PR_ARG
-+	)
-+);
-+
- TRACE_EVENT(drv_get_stats,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_low_level_stats *stats,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 72499fe..6f726dc 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -642,6 +642,7 @@ enum queue_stop_reason {
-  *	that the scan completed.
-  * @SCAN_ABORTED: Set for our scan work function when the driver reported
-  *	a scan complete for an aborted scan.
-+ * @SCAN_SCHED_SCANNING: We're currently performing periodic scans
-  */
- enum {
- 	SCAN_SW_SCANNING,
-@@ -649,6 +650,7 @@ enum {
- 	SCAN_OFF_CHANNEL,
- 	SCAN_COMPLETED,
- 	SCAN_ABORTED,
-+	SCAN_SCHED_SCANNING,
- };
- 
- /**
-@@ -810,6 +812,7 @@ struct ieee80211_local {
- 	enum ieee80211_band hw_scan_band;
- 	int scan_channel_idx;
- 	int scan_ies_len;
-+	struct ieee80211_sched_scan_ies sched_scan_ies;
- 
- 	unsigned long leave_oper_channel_time;
- 	enum mac80211_scan_state next_scan_state;
-@@ -1109,6 +1112,11 @@ ieee80211_rx_bss_get(struct ieee80211_local *local, u8 *bssid, int freq,
- void ieee80211_rx_bss_put(struct ieee80211_local *local,
- 			  struct ieee80211_bss *bss);
- 
-+/* periodic scan handling */
-+int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
-+				       struct cfg80211_sched_scan_request *req);
-+int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
-+
- /* off-channel helpers */
- void ieee80211_offchannel_stop_beaconing(struct ieee80211_local *local);
- void ieee80211_offchannel_stop_station(struct ieee80211_local *local);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 2fe8f5f..b78aba9 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -392,7 +392,8 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- 	if (likely(!(status->rx_flags & IEEE80211_RX_IN_SCAN)))
- 		return RX_CONTINUE;
- 
--	if (test_bit(SCAN_HW_SCANNING, &local->scanning))
-+	if (test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-+	    test_bit(SCAN_SCHED_SCANNING, &local->scanning))
- 		return ieee80211_scan_rx(rx->sdata, skb);
- 
- 	if (test_bit(SCAN_SW_SCANNING, &local->scanning)) {
-@@ -2713,6 +2714,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		local->dot11ReceivedFragmentCount++;
- 
- 	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-+		     test_bit(SCAN_SCHED_SCANNING, &local->scanning) ||
- 		     test_bit(SCAN_OFF_CHANNEL, &local->scanning)))
- 		status->rx_flags |= IEEE80211_RX_IN_SCAN;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index fb274db..419989f 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -15,6 +15,7 @@
- #include <linux/if_arp.h>
- #include <linux/rtnetlink.h>
- #include <linux/pm_qos_params.h>
-+#include <linux/slab.h>
- #include <net/sch_generic.h>
- #include <linux/slab.h>
- #include <net/mac80211.h>
-@@ -822,3 +823,82 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
- 	if (finish)
- 		__ieee80211_scan_completed_finish(&local->hw, false);
- }
-+
-+int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
-+				       struct cfg80211_sched_scan_request *req)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int ret, i;
-+
-+	mutex_lock(&sdata->local->mtx);
-+
-+	if (test_bit(SCAN_SCHED_SCANNING, &local->scanning)) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	if (!local->ops->sched_scan_start) {
-+		ret = -ENOTSUPP;
-+		goto out;
-+	}
-+
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		local->sched_scan_ies.ie[i] = kzalloc(2 +
-+						      IEEE80211_MAX_SSID_LEN +
-+						      local->scan_ies_len,
-+						      GFP_KERNEL);
-+
-+		local->sched_scan_ies.len[i] =
-+			ieee80211_build_preq_ies(local,
-+						 local->sched_scan_ies.ie[i],
-+						 req->ie, req->ie_len, i,
-+						 (u32) -1, 0);
-+	}
-+
-+	ret = drv_sched_scan_start(local, sdata, req,
-+				   &local->sched_scan_ies);
-+	if (!ret)
-+		__set_bit(SCAN_SCHED_SCANNING, &local->scanning);
-+out:
-+	mutex_unlock(&sdata->local->mtx);
-+
-+	return ret;
-+}
-+
-+int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int ret = 0, i;
-+
-+	mutex_lock(&sdata->local->mtx);
-+
-+	if (!local->ops->sched_scan_stop) {
-+		ret = -ENOTSUPP;
-+		goto out;
-+	}
-+
-+	if (test_bit(SCAN_SCHED_SCANNING, &local->scanning)) {
-+		for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+			kfree(local->sched_scan_ies.ie[i]);
-+
-+		ret = drv_sched_scan_stop(local, sdata);
-+		__clear_bit(SCAN_SCHED_SCANNING, &local->scanning);
-+	}
-+
-+out:
-+	mutex_unlock(&sdata->local->mtx);
-+
-+	return ret;
-+}
-+
-+void ieee80211_sched_scan_results(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	mutex_lock(&local->mtx);
-+
-+	cfg80211_sched_scan_results(hw->wiphy);
-+
-+	mutex_unlock(&local->mtx);
-+}
-+EXPORT_SYMBOL(ieee80211_sched_scan_results);
--- 
-1.7.0.4
+This is after make install
+
+stecklum@extragalactix:~/System/src/compat-wireless-2010-12-12$ find . -name 
+iwlcore.ko -print
+stecklum@extragalactix:~/System/src/compat-wireless-2010-12-12$
+
+and consequently the module is not in the update module folder. Thus, upon 
+modprobe iwlagn the original kernel module will be loaded which, of course, 
+lacks the new symbols.
+
+Regards, Bringfried
+
 
