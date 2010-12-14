@@ -1,139 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43978 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752662Ab0LBR4s convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 12:56:48 -0500
-Received: by wyb28 with SMTP id 28so8478055wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:56:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimcV+pHp8ui-hExnsBfuQ2PtGA2aZidCYSFsQnh@mail.gmail.com>
-References: <AANLkTi=_F0orXPY79ojoPKEqn4ohQjV5Rj5Qb3H7CR8f@mail.gmail.com>
-	<201012011921.11151.br1@einfach.org>
-	<AANLkTimcV+pHp8ui-hExnsBfuQ2PtGA2aZidCYSFsQnh@mail.gmail.com>
-Date: Thu, 2 Dec 2010 19:56:46 +0200
-Message-ID: <AANLkTinvV-6FqMni86MEYrBN6q0255M6cFjBOpR9vdP2@mail.gmail.com>
-Subject: Re: [linux-next] next-20101201: ath5k permanently disconnecting
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: Bruno Randolf <br1@einfach.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:2622 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758826Ab0LNA50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:57:26 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 6/8] staging: brcm80211: Remove ETHER_HDR_LEN, use ETH_HLEN
+Date: Mon, 13 Dec 2010 16:57:02 -0800
+Message-Id: <b6b82ac96452e2958cc53d8f4b09c5f018625e0b.1292287725.git.joe@perches.com>
+In-Reply-To: <cover.1292287720.git.joe@perches.com>
+References: <cover.1292287720.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/2 Sedat Dilek <sedat.dilek@googlemail.com>:
-> On Wed, Dec 1, 2010 at 11:21 AM, Bruno Randolf <br1@einfach.org> wrote:
->> On Wed December 1 2010 19:09:03 Sedat Dilek wrote:
->>> Hi,
->>>
->>> I have built today a linux-next (next-20101201) kernel which includes
->>> wireless-next-2.6 up to master-2010-11-30.
-> [...]
->>> Unfortunately, my wlan network connection is totally unstable.
-> [...]
->> 1.) For identification of the chipset, please:
->> dmesg |grep "ath5.*chip"
->>
->> 2.) Is there a problem when you don't use encryption?
->>
->> 3.) git bisect might help track it down.
->>
->> bruno
->
-> OK, I did not a "classic" git-bisect, I created from linux-next
-> (next-20101202) GIT tree a revert-ath5k patchset (30 in total).
->
-> [1] VERY GOOD: Revertiing all 30 patches
->
-> ...leads to a stable system.
->
-> [2] REDUCED DISCONNECTIONS DROPS: Reverting 0001..0008
->
-> This stabilizes the system, but... listening to a radio
-> broadcast-stream with VLC is a pain in the ass... permanent audio
-> dropouts. I had only 2 disconnections in the first 10mins when system
-> was up (normally I can see disconnects after loggin into my KDE
-> desktop).
->
-> [3] GOOD AUDIO STREAMING: Reverting 0001..0014
->
-> This is just fine, system like I am used to.
->
-> [4] CONCLUSION
->
-> So I played a bit with my revert-patchset.
->
-> Reverting 0001..0008 + a refreshed v2 of
-> 0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch (patch attached) is
-> doing the job here.
->
-> Having a closer look into 0008 (parts of
-> drivers/net/wireless/ath/ath5k/reset.c):
->
-> $ grep AR5212 patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
-> -       if (ah->ah_version == AR5K_AR5212)
-> +                        * On AR5212 TSF is almost preserved across a
-> -                * On AR5212 TSF is almost preserved across a
-> +               if (ah->ah_version == AR5K_AR5212) {
-> -       if (ah->ah_version == AR5K_AR5212 &&
->
-> As I mentionned I have a AR5212 wlan device!
-> What to do with that parts?
-> Any idea?
->
-> Kind Regards,
-> - Sedat -
->
-> P.S.: I have added a list containing all commit-ids (chronological)
-> and a script how I reverted (documenting for myself).
->
-> $ ls patches/revert-wireless-patches/00*.patch
-> patches/revert-wireless-patches/0001-Revert-ath5k-Set-turbo-bit-on-rf-bank-2.patch
-> patches/revert-wireless-patches/0002-Revert-ath5k-Clean-up-turbo-mode-initvals-rfregs.patch
-> patches/revert-wireless-patches/0003-Revert-ath5k-Cleanup-turbo-channel-flags.patch
-> patches/revert-wireless-patches/0004-Revert-ath5k-Use-correct-clock-when-setting-ofdm-tim.patch
-> patches/revert-wireless-patches/0005-Revert-ath5k-Skip-tx-power-setting-on-AR5210-for-now.patch
-> patches/revert-wireless-patches/0006-Revert-ath5k-Tweak-phy-activate-to-rx-start-delay-ba.patch
-> patches/revert-wireless-patches/0007-Revert-ath5k-No-need-to-save-restore-staid-flags-on-.patch
-> patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
-> patches/revert-wireless-patches/0009-Revert-ath5k-Skip-powertable-setting-when-we-are-on-.patch
-> patches/revert-wireless-patches/0010-Revert-ath5k-Update-PLL-programming-for-turbo-half-q.patch
-> patches/revert-wireless-patches/0011-Revert-ath5k-Update-spur-mitigation-filter-for-turbo.patch
-> patches/revert-wireless-patches/0012-Revert-ath5k-Tweak-power-detector-delays-on-RF5111-R.patch
-> patches/revert-wireless-patches/0013-Revert-ath5k-Always-set-IFS-intervals-on-reset.patch
-> patches/revert-wireless-patches/0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch
-> patches/revert-wireless-patches/0015-Revert-ath5k-Set-all-IFS-intervals-not-just-slot-tim.patch
-> patches/revert-wireless-patches/0016-Revert-ath5k-Extend-rate_duration.patch
-> patches/revert-wireless-patches/0017-Revert-ath5k-Extend-get_default_sifs-slot_time.patch
-> patches/revert-wireless-patches/0018-Revert-ath5k-Move-tx-retries-setting-outside-reset_t.patch
-> patches/revert-wireless-patches/0019-Revert-ath5k-Increase-PHY-settling-parameters-for-tu.patch
-> patches/revert-wireless-patches/0020-Revert-ath5k-Small-cleanup-on-tweak_initvals.patch
-> patches/revert-wireless-patches/0021-Revert-ath5k-Put-core-clock-initialization-on-a-new-.patch
-> patches/revert-wireless-patches/0022-Revert-ath5k-Add-new-field-on-ath5k_hw-to-track-band.patch
-> patches/revert-wireless-patches/0023-Revert-ath5k-Use-new-function-to-stop-beacon-queue.patch
-> patches/revert-wireless-patches/0024-Revert-ath5k-Check-RXE-when-setting-RXDP.patch
-> patches/revert-wireless-patches/0025-Revert-ath5k-Use-DCU-early-termination-correctly.patch
-> patches/revert-wireless-patches/0026-Revert-ath5k-Debug-DMA-timeouts.patch
-> patches/revert-wireless-patches/0027-Revert-ath5k-Use-new-dma_stop-function-on-base.c.patch
-> patches/revert-wireless-patches/0028-Revert-ath5k-Stop-PCU-on-reset.patch
-> patches/revert-wireless-patches/0029-Revert-ath5k-Add-new-function-to-stop-rx-tx-DMA.patch
-> patches/revert-wireless-patches/0030-Revert-ath5k-Reset-cleanup-and-generic-cleanup.patch
->
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/staging/brcm80211/include/proto/ethernet.h |    1 -
+ drivers/staging/brcm80211/sys/wlc_mac80211.c       |    2 +-
+ 2 files changed, 1 insertions(+), 2 deletions(-)
 
-OK this doesn't make any sense, based on your logs you have an
-AR5212+RF5111+RF2111 combination, synth-only channel change (0008) is
-only executed on AR2413 and AR5413 so you don't even run that code,
-setting turbo flag on DCU (0014) is also unrelated since we never
-enable turbo mode and if we did you wouldn't be able to receive
-anything non-turbo.
-
-I am going to test 2 cards like yours a CM6 and an older one from
-Atheros and come back to you ASAP...
-
+diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
+index a8638db..888165e 100644
+--- a/drivers/staging/brcm80211/include/proto/ethernet.h
++++ b/drivers/staging/brcm80211/include/proto/ethernet.h
+@@ -23,7 +23,6 @@
+ 
+ #define	ETHER_TYPE_LEN		2
+ #define	ETHER_CRC_LEN		4
+-#define	ETHER_HDR_LEN		(ETH_ALEN * 2 + ETHER_TYPE_LEN)
+ #define	ETHER_MIN_LEN		64
+ #define	ETHER_MIN_DATA		46
+ #define	ETHER_MAX_LEN		1518
+diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
+index 407f5ec..8a89b5f 100644
+--- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
++++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
+@@ -1727,7 +1727,7 @@ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
+ 
+ 	/* some code depends on packed structures */
+ 	ASSERT(sizeof(struct ether_addr) == ETH_ALEN);
+-	ASSERT(sizeof(struct ether_header) == ETHER_HDR_LEN);
++	ASSERT(sizeof(struct ether_header) == ETH_HLEN);
+ 	ASSERT(sizeof(d11regs_t) == SI_CORE_SIZE);
+ 	ASSERT(sizeof(ofdm_phy_hdr_t) == D11_PHY_HDR_LEN);
+ 	ASSERT(sizeof(cck_phy_hdr_t) == D11_PHY_HDR_LEN);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.3.3.398.g0b0cd.dirty
+
