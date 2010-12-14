@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f170.google.com ([209.85.214.170]:56291 "EHLO
-	mail-iw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796Ab0LLKmZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 05:42:25 -0500
-Received: by iwn6 with SMTP id 6so7661553iwn.1
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 02:42:25 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19716.42722.13272.204029@gargle.gargle.HOWL>
-Date: Sun, 12 Dec 2010 16:11:38 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH] ath9k_htc: Add Ubiquity wifistation ext to supported devices
+Received: from mga03.intel.com ([143.182.124.21]:11895 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756698Ab0LNP1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 10:27:12 -0500
+Subject: Re: [PATCH 03/14] iwlagn: check ready in iwlagn_bss_info_changed()
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Zhao, Shanyu" <shanyu.zhao@intel.com>
+In-Reply-To: <1292310979.3569.2.camel@jlt3.sipsolutions.net>
+References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1292285372-11373-4-git-send-email-wey-yi.w.guy@intel.com>
+	 <1292310979.3569.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Tue, 14 Dec 2010 07:26:05 -0800
+Message-Id: <1292340365.9665.4.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Johannes and John,
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Mon, 2010-12-13 at 23:16 -0800, Johannes Berg wrote:
+> On Mon, 2010-12-13 at 16:09 -0800, Wey-Yi Guy wrote:
+> 
+> > -	if (WARN_ON(!ctx->vif)) {
+> > +	if (unlikely(!iwl_is_ready(priv))) {
+> > +                IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+> > +                mutex_unlock(&priv->mutex);
+> > +		return;
+> 
+> There appears to be some whitespace damage here.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 45d4b24..f09c1d8 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -38,6 +38,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x13D3, 0x3350) }, /* Azurewave */
- 	{ USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
- 	{ USB_DEVICE(0x040D, 0x3801) }, /* VIA */
-+	{ USB_DEVICE(0x0cf3, 0xb003) }, /* Ubiquity WifiStation Ext */
- 
- 	{ USB_DEVICE(0x0cf3, 0x7015),
- 	  .driver_info = AR9287_USB },  /* Atheros */
--- 
-1.7.3.3
+my bad did not check before push, I will submit another patch to fix it
+and please merge both
+
+Thanks
+Wey
+
+> 
 
