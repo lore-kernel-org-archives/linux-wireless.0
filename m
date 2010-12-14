@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:62392 "EHLO mail.atheros.com"
+Received: from mga14.intel.com ([143.182.124.37]:3691 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932292Ab0LTQaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 11:30:03 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 08:29:47 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH] ath9k: fix aphy / wiphy idle mismatch
-Date: Mon, 20 Dec 2010 11:29:59 -0500
-Message-ID: <1292862599-26335-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1758093Ab0LNARI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Dec 2010 19:17:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/14] iwlagn: rename enhanced txpower fields
+Date: Mon, 13 Dec 2010 16:09:24 -0800
+Message-Id: <1292285372-11373-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k supports its own set of virtual wiphys, and it uses
-the mac80211 idle notifications to know when a device needs
-to be idle or not. We recently changed ath9k to force idle
-on driver stop() and on resume but forgot to take into account
-ath9k's own virtual wiphy idle states. These are used internally
-by ath9k to check if the device's radio should be powered down
-on each idle call. Without this change its possible that the
-device could have been forced off but the virtual wiphy idle
-was left on.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Some fields we didn't previously use from the
+enhanced TX power structure will be needed in
+the next patch, so rename them to their correct
+names to be able to use them and change code
+reading them accordingly.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h     |   10 ++++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-I'm not yet sure if this actually fixes an issue but it
-certainly is a proper ammendment to the other idle fix
-submitted for stable for suspend/resume.
-
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- drivers/net/wireless/ath/ath9k/pci.c  |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4d64716..1b35175 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1354,6 +1354,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	ath9k_ps_restore(sc);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+index dbada76..7c1be8c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+@@ -460,7 +460,8 @@ void iwlcore_eeprom_enhanced_txpower(struct iwl_priv *priv)
+ 		 * always check for valid entry before process
+ 		 * the information
+ 		 */
+-		if (!enhanced_txpower->common || enhanced_txpower->reserved)
++		if (!(enhanced_txpower->flags || enhanced_txpower->channel) ||
++		    enhanced_txpower->delta_20_in_40)
+ 			continue;
  
- 	sc->ps_idle = true;
-+	ath9k_set_wiphy_idle(aphy, true);
- 	ath_radio_disable(sc, hw);
- 
- 	sc->sc_flags |= SC_OP_INVALID;
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7ca8499..4538283 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -310,6 +310,7 @@ static int ath_pci_resume(struct device *device)
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
- 	sc->ps_idle = true;
-+	ath9k_set_wiphy_idle(aphy, true);
- 	ath_radio_disable(sc, hw);
- 
- 	return 0;
+ 		for (element = 0; element < eeprom_section_count; element++) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 583916d..c8566a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -136,21 +136,23 @@ struct iwl_eeprom_channel {
+  *    Enhanced regulatory tx power portion of eeprom image can be broken down
+  *    into individual structures; each one is 8 bytes in size and contain the
+  *    following information
+- * @common: (desc + channel) not used by driver, should _NOT_ be "zero"
++ * @flags: entry flags
++ * @channel: channel number
+  * @chain_a_max_pwr: chain a max power in 1/2 dBm
+  * @chain_b_max_pwr: chain b max power in 1/2 dBm
+  * @chain_c_max_pwr: chain c max power in 1/2 dBm
+- * @reserved: not used, should be "zero"
++ * @delta_20_in_40: 20-in-40 deltas (hi/lo)
+  * @mimo2_max_pwr: mimo2 max power in 1/2 dBm
+  * @mimo3_max_pwr: mimo3 max power in 1/2 dBm
+  *
+  */
+ struct iwl_eeprom_enhanced_txpwr {
+-	__le16 common;
++	u8 flags;
++	u8 channel;
+ 	s8 chain_a_max;
+ 	s8 chain_b_max;
+ 	s8 chain_c_max;
+-	s8 reserved;
++	u8 delta_20_in_40;
+ 	s8 mimo2_max;
+ 	s8 mimo3_max;
+ } __packed;
 -- 
-1.7.3.2.90.gd4c43
+1.7.0.4
 
