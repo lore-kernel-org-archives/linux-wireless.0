@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48358 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab0LGSMt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 13:12:49 -0500
-Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
- count is 0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+Received: from mail.atheros.com ([12.19.149.2]:27363 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751364Ab0LNQZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 11:25:16 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 08:25:01 -0800
+Date: Tue, 14 Dec 2010 08:25:13 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	"pstew@google.com" <pstew@google.com>,
-	"stable@kernel.org" <stable@kernel.org>
-In-Reply-To: <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
-	 <1291690135-4535-6-git-send-email-lrodriguez@atheros.com>
-	 <1291714709.3607.2.camel@jlt3.sipsolutions.net>
-	 <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
-	 <1291736887.3607.47.camel@jlt3.sipsolutions.net>
-	 <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
-	 <1291737298.3607.48.camel@jlt3.sipsolutions.net>
-	 <20101207155916.GA1855@tux>
-	 <1291743121.3607.50.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Dec 2010 19:12:47 +0100
-Message-ID: <1291745567.3607.52.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: Re: [PATCH] ath9k: Make PM-QOS value as user configurable
+Message-ID: <20101214162513.GC6190@tux>
+References: <1292312908-6182-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1292312908-6182-1-git-send-email-mshajakhan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-07 at 10:04 -0800, Luis R. Rodriguez wrote:
-> On Tue, Dec 7, 2010 at 9:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2010-12-07 at 07:59 -0800, Luis R. Rodriguez wrote:
-> >
-> >> @@ -301,7 +301,7 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
-> >>       }
-> >>
-> >>       mutex_lock(&local->mtx);
-> >> -     ieee80211_recalc_idle(local);
-> >> +     ieee80211_recalc_idle_force(local);
-> >>       mutex_unlock(&local->mtx);
-> >
-> > This is the change that I don't think is necessary.
+On Mon, Dec 13, 2010 at 11:48:28PM -0800, Mohammed Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 > 
-> Without this resume fails.
+> This patch allows the pm-qos value to be user configurable by making it as
+> a module parameter.This will help our customers to configure the pm-qos
+> value according to the effect in throughput due to the DMA latency problem
+> which was observed in Intel Pinetrail platforms.
+> 	The tested value of '55' will be filled as the default
+> pm-qos-value incase the user does not specifies pm-qos value as a
+> module parameter.
+> example usage: sudo modprobe ath9k pmqos=65
 
-In what situation? When you just suspend while things are up&running, or
-if you suspend with interfaces down? It doesn't make sense anyway, so
-something's going on in the rest of the scan code -- we should be
-canceling scans properly when going down and when suspending, well
-before any of this becomes relevant.
+Where is this documented though? Can you please add some
 
-johannes
+/*
+ * some good docs
+ */
 
+of some sort as a followup patch? Thanks!
+
+  Luis
