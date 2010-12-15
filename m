@@ -1,47 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:43454 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752280Ab0LPMIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 07:08:30 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 04:08:15 -0800
-Message-ID: <4D0A012E.3090408@atheros.com>
-Date: Thu, 16 Dec 2010 17:38:14 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:32850 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226Ab0LOCSL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 21:18:11 -0500
+Received: by ywl5 with SMTP id 5so775100ywl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 18:18:10 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Sujith <m.sujith@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] ath9k_htc : Update txrate status to mac80211
-References: <1292499588-11636-1-git-send-email-mshajakhan@atheros.com> <19721.65246.410283.55163@gargle.gargle.HOWL>
-In-Reply-To: <19721.65246.410283.55163@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19720.9510.589223.207856@gargle.gargle.HOWL>
+Date: Wed, 15 Dec 2010 07:47:10 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH] mac80211: Add timeout to BA session start API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 16 December 2010 05:28 PM, Sujith wrote:
-> Mohammed Shafi Shajakhan wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> In ath9k htc txrate status is not updated to mac80211 as rate control is
->> handled in firmware.This workaround will obtain the txrate which was
->> supposed to be for debug statistics and updates it to mac80211 using
->> a rate control look up table.
->>      
-> Well, we can't match the TXRATE event with any transmitted frame,
-> so we would end up sending bogus and most likely, stale, information to mac80211.
->    
-Hi Sujith,
-             Thanks for your reply.Yes we cannot cleanly send the actual 
-status to mac80211.
-This patch just takes care for displaying the txrate and appropriately 
-sets mac80211 rate control flags,but completely ignores long retries.I 
-had tested it  , except retries the MCS index , txrate in userspace 
-matches with the txrate reported in debug statistics.
-     Is there chance of any possible fix for this ?
-> Sujith
-> .
->
->    
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+
+Allow drivers or rate control algorithms to specify BlockAck session
+timeout when initiating an ADDBA transaction. This is useful in cases
+where maintaining persistent BA sessions does not incur any overhead.
+
+The current timeout value of 5000 TUs is retained for all non ath9k/ath9k_htc
+drivers.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
+ drivers/net/wireless/ath/ath9k/rc.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c     |    2 +-
+ include/net/mac80211.h                        |    4 +++-
+ net/mac80211/agg-tx.c                         |    7 +++++--
+ net/mac80211/debugfs_sta.c                    |    2 +-
+ net/mac80211/rc80211_minstrel_ht.c            |    2 +-
+ net/mac80211/sta_info.h                       |    2 ++
+ 8 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 31fad82..33f3602 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -251,7 +251,7 @@ void ath9k_tx_tasklet(unsigned long data)
+ 				ista = (struct ath9k_htc_sta *)sta->drv_priv;
+ 
+ 				if (ath9k_htc_check_tx_aggr(priv, ista, tid)) {
+-					ieee80211_start_tx_ba_session(sta, tid);
++					ieee80211_start_tx_ba_session(sta, tid, 0);
+ 					spin_lock_bh(&priv->tx_lock);
+ 					ista->tid_state[tid] = AGGR_PROGRESS;
+ 					spin_unlock_bh(&priv->tx_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 2061a75..896d129 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1373,7 +1373,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			an = (struct ath_node *)sta->drv_priv;
+ 
+ 			if(ath_tx_aggr_check(sc, an, tid))
+-				ieee80211_start_tx_ba_session(sta, tid);
++				ieee80211_start_tx_ba_session(sta, tid, 0);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index f450adc..732b329 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -387,7 +387,7 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
+ 	if (load > IWL_AGG_LOAD_THRESHOLD) {
+ 		IWL_DEBUG_HT(priv, "Starting Tx agg: STA: %pM tid: %d\n",
+ 				sta->addr, tid);
+-		ret = ieee80211_start_tx_ba_session(sta, tid);
++		ret = ieee80211_start_tx_ba_session(sta, tid, 5000);
+ 		if (ret == -EAGAIN) {
+ 			/*
+ 			 * driver and mac80211 is out of sync
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f2f9a85..479c35e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2487,6 +2487,7 @@ void ieee80211_queue_delayed_work(struct ieee80211_hw *hw,
+  * ieee80211_start_tx_ba_session - Start a tx Block Ack session.
+  * @sta: the station for which to start a BA session
+  * @tid: the TID to BA on.
++ * @timeout: session timeout value (in TUs)
+  *
+  * Return: success if addBA request was sent, failure otherwise
+  *
+@@ -2494,7 +2495,8 @@ void ieee80211_queue_delayed_work(struct ieee80211_hw *hw,
+  * the need to start aggregation on a certain RA/TID, the session level
+  * will be managed by the mac80211.
+  */
+-int ieee80211_start_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
++int ieee80211_start_tx_ba_session(struct ieee80211_sta *sta, u16 tid,
++				  u16 timeout);
+ 
+ /**
+  * ieee80211_start_tx_ba_cb_irqsafe - low level driver ready to aggregate.
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index d4679b2..9cc472c 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -342,10 +342,11 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 	/* send AddBA request */
+ 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+ 				     tid_tx->dialog_token, start_seq_num,
+-				     0x40, 5000);
++				     0x40, tid_tx->timeout);
+ }
+ 
+-int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
++int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
++				  u16 timeout)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -420,6 +421,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+ 	skb_queue_head_init(&tid_tx->pending);
+ 	__set_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
+ 
++	tid_tx->timeout = timeout;
++
+ 	/* Tx timer */
+ 	tid_tx->addba_resp_timer.function = sta_addba_resp_timer_expired;
+ 	tid_tx->addba_resp_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 8bb5af8..c04a139 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -189,7 +189,7 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
+ 
+ 	if (tx) {
+ 		if (start)
+-			ret = ieee80211_start_tx_ba_session(&sta->sta, tid);
++			ret = ieee80211_start_tx_ba_session(&sta->sta, tid, 5000);
+ 		else
+ 			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid);
+ 	} else {
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 4ad7a36..165a451 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -374,7 +374,7 @@ minstrel_aggr_check(struct minstrel_priv *mp, struct ieee80211_sta *pubsta, stru
+ 	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
+ 		return;
+ 
+-	ieee80211_start_tx_ba_session(pubsta, tid);
++	ieee80211_start_tx_ba_session(pubsta, tid, 5000);
+ }
+ 
+ static void
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index fdca52c..bbdd2a8 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -78,6 +78,7 @@ enum ieee80211_sta_info_flags {
+  * @addba_resp_timer: timer for peer's response to addba request
+  * @pending: pending frames queue -- use sta's spinlock to protect
+  * @dialog_token: dialog token for aggregation session
++ * @timeout: session timeout value to be filled in ADDBA requests
+  * @state: session state (see above)
+  * @stop_initiator: initiator of a session stop
+  * @tx_stop: TX DelBA frame when stopping
+@@ -96,6 +97,7 @@ struct tid_ampdu_tx {
+ 	struct timer_list addba_resp_timer;
+ 	struct sk_buff_head pending;
+ 	unsigned long state;
++	u16 timeout;
+ 	u8 dialog_token;
+ 	u8 stop_initiator;
+ 	bool tx_stop;
+-- 
+1.7.3.3
+
