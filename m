@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:56913 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754871Ab0LQWl7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 17:41:59 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat: backport skb_checksum_start_offset
-Date: Fri, 17 Dec 2010 23:41:36 +0100
-Message-Id: <1292625698-17289-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:59363 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874Ab0LOQS0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 11:18:26 -0500
+Received: by fxm18 with SMTP id 18so2224069fxm.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 08:18:24 -0800 (PST)
+Message-ID: <4D08EA6D.6070106@lwfinger.net>
+Date: Wed, 15 Dec 2010 10:18:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/22] rtl8192ce: Initial upload of driver
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by atlx, atl1c and atl1e.
+John,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.38.h |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+What is the status of the driver that was submitted in this patch set? There has
+been no ACK, but on the other hand, neither the RFC nor the PATCH set got any
+negative or positive comments. These devices are in the wild and several users
+on the openSUSE forum have needed help is setting up the vendor driver on which
+this one is based.
 
-diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
-index dfc406e..0521156 100644
---- a/include/linux/compat-2.6.38.h
-+++ b/include/linux/compat-2.6.38.h
-@@ -6,6 +6,7 @@
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38))
- 
- #include <linux/kernel.h>
-+#include <linux/skbuff.h>
- 
- /*
-  * This is not part of The 2.6.37 kernel yet but we
-@@ -56,6 +57,11 @@ static inline unsigned long ewma_read(const struct ewma *avg)
- 
- #define pr_warn pr_warning
- 
-+static inline int skb_checksum_start_offset(const struct sk_buff *skb)
-+{
-+	return skb->csum_start - skb_headroom(skb);
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)) */
- 
- #endif /* LINUX_26_38_COMPAT_H */
--- 
-1.7.1
+If you prefer that it go to staging first, I will send it to GregKH, but since
+it uses mac80211, I think it is ready for wireless.
 
+Thanks,
+
+Larry
