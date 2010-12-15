@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab0L1Iig (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:61949 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754121Ab0LOEPo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 03:38:36 -0500
-Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for
- 802.11j
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mcgrof@gmail.com
-In-Reply-To: <201012281431.46536.br1@einfach.org>
-References: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
-	 <1293447459.3544.1.camel@jlt3.sipsolutions.net>
-	 <201012281431.46536.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Dec 2010 09:38:33 +0100
-Message-ID: <1293525513.3526.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 14 Dec 2010 23:15:44 -0500
+Received: by iwn9 with SMTP id 9so1567210iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 20:15:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1292375879-32085-1-git-send-email-vmehta@atheros.com>
+References: <1292375879-32085-1-git-send-email-vmehta@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 14 Dec 2010 20:15:24 -0800
+Message-ID: <AANLkTin_fw6aRc5Rs1_BTcapTE9kgPHy7_Gex9wRtkWy@mail.gmail.com>
+Subject: Re: [PATCH] staging: ath6kl: Fixing device NULL pointer dereference
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: greg@kroah.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-28 at 14:31 +0900, Bruno Randolf wrote:
+On Tue, Dec 14, 2010 at 5:17 PM, Vipin Mehta <vmehta@atheros.com> wrote:
+> Fixing the device instance being passed to set_wiphy_dev() from
+> NULL to the one being returned by the MMC stack probe callback.
+>
+> Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+> ---
+>  drivers/staging/ath6kl/os/linux/ar6000_drv.c |   19 ++++++++++++-------
+>  1 files changed, 12 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> index a659f70..9f3e928 100644
+> --- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> +++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> @@ -1608,6 +1608,15 @@ ar6000_avail_ev(void *context, void *hif_handle)
+>     struct wireless_dev *wdev;
+>  #endif /* ATH6K_CONFIG_CFG80211 */
+>     A_STATUS init_status = A_OK;
+> +    HIF_DEVICE_OS_DEVICE_INFO osDevInfo;
+> +
+> +    A_MEMZERO(&osDevInfo, sizeof(osDevInfo));
+> +    if ( A_FAILED( HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_OS_DEVICE,
+> +                    &osDevInfo, sizeof(osDevInfo))) )
 
-> > > -	if (freq == ieee80211_channel_to_frequency(12) ||
-> > > -	    freq == ieee80211_channel_to_frequency(13) ||
-> > > -	    freq == ieee80211_channel_to_frequency(14))
-> > > +	if (freq == ieee80211_channel_to_frequency(12, IEEE80211_BAND_2GHZ) ||
-> > > +	    freq == ieee80211_channel_to_frequency(13, IEEE80211_BAND_2GHZ) ||
-> > > +	    freq == ieee80211_channel_to_frequency(14, IEEE80211_BAND_2GHZ))
-> > > 
-> > >  		return true;
-> > 
-> > This seems strange ... why not just hardcode the values??
-> 
-> True, but this is not my code, I just did the change for the new function 
-> parameter. It's in net/wireless/reg.c, so I'll CC: Luis.
+while you are adding new code, why not use the direct Linux calls?
 
-Right. It seems rather complicated though, especially with this change.
-
-
-> Any other comments on the code or purpose of this patch?
-
-Not really. I guess it seems fine. Do you know if there are ever any
-starting values used other than 4900 and 5000?
-
-johannes
-
+  Luis
