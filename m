@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12635 "EHLO mail.atheros.com"
+Received: from smtp.nokia.com ([147.243.1.48]:30572 "EHLO mgw-sa02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751690Ab0LQDXZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 22:23:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 19:23:09 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 0/8] wireless: DFS region support
-Date: Thu, 16 Dec 2010 19:23:09 -0800
-Message-ID: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754399Ab0LOOqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 09:46:24 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBFEkMtK004522
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 16:46:22 +0200
+Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current
+ style
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: Roger Quadros <roger.quadros@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1292423633.32385.9.camel@chilepepper>
+References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
+	 <1292423633.32385.9.camel@chilepepper>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 15 Dec 2010 16:48:21 +0200
+Message-ID: <1292424501.32385.10.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series has a list of changes to kernel and userspace
-to start addressing DFS region support. I've cheated and
-figured out a way to alter the current regulatory database
-in such a way that it remains backwards compatible with
-older databases so that no new CRDAs are required and we
-don't have to provide two releases for old kernels and
-newer kernels for wireless-regdb updates.
+On Wed, 2010-12-15 at 16:33 +0200, ext Luciano Coelho wrote:
+> On Wed, 2010-12-15 at 16:31 +0200, luciano.coelho@nokia.com wrote:
+> > From: Luciano Coelho <luciano.coelho@nokia.com>
+> > 
+> > Change some file names and Kconfig settings so that this new module matches
+> > the new way of using wl12xx instead of wl1271.
+> > 
+> > Also fix SDIO power enabling and disabling to match the latest way of doing
+> > it.
+> > 
+> > Cc: Roger Quadros <roger.quadros@nokia.com>
+> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > ---
+> 
+> In v2 I used the -M flag (to detect renames, which I stupidly forgot
+> before) and removed the file names from the header of the sdio_test.c
+> file, since it's a bad idea to have it there (thanks Johannes for the
+> comments).
 
-Let me know if this seems agreeable. In the end we end
-up passing the DFS region to the drivers, the next question
-then is what to do next.
+Roger, I have just compile-tested this module in upstream.  Could you
+run at least some basic tests with it to make sure it works?
 
-  Luis
+
+-- 
+Cheers,
+Luca.
+
