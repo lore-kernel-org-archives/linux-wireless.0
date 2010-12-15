@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2609 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.19.149.2]:64252 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758795Ab0LNA5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 19:57:16 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH 3/8] staging: brcm80211: Remove unused ether_<foo> #defines and struct
-Date: Mon, 13 Dec 2010 16:56:59 -0800
-Message-Id: <499374d1530aa26f69954d20a3506250d3b9d6f4.1292287723.git.joe@perches.com>
-In-Reply-To: <cover.1292287720.git.joe@perches.com>
-References: <cover.1292287720.git.joe@perches.com>
+	id S1753565Ab0LOPbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 10:31:09 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 07:30:53 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/7] ath9k_hw: Move get_streams() to hw.h
+Date: Wed, 15 Dec 2010 07:30:49 -0800
+Message-ID: <1292427053-5880-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
+References: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are unused, just remove them.
+This helper can be used in multiple places. Also make
+it inline returning u8.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/staging/brcm80211/include/proto/ethernet.h |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    5 -----
+ drivers/net/wireless/ath/ath9k/hw.h           |    5 +++++
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
-index a2353a5..1b352c5 100644
---- a/drivers/staging/brcm80211/include/proto/ethernet.h
-+++ b/drivers/staging/brcm80211/include/proto/ethernet.h
-@@ -64,17 +64,7 @@ BWL_PRE_PACKED_STRUCT struct ether_addr {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 69f7792..4c74479 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -50,11 +50,6 @@ static int ar9003_get_training_power_2g(struct ath_hw *ah)
+ 	return power;
+ }
  
- #define ETHER_SET_UNICAST(ea)	(((u8 *)(ea))[0] = (((u8 *)(ea))[0] & ~1))
- 
--#define	ether_cmp(a, b)	(!(((short *)a)[0] == ((short *)b)[0]) | \
--			 !(((short *)a)[1] == ((short *)b)[1]) | \
--			 !(((short *)a)[2] == ((short *)b)[2]))
+-static int get_streams(int mask)
+-{
+-	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
+-}
 -
--#define	ether_copy(s, d) { \
--		((short *)d)[0] = ((short *)s)[0]; \
--		((short *)d)[1] = ((short *)s)[1]; \
--		((short *)d)[2] = ((short *)s)[2]; }
--
- static const struct ether_addr ether_bcast = { {255, 255, 255, 255, 255, 255} };
--static const struct ether_addr ether_null = { {0, 0, 0, 0, 0, 0} };
+ static int ar9003_get_training_power_5g(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 97f22c4..fb64ab8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -868,6 +868,11 @@ static inline struct ath_hw_ops *ath9k_hw_ops(struct ath_hw *ah)
+ 	return &ah->ops;
+ }
  
- #define ETHER_ISBCAST(ea)	((((u8 *)(ea))[0] &		\
- 	((u8 *)(ea))[1] &		\
++static inline u8 get_streams(int mask)
++{
++	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
++}
++
+ /* Initialization, Detach, Reset */
+ const char *ath9k_hw_probe(u16 vendorid, u16 devid);
+ void ath9k_hw_deinit(struct ath_hw *ah);
 -- 
-1.7.3.3.398.g0b0cd.dirty
+1.7.0.4
 
