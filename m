@@ -1,98 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49085 "EHLO mx1.redhat.com"
+Received: from smtp.nokia.com ([147.243.1.47]:41875 "EHLO mgw-sa01.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752994Ab0LWLiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 06:38:17 -0500
-Date: Thu, 23 Dec 2010 12:38:21 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: [PATCH v2] iwlagn: enable only rfkill interrupt when device is down
-Message-ID: <20101223113820.GA8249@redhat.com>
-References: <1293022913-4692-1-git-send-email-sgruszka@redhat.com>
- <1293038839.3531.24.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1293038839.3531.24.camel@jlt3.sipsolutions.net>
+	id S1752060Ab0LONMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 08:12:03 -0500
+Subject: Re: [PATCH] wl1271: fixed problem with WPS IEs in probe requests
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Guy Eilam <guy@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291906499-21141-1-git-send-email-guy@wizery.com>
+References: <1291906499-21141-1-git-send-email-guy@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 15 Dec 2010 15:14:09 +0200
+Message-ID: <1292418849.32385.3.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit 6cd0b1cb872b3bf9fc5de4536404206ab74bafdd "iwlagn: fix
-hw-rfkill while the interface is down", we enable interrupts when
-device is not ready to receive them. However hardware, when it is in
-some inconsistent state, can generate other than rfkill interrupts
-and crash the system. I can reproduce crash with "kernel BUG at
-drivers/net/wireless/iwlwifi/iwl-agn.c:1010!" message, when forcing
-firmware restarts.
+On Thu, 2010-12-09 at 16:54 +0200, ext Guy Eilam wrote:
+> Inclusion of a WPS IE in probe requests caused a problem
+> in the driver due to the maximum size of the probe request
+> template and the max_scan_ie_len values at initialization.
+> 
+> Increased the size of probe request template
+> to the maximum size allowed by the firmware.
+> Struct wl12xx_probe_req_template, which was only used
+> for calculating the max size of the probe request template,
+> is no longer used and needed.
+> 
+> max_scan_ie_len is used for validating the size of
+> additional IEs in scan requests.
+> Initialized the max_scan_ie_len field to the maximum size
+> of the probe request template minus the ieee80211 header size.
+> 
+> Signed-off-by: Guy Eilam <guy@wizery.com>
+> ---
 
-To fix only enable rfkill interrupt when down device and after probe.
-I checked patch on laptop with 5100 device, rfkill change is still
-passed to user space when device is down.
+Applied, thanks!
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: stable@kernel.org
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-v1 -> v2: fix topic (thanks to Johannes for correct my English :)
- 
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    9 +++++----
- drivers/net/wireless/iwlwifi/iwl-helpers.h |    6 ++++++
- 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d407547..f5bd584 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3280,9 +3280,10 @@ void iwlagn_mac_stop(struct ieee80211_hw *hw)
- 
- 	flush_workqueue(priv->workqueue);
- 
--	/* enable interrupts again in order to receive rfkill changes */
-+	/* User space software may expect getting rfkill changes
-+	 * even if interface is down */
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
--	iwl_enable_interrupts(priv);
-+	iwl_enable_rfkill_int(priv);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
-@@ -4190,14 +4191,14 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 * 8. Enable interrupts and read RFKILL state
- 	 *********************************************/
- 
--	/* enable interrupts if needed: hw bug w/a */
-+	/* enable rfkill interrupt: hw bug w/a */
- 	pci_read_config_word(priv->pci_dev, PCI_COMMAND, &pci_cmd);
- 	if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
- 		pci_cmd &= ~PCI_COMMAND_INTX_DISABLE;
- 		pci_write_config_word(priv->pci_dev, PCI_COMMAND, pci_cmd);
- 	}
- 
--	iwl_enable_interrupts(priv);
-+	iwl_enable_rfkill_int(priv);
- 
- 	/* If platform's RF_KILL switch is NOT set to KILL */
- 	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-index 3f5bedd..8821f08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-@@ -148,6 +148,12 @@ static inline void iwl_disable_interrupts(struct iwl_priv *priv)
- 	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
- }
- 
-+static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
-+	iwl_write32(priv, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
-+}
-+
- static inline void iwl_enable_interrupts(struct iwl_priv *priv)
- {
- 	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
 -- 
-1.7.1
+Cheers,
+Luca.
 
