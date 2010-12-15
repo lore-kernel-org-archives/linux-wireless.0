@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f45.google.com ([209.85.214.45]:36204 "EHLO
-	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632Ab0LGK3H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 05:29:07 -0500
-Received: by mail-bw0-f45.google.com with SMTP id 16so11706385bwz.4
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 02:29:06 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] cfg80211: Make NL80211_CMD_SET_REG synchronous
-Date: Tue, 7 Dec 2010 11:27:55 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-References: <1291715126-7652-1-git-send-email-helmut.schaa@googlemail.com> <1291715582.3607.10.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291715582.3607.10.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:64257 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754045Ab0LOPbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 10:31:14 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 07:30:59 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/7] ath9k_hw: Add a helper to get paprd scale factor
+Date: Wed, 15 Dec 2010 07:30:51 -0800
+Message-ID: <1292427053-5880-5-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
+References: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201012071127.55852.helmut.schaa@googlemail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 7. Dezember 2010 schrieb Johannes Berg:
-> On Tue, 2010-12-07 at 10:45 +0100, Helmut Schaa wrote:
-> > A user space caller of NL80211_CMD_SET_REG previously had no chance to
-> > verify if the regulatory domain change it requested already happened.
-> > Listening to NL80211_CMD_REG_CHANGE is not enough since it won't be
-> > triggered when the regulatory domain didn't change (for example because
-> > it was already the same before).
-> > 
-> > Fix this by making NL80211_CMD_SET_REG synchronous by adding a
-> > completion struct to the regulatory_hint_user function and wait for the
-> > completion of the regulatory request before returning.
-> 
-> Way too complicated. regulatory_hint_user() is called in a context that
-> can sleep, obviously, so you can just make it call something like
-> run_regulatory_request() that will cancel_work_sync(reg_work) and call
-> reg_todo() after queueing, instead of schedule_work(reg_work)  -- that
-> way when it returns all things have been processed.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    3 +++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-Sounds good, but that would also change the other calls to regulatory_hint_user
-(regulatory_init & restore_regulatory_settings), not just the netlink command
-from user space. Not sure if it is reasoable to wait for these callers as well?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 4149ffb..9fa5793 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4843,6 +4843,27 @@ u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz)
+ 		return eep->modalHeader5G.spurChans;
+ }
+ 
++unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
++					   struct ath9k_channel *chan)
++{
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++
++	if (IS_CHAN_2GHZ(chan))
++		return MS(le32_to_cpu(eep->modalHeader2G.papdRateMaskHt20),
++			  AR9300_PAPRD_SCALE_1);
++	else {
++		if (chan->channel >= 5700)
++		return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
++			  AR9300_PAPRD_SCALE_1);
++		else if (chan->channel >= 5400)
++			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
++				   AR9300_PAPRD_SCALE_2);
++		else
++			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
++				  AR9300_PAPRD_SCALE_1);
++	}
++}
++
+ const struct eeprom_ops eep_ar9300_ops = {
+ 	.check_eeprom = ath9k_hw_ar9300_check_eeprom,
+ 	.get_eeprom = ath9k_hw_ar9300_get_eeprom,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index efb6a02..afb0b5e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -315,4 +315,7 @@ s32 ar9003_hw_get_tx_gain_idx(struct ath_hw *ah);
+ s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah);
+ 
+ u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz);
++
++unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
++					   struct ath9k_channel *chan);
+ #endif
+-- 
+1.7.0.4
 
-Second, since reg_process_pending_hints and reg_process_pending_hints are mutex
-protected we wouldn't even have to to call cancel_work_sync to ensure
-serialization.
-
-Helmut
