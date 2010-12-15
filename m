@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42408 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751909Ab0LKXve (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Dec 2010 18:51:34 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 7/8] ath9k_hw: remove ah->beacon_interval
-Date: Sun, 12 Dec 2010 00:51:13 +0100
-Message-Id: <1292111474-70939-7-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292111474-70939-6-git-send-email-nbd@openwrt.org>
-References: <1292111474-70939-1-git-send-email-nbd@openwrt.org>
- <1292111474-70939-2-git-send-email-nbd@openwrt.org>
- <1292111474-70939-3-git-send-email-nbd@openwrt.org>
- <1292111474-70939-4-git-send-email-nbd@openwrt.org>
- <1292111474-70939-5-git-send-email-nbd@openwrt.org>
- <1292111474-70939-6-git-send-email-nbd@openwrt.org>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:49443 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750795Ab0LOJwk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 04:52:40 -0500
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0938406756
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 18:52:38 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Subject: Re: [PATCH 1/2] nl80211: Export available antennas
+Date: Wed, 15 Dec 2010 18:53:10 +0900
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <20101214022018.2343.8216.stgit@localhost6.localdomain6> <201012141131.59086.br1@einfach.org> <AANLkTi=6o=tK1fRhOtchT9UPy+EWCcqzhebVYv+8XJP3@mail.gmail.com>
+In-Reply-To: <AANLkTi=6o=tK1fRhOtchT9UPy+EWCcqzhebVYv+8XJP3@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012151853.10256.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    3 ---
- drivers/net/wireless/ath/ath9k/hw.h |    1 -
- 2 files changed, 0 insertions(+), 4 deletions(-)
+On Tue December 14 2010 12:11:52 Daniel Halperin wrote:
+> Several of the Intel ones, I believe.  For instance 4965 can RX with 3
+> antennas but can maybe only TX with A and B?  Intel also has a 1x2
+> (5100 maybe?) chipset.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 06028e3..d44f74e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -407,7 +407,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	ah->sta_id1_defaults =
- 		AR_STA_ID1_CRPT_MIC_ENABLE |
- 		AR_STA_ID1_MCAST_KSRCH;
--	ah->beacon_interval = 100;
- 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
- 	ah->slottime = (u32) -1;
- 	ah->globaltxtimeout = (u32) -1;
-@@ -1628,8 +1627,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- {
- 	int flags = 0;
- 
--	ah->beacon_interval = beacon_period;
--
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
- 	switch (ah->opmode) {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e99b395..0db0ef6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -764,7 +764,6 @@ struct ath_hw {
- 	u8 txpower_limit;
- 	int16_t txpower_indexoffset;
- 	int coverage_class;
--	u32 beacon_interval;
- 	u32 slottime;
- 	u32 globaltxtimeout;
- 
--- 
-1.7.3.2
+A lot of maybees ;) Can anyone else comment? Do we need available antennas 
+separately for RX and TX?
 
+bruno
+
+> On Mon, Dec 13, 2010 at 6:31 PM, Bruno Randolf <br1@einfach.org> wrote:
+> > On Tue December 14 2010 11:23:09 Daniel Halperin wrote:
+> >> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> >> > index b8fa25d..63b603c 100644
+> >> > --- a/include/linux/nl80211.h
+> >> > +++ b/include/linux/nl80211.h
+> >> > @@ -841,6 +841,9 @@ enum nl80211_commands {
+> >> >  *     the hardware should not be configured to receive on this
+> >> > antenna. *     For a more detailed descripton see
+> >> > @NL80211_ATTR_WIPHY_ANTENNA_TX. *
+> >> > + * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL: Bitmap of antennas which are
+> >> > available for + *     configuration via the above parameters.
+> >> > + *
+> >> 
+> >> Not clear exactly what the point of this is -- there's no commit
+> >> message -- but should not this API distinguish between TX and RX?
+> >> E.g., several chipsets can only TX from a subset of RX antennas.
+> > 
+> > This is just the nl80211 part of a patch that got merged earlier, the
+> > description of which has more info:
+> > 
+> > https://patchwork.kernel.org/patch/389682/
+> > 
+> > If it's necessary to distinguish between RX and TX it has to be done
+> > there too. Can you give us examples of these chipsets which you
+> > mentioned?
+> > 
+> > bruno
