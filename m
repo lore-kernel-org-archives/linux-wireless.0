@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39003 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752161Ab0LXQ25 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Dec 2010 11:28:57 -0500
-Subject: Re: iwlwifi: Intel 3945ABG speed issues finally identified.
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Eric Appleman <erappleman@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <loom.20101224T055254-814@post.gmane.org>
-References: <loom.20101223T071403-99@post.gmane.org>
-	 <1293120787.3997.50.camel@wwguy-huron>
-	 <loom.20101224T055254-814@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Dec 2010 08:19:51 -0800
-Message-ID: <1293207591.3997.52.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38996 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab0LOQpH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 11:45:07 -0500
+Date: Wed, 15 Dec 2010 11:37:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/22] rtl8192ce: Initial upload of driver
+Message-ID: <20101215163730.GF2377@tuxdriver.com>
+References: <4D08EA6D.6070106@lwfinger.net>
+ <1292430400.3678.10.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1292430400.3678.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-23 at 22:16 -0800, Eric Appleman wrote:
-> Btw, I've never seen a firmware reload message in association with this bug,
-> regardless of commit, whether it be from May or December.
+On Wed, Dec 15, 2010 at 05:26:40PM +0100, Johannes Berg wrote:
 
-> then most likely "stuck queue detection" is not the problem.
-
-Wey
+> > If you prefer that it go to staging first, I will send it to GregKH, but since
+> > it uses mac80211, I think it is ready for wireless.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It looks pretty clean -- so personally, I don't think I'd mind it going
+> in directly.
+> 
+> Are you or somebody else planning to make changes to it though? It looks
+> like for example the config semaphore could easily be replaced by a
+> mutex for better debug, for example. Potentially, rate control could be
+> internalised with IEEE80211_HW_HAS_RATE_CONTROL as well, and some
+> similar minor things.
 
+Sorry for the delay, Larry!  I've been meaning to post a thorough
+review, but...busy, busy...
 
+Anyway, I think Johannes is right -- whatever issues remain, it
+would be better to get it in place now than to leave it out or push
+it to staging.
+
+I intend to mash the series together into a single patch when I merge
+it -- I hope you don't mind.
+
+Thanks,
+
+JOhn
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
