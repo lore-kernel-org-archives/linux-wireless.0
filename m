@@ -1,107 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55290 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388Ab0L2PE3 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:39775 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab0LOJrk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 10:04:29 -0500
-Subject: Re: BUG: while bridging Ethernet and wireless device:
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	YOSHIFUJI Hideaki /
-	 =?UTF-8?Q?=E5=90=89=E8=97=A4=E8=8B=B1=E6=98=8E?=
-	<yoshfuji@linux-ipv6.org>
-In-Reply-To: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
-References: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Dec 2010 16:04:27 +0100
-Message-ID: <1293635067.3546.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Dec 2010 04:47:40 -0500
+Received: by wyb28 with SMTP id 28so1266838wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 01:47:38 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: remove redundant debugfs_remove_recursive() call
+Date: Wed, 15 Dec 2010 11:47:54 +0200
+Message-Id: <1292406474-3238-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 14:11 +0200, Tomas Winkler wrote:
-> Will be happy if someone can give me some more insight. (kernel 2.6.37-rc5)
+Upon rmmod, the <debugfs>/ieee80211/phyX dir is being removed.
+later, we try to remove <debugfs>/ieee80211/phyX/wl12xx, which
+might result in NULL dereference.
 
-Tomas looked into it a bit more and told me that it happens on IPv6
-packets. To recap, he gets
+Remove the excessive debugfs_remove_recursive() call.
+(consequently, there is no more need to save wl->rootdir)
 
-kernel BUG at include/linux/skbuff.h:1178!
-with
-EIP: [<f83edd65>] br_multicast_rcv+0xc95/0xe1c [bridge]
-
-Also remember that the packets are almost fully nonlinear, when they get
-here they likely have almost no data in the skb header.
-
-I then looked at br_multicast_ipv6_rcv(), and it looks fishy:
-
-Up to:
-	skb2 = skb_clone(skb, GFP_ATOMIC);
-
-everything's fine, since ipv6_skip_exthdr() will use
-skb_header_pointer(). At this point, offset is the result of
-ipv6_skip_exthdr(). Remember that skb_clone() is not skb_copy().
-
-Then, however, we do
-	__skb_pull(skb2, offset);
-
-At this point, however, I don't see anything that guarantees that all
-"offset" bytes are part of the headroom -- and indeed I think this is
-where it crashes.
-
-If it didn't crash, because this many bytes were part of the header,
-continuing further into the function, however, we could still crash:
-
-        if (!pskb_may_pull(skb2, sizeof(*icmp6h)))
-                goto out;
-
-now makes sure that we can read the ICMPv6 header. Later, however, we do
-
-        case ICMPV6_MGM_REPORT:
-            {
-                struct mld_msg *mld = (struct mld_msg *)icmp6h;
-                BR_INPUT_SKB_CB(skb2)->mrouters_only = 1;
-                err = br_ip6_multicast_add_group(br, port, &mld->mld_mca);
-
-which seems just as unsafe since "mld_mca" need not be part of the
-header of the SKB. Similarly in another branch of this.
-
-Additionally, I'm not convinced that there even is guaranteed to be
-enough space in the SKB at all for the entire "struct mld_msg".
-
-And finally, the error path in this function is confusing. Below patch
-should be fine since unlike IPv4 (where this was copied maybe?) this
-code unconditionally clones the SKB.
-
-johannes
-
+Reported-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/bridge/br_multicast.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/wl12xx/debugfs.c |   34 ++++++++++++++------------------
+ drivers/net/wireless/wl12xx/wl12xx.h  |    1 -
+ 2 files changed, 15 insertions(+), 20 deletions(-)
 
---- wireless-testing.orig/net/bridge/br_multicast.c	2010-12-29 15:45:03.000000000 +0100
-+++ wireless-testing/net/bridge/br_multicast.c	2010-12-29 16:03:03.000000000 +0100
-@@ -1430,7 +1430,7 @@ static int br_multicast_ipv6_rcv(struct
- 				 struct net_bridge_port *port,
- 				 struct sk_buff *skb)
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 8106a6c..86cf1fc 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -293,12 +293,13 @@ static const struct file_operations gpio_power_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static int wl1271_debugfs_add_files(struct wl1271 *wl)
++static int wl1271_debugfs_add_files(struct wl1271 *wl,
++				     struct dentry *rootdir)
  {
--	struct sk_buff *skb2 = skb;
-+	struct sk_buff *skb2;
- 	struct ipv6hdr *ip6h;
- 	struct icmp6hdr *icmp6h;
- 	u8 nexthdr;
-@@ -1535,9 +1535,7 @@ static int br_multicast_ipv6_rcv(struct
+ 	int ret = 0;
+ 	struct dentry *entry, *stats;
+ 
+-	stats = debugfs_create_dir("fw-statistics", wl->rootdir);
++	stats = debugfs_create_dir("fw-statistics", rootdir);
+ 	if (!stats || IS_ERR(stats)) {
+ 		entry = stats;
+ 		goto err;
+@@ -395,11 +396,11 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl)
+ 	DEBUGFS_FWSTATS_ADD(rxpipe, missed_beacon_host_int_trig_rx_data);
+ 	DEBUGFS_FWSTATS_ADD(rxpipe, tx_xfr_host_int_trig_rx_data);
+ 
+-	DEBUGFS_ADD(tx_queue_len, wl->rootdir);
+-	DEBUGFS_ADD(retry_count, wl->rootdir);
+-	DEBUGFS_ADD(excessive_retries, wl->rootdir);
++	DEBUGFS_ADD(tx_queue_len, rootdir);
++	DEBUGFS_ADD(retry_count, rootdir);
++	DEBUGFS_ADD(excessive_retries, rootdir);
+ 
+-	DEBUGFS_ADD(gpio_power, wl->rootdir);
++	DEBUGFS_ADD(gpio_power, rootdir);
+ 
+ 	return 0;
+ 
+@@ -414,7 +415,7 @@ err:
+ 
+ void wl1271_debugfs_reset(struct wl1271 *wl)
+ {
+-	if (!wl->rootdir)
++	if (!wl->stats.fw_stats)
+ 		return;
+ 
+ 	memset(wl->stats.fw_stats, 0, sizeof(*wl->stats.fw_stats));
+@@ -425,13 +426,13 @@ void wl1271_debugfs_reset(struct wl1271 *wl)
+ int wl1271_debugfs_init(struct wl1271 *wl)
+ {
+ 	int ret;
++	struct dentry *rootdir;
+ 
+-	wl->rootdir = debugfs_create_dir(KBUILD_MODNAME,
+-					 wl->hw->wiphy->debugfsdir);
++	rootdir = debugfs_create_dir(KBUILD_MODNAME,
++				     wl->hw->wiphy->debugfsdir);
+ 
+-	if (IS_ERR(wl->rootdir)) {
+-		ret = PTR_ERR(wl->rootdir);
+-		wl->rootdir = NULL;
++	if (IS_ERR(rootdir)) {
++		ret = PTR_ERR(rootdir);
+ 		goto err;
  	}
  
- out:
--	__skb_push(skb2, offset);
--	if (skb2 != skb)
--		kfree_skb(skb2);
-+	kfree_skb(skb2);
- 	return err;
+@@ -445,7 +446,7 @@ int wl1271_debugfs_init(struct wl1271 *wl)
+ 
+ 	wl->stats.fw_stats_update = jiffies;
+ 
+-	ret = wl1271_debugfs_add_files(wl);
++	ret = wl1271_debugfs_add_files(wl, rootdir);
+ 
+ 	if (ret < 0)
+ 		goto err_file;
+@@ -457,8 +458,7 @@ err_file:
+ 	wl->stats.fw_stats = NULL;
+ 
+ err_fw:
+-	debugfs_remove_recursive(wl->rootdir);
+-	wl->rootdir = NULL;
++	debugfs_remove_recursive(rootdir);
+ 
+ err:
+ 	return ret;
+@@ -468,8 +468,4 @@ void wl1271_debugfs_exit(struct wl1271 *wl)
+ {
+ 	kfree(wl->stats.fw_stats);
+ 	wl->stats.fw_stats = NULL;
+-
+-	debugfs_remove_recursive(wl->rootdir);
+-	wl->rootdir = NULL;
+-
  }
- #endif
-
-
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index e904c72..da275d0 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -376,7 +376,6 @@ struct wl1271 {
+ 	int last_rssi_event;
+ 
+ 	struct wl1271_stats stats;
+-	struct dentry *rootdir;
+ 
+ 	__le32 buffer_32;
+ 	u32 buffer_cmd;
+-- 
+1.7.0.4
 
