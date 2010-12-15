@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.214.194]:37884 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837Ab0L1Teb convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42861 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391Ab0LOWAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 14:34:31 -0500
+	Wed, 15 Dec 2010 17:00:05 -0500
+Date: Wed, 15 Dec 2010 16:56:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] nl80211: Add notification for dropped Deauth/Disassoc
+Message-ID: <20101215215610.GH2377@tuxdriver.com>
+References: <20101213220048.GA24752@jm.kir.nu>
+ <20101214084133.GA28466@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <201012282021.31695.rjw@sisk.pl>
-References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
- <201012261935.13238.rjw@sisk.pl> <AANLkTimHHN+GesyhR6Jjnm771XLhn=inn=vrSk=mT6Mh@mail.gmail.com>
- <201012282021.31695.rjw@sisk.pl>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 28 Dec 2010 21:34:09 +0200
-Message-ID: <AANLkTinPrUbaFsNMmoZJtOaF6dutLaXXQ7Uws5826n4=@mail.gmail.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101214084133.GA28466@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 28, 2010 at 9:21 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> It looks like you could simply do a power down-power up cycle before trying to
-> load new firmware, just in case.  I guess that's suboptimal for some reason?
+On Tue, Dec 14, 2010 at 10:41:33AM +0200, Jouni Malinen wrote:
+> Add a new notification to indicate that a received, unprotected
+> Deauthentication or Disassociation frame was dropped due to
+> management frame protection being in use. This notification is
+> needed to allow user space (e.g., wpa_supplicant) to implement
+> SA Query procedure to recover from association state mismatch
+> between an AP and STA.
+> 
+> This is needed to avoid getting stuck in non-working state when MFP
+> (IEEE 802.11w) is used and a protected Deauthentication or
+> Disassociation frame is dropped for any reason. After that, the
+> station would silently discard any unprotected Deauthentication or
+> Disassociation frame that could be indicating that the AP does not
+> have association for the STA (when the Reason Code would be 6 or 7).
+> IEEE Std 802.11w-2009, 11.13 describes this recovery mechanism.
+> 
+> Signed-off-by: Jouni Malinen <j@w1.fi>
+> 
+> ---
+>  include/linux/nl80211.h |   10 ++++++++++
+>  net/mac80211/rx.c       |   22 ++++++++++++++++++++--
+>  net/wireless/mlme.c     |   22 ++++++++++++++++++++++
+>  net/wireless/nl80211.c  |   16 ++++++++++++++++
+>  net/wireless/nl80211.h  |    6 ++++++
+>  5 files changed, 74 insertions(+), 2 deletions(-)
 
-It would work, but we will not be able to unconditionally disable the
-radios (e.g. airplane mode comes to mind).
 
-> Please pretend that the runtime PM framework doesn't exist for a while.  How
-> would you design things in that case?
+> --- wireless-testing.orig/net/wireless/mlme.c	2010-12-13 23:35:46.000000000 -0800
+> +++ wireless-testing/net/wireless/mlme.c	2010-12-14 10:23:56.000000000 -0800
+> @@ -263,6 +263,28 @@ void cfg80211_send_disassoc(struct net_d
+>  }
+>  EXPORT_SYMBOL(cfg80211_send_disassoc);
+>  
+> +void cfg80211_send_unprot_deauth(struct net_device *dev, const u8 *buf,
+> +				 size_t len)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct wiphy *wiphy = wdev->wiphy;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+> +
+> +	nl80211_send_unprot_deauth(rdev, dev, buf, len, GFP_ATOMIC);
+> +}
+> +EXPORT_SYMBOL(cfg80211_send_unprot_deauth);
+> +
+> +void cfg80211_send_unprot_disassoc(struct net_device *dev, const u8 *buf,
+> +				   size_t len)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	struct wiphy *wiphy = wdev->wiphy;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+> +
+> +	nl80211_send_unprot_disassoc(rdev, dev, buf, len, GFP_ATOMIC);
+> +}
+> +EXPORT_SYMBOL(cfg80211_send_unprot_disassoc);
+> +
+>  static void __cfg80211_auth_remove(struct wireless_dev *wdev, const u8 *addr)
+>  {
+>  	int i;
 
-Duplicate most of runtime-PM's plumbing into the MMC/SDIO subsystem.
-Off the top of my hat:
-- We need the device hierarchy and the suspend/resume dependencies (a
-single SDIO card has several logical sub-devices, a.k.a SDIO
-functions)
-- We need to maintain usage_count for each device, and expose the same
-API to handle it
-- We need autosuspend for MMC cards (power them off on inactivity)
-- We need the same, or similar, locking plumbing
-- We probably need the same sysfs ABI as well: autosuspend_delay_ms,
-and even  /sys/devices/.../power/control itself is useful (not for our
-device, but for others, sure)
-- ...
+Need cfg80211.h bits for these, no?
 
-Thanks,
-Ohad.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
