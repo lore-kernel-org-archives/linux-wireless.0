@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42761 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756383Ab0LJUaH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 15:30:07 -0500
-Date: Fri, 10 Dec 2010 15:17:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 0/2] iwlwifi fix for 2.6.37
-Message-ID: <20101210201750.GF4296@tuxdriver.com>
-References: <1291918780-10882-1-git-send-email-wey-yi.w.guy@intel.com>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:47328 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752542Ab0LOAjX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Dec 2010 19:39:23 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PSfOn-0003fw-FW
+	for linux-wireless@vger.kernel.org; Wed, 15 Dec 2010 01:39:17 +0100
+Received: from c-67-183-8-18.hsd1.wa.comcast.net ([67.183.8.18])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 01:39:17 +0100
+Received: from yuhongbao_386 by c-67-183-8-18.hsd1.wa.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 01:39:17 +0100
+To: linux-wireless@vger.kernel.org
+From: Yuhong Bao <yuhongbao_386@hotmail.com>
+Subject: Re: Bringing up Marvell 88W8300
+Date: Wed, 15 Dec 2010 00:38:59 +0000 (UTC)
+Message-ID: <loom.20101215T012953-378@post.gmane.org>
+References: <AANLkTik+BWQdU4hhKN7yfgOdJuQXopvYr4Z59RTntqSW@mail.gmail.com> <1289607742.21000.23.camel@dcbw.foobar.com> <AANLkTi=1RFZwRYvA=VfuKTQS6YwZkTv17Q0nnWnQW3Hq@mail.gmail.com> <AANLkTinKMfu2SX2fymUDi3JooAwKZv7=41BQBywR3pVe@mail.gmail.com> <1290028078.8522.62.camel@dcbw.foobar.com> <AANLkTinc7F8pCXbKBf3-Nyeb05GQ=_DX+EsRxjkzO9ua@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291918780-10882-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 09, 2010 at 10:19:38AM -0800, Wey-Yi Guy wrote:
-> The original method used to parsing EEPROM Tx Power Table was hardcode and
-> not forward compatible with newer devices. Fix it here to be layout agnostic
+> I have a card with this chipset (A Netgear WG311v3) and have a spare
+> machine to test it in. I'm quite happy to test the driver at any stage
+> of development.
 > 
-> John, we split EEPROM reading patches to two stage, for .37 release,
-> the existing devices will not change, only the newer devices will use
-> the new EEPROM reading method; we will remove the old EEPROM reading method
-> all together in separated patch for .38 release. Please let me know if this
-> is ok
+> Thanks,
+> 
+I have a WG511v2 card from the same vendor with this chipset too and I remember 
+the pain of using 
+Linux without a driver for it. Any ETA for getting a driver merged onto the 
+driver tree? Unfortunately I have no laptop with CardBus slots with Linux 
+installed on the hard drive at this point.
 
-OK, I think this will do.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
