@@ -1,118 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:12304 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751438Ab0LHEtu (ORCPT
+Received: from mail-bw0-f45.google.com ([209.85.214.45]:54634 "EHLO
+	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643Ab0LORMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 23:49:50 -0500
-Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0734833786
-	for <linux-wireless@vger.kernel.org>; Wed,  8 Dec 2010 13:49:49 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: johannes@sipsolutions.net
-Subject: Re: [PATCH v2] cfg80211: Add antenna availability information
-Date: Wed, 8 Dec 2010 13:49:17 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20101208034429.24218.50707.stgit@localhost6.localdomain6>
-In-Reply-To: <20101208034429.24218.50707.stgit@localhost6.localdomain6>
+	Wed, 15 Dec 2010 12:12:17 -0500
+Received: by bwz16 with SMTP id 16so2540236bwz.4
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 09:12:16 -0800 (PST)
+Message-ID: <4D08F70C.4060302@lwfinger.net>
+Date: Wed, 15 Dec 2010 11:12:44 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012081349.17449.br1@einfach.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/22] rtl8192ce: Initial upload of driver
+References: <4D08EA6D.6070106@lwfinger.net> <1292430400.3678.10.camel@jlt3.sipsolutions.net> <20101215163730.GF2377@tuxdriver.com>
+In-Reply-To: <20101215163730.GF2377@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ah, please ignore this one and wait for v3...
+On 12/15/2010 10:37 AM, John W. Linville wrote:
+> On Wed, Dec 15, 2010 at 05:26:40PM +0100, Johannes Berg wrote:
+> 
+>>> If you prefer that it go to staging first, I will send it to GregKH, but since
+>>> it uses mac80211, I think it is ready for wireless.
+>>
+>> It looks pretty clean -- so personally, I don't think I'd mind it going
+>> in directly.
+>>
+>> Are you or somebody else planning to make changes to it though? It looks
+>> like for example the config semaphore could easily be replaced by a
+>> mutex for better debug, for example. Potentially, rate control could be
+>> internalised with IEEE80211_HW_HAS_RATE_CONTROL as well, and some
+>> similar minor things.
 
-bruno
+Certainly, the semaphore can be replaced with a mutex. I will need to think
+about the rate control.
+> 
+> Sorry for the delay, Larry!  I've been meaning to post a thorough
+> review, but...busy, busy...
+> 
+> Anyway, I think Johannes is right -- whatever issues remain, it
+> would be better to get it in place now than to leave it out or push
+> it to staging.
+> 
+> I intend to mash the series together into a single patch when I merge
+> it -- I hope you don't mind.
 
-On Wed December 8 2010 12:44:29 Bruno Randolf wrote:
-> Add a field to wiphy for the hardware to report the availble antennas for
-> configuration. Only if this is set to something bigger than zero, will the
-> anntenna configuration ops be executed.
-> 
-> Allthough this could be a simple number of antennas, I defined it as a
-> bitmap of antennas which are available for configuration, since it's more
-> consistent with the rest of the antenna API and there could be cases where
-> the hardware allows only configuration of certain antennas. As it does not
-> make much of a difference in size or normal usage, I think it's better to
-> be able to support this, in case the need arises.
-> 
-> The antenna configuration is now also checked against the availabe antennas
-> and rejected if it does not match.
-> 
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> 
-> v2:	reject antenna configurations which don't match the available antennas
-> ---
->  include/net/cfg80211.h |    5 +++++
->  net/wireless/nl80211.c |   12 ++++++++++--
->  2 files changed, 15 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 8764c9a..ef6f15d 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1465,6 +1465,9 @@ struct ieee80211_txrx_stypes {
->   * @mgmt_stypes: bitmasks of frame subtypes that can be subscribed to or
->   *	transmitted through nl80211, points to an array indexed by interface
->   *	type
-> + *
-> + * @available_antennas: bitmap of antennas which are available to
-> configure. + *	antenna configuration commands will be rejected unless 
-this
-> is set. */
->  struct wiphy {
->  	/* assign these fields before you register the wiphy */
-> @@ -1504,6 +1507,8 @@ struct wiphy {
-> 
->  	u8 max_num_pmkids;
-> 
-> +	u32 available_antennas;
-> +
->  	/* If multiple wiphys are registered and you're handed e.g.
->  	 * a regular netdev with assigned ieee80211_ptr, you won't
->  	 * know whether it points to a wiphy your driver has registered
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 2cf0333..4f6ff31 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -547,7 +547,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32
-> pid, u32 seq, int flags, if (dev->wiphy.flags &
-> WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
->  		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
-> 
-> -	if (dev->ops->get_antenna) {
-> +	if (dev->wiphy.available_antennas && dev->ops->get_antenna) {
->  		u32 tx_ant = 0, rx_ant = 0;
->  		int res;
->  		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
-> @@ -1045,7 +1045,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb,
-> struct genl_info *info) if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
->  	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
->  		u32 tx_ant, rx_ant;
-> -		if (!rdev->ops->set_antenna) {
-> +		if (!rdev->wiphy.available_antennas || !rdev->ops->set_antenna) {
->  			result = -EOPNOTSUPP;
->  			goto bad_res;
->  		}
-> @@ -1053,6 +1053,14 @@ static int nl80211_set_wiphy(struct sk_buff *skb,
-> struct genl_info *info) tx_ant =
-> nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]); rx_ant =
-> nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
-> 
-> +		/* reject antenna configurations which don't match the
-> +		 * available antenna mask, except for the "all" mask */
-> +		if ((~tx_ant && (tx_ant & ~rdev->wiphy.available_antennas)) ||
-> +		    (~rx_ant && (rx_ant & ~rdev->wiphy.available_antennas))) {
-> +			result = -EINVAL;
-> +			goto bad_res;
-> +		}
-> +
->  		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
->  		if (result)
->  			goto bad_res;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, I don't mind. I just put it as multiple patches for review. One nice thing
+about being retired is that I don't have to deal with any bean counters who
+might worry about number or lines of patches - only making Linux better.
+
+If you want, I can make it a single patch and put it in the git tree I mentioned
+for you to pull.
+
+Larry
