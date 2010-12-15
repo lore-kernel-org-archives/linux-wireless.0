@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58637 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164Ab0LVR1i (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38537 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751691Ab0LOWtb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 12:27:38 -0500
-Subject: Re: [PATCH] iwlagn: only enable rfkill interrupt when device is
- down
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-In-Reply-To: <1293022913-4692-1-git-send-email-sgruszka@redhat.com>
-References: <1293022913-4692-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 18:27:19 +0100
-Message-ID: <1293038839.3531.24.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Dec 2010 17:49:31 -0500
+Date: Thu, 16 Dec 2010 00:49:22 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] nl80211: Add notification for dropped
+ Deauth/Disassoc
+Message-ID: <20101215224922.GA19473@jm.kir.nu>
+References: <20101213220048.GA24752@jm.kir.nu>
+ <20101214084133.GA28466@jm.kir.nu>
+ <20101215215610.GH2377@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101215215610.GH2377@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 14:01 +0100, Stanislaw Gruszka wrote:
-> Since commit 6cd0b1cb872b3bf9fc5de4536404206ab74bafdd "iwlagn: fix
-> hw-rfkill while the interface is down", we enable interrupts when
-> device is not ready to receive them. However hardware, when it is in
-> some inconsistent state, can generate other than rfkill interrupts
-> and crash the system. I can reproduce crash with "kernel BUG at
-> drivers/net/wireless/iwlwifi/iwl-agn.c:1010!" message, when forcing
-> firmware restarts.
-> 
-> To fix only enable rfkill interrupt when down device and after probe.
-> I checked patch on laptop with 5100 device, rfkill change is still
-> passed to user space when device is down.
+On Wed, Dec 15, 2010 at 04:56:11PM -0500, John W. Linville wrote:
+> On Tue, Dec 14, 2010 at 10:41:33AM +0200, Jouni Malinen wrote:
+> > +void cfg80211_send_unprot_disassoc(struct net_device *dev, const u8 *buf,
+> > +				   size_t len)
 
-Should the subject say "enable only rfkill interrupt when device is
-down" instead? As it is, to me it reads like rfkill interrupt would be
-disabled while up, which can't be right?
+> > +EXPORT_SYMBOL(cfg80211_send_unprot_disassoc);
 
-johannes
+> Need cfg80211.h bits for these, no?
 
+Yes, indeed. Looks like a missing "quilt add" since I obviously do have
+those prototypes for the build to go through without warnings... I'll
+post a fixed version.
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
