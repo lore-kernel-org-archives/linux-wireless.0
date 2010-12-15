@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46222 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab0LPMfg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 07:35:36 -0500
-Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org, luis.rodriguez@atheros.com
-In-Reply-To: <AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
-References: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
-	 <1292482775.3542.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
-	 <1292499024.3612.3.camel@jlt3.sipsolutions.net>
-	 <AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
-	 <1292501047.3612.9.camel@jlt3.sipsolutions.net>
-	 <AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 13:35:34 +0100
-Message-ID: <1292502934.3612.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([147.243.1.47]:31691 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754366Ab0LOPPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 10:15:03 -0500
+Received: from vaebh102.NOE.Nokia.com (vaebh102.europe.nokia.com [10.160.244.23])
+	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBFFF0A1006776
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 17:15:00 +0200
+Message-ID: <4D08DBDC.5070908@nokia.com>
+Date: Wed, 15 Dec 2010 17:16:44 +0200
+From: Roger Quadros <roger.quadros@nokia.com>
+MIME-Version: 1.0
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current style
+References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>	 <1292423633.32385.9.camel@chilepepper> <1292424501.32385.10.camel@chilepepper>
+In-Reply-To: <1292424501.32385.10.camel@chilepepper>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 04:27 -0800, Paul Stewart wrote:
+On 12/15/2010 04:48 PM, Luciano Coelho wrote:
+> On Wed, 2010-12-15 at 16:33 +0200, ext Luciano Coelho wrote:
+>> On Wed, 2010-12-15 at 16:31 +0200, luciano.coelho@nokia.com wrote:
+>>> From: Luciano Coelho<luciano.coelho@nokia.com>
+>>>
+>>> Change some file names and Kconfig settings so that this new module matches
+>>> the new way of using wl12xx instead of wl1271.
+>>>
+>>> Also fix SDIO power enabling and disabling to match the latest way of doing
+>>> it.
+>>>
+>>> Cc: Roger Quadros<roger.quadros@nokia.com>
+>>> Signed-off-by: Luciano Coelho<luciano.coelho@nokia.com>
+>>> ---
+>>
+>> In v2 I used the -M flag (to detect renames, which I stupidly forgot
+>> before) and removed the file names from the header of the sdio_test.c
+>> file, since it's a bad idea to have it there (thanks Johannes for the
+>> comments).
+>
+> Roger, I have just compile-tested this module in upstream.  Could you
+> run at least some basic tests with it to make sure it works?
+>
+>
 
-> > How so? After resume, mac80211 will invoke start(), add interfaces and
-> > stations back, and then invoke drv_config with all flags in "changed"
-> > set. Therefore, at this point, the device should be reset. Where's this
-> > not working?
-> 
-> I haven't dug deep into it, but I can guess at a reason -- ath9k stores idle
-> state in two different places -- one is meant to mirror mac80211's state,
-> and the other one is internal, periodically computed from the state of all
-> wiphys. The ath9k version of the fix modified the
-> internal state without the mac80211 mirror. 
+Luca,
 
-But at this point mac80211 doesn't care what the state is any more.
+I don't have a ready setup with me which boots mainline kernel and has wl1271 on 
+sdio.
 
-> The ath9k config() routine
-> probably does nothing when called with "all changed" on resume because
-> in fact, if we suspend and resume when non-idle, nothing _has_ changed
-> from that perspective.
+The only way to verify it is to load the module with the parameters rx=1 and 
+tx=1 and see if the "testing started" message appears.
 
-Hmm, I still don't get it. The "idle just changed" flag is set -- and
-idle will actually be what it was at suspend time. If ath9k was simply
-setting its own idle state on stop(), and returning to what mac80211
-says when it first configures the device after start(), what would the
-problem be?
+what platform do you use to verify with mainline kernel & sdio wl1271 ?
 
->   I fear that unless ath9k gets changed more
-> substantially, it really does need to be informed of IDLE changes.
-
-I'd rather have ath9k change more than try to enforce this perfectly in
-mac80211. I still think that's brittle, and every little bug in a corner
-case will cause severe problems since it causes suspend/resume to fail.
-
-johannes
-
+-- 
+regards,
+-roger
