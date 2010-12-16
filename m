@@ -1,92 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:47335 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754277Ab0L1RhK (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:56012 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753122Ab0LPKyt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:37:10 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so4468650ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:10 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 05/18] wl1271: AP mode - workaround for FW bug on station remove
-Date: Tue, 28 Dec 2010 19:36:35 +0200
-Message-Id: <1293557808-27068-6-git-send-email-arik@wizery.com>
-In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
+	Thu, 16 Dec 2010 05:54:49 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Thu, 16 Dec 2010 11:54:48 +0100
+Message-ID: <AANLkTinbhb-_v+8tJBPeoLcDo0mFzwo2EZAy3bnvErFT@mail.gmail.com>
+Subject: Re: linux-next: Tree for December 16 (broken iwlwifi)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	John Linville <linville@tuxdriver.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes an event indicating station removal is not sent up by
-firmware. We work around this by always indicating success in when
-a wait for the event timeouts.
+Hi,
 
-Temporary workaround until a FW fix is introduced.
+Just FYI (didn't look at the code right now, sorry for German output):
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c |   26 +++++++++++++++++++++-----
- 1 files changed, 21 insertions(+), 5 deletions(-)
+[ build.log ]
+...
+/home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:
+In function ‘iwl_rs_rate_init’:
+/home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2876:8:
+error: ‘struct iwl_lq_sta’ has no member named ‘dbg_fixed_rate’
+make[8]: *** [drivers/net/wireless/iwlwifi/iwl-agn-rs.o] Fehler 1
+make[7]: *** [drivers/net/wireless/iwlwifi] Fehler 2
+make[6]: *** [drivers/net/wireless] Fehler 2
+make[6]: *** Warte auf noch nicht beendete Prozesse...
+...
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index eb723f0..4a51fd2 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -222,7 +222,7 @@ int wl1271_cmd_ext_radio_parms(struct wl1271 *wl)
-  * Poll the mailbox event field until any of the bits in the mask is set or a
-  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
-  */
--static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
-+static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
- {
- 	u32 events_vector, event;
- 	unsigned long timeout;
-@@ -231,7 +231,8 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
- 
- 	do {
- 		if (time_after(jiffies, timeout)) {
--			ieee80211_queue_work(wl->hw, &wl->recovery_work);
-+			wl1271_debug(DEBUG_CMD, "timeout waiting for event %d",
-+				     (int)mask);
- 			return -ETIMEDOUT;
- 		}
- 
-@@ -249,6 +250,19 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
- 	return 0;
- }
- 
-+static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
-+{
-+	int ret;
-+
-+	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
-+	if (ret != 0) {
-+		ieee80211_queue_work(wl->hw, &wl->recovery_work);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- {
- 	struct wl1271_cmd_join *join;
-@@ -1108,9 +1122,11 @@ int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid)
- 		goto out_free;
- 	}
- 
--	ret = wl1271_cmd_wait_for_event(wl, STA_REMOVE_COMPLETE_EVENT_ID);
--	if (ret < 0)
--		wl1271_error("cmd remove sta event completion error");
-+	/*
-+	 * We are ok with a timeout here. The event is sometimes not sent
-+	 * due to a firmware bug.
-+	 */
-+	wl1271_cmd_wait_for_event_or_timeout(wl, STA_REMOVE_COMPLETE_EVENT_ID);
- 
- out_free:
- 	kfree(cmd);
--- 
-1.7.1
-
+Regards,
+- Sedat -
