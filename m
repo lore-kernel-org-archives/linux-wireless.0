@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50988 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751187Ab0LVUMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 15:12:21 -0500
-Message-ID: <4D125B9F.7090503@hauke-m.de>
-Date: Wed, 22 Dec 2010 21:12:15 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:8192 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755148Ab0LPC3r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 21:29:47 -0500
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0924186584
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:29:45 +0900 (JST)
+Subject: [PATCH 2/3] nl80211: Export available antennas
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: dhalperi@cs.washington.edu, linux-wireless@vger.kernel.org
+Date: Thu, 16 Dec 2010 11:30:28 +0900
+Message-ID: <20101216023028.24356.25352.stgit@localhost6.localdomain6>
+In-Reply-To: <20101216023022.24356.22416.stgit@localhost6.localdomain6>
+References: <20101216023022.24356.22416.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Elvis Dowson <elvis.dowson@mac.com>
-CC: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com> <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com> <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com> <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com> <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com> <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com> <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com> <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com> <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com>
-In-Reply-To: <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/22/2010 09:03 PM, Elvis Dowson wrote:
-> 
-> On Dec 22, 2010, at 11:34 PM, Elvis Dowson wrote:
-> 
->> However, I don't see a wl1271.ko module in the list of built files. The TI android
->> rowboard 2.6.32 kernel doesn't have an option for wl12xx or wl1271 at the moment
->> so, what do I do next? :-) 
-> 
-> I only see the following kernel modules :
-> 
-> cfg80211.ko
-> compat.ko
-> compat_firmware_class.ko
-> mac80211.ko
-> 
-> Shouldn't a wl1271.ko or wl12xx,ko module be there? 
-> 
-> I configured compat-wireless for the wl12xx driver.
-> 
-> Elvis Dowson
-Hi Elvis,
+Export the information which antennas are available for configuration as TX or
+RX antennas via nl80211.
 
-Looks like you did everything correct. ;-)
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-Is CONFIG_CRC7=y set in your kernel config, the wl12xx module needs
-this? If it is not set the module will not be build.
+---
 
-Hauke
+v3:	rebased and updated for separate RX and TX availablility
+v2:	rebased
+---
+ include/linux/nl80211.h |    9 +++++++++
+ net/wireless/nl80211.c  |    5 +++++
+ 2 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 1cee56b..a6e1ec5 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -844,6 +844,12 @@ enum nl80211_commands {
+  *	the hardware should not be configured to receive on this antenna.
+  *	For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
+  *
++ * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX: Bitmap of antennas which are available
++ *	for configuration as TX antennas via the above parameters.
++ *
++ * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX: Bitmap of antennas which are available
++ *	for configuration as RX antennas via the above parameters.
++ *
+  * @NL80211_ATTR_MCAST_RATE: Multicast tx rate (in 100 kbps) for IBSS
+  *
+  * @NL80211_ATTR_OFFCHANNEL_TX_OK: For management frame TX, the frame may be
+@@ -1040,6 +1046,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION,
+ 
++	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
++	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 087397b..ad3ca7d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -605,6 +605,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
+ 
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
++		    dev->wiphy.available_antennas_tx);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
++		    dev->wiphy.available_antennas_rx);
++
+ 	if ((dev->wiphy.available_antennas_tx ||
+ 	     dev->wiphy.available_antennas_rx) && dev->ops->get_antenna) {
+ 		u32 tx_ant = 0, rx_ant = 0;
+
