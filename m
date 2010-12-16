@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34976 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60287 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756750Ab0LNHrU (ORCPT
+	with ESMTP id S1751738Ab0LPMQj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 02:47:20 -0500
-Subject: Re: [RFC] mac80211: Change BA timeout
+	Thu, 16 Dec 2010 07:16:39 -0500
+Subject: Re: BUG: while bridging Ethernet and wireless device:
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <19719.8288.322475.954293@gargle.gargle.HOWL>
-References: <19719.8288.322475.954293@gargle.gargle.HOWL>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
+References: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Dec 2010 08:47:15 +0100
-Message-ID: <1292312835.3569.5.camel@jlt3.sipsolutions.net>
+Date: Thu, 16 Dec 2010 13:16:37 +0100
+Message-ID: <1292501797.3612.12.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-14 at 13:14 +0530, Sujith wrote:
-> The BlockAck session timout value is currently an arbitrary 5000.
-> This results in BA sessions being created and torn down incessantly
-> when mac80211 is used with a driver (say ath9k) in AP mode.
-> 
-> The 802.11 standard doesn't specify any default value for the timeout field.
-> And there is no benefit to be gained by tearing down BA sessions and
-> recreating them. The current value of 5000 doesn't cause any problems,
-> but it is hard to find an AP/STA in the field that uses a non-zero timeout.
+On Thu, 2010-12-16 at 14:11 +0200, Tomas Winkler wrote:
 
-Please make it configurable in the request API. Each session consumes
-one of a very limited number of hardware queues on iwlwifi, and once we
-go to having multiple connected stations to it as an AP, it would be
-good to time out idle sessions.
+> Dec 15 14:36:41 User-PC kernel: [175576.120452] kernel BUG at include/linux/skbuff.h:1178!
+
+> Dec 15 14:36:41 User-PC kernel: [175576.123193] EIP is at br_multicast_rcv+0xc95/0xe1c [bridge]
+
+So as I said to Tomas in private before -- it kinda looks like something
+here is not handling paged SKBs correctly? But I would imaging that
+causing more issues, unless there was a bug here that made bridging
+require more data in the skb header than we put in there right now -- it
+can end up being empty I believe.
+
+Thing is, I looked at the code and it seemed fine.
 
 johannes
 
