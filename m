@@ -1,77 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754860Ab0LIOme (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 09:42:34 -0500
-Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tejun Heo <tj@kernel.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4D00E8E2.1030201@kernel.org>
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
-	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
-	 <4CDDAA3B.9090007@candelatech.com>
-	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>
-	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>
-	 <4CE292F7.4090200@kernel.org>
-	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>
-	 <4CE396A9.1050908@kernel.org>
-	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>
-	 <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost>
-	 <4CE4D41F.1080005@kernel.org>
-	 <1290099585.3801.1.camel@jlt3.sipsolutions.net>
-	 <4CE68AF4.8060507@kernel.org>
-	 <1290189452.3768.3.camel@jlt3.sipsolutions.net>
-	 <4CE6E430.6080804@candelatech.com>
-	 <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com>
-	 <4CFFC214.6000608@candelatech.com> <4CFFCC31.1050408@candelatech.com>
-	 <4CFFCE47.8040305@candelatech.com>  <4D00E8E2.1030201@kernel.org>
+Received: from smtp.nokia.com ([147.243.128.24]:54541 "EHLO mgw-da01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751449Ab0LPItv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 03:49:51 -0500
+Subject: pull request: wl12xx 2010-12-16
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 15:42:30 +0100
-Message-ID: <1291905750.3540.14.camel@jlt3.sipsolutions.net>
+Date: Thu, 16 Dec 2010 10:51:51 +0200
+Message-ID: <1292489511.11205.3.camel@chilepepper>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 15:34 +0100, Tejun Heo wrote:
+Hi John,
 
->    [<78447ce1>] flush_work+0x23/0x27
->    [<f91a2646>] ieee80211_do_stop+0x25c/0x403 [mac80211]
+This pull-request contains some improvements and bug fixes for the
+wl12xx driver.  It's the same thing I sent yesterday, but with one extra
+patch that fixes a compilation breakage.
 
->    [<787001fe>] rtnetlink_rcv+0x1b/0x22		<- rtnl lock
+Please pull or let me know if there's any problem.  This tree is based
+on wireless-next/master.
 
-Right, so we're flushing here under RTNL ... I believe this is the one
-that Ben hacked up to not flush or so?
+Thanks!
 
->    [<7878cdab>] _cond_resched+0x2b/0x44
->    [<7878d84f>] mutex_lock_nested+0x22/0x3b
->    [<f919fddc>] ieee80211_sta_rx_queued_mgmt+0x2d/0x3a6 [mac80211]
->    [<f91a2f53>] ieee80211_iface_work+0x1ff/0x282 [mac80211]
+The following changes since commit 412b31334b831a8c2909afaca017c5a236ac2dd0:
+  Wolfgang Kufner (1):
+        rt2x00: Fix firmware loading regression on x86_64.
 
-> But, sdata->work is busy running ieee80211_iface_work().  I _suspect_
-> for some reason iee80211_iface_work() isn't finishing.
+are available in the git repository at:
 
-It's trying to acquire a mutex here, which must be &ifmgd->mtx or
-&local->mtx, but neither of them ever nest around the RTNL.
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wl12xx-next
 
-> That, or, the
-> new flush_work() implementation is broken and it's failing to flush
-> when a work is being executed back to back.  I'll prep a debug patch
-> to determine what's going on.
+Eliad Peller (4):
+      wl1271: use debugfs_remove_recursive
+      wl1271: move wl12xx debugfs directory to under wiphy's debugfs
+      wl12xx: add auto-arp support
+      wl12xx: allow runtime changing of debug_level
 
-Thanks.
+Guy Eilam (1):
+      wl1271: fixed problem with WPS IEs in probe requests
 
-I wonder if Ben can attempt to reproduce this using compat-wireless
-against a kernel that doesn't have the workqueue changes, was the last
-one without those 2.6.34? 2.6.35?
+Juuso Oikarinen (4):
+      wl12xx: Fix kernel crash related to hw recovery and interface shutdown
+      wl1271: Fix setting of the hardware connection monitoring probe-req template
+      wl12xx: Remove 11j channels from the supported channels list.
+      wl12xx: Change TX queue to be per AC
 
-> The rest of the system going down the toilet after this is mostly
-> caused by the held rtnl_lock above.
+Luciano Coelho (4):
+      wl12xx: disable 11a channels when regulatory changes if 11a is not supported
+      wl12xx: fix illegal memset if debugfs is not enabled
+      wl12xx: disable 11a channels when wl->enable_11a is known
+      wl12xx_sdio_test: rename files to match current style
 
-Indeed, the rtnl is pretty important :-)
+Roger Quadros (2):
+      wl1271: Add wl1271_load_firmware() and export some functions
+      wl1271_sdio_test: Add module for sdio RX/TX testing
 
-johannes
+ drivers/net/wireless/wl12xx/Kconfig        |   10 +
+ drivers/net/wireless/wl12xx/Makefile       |    3 +
+ drivers/net/wireless/wl12xx/acx.c          |    4 +-
+ drivers/net/wireless/wl12xx/acx.h          |    9 +-
+ drivers/net/wireless/wl12xx/boot.c         |   17 +-
+ drivers/net/wireless/wl12xx/boot.h         |    1 +
+ drivers/net/wireless/wl12xx/cmd.c          |   69 ++++
+ drivers/net/wireless/wl12xx/cmd.h          |    4 +
+ drivers/net/wireless/wl12xx/debugfs.c      |  192 +++--------
+ drivers/net/wireless/wl12xx/init.c         |   13 +-
+ drivers/net/wireless/wl12xx/io.c           |    1 +
+ drivers/net/wireless/wl12xx/main.c         |  119 +++++--
+ drivers/net/wireless/wl12xx/scan.c         |    4 +
+ drivers/net/wireless/wl12xx/sdio_test.c    |  520 ++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/tx.c           |   60 +++-
+ drivers/net/wireless/wl12xx/wl12xx.h       |  129 +------
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |   17 +-
+ 17 files changed, 848 insertions(+), 324 deletions(-)
+ create mode 100644 drivers/net/wireless/wl12xx/sdio_test.c
+
+
+-- 
+Cheers,
+Luca.
+
 
