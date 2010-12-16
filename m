@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:8192 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755148Ab0LPC3r (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:55276 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754123Ab0LPT6r convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 21:29:47 -0500
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0924186584
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:29:45 +0900 (JST)
-Subject: [PATCH 2/3] nl80211: Export available antennas
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: dhalperi@cs.washington.edu, linux-wireless@vger.kernel.org
-Date: Thu, 16 Dec 2010 11:30:28 +0900
-Message-ID: <20101216023028.24356.25352.stgit@localhost6.localdomain6>
-In-Reply-To: <20101216023022.24356.22416.stgit@localhost6.localdomain6>
-References: <20101216023022.24356.22416.stgit@localhost6.localdomain6>
+	Thu, 16 Dec 2010 14:58:47 -0500
+Received: by qwa26 with SMTP id 26so3619405qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:58:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1292525806.3612.31.camel@jlt3.sipsolutions.net>
+References: <1292524241-14837-1-git-send-email-javier@cozybit.com> <1292525806.3612.31.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 16 Dec 2010 11:58:24 -0800
+Message-ID: <AANLkTimpmCdAx_8OqfqALwbWkX3NVaP98FzbxS4yJUFm@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Remove unused third address from mesh address
+ extension header.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Export the information which antennas are available for configuration as TX or
-RX antennas via nl80211.
+Johannes,
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Thu, Dec 16, 2010 at 10:56 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2010-12-16 at 10:30 -0800, Javier Cardona wrote:
+>> The Mesh Control header only includes 0, 1 or 2 addresses. If there is
+>> one address, it should be interpreted as Address 4.  If there are 2,
+>> they are interpreted as Addresses 5 and 6 (Address 4 being the 4th
+>> address in the 802.11 header).
+>
+> Is this a draft change? Not sure I understand.
 
----
+Yes, the address extension used to hold up to 3 addresses instead of
+the current 2.  I don't recall the draft version when this changed,
+but it is very unlikely that it will change again.  See section
+7.1.3.6.3 in current draft (8.0).
 
-v3:	rebased and updated for separate RX and TX availablility
-v2:	rebased
----
- include/linux/nl80211.h |    9 +++++++++
- net/wireless/nl80211.c  |    5 +++++
- 2 files changed, 14 insertions(+), 0 deletions(-)
+Also, note that the extra address that I'm removing was not being
+used.  I thought I better remove it before someone does start using
+it.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 1cee56b..a6e1ec5 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -844,6 +844,12 @@ enum nl80211_commands {
-  *	the hardware should not be configured to receive on this antenna.
-  *	For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
-  *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX: Bitmap of antennas which are available
-+ *	for configuration as TX antennas via the above parameters.
-+ *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX: Bitmap of antennas which are available
-+ *	for configuration as RX antennas via the above parameters.
-+ *
-  * @NL80211_ATTR_MCAST_RATE: Multicast tx rate (in 100 kbps) for IBSS
-  *
-  * @NL80211_ATTR_OFFCHANNEL_TX_OK: For management frame TX, the frame may be
-@@ -1040,6 +1046,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION,
- 
-+	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
-+	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 087397b..ad3ca7d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -605,6 +605,11 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
- 
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
-+		    dev->wiphy.available_antennas_tx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
-+		    dev->wiphy.available_antennas_rx);
-+
- 	if ((dev->wiphy.available_antennas_tx ||
- 	     dev->wiphy.available_antennas_rx) && dev->ops->get_antenna) {
- 		u32 tx_ant = 0, rx_ant = 0;
+Cheers,
 
+Javier
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
