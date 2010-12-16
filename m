@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.214.180]:60737 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758527Ab0LMRaN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60161 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753574Ab0LPSv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 12:30:13 -0500
-Received: by iwn37 with SMTP id 37so9623616iwn.11
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 09:30:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101213114351.47df9333@gotham.conectiva>
-References: <20101213114351.47df9333@gotham.conectiva>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 13 Dec 2010 09:29:52 -0800
-Message-ID: <AANLkTinnhSj=50agjC3mVDKF1Z7-rMdZ4oqZvwmitmmE@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: avoid calling ieee80211_work_work unconditionally
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Dec 2010 13:51:56 -0500
+Subject: Re: [PATCH 1/3 v2] mac80211: Rename mesh_params to mesh_config to
+ prepare for mesh_setup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1292524200-14791-1-git-send-email-javier@cozybit.com>
+References: <1292234643.3539.6.camel@jlt3.sipsolutions.net>
+	 <1292524200-14791-1-git-send-email-javier@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Dec 2010 19:51:53 +0100
+Message-ID: <1292525513.3612.26.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 13, 2010 at 5:43 AM, Herton Ronaldo Krzesinski
-<herton@mandriva.com.br> wrote:
-> On suspend, there might be usb wireless drivers which wrongly trigger
-> the warning in ieee80211_work_work. If an usb driver doesn't have a
-> suspend hook, the usb stack will disconnect the device. On disconnect,
-> a mac80211 driver calls ieee80211_unregister_hw, which calls dev_close,
-> which calls ieee80211_stop, and in the end calls ieee80211_work_purge->
-> ieee80211_work_work.
->
-> The problem is that this call to ieee80211_work_purge comes after
-> mac80211 is suspended, triggering the warning even when we don't have
-> work queued in work_list (the expected case when already suspended),
-> because it always calls ieee80211_work_work.
->
-> So, just call ieee80211_work_work in ieee80211_work_purge if we really
-> have to abort work. This addresses the warning reported at
-> https://bugzilla.kernel.org/show_bug.cgi?id=24402
->
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+On Thu, 2010-12-16 at 10:29 -0800, Javier Cardona wrote:
 
-Cc: stable@kernel.org ?
+> -	NL80211_CMD_GET_MESH_PARAMS,
+> -	NL80211_CMD_SET_MESH_PARAMS,
+> +	NL80211_CMD_GET_MESH_CONFIG,
+> +	NL80211_CMD_SET_MESH_CONFIG,
+>  
+>  	NL80211_CMD_SET_MGMT_EXTRA_IE /* reserved; not used */,
+>  
+> @@ -912,7 +912,7 @@ enum nl80211_attrs {
+>  	NL80211_ATTR_REG_ALPHA2,
+>  	NL80211_ATTR_REG_RULES,
+>  
+> -	NL80211_ATTR_MESH_PARAMS,
+> +	NL80211_ATTR_MESH_CONFIG,
 
-  Luis
+ack, but I think you should add #define's for the old names for backward
+compatibility with existing code like iw?
+ 
+johannes
+
