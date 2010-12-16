@@ -1,34 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754946Ab0LNHQW (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:62782 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754237Ab0LPLQW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 02:16:22 -0500
-Subject: Re: [PATCH 03/14] iwlagn: check ready in iwlagn_bss_info_changed()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>
-In-Reply-To: <1292285372-11373-4-git-send-email-wey-yi.w.guy@intel.com>
-References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1292285372-11373-4-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Dec 2010 08:16:19 +0100
-Message-ID: <1292310979.3569.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 16 Dec 2010 06:16:22 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <AANLkTi=t0VqSiZ=k9rBxPBVnHxy6v3JvTwW-n6ngM1f0@mail.gmail.com>
+References: <AANLkTinbhb-_v+8tJBPeoLcDo0mFzwo2EZAy3bnvErFT@mail.gmail.com>
+	<AANLkTi=t0VqSiZ=k9rBxPBVnHxy6v3JvTwW-n6ngM1f0@mail.gmail.com>
+Date: Thu, 16 Dec 2010 12:16:21 +0100
+Message-ID: <AANLkTimRmJBF+6EcJHyf7pSgj49C5D0WWmOS1fp1Ag0v@mail.gmail.com>
+Subject: Re: linux-next: Tree for December 16 (broken iwlwifi)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	John Linville <linville@tuxdriver.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-12-13 at 16:09 -0800, Wey-Yi Guy wrote:
+On Thu, Dec 16, 2010 at 12:05 PM, Sedat Dilek
+<sedat.dilek@googlemail.com> wrote:
+> On Thu, Dec 16, 2010 at 11:54 AM, Sedat Dilek
+> <sedat.dilek@googlemail.com> wrote:
+>> Hi,
+>>
+>> Just FYI (didn't look at the code right now, sorry for German output):
+>>
+>> [ build.log ]
+>> ...
+>> /home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:
+>> In function ‘iwl_rs_rate_init’:
+>> /home/sd/src/linux-2.6/linux-2.6.37-rc5/debian/build/source_i386_none/drivers/net/wireless/iwlwifi/iwl-agn-rs.c:2876:8:
+>> error: ‘struct iwl_lq_sta’ has no member named ‘dbg_fixed_rate’
+>> make[8]: *** [drivers/net/wireless/iwlwifi/iwl-agn-rs.o] Fehler 1
+>> make[7]: *** [drivers/net/wireless/iwlwifi] Fehler 2
+>> make[6]: *** [drivers/net/wireless] Fehler 2
+>> make[6]: *** Warte auf noch nicht beendete Prozesse...
+>> ...
+>>
+>> Regards,
+>> - Sedat -
+>>
+>
+> Looks like dbg_fixed_rate is only set when CONFIG_MAC80211_DEBUGFS is set:
+>
+> [ drivers/net/wireless/iwlwifi/iwl-agn-rs.h ]
+> ...
+> #ifdef CONFIG_MAC80211_DEBUGFS
+>        struct dentry *rs_sta_dbgfs_scale_table_file;
+>        struct dentry *rs_sta_dbgfs_stats_table_file;
+>        struct dentry *rs_sta_dbgfs_rate_scale_data_file;
+>        struct dentry *rs_sta_dbgfs_tx_agg_tid_en_file;
+>        u32 dbg_fixed_rate;
+> #endif
+> ...
+>
+> So I have no CONFIG_MAC80211_DEBUGFS... :-).
+> Can someone fix that, please?
+>
+> - Sedat -
+>
 
-> -	if (WARN_ON(!ctx->vif)) {
-> +	if (unlikely(!iwl_is_ready(priv))) {
-> +                IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
-> +                mutex_unlock(&priv->mutex);
-> +		return;
+Untested !
 
-There appears to be some whitespace damage here.
+----- SNIP -----
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 5083dba..75fcd30 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2873,7 +2873,9 @@ void iwl_rs_rate_init(struct iwl_priv *priv,
+struct ieee80211_sta *sta, u8 sta_i
+                lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+        lq_sta->is_agg = 0;
 
++#ifdef CONFIG_MAC80211_DEBUGFS
+        lq_sta->dbg_fixed_rate = 0;
++#endif
+
+        rs_initialize_lq(priv, conf, sta, lq_sta);
+ }
+
+----- SNAP -----
