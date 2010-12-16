@@ -1,26 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:36656 "EHLO
+Received: from smtp-out.google.com ([216.239.44.51]:40031 "EHLO
 	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911Ab0LPLvU (ORCPT
+	with ESMTP id S1754237Ab0LPLR4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 06:51:20 -0500
-Received: from wpaz9.hot.corp.google.com (wpaz9.hot.corp.google.com [172.24.198.73])
-	by smtp-out.google.com with ESMTP id oBGBpI2M000629
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:51:18 -0800
-Received: from iwn2 (iwn2.prod.google.com [10.241.68.66])
-	by wpaz9.hot.corp.google.com with ESMTP id oBGBp16l012138
+	Thu, 16 Dec 2010 06:17:56 -0500
+Received: from kpbe15.cbf.corp.google.com (kpbe15.cbf.corp.google.com [172.25.105.79])
+	by smtp-out.google.com with ESMTP id oBGBHtdg026009
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:17:55 -0800
+Received: from iwn3 (iwn3.prod.google.com [10.241.68.67])
+	by kpbe15.cbf.corp.google.com with ESMTP id oBGBHrLd012436
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:51:17 -0800
-Received: by iwn2 with SMTP id 2so3536754iwn.2
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:51:17 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:17:54 -0800
+Received: by iwn3 with SMTP id 3so3580383iwn.26
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:17:53 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1292499024.3612.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1292482775.3542.8.camel@jlt3.sipsolutions.net>
 References: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
 	<1292482775.3542.8.camel@jlt3.sipsolutions.net>
-	<AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
-	<1292499024.3612.3.camel@jlt3.sipsolutions.net>
-Date: Thu, 16 Dec 2010 03:51:16 -0800
-Message-ID: <AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
+Date: Thu, 16 Dec 2010 03:17:53 -0800
+Message-ID: <AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
 Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
 From: Paul Stewart <pstew@google.com>
 To: Johannes Berg <johannes@sipsolutions.net>
@@ -29,51 +27,72 @@ Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 16, 2010 at 3:30 AM, Johannes Berg
+On Wed, Dec 15, 2010 at 10:59 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
-> On Thu, 2010-12-16 at 03:17 -0800, Paul Stewart wrote:
+> On Wed, 2010-12-15 at 10:54 -0800, Paul Stewart wrote:
+>> Sometimes mac80211 doesn't push idle state downwards to the
+>> driver.  Specifically, there are times in some functions where
+>> the "local->hw.conf.flags & IEEE80211_CONF_IDLE" may change but
+>> the equivalent of "drv_config(local, IEEE80211_CONF_CHANGE_IDLE)"
+>> does not end up being called.  This is usually not all that
+>> problematic except, for example, suspending and resuming an idle
+>> ath9k device.  If the device isn't marked idle when
+>> ieee80211_stop_device() is called, the device never gets put to
+>> sleep, and will end up in an unresponsive state on resume.
 >
->> > I thought this was solved in ath9k differently? Was that somehow
->> > inadequate?
+> I thought this was solved in ath9k differently? Was that somehow
+> inadequate?
+
+Unfortunately previous attempts to solve this problem failed.
+
+>> As a precaution, explicitly call drv_config() before
+>> ieee80211_stop_device(), which should be a no-op under normal
+>> circumstances, but where this problem arises, it will shut down
+>> the ath9k where necessary.
+>
+> I'm not convinced that this makes a lot of sense. I'm sure you can come
+> up with other scenarios in which we stop a device and expect it to come
+> back. I'm not sure why mac80211 should be responsible for all this?
+>
+>> One example where this problem occurs is when I down an interface
+>> while a scan is in progress on ath9k.  If the device was not shut
+>> down correctly and the system suspends and resumes repeatedly with
+>> ath9k, I end up with a fatal register read error (0x7000/deadbeef)
+>> when trying to bring the interface back up.
 >>
->> Unfortunately previous attempts to solve this problem failed.
+>> Signed-off-by: Paul Stewart <pstew@google.com>
+>> ---
+>>  net/mac80211/iface.c |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+>> index b6db237..5af5a89 100644
+>> --- a/net/mac80211/iface.c
+>> +++ b/net/mac80211/iface.c
+>> @@ -536,6 +536,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>>               if (local->ops->napi_poll)
+>>                       napi_disable(&local->napi);
+>>               ieee80211_clear_tx_pending(local);
+>> +             drv_config(local, IEEE80211_CONF_CHANGE_IDLE);
+>>               ieee80211_stop_device(local);
+>>
+>>               /* no reconfiguring after stop! */
 >
-> I thought ath9k was fixed to simply go idle when stopped? Why didn't
-> that help?
+> I don't like this anyway -- you're calling a driver callback directly,
+> and there's no guarantee that just that particular change will be used
+> by the driver -- it's free to look at other state given to it in each
+> callback as well. That seems problematic because of all the other logic
+> that we have in ieee80211_hw_config().
+>
+> At the very least I think you need to provide a better rationale for
+> this patch and explain why the ath9k change isn't sufficient?
 
-So, I'm trying to balance two fairly nasty problems here.  On one end
-we have the problem before any changes where the device is not shut
-down when it legitimately should be -- we ifdown the device while scanning
-but the device in ath9k is not set to "idle".  Fixing the problem in ath9k
-alone causes a separate problem.  If you stop the driver from mac80211's
-pm.c, ath9k would set the device ps_idle, when mac80211 does not
-consider the device to to be idle.  Thus, when we resume from suspend,
-the device stays quiescent (mac80211 has no reason to believe it needs
-to do anything special to be able to tx, receive beacons, etc.)
+Here's a slightly better rationale, as I'm getting to understand the problem.
+ieee80211_do_stop() decrements "open_count" so early during the function
+that if the device is not idle at this point (e.g, due to scanning),
+drv_config()
+will never be called on the the lower-level driver, since ieee80211_hw_config()
+tests for "open_count > 0" and silently returns no-error.
 
->> Here's a slightly better rationale, as I'm getting to understand the problem.
->> ieee80211_do_stop() decrements "open_count" so early during the function
->> that if the device is not idle at this point (e.g, due to scanning),
->> drv_config()
->> will never be called on the the lower-level driver, since ieee80211_hw_config()
->> tests for "open_count > 0" and silently returns no-error.
->
-> Yes, I realise that -- but also Luis said this change wasn't sufficient
-> in his tests, he also needed something in scan code itself. Also, this
-> is really quite intentional if you read the comments around the area
-> you're modifying -- mac80211 assumes that after it shuts down the device
-> with stop(), the device will be powered off under control of the driver
-> until start().
->
-> I just don't think it'll be easy to actually make sure that we always go
-> IDLE before calling stop(). This patch might solve part of the problem,
-> but what about hardware scan, that might have to be stopped by the
-> driver during stop()? Similar things might come up with other features.
->
-> Therefore I'm not sure we should even try. If we stop() the hardware,
-> what's preventing the driver from doing whatever it needs to put the
-> device into a low power state?
->
-> johannes
->
->
+--
+Paul
