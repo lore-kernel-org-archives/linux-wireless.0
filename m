@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:36145 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193Ab0LUKuf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 05:50:35 -0500
-Received: by wyb28 with SMTP id 28so3808933wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 02:50:33 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/4] b43: use correct firmware for newer cores
-Date: Tue, 21 Dec 2010 11:50:19 +0100
-Message-Id: <1292928622-27651-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail.perches.com ([173.55.12.10]:2709 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756575Ab0LPR0A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 12:26:00 -0500
+Subject: [PATCH] checkpatch.pl: Add "prefer __packed" check
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Andy Whitcroft <apw@canonical.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <20101216152121.GB2413@tuxdriver.com>
+References: <1292510088-7449-1-git-send-email-linville@tuxdriver.com>
+	 <4D0A2AA8.5060808@lwfinger.net>  <20101216152121.GB2413@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Dec 2010 09:25:58 -0800
+Message-ID: <1292520358.29894.15.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+There's a __packed #define for this __attribute__((packed)).
+Might as well get checkpatch to tell people about it.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 1aec160..5fb0bc6 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2121,8 +2121,10 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 		filename = "ucode13";
- 	else if (rev == 14)
- 		filename = "ucode14";
--	else if (rev >= 15)
-+	else if (rev == 15)
- 		filename = "ucode15";
-+	else if ((rev >= 16) && (rev <= 20))
-+		filename = "ucode16_mimo";
- 	else
- 		goto err_no_ucode;
- 	err = b43_do_request_fw(ctx, filename, &fw->ucode);
-@@ -2165,7 +2167,9 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 			goto err_no_initvals;
- 		break;
- 	case B43_PHYTYPE_N:
--		if ((rev >= 11) && (rev <= 12))
-+		if (rev >= 16)
-+			filename = "n0initvals16";
-+		else if ((rev >= 11) && (rev <= 12))
- 			filename = "n0initvals11";
- 		else
- 			goto err_no_initvals;
-@@ -2209,7 +2213,9 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 			goto err_no_initvals;
- 		break;
- 	case B43_PHYTYPE_N:
--		if ((rev >= 11) && (rev <= 12))
-+		if (rev >= 16)
-+			filename = "n0bsinitvals16";
-+		else if ((rev >= 11) && (rev <= 12))
- 			filename = "n0bsinitvals11";
- 		else
- 			goto err_no_initvals;
--- 
-1.6.3.3
+Signed-off-by: Joe Perches <joe@perches.com>
+
+---
+
+On Thu, 2010-12-16 at 10:21 -0500, John W. Linville wrote:
+> On Thu, Dec 16, 2010 at 09:05:12AM -0600, Larry Finger wrote:
+> > On 12/16/2010 08:34 AM, John W. Linville wrote:
+> > > Use "__packed" instead of "__attribute__ ((packed))"...
+> > As a point of interest, is this the "new" recommended way? The reason I ask is
+> > that the Linux headers are mostly in the attribute form.
+> AIUI, "__packed" is the one true way.  I think this facilitates
+> compiling the kernel with compilers other than GCC.
+> 
+> At any rate, Dave Miller threatened to injure me if I kept sending him stuff using 
+> "__attribute__ ((packed))"... :-)
+
+ scripts/checkpatch.pl |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index e3c7fc0..6fc24af 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -2743,6 +2743,11 @@ sub process {
+ 			WARN("plain inline is preferred over $1\n" . $herecurr);
+ 		}
+ 
++# Check for __attribute__ packed, prefer __packed
++		if ($line =~ /\b__attribute__\s*\(\s*\(.*\bpacked\b/) {
++			WARN("__packed is preferred over __attribute__((packed))\n" . $herecurr);
++		}
++
+ # check for sizeof(&)
+ 		if ($line =~ /\bsizeof\s*\(\s*\&/) {
+ 			WARN("sizeof(& should be avoided\n" . $herecurr);
+
+
 
