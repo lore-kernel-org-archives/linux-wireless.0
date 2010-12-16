@@ -1,97 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:43969 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865Ab0LVO2D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:28:03 -0500
-Received: by wwi17 with SMTP id 17so5126976wwi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:01 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 03/18] wl1271: AP mode - add AP specific event
-Date: Wed, 22 Dec 2010 16:27:22 +0200
-Message-Id: <1293028057-6212-4-git-send-email-arik@wizery.com>
-In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
+Received: from mga02.intel.com ([134.134.136.20]:30485 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750874Ab0LPQOl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 11:14:41 -0500
+Subject: Re: [PATCH] iwlwifi: Fix error: struct iwl_lq_sta has no member
+ named dbg_fixed_rate
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	John Linville <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+In-Reply-To: <AANLkTink67RM4mp537UxFcx4g-9Dx+ymbW0A=cCu3C4g@mail.gmail.com>
+References: <AANLkTink67RM4mp537UxFcx4g-9Dx+ymbW0A=cCu3C4g@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 16 Dec 2010 08:13:35 -0800
+Message-Id: <1292516015.27593.26.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add STA-remove completion event. Unmask it during boot if operating in
-AP-mode.
-Ignore unrelated events in AP-mode.
+Hi Sedat,
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/boot.c  |    3 +++
- drivers/net/wireless/wl12xx/event.c |    7 ++++---
- drivers/net/wireless/wl12xx/event.h |    1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
+On Thu, 2010-12-16 at 03:46 -0800, Sedat Dilek wrote:
+> Attached patch fixes an issue with linux-next (20101216) and iwlwifi (see [1]).
+> 
+> - Sedat -
+> 
+> [1] http://lkml.org/lkml/2010/12/16/101
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 4a9f929..bb4f283 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -432,6 +432,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
- 		SOFT_GEMINI_SENSE_EVENT_ID;
- 
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
-+
- 	ret = wl1271_event_unmask(wl);
- 	if (ret < 0) {
- 		wl1271_error("EVENT mask setting failed");
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index f9146f5..3376a5d 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -186,6 +186,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	int ret;
- 	u32 vector;
- 	bool beacon_loss = false;
-+	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
- 
- 	wl1271_event_mbox_dump(mbox);
- 
-@@ -218,21 +219,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
- 	 *
- 	 */
--	if (vector & BSS_LOSE_EVENT_ID) {
-+	if ((vector & BSS_LOSE_EVENT_ID) && !is_ap) {
- 		wl1271_info("Beacon loss detected.");
- 
- 		/* indicate to the stack, that beacons have been lost */
- 		beacon_loss = true;
- 	}
- 
--	if (vector & PS_REPORT_EVENT_ID) {
-+	if ((vector & PS_REPORT_EVENT_ID) && !is_ap) {
- 		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
- 		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
- 		if (ret < 0)
- 			return ret;
- 	}
- 
--	if (vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID)
-+	if ((vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID) && !is_ap)
- 		wl1271_event_pspoll_delivery_fail(wl);
- 
- 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
-diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
-index 6cce014..fd955f3 100644
---- a/drivers/net/wireless/wl12xx/event.h
-+++ b/drivers/net/wireless/wl12xx/event.h
-@@ -59,6 +59,7 @@ enum {
- 	BSS_LOSE_EVENT_ID			 = BIT(18),
- 	REGAINED_BSS_EVENT_ID			 = BIT(19),
- 	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
-+	STA_REMOVE_COMPLETE_EVENT_ID		 = BIT(21), /* AP */
- 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
- 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
- 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
--- 
-1.7.1
+ACKed-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+
+Thank you very much for catch this mistake and fix it so quickly.
+
+Wey
 
