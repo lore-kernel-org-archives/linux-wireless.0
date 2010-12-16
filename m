@@ -1,74 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64257 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754045Ab0LOPbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 10:31:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 07:30:59 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] ath9k_hw: Add a helper to get paprd scale factor
-Date: Wed, 15 Dec 2010 07:30:51 -0800
-Message-ID: <1292427053-5880-5-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
-References: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:44033 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989Ab0LPEXj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 23:23:39 -0500
+Message-ID: <4D099444.5040703@lwfinger.net>
+Date: Wed, 15 Dec 2010 22:23:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Evgeniy Polyakov <zbr@ioremap.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com
+Subject: Re: iwl rfkill suddenly dropped to hard block
+References: <20101215195651.GA18545@ioremap.net> <20101215201126.GG2377@tuxdriver.com> <20101216032247.GA7345@ioremap.net>
+In-Reply-To: <20101216032247.GA7345@ioremap.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    3 +++
- 2 files changed, 24 insertions(+), 0 deletions(-)
+On 12/15/2010 09:22 PM, Evgeniy Polyakov wrote:
+> On Wed, Dec 15, 2010 at 03:11:27PM -0500, John W. Linville (linville@tuxdriver.com) wrote:
+>> Cc'ing linux-wireless and Wey-Yi...
+>>
+>> To be honest, nearly every report of "suddenly my rfkill is stuck
+>> on" is because the laptop has multiple rfkill keys, usually with
+>> one of them a slider along the edge of the case.  In particular,
+>> Thinkpads have such switches.  The slider gets accidently engaged
+>> (possibly while the laptop is being transported or somesuch) and
+>> suddenly wireless stops working.
+>>
+>> Please check for the above.  If you are sure that isn't the case, then
+>> please try to determine the last working kernel and do a bisection --
+>> hopefully you don't have to go all the way back to 2.6.33!
+>
+> I'm pretty sure it would be that simple if there was such a slider.
+>
+> There is no way I can bisect this problem since, first, i915 does not
+> work anywhere after 2.6.34 upto current git tree, and second, because
+> wifi perfectly well worked two days ago with this kernel, and now there
+> are no good and bad kernels, only bad ones.
+>
+> Turning on dell_wmi brings 2 more rfkill classes, which are both
+> hard and soft blocked. Both can not be unblocked (even soft unblock),
+> although reported case can be soft unblocked (hard block status
+> obviously does not change). Actually by default it is soft unblocked,
+> other two (another wifi switch and bluetooth) are both hard and soft
+> blocked.
+>
+> I would imagine this is just related to some dellish crap, but I saw a
+> number of exactly the same cases in the web including linux-kernel mail
+> lists in the past and also without 'slider on the back' case.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 4149ffb..9fa5793 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4843,6 +4843,27 @@ u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz)
- 		return eep->modalHeader5G.spurChans;
- }
- 
-+unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
-+					   struct ath9k_channel *chan)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	if (IS_CHAN_2GHZ(chan))
-+		return MS(le32_to_cpu(eep->modalHeader2G.papdRateMaskHt20),
-+			  AR9300_PAPRD_SCALE_1);
-+	else {
-+		if (chan->channel >= 5700)
-+		return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
-+			  AR9300_PAPRD_SCALE_1);
-+		else if (chan->channel >= 5400)
-+			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
-+				   AR9300_PAPRD_SCALE_2);
-+		else
-+			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
-+				  AR9300_PAPRD_SCALE_1);
-+	}
-+}
-+
- const struct eeprom_ops eep_ar9300_ops = {
- 	.check_eeprom = ath9k_hw_ar9300_check_eeprom,
- 	.get_eeprom = ath9k_hw_ar9300_get_eeprom,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index efb6a02..afb0b5e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -315,4 +315,7 @@ s32 ar9003_hw_get_tx_gain_idx(struct ath_hw *ah);
- s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah);
- 
- u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz);
-+
-+unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
-+					   struct ath9k_channel *chan);
- #endif
--- 
-1.7.0.4
+I doubt that it is Dell related, if that is what "dellish" means.
 
+I have had some success in clearing this problem by unloading and reloading the 
+wireless driver. I had the problem on one box that has no rfkill switch and an 
+802.11b card that uses b43legacy.
+
+Larry
