@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42278 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216Ab0L2JSc (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:59346 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750715Ab0LPEzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 04:18:32 -0500
-Subject: Re: [PATCH 4/4] mwl8k: Enable HW encryption for AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, mwl8k-devel@cozybit.com,
-	buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-In-Reply-To: <1293614230.3546.4.camel@jlt3.sipsolutions.net>
-References: <1293577297-25755-1-git-send-email-thomas@cozybit.com>
-	 <1293577297-25755-5-git-send-email-thomas@cozybit.com>
-	 <1293614230.3546.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Dec 2010 10:18:30 +0100
-Message-ID: <1293614310.3546.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Dec 2010 23:55:37 -0500
+Date: Wed, 15 Dec 2010 22:55:34 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8192ce: Fix build on powerpc
+Message-ID: <4d099bc6.A/mmZxu+nz0FW6tP%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-29 at 10:17 +0100, Johannes Berg wrote:
-> On Tue, 2010-12-28 at 15:01 -0800, Thomas Pedersen wrote:
-> 
-> > @@ -824,15 +827,22 @@ static void mwl8k_encapsulate_tx_frame(struct sk_buff *skb)
-> >  	header_pad = 0;
-> >  	data_pad = 0;
-> >  	if (key_conf != NULL) {
-> > -		if (key_conf->alg == ALG_WEP) {
-> > +		switch (key_conf->cipher) {
-> 
-> how can this patch possibly apply? key_conf->alg hasn't existed in a
-> LONG time, so I don't see how you can be removing a line containing it?!
+After merge of the rtl8192ce driver, a powerpc build fails with:
 
-Oh, never mind, patch 2/4 is adding this code, so it can never
-compile...........
+drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c: In function 'rtl92c_init_sw_vars':
+drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c:76: error: implicit declaration of function 'vmalloc'
+drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c:76: warning: cast to pointer from integer of different size
+drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c: In function 'rtl92c_deinit_sw_vars':
+drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c:91: error: implicit declaration of function 'vfree'
 
-johannes
+The problem is fixed by explicitly including the appropriate header.
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+Sorry about this. Too bad the implicit headers are not the same on all platforms.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
+@@ -27,6 +27,8 @@
+  *
+  *****************************************************************************/
+ 
++#include <linux/vmalloc.h>
++
+ #include "../wifi.h"
+ #include "../core.h"
+ #include "../pci.h"
