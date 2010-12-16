@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26963 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752440Ab0LZS1v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 13:27:51 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/3] iwlagn: fix FH error
-Date: Sun, 26 Dec 2010 10:17:57 -0800
-Message-Id: <1293387478-3297-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1293387478-3297-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1293387478-3297-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:44819 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691Ab0LPLa1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 06:30:27 -0500
+Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org, luis.rodriguez@atheros.com
+In-Reply-To: <AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
+References: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
+	 <1292482775.3542.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Dec 2010 12:30:24 +0100
+Message-ID: <1292499024.3612.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2010-12-16 at 03:17 -0800, Paul Stewart wrote:
 
-# iw wlan0 interface add moni0 type monitor flags control
-# ip link set moni0 up
+> > I thought this was solved in ath9k differently? Was that somehow
+> > inadequate?
+> 
+> Unfortunately previous attempts to solve this problem failed.
 
-causes a continuous spew of FH_ERROR from the
-device. Fix this by not setting the CTL2HOST
-filter by itself -- CTL + promisc works fine.
+I thought ath9k was fixed to simply go idle when stopped? Why didn't
+that help?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> Here's a slightly better rationale, as I'm getting to understand the problem.
+> ieee80211_do_stop() decrements "open_count" so early during the function
+> that if the device is not idle at this point (e.g, due to scanning),
+> drv_config()
+> will never be called on the the lower-level driver, since ieee80211_hw_config()
+> tests for "open_count > 0" and silently returns no-error.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d407547..b54d74d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3634,7 +3634,8 @@ void iwlagn_configure_filter(struct ieee80211_hw *hw,
- 			changed_flags, *total_flags);
- 
- 	CHK(FIF_OTHER_BSS | FIF_PROMISC_IN_BSS, RXON_FILTER_PROMISC_MSK);
--	CHK(FIF_CONTROL, RXON_FILTER_CTL2HOST_MSK);
-+	/* Setting _just_ RXON_FILTER_CTL2HOST_MSK causes FH errors */
-+	CHK(FIF_CONTROL, RXON_FILTER_CTL2HOST_MSK | RXON_FILTER_PROMISC_MSK);
- 	CHK(FIF_BCN_PRBRESP_PROMISC, RXON_FILTER_BCON_AWARE_MSK);
- 
- #undef CHK
--- 
-1.7.0.4
+Yes, I realise that -- but also Luis said this change wasn't sufficient
+in his tests, he also needed something in scan code itself. Also, this
+is really quite intentional if you read the comments around the area
+you're modifying -- mac80211 assumes that after it shuts down the device
+with stop(), the device will be powered off under control of the driver
+until start().
+
+I just don't think it'll be easy to actually make sure that we always go
+IDLE before calling stop(). This patch might solve part of the problem,
+but what about hardware scan, that might have to be stopped by the
+driver during stop()? Similar things might come up with other features.
+
+Therefore I'm not sure we should even try. If we stop() the hardware,
+what's preventing the driver from doing whatever it needs to put the
+device into a low power state?
+
+johannes
 
