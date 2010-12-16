@@ -1,299 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2066 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754729Ab0LARoV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 12:44:21 -0500
-From: Joe Perches <joe@perches.com>
-To: Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: ath9k-devel@lists.ath9k.org, Peter Stuge <peter@stuge.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] ath: Add and use ath_printk and ath_<level>
-Date: Wed,  1 Dec 2010 09:44:18 -0800
-Message-Id: <d2a73495a7295cbd01ffd820761f538bc301f6aa.1291224405.git.joe@perches.com>
-In-Reply-To: <4CF65DB9.3050007@openwrt.org>
-References: <4CF65DB9.3050007@openwrt.org>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:65345 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754653Ab0LPRKn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 12:10:43 -0500
+Date: Thu, 16 Dec 2010 11:10:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Switch ;ocking from semaphores to mutexes
+Message-ID: <4d0a4810.D27sZkvOxusWnOXl%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ath_printk and ath_<level> similar to
-dev_printk and dev_<level> from device.h
-
-This allows a more gradual rename of ath_print
-to to ath_dbg or perhaps ath_debug.
-
-This basically removes debug.h leaving
-only an #define ath_printk ath_dbg
-there and moving all the ATH_DBG_<foo>
-enums to ath.h
-
-I do not think there's much purpose for struct
-ath_common * being passed to the ath_printk
-functions, but perhaps there might be.
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath.h   |  103 ++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/debug.c |   20 -------
- drivers/net/wireless/ath/debug.h |   72 +--------------------------
- drivers/net/wireless/ath/main.c  |   20 +++++++
- 4 files changed, 124 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 26bdbee..5a598b9 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -186,4 +186,107 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
- void ath_hw_cycle_counters_update(struct ath_common *common);
- int32_t ath_hw_get_listen_time(struct ath_common *common);
+John,
+
+This change was requested by Johannes.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
+@@ -309,8 +309,8 @@ int rtl_init_core(struct ieee80211_hw *h
+ 	}
  
-+extern __attribute__ ((format (printf, 3, 4))) int
-+ath_printk(const char *level, struct ath_common *common, const char *fmt, ...);
-+
-+#define ath_emerg(common, fmt, ...)				\
-+	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS)
-+#define ath_alert(common, fmt, ...)				\
-+	ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS)
-+#define ath_crit(common, fmt, ...)				\
-+	ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS)
-+#define ath_err(common, fmt, ...)				\
-+	ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS)
-+#define ath_warn(common, fmt, ...)				\
-+	ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS)
-+#define ath_notice(common, fmt, ...)				\
-+	ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS)
-+#define ath_info(common, fmt, ...)				\
-+	ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS)
-+
-+/**
-+ * enum ath_debug_level - atheros wireless debug level
-+ *
-+ * @ATH_DBG_RESET: reset processing
-+ * @ATH_DBG_QUEUE: hardware queue management
-+ * @ATH_DBG_EEPROM: eeprom processing
-+ * @ATH_DBG_CALIBRATE: periodic calibration
-+ * @ATH_DBG_INTERRUPT: interrupt processing
-+ * @ATH_DBG_REGULATORY: regulatory processing
-+ * @ATH_DBG_ANI: adaptive noise immunitive processing
-+ * @ATH_DBG_XMIT: basic xmit operation
-+ * @ATH_DBG_BEACON: beacon handling
-+ * @ATH_DBG_CONFIG: configuration of the hardware
-+ * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
-+ * @ATH_DBG_PS: power save processing
-+ * @ATH_DBG_HWTIMER: hardware timer handling
-+ * @ATH_DBG_BTCOEX: bluetooth coexistance
-+ * @ATH_DBG_BSTUCK: stuck beacons
-+ * @ATH_DBG_ANY: enable all debugging
-+ *
-+ * The debug level is used to control the amount and type of debugging output
-+ * we want to see. Each driver has its own method for enabling debugging and
-+ * modifying debug level states -- but this is typically done through a
-+ * module parameter 'debug' along with a respective 'debug' debugfs file
-+ * entry.
-+ */
-+enum ATH_DEBUG {
-+	ATH_DBG_RESET		= 0x00000001,
-+	ATH_DBG_QUEUE		= 0x00000002,
-+	ATH_DBG_EEPROM		= 0x00000004,
-+	ATH_DBG_CALIBRATE	= 0x00000008,
-+	ATH_DBG_INTERRUPT	= 0x00000010,
-+	ATH_DBG_REGULATORY	= 0x00000020,
-+	ATH_DBG_ANI		= 0x00000040,
-+	ATH_DBG_XMIT		= 0x00000080,
-+	ATH_DBG_BEACON		= 0x00000100,
-+	ATH_DBG_CONFIG		= 0x00000200,
-+	ATH_DBG_FATAL		= 0x00000400,
-+	ATH_DBG_PS		= 0x00000800,
-+	ATH_DBG_HWTIMER		= 0x00001000,
-+	ATH_DBG_BTCOEX		= 0x00002000,
-+	ATH_DBG_WMI		= 0x00004000,
-+	ATH_DBG_BSTUCK		= 0x00008000,
-+	ATH_DBG_ANY		= 0xffffffff
-+};
-+
-+#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
-+
-+#ifdef CONFIG_ATH_DEBUG
-+
-+#define ath_dbg(common, dbg_mask, fmt, ...)			\
-+({								\
-+	int rtn;						\
-+	if ((common)->debug_mask & dbg_mask)			\
-+		rtn = ath_printk(KERN_DEBUG, common, fmt,	\
-+				 ##__VA_ARGS__);		\
-+	else							\
-+		rtn = 0;					\
-+								\
-+	rtn;							\
-+})
-+#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
-+
-+#else
-+
-+static inline  __attribute__ ((format (printf, 3, 4))) int
-+ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
-+	const char *fmt, ...)
-+{
-+	return 0;
-+}
-+#define ATH_DBG_WARN(foo, arg) do {} while (0)
-+
-+#endif /* CONFIG_ATH_DEBUG */
-+
-+/** Returns string describing opmode, or NULL if unknown mode. */
-+#ifdef CONFIG_ATH_DEBUG
-+const char *ath_opmode_to_string(enum nl80211_iftype opmode);
-+#else
-+static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
-+{
-+	return "UNKNOWN";
-+}
-+#endif
-+
- #endif /* ATH_H */
-diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
-index a9600ba..5367b10 100644
---- a/drivers/net/wireless/ath/debug.c
-+++ b/drivers/net/wireless/ath/debug.c
-@@ -15,26 +15,6 @@
-  */
- 
- #include "ath.h"
--#include "debug.h"
--
--void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	if (likely(!(common->debug_mask & dbg_mask)))
--		return;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk(KERN_DEBUG "ath: %pV", &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ath_print);
- 
- const char *ath_opmode_to_string(enum nl80211_iftype opmode)
- {
-diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
-index f207007..cec951c 100644
---- a/drivers/net/wireless/ath/debug.h
-+++ b/drivers/net/wireless/ath/debug.h
-@@ -17,76 +17,6 @@
- #ifndef ATH_DEBUG_H
- #define ATH_DEBUG_H
- 
--#include "ath.h"
--
--/**
-- * enum ath_debug_level - atheros wireless debug level
-- *
-- * @ATH_DBG_RESET: reset processing
-- * @ATH_DBG_QUEUE: hardware queue management
-- * @ATH_DBG_EEPROM: eeprom processing
-- * @ATH_DBG_CALIBRATE: periodic calibration
-- * @ATH_DBG_INTERRUPT: interrupt processing
-- * @ATH_DBG_REGULATORY: regulatory processing
-- * @ATH_DBG_ANI: adaptive noise immunitive processing
-- * @ATH_DBG_XMIT: basic xmit operation
-- * @ATH_DBG_BEACON: beacon handling
-- * @ATH_DBG_CONFIG: configuration of the hardware
-- * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
-- * @ATH_DBG_PS: power save processing
-- * @ATH_DBG_HWTIMER: hardware timer handling
-- * @ATH_DBG_BTCOEX: bluetooth coexistance
-- * @ATH_DBG_BSTUCK: stuck beacons
-- * @ATH_DBG_ANY: enable all debugging
-- *
-- * The debug level is used to control the amount and type of debugging output
-- * we want to see. Each driver has its own method for enabling debugging and
-- * modifying debug level states -- but this is typically done through a
-- * module parameter 'debug' along with a respective 'debug' debugfs file
-- * entry.
-- */
--enum ATH_DEBUG {
--	ATH_DBG_RESET		= 0x00000001,
--	ATH_DBG_QUEUE		= 0x00000002,
--	ATH_DBG_EEPROM		= 0x00000004,
--	ATH_DBG_CALIBRATE	= 0x00000008,
--	ATH_DBG_INTERRUPT	= 0x00000010,
--	ATH_DBG_REGULATORY	= 0x00000020,
--	ATH_DBG_ANI		= 0x00000040,
--	ATH_DBG_XMIT		= 0x00000080,
--	ATH_DBG_BEACON		= 0x00000100,
--	ATH_DBG_CONFIG		= 0x00000200,
--	ATH_DBG_FATAL		= 0x00000400,
--	ATH_DBG_PS		= 0x00000800,
--	ATH_DBG_HWTIMER		= 0x00001000,
--	ATH_DBG_BTCOEX		= 0x00002000,
--	ATH_DBG_WMI		= 0x00004000,
--	ATH_DBG_BSTUCK		= 0x00008000,
--	ATH_DBG_ANY		= 0xffffffff
--};
--
--#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
--
--#ifdef CONFIG_ATH_DEBUG
--void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--	__attribute__ ((format (printf, 3, 4)));
--#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
--#else
--static inline void __attribute__ ((format (printf, 3, 4)))
--ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--{
--}
--#define ATH_DBG_WARN(foo, arg)
--#endif /* CONFIG_ATH_DEBUG */
--
--/** Returns string describing opmode, or NULL if unknown mode. */
--#ifdef CONFIG_ATH_DEBUG
--const char *ath_opmode_to_string(enum nl80211_iftype opmode);
--#else
--static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
--{
--	return "UNKNOWN";
--}
--#endif
-+#define ath_print ath_dbg
- 
- #endif /* ATH_DEBUG_H */
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 487193f..c325202 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -56,3 +56,23 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
- 	return skb;
+ 	/* <4> locks */
+-	sema_init(&rtlpriv->locks.ips_sem, 1);
+-	sema_init(&rtlpriv->locks.conf_sem, 1);
++	mutex_init(&rtlpriv->locks.ips_mutex);
++	mutex_init(&rtlpriv->locks.conf_mutex);
+ 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
+ 	spin_lock_init(&rtlpriv->locks.h2c_lock);
+ 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
+Index: wireless-testing/drivers/net/wireless/rtlwifi/core.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/core.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/core.c
+@@ -43,13 +43,13 @@ static int rtl_op_start(struct ieee80211
+ 		return 0;
+ 	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
+ 		return 0;
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 	err = rtlpriv->intf_ops->adapter_start(hw);
+ 	if (err)
+ 		goto out;
+ 	rtl_watch_dog_timer_callback((unsigned long)hw);
+ out:
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ 	return err;
  }
- EXPORT_SYMBOL(ath_rxbuf_alloc);
-+
-+int ath_printk(const char *level, struct ath_common *common,
-+	       const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+	int rtn;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	rtn = printk("%sath: %pV", level, &vaf);
-+
-+	va_end(args);
-+
-+	return rtn;
-+}
-+EXPORT_SYMBOL(ath_printk);
--- 
-1.7.3.2.245.g03276.dirty
-
+ 
+@@ -68,7 +68,7 @@ static void rtl_op_stop(struct ieee80211
+ 		mdelay(1);
+ 	}
+ 
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 
+ 	mac->link_state = MAC80211_NOLINK;
+ 	memset(mac->bssid, 0, 6);
+@@ -79,7 +79,7 @@ static void rtl_op_stop(struct ieee80211
+ 	rtl_deinit_deferred_work(hw);
+ 	rtlpriv->intf_ops->adapter_stop(hw);
+ 
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ }
+ 
+ static int rtl_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+@@ -119,7 +119,7 @@ static int rtl_op_add_interface(struct i
+ 
+ 	rtl_ips_nic_on(hw);
+ 
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		if (mac->beacon_enabled == 1) {
+@@ -156,7 +156,7 @@ static int rtl_op_add_interface(struct i
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
+ 
+ out:
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ 	return err;
+ }
+ 
+@@ -166,7 +166,7 @@ static void rtl_op_remove_interface(stru
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 
+ 	/* Free beacon resources */
+ 	if ((mac->opmode == NL80211_IFTYPE_AP) ||
+@@ -190,7 +190,7 @@ static void rtl_op_remove_interface(stru
+ 	mac->opmode = NL80211_IFTYPE_UNSPECIFIED;
+ 	rtlpriv->cfg->ops->set_network_type(hw, mac->opmode);
+ 
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ }
+ 
+ 
+@@ -202,7 +202,7 @@ static int rtl_op_config(struct ieee8021
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 	if (changed & IEEE80211_CONF_CHANGE_LISTEN_INTERVAL) {	/*BIT(2)*/
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
+ 			 ("IEEE80211_CONF_CHANGE_LISTEN_INTERVAL\n"));
+@@ -303,7 +303,7 @@ static int rtl_op_config(struct ieee8021
+ 					       hw->conf.channel_type);
+ 	}
+ 
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ 
+ 	return 0;
+ }
+@@ -450,7 +450,7 @@ static void rtl_op_bss_info_changed(stru
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 
+ 	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
+ 	    (vif->type == NL80211_IFTYPE_AP) ||
+@@ -700,7 +700,7 @@ static void rtl_op_bss_info_changed(stru
+ 	}
+ 
+ out:
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ }
+ 
+ static u64 rtl_op_get_tsf(struct ieee80211_hw *hw)
+@@ -852,7 +852,7 @@ static int rtl_op_set_key(struct ieee802
+ 		  sta ? sta->addr : bcast_addr));
+ 	rtlpriv->sec.being_setkey = true;
+ 	rtl_ips_nic_on(hw);
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 	/* <1> get encryption alg */
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+@@ -970,7 +970,7 @@ static int rtl_op_set_key(struct ieee802
+ 			 ("cmd_err:%x!!!!:\n", cmd));
+ 	}
+ out_unlock:
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ 	rtlpriv->sec.being_setkey = false;
+ 	return err;
+ }
+@@ -986,7 +986,7 @@ static void rtl_op_rfkill_poll(struct ie
+ 	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
+ 		return;
+ 
+-	down(&rtlpriv->locks.conf_sem);
++	mutex_lock(&rtlpriv->locks.conf_mutex);
+ 
+ 	/*if Radio On return true here */
+ 	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
+@@ -1004,7 +1004,7 @@ static void rtl_op_rfkill_poll(struct ie
+ 		}
+ 	}
+ 
+-	up(&rtlpriv->locks.conf_sem);
++	mutex_unlock(&rtlpriv->locks.conf_mutex);
+ }
+ 
+ const struct ieee80211_ops rtl_ops = {
+Index: wireless-testing/drivers/net/wireless/rtlwifi/ps.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/ps.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/ps.c
+@@ -287,7 +287,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	enum rf_pwrstate rtstate;
+ 
+-	down(&rtlpriv->locks.ips_sem);
++	mutex_lock(&rtlpriv->locks.ips_mutex);
+ 
+ 	if (ppsc->b_inactiveps) {
+ 		rtstate = ppsc->rfpwr_state;
+@@ -303,7 +303,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
+ 		}
+ 	}
+ 
+-	up(&rtlpriv->locks.ips_sem);
++	mutex_unlock(&rtlpriv->locks.ips_mutex);
+ }
+ 
+ /*for FW LPS*/
+Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1193,8 +1193,8 @@ struct rtl_hal_cfg {
+ 
+ struct rtl_locks {
+ 	/*sem */
+-	struct semaphore ips_sem;
+-	struct semaphore conf_sem;
++	struct mutex ips_mutex;
++	struct mutex conf_mutex;
+ 
+ 	/*spin lock */
+ 	spinlock_t irq_th_lock;
