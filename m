@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:14290 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752614Ab0LIWn0 (ORCPT
+Received: from mx51.mymxserver.com ([188.94.250.25]:10417 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755805Ab0LPNM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 17:43:26 -0500
-Date: Thu, 9 Dec 2010 23:36:47 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
+	Thu, 16 Dec 2010 08:12:57 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
 Subject: Re: Start dropping PCMCIA from compat-wireless for 2.6.38+
-In-Reply-To: <AANLkTikc_u4NhxdGzwQMjbEe12qYmhq481amazTK-JRc@mail.gmail.com>
-Message-ID: <alpine.LNX.2.00.1012092335380.25880@swampdragon.chaosbits.net>
-References: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com> <alpine.LNX.2.00.1012092329480.25880@swampdragon.chaosbits.net> <AANLkTikc_u4NhxdGzwQMjbEe12qYmhq481amazTK-JRc@mail.gmail.com>
+Date: Thu, 16 Dec 2010 14:17:42 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com> <201012130846.16522.holgerschurig@gmail.com> <AANLkTimWaopJnU5T6OZvqm4YSvSZeXs0dh7oMfU+ERJ8@mail.gmail.com>
+In-Reply-To: <AANLkTimWaopJnU5T6OZvqm4YSvSZeXs0dh7oMfU+ERJ8@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201012161417.42268.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Dec 2010, Luis R. Rodriguez wrote:
+> You use libertas_cs on an embedded device with compat-wireless, OK,
+> thanks for the feedback. If you can help with patches when PCMCIA crap
+> is advanced that would help too.
 
-> On Thu, Dec 9, 2010 at 2:31 PM, Jesper Juhl <jj@chaosbits.net> wrote:
-> > On Thu, 9 Dec 2010, Luis R. Rodriguez wrote:
-> >
-> >> I'm going to start dropping PCMCIA stuff from compat-wireless as I
-> >> don't think we have any users of it nor interest to keep backporting
-> >> it. This entails dropping drivers like orinoco, b43 PCMCIA support,
-> >> libertas, as well as bluetooth bluecard_cs, bluecard_cs, dtl1_cs,
-> >> bt3c_cs and of course CONFIG_SSB_PCMCIAHOST. If you are a user please
-> >> yell now.
-> >>
-> > Yelling.
-> > While I'm not personally a user, my mother is. She still has an old IBM
-> > Thinkpad 600 laptop with a PCMCIA card in it that uses the orinoco driver.
-> 
-> And you have your mother using compat-wireless?
-> 
-Yes, as a matter of fact I do.
+The problem is that I work on this in an on-off way. If a customer 
+notices some heavy bug with the current kernel on our devices, I'll do 
+the upgrade dance. As long as everything works, I'm lazy --- or busy 
+doing other things.
+
+And I'm looking for a new job anyway :-)
+
+Greetings,
+Holger
 
 -- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
-
+Homepage: http://www.holgerschurig.de
