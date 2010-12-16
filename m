@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50672 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689Ab0LCPAH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 10:00:07 -0500
-Date: Fri, 3 Dec 2010 09:59:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Properly use unlikely check macro
-Message-ID: <20101203145918.GC2348@tuxdriver.com>
-References: <1291044477-2317-1-git-send-email-mshajakhan@atheros.com>
- <20101202202127.GF2358@tuxdriver.com>
- <4CF87597.5080900@atheros.com>
+Received: from mail.atheros.com ([12.19.149.2]:43454 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752280Ab0LPMIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 07:08:30 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 04:08:15 -0800
+Message-ID: <4D0A012E.3090408@atheros.com>
+Date: Thu, 16 Dec 2010 17:38:14 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CF87597.5080900@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [RFC] ath9k_htc : Update txrate status to mac80211
+References: <1292499588-11636-1-git-send-email-mshajakhan@atheros.com> <19721.65246.410283.55163@gargle.gargle.HOWL>
+In-Reply-To: <19721.65246.410283.55163@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 03, 2010 at 10:14:07AM +0530, Mohammed Shafi wrote:
-> On Friday 03 December 2010 01:51 AM, John W. Linville wrote:
-> >On Mon, Nov 29, 2010 at 08:57:57PM +0530, Mohammed Shafi Shajakhan wrote:
-> >>From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>
-> >>AUTOSLEEP feature is enabled only AR9003 and later chips.So unlikely
-> >>macro should be used only to check whether auto-sleep feature is enabled
-> >>
-> >>Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>---
-> >>  drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
-> >>  1 files changed, 3 insertions(+), 3 deletions(-)
-> >>
-> >>diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> >>index 262c815..751ee1b 100644
-> >>--- a/drivers/net/wireless/ath/ath9k/recv.c
-> >>+++ b/drivers/net/wireless/ath/ath9k/recv.c
-> >>@@ -1743,10 +1743,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
-> >>  		}
-> >>
-> >>  		spin_lock_irqsave(&sc->sc_pm_lock, flags);
-> >>-		if (unlikely(ath9k_check_auto_sleep(sc) ||
-> >>-			     (sc->ps_flags&  (PS_WAIT_FOR_BEACON |
-> >>+		if ((sc->ps_flags&  (PS_WAIT_FOR_BEACON |
-> >>  					      PS_WAIT_FOR_CAB |
-> >>-					      PS_WAIT_FOR_PSPOLL_DATA))))
-> >>+					      PS_WAIT_FOR_PSPOLL_DATA)) ||
-> >>+				unlikely(ath9k_hw_check_auto_sleep(sc)))
-> >>  			ath_rx_ps(sc, skb);
-> >>  		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
-> >What tree is this against?
-> 2.6.37-rc4 ..Any problems in applying.Do I have to resend it based
-> on the latest pull ?
-
-Did you compile it?
-
-/home/linville/git/linux-2.6
-[linville-8530p.local]:> git describe
-v2.6.37-rc4
-
-/home/linville/git/linux-2.6
-[linville-8530p.local]:> grep ath9k_hw_check_auto_sleep drivers/net/wireless/ath/ath9k/*
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Thursday 16 December 2010 05:28 PM, Sujith wrote:
+> Mohammed Shafi Shajakhan wrote:
+>    
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>
+>> In ath9k htc txrate status is not updated to mac80211 as rate control is
+>> handled in firmware.This workaround will obtain the txrate which was
+>> supposed to be for debug statistics and updates it to mac80211 using
+>> a rate control look up table.
+>>      
+> Well, we can't match the TXRATE event with any transmitted frame,
+> so we would end up sending bogus and most likely, stale, information to mac80211.
+>    
+Hi Sujith,
+             Thanks for your reply.Yes we cannot cleanly send the actual 
+status to mac80211.
+This patch just takes care for displaying the txrate and appropriately 
+sets mac80211 rate control flags,but completely ignores long retries.I 
+had tested it  , except retries the MCS index , txrate in userspace 
+matches with the txrate reported in debug statistics.
+     Is there chance of any possible fix for this ?
+> Sujith
+> .
+>
+>    
