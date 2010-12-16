@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.214.180]:39422 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754370Ab0LMSb6 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:59703 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754551Ab0LPUEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 13:31:58 -0500
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 13 Dec 2010 10:31:34 -0800
-Message-ID: <AANLkTimNe0wX1cJfw3zdTpa5pqZ-xycWVtp4tH4auaCc@mail.gmail.com>
-Subject: Stable extra versions on linux-next.git
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Dec 2010 15:04:39 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 331904061C
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 15:04:44 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-16 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101216200437.E642A40F97@repository3.orbit-lab.org>
+Date: Thu, 16 Dec 2010 15:04:37 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   1e0e84f..03f2848  history    -> origin/history
+ + e3d7018...46f736e master     -> origin/master  (forced update)
+   3373c3d..a4851d8  stable     -> origin/stable
+ * [new tag]         next-20101216 -> next-20101216
 
-I'm using linux-next.git to suck out pending stable patches for some
-releases for 802.11 using compat-wireless. This works great for the
-first stable release of a kernel, so for example 2.6.36 was released
-but there were a few stable patches I wanted to suck in for a release
-for compat-wireless-2.6.36 so I used linux-next.git and used this:
+compat-wireless code metrics
 
-git format-patch --grep=stable@kernel.org -o pending-stable/ v2.6.36..
-        net/wireless/
-        net/wireless/
-        net/mac80211/
-        net/rfkill/
-        drivers/net/wireless/
-        net/bluetooth/
-        drivers/bluetooth/
-        drivers/net/atl1c/
-        drivers/net/atl1e/
-        drivers/net/atlx/
-        include/linux/nl80211.h
-        include/linux/rfkill.h
-        include/net/cfg80211.h
-	include/net/mac80211.h
-        include/net/regulatory.h
-        include/net/cfg80211.h
+    752909 - Total upstream lines of code being pulled
+      2198 - backport code changes
+      1935 - backport code additions
+       263 - backport code deletions
+      6639 - backport from compat module
+      8837 - total backport code
+    1.1737 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2035 - % of crap code
 
-To suck out pending-stable patches so I can apply to my local tarball.
-I just noticed linux-next.git doesn't suck in the stable extra
-versions though. The extra version stable updates are available
-through hpa's linux-2.6-allstable.git tree:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
-
-Now, I have three trees:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
-
-My wireless-testing.git tree is the original fresh clonse, all others
-are cloned with --reference pointing to the wireless-testing/.git
-directory. This lets me removes the need to suck in objects which all
-trees have in common. What it seems I want is to generate a
-format-patch from one old stable-extra-version to a new linux-next
-tag.
-
-git format-patch --grep=stable@kernel.org -o pending-stable/
-v2.6.36.2..next-20101213
-
-I tried this from my wireless-testing directory but with no luck, it
-doesn't know about the linux-2.6-allstable.git tags and linux-next.git
-tags, and my linux-next tree tree is unaware of the extra version
-stable updates. Any ideas if I can get this working somehow?
-
-  Luis
+Base tree: linux-next.git
+Base tree version: next-20101216
+compat-wireless release: compat-wireless-2010-12-10-3-g880bb0b-pc
