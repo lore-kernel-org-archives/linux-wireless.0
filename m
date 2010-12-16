@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51285 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757481Ab0LBR7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 12:59:54 -0500
-Received: by bwz15 with SMTP id 15so7495750bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:59:53 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Fix BUG in pskb_expand_head when transmitting shared skbs
-Date: Thu, 2 Dec 2010 18:58:45 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1291311849-13086-1-git-send-email-helmut.schaa@googlemail.com> <1291311968.3481.52.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291311968.3481.52.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:30982 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755923Ab0LPDYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Dec 2010 22:24:16 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 19:24:01 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/2] cfg80211/ath: custom regulatory bug fixes
+Date: Wed, 15 Dec 2010 19:24:10 -0800
+Message-ID: <1292469852-2987-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201012021858.46044.helmut.schaa@googlemail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 02 Dezember 2010 schrieb Johannes Berg:
-> On Thu, 2010-12-02 at 18:44 +0100, Helmut Schaa wrote:
-> > mac80211 doesn't handle shared skbs correctly at the moment. As a result
-> > a possible resize can trigger a BUG in pskb_expand_head.
-> 
-> Could monitor_start_xmit have the same issue?
+Here are a couple of fixes for the recent change we did where we
+moved the core regulatory hint to the queue. In a really slow box
+or if you are doing crazy testing this can potentilly occur. I take
+it the patch "cfg80211: put core regulatory request into queue"
+will note make it in until 2.6.38, so these are not a stable fixes.
 
-Hmm, good point. Are we expecting shared skbs on monitor interfaces somehow?
+I was able to force the condition by doing:
 
-To be honest I don't know in which situations shared skbs are used (despite
-the pktgen case I've run into) and thus cannot make a qualified statement :)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 99d4183..e6f483d0 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1481,7 +1481,7 @@ static void reg_process_pending_hints(void)
+ 
+ 	spin_unlock(&reg_requests_lock);
+ 
+-	reg_process_hint(reg_request);
++	//reg_process_hint(reg_request);
+ 
+ out:
+ 	mutex_unlock(&reg_mutex);
 
-pktgen only generates 802.3 frames AFAICS and not arbitrary frames, so this
-is not usable for monitor interfaces (yet?).
+This mimics the situation of either having a slow box or you
+doing some crazy module load/unload testing.
 
-Helmut
+Luis R. Rodriguez (2):
+  cfg80211: fix null pointer dereference with a custom regulatory
+    request
+  ath: fix NULL pointer dereference on reg_notifier()
+
+ drivers/net/wireless/ath/regd.c |    8 ++++++++
+ include/net/cfg80211.h          |    4 +++-
+ net/wireless/reg.c              |    3 ++-
+ 3 files changed, 13 insertions(+), 2 deletions(-)
+
+-- 
+1.7.3.2.90.gd4c43
+
