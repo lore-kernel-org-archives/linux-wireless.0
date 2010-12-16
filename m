@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:56369 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab0LUUoQ (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:64025 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756186Ab0LPUcP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 15:44:16 -0500
-Subject: [PATCH 2/7] rndis_wlan: do not set default_key if not WEP key
-To: "John W. Linville" <linville@tuxdriver.com>
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Dec 2010 22:44:12 +0200
-Message-ID: <20101221204412.12250.10396.stgit@fate.lan>
-In-Reply-To: <20101221204405.12250.35410.stgit@fate.lan>
-References: <20101221204405.12250.35410.stgit@fate.lan>
+	Thu, 16 Dec 2010 15:32:15 -0500
+Received: by wwa36 with SMTP id 36so2858865wwa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 12:32:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Thu, 16 Dec 2010 12:32:14 -0800
+Message-ID: <AANLkTi=fPHdnizvPsDVQU+aMcYmMzdu6thNvXG2YLMuX@mail.gmail.com>
+Subject: Help with Libertas error
+From: Matt Rosenthal <matt@touchrev.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rndis_set_default_key did call add_wep_key to set default key on device, even
-if key is WPA. This caused rndis_wlan not work with wpa_supplicant in nl80211
-mode (causing disconnect from AP).
+Hi,
+If possible can someone help point me in the right direction.  I am
+building an embedded android device.  I am currently using the froyo
+code base on the 2.6.32 Linux kernel.
+My system works well but under some heave wifi loads the wifi stops
+working.  I am using the Marvell 8686 wifi chip connected to a TI
+OMAP3 processor.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/rndis_wlan.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+The way to create the problem is to download large files over wifi or
+continuously stream data over wifi.
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index de4c050..9e6105c 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2435,6 +2435,9 @@ static int rndis_set_default_key(struct wiphy *wiphy, struct net_device *netdev,
- 
- 	priv->encr_tx_key_index = key_index;
- 
-+	if (is_wpa_key(priv, key_index))
-+		return 0;
-+
- 	key = priv->encr_keys[key_index];
- 
- 	return add_wep_key(usbdev, key.material, key.len, key_index);
+Below is an error message I see on the console.
+---------------------------------------------------------------------
+libertas: Excessive timeouts submitting command 0x000b
+libertas: PREP_CMD: command 0x000b failed: -110
+libertas: PREP_CMD: command 0x000b failed: -110
+libertas: requeueing command 0x000b due to timeout (#1)
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#2)
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#3)
+libertas: command 0x000b timed out
+libertas: Excessive timeouts submitting command 0x000b
+libertas: PREP_CMD: command 0x000b failed: -110
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#1)
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#2)
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#3)
+libertas: command 0x000b timed out
+libertas: Excessive timeouts submitting command 0x000b
+libertas: PREP_CMD: command 0x000b failed: -110
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#1)
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#2)
+libertas: command 0x000b timed out
+libertas: requeueing command 0x000b due to timeout (#3)
+------------------------------------------------------------------------
 
+After this error message shows up the wifi no longer functions at all.
+ Any help is much appreciated.
+Thanks
+
+Matt
+
+-- 
+Matthew Rosenthal
+TPK USA, LLC
+Touch Revolution BU
+
+Confidentiality Disclaimer: This e-mail message and any attachments
+are private communication sent by TPK USA LLC, and may contain
+confidential, legally privileged information meant solely for the
+intended recipient. If you are not the intended recipient, you are
+hereby notified that any use, dissemination, distribution or copying
+of this communication is strictly prohibited. Please notify the sender
+immediately by replying to this message, then delete the e-mail and
+any attachments from your system. Thank you.
