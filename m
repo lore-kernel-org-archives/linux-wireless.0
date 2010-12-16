@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35424 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521Ab0LGTmT (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59573 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757355Ab0LPUna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 14:42:19 -0500
-Subject: RE: [PATCH] mwifiex: remove some element ID's definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307D5C10021@SC-VEXCH1.marvell.com>
-References: <1291702585-30285-1-git-send-email-bzhao@marvell.com>
-	 <1291714911.3607.6.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F704307D5C10021@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Dec 2010 20:42:15 +0100
-Message-ID: <1291750935.3607.57.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 16 Dec 2010 15:43:30 -0500
+Received: by qwa26 with SMTP id 26so3661280qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 12:43:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <370262.79515.qm@web56806.mail.re3.yahoo.com>
+References: <599567.31181.qm@web56805.mail.re3.yahoo.com>
+	<370262.79515.qm@web56806.mail.re3.yahoo.com>
+Date: Thu, 16 Dec 2010 21:43:29 +0100
+Message-ID: <AANLkTi=img36VOkKapcgZz54ZmtXRneai-W0bU_W5z=E@mail.gmail.com>
+Subject: Re: [PATCH 04/17] rt2x00: fix hang when unplugging USB device in use
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: js@sig21.net, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-07 at 11:32 -0800, Bing Zhao wrote:
+Hi,
 
-> Thanks for your comments. I will resend the patch to incorporate all of above.
+> Even with the latest patches, rmmod'ing the rt2xXXX stuff causes a complete system freeze. Unless I bring down the interface first via 'ifconfig wlanX down', unloading the driver while operational equates OS hang and hard reset.
 
-FWIW, I have no issues with it being a separate patch either, just
-commenting.
+Odd I have been testing this while stresstesting the card, and either
+unplugging, rmmod or ifdown, and I couldn't
+reproduce any crashes. Has the stacktrace changed after these patches?
 
-johannes
-
+Ivo
