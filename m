@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36938 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755148Ab0LGVAM (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.214.194]:41286 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754063Ab0LQTip convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:00:12 -0500
-Date: Tue, 7 Dec 2010 15:57:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k: Fixes for mesh operation
-Message-ID: <20101207205713.GI2700@tuxdriver.com>
-References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
- <AANLkTik5bGXyWsz0CeVemZ-s9uWC+SOyJNzfxr1vcoGt@mail.gmail.com>
+	Fri, 17 Dec 2010 14:38:45 -0500
+Received: by iwn42 with SMTP id 42so507890iwn.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 11:38:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTik5bGXyWsz0CeVemZ-s9uWC+SOyJNzfxr1vcoGt@mail.gmail.com>
+In-Reply-To: <20101217063957.GB1381@senthil-lnx.users.atheros.com>
+References: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
+ <1292556197-4820-4-git-send-email-lrodriguez@atheros.com> <20101217063957.GB1381@senthil-lnx.users.atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 17 Dec 2010 11:38:24 -0800
+Message-ID: <AANLkTimXQ_pk96zF0tC_pBYLzt4wnjGE-cmTsdwpyc7s@mail.gmail.com>
+Subject: Re: [RFC 3/8] cfg80211: pass DFS region to drivers through reg_notifier()
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Waiting on davem to process my last pull request...
+On Thu, Dec 16, 2010 at 10:39 PM, Senthil Balasubramanian
+<senthilkumar@atheros.com> wrote:
+>> diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+>> index 2b14775..426b514 100644
+>> --- a/drivers/net/wireless/ath/regd.c
+>> +++ b/drivers/net/wireless/ath/regd.c
+>> @@ -337,7 +337,8 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
+>>
+>>  int ath_reg_notifier_apply(struct wiphy *wiphy,
+>>                          struct regulatory_request *request,
+>> -                        struct ath_regulatory *reg)
+>> +                        struct ath_regulatory *reg,
+>> +                        u16 dfs_region)
+> may be we can maintain consistency of dfs_regsion type. It's u8 everywhere
+> except here..???
 
-On Tue, Dec 07, 2010 at 11:12:55AM -0800, Javier Cardona wrote:
-> John,
-> 
-> Are you waiting for acks from ath5k maintainers to apply this series?
-> 
-> https://patchwork.kernel.org/patch/369461/
-> https://patchwork.kernel.org/patch/369471/
-> https://patchwork.kernel.org/patch/369481/
-> 
-> Thanks!
-> 
-> Javier
-> 
-> On Tue, Nov 30, 2010 at 6:18 PM, Javier Cardona <javier@cozybit.com> wrote:
-> > After applying these fixes we were able to successfully bring up mesh
-> > interfaces and establish peer links with ath9k devices.
-> >
-> > One issue still looms with both athX drivers: �you have to issue a scan to get
-> > mesh beaconing started. �Keep that in mind if you try and test these fixes.
-> >
-> >
-> 
-> 
-> 
-> -- 
-> Javier Cardona
-> cozybit Inc.
-> http://www.cozybit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Good catch yes, that was a typo.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
