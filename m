@@ -1,82 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:65221 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262Ab0LBFJW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 00:09:22 -0500
-Received: by wyb28 with SMTP id 28so7780605wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 21:09:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4CF6A8FD.6020508@candelatech.com>
-References: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>
-	<4CF6A8FD.6020508@candelatech.com>
-Date: Thu, 2 Dec 2010 10:39:19 +0530
-Message-ID: <AANLkTik7L-Ybcq6N=3daQefbycV3h9+=YtFV8_c3JW24@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received
- MIC failed bcast frames
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:19374 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753640Ab0LQKgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 05:36:50 -0500
+Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271
+ drivers
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Elvis Dowson <elvis.dowson@mac.com>
+Cc: Arik Nemtsov <arik@wizery.com>, panduranga <x0125717@ti.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
+	"Jara, Pedro" <pedrojara@ti.com>
+In-Reply-To: <397FC41E-7F1D-4AA8-9D09-6121BB0169E7@mac.com>
+References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com>
+	 <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
+	 <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com>
+	 <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
+	 <98BC4735-664C-491E-80CE-356BE32FA2ED@mac.com>
+	 <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
+	 <C4B3622F-ADC4-481E-9340-1819C815184A@mac.com>
+	 <AANLkTikvk+AqKRr1VbKv9pSHicy7PAGu8GkdeZuvYwFh@mail.gmail.com>
+	 <397FC41E-7F1D-4AA8-9D09-6121BB0169E7@mac.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 17 Dec 2010 12:38:43 +0200
+Message-ID: <1292582324.18083.7.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 2, 2010 at 1:28 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 12/01/2010 03:00 AM, Senthil Balasubramanian wrote:
->>
->> AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
->> this status for MIC failed frames is buggy.
->>
->> Due to this, MIC failure events for broadcast frames are not sent to
->> supplicant resulted in AP disconnecting the STA.
->>
->> Able to pass Wifi Test case 5.2.18 with this fix.
->
-> Please do not apply this yet.  As far as I can tell, either
-> of these patches breaks multiple VIF scenarios.  I'm not
-> sure exactly why, but I had to revert this to get any
-> of my interfaces to associate.
+Hi Elvis,
 
-Ben can you please give some more information(or just point out some
-link) regarding your test case,I can try it out.
-thanks,
-shafi
->
-> I'm using software encryption in case that matters.
->
-> Senthil:  Any chance you could test with a few VIFS to
-> see if you see the same problem?
->
-> Here is a dmesg snippet from wireless-testing with the v1 reverted
-> and v2 applied:
->
-> sta9: authenticate with 00:14:d1:c6:d2:54 (try 1)
-> sta9: authenticated
-> sta9: associate with 00:14:d1:c6:d2:54 (try 1)
-> sta9: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=1 aid=0)
-> sta9: 00:14:d1:c6:d2:54 denied association (code=1)
-> sta9: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
-> ieee80211 wiphy0: device now idle
-> ieee80211 wiphy0: device no longer idle - scanning
-> ieee80211 wiphy0: device now idle
-> ieee80211 wiphy0: device no longer idle - working
-> sta10: authenticate with 00:14:d1:c6:d2:54 (try 1)
-> sta10: authenticated
-> sta10: associate with 00:14:d1:c6:d2:54 (try 1)
-> sta10: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=1 aid=0)
-> sta10: 00:14:d1:c6:d2:54 denied association (code=1)
-> sta10: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Fri, 2010-12-17 at 14:25 +0400, ext Elvis Dowson wrote:
+> Hi Arik,
+> 
+> On Dec 17, 2010, at 2:12 PM, Arik Nemtsov wrote:
+> > 
+> > The firmware file should be called wl1271-fw.bin and the nvs file
+> > should be called wl1271-nvs.bin. Both should reside in /etc/firmware
+> > (if you're running a standard linux).
+> 
+> I got the files from this git repo 
+> 
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
+> 
+> and copied them over to /etc/firmware
+> 
+> /etc/firmware# ls -l
+> total 276
+> -r--r--r-- 1 root root 271712 Dec 17  2010 wl1271-fw.bin
+> -rw-rw-r-- 1 root root    912 Dec 17  2010 wl1271-nvs.bin
+> 
+> But I still get a error saying the the nvs file could not be found:
+> 
+> [   63.852264] wl1271: ERROR could not get nvs file: -2
+> [   63.906250] wl1271: loaded
+> [   63.909271] wl1271: initialized
+
+You need to start udevd.  The driver gets the firmware via udev.
+
+
+-- 
+Cheers,
+Luca.
+
