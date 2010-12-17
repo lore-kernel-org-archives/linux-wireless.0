@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:49161 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753491Ab0LVSbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 13:31:33 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 10:31:17 -0800
-Date: Wed, 22 Dec 2010 13:31:29 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>
-Subject: Re: [PATCH] ath9k: fix aphy / wiphy idle mismatch
-Message-ID: <20101222183129.GA8384@tux>
-References: <1292862599-26335-1-git-send-email-lrodriguez@atheros.com>
- <20101222182851.GC10046@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101222182851.GC10046@tuxdriver.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56913 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754871Ab0LQWl7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 17:41:59 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat: backport skb_checksum_start_offset
+Date: Fri, 17 Dec 2010 23:41:36 +0100
+Message-Id: <1292625698-17289-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 10:28:51AM -0800, John W. Linville wrote:
-> On Mon, Dec 20, 2010 at 11:29:59AM -0500, Luis R. Rodriguez wrote:
-> > ath9k supports its own set of virtual wiphys, and it uses
-> > the mac80211 idle notifications to know when a device needs
-> > to be idle or not. We recently changed ath9k to force idle
-> > on driver stop() and on resume but forgot to take into account
-> > ath9k's own virtual wiphy idle states. These are used internally
-> > by ath9k to check if the device's radio should be powered down
-> > on each idle call. Without this change its possible that the
-> > device could have been forced off but the virtual wiphy idle
-> > was left on.
-> > 
-> > Cc: stable@kernel.org
-> > Cc: Paul Stewart <pstew@google.com>
-> > Cc: Amod Bodas <amod.bodas@atheros.com>
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> > 
-> > I'm not yet sure if this actually fixes an issue but it
-> > certainly is a proper ammendment to the other idle fix
-> > submitted for stable for suspend/resume.
-> 
-> Can you refresh me on which patch that is?
+This is needed by atlx, atl1c and atl1e.
 
-Sure, its:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.38.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-    ath9k: fix assumptions for idle calls on suspend/resume
+diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
+index dfc406e..0521156 100644
+--- a/include/linux/compat-2.6.38.h
++++ b/include/linux/compat-2.6.38.h
+@@ -6,6 +6,7 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38))
+ 
+ #include <linux/kernel.h>
++#include <linux/skbuff.h>
+ 
+ /*
+  * This is not part of The 2.6.37 kernel yet but we
+@@ -56,6 +57,11 @@ static inline unsigned long ewma_read(const struct ewma *avg)
+ 
+ #define pr_warn pr_warning
+ 
++static inline int skb_checksum_start_offset(const struct sk_buff *skb)
++{
++	return skb->csum_start - skb_headroom(skb);
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)) */
+ 
+ #endif /* LINUX_26_38_COMPAT_H */
+-- 
+1.7.1
 
-  Luis
