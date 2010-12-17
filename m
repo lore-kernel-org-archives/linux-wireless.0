@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61892 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684Ab0LVOhN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:37:13 -0500
-Received: by iyi12 with SMTP id 12so4106219iyi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:37:13 -0800 (PST)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50357 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754404Ab0LQTR0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 14:17:26 -0500
+Message-ID: <4D0BB739.3020700@hauke-m.de>
+Date: Fri, 17 Dec 2010 20:17:13 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <1293026551.3531.22.camel@jlt3.sipsolutions.net>
-References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
- <1292864555-28661-6-git-send-email-lrodriguez@atheros.com> <1293026551.3531.22.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 22 Dec 2010 09:36:53 -0500
-Message-ID: <AANLkTikj0qgg1fsYuO5Ks7MREn1=yJiPAqEo1HfCaij_@mail.gmail.com>
-Subject: Re: [PATCH 5/8] crda: synch up nl80211.h header with upstream for
- country flags
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, kathy.giori@atheros.com,
-	amod.bodas@atheros.com, david.quan@atheros.com,
-	michael.green@atheros.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8192ce: Update MAINTAINERS
+References: <4d0a2c91.Nuemy+kBaD1fOuX+%Larry.Finger@lwfinger.net>
+In-Reply-To: <4d0a2c91.Nuemy+kBaD1fOuX+%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 9:02 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> What's the point in two patches for this?
+On 12/16/2010 04:13 PM, Larry Finger wrote:
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Index: wireless-testing/MAINTAINERS
+> ===================================================================
+> --- wireless-testing.orig/MAINTAINERS
+> +++ wireless-testing/MAINTAINERS
+> @@ -5055,6 +5055,16 @@ T:	git git://git.kernel.org/pub/scm/linu
+>  S:	Maintained
+>  F:	drivers/net/wireless/rtl818x/rtl8187*
+>  
+> +RTL8192CE WIRELESS DRIVER
+> +M:	Larry Finger <Larry.Finger@lwfinger.net>
+> +M:	Chaoming Li <chaoming_li@realsil.com.cn>
+> +L:	linux-wireless@vger.kernel.org
+> +W:	http://linuxwireless.org/
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> +S:	Maintained
+> +F:	drivers/net/wireless/rtlwifi/
+> +F:	drivers/net/wireless/rtl8192ce/
+This path is wrong, it should be drivers/net/wireless/rtlwifi/rtl8192ce/
+at least the driver is not in rivers/net/wireless/rtl8192ce/.
 
-Yeah it doesn't matter.
-
-  Luis
+Hauke
