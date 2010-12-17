@@ -1,207 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:55968 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932236Ab0LNQEc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 11:04:32 -0500
-Subject: Re: [RFC v2 2/2] mac80211: add support for HW scheduled scan
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1292012143.3531.31.camel@jlt3.sipsolutions.net>
-References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-	 <1291993632-6921-3-git-send-email-luciano.coelho@nokia.com>
-	 <1292012143.3531.31.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Dec 2010 18:06:10 +0200
-Message-ID: <1292342770.25719.500.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50665 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303Ab0LQRUd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 12:20:33 -0500
+Received: by wwa36 with SMTP id 36so888993wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 09:20:32 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 17 Dec 2010 12:20:32 -0500
+Message-ID: <AANLkTikKtc4uiXN+oHwDr8sPFXZCe3HvTfYSvgZ8uYx0@mail.gmail.com>
+Subject: rtl8192 does not see N networks in my building
+From: Amos Blanton <amos.blanton@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-10 at 21:15 +0100, ext Johannes Berg wrote:
-> See ... I see nothing here in main.c that would set the wiphy flag, so
-> you really should've checked it in cfg8021 :-)
+Greetings. I have a rtl8192 in a Strata 13 laptop from Zareason
+running Ubuntu 10.10, and I work in an environment with many Wifi
+networks. With my previous laptop I was often able to see and
+sometimes login to a local un-encrypted N network, the best we have
+around here, but this one doesn't seem to find and display that
+network via Network Manager.
+I'm told my office has cisco ap1252s running the latest 7.0 code
+release. There are B/G as well as N networks here, at least 10 that
+Network manager will recognize.
 
-Heheh! Well, as we discussed on IRC, I had set the wiphy flag directly
-in the driver code.  But as you recommended, I have now changed it so
-that mac80211 will check if the driver has an op->sched_scan_start and
-set the flag accordingly.
+Sorry, I'm not sure what the relevant DMSG info is, so I'll include
+the latest swath. Please let me know if I should get additional info,
+and if this is the right place to report these issues.
+Thanks to everyone here who helps make Linux wireless work!
 
+-Amos
 
-> > +struct ieee80211_sched_scan_ies {
-> > +	u8 *ie[IEEE80211_NUM_BANDS];
-> 
-> const?
-
-As discussed on IRC, in this case this doesn't need to be const.  This
-struct belongs to mac80211 and it needs to write to it when preparing
-the sched_scan, so no need to const it and cast back to non-const when
-assigning values to it.  There no need to restrict the access to it from
-the driver's point-of-view.  In normal cases, the driver should not
-write to the IEs, but there's no reason to prevent it from doing it.
-
-
-> > + * @sched_scan_start: Ask the hardware to start scanning repeatedly at
-> > + * 	specific intervals.  The driver must call the
-> > + * 	ieee80211_sched_scan_results() function whenever it finds results.
-> > + * 	This process will continue until sched_scan_stop is called.
-> > + *
-> > + * @sched_scan_stop: Tell the hardware to stop an ongoing periodic scan.
-> > + * 
-> > + * ieee80211_sched_scan_results() each time it finds some results.
-> 
-> I think that should talk about filtering as well? Maybe a DOC: section
-> would be good, dunno.
-
-As discussed in your comments to the previous patch, I decided to leave
-the filtering out for now and will add it later with a separate patch,
-to keep things simple.
-
-There was this extra "ieee80211_sched_scan_results..." pasted wrongly
-there, which I have removed.
-
-
-> >  /**
-> > + * ieee80211_sched_scan_results - got results from periodic scan
-> > + *
-> > + * When a periodic scan is running, this function needs to be called by the
-> > + * driver whenever there are new scan results availble.
-> 
-> typo: available
-
-Fixed.
-
-
-> > +TRACE_EVENT(drv_sched_scan_results,
-> > +	TP_PROTO(struct ieee80211_local *local),
-> > +
-> > +	TP_ARGS(local),
-> > +
-> > +	TP_STRUCT__entry(
-> > +		LOCAL_ENTRY
-> > +	),
-> > +
-> > +	TP_fast_assign(
-> > +		LOCAL_ASSIGN;
-> > +	),
-> > +
-> > +	TP_printk(
-> > +		LOCAL_PR_FMT, LOCAL_PR_ARG
-> > +	)
-> > +);
-> 
-> Shouldn't that be in the _api_ section?
-
-Indeed.  In fact this trace was not even used anywhere.  I'll move it to
-the api_ section and call it properly.
-
-
-> > @@ -642,6 +642,7 @@ enum queue_stop_reason {
-> >   *	that the scan completed.
-> >   * @SCAN_ABORTED: Set for our scan work function when the driver reported
-> >   *	a scan complete for an aborted scan.
-> > + * @SCAN_SCHED_SCANNING: We're currently performing periodic scans
-> 
-> That reminds me ... can you scan and sched_scan at the same time?
-> sched_scan while associated? Should these be prohibited, or documented
-> as being implementation dependent?
-
-With the wl12xx firmware, you can scan and sched_scan at the same time.
-In theory, I haven't tried it very thoroughly.  It doesn't support
-sched_scan while associated, yet.  But I think it's a good feature, eg.
-for roaming, and we shouldn't restrict it in the mac80211.
-
-I think the best is to document that it is implementation dependent.
-
-And again, for the record, I'll implement a NL80211_SCHED_SCAN_STOPPED
-event that the driver can send to userspace at any time when the
-sched_scan is running.  By doing so, we allow drivers that need to stop
-the scan in certain scenarios (eg. while associating or starting a
-one-shot scan) to inform the userspace, which then decides whether to
-restart it or not.
-
-Maybe we just mandate that sched_scan must work when idle.  In other
-cases the driver can always return -EBUSY, for instance if it doesn't
-support sched_scan while associated.
-
-
-> Also, how does this interact with IDLE? Obviously, the device won't be
-> idle with this, but you still want it to be "otherwise" idle, no? Should
-> we take this out of scanning flags and specify that it must be supported
-> while the device is told that it's idle by mac80211? Do you expect this
-> to be stopped before trying to associate?
-
-The last question is easy to answer: see above. :)
-
-About idle... I have made the assumption that we will consider
-sched_scanning as idle, so mac80211 is not calling config() with
-IEEE80211_CONF_CHANGE_IDLE when starting or stopping the sched_scan (it
-checks local->scan_data when recalculating idle).
-
-But indeed, now checking it more carefully,  I can see that the scanning
-flags are checked in many different places.  I guess the best thing to
-do is to take the sched_scan out of the scanning flags and check case by
-case.  Some kind of new state... we shouldn't suspend things while
-sched_scan is running.
-
-
-> > @@ -392,7 +392,8 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
-> >  	if (likely(!(status->rx_flags & IEEE80211_RX_IN_SCAN)))
-> >  		return RX_CONTINUE;
-> >  
-> > -	if (test_bit(SCAN_HW_SCANNING, &local->scanning))
-> > +	if (test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-> > +	    test_bit(SCAN_SCHED_SCANNING, &local->scanning))
-> >  		return ieee80211_scan_rx(rx->sdata, skb);
-> 
-> This won't work while associated...
-
-Damn, this is getting more complicated than I expected.  As discussed,
-this would eat all beacons during the entire duration of the sched_scan,
-so association would break.
-
-Can I change my mind and just forbid sched_scan while not idle? :D
-
-No seriously, I'll continue thinking aboout how to solve this tomorrow.
-
-
-> > +	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-> > +		local->sched_scan_ies.ie[i] = kzalloc(2 +
-> > +						      IEEE80211_MAX_SSID_LEN +
-> > +						      local->scan_ies_len,
-> > +						      GFP_KERNEL);
-> 
-> 
-> Oops ... how about if this allocation fails?
-
-Oorgh! Fixed.
-
-
-> > +void ieee80211_sched_scan_results(struct ieee80211_hw *hw)
-> > +{
-> > +	struct ieee80211_local *local = hw_to_local(hw);
-> > +
-> > +	mutex_lock(&local->mtx);
-> > +
-> > +	cfg80211_sched_scan_results(hw->wiphy);
-> > +
-> > +	mutex_unlock(&local->mtx);
-> 
-> Does that really need locking? Seems ... pointless since cfg80211 will
-> have to take care of its locking.
-
-Indeed.  Removed the locking here.
-
-
-> Finally: how does this interact with HW reset? Should it be re-started
-> if it was ever started?
-
-As described earlier, we can rely on the NL80211_SCHED_SCAN_STOPPED
-event, so the userspace may decided whether to restart the sched_scan or
-not.
-
-
--- 
-Cheers,
-Luca.
-
+  359.748754] LPS leave: notify AP we are awaked ++++++++++ SendNullFunctionData
+[  359.749098] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  359.805892] =====>rtl8192_set_chan()====ch:1
+[  359.925611] =====>rtl8192_set_chan()====ch:2
+[  360.045465] =====>rtl8192_set_chan()====ch:3
+[  360.165430] =====>rtl8192_set_chan()====ch:4
+[  360.285243] =====>rtl8192_set_chan()====ch:5
+[  360.405139] =====>rtl8192_set_chan()====ch:6
+[  360.524976] =====>rtl8192_set_chan()====ch:7
+[  360.644919] =====>rtl8192_set_chan()====ch:8
+[  360.764741] =====>rtl8192_set_chan()====ch:9
+[  360.884613] =====>rtl8192_set_chan()====ch:10
+[  361.004666] =====>rtl8192_set_chan()====ch:11
+[  361.128624] =====>rtl8192_set_chan()====ch:12
+[  361.244226] =====>rtl8192_set_chan()====ch:13
+[  361.364079] =====>rtl8192_set_chan()====ch:11
+[  361.374946] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  361.374958] rtl8192_update_cap(): WLAN_CAPABILITY_SHORT_PREAMBLE
+[  361.380087] notify_wx_assoc_event(): Tell user space disconnected
+[  361.380131] Linking with MIT,channel:6, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  361.380217] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  361.380357] ===>rtllib_associate_procedure_wq(), chan:6
+[  361.380361] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  361.380366] =====>rtl8192_set_chan()====ch:6
+[  361.417746] Linking with MIT,channel:1, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  361.417778] ===>rtllib_associate_procedure_wq(), chan:1
+[  361.417785] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  361.417791] =====>rtl8192_set_chan()====ch:1
+[  363.921468] Linking with MIT,channel:1, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  363.921488] ===>rtllib_associate_procedure_wq(), chan:1
+[  363.921494] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  363.921500] =====>rtl8192_set_chan()====ch:1
+[  364.266878] rtl8192_SetWirelessMode(), wireless_mode:10, bEnableHT = 1
+[  364.334040] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:0:2b
+[  364.334044] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:1:4f
+[  364.334047] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:2:22
+[  364.334050] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:3:22
+[  364.334056] Associated successfully
+[  364.334058] normal associate
+[  364.334071] Using G rates:108
+[  364.334073] Successfully associated, ht enabled
+[  364.334076] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  364.334080] =====>rtl8192_set_chan()====ch:1
+[  364.344559] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  364.344570] rtl8192_update_cap(): WLAN_CAPABILITY_SHORT_PREAMBLE
+[  364.356664] ====>rx ADDBAREQ from :00:23:eb:d1:cd:02
+[  364.356684] ====>to send ADDBARSP
+[  372.032996] intel ips 0000:00:1f.6: MCP power or thermal limit exceeded
+[  397.106889] rtl8192_hw_wakeup(): RF Change in progress! schedule
+wake up task again
+[  405.090729] rtl8192_hw_sleep_down(): RF Change in progress!
+[  419.074869] rtl8192_hw_sleep_down(): RF Change in progress!
+[  465.026504] MgntActSet_RF_State(): RF Change in progress! Wait to
+set..StateToSet(0).
+[  479.622470] LPS leave: notify AP we are awaked ++++++++++
+SendNullFunctionData
+[  479.622768] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  479.681548] =====>rtl8192_set_chan()====ch:1
+[  479.801523] =====>rtl8192_set_chan()====ch:2
+[  479.920546] =====>rtl8192_set_chan()====ch:3
+[  480.040420] =====>rtl8192_set_chan()====ch:4
+[  480.160316] =====>rtl8192_set_chan()====ch:5
+[  480.280181] =====>rtl8192_set_chan()====ch:6
+[  480.400039] =====>rtl8192_set_chan()====ch:7
+[  480.519937] =====>rtl8192_set_chan()====ch:8
+[  480.639949] =====>rtl8192_set_chan()====ch:9
+[  480.759647] =====>rtl8192_set_chan()====ch:10
+[  480.879483] =====>rtl8192_set_chan()====ch:11
+[  480.999424] =====>rtl8192_set_chan()====ch:12
+[  481.119290] =====>rtl8192_set_chan()====ch:13
+[  481.239199] =====>rtl8192_set_chan()====ch:1
+[  481.250154] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  481.250165] rtl8192_update_cap(): WLAN_CAPABILITY_SHORT_PREAMBLE
+[  481.255013] notify_wx_assoc_event(): Tell user space disconnected
+[  481.255044] Linking with MIT,channel:6, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  481.255108] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  481.255350] ===>rtllib_associate_procedure_wq(), chan:6
+[  481.255353] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  481.255357] =====>rtl8192_set_chan()====ch:6
+[  481.292927] Linking with MIT,channel:1, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  481.293782] ===>rtllib_associate_procedure_wq(), chan:1
+[  481.293791] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  481.293801] =====>rtl8192_set_chan()====ch:1
+[  481.528555] rtllib: received DELBA while QOS or HT is not supported(0, 1)
+[  483.796486] Linking with MIT,channel:1, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  483.796505] ===>rtllib_associate_procedure_wq(), chan:1
+[  483.796511] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  483.796517] =====>rtl8192_set_chan()====ch:1
+[  486.303883] Linking with MIT,channel:1, qos:1, myHT:1, networkHT:1,
+mode:10 cur_net.flags:0x40e
+[  486.303895] ===>rtllib_associate_procedure_wq(), chan:1
+[  486.303899] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  486.303902] =====>rtl8192_set_chan()====ch:1
+[  486.356465] rtl8192_SetWirelessMode(), wireless_mode:10, bEnableHT = 1
+[  486.409854] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:0:2b
+[  486.409862] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:1:4f
+[  486.409867] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:2:22
+[  486.409873] SetHwReg8192SE():HW_VAR_AC_PARAM eACI:3:22
+[  486.409883] Associated successfully
+[  486.409887] normal associate
+[  486.409905] Using G rates:108
+[  486.409909] Successfully associated, ht enabled
+[  486.409914] HTSetConnectBwMode():pHTInfo->bCurBW40MHz:0
+[  486.409920] =====>rtl8192_set_chan()====ch:1
+[  486.420769] ===>rtl8192se_link_change():ieee->iw_mode is 2
+[  486.420779] rtl8192_update_cap(): WLAN_CAPABILITY_SHORT_PREAMBLE
+[  486.432060] ====>rx ADDBAREQ from :00:23:eb:d1:cb:e2
+[  486.432071] ====>to send ADDBARSP
+[  512.984431] rtl8192_hw_sleep_down(): RF Change in progress!
+[  518.981534] rtl8192_hw_wakeup(): RF Change in progress! schedule
+wake up task again
