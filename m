@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:55161 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758384Ab0LCELJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 23:11:09 -0500
-Received: by eye27 with SMTP id 27so4779975eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 20:11:08 -0800 (PST)
-Date: Fri, 3 Dec 2010 06:11:09 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
-	sedat.dilek@googlemail.com
-Subject: [PATCH 5/6] ath5k: Update version string
-Message-ID: <20101203041109.GE2988@makis.mantri>
+Received: from mail.atheros.com ([12.19.149.2]:23799 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755007Ab0LQPOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 10:14:43 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 07:14:27 -0800
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: Properly initialize channel table for 2GHz
+Date: Fri, 17 Dec 2010 20:44:36 +0530
+Message-ID: <1292598876-8242-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Change version number, we've added various new features lately.
- We need to find a way to maintain this, maybe on each kernel release
- or something. Also remove "EXPERIMENTAL", we aren't experimental any
- more I think ;-)
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+ath9k channel table for 2Ghz does not seems to initialize the 'band'
+parameter.Though it does not seems to cause any visible issue it looks
+odd when we initialize the 'band' parameter for 5Ghz channel table while
+not so for 2Ghz.
 
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 6edfa9f..835ab3a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -78,7 +78,7 @@ MODULE_AUTHOR("Nick Kossifidis");
- MODULE_DESCRIPTION("Support for 5xxx series of Atheros 802.11 wireless LAN cards.");
- MODULE_SUPPORTED_DEVICE("Atheros 5xxx WLAN cards");
- MODULE_LICENSE("Dual BSD/GPL");
--MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
-+MODULE_VERSION("0.7.0");
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 1238795..b0e5e71 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -48,6 +48,7 @@ MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
+ /* We use the hw_value as an index into our private channel structure */
  
- static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
- 								bool skip_pcu);
+ #define CHAN2G(_freq, _idx)  { \
++	.band = IEEE80211_BAND_2GHZ, \
+ 	.center_freq = (_freq), \
+ 	.hw_value = (_idx), \
+ 	.max_power = 20, \
+-- 
+1.7.0.4
+
