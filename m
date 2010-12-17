@@ -1,98 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f45.google.com ([209.85.214.45]:58717 "EHLO
-	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752572Ab0LFXkp (ORCPT
+Received: from asmtpout027.mac.com ([17.148.16.102]:47346 "EHLO
+	asmtpout027.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234Ab0LQAXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 18:40:45 -0500
-Received: by bwz16 with SMTP id 16so11377212bwz.4
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 15:40:43 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
-Subject: Re: carl9170 connect/disconnect loop
-Date: Tue, 7 Dec 2010 00:32:22 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTingL2eooC2+jH6nQVADKZBFemE=6eTQ_Vhx_Swx@mail.gmail.com>
-In-Reply-To: <AANLkTingL2eooC2+jH6nQVADKZBFemE=6eTQ_Vhx_Swx@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012070032.23135.chunkeey@googlemail.com>
+	Thu, 16 Dec 2010 19:23:48 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from [192.168.1.30] (unknown [87.201.169.175])
+ by asmtp027.mac.com (Oracle Communications Messaging Exchange Server 7u4-18.01
+ 64bit (built Jul 15 2010)) with ESMTPSA id <0LDJ00FMEQFHDC20@asmtp027.mac.com>
+ for linux-wireless@vger.kernel.org; Thu, 16 Dec 2010 16:23:47 -0800 (PST)
+Subject: Problem bringing up wlan0 interface up with mainline wl1271 drivers
+From: Elvis Dowson <elvis.dowson@mac.com>
+In-reply-to: <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
+Date: Fri, 17 Dec 2010 04:23:32 +0400
+Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
+	panduranga <x0125717@ti.com>, Pedro Jara <pedrojara@ti.com>
+Message-id: <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com>
+References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com>
+ <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 December 2010 23:44:49 Wade Fitzpatrick wrote:
-> On 7 December 2010 04:41, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> > On Monday 06 December 2010 17:34:15 Wade Fitzpatrick wrote:
-> >> options mac80211 ieee80211_default_rc_algo=minstrel
-> > the problem with this is that carl9170 (or any other driver
-> > that relies on minstrel_ht to supply 802.11n MCS rates)
-> > are limited to the legacy rates (and physpeeds of 54Mbit)
+Hi,
+
+On Dec 12, 2010, at 1:24 AM, Ohad Ben-Cohen wrote:
+
+>> When I build the TI WiLink drivers from the ti rowboat hardware/ti/wlan project
 > 
-> I tried carl9170 with minstrel_ht and by forcing to only use minstrel.
-> Both times I get the same connect/disconnect loop happening every 1-2
-> seconds:
-so unlike ar9170usb, carl1970 fails regardless which rate control
-algorithm is selected. Now that's very interesting!
+> The linux-omap community can help you with mainline drivers, but no so
+> much with proprietary ones. Why don't you use the upstream wl12xx
+> driver ?
 
-> usb 2-5: reset high speed USB device using ehci_hcd and address 6
-> usbcore: registered new interface driver carl9170
-> usb 2-5: driver   API: 1.9.0 2010-10-29 [1-1]
-> usb 2-5: firmware API: 1.9.1 2010-12-06
-> ath: EEPROM regdomain: 0x0
-> ath: EEPROM indicates default country code should be used
-> ath: doing EEPROM country->regdmn map search
-> ath: country maps to regdmn code: 0x3a
-> ath: Country alpha2 being used: US
-> ath: Regpair used: 0x3a
-> ieee80211 phy1: Selected rate control algorithm 'minstrel'
-> Registered led device: carl9170-phy1::tx
-> usb 2-5: Atheros AR9170 is registered as 'phy1'
-> ADDRCONF(NETDEV_UP): wlan1: link is not ready
-> wlan1: authenticate with 00:22:3f:07:42:f3 (try 1)
-> wlan1: authenticated
-> wlan1: associate with 00:22:3f:07:42:f3 (try 1)
-> wlan1: RX AssocResp from 00:22:3f:07:42:f3 (capab=0x431 status=0 aid=3)
-> wlan1: associated
+I've built linux kernel 2.6.37-rc6, and patched board-omap3beagle.c to interface with MMC2 SDIO controller, 
+but I'm unable to bring the wlan0 interface up.
 
-> # iw event -f
-> wlan1 (phy #1): deauth 00:22:3f:07:42:f3 -> 00:22:3f:8d:7b:05 reason
-> 2: Previous authentication no longer valid [frame: c0 00 40 01 00 22
-> 3f 8d 7b 05 00 22 3f 07 42 f3 00 22 3f 07 42 f3 70 00 02 00]
-> wlan1 (phy #1): disconnected (by AP) reason: 2: Previous
-> authentication no longer valid
-> wlan1 (phy #1): scan started
-> wlan1 (phy #1): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447
-> 2452 2457 2462, ""
-> wlan1 (phy #1): auth 00:22:3f:07:42:f3 -> 00:22:3f:8d:7b:05 status: 0:
-> Successful [frame: b0 00 40 01 00 22 3f 8d 7b 05 00 22 3f 07 42 f3 00
-> 22 3f 07 42 f3 00 00 00 00 02 00 00 00]
-> wlan1: new station 00:22:3f:07:42:f3
+Here are the messages during kernel boot:
 
-> I had the router/AP set to 145Mbit mode but changed it to 300Mbit mode
-> with no difference.
-> Where to from here?
+[    0.000000] wlan_mux_init: Configuring mux settings for wl1271 wlan module
+[    0.077117] regulator: vwl1271: 1850 mV normal standby
+[    2.171813] mmc1: mmc_rescan: trying to init card at 400000 Hz
+[    2.323120] mmc1: card claims to support voltages below the defined range. These will be ignored.
+[    2.368865] mmc1: queuing unknown CIS tuple 0x91 (3 bytes)
+[    2.392150] mmc1: new SDIO card at address 0001
+[    2.787597] wl1271: loaded
+[    2.790802] wl1271: initialized
 
-mac80211 comes with some powerful debug tools.
-Since you get the disconnects fairly quickly, you should
-setup a wlan monitor.
+# ifconfig -a
+lo        Link encap:Local Loopback  
+          LOOPBACK  MTU:16436  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
 
-<http://linuxwireless.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
- iw dev wlan1 interface add mon type monitor flags otherbss control
- ifconfig mon up
+wlan0     Link encap:Ethernet  HWaddr 00:00:00:00:00:00  
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
 
-This will give you a running monitor interface. Now, all you need is to
-attach a network sniffer like wireshark, tcpdump, etc... to the "mon" interface. 
-just two things:
- - the sniffer needs network/root privileges and
- - try to avoid "promiscuous" mode
+# ifconfig wlan0 up
+SIOCSIFFLAGS: Cannot assign requested address
 
-next, connect "wlan1" to your network and watch what 802.11 frames the
-attached network sniffer picks up. After you acquired multiple "samples"
-save the dump, (compress it) and send it to me (you probably want to
-switch to "personal" mail for this, since WPA-PSKs can be retrieved from
-these "network dump".)
+What could the reason be?
 
-Best Regards,
-	Chr
-
-P.S.: It's past 00:00 here, so good night! 
+Elvis Dowson
