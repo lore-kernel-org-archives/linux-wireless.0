@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53195 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751420Ab0LLIqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 03:46:07 -0500
-Subject: Re: [PATCH 2/2] ssb: Save sprom image for dump of device at
- alternate location
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net> (sfid-20101212_043513_712988_FFFFFFFF9320429C)
-References: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>
-	 (sfid-20101212_043513_712988_FFFFFFFF9320429C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 12 Dec 2010 09:45:51 +0100
-Message-ID: <1292143551.20015.24.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-gx0-f180.google.com ([209.85.161.180]:42252 "EHLO
+	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708Ab0LQI7y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 03:59:54 -0500
+Received: by gxk19 with SMTP id 19so268699gxk.11
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 00:59:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
+References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com> <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
+ <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com> <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
+ <98BC4735-664C-491E-80CE-356BE32FA2ED@mac.com> <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Fri, 17 Dec 2010 10:59:38 +0200
+Message-ID: <AANLkTimJCg1_6cZY1JE11hpmow772cP2KspM6diuDoAE@mail.gmail.com>
+Subject: Problem bringing up wlan0 interface up with mainline wl1271 drivers
+To: Elvis Dowson <elvis.dowson@mac.com>
+Cc: panduranga <x0125717@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>,
+	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
+	"Jara, Pedro" <pedrojara@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-12-11 at 21:35 -0600, Larry Finger wrote: 
-> Some recent Broadcom devices in netbooks have an SPROM that is located
-> at 0x0800, not the normal location of 0x1000. Initial reading of the
-> SPROM has been solved in a previous commit; however, dumping to a console
-> no longer works. This difficulty is fixed by saving the SPROM image
-> from the initial read, and only freeing that memory at module unload.
+[ resending to list since it rejects html subparts ]
 
-Ah wait. Now I get what you were talking about.
-Yes, those devices map the SPROM into the wireless core window.
-So, yes, the wireless core has to be mapped for the readout to work,
-of course. I don't know what other prerequisites have to be met to
-read the data. Maybe IHR region has to be disabled.
-I don't know how writing works on these devices.
+Hey Elvis,
 
--- 
-Greetings Michael.
+>
+> On Fri, Dec 17, 2010 at 10:36, Elvis Dowson <elvis.dowson@mac.com> wrote:
+>>
+>> Hi,
+>>
+>> On Dec 17, 2010, at 9:11 AM, panduranga wrote:
+>>
+>> # ifconfig wlan0 hw ether 11:22:33:44:55:66
+>> SIOCSIFHWADDR: Cannot assign requested address
+>>
+>> Even trying to assign an IP address doesn't work.
+>>
+>> # ifconfig wlan0 inet 192.168.1.105 netmask 255.255.255.0
+>> SIOCSIFFLAGS: Cannot assign requested address
+>>
+>
 
+Ethernet addresses with the LSB of the first octet turned on are
+considered multicast addresses. Please try:
+
+ifconfig wlan0 hw ether 00:22:33:44:55:66
+
+Regards,
+Arik
