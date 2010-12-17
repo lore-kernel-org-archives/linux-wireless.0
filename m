@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31379 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752662Ab0LBQ5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:57:52 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/5] update for 2.6.38
-Date: Thu,  2 Dec 2010 08:51:19 -0800
-Message-Id: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56919 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754871Ab0LQWmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 17:42:00 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat backport no_printk
+Date: Fri, 17 Dec 2010 23:41:37 +0100
+Message-Id: <1292625698-17289-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1292625698-17289-1-git-send-email-hauke@hauke-m.de>
+References: <1292625698-17289-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We enable PCI L1 state after uCode load to improve device power
-consumption
-We also fix the error when sending rxon command to uCode while the
-device is on the way to shutdown
+This is needed by brcm80211.
 
-Grumbach, Emmanuel (1):
-  iwlagn: Enable PCI L1 ACTIVE state after uCode has been loaded
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.36.h |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Wey-Yi Guy (4):
-  iwlagn: fix race condition when reprogram sta
-  iwlagn: remove structure name reference to gen2
-  iwlwifi: check for STATUS_EXIT_PENDING when send RXON command
-  iwlagn: name change for bt_ch_announce module parameter
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-3945.c      |    3 +
- drivers/net/wireless/iwlwifi/iwl-6000.c      |   20 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |    3 +
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    4 ++
- drivers/net/wireless/iwlwifi/iwl-agn.c       |   70 +++++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-agn.h       |   20 ++++----
- drivers/net/wireless/iwlwifi/iwl-sta.c       |   13 +++++
- 7 files changed, 79 insertions(+), 54 deletions(-)
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 83b7f06..1f2f507 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -90,6 +90,13 @@ struct pm_qos_request_list {
+ 
+ #endif
+ 
++/*
++ * Dummy printk for disabled debugging statements to use whilst maintaining
++ * gcc's format and side-effect checking.
++ */
++static inline __attribute__ ((format (printf, 1, 2)))
++int no_printk(const char *s, ...) { return 0; }
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
+ 
+ #endif /* LINUX_26_36_COMPAT_H */
+-- 
+1.7.1
 
