@@ -1,103 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59205 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757372Ab0LBLNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:13:18 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:13:04 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 16/27] ath9k_hw: Read and configure antenna diversity control for AR9485
-Date: Thu, 2 Dec 2010 03:07:00 -0800
-Message-ID: <1291288031-3409-17-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:49735 "HELO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754413Ab0LQTYD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Dec 2010 14:24:03 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Fri, 17 Dec 2010 11:23:48 -0800
+Subject: RE: [PATCH] mwifiex: use debugfs_remove_recursive()
+Message-ID: <477F20668A386D41ADCC57781B1F704307F4C231D1@SC-VEXCH1.marvell.com>
+References: <1292558206-29423-1-git-send-email-bzhao@marvell.com>
+ <20101217142653.GC2398@tuxdriver.com>
+In-Reply-To: <20101217142653.GC2398@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   24 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |   10 ++++++++++
- 2 files changed, 30 insertions(+), 4 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 02b6150..9ce6846 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3031,6 +3031,8 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return !!(pBase->featureEnable & BIT(5));
- 	case EEP_CHAIN_MASK_REDUCE:
- 		return (pBase->miscConfiguration >> 0x3) & 0x1;
-+	case EEP_ANT_DIV_CTL1:
-+		return le32_to_cpu(eep->base_ext1.ant_div_control);
- 	default:
- 		return 0;
- 	}
-@@ -3512,11 +3514,25 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 	value = ar9003_hw_ant_ctrl_chain_get(ah, 0, is2ghz);
- 	REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_0, AR_SWITCH_TABLE_ALL, value);
- 
--	value = ar9003_hw_ant_ctrl_chain_get(ah, 1, is2ghz);
--	REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_1, AR_SWITCH_TABLE_ALL, value);
-+	if (!AR_SREV_9485(ah)) {
-+		value = ar9003_hw_ant_ctrl_chain_get(ah, 1, is2ghz);
-+		REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_1, AR_SWITCH_TABLE_ALL,
-+			      value);
- 
--	value = ar9003_hw_ant_ctrl_chain_get(ah, 2, is2ghz);
--	REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_2, AR_SWITCH_TABLE_ALL, value);
-+		value = ar9003_hw_ant_ctrl_chain_get(ah, 2, is2ghz);
-+		REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_2, AR_SWITCH_TABLE_ALL,
-+			      value);
-+	}
-+
-+	if (AR_SREV_9485(ah)) {
-+		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_CTRL_ALL,
-+			      value);
-+		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE,
-+			      value >> 6);
-+		REG_RMW_FIELD(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE,
-+			      value >> 7);
-+	}
- }
- 
- static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index b772081..6e0d4ad 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -260,7 +260,13 @@
- #define AR_PHY_CCA_0            (AR_AGC_BASE + 0x1c)
- #define AR_PHY_EXT_CCA0         (AR_AGC_BASE + 0x20)
- #define AR_PHY_RESTART          (AR_AGC_BASE + 0x24)
-+
- #define AR_PHY_MC_GAIN_CTRL     (AR_AGC_BASE + 0x28)
-+#define AR_ANT_DIV_CTRL_ALL	0x7e000000
-+#define AR_ANT_DIV_CTRL_ALL_S	25
-+#define AR_ANT_DIV_ENABLE	0x1000000
-+#define AR_ANT_DIV_ENABLE_S	24
-+
- #define AR_PHY_EXTCHN_PWRTHR1   (AR_AGC_BASE + 0x2c)
- #define AR_PHY_EXT_CHN_WIN      (AR_AGC_BASE + 0x30)
- #define AR_PHY_20_40_DET_THR    (AR_AGC_BASE + 0x34)
-@@ -271,7 +277,11 @@
- #define AR_PHY_RX_GAIN_BOUNDS_2 (AR_AGC_BASE + 0x48)
- #define AR_PHY_RSSI_0           (AR_AGC_BASE + 0x180)
- #define AR_PHY_SPUR_CCK_REP0    (AR_AGC_BASE + 0x184)
-+
- #define AR_PHY_CCK_DETECT       (AR_AGC_BASE + 0x1c0)
-+#define AR_FAST_DIV_ENABLE	0x2000
-+#define AR_FAST_DIV_ENABLE_S	13
-+
- #define AR_PHY_DAG_CTRLCCK      (AR_AGC_BASE + 0x1c4)
- #define AR_PHY_IQCORR_CTRL_CCK  (AR_AGC_BASE + 0x1c8)
- 
--- 
-1.7.0.4
+> -----Original Message-----
+> From: John W. Linville [mailto:linville@tuxdriver.com]
+> Sent: Friday, December 17, 2010 6:27 AM
+> To: Bing Zhao
+> Cc: linux-wireless@vger.kernel.org; Johannes Berg; Amitkumar Karwar; Kiran Divekar; Frank Huang
+> Subject: Re: [PATCH] mwifiex: use debugfs_remove_recursive()
+> 
+> On Thu, Dec 16, 2010 at 07:56:46PM -0800, Bing Zhao wrote:
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > instead of keeping pointers to all entries.
+> >
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> 
+> Just for the record, I'm not tracking any of the mwifiex patches at
+> this time.  Are you pushing them to a public git tree?
 
+I have pushed all mwifiex patches to Marvell public git tree:
+
+git://git.marvell.com/mwifiex.git
+http://git.marvell.com/?p=mwifiex.git;a=summary
+
+I will let you know as soon as we finish all open items commented by you, Johannes and other reviewers.
+
+Thanks,
+
+Bing
+
+> 
+> John
+> --
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
