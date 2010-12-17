@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:44089 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751297Ab0LVBnA (ORCPT
+Received: from asmtpout024.mac.com ([17.148.16.99]:34872 "EHLO
+	asmtpout024.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287Ab0LQKhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 20:43:00 -0500
-Date: Tue, 21 Dec 2010 20:42:59 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Ohad Ben-Cohen <ohad@wizery.com>,
-	<linux-pm@lists.linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-In-Reply-To: <201012212231.57420.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1012212032590.11252-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Fri, 17 Dec 2010 05:37:34 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from [192.168.1.30] (unknown [87.201.169.175])
+ by asmtp024.mac.com (Oracle Communications Messaging Exchange Server 7u4-18.01
+ 64bit (built Jul 15 2010)) with ESMTPSA id <0LDK006NPIU75Z30@asmtp024.mac.com>
+ for linux-wireless@vger.kernel.org; Fri, 17 Dec 2010 02:37:23 -0800 (PST)
+Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271 drivers
+From: Elvis Dowson <elvis.dowson@mac.com>
+In-reply-to: <AANLkTimfNw7Lsp7vnLPt7SaC=SAg0ctMbunRBz4SybhD@mail.gmail.com>
+Date: Fri, 17 Dec 2010 14:37:09 +0400
+Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Message-id: <9B373863-A428-4A02-BFD2-DE5B5C914C48@mac.com>
+References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com>
+ <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
+ <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com>
+ <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
+ <98BC4735-664C-491E-80CE-356BE32FA2ED@mac.com>
+ <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
+ <C4B3622F-ADC4-481E-9340-1819C815184A@mac.com>
+ <AANLkTikvk+AqKRr1VbKv9pSHicy7PAGu8GkdeZuvYwFh@mail.gmail.com>
+ <397FC41E-7F1D-4AA8-9D09-6121BB0169E7@mac.com>
+ <AANLkTimfNw7Lsp7vnLPt7SaC=SAg0ctMbunRBz4SybhD@mail.gmail.com>
+To: Arik Nemtsov <arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 21 Dec 2010, Rafael J. Wysocki wrote:
+Hi Arik,
 
-> It basically goes like this.  There's device A that is only resumed when it's
-> needed to carry out an operation and is suspended immediately after that.
-> There's another device B that needs A to do something during its suspend.
-> So, when the suspend of B is started, A is woken up, does its work and is
-> suspended again (using pm_runtime_suspend()).  Then B is suspended.
+On Dec 17, 2010, at 2:34 PM, Arik Nemtsov wrote:
 > 
-> We currently require that ->suspend() and ->resume() callbacks be defined
-> for A (presumably pointing to the same code as its runtime callbacks) so that
-> things work correctly, but perhaps we can just relax this requirement a bit?
-> I'm not 100% sure that's a good idea, just considering it.
+> Sorry Elvis I gave you the wrong path :)
+> Its /lib/firmware in a regular linux. Its /etc/firmware in android.
 
-I still don't know.  It would require a lot of special conditions: no
-child devices, not runtime-PM-disabled, not runtime-PM-forbidden...  
-Also, A's parent would have to be coded carefully; otherwise A's
-runtime resume would prevent the parent from suspending.
+:-) Ok, that's understandable!! My final aim is to get this working with android-2.2.1. Have you done a port of the android kernel to 2.6.37 already ?
 
-This just doesn't fit very well with the runtime PM model, or at least, 
-not in the form you described.
+Best regards,
 
-Consider this instead:  Since A is required to be functional before B
-can be used, A must be registered before B and hence B gets suspended
-before A.  Therefore during the prepare phase we can runtime-resume A
-and leave it powered up; when B needs to suspend, it won't matter that
-the runtime-PM calls are ineffective.  Then when A's dpm_suspend
-occurs, it can safely go to a low-power state and stay there.
-
-Alan Stern
-
+Elvis Dowson
