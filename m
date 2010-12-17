@@ -1,126 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:53004 "EHLO mail.neratec.ch"
+Received: from mail.atheros.com ([12.19.149.2]:12644 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756405Ab0LBJ1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 04:27:09 -0500
-Date: Thu, 2 Dec 2010 10:27:06 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, mickflemm@gmail.com
-Message-ID: <11785617.1441291282021369.JavaMail.wlan@CHBU500181>
-In-Reply-To: <22025878.1221291281861821.JavaMail.wlan@CHBU500181>
-Subject: [PATCH v7 5/9] ath5k: Check if pci pdev struct is initialized in
- common functions.
+	id S1752619Ab0LQDXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Dec 2010 22:23:32 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 19:23:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 3/8] cfg80211: pass DFS region to drivers through reg_notifier()
+Date: Thu, 16 Dec 2010 19:23:12 -0800
+Message-ID: <1292556197-4820-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
+References: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+This grants drivers access to the DFS region that a
+regulatory domain belongs to.
 
-To be able to support other busses than PCI check if pci device
-structure is initialized.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/attach.c |    5 ++---
- drivers/net/wireless/ath/ath5k/led.c    |    5 ++++-
- drivers/net/wireless/ath/ath5k/reset.c  |    4 ++--
- drivers/net/wireless/ath/ath5k/sysfs.c  |    4 ++--
- 4 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ar9170/main.c        |    6 ++++--
+ drivers/net/wireless/ath/ath5k/base.c         |    6 ++++--
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    6 ++++--
+ drivers/net/wireless/ath/ath9k/init.c         |    5 +++--
+ drivers/net/wireless/ath/carl9170/main.c      |    6 ++++--
+ drivers/net/wireless/ath/regd.c               |    9 ++++++---
+ drivers/net/wireless/ath/regd.h               |    5 +++--
+ include/net/cfg80211.h                        |    3 ++-
+ net/wireless/reg.c                            |    4 +++-
+ 9 files changed, 33 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index a84782a..86f6fec 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -273,7 +273,7 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	/*
- 	 * Write PCI-E power save settings
- 	 */
--	if ((ah->ah_version == AR5K_AR5212) && (pdev->is_pcie)) {
-+	if ((ah->ah_version == AR5K_AR5212) && pdev && (pdev->is_pcie)) {
- 		ath5k_hw_reg_write(ah, 0x9248fc00, AR5K_PCIE_SERDES);
- 		ath5k_hw_reg_write(ah, 0x24924924, AR5K_PCIE_SERDES);
- 
-@@ -305,8 +305,7 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	/* Get misc capabilities */
- 	ret = ath5k_hw_set_capabilities(ah);
- 	if (ret) {
--		ATH5K_ERR(sc, "unable to get device capabilities: 0x%04x\n",
--			sc->pdev->device);
-+		ATH5K_ERR(sc, "unable to get device capabilities\n");
- 		goto err;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 67aa52e..1f5a991 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -133,7 +133,7 @@ ath5k_register_led(struct ath5k_softc *sc, struct ath5k_led *led,
- 	led->led_dev.default_trigger = trigger;
- 	led->led_dev.brightness_set = ath5k_led_brightness_set;
- 
--	err = led_classdev_register(&sc->pdev->dev, &led->led_dev);
-+	err = led_classdev_register(sc->dev, &led->led_dev);
- 	if (err) {
- 		ATH5K_WARN(sc, "could not register LED %s\n", name);
- 		led->sc = NULL;
-@@ -165,6 +165,9 @@ int ath5k_init_leds(struct ath5k_softc *sc)
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
- 	const struct pci_device_id *match;
- 
-+	if (!sc->pdev)
-+		return 0;
-+
- 	match = pci_match_id(&ath5k_led_devices[0], pdev);
- 	if (match) {
- 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 7d8ef8d..f2f889d 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -471,7 +471,7 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
- 	 * we ingore that flag for PCI-E cards. On PCI cards
- 	 * this flag gets cleared after 64 PCI clocks.
- 	 */
--	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
-+	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
- 
- 	if (ah->ah_version == AR5K_AR5210) {
- 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
-@@ -526,7 +526,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
- 	 * we ingore that flag for PCI-E cards. On PCI cards
- 	 * this flag gets cleared after 64 PCI clocks.
- 	 */
--	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
-+	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
- 
- 	if (ah->ah_version == AR5K_AR5210) {
- 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
-diff --git a/drivers/net/wireless/ath/ath5k/sysfs.c b/drivers/net/wireless/ath/ath5k/sysfs.c
-index 90757de..929c68c 100644
---- a/drivers/net/wireless/ath/ath5k/sysfs.c
-+++ b/drivers/net/wireless/ath/ath5k/sysfs.c
-@@ -95,7 +95,7 @@ static struct attribute_group ath5k_attribute_group_ani = {
- int
- ath5k_sysfs_register(struct ath5k_softc *sc)
- {
--	struct device *dev = &sc->pdev->dev;
-+	struct device *dev = sc->dev;
- 	int err;
- 
- 	err = sysfs_create_group(&dev->kobj, &ath5k_attribute_group_ani);
-@@ -110,7 +110,7 @@ ath5k_sysfs_register(struct ath5k_softc *sc)
- void
- ath5k_sysfs_unregister(struct ath5k_softc *sc)
- {
--	struct device *dev = &sc->pdev->dev;
-+	struct device *dev = sc->dev;
- 
- 	sysfs_remove_group(&dev->kobj, &ath5k_attribute_group_ani);
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 32bf79e..7f65d3d 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2122,12 +2122,14 @@ static int ar9170_read_eeprom(struct ar9170 *ar)
  }
+ 
+ static int ar9170_reg_notifier(struct wiphy *wiphy,
+-			struct regulatory_request *request)
++			       struct regulatory_request *request,
++			       u8 dfs_region)
+ {
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct ar9170 *ar = hw->priv;
+ 
+-	return ath_reg_notifier_apply(wiphy, request, &ar->common.regulatory);
++	return ath_reg_notifier_apply(wiphy, request,
++				      &ar->common.regulatory, dfs_region);
+ }
+ 
+ int ar9170_register(struct ar9170 *ar, struct device *pdev)
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 4e3b97c..5a8d9a9 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -261,13 +261,15 @@ static const struct ath_ops ath5k_common_ops = {
+ * Driver Initialization *
+ \***********************/
+ 
+-static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
++static int ath5k_reg_notifier(struct wiphy *wiphy,
++			      struct regulatory_request *request,
++			      u8 dfs_region)
+ {
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct ath5k_softc *sc = hw->priv;
+ 	struct ath_regulatory *regulatory = ath5k_hw_regulatory(sc->ah);
+ 
+-	return ath_reg_notifier_apply(wiphy, request, regulatory);
++	return ath_reg_notifier_apply(wiphy, request, regulatory, dfs_region);
+ }
+ 
+ /********************\
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 0f6be35..2970026 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -266,13 +266,15 @@ err:
+ }
+ 
+ static int ath9k_reg_notifier(struct wiphy *wiphy,
+-			      struct regulatory_request *request)
++			      struct regulatory_request *request,
++			      u8 dfs_region)
+ {
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 
+ 	return ath_reg_notifier_apply(wiphy, request,
+-				      ath9k_hw_regulatory(priv->ah));
++				      ath9k_hw_regulatory(priv->ah),
++				      dfs_region);
+ }
+ 
+ static unsigned int ath9k_regread(void *hw_priv, u32 reg_offset)
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 1238795..930ccec 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -249,14 +249,15 @@ static void setup_ht_cap(struct ath_softc *sc,
+ }
+ 
+ static int ath9k_reg_notifier(struct wiphy *wiphy,
+-			      struct regulatory_request *request)
++			      struct regulatory_request *request,
++			      u8 dfs_region)
+ {
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 	struct ath_regulatory *reg = ath9k_hw_regulatory(sc->sc_ah);
+ 
+-	return ath_reg_notifier_apply(wiphy, request, reg);
++	return ath_reg_notifier_apply(wiphy, request, reg, dfs_region);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 870df8c..474a04a 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1774,12 +1774,14 @@ static int carl9170_parse_eeprom(struct ar9170 *ar)
+ }
+ 
+ static int carl9170_reg_notifier(struct wiphy *wiphy,
+-				 struct regulatory_request *request)
++				 struct regulatory_request *request,
++				 u8 dfs_region)
+ {
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct ar9170 *ar = hw->priv;
+ 
+-	return ath_reg_notifier_apply(wiphy, request, &ar->common.regulatory);
++	return ath_reg_notifier_apply(wiphy, request,
++				      &ar->common.regulatory, dfs_region);
+ }
+ 
+ int carl9170_register(struct ar9170 *ar)
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 2b14775..426b514 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -337,7 +337,8 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
+ 
+ int ath_reg_notifier_apply(struct wiphy *wiphy,
+ 			   struct regulatory_request *request,
+-			   struct ath_regulatory *reg)
++			   struct ath_regulatory *reg,
++			   u16 dfs_region)
+ {
+ 	/* We always apply this */
+ 	ath_reg_apply_radar_flags(wiphy);
+@@ -453,7 +454,8 @@ static int
+ ath_regd_init_wiphy(struct ath_regulatory *reg,
+ 		    struct wiphy *wiphy,
+ 		    int (*reg_notifier)(struct wiphy *wiphy,
+-					struct regulatory_request *request))
++					struct regulatory_request *request,
++					u8 dfs_region))
+ {
+ 	const struct ieee80211_regdomain *regd;
+ 
+@@ -500,7 +502,8 @@ int
+ ath_regd_init(struct ath_regulatory *reg,
+ 	      struct wiphy *wiphy,
+ 	      int (*reg_notifier)(struct wiphy *wiphy,
+-				  struct regulatory_request *request))
++				  struct regulatory_request *request,
++				  u8 dfs_region))
+ {
+ 	struct country_code_to_enum_rd *country = NULL;
+ 	u16 regdmn;
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index 345dd97..e06c784 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -252,11 +252,12 @@ enum CountryCode {
+ bool ath_is_world_regd(struct ath_regulatory *reg);
+ int ath_regd_init(struct ath_regulatory *reg, struct wiphy *wiphy,
+ 		  int (*reg_notifier)(struct wiphy *wiphy,
+-		  struct regulatory_request *request));
++		  struct regulatory_request *request, u8 dfs_region));
+ u32 ath_regd_get_band_ctl(struct ath_regulatory *reg,
+ 			  enum ieee80211_band band);
+ int ath_reg_notifier_apply(struct wiphy *wiphy,
+ 			   struct regulatory_request *request,
+-			   struct ath_regulatory *reg);
++			   struct ath_regulatory *reg,
++			   u16 dfs_region);
+ 
+ #endif
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1db4d8d..ae5d590 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1533,7 +1533,8 @@ struct wiphy {
+ 
+ 	/* Lets us get back the wiphy on the callback */
+ 	int (*reg_notifier)(struct wiphy *wiphy,
+-			    struct regulatory_request *request);
++			    struct regulatory_request *request,
++			    u8 dfs_region);
+ 
+ 	/* fields below are read-only, assigned by cfg80211 */
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a3731d2..b6780f6 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1126,6 +1126,8 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
+ 			     enum nl80211_reg_initiator initiator)
+ {
+ 	enum ieee80211_band band;
++	u8 dfs_region = (cfg80211_regdomain->flags &
++			 NL80211_CFLAG_ALL_DFS_FLAGS);
+ 
+ 	if (ignore_reg_update(wiphy, initiator))
+ 		goto out;
+@@ -1137,7 +1139,7 @@ out:
+ 	reg_process_beacons(wiphy);
+ 	reg_process_ht_flags(wiphy);
+ 	if (wiphy->reg_notifier)
+-		wiphy->reg_notifier(wiphy, last_request);
++		wiphy->reg_notifier(wiphy, last_request, dfs_region);
+ }
+ 
+ static void handle_channel_custom(struct wiphy *wiphy,
 -- 
-1.7.1
+1.7.3.2.90.gd4c43
 
