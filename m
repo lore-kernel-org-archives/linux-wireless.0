@@ -1,91 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:59968 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759573Ab0LNUE6 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:58110 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754202Ab0LQShZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 15:04:58 -0500
-Received: from wpaz33.hot.corp.google.com (wpaz33.hot.corp.google.com [172.24.198.97])
-	by smtp-out.google.com with ESMTP id oBEK4uIO015049
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 12:04:56 -0800
-Received: from qyk10 (qyk10.prod.google.com [10.241.83.138])
-	by wpaz33.hot.corp.google.com with ESMTP id oBEK0gme016659
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 12:04:55 -0800
-Received: by qyk10 with SMTP id 10so1145177qyk.7
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 12:04:55 -0800 (PST)
+	Fri, 17 Dec 2010 13:37:25 -0500
+Received: by fxm18 with SMTP id 18so1019675fxm.2
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 10:37:24 -0800 (PST)
+Message-ID: <4D0BADBE.40101@lwfinger.net>
+Date: Fri, 17 Dec 2010 12:36:46 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=NdBsXA-6Wj8MPDaggzmFMCDcKo7n8NQE6UjH1@mail.gmail.com>
-References: <AANLkTimqTaTJYinS-AyyjwR2hD+zLYuzjC6W0jDXMyB9@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE13856A173D@SJEXCHCCR01.corp.ad.broadcom.com>
-	<AANLkTikL8M-nbCuhj4UmYVYEX-5ba2rRthTMFqbYqmwp@mail.gmail.com>
-	<4D06670B.90200@lwfinger.net>
-	<AANLkTikYRuLi_8iXFnisH6g+-TmKPvvz2ERobq8Bjab9@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE13856A1786@SJEXCHCCR01.corp.ad.broadcom.com>
-	<AANLkTi=NdBsXA-6Wj8MPDaggzmFMCDcKo7n8NQE6UjH1@mail.gmail.com>
-Date: Tue, 14 Dec 2010 15:04:55 -0500
-Message-ID: <AANLkTino-9swQA66WoSxsYuVvHgaGCaStoeimvd6Q4Os@mail.gmail.com>
-Subject: Re: brcm80211 locking up
-From: Sean Paul <seanpaul@google.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: Amos Blanton <amos.blanton@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192 does not see N networks in my building
+References: <AANLkTikKtc4uiXN+oHwDr8sPFXZCe3HvTfYSvgZ8uYx0@mail.gmail.com>
+In-Reply-To: <AANLkTikKtc4uiXN+oHwDr8sPFXZCe3HvTfYSvgZ8uYx0@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brett,
-Could we, in the interim, turn off the radio disabled check until the
-driver is properly fixed? I've hard-coded it to false which seems to
-work for me.
+On 12/17/2010 11:20 AM, Amos Blanton wrote:
+> Greetings. I have a rtl8192 in a Strata 13 laptop from Zareason
+> running Ubuntu 10.10, and I work in an environment with many Wifi
+> networks. With my previous laptop I was often able to see and
+> sometimes login to a local un-encrypted N network, the best we have
+> around here, but this one doesn't seem to find and display that
+> network via Network Manager.
+> I'm told my office has cisco ap1252s running the latest 7.0 code
+> release. There are B/G as well as N networks here, at least 10 that
+> Network manager will recognize.
+> 
+> Sorry, I'm not sure what the relevant DMSG info is, so I'll include
+> the latest swath. Please let me know if I should get additional info,
+> and if this is the right place to report these issues.
+> Thanks to everyone here who helps make Linux wireless work!
 
-Thanks,
+This is the right place to ask. The driver you are using is from staging, and I
+don't know much about it, but let's see what we can do.
 
-Sean
+Please provide the output of the command '/sbin/lspci -nn | grep Realtek'.
 
-On Tue, Dec 14, 2010 at 9:26 AM, Sean Paul <seanpaul@google.com> wrote:
-> Hi Brett,
-> I've been testing on a Lenovo S10-3t, with the 4313 chipset. I've
-> tried 2 other S10-3t units with the same result (making doubly sure
-> the switch was in the on position). I haven't tried another model with
-> the 4313 in it.
->
-> Is it possible that Larry's experiences with the b43 driver and rfkill
-> are related?
->
-> Thanks,
->
-> Sean
->
-> On Mon, Dec 13, 2010 at 2:32 PM, Brett Rudley <brudley@broadcom.com> wrote:
->>
->>> -----Original Message-----
->>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->>> owner@vger.kernel.org] On Behalf Of Sean Paul
->>> Sent: Monday, December 13, 2010 10:39 AM
->>> To: Larry Finger
->>> Cc: Brett Rudley; linux-wireless@vger.kernel.org
->>> Subject: Re: brcm80211 locking up
->>>
->>> Hi Larry,
->>> Thanks for the insight. It's very difficult to debug this since the
->>> loop is hosing my system, so it's unclear whether an unload/reload
->>> would fix the issue.
->>>
->>> Brett: Do you know the cause of the loop?
->>
->>> Two issues:
->>
->> - Something on your machine is forcing the radio off.
->> - The driver isn't handling the radio off condition during load.
->>
->> The latter is on our todo list and I just haven't had time to deal with yet.
->>
->> The former is odd... I haven't seen this before (except for when my RF switch was actually off).
->>
->> What machine is this and have you seen the problem on any other type of machines?  Does it happen all the time, some of the time?
->>
->> Brett
->>
->>
->>
->
+In addition, please post the output of the command 'sudo /usr/sbin/iwlist scan'.
+I'm guessing at the location of iwlist on your distro. If the command is not
+found, then the patch is wrong - change it to match your system.
+
+Larry
