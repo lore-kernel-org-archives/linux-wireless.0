@@ -1,107 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:33816 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517Ab0LAHAo (ORCPT
+Received: from mail-gx0-f180.google.com ([209.85.161.180]:34418 "EHLO
+	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753125Ab0LQKe7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:00:44 -0500
-Received: by gxk1 with SMTP id 1so268673gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:00:44 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 17 Dec 2010 05:34:59 -0500
+Received: by gxk19 with SMTP id 19so303065gxk.11
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 02:34:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19701.62091.644444.121284@gargle.gargle.HOWL>
-Date: Wed, 1 Dec 2010 12:30:27 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] ath9k_htc: Fix suspend/resume
+In-Reply-To: <397FC41E-7F1D-4AA8-9D09-6121BB0169E7@mac.com>
+References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com> <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
+ <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com> <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
+ <98BC4735-664C-491E-80CE-356BE32FA2ED@mac.com> <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
+ <C4B3622F-ADC4-481E-9340-1819C815184A@mac.com> <AANLkTikvk+AqKRr1VbKv9pSHicy7PAGu8GkdeZuvYwFh@mail.gmail.com>
+ <397FC41E-7F1D-4AA8-9D09-6121BB0169E7@mac.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Fri, 17 Dec 2010 12:34:43 +0200
+Message-ID: <AANLkTimfNw7Lsp7vnLPt7SaC=SAg0ctMbunRBz4SybhD@mail.gmail.com>
+Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271 drivers
+To: Elvis Dowson <elvis.dowson@mac.com>
+Cc: panduranga <x0125717@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>,
+	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
+	"Jara, Pedro" <pedrojara@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Fri, Dec 17, 2010 at 12:25, Elvis Dowson <elvis.dowson@mac.com> wrote:
+> Hi Arik,
+>
+> On Dec 17, 2010, at 2:12 PM, Arik Nemtsov wrote:
+>>
+>> The firmware file should be called wl1271-fw.bin and the nvs file
+>> should be called wl1271-nvs.bin. Both should reside in /etc/firmware
+>> (if you're running a standard linux).
+>
+> I got the files from this git repo
+>
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
+>
+> and copied them over to /etc/firmware
+>
+> /etc/firmware# ls -l
+> total 276
+> -r--r--r-- 1 root root 271712 Dec 17  2010 wl1271-fw.bin
+> -rw-rw-r-- 1 root root    912 Dec 17  2010 wl1271-nvs.bin
+>
+> But I still get a error saying the the nvs file could not be found:
+>
+> [   63.852264] wl1271: ERROR could not get nvs file: -2
+> [   63.906250] wl1271: loaded
+> [   63.909271] wl1271: initialized
+>
+> Best regards,
+>
+> Elvis Dowson
+>
 
-The HW has to be set to FULLSLEEP mode during suspend,
-when no interface has been brought up. Not doing this would
-break resume, as the chip won't be powered up at all.
+Sorry Elvis I gave you the wrong path :)
+Its /lib/firmware in a regular linux. Its /etc/firmware in android.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c      |    7 +++++++
- drivers/net/wireless/ath/ath9k/htc.h          |    3 +++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    6 ++++++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    4 ++--
- 4 files changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index ae842db..6372c64 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1019,6 +1019,13 @@ static int ath9k_hif_usb_suspend(struct usb_interface *interface,
- 	struct hif_device_usb *hif_dev =
- 		(struct hif_device_usb *) usb_get_intfdata(interface);
- 
-+	/*
-+	 * The device has to be set to FULLSLEEP mode in case no
-+	 * interface is up.
-+	 */
-+	if (!(hif_dev->flags & HIF_USB_START))
-+		ath9k_htc_suspend(hif_dev->htc_handle);
-+
- 	ath9k_hif_usb_dealloc_urbs(hif_dev);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index afe39a9..fdf9d5f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -455,6 +455,8 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv);
- void ath9k_htc_ps_wakeup(struct ath9k_htc_priv *priv);
- void ath9k_htc_ps_restore(struct ath9k_htc_priv *priv);
- void ath9k_ps_work(struct work_struct *work);
-+bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
-+			enum ath9k_power_mode mode);
- 
- void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv);
- void ath9k_init_leds(struct ath9k_htc_priv *priv);
-@@ -464,6 +466,7 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 			   u16 devid, char *product, u32 drv_info);
- void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug);
- #ifdef CONFIG_PM
-+void ath9k_htc_suspend(struct htc_target *htc_handle);
- int ath9k_htc_resume(struct htc_target *htc_handle);
- #endif
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 071d0c9..3b172ea 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -888,6 +888,12 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
- }
- 
- #ifdef CONFIG_PM
-+
-+void ath9k_htc_suspend(struct htc_target *htc_handle)
-+{
-+	ath9k_htc_setpower(htc_handle->drv_priv, ATH9K_PM_FULL_SLEEP);
-+}
-+
- int ath9k_htc_resume(struct htc_target *htc_handle)
- {
- 	struct ath9k_htc_priv *priv = htc_handle->drv_priv;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 8266ce1..1f62155 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -63,8 +63,8 @@ static enum htc_phymode ath9k_htc_get_curmode(struct ath9k_htc_priv *priv,
- 	return mode;
- }
- 
--static bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
--			       enum ath9k_power_mode mode)
-+bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
-+			enum ath9k_power_mode mode)
- {
- 	bool ret;
- 
--- 
-1.7.3.2
-
+Regards,
+Arik
