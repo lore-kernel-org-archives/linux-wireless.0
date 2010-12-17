@@ -1,80 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45505 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756655Ab0LIT4Z (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54522 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347Ab0LQXXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 14:56:25 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 36so2856888wwa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 11:56:24 -0800 (PST)
+	Fri, 17 Dec 2010 18:23:14 -0500
+Received: by wyb28 with SMTP id 28so1183017wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 15:23:12 -0800 (PST)
 From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
 Cc: b43-dev@lists.infradead.org,
 	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/4] b43: rename TMS defines, drop useless condition from core reset
-Date: Thu,  9 Dec 2010 20:56:01 +0100
-Message-Id: <1291924561-21630-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1291924561-21630-1-git-send-email-zajec5@gmail.com>
-References: <1291924561-21630-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: [RFC][PATCH] b43: N-PHY: prepare for 2056 radio tables writing
+Date: Sat, 18 Dec 2010 00:22:41 +0100
+Message-Id: <1292628161-6201-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As discussed we do not know band width at core reset time and it is not a good
-idea to reset whole just to change band. So just set unconditionally 20 MHz
-band width as default during core reset.
-
-As for defines PHY clock changed to band width in specs and it makes much more
-sens to call defines by band width which is self-explainable. Updated specs do
-not mention 0 value, but comparing to old ones you can notice lineral relation
-between PHY clock speed and band width. So it makes sense for 0x0 value to be
-10 MHz band width.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/b43/b43.h  |    8 ++++----
- drivers/net/wireless/b43/main.c |    8 ++------
- 2 files changed, 6 insertions(+), 10 deletions(-)
+Here is the way I'd like to handle many different tables, 3 for every PHY rev.
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 9aad2ca..bd4cb75 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -416,10 +416,10 @@ enum {
+This adds some helper structure, pointers and magic macro. I understand this
+but is this readable for others?
+
+Advantage of this crazy layout is that we avoid mess like:
+b2056_find_syn_table()
+{
+	if (phy == 3)
+		return table_phy3;
+	else if (phy == 4)
+		return table_phy4;
+	...
+	else if (phy == 9)
+		return table_phy9;
+}
+... same for tx and rx.
+
+Any objections?
+---
+ drivers/net/wireless/b43/radio_2056.c |   82 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/radio_2056.h |    3 +
+ 2 files changed, 85 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
+index 0cdf6a4..d30c10a 100644
+--- a/drivers/net/wireless/b43/radio_2056.c
++++ b/drivers/net/wireless/b43/radio_2056.c
+@@ -24,6 +24,47 @@
+ #include "radio_2056.h"
+ #include "phy_common.h"
  
- /* 802.11 core specific TM State Low (SSB_TMSLOW) flags */
- #define B43_TMSLOW_GMODE		0x20000000	/* G Mode Enable */
--#define B43_TMSLOW_PHYCLKSPEED		0x00C00000	/* PHY clock speed mask (N-PHY only) */
--#define  B43_TMSLOW_PHYCLKSPEED_40MHZ	0x00000000	/* 40 MHz PHY */
--#define  B43_TMSLOW_PHYCLKSPEED_80MHZ	0x00400000	/* 80 MHz PHY */
--#define  B43_TMSLOW_PHYCLKSPEED_160MHZ	0x00800000	/* 160 MHz PHY */
-+#define B43_TMSLOW_PHY_BANDWIDTH	0x00C00000	/* PHY band width and clock speed mask (N-PHY only) */
-+#define  B43_TMSLOW_PHY_BANDWIDTH_10MHZ	0x00000000	/* 10 MHz bandwidth, 40 MHz PHY */
-+#define  B43_TMSLOW_PHY_BANDWIDTH_20MHZ	0x00400000	/* 20 MHz bandwidth, 80 MHz PHY */
-+#define  B43_TMSLOW_PHY_BANDWIDTH_40MHZ	0x00800000	/* 40 MHz bandwidth, 160 MHz PHY */
- #define B43_TMSLOW_PLLREFSEL		0x00200000	/* PLL Frequency Reference Select (rev >= 5) */
- #define B43_TMSLOW_MACPHYCLKEN		0x00100000	/* MAC PHY Clock Control Enable (rev >= 5) */
- #define B43_TMSLOW_PHYRESET		0x00080000	/* PHY Reset */
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 9ae3f61..1aec160 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1150,12 +1150,8 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
++struct b2056_inittab_entry {
++	/* Value to write if we use the 5GHz band. */
++	u16 ghz5;
++	/* Value to write if we use the 2.4GHz band. */
++	u16 ghz2;
++	/* Flags */
++	u8 flags;
++#define B2056_INITTAB_ENTRY_OK	0x01
++#define B2056_INITTAB_UPLOAD	0x02
++};
++#define UPLOAD		.flags = B2056_INITTAB_ENTRY_OK | B2056_INITTAB_UPLOAD
++#define NOUPLOAD	.flags = B2056_INITTAB_ENTRY_OK
++
++struct b2056_inittabs_pts {
++	const struct b2056_inittab_entry *syn;
++	unsigned int syn_length;
++	const struct b2056_inittab_entry *tx;
++	unsigned int tx_length;
++	const struct b2056_inittab_entry *rx;
++	unsigned int rx_length;
++};
++
++static const struct b2056_inittab_entry b2056_inittab_rev3_syn[] = {
++};
++static const struct b2056_inittab_entry b2056_inittab_rev3_tx[] = {
++};
++static const struct b2056_inittab_entry b2056_inittab_rev3_rx[] = {
++};
++
++#define INITTABSPTS(prefix) \
++	.syn 		= prefix##_syn,			\
++	.syn_length	= ARRAY_SIZE(prefix##_syn),	\
++	.tx 		= prefix##_tx,			\
++	.tx_length	= ARRAY_SIZE(prefix##_tx),	\
++	.rx 		= prefix##_rx,			\
++	.rx_length	= ARRAY_SIZE(prefix##_rx)
++
++struct b2056_inittabs_pts b2056_inittabs[] = {
++	[3] = { INITTABSPTS(b2056_inittab_rev3) },
++};
++
+ #define RADIOREGS3(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
+ 		   r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
+ 		   r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, \
+@@ -6045,6 +6086,47 @@ static const struct b43_nphy_channeltab_entry_rev3 b43_nphy_channeltab_rev8[] =
+   },
+ };
  
- 	flags |= B43_TMSLOW_PHYCLKEN;
- 	flags |= B43_TMSLOW_PHYRESET;
--	if (dev->phy.type == B43_PHYTYPE_N) {
--		if (b43_channel_type_is_40mhz(dev->phy.channel_type))
--			flags |= B43_TMSLOW_PHYCLKSPEED_160MHZ;
--		else
--			flags |= B43_TMSLOW_PHYCLKSPEED_80MHZ;
--	}
-+	if (dev->phy.type == B43_PHYTYPE_N)
-+		flags |= B43_TMSLOW_PHY_BANDWIDTH_20MHZ; /* Make 20 MHz def */
- 	ssb_device_enable(dev->dev, flags);
- 	msleep(2);		/* Wait for the PLL to turn on. */
++static void b2056_upload_inittab(struct b43_wldev *dev, bool ghz5,
++				 bool ignore_uploadflag, u16 routing,
++				 const struct b2056_inittab_entry *e,
++				 unsigned int length)
++{
++	unsigned int i;
++	u16 value;
++
++	for (i = 0; i < length; i++) {
++		if (!(e->flags & B2056_INITTAB_ENTRY_OK))
++			continue;
++		if ((e->flags & B2056_INITTAB_UPLOAD) || ignore_uploadflag) {
++			if (ghz5)
++				value = e->ghz5;
++			else
++				value = e->ghz2;
++			b43_radio_write(dev, routing | i, value);
++		}
++		e++;
++	}
++}
++
++void b2056_upload_inittabs(struct b43_wldev *dev,
++			   bool ghz5, bool ignore_uploadflag)
++{
++	struct b2056_inittabs_pts *pts;
++
++	pts = &b2056_inittabs[dev->phy.rev];
++
++	b2056_upload_inittab(dev, ghz5, ignore_uploadflag,
++				B2056_SYN, pts->syn, pts->syn_length);
++	b2056_upload_inittab(dev, ghz5, ignore_uploadflag,
++				B2056_TX0, pts->tx, pts->tx_length);
++	b2056_upload_inittab(dev, ghz5, ignore_uploadflag,
++				B2056_TX1, pts->tx, pts->tx_length);
++	b2056_upload_inittab(dev, ghz5, ignore_uploadflag,
++				B2056_RX0, pts->rx, pts->rx_length);
++	b2056_upload_inittab(dev, ghz5, ignore_uploadflag,
++				B2056_RX1, pts->rx, pts->rx_length);
++}
++
+ /* TODO: add support for rev4+ devices by searching in rev4+ tables */
+ const struct b43_nphy_channeltab_entry_rev3 *
+ b43_nphy_get_chantabent_rev3(struct b43_wldev *dev, u16 freq)
+diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
+index 302600c..d601f6e 100644
+--- a/drivers/net/wireless/b43/radio_2056.h
++++ b/drivers/net/wireless/b43/radio_2056.h
+@@ -1114,4 +1114,7 @@ struct b43_nphy_channeltab_entry_rev3 {
+ 	struct b43_phy_n_sfo_cfg phy_regs;
+ };
  
++void b2056_upload_inittabs(struct b43_wldev *dev,
++			   bool ghz5, bool ignore_uploadflag);
++
+ #endif /* B43_RADIO_2056_H_ */
 -- 
 1.6.3.3
 
