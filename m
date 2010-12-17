@@ -1,72 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754982Ab0LHROD (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51391 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754063Ab0LQTkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 12:14:03 -0500
-Received: by mail-pw0-f46.google.com with SMTP id 3so322374pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:14:03 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 11/22] rtl8192ce: Add files to rtlwifi - Part 11: Kconfig and Makefile
-Date: Wed,  8 Dec 2010 11:12:41 -0600
-Message-Id: <1291828372-25159-12-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 17 Dec 2010 14:40:06 -0500
+Received: by wyb28 with SMTP id 28so1015255wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 11:40:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4D0BADBE.40101@lwfinger.net>
+References: <AANLkTikKtc4uiXN+oHwDr8sPFXZCe3HvTfYSvgZ8uYx0@mail.gmail.com>
+	<4D0BADBE.40101@lwfinger.net>
+Date: Fri, 17 Dec 2010 14:40:04 -0500
+Message-ID: <AANLkTimvazto71m6SPMYtSAGuQkNpab+kMZcF4buNqYa@mail.gmail.com>
+Subject: Re: rtl8192 does not see N networks in my building
+From: Amos Blanton <amos.blanton@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/Kconfig  |   16 ++++++++++++++++
- drivers/net/wireless/rtlwifi/Makefile |   13 +++++++++++++
- 2 files changed, 29 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/Kconfig
- create mode 100644 drivers/net/wireless/rtlwifi/Makefile
+Here's lspci output:
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-new file mode 100644
-index 0000000..9ff3081
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -0,0 +1,16 @@
-+config RTL8192CE
-+	tristate "Realtek RTL8192CE/RTL8188SE Wireless Network Adapter"
-+	depends on MAC80211 && EXPERIMENTAL
-+	select FW_LOADER
-+	select RTLWIFI
-+	---help---
-+	This is the driver for Realtek RTL8192CE/RTL8188CE 802.11n PCIe
-+	wireless network adapters.
-+
-+	If you choose to build it as a module, it will be calledrtl8192ce.
-+
-+config RTLWIFI
-+	tristate
-+	depends on RTL8192CE
-+	default m
-+
-diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
-new file mode 100644
-index 0000000..cd2fb60
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/Makefile
-@@ -0,0 +1,13 @@
-+obj-$(CONFIG_RTLWIFI) 		+= rtlwifi.o
-+rtlwifi-objs	:=		\
-+		base.o		\
-+		cam.o		\
-+		core.o		\
-+		debug.o		\
-+		efuse.o		\
-+		pci.o		\
-+		ps.o		\
-+		rc.o		\
-+		regd.o
-+
-+obj-$(CONFIG_RTL8192CE)		+= rtl8192c/
--- 
-1.7.1
+$ lspci -nn | grep Realtek
+01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
+RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
+02:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
+03)
+03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
+RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
+06)
+lightnin@Buford:~$
 
+iwlist:
+lightnin@Buford:~$ iwlist scan
+lo        Interface doesn't support scanning.
+
+eth1      Interface doesn't support scanning.
+
+eth0      Interface doesn't support scanning.
+
+wlan0     No scan results
+
+Here's iwconfig output, in case that is helpful:
+wlan0     802.11bgn  Nickname:"rtl8191SEVA2"
+          Mode:Managed  Frequency=2.462 GHz  Access Point: Not-Associated
+          Bit Rate:300 Mb/s
+          Retry:on   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=10/100  Signal level=0 dBm  Noise level=-100 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+
+On Fri, Dec 17, 2010 at 1:36 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 12/17/2010 11:20 AM, Amos Blanton wrote:
+>> Greetings. I have a rtl8192 in a Strata 13 laptop from Zareason
+>> running Ubuntu 10.10, and I work in an environment with many Wifi
+>> networks. With my previous laptop I was often able to see and
+>> sometimes login to a local un-encrypted N network, the best we have
+>> around here, but this one doesn't seem to find and display that
+>> network via Network Manager.
+>> I'm told my office has cisco ap1252s running the latest 7.0 code
+>> release. There are B/G as well as N networks here, at least 10 that
+>> Network manager will recognize.
+>>
+>> Sorry, I'm not sure what the relevant DMSG info is, so I'll include
+>> the latest swath. Please let me know if I should get additional info,
+>> and if this is the right place to report these issues.
+>> Thanks to everyone here who helps make Linux wireless work!
+>
+> This is the right place to ask. The driver you are using is from staging, and I
+> don't know much about it, but let's see what we can do.
+>
+> Please provide the output of the command '/sbin/lspci -nn | grep Realtek'.
+>
+> In addition, please post the output of the command 'sudo /usr/sbin/iwlist scan'.
+> I'm guessing at the location of iwlist on your distro. If the command is not
+> found, then the patch is wrong - change it to match your system.
+>
+> Larry
+>
