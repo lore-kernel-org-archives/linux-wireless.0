@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44526 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751314Ab0LKUDm (ORCPT
+Received: from web56806.mail.re3.yahoo.com ([66.196.97.80]:46700 "HELO
+	web56806.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752301Ab0LQL4K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Dec 2010 15:03:42 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id D35EB418D8
-	for <linux-wireless@vger.kernel.org>; Sat, 11 Dec 2010 14:58:09 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-11 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101211200340.B4CA240F97@repository3.orbit-lab.org>
-Date: Sat, 11 Dec 2010 15:03:40 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 17 Dec 2010 06:56:10 -0500
+Message-ID: <740412.10599.qm@web56806.mail.re3.yahoo.com>
+Date: Fri, 17 Dec 2010 03:56:05 -0800 (PST)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [PATCH 04/17] rt2x00: fix hang when unplugging USB device in use
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: js@sig21.net, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+In-Reply-To: <AANLkTi=img36VOkKapcgZz54ZmtXRneai-W0bU_W5z=E@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   2852e12..9204be5  linux-2.6.37.y -> origin/linux-2.6.37.y
-   f9f0812..c0f962a  master     -> origin/master
- * [new tag]         compat-wireless-2.6.37-rc5-4 -> compat-wireless-2.6.37-rc5-4
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-2.6.37-rc5-3 -> compat-wireless-2.6.37-rc5-3
- * [new tag]         compat-wireless-2010-12-10 -> compat-wireless-2010-12-10
+ 
+> Odd I have been testing this while stresstesting the card,
+> and either
+> unplugging, rmmod or ifdown, and I couldn't
+> reproduce any crashes. Has the stacktrace changed after
+> these patches?
 
-compat-wireless code metrics
+Hi.
 
-    752722 - Total upstream lines of code being pulled
-      2198 - backport code changes
-      1935 - backport code additions
-       263 - backport code deletions
-      6637 - backport from compat module
-      8835 - total backport code
-    1.1737 - % of code consists of backport work
-      1532 - Crap changes not yet posted
-      1489 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2035 - % of crap code
+I can confirm when the rt2800usb is loaded and an rt3070 chip is connected to a network, running 'rmmod rt2800usb rt2x00lib rt2x00usb rt2800lib' causes immediate system hang (and hard-reset).
 
-Base tree: linux-next.git
-Base tree version: next-20101210
-compat-wireless release: compat-wireless-2010-12-10-1-gc0f962a-pc
+I was not able to retrieve any relevant error logs.
+
+Walter
+
+
+      
