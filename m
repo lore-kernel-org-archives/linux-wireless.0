@@ -1,92 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865Ab0LVO2H (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52587
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755814Ab0LQVcQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:28:07 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:07 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 05/18] wl1271: AP mode - workaround for FW bug on station remove
-Date: Wed, 22 Dec 2010 16:27:24 +0200
-Message-Id: <1293028057-6212-6-git-send-email-arik@wizery.com>
-In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
+	Fri, 17 Dec 2010 16:32:16 -0500
+Date: Fri, 17 Dec 2010 13:32:44 -0800 (PST)
+Message-Id: <20101217.133244.48510021.davem@davemloft.net>
+To: mroos@linux.ee
+Cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] hostap: remove netif_stop_queue from init
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.SOC.1.00.1012172324340.24976@math.ut.ee>
+References: <alpine.SOC.1.00.1012100918300.15996@math.ut.ee>
+	<20101210.094747.193727608.davem@davemloft.net>
+	<alpine.SOC.1.00.1012172324340.24976@math.ut.ee>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes an event indicating station removal is not sent up by
-firmware. We work around this by always indicating success in when
-a wait for the event timeouts.
+From: Meelis Roos <mroos@linux.ee>
+Date: Fri, 17 Dec 2010 23:27:50 +0200 (EET)
 
-Temporary workaround until a FW fix is introduced.
+> Fix runtime warning with backtrace from hostap by removing 
+> netif_stop_queue() call before register_netdev. Tested to work fine on 
+> hostap_pci Prism 2.5.
+> 
+> Signed-off-by: Meelis Roos <mroos@linux.ee>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c |   26 +++++++++++++++++++++-----
- 1 files changed, 21 insertions(+), 5 deletions(-)
+Acked-by: David S. Miller <davem@davemloft.net>
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index aab1b77..0a1eb0e 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -222,7 +222,7 @@ int wl1271_cmd_ext_radio_parms(struct wl1271 *wl)
-  * Poll the mailbox event field until any of the bits in the mask is set or a
-  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
-  */
--static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
-+static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
- {
- 	u32 events_vector, event;
- 	unsigned long timeout;
-@@ -231,7 +231,8 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
- 
- 	do {
- 		if (time_after(jiffies, timeout)) {
--			ieee80211_queue_work(wl->hw, &wl->recovery_work);
-+			wl1271_debug(DEBUG_CMD, "timeout waiting for event %d",
-+				     (int)mask);
- 			return -ETIMEDOUT;
- 		}
- 
-@@ -249,6 +250,19 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
- 	return 0;
- }
- 
-+static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
-+{
-+	int ret;
-+
-+	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
-+	if (ret != 0) {
-+		ieee80211_queue_work(wl->hw, &wl->recovery_work);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- {
- 	struct wl1271_cmd_join *join;
-@@ -1108,9 +1122,11 @@ int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid)
- 		goto out_free;
- 	}
- 
--	ret = wl1271_cmd_wait_for_event(wl, STA_REMOVE_COMPLETE_EVENT_ID);
--	if (ret < 0)
--		wl1271_error("cmd remove sta event completion error");
-+	/*
-+	 * We are ok with a timeout here. The event is sometimes not sent
-+	 * due to a firmware bug.
-+	 */
-+	wl1271_cmd_wait_for_event_or_timeout(wl, STA_REMOVE_COMPLETE_EVENT_ID);
- 
- out_free:
- 	kfree(cmd);
--- 
-1.7.1
-
+John, please apply this.
