@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm6.bullet.mail.ne1.yahoo.com ([98.138.90.69]:40656 "HELO
-	nm6.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751432Ab0LHVd1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 16:33:27 -0500
-Message-ID: <401121.57601.qm@web120213.mail.ne1.yahoo.com>
-References: <368544.4876.qm@web120203.mail.ne1.yahoo.com> <201012082052.51358.chunkeey@googlemail.com> <326185.97637.qm@web120219.mail.ne1.yahoo.com> <201012082159.09406.chunkeey@googlemail.com>
-Date: Wed, 8 Dec 2010 13:33:25 -0800 (PST)
-From: Chris Pechard <chrispechard@yahoo.com>
-Subject: Re: carl9170fw: custom build incompatibility issue
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <201012082159.09406.chunkeey@googlemail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:37880 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757185Ab0LRW57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 17:57:59 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Sat, 18 Dec 2010 23:57:25 +0100
+Cc: "Ohad Ben-Cohen" <ohad@wizery.com>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-mmc@vger.kernel.org, Ido Yariv <ido@wizery.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <Pine.LNX.4.44L0.1012181629350.7965-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1012181629350.7965-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012182357.25687.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Christian for the quick turnaround, option 2 did it.
-
-Chris.
-
-
------ Original Message ----
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Chris Pechard <chrispechard@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Sent: Wed, December 8, 2010 12:59:09 PM
-Subject: Re: carl9170fw: custom build incompatibility issue
-
-On Wednesday 08 December 2010 21:33:43 Chris Pechard wrote:
-> Hi Christian,
+On Saturday, December 18, 2010, Alan Stern wrote:
+> On Sat, 18 Dec 2010, Ohad Ben-Cohen wrote:
 > 
-> this is the info you requested. 
+> > > Sounds to me like the difference isn't really in the driver, but the
+> > > core PM subsystem. Why does it care when powering off a device whether
+> > > it's during suspend, or during runtime?
+> > 
+> > Agree.
+> > 
+> > If we can add a dev_pm_info bit, that would allow using runtime PM API
+> > during suspend/resume transitions, the driver will not have to care.
+> > 
+> > Rafael what do you think ? Is that totally unacceptable ?
+> 
+> Have you forgotten about the "echo on >.../power/control" scenario?
 
-The only thing wrong is the lack of fw metadata (which is kind of
-obvious since the the firmware is somewhat customizable).
+Well, that change would basically require the runtime PM framework to ignore
+the usage count for this particular device, which would defeat the framework's
+purpose to some extent, but it would cover the "echo on > ..." case.
 
+However, I'm not going to agree to make that change.
 
-You have two options:
-
-- either concat carl9170.fw and carl9170.dsc into carl9170-1.fw
-   (by hand).
-
-- autogen.sh install [also adds miniboot + fw checksum]
-   (since CONFIG_CARL9170FW_MAKE_RELEASE is y,
-    and CONFIG_CARL9170FW_RELEASE_VERSION=1)
-
-Best Regards,
-    Christian 
-
-
-
-      
+Thanks,
+Rafael
