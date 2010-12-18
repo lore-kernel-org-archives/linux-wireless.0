@@ -1,33 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492Ab0L2SNO (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46078 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932108Ab0LRUO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 13:13:14 -0500
-Subject: Re: [PATCH] p54: fix compiler-warning when no P54_LEDS are
- configured
-From: Johannes Berg <johannes@sipsolutions.net>
-To: christoph.paasch@uclouvain.be
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, chunkeey@googlemail.com
-In-Reply-To: <201012291816.27302.christoph.paasch@uclouvain.be>
-References: <1293635679-9783-1-git-send-email-christoph.paasch@uclouvain.be>
-	 <4D1B65D7.8090103@lwfinger.net>
-	 <201012291816.27302.christoph.paasch@uclouvain.be>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Dec 2010 19:13:10 +0100
-Message-ID: <1293646390.3546.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 18 Dec 2010 15:14:58 -0500
+Received: by iyi12 with SMTP id 12so1220730iyi.19
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Dec 2010 12:14:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1292625768-17318-2-git-send-email-hauke@hauke-m.de>
+References: <1292625768-17318-1-git-send-email-hauke@hauke-m.de> <1292625768-17318-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 18 Dec 2010 12:14:37 -0800
+Message-ID: <AANLkTikcwifCiFGeCRBuAnupAycgqeEbkH1=HtxGUdrn@mail.gmail.com>
+Subject: Re: [PATCH 2/3] compat-wireless: use pci_is_pcie()
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-29 at 18:16 +0100, Christoph Paasch wrote:
+On Fri, Dec 17, 2010 at 2:42 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Use pci_is_pcie function and do not access the member of the struct directly.
 
-> +#if defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_P54_LEDS)
->  	struct p54_common *priv = dev->priv;
-> +#endif
+So we can submit this upstream as well?
 
-It seems a lot simpler to just add __maybe_unused...
-
-johannes
-
+  Luis
