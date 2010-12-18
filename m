@@ -1,145 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:49820 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753376Ab0LBAYC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 19:24:02 -0500
-Received: by qwb7 with SMTP id 7so7717142qwb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 16:24:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101201210226.159495600@sipsolutions.net>
-References: <20101201205939.009530439@sipsolutions.net> <20101201210226.159495600@sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Wed, 1 Dec 2010 16:23:41 -0800
-Message-ID: <AANLkTin==aJjY4Sctu1+g7bitDsd6S14SKRymrNW_WLy@mail.gmail.com>
-Subject: Re: [RFC 5/5] cfg80211/mac80211: add mesh join/leave commands
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:38577 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752290Ab0LRXcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 18:32:10 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 2/2] ath9k: do not limit the chainmask to 1 for legacy mode
+Date: Sun, 19 Dec 2010 00:31:55 +0100
+Message-Id: <1292715115-36506-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1292715115-36506-1-git-send-email-nbd@openwrt.org>
+References: <1292715115-36506-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wow, Johannes!
+Restricting the chainmask to 1 for legacy mode disables useful features
+such as MRC, and it reduces the available transmit power.
+I can't think of a good reason to do this in legacy mode, so let's just
+get rid of that code.
 
-On Wed, Dec 1, 2010 at 12:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Instead of tying mesh activity to interface up,
-> add join and leave commands for mesh. Since we
-> must be backward compatible, let cfg80211 handle
-> joining a mesh if a mesh ID was pre-configured
-> when the device goes up.
->
-> Note that this therefore must modify mac80211 as
-> well since mac80211 needs to lose the logic to
-> start the mesh on interface up.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    1 -
+ drivers/net/wireless/ath/ath9k/main.c    |   32 ------------------------------
+ drivers/net/wireless/ath/ath9k/virtual.c |    1 -
+ 3 files changed, 0 insertions(+), 34 deletions(-)
 
-Pretty impressive.  Comments below
-
-+static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
-+{
-+       struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+       struct net_device *dev = info->user_ptr[1];
-+       struct mesh_config cfg;
-+       int err;
-+
-+       /* start with default */
-+       memcpy(&cfg, &default_mesh_config, sizeof(cfg));
-+
-+       /* and parse other given info */
-+       err = nl80211_parse_mesh_params(info, &cfg, NULL);
-+       if (err)
-+               return err;
-
-Only the mesh id should be mandatory for starting the mesh, and none
-of the other mesh parameters.  Therefore I would change the above to:
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 75c501f..300835d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4527,9 +4527,11 @@ static int nl80211_join_mesh(struct sk_buff
-*skb, struct genl_info *info)
-        memcpy(&cfg, &default_mesh_config, sizeof(cfg));
-
-        /* and parse other given info */
--       err = nl80211_parse_mesh_params(info, &cfg, NULL);
--       if (err)
--               return err;
-+       if (info->attrs[NL80211_ATTR_MESH_PARAMS]) {
-+               err = nl80211_parse_mesh_params(info, &cfg, NULL);
-+               if (err)
-+                       return err;
-+       }
-
-        if (!info->attrs[NL80211_ATTR_MESH_ID] ||
-            !nla_len(info->attrs[NL80211_ATTR_MESH_ID]))
-
-@@ -775,20 +779,26 @@ static int cfg80211_netdev_notifier_call
-               }
-               cfg80211_lock_rdev(rdev);
-               mutex_lock(&rdev->devlist_mtx);
--#ifdef CONFIG_CFG80211_WEXT
-               wdev_lock(wdev);
-               switch (wdev->iftype) {
-+#ifdef CONFIG_CFG80211_WEXT
-               case NL80211_IFTYPE_ADHOC:
-                       cfg80211_ibss_wext_join(rdev, wdev);
-                       break;
-               case NL80211_IFTYPE_STATION:
-                       cfg80211_mgd_wext_connect(rdev, wdev);
-                       break;
-+#endif
-+               case NL80211_IFTYPE_MESH_POINT:
-+                       /* backward compat code ... */
-+                       if (wdev->ssid_len)
-+                               __cfg80211_join_mesh(rdev, dev, wdev->ssid,
-+                                                    wdev->ssid_len, NULL);
-+
-
-This doesn't quite work:  when mesh interfaces are created with a mesh
-id you set wdev->ssid_len.
-Later, when the interface is brought up, the mesh won't start because
-of the last check below:
-
-+int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-+                        struct net_device *dev,
-+                        const u8 *mesh_id, size_t mesh_id_len,
-+                        const struct mesh_config *conf)
-+{
-+       struct wireless_dev *wdev = dev->ieee80211_ptr;
-+       int err;
-+
-+       BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN != IEEE80211_MAX_MESH_ID_LEN);
-+
-+       ASSERT_WDEV_LOCK(wdev);
-+
-+       if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
-+               return -EOPNOTSUPP;
-+
-+       if (wdev->ssid_len)       <<<<<<
-+               return -EALREADY;
-
-If you want to keep working on this we'll be happy to test it again,
-or if you want we can take it from here and finish this.
-Let me know.
-
-Regarding...
-
-> I just noticed that this will lose mesh parameters when you leave the
-> mesh, unlike previously where they would be kept.
-
-...I don't think there's an issue.  I'll ask around.
-
-Cheers,
-
-Javier
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9fd9519..2c31f51 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -675,7 +675,6 @@ void ath9k_deinit_device(struct ath_softc *sc);
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
+ void ath9k_update_ichannel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 			   struct ath9k_channel *ichan);
+-void ath_update_chainmask(struct ath_softc *sc, int is_ht);
+ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		    struct ath9k_channel *hchan);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index cb53fbb..8a1691d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -538,32 +538,6 @@ set_timer:
+ 	}
+ }
+ 
+-/*
+- * Update tx/rx chainmask. For legacy association,
+- * hard code chainmask to 1x1, for 11n association, use
+- * the chainmask configuration, for bt coexistence, use
+- * the chainmask configuration even in legacy mode.
+- */
+-void ath_update_chainmask(struct ath_softc *sc, int is_ht)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	if ((sc->sc_flags & SC_OP_OFFCHANNEL) || is_ht ||
+-	    (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE)) {
+-		common->tx_chainmask = ah->caps.tx_chainmask;
+-		common->rx_chainmask = ah->caps.rx_chainmask;
+-	} else {
+-		common->tx_chainmask = 1;
+-		common->rx_chainmask = 1;
+-	}
+-
+-	ath_dbg(common, ATH_DBG_CONFIG,
+-		"tx chmask: %d, rx chmask: %d\n",
+-		common->tx_chainmask,
+-		common->rx_chainmask);
+-}
+-
+ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta)
+ {
+ 	struct ath_node *an;
+@@ -1679,8 +1653,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		/* XXX: remove me eventualy */
+ 		ath9k_update_ichannel(sc, hw, &sc->sc_ah->channels[pos]);
+ 
+-		ath_update_chainmask(sc, conf_is_ht(conf));
+-
+ 		/* update survey stats for the old channel before switching */
+ 		spin_lock_irqsave(&common->cc_lock, flags);
+ 		ath_update_survey_stats(sc);
+@@ -1912,10 +1884,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		/* Set aggregation protection mode parameters */
+ 		sc->config.ath_aggr_prot = 0;
+ 
+-		/* Only legacy IBSS for now */
+-		if (vif->type == NL80211_IFTYPE_ADHOC)
+-			ath_update_chainmask(sc, 0);
+-
+ 		ath_dbg(common, ATH_DBG_CONFIG, "BSSID: %pM aid: 0x%x\n",
+ 			common->curbssid, common->curaid);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index fbfbc82..2dc7095 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -288,7 +288,6 @@ void ath9k_wiphy_chan_work(struct work_struct *work)
+ 	/* sync hw configuration for hw code */
+ 	common->hw = aphy->hw;
+ 
+-	ath_update_chainmask(sc, sc->chan_is_ht);
+ 	if (ath_set_channel(sc, aphy->hw,
+ 			    &sc->sc_ah->channels[sc->chan_idx]) < 0) {
+ 		printk(KERN_DEBUG "ath9k: Failed to set channel for new "
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.3.2
+
