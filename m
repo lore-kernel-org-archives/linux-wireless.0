@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59481 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755399Ab0LAV5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 16:57:17 -0500
-Subject: Re: RFC - removal of SPROM fallback
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CF69ED1.1070406@lwfinger.net> (sfid-20101201_201546_954964_FFFFFFFFC298F049)
-References: <4CF69ED1.1070406@lwfinger.net>
-	 (sfid-20101201_201546_954964_FFFFFFFFC298F049)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 22:56:59 +0100
-Message-ID: <1291240619.1960.3.camel@maggie>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:37869 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752483Ab0LRWxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 17:53:07 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Ohad Ben-Cohen" <ohad@wizery.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Sat, 18 Dec 2010 23:52:10 +0100
+Cc: "Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-mmc@vger.kernel.org, Ido Yariv <ido@wizery.com>,
+	linux-wireless@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <AANLkTikJr+0kVPE4aSwPjZWRfA3gRSNgGwzQdSwRpo_5@mail.gmail.com> <1292690407.3653.2.camel@jlt3.sipsolutions.net> <AANLkTin6zdUb2C-3GU-FySb3Pmk5iHaG5neLNSG38Tdx@mail.gmail.com>
+In-Reply-To: <AANLkTin6zdUb2C-3GU-FySb3Pmk5iHaG5neLNSG38Tdx@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012182352.10765.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-01 at 13:15 -0600, Larry Finger wrote: 
-> At one time, we thought that we had found BCM43xx devices with no SPROM. In the
-> one case that I remember, it was because the SPROM had been relocated.
+On Saturday, December 18, 2010, Ohad Ben-Cohen wrote:
+> On Sat, Dec 18, 2010 at 6:40 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sat, 2010-12-18 at 18:00 +0200, Ohad Ben-Cohen wrote:
+> >
+> >> > That's where the problem is.  If there's a difference, from the driver's
+> >> > point of view, between suspend and some other operation, there should be a
+> >> > way to tell the driver what case it actually is dealing with.
+> >>
+> >> Yes, the problem will be solved if the driver would bypass the runtime
+> >> PM framework on system suspend. mac80211 obviously has this
+> >> information, and technically it's very easy to let the driver know
+> >> about it.
+> >>
+> >> But the difference between suspend and normal operation is really
+> >> artificial: in both cases mac80211 just asks the driver to power its
+> >> device down, and the end result is exactly the same (a GPIO line of
+> >> the device is de-asserted in our case). The difference between these
+> >> two scenarios
+> >> exist only because runtime PM is effectively disabled during system
+> >> suspend, and therefore the driver has to look for an alternative way
+> >> to power down the device.
+> >
+> > Sounds to me like the difference isn't really in the driver, but the
+> > core PM subsystem. Why does it care when powering off a device whether
+> > it's during suspend, or during runtime?
 > 
-> I now have the data from John's device that needs the revision fixup and I know
-> what is wrong - it is rev 2 with corrupted CRC. The defaulting to rev 1 is
-> getting almost everything wrong, including MAC address and vendor. My plan is to
-> write a better fixup routine.
+> Agree.
 > 
-> At the moment, we have some SPROM fallback code that has not been fully
-> implemented, and is probably not needed. Are there any objections to stripping
-> this code out of drivers/ssb/pci.c and drivers/ssb/sprom.c?
+> If we can add a dev_pm_info bit, that would allow using runtime PM API
+> during suspend/resume transitions, the driver will not have to care.
+> 
+> Rafael what do you think ? Is that totally unacceptable ?
 
-Yes. The code is needed for bcm63xx embedded devices. The code that uses
-it currently is not in mainline, though. It can be found in the OpenWRT
-repositories.
+Already said.  It is not acceptable at all.
 
-But I still think that the SPROM fallback mechanism should be replaced
-by a "platform data" based mechanism, or similar. Just removing it
-without replacement is not an option, because bcm63xx embedded really
-does not have an SPROM.
-
-The bcm63xx was the reason the fallback mechanism was implemented in
-the first place. See git logs for more details.
-
--- 
-Greetings Michael.
-
+Thanks,
+Rafael
