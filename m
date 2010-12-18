@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46574 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751872Ab0LGRzz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 12:55:55 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k: Show some live tx-queue values in debugfs.
-Date: Tue,  7 Dec 2010 09:55:49 -0800
-Message-Id: <1291744549-7646-1-git-send-email-greearb@candelatech.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:37859 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752579Ab0LRWv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 17:51:26 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Sat, 18 Dec 2010 23:50:55 +0100
+Cc: "Ohad Ben-Cohen" <ohad@wizery.com>, linux-mmc@vger.kernel.org,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	Ido Yariv <ido@wizery.com>, linux-wireless@vger.kernel.org
+References: <AANLkTikJr+0kVPE4aSwPjZWRfA3gRSNgGwzQdSwRpo_5@mail.gmail.com> <AANLkTin23vbbA7+UDzh=v060HbkLMrJjB38cs+AWScPJ@mail.gmail.com> <1292690407.3653.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1292690407.3653.2.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012182350.55544.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Saturday, December 18, 2010, Johannes Berg wrote:
+> On Sat, 2010-12-18 at 18:00 +0200, Ohad Ben-Cohen wrote:
+> 
+> > > That's where the problem is.  If there's a difference, from the driver's
+> > > point of view, between suspend and some other operation, there should be a
+> > > way to tell the driver what case it actually is dealing with.
+> > 
+> > Yes, the problem will be solved if the driver would bypass the runtime
+> > PM framework on system suspend. mac80211 obviously has this
+> > information, and technically it's very easy to let the driver know
+> > about it.
+> > 
+> > But the difference between suspend and normal operation is really
+> > artificial: in both cases mac80211 just asks the driver to power its
+> > device down, and the end result is exactly the same (a GPIO line of
+> > the device is de-asserted in our case). The difference between these
+> > two scenarios
+> > exist only because runtime PM is effectively disabled during system
+> > suspend, and therefore the driver has to look for an alternative way
+> > to power down the device.
+> 
+> Sounds to me like the difference isn't really in the driver, but the
+> core PM subsystem. Why does it care when powering off a device whether
+> it's during suspend, or during runtime?
 
-I thought this might help track down stuck queues, etc.
+The problem is that the driver is using something it shouldn't use for
+the particular purpose.  Plain and simple.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 3586c43... 5075faa... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+Namely, it uses the runtime PM _framework_ (which has specific and _documented_
+limitations) for general power management of the device it handles.  It is
+wrong and it has nothing to do with the PM subsystem.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 3586c43..5075faa 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -589,6 +589,16 @@ static const struct file_operations fops_wiphy = {
- 		sc->debug.stats.txstats[WME_AC_VO].elem); \
- } while(0)
- 
-+#define PRX(str, elem)							\
-+do {									\
-+	len += snprintf(buf + len, size - len,				\
-+			"%s%13u%11u%10u%10u\n", str,			\
-+			(unsigned int)(sc->tx.txq[WME_AC_BE].elem),	\
-+			(unsigned int)(sc->tx.txq[WME_AC_BK].elem),	\
-+			(unsigned int)(sc->tx.txq[WME_AC_VI].elem),	\
-+			(unsigned int)(sc->tx.txq[WME_AC_VO].elem));	\
-+} while(0)
-+
- static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 			      size_t count, loff_t *ppos)
- {
-@@ -619,6 +629,12 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	PR("TX-Pkts-All:     ", tx_pkts_all);
- 	PR("TX-Bytes-All:    ", tx_bytes_all);
- 
-+	PRX("axq-qnum:        ", axq_qnum);
-+	PRX("axq-depth:       ", axq_depth);
-+	PRX("axq-stopped      ", stopped);
-+	PRX("tx-in-progress   ", axq_tx_inprogress);
-+	PRX("pending-frames   ", pending_frames);
-+
- 	if (len > size)
- 		len = size;
- 
--- 
-1.7.2.3
-
+Thanks,
+Rafael
