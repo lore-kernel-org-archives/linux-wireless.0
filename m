@@ -1,86 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35413 "EHLO mail.atheros.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:37852 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752478Ab0LVGuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 01:50:22 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 22:50:06 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <linux-wireless@vger.kernel.org>,
-	<lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Reset keycache on resume
-Date: Wed, 22 Dec 2010 12:20:12 +0530
-Message-ID: <1293000612-10884-1-git-send-email-mshajakhan@atheros.com>
+	id S1752559Ab0LRWri (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 17:47:38 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Ohad Ben-Cohen" <ohad@wizery.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Sat, 18 Dec 2010 23:47:08 +0100
+Cc: linux-mmc@vger.kernel.org,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	Ido Yariv <ido@wizery.com>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <AANLkTikJr+0kVPE4aSwPjZWRfA3gRSNgGwzQdSwRpo_5@mail.gmail.com> <201012181607.26628.rjw@sisk.pl> <AANLkTin23vbbA7+UDzh=v060HbkLMrJjB38cs+AWScPJ@mail.gmail.com>
+In-Reply-To: <AANLkTin23vbbA7+UDzh=v060HbkLMrJjB38cs+AWScPJ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012182347.08635.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Saturday, December 18, 2010, Ohad Ben-Cohen wrote:
+> On Sat, Dec 18, 2010 at 5:07 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Saturday, December 18, 2010, Ohad Ben-Cohen wrote:
+> >> On Sat, Dec 11, 2010 at 4:50 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >> >> Think of a device which you have no way to reset other than powering
+> >> >> it down and up again.
+> >> >>
+> >> >> If that device is managed by runtime PM, the only way to do that is by
+> >> >> using put_sync() followed by a get_sync(). Sure, if someone else
+> >> >> increased the usage_count of that device this won't work, but then of
+> >> >> course it means that the driver is not using runtime PM correctly.
+> >> >
+> >> > Not so.  Even if a driver uses runtime PM correctly, there will still
+> >> > be times when someone else has increased the usage_count.  This happens
+> >> > during probing and during system resume, for example.
+> >>
+> >> I'm aware of these two examples; normally we're good with them since
+> >> during probing we're not toggling the power, and during suspend/resume
+> >> the SDIO core is responsible for manipulating the power (and it does
+> >> so directly). Are there (or do you think there will be) additional
+> >> examples where this can happen ?
+> >>
+> >> But this leads me to a real problem which we have encountered.
+> >>
+> >> During system suspend, our driver is asked (by mac80211's suspend
+> >> handler) to power off its device. When this happens, the driver has no
+> >> idea that the system is suspending - regular driver code (responsible
+> >> to remove the wlan interface and stop the device) is being called.
+> >
+> > That's where the problem is.  If there's a difference, from the driver's
+> > point of view, between suspend and some other operation, there should be a
+> > way to tell the driver what case it actually is dealing with.
+> 
+> Yes, the problem will be solved if the driver would bypass the runtime
+> PM framework on system suspend. mac80211 obviously has this
+> information, and technically it's very easy to let the driver know
+> about it.
+> 
+> But the difference between suspend and normal operation is really
+> artificial: in both cases mac80211 just asks the driver to power its
+> device down, and the end result is exactly the same (a GPIO line of
+> the device is de-asserted in our case). The difference between these
+> two scenarios
+> exist only because runtime PM is effectively disabled during system
+> suspend, and therefore the driver has to look for an alternative way
+> to power down the device.
 
-It looks like some hardware registers are left into undefined state
-after suspend/resume. At minimum, this can cause odd issues related to
-key cache and hardware trying to encrypt/decrypt frames unexpectedly.
-This seems to happen even when there is no keys configured, i.e., hardware
-can end up touching TX frames just based of invalid key cache context
-even if the driver is not asking a specific entry to be used. In
-addition, RX can likely be affected. This patch fixes this issue.
+That's not correct, sorry.
 
-Signed-off-by: Jouni Malinen <Jouni.Malinen@Atheros.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/init.c  |    2 +-
- drivers/net/wireless/ath/ath9k/pci.c   |    8 ++++++++
- 3 files changed, 10 insertions(+), 1 deletions(-)
+There is a bug and the bug is that you use the runtime PM to power down
+the device in every situation, although you obviously shouldn't do that
+(e.g. because it may be disabled by user space or it _is_ disabled by
+the PM core during system suspend).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 2c31f51..12e60bb 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -669,6 +669,7 @@ extern int led_blink;
- extern int ath9k_pm_qos_value;
- 
- irqreturn_t ath_isr(int irq, void *dev);
-+void ath9k_init_crypto(struct ath_softc *sc);
- int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 		    const struct ath_bus_ops *bus_ops);
- void ath9k_deinit_device(struct ath_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b0e5e71..91cb422 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -372,7 +372,7 @@ fail:
- #undef DS2PHYS
- }
- 
--static void ath9k_init_crypto(struct ath_softc *sc)
-+void ath9k_init_crypto(struct ath_softc *sc)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int i = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7ca8499..af34d05 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -309,6 +309,14 @@ static int ath_pci_resume(struct device *device)
- 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
-+	  /*
-+	   * Reset key cache to sane defaults (all entries cleared) instead of
-+	   * semi-random values after suspend/resume.
-+	   */
-+	ath9k_ps_wakeup(sc);
-+	ath9k_init_crypto(sc);
-+	ath9k_ps_restore(sc);
-+
- 	sc->ps_idle = true;
- 	ath_radio_disable(sc, hw);
- 
--- 
-1.7.0.4
+> > BTW, what would you do in that case if the runtime PM of the device were
+> > disabled by user space by writing "on" to the device's
+> > /sys/devices/.../power/control file?
+> 
+> That's a good point.
+> 
+> Blocking runtime PM for this device is fatal since this particular
+> device has functionality tied up with its power control (no other way
+> to reset it).
+> 
+> It might call for a device-specific dev_pm_info bit flag to prohibit this...
 
+No way.
+
+> (Or.. not using runtime PM at all for this device. But that would call
+> for SDIO bus changes, because there is no other way to power off SDIO
+> devices in the absence of their drivers. Moreover, the device would
+> not gain from runtime PM's system integration, e.g. powertop
+> statistics, etc..)
+
+Let me repeat, please.  The runtime PM framework is _not_ _suitable_ for
+_general_ runtime PM of devices, because (a) it may be disabled by user space
+at any time and (b) it is disabled by the PM core during system suspend.
+
+Thanks,
+Rafael
