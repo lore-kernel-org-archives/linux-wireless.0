@@ -1,28 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56724 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751651Ab0LCUEK (ORCPT
+Received: from mail-gw0-f42.google.com ([74.125.83.42]:51795 "EHLO
+	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886Ab0LREJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 15:04:10 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 24F53418D8
-	for <linux-wireless@vger.kernel.org>; Fri,  3 Dec 2010 14:59:00 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-03 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101203200409.A405740F97@repository3.orbit-lab.org>
-Date: Fri,  3 Dec 2010 15:04:09 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 17 Dec 2010 23:09:03 -0500
+Received: by gwb20 with SMTP id 20so890740gwb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 20:09:03 -0800 (PST)
+Message-ID: <4D0C33C8.1070509@lwfinger.net>
+Date: Fri, 17 Dec 2010 22:08:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Amos Blanton <amos.blanton@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192 does not see N networks in my building
+References: <AANLkTikKtc4uiXN+oHwDr8sPFXZCe3HvTfYSvgZ8uYx0@mail.gmail.com>	<4D0BADBE.40101@lwfinger.net>	<AANLkTimvazto71m6SPMYtSAGuQkNpab+kMZcF4buNqYa@mail.gmail.com>	<4D0BC0C1.4000809@lwfinger.net> <AANLkTinCWK95_eFb47pFLz2O=+UHMGpeXg9Z_JstFEa=@mail.gmail.com>
+In-Reply-To: <AANLkTinCWK95_eFb47pFLz2O=+UHMGpeXg9Z_JstFEa=@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   813c0e6..4386744  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   c9f50b7..7e6b6a2  history    -> origin/history
- + 80efa21...8579744 master     -> origin/master  (forced update)
-   22a5b56..94c35de  stable     -> origin/stable
- * [new tag]         next-20101203 -> next-20101203
+On 12/17/2010 09:32 PM, Amos Blanton wrote:
+> 
+> Ah, my apologies! I did forget the sudo - sorry about that. I've left
+> work now but will do a scan on Monday.
+> 
+> Should I try installing an updated version of the driver that is
 
-compat-wireless code metrics
+As yours works, then it is likely OK. You would get the latest from the Reaktek
+web site. I have no idea where Ubuntu got their version. You would have to
+contact them.
 
-    750561 - Total upstream lines of code being pulled
+Larry
