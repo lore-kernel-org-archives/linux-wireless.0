@@ -1,89 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13845 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752896Ab0LAHeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:34:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:34:10 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/26] ath9k: Read spur channel information from eeprom for AR9485
-Date: Tue, 30 Nov 2010 23:32:42 -0800
-Message-ID: <1291188775-13707-14-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35479 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297Ab0LRIw1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 03:52:27 -0500
+Date: Sat, 18 Dec 2010 11:52:10 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch -next] wl1251: wl12xx_get_platform_data() returns an ERR_PTR
+Message-ID: <20101218085210.GO1639@bicker>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also spur channel count and range is different for AR9485.
+wl12xx_get_platform_data() returns an ERR_PTR on failure and it never
+returns a NULL.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   35 ++++++++++++++++++++++++--
- 1 files changed, 32 insertions(+), 3 deletions(-)
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 4739af1..e461723 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -154,21 +154,50 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 	static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
- 	int cur_bb_spur, negative = 0, cck_spur_freq;
- 	int i;
-+	int range, max_spur_cnts, synth_freq;
-+	u8 *spur_fbin_ptr = NULL;
+diff --git a/drivers/net/wireless/wl1251/sdio.c b/drivers/net/wireless/wl1251/sdio.c
+index 596d90e..d550b5e 100644
+--- a/drivers/net/wireless/wl1251/sdio.c
++++ b/drivers/net/wireless/wl1251/sdio.c
+@@ -252,7 +252,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 	wl->if_ops = &wl1251_sdio_ops;
  
- 	/*
- 	 * Need to verify range +/- 10 MHz in control channel, otherwise spur
- 	 * is out-of-band and can be ignored.
- 	 */
- 
--	for (i = 0; i < 4; i++) {
-+	if (AR_SREV_9485(ah)) {
-+		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
-+							 IS_CHAN_2GHZ(chan));
-+		if (spur_fbin_ptr[0] == 0) /* No spur */
-+			return;
-+		max_spur_cnts = 5;
-+		if (IS_CHAN_HT40(chan)) {
-+			range = 19;
-+			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-+					   AR_PHY_GC_DYN2040_PRI_CH) == 0)
-+				synth_freq = chan->channel + 10;
-+			else
-+				synth_freq = chan->channel - 10;
-+		} else {
-+			range = 10;
-+			synth_freq = chan->channel;
-+		}
-+	} else {
-+		range = 10;
-+		max_spur_cnts = 4;
-+		synth_freq = chan->channel;
-+	}
-+
-+	for (i = 0; i < max_spur_cnts; i++) {
- 		negative = 0;
--		cur_bb_spur = spur_freq[i] - chan->channel;
-+		if (AR_SREV_9485(ah))
-+			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
-+					IS_CHAN_2GHZ(chan)) - synth_freq;
-+		else
-+			cur_bb_spur = spur_freq[i] - synth_freq;
- 
- 		if (cur_bb_spur < 0) {
- 			negative = 1;
- 			cur_bb_spur = -cur_bb_spur;
- 		}
--		if (cur_bb_spur < 10) {
-+		if (cur_bb_spur < range) {
- 			cck_spur_freq = (int)((cur_bb_spur << 19) / 11);
- 
- 			if (negative == 1)
--- 
-1.7.0.4
-
+ 	wl12xx_board_data = wl12xx_get_platform_data();
+-	if (wl12xx_board_data != NULL) {
++	if (!IS_ERR(wl12xx_board_data)) {
+ 		wl->set_power = wl12xx_board_data->set_power;
+ 		wl->irq = wl12xx_board_data->irq;
+ 		wl->use_eeprom = wl12xx_board_data->use_eeprom;
