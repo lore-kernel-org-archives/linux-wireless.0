@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout027.mac.com ([17.148.16.102]:58336 "EHLO
-	asmtpout027.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923Ab0LQJeA (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62440 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702Ab0LRQAY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 04:34:00 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII
-Received: from [192.168.1.30] (unknown [87.201.169.175])
- by asmtp027.mac.com (Oracle Communications Messaging Exchange Server 7u4-18.01
- 64bit (built Jul 15 2010)) with ESMTPSA id <0LDK0053FFWBKA90@asmtp027.mac.com>
- for linux-wireless@vger.kernel.org; Fri, 17 Dec 2010 01:33:51 -0800 (PST)
-Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271 drivers
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
-Date: Fri, 17 Dec 2010 13:33:36 +0400
-Cc: Ohad Ben-Cohen <ohad@wizery.com>,
-	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
-	"Jara, Pedro" <pedrojara@ti.com>
-Message-id: <5BEEB020-F254-4885-91B1-61FD38F7E19A@mac.com>
-References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com>
- <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
- <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com>
- <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
-To: panduranga <x0125717@ti.com>
+	Sat, 18 Dec 2010 11:00:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <201012181607.26628.rjw@sisk.pl>
+References: <AANLkTikJr+0kVPE4aSwPjZWRfA3gRSNgGwzQdSwRpo_5@mail.gmail.com>
+ <Pine.LNX.4.44L0.1012110937100.10743-100000@netrider.rowland.org>
+ <AANLkTi=32bqipN5U00La-B7JSgTC1bHgMev=xUSF6kRN@mail.gmail.com> <201012181607.26628.rjw@sisk.pl>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Sat, 18 Dec 2010 18:00:03 +0200
+Message-ID: <AANLkTin23vbbA7+UDzh=v060HbkLMrJjB38cs+AWScPJ@mail.gmail.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-mmc@vger.kernel.org,
+	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
+	Ido Yariv <ido@wizery.com>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sat, Dec 18, 2010 at 5:07 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Saturday, December 18, 2010, Ohad Ben-Cohen wrote:
+>> On Sat, Dec 11, 2010 at 4:50 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> >> Think of a device which you have no way to reset other than powering
+>> >> it down and up again.
+>> >>
+>> >> If that device is managed by runtime PM, the only way to do that is by
+>> >> using put_sync() followed by a get_sync(). Sure, if someone else
+>> >> increased the usage_count of that device this won't work, but then of
+>> >> course it means that the driver is not using runtime PM correctly.
+>> >
+>> > Not so.  Even if a driver uses runtime PM correctly, there will still
+>> > be times when someone else has increased the usage_count.  This happens
+>> > during probing and during system resume, for example.
+>>
+>> I'm aware of these two examples; normally we're good with them since
+>> during probing we're not toggling the power, and during suspend/resume
+>> the SDIO core is responsible for manipulating the power (and it does
+>> so directly). Are there (or do you think there will be) additional
+>> examples where this can happen ?
+>>
+>> But this leads me to a real problem which we have encountered.
+>>
+>> During system suspend, our driver is asked (by mac80211's suspend
+>> handler) to power off its device. When this happens, the driver has no
+>> idea that the system is suspending - regular driver code (responsible
+>> to remove the wlan interface and stop the device) is being called.
+>
+> That's where the problem is.  If there's a difference, from the driver's
+> point of view, between suspend and some other operation, there should be a
+> way to tell the driver what case it actually is dealing with.
 
-On Dec 17, 2010, at 9:11 AM, panduranga wrote:
+Yes, the problem will be solved if the driver would bypass the runtime
+PM framework on system suspend. mac80211 obviously has this
+information, and technically it's very easy to let the driver know
+about it.
 
-> add the following patch (http://www.spinics.net/lists/linux-wireless/msg59391.html) by Arik Nemtsov.
-> 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 708b699..e5fbbb6 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -2987,6 +2987,18 @@ int wl1271_register_hw(struct wl1271 *wl)
-> 	if (wl->mac80211_registered)
-> 		return 0;
-> 
-> +	ret = wl1271_fetch_nvs(wl);
-> +	if (ret == 0) {
-> +		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-> +
-> +		wl->mac_addr[0] = nvs_ptr[11];
-> +		wl->mac_addr[1] = nvs_ptr[10];
-> +		wl->mac_addr[2] = nvs_ptr[6];
-> +		wl->mac_addr[3] = nvs_ptr[5];
-> +		wl->mac_addr[4] = nvs_ptr[4];
-> +		wl->mac_addr[5] = nvs_ptr[3];
-> +	}
-> +
-> 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
-> 
-> 	ret = ieee80211_register_hw(wl->hw);
+But the difference between suspend and normal operation is really
+artificial: in both cases mac80211 just asks the driver to power its
+device down, and the end result is exactly the same (a GPIO line of
+the device is de-asserted in our case). The difference between these
+two scenarios
+exist only because runtime PM is effectively disabled during system
+suspend, and therefore the driver has to look for an alternative way
+to power down the device.
 
-Where should the firmware file be located? What name should I give the firmware file : firmware.bin ? 
+> BTW, what would you do in that case if the runtime PM of the device were
+> disabled by user space by writing "on" to the device's
+> /sys/devices/.../power/control file?
 
-I get the following error after adding the following patch:
+That's a good point.
 
-[   62.835174] wl1271: ERROR could not get nvs file: -2
-[   62.887786] wl1271: loaded
-[   62.890655] wl1271: initialized
+Blocking runtime PM for this device is fatal since this particular
+device has functionality tied up with its power control (no other way
+to reset it).
 
+It might call for a device-specific dev_pm_info bit flag to prohibit this...
 
-Elvis Dowson
+(Or.. not using runtime PM at all for this device. But that would call
+for SDIO bus changes, because there is no other way to power off SDIO
+devices in the absence of their drivers. Moreover, the device would
+not gain from runtime PM's system integration, e.g. powertop
+statistics, etc..)
