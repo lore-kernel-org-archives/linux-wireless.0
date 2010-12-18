@@ -1,108 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43162 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:46366 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932153Ab0LAVDN (ORCPT
+	with ESMTP id S1756774Ab0LRQXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 16:03:13 -0500
-Message-Id: <20101201210225.543887760@sipsolutions.net>
-Date: Wed, 01 Dec 2010 21:59:41 +0100
+	Sat, 18 Dec 2010 11:23:15 -0500
+Message-Id: <20101218162217.339713275@sipsolutions.net>
+Date: Sat, 18 Dec 2010 17:20:48 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org
-Subject: [RFC 2/5] mac80211: move mesh filter adjusting
-References: <20101201205939.009530439@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mac80211: implement off-channel TX using hw r-o-c
+ offload
+References: <20101218162046.876589704@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Logically, the filter adjusting belongs with
-starting/stopping mesh, not interface up/down,
-so move it there.
+When the driver has remain-on-channel offload,
+implement off-channel transmission using that
+primitive.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/iface.c |   18 +-----------------
- net/mac80211/mesh.c  |   11 +++++++++++
- 2 files changed, 12 insertions(+), 17 deletions(-)
+ net/mac80211/cfg.c         |   59 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/offchannel.c  |   30 +++++++++++++++-------
+ 3 files changed, 81 insertions(+), 10 deletions(-)
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-12-01 20:24:46.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2010-12-01 20:28:08.000000000 +0100
-@@ -197,11 +197,6 @@ static int ieee80211_do_open(struct net_
- 		sdata->bss = &sdata->u.ap;
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
--		if (!ieee80211_vif_is_mesh(&sdata->vif))
--			break;
--		/* mesh ifaces must set allmulti to forward mcast traffic */
--		atomic_inc(&local->iff_allmultis);
--		break;
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_ADHOC:
-@@ -274,9 +269,6 @@ static int ieee80211_do_open(struct net_
- 		}
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-12-18 17:06:35.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2010-12-18 17:08:23.000000000 +0100
+@@ -1610,6 +1610,7 @@ static int ieee80211_remain_on_channel(s
+ 		ret = ieee80211_remain_on_channel_hw(local, dev,
+ 						     chan, channel_type,
+ 						     duration, cookie);
++		local->hw_roc_for_tx = false;
+ 		mutex_unlock(&local->mtx);
  
- 		if (ieee80211_vif_is_mesh(&sdata->vif)) {
--			local->fif_other_bss++;
--			ieee80211_configure_filter(local);
--
- 			ieee80211_start_mesh(sdata);
- 		} else if (sdata->vif.type == NL80211_IFTYPE_AP) {
- 			local->fif_pspoll++;
-@@ -504,16 +496,8 @@ static void ieee80211_do_stop(struct iee
- 		ieee80211_configure_filter(local);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
--		if (ieee80211_vif_is_mesh(&sdata->vif)) {
--			/* other_bss and allmulti are always set on mesh
--			 * ifaces */
--			local->fif_other_bss--;
--			atomic_dec(&local->iff_allmultis);
--
--			ieee80211_configure_filter(local);
--
-+		if (ieee80211_vif_is_mesh(&sdata->vif))
- 			ieee80211_stop_mesh(sdata);
--		}
- 		/* fall through */
- 	default:
- 		flush_work(&sdata->work);
---- wireless-testing.orig/net/mac80211/mesh.c	2010-12-01 20:24:46.000000000 +0100
-+++ wireless-testing/net/mac80211/mesh.c	2010-12-01 20:29:36.000000000 +0100
-@@ -513,6 +513,11 @@ void ieee80211_start_mesh(struct ieee802
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
+ 		return ret;
+@@ -1751,6 +1752,49 @@ static int ieee80211_mgmt_tx(struct wiph
  
-+	local->fif_other_bss++;
-+	/* mesh ifaces must set allmulti to forward mcast traffic */
-+	atomic_inc(&local->iff_allmultis);
-+	ieee80211_configure_filter(local);
+ 	*cookie = (unsigned long) skb;
+ 
++	if (is_offchan && local->ops->remain_on_channel) {
++		unsigned int duration;
++		int ret;
 +
- 	set_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags);
- 	ieee80211_mesh_root_setup(ifmsh);
- 	ieee80211_queue_work(&local->hw, &sdata->work);
-@@ -524,6 +529,8 @@ void ieee80211_start_mesh(struct ieee802
- 
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_local *local = sdata->local;
++		mutex_lock(&local->mtx);
++		/*
++		 * If the duration is zero, then the driver
++		 * wouldn't actually do anything. Set it to
++		 * 100 for now.
++		 *
++		 * TODO: cancel the off-channel operation
++		 *       when we get the SKB's TX status and
++		 *       the wait time was zero before.
++		 */
++		duration = 100;
++		if (wait)
++			duration = wait;
++		ret = ieee80211_remain_on_channel_hw(local, dev, chan,
++						     channel_type,
++						     duration, cookie);
++		if (ret) {
++			kfree_skb(skb);
++			mutex_unlock(&local->mtx);
++			return ret;
++		}
 +
- 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
- 	del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
++		local->hw_roc_for_tx = true;
++		local->hw_roc_duration = wait;
++
++		/*
++		 * queue up frame for transmission after
++		 * ieee80211_ready_on_channel call
++		 */
++
++		/* modify cookie to prevent API mismatches */
++		*cookie ^= 2;
++		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
++		local->hw_roc_skb = skb;
++		mutex_unlock(&local->mtx);
++
++		return 0;
++	}
++
  	/*
-@@ -534,6 +541,10 @@ void ieee80211_stop_mesh(struct ieee8021
- 	 * it no longer is.
- 	 */
- 	cancel_work_sync(&sdata->work);
+ 	 * Can transmit right away if the channel was the
+ 	 * right one and there's no wait involved... If a
+@@ -1791,6 +1835,21 @@ static int ieee80211_mgmt_tx_cancel_wait
+ 	int ret = -ENOENT;
+ 
+ 	mutex_lock(&local->mtx);
 +
-+	local->fif_other_bss--;
-+	atomic_dec(&local->iff_allmultis);
-+	ieee80211_configure_filter(local);
++	if (local->ops->cancel_remain_on_channel) {
++		cookie ^= 2;
++		ret = ieee80211_cancel_remain_on_channel_hw(local, cookie);
++
++		if (ret == 0) {
++			kfree_skb(local->hw_roc_skb);
++			local->hw_roc_skb = NULL;
++		}
++
++		mutex_unlock(&local->mtx);
++
++		return ret;
++	}
++
+ 	list_for_each_entry(wk, &local->work_list, list) {
+ 		if (wk->sdata != sdata)
+ 			continue;
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-12-18 17:06:23.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-12-18 17:08:23.000000000 +0100
+@@ -940,10 +940,12 @@ struct ieee80211_local {
+ 
+ 	struct ieee80211_channel *hw_roc_channel;
+ 	struct net_device *hw_roc_dev;
++	struct sk_buff *hw_roc_skb;
+ 	struct work_struct hw_roc_start, hw_roc_done;
+ 	enum nl80211_channel_type hw_roc_channel_type;
+ 	unsigned int hw_roc_duration;
+ 	u32 hw_roc_cookie;
++	bool hw_roc_for_tx;
+ 
+ 	/* dummy netdev for use w/ NAPI */
+ 	struct net_device napi_dev;
+--- wireless-testing.orig/net/mac80211/offchannel.c	2010-12-18 17:06:23.000000000 +0100
++++ wireless-testing/net/mac80211/offchannel.c	2010-12-18 17:08:23.000000000 +0100
+@@ -196,6 +196,7 @@ static void ieee80211_hw_roc_start(struc
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, hw_roc_start);
++	struct ieee80211_sub_if_data *sdata;
+ 
+ 	mutex_lock(&local->mtx);
+ 
+@@ -206,11 +207,19 @@ static void ieee80211_hw_roc_start(struc
+ 
+ 	ieee80211_recalc_idle(local);
+ 
+-	cfg80211_ready_on_channel(local->hw_roc_dev, local->hw_roc_cookie,
+-				  local->hw_roc_channel,
+-				  local->hw_roc_channel_type,
+-				  local->hw_roc_duration,
+-				  GFP_KERNEL);
++	if (local->hw_roc_skb) {
++		sdata = IEEE80211_DEV_TO_SUB_IF(local->hw_roc_dev);
++		ieee80211_tx_skb(sdata, local->hw_roc_skb);
++		local->hw_roc_skb = NULL;
++	} else {
++		cfg80211_ready_on_channel(local->hw_roc_dev,
++					  local->hw_roc_cookie,
++					  local->hw_roc_channel,
++					  local->hw_roc_channel_type,
++					  local->hw_roc_duration,
++					  GFP_KERNEL);
++	}
++
+ 	mutex_unlock(&local->mtx);
  }
  
- static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+@@ -236,11 +245,12 @@ static void ieee80211_hw_roc_done(struct
+ 		return;
+ 	}
+ 
+-	cfg80211_remain_on_channel_expired(local->hw_roc_dev,
+-					   local->hw_roc_cookie,
+-					   local->hw_roc_channel,
+-					   local->hw_roc_channel_type,
+-					   GFP_KERNEL);
++	if (!local->hw_roc_for_tx)
++		cfg80211_remain_on_channel_expired(local->hw_roc_dev,
++						   local->hw_roc_cookie,
++						   local->hw_roc_channel,
++						   local->hw_roc_channel_type,
++						   GFP_KERNEL);
+ 
+ 	local->hw_roc_channel = NULL;
+ 	local->hw_roc_cookie = 0;
 
 
