@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:50607 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756487Ab0LRB3g (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:62365 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756487Ab0LRBg2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 20:29:36 -0500
-Received: by gwb20 with SMTP id 20so838063gwb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 17:29:35 -0800 (PST)
-Message-ID: <4D0C0E5F.4030605@lwfinger.net>
-Date: Fri, 17 Dec 2010 19:29:03 -0600
+	Fri, 17 Dec 2010 20:36:28 -0500
+Date: Fri, 17 Dec 2010 19:36:25 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix use of mutex in interrupt code
+Message-ID: <4d0c1019.Ojk0z75BV563kcjY%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Tejun Heo <tj@kernel.org>
-Subject: Re: [RFT] rtlwifi: use alloc_workqueue
-References: <1292529589-5904-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1292529589-5904-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2010 01:59 PM, John W. Linville wrote:
-> create_workqueue is deprecated.  The workqueue usage does not seem to
-> demand any special treatment, so do not set any flags either.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> I don't have the hardware to test...
-> 
->  drivers/net/wireless/rtlwifi/base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-> index 9e860ff..24a7cd3 100644
-> --- a/drivers/net/wireless/rtlwifi/base.c
-> +++ b/drivers/net/wireless/rtlwifi/base.c
-> @@ -225,7 +225,7 @@ static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
->  
->  	/* <2> work queue */
->  	rtlpriv->works.hw = hw;
-> -	rtlpriv->works.rtl_wq = create_workqueue(rtlpriv->cfg->name);
-> +	rtlpriv->works.rtl_wq = alloc_workqueue(rtlpriv->cfg->name, 0, 0);
->  	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
->  			  (void *)rtl_watchdog_wq_callback);
->  	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
+A previous conversion from semaphoreto mutexes missed the fact that one
+of the semaphores was used in interrupt code. Fixed by changing to
+a spinlock.
 
-After further testing, this patch is OK. The problem I saw had another source.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Add Tested-by: Larry Finger
-
-Larry
-
+Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
+@@ -309,8 +309,8 @@ int rtl_init_core(struct ieee80211_hw *h
+ 	}
+ 
+ 	/* <4> locks */
+-	mutex_init(&rtlpriv->locks.ips_mutex);
+ 	mutex_init(&rtlpriv->locks.conf_mutex);
++	spin_lock_init(&rtlpriv->locks.ips_lock);
+ 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
+ 	spin_lock_init(&rtlpriv->locks.h2c_lock);
+ 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
+Index: wireless-testing/drivers/net/wireless/rtlwifi/ps.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/ps.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/ps.c
+@@ -286,8 +286,9 @@ void rtl_ips_nic_on(struct ieee80211_hw
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	enum rf_pwrstate rtstate;
++	unsigned long flags;
+ 
+-	mutex_lock(&rtlpriv->locks.ips_mutex);
++	spin_lock_irqsave(&rtlpriv->locks.ips_lock, flags);
+ 
+ 	if (ppsc->b_inactiveps) {
+ 		rtstate = ppsc->rfpwr_state;
+@@ -303,7 +304,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
+ 		}
+ 	}
+ 
+-	mutex_unlock(&rtlpriv->locks.ips_mutex);
++	spin_unlock_irqrestore(&rtlpriv->locks.ips_lock, flags);
+ }
+ 
+ /*for FW LPS*/
+Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1192,11 +1192,11 @@ struct rtl_hal_cfg {
+ };
+ 
+ struct rtl_locks {
+-	/*sem */
+-	struct mutex ips_mutex;
++	/* mutex */
+ 	struct mutex conf_mutex;
+ 
+ 	/*spin lock */
++	spinlock_t ips_lock;
+ 	spinlock_t irq_th_lock;
+ 	spinlock_t h2c_lock;
+ 	spinlock_t rf_ps_lock;
