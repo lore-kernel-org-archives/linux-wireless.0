@@ -1,156 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2115 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.19.149.2]:48318 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753672Ab0LBFNk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 00:13:40 -0500
-From: Joe Perches <joe@perches.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: [PATCH 2/2] ath: Fix logging message typos
-Date: Wed,  1 Dec 2010 21:13:33 -0800
-Message-Id: <a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
-In-Reply-To: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
-References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
+	id S1754108Ab0LRJ3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Dec 2010 04:29:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 18 Dec 2010 01:29:15 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 2/2] ath9k_htc: Fix unnecessary warnings on card removal
+Date: Sat, 18 Dec 2010 14:59:07 +0530
+Message-ID: <1292664547-5474-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix immunity misspelling.
-Standardize strings from multiple modules.
-Add spaces between words of concatenated strings.
+Avoid register read/write operations when
+the card is unplaugged. Otherwise results in
+unnecessary warnings.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+usb 1-1: USB disconnect, address 10
+ath: Failed to wakeup in 500us
+------------[ cut here ]------------
+WARNING: at drivers/net/wireless/ath/ath9k/hw.c:1616
+ath9k_hw_setpower+0x61f/0x630 [ath9k_hw]()
+Pid: 1830, comm: khubd Tainted: G        W   2.6.37-rc5-wl #33
+Call Trace:
+[<ffffffff8105018a>] warn_slowpath_common+0x7a/0xb0
+[<ffffffffa0621c90>] ? ath9k_regwrite+0x0/0x190 [ath9k_htc]
+[<ffffffff810501d5>] warn_slowpath_null+0x15/0x20
+[<ffffffffa05d06ef>] ath9k_hw_setpower+0x61f/0x630 [ath9k_hw]
+[<ffffffffa061f25c>] ath9k_htc_ps_wakeup+0x5c/0x60 [ath9k_htc]
+[<ffffffffa062082e>] ath9k_htc_remove_interface+0x4e/0xe0 [ath9k_htc]
+[<ffffffff81345329>] ? mutex_unlock+0x9/0x10
+[<ffffffffa055bbe7>] ? ieee80211_free_keys+0x87/0xa0 [mac80211]
+[<ffffffffa054e845>] ieee80211_do_stop+0x4f5/0x540 [mac80211]
+[<ffffffff8134678f>] ? _raw_spin_unlock_bh+0x1f/0x30
+[<ffffffff812b6983>] ? dev_deactivate+0x1c3/0x1e0
+[<ffffffffa054e8a5>] ieee80211_stop+0x15/0x20 [mac80211]
+[<ffffffff8129d226>] __dev_close+0x56/0x90
+[<ffffffff8129d27a>] dev_close+0x1a/0x50
+
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/ani.c          |    2 +-
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_4k.c    |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_9287.c  |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c   |    2 +-
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    6 +++---
- 6 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    6 ++----
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   24 +++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/wmi.c          |    2 +-
+ 4 files changed, 26 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
-index 6b75b22..9c41881 100644
---- a/drivers/net/wireless/ath/ath5k/ani.c
-+++ b/drivers/net/wireless/ath/ath5k/ani.c
-@@ -74,7 +74,7 @@ ath5k_ani_set_noise_immunity_level(struct ath5k_hw *ah, int level)
- 	static const s8 fr[] = { -78, -80 };
- #endif
- 	if (level < 0 || level >= ARRAY_SIZE(sz)) {
--		ATH5K_ERR(ah->ah_sc, "noise immuniy level %d out of range",
-+		ATH5K_ERR(ah->ah_sc, "noise immunity level %d out of range",
- 			  level);
- 		return;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index a7705e7..199131e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -720,7 +720,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
- 				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
- 			ath_dbg(common, ATH_DBG_CALIBRATE,
--				"offset calibration failed to complete in 1ms; noisy ??\n");
-+				"offset calibration failed to complete in 1ms; noisy environment?\n");
- 			return false;
- 		}
- 		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
-@@ -734,7 +734,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
- 			  0, AH_WAIT_TIMEOUT)) {
- 		ath_dbg(common, ATH_DBG_CALIBRATE,
--			"offset calibration failed to complete in 1ms; noisy ??\n");
-+			"offset calibration failed to complete in 1ms; noisy enfironment?\n");
- 		return false;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index fdf9d5f..d90838a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -339,7 +339,6 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_ASSOCIATED		   BIT(7)
+ #define OP_ENABLE_BEACON	   BIT(8)
+ #define OP_LED_DEINIT		   BIT(9)
+-#define OP_UNPLUGGED		   BIT(10)
+ #define OP_BT_PRIORITY_DETECTED	   BIT(11)
+ #define OP_BT_SCAN		   BIT(12)
  
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 35b1a8c..939fc7a 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -90,7 +90,7 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
- 				}
- 			} else {
- 				ath_err(common,
--					"Invalid EEPROM Magic. endianness mismatch.\n");
-+					"Invalid EEPROM Magic. Endianness mismatch.\n");
- 				return -EINVAL;
- 			}
- 		}
-@@ -1178,7 +1178,7 @@ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- 	u16 spur_val = AR_NO_SPUR;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 0f6be35..8a73dc2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -632,6 +632,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	ah->hw_version.subsysid = 0; /* FIXME */
+ 	ah->hw_version.usbdev = drv_info;
+ 	ah->ah_flags |= AH_USE_EEPROM;
++	ah->ah_flags &= ~AH_UNPLUGGED;
+ 	priv->ah = ah;
  
- 	ath_dbg(common, ATH_DBG_ANI,
--		"Getting spur idx %d is2Ghz. %d val %x\n",
-+		"Getting spur idx:%d is2Ghz:%d val:%x\n",
- 		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+ 	common = ath9k_hw_common(ah);
+@@ -851,9 +852,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
+ 	if (ret)
+ 		goto err_init;
  
- 	switch (ah->config.spurmode) {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 0be5351..9ec4bc8 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -1150,7 +1150,7 @@ static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
- 	u16 spur_val = AR_NO_SPUR;
+-	/* The device may have been unplugged earlier. */
+-	priv->op_flags &= ~OP_UNPLUGGED;
+-
+ 	ret = ath9k_init_device(priv, devid, product, drv_info);
+ 	if (ret)
+ 		goto err_init;
+@@ -873,7 +871,7 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
  
- 	ath_dbg(common, ATH_DBG_ANI,
--		"Getting spur idx %d is2Ghz. %d val %x\n",
-+		"Getting spur idx:%d is2Ghz:%d val:%x\n",
- 		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+ 		/* Check if the device has been yanked out. */
+ 		if (hotunplug)
+-			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
++			htc_handle->drv_priv->ah->ah_flags |= AH_UNPLUGGED;
  
- 	switch (ah->config.spurmode) {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 91722fb..9aa31aa 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1458,7 +1458,7 @@ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- 	u16 spur_val = AR_NO_SPUR;
+ 		ath9k_deinit_device(htc_handle->drv_priv);
+ 		ath9k_deinit_wmi(htc_handle->drv_priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index dd17909..f6e64c9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1110,6 +1110,11 @@ static int ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 	int padpos, padsize, ret;
  
- 	ath_dbg(common, ATH_DBG_ANI,
--		"Getting spur idx %d is2Ghz. %d val %x\n",
-+		"Getting spur idx:%d is2Ghz:%d val:%x\n",
- 		i, is2GHz, ah->config.spurchans[i][is2GHz]);
++	if (priv->ah->ah_flags & AH_UNPLUGGED) {
++		ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_ANY,
++			"Device no present, can not xmit\n");
++		goto fail_tx;
++	}
+ 	hdr = (struct ieee80211_hdr *) skb->data;
  
- 	switch (ah->config.spurmode) {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index c41ab8c..69b6aca 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -239,7 +239,7 @@ int htc_connect_service(struct htc_target *target,
- 	/* Find an available endpoint */
- 	endpoint = get_next_avail_ep(target->endpoint);
- 	if (!endpoint) {
--		dev_err(target->dev, "Endpoint is not available for"
-+		dev_err(target->dev, "Endpoint is not available for "
- 			"service %d\n", service_connreq->service_id);
- 		return -EINVAL;
- 	}
-@@ -253,7 +253,7 @@ int htc_connect_service(struct htc_target *target,
- 	skb = alloc_skb(sizeof(struct htc_conn_svc_msg) +
- 			    sizeof(struct htc_frame_hdr), GFP_ATOMIC);
- 	if (!skb) {
--		dev_err(target->dev, "Failed to allocate buf to send"
-+		dev_err(target->dev, "Failed to allocate buf to send "
- 			"service connect req\n");
- 		return -ENOMEM;
- 	}
-@@ -434,7 +434,7 @@ struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
+ 	/* Add the padding after the header if this is not already done */
+@@ -1231,6 +1236,12 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+ 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
+ 	ath9k_led_stop_brightness(priv);
  
- 	target = kzalloc(sizeof(struct htc_target), GFP_KERNEL);
- 	if (!target) {
--		printk(KERN_ERR "Unable to allocate memory for"
-+		printk(KERN_ERR "Unable to allocate memory for "
- 			"target device\n");
- 		return NULL;
- 	}
++	if (ah->ah_flags & AH_UNPLUGGED) {
++		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
++		mutex_unlock(&priv->mutex);
++		return;
++	}
++
+ 	ath9k_htc_ps_wakeup(priv);
+ 	htc_stop(priv->htc);
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+@@ -1348,6 +1359,11 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+ 	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface\n");
+ 
+ 	mutex_lock(&priv->mutex);
++	if (priv->ah->ah_flags & AH_UNPLUGGED) {
++		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
++		mutex_unlock(&priv->mutex);
++		return;
++	}
+ 	ath9k_htc_ps_wakeup(priv);
+ 
+ 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+@@ -1471,11 +1487,17 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
+ 	u32 rfilt;
+ 
+ 	mutex_lock(&priv->mutex);
+-	ath9k_htc_ps_wakeup(priv);
+ 
+ 	changed_flags &= SUPPORTED_FILTERS;
+ 	*total_flags &= SUPPORTED_FILTERS;
+ 
++	if (priv->ah->ah_flags & AH_UNPLUGGED) {
++		ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_ANY,
++			"Device not present\n");
++		mutex_unlock(&priv->mutex);
++		return;
++	}
++	ath9k_htc_ps_wakeup(priv);
+ 	priv->rxfilter = *total_flags;
+ 	rfilt = ath9k_htc_calcrxfilter(priv);
+ 	ath9k_hw_setrxfilter(priv->ah, rfilt);
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 8f42ea7..8f42d42 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -250,7 +250,7 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	int time_left, ret = 0;
+ 	unsigned long flags;
+ 
+-	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
++	if (wmi->drv_priv->ah->ah_flags & AH_UNPLUGGED)
+ 		return 0;
+ 
+ 	skb = alloc_skb(headroom + cmd_len, GFP_ATOMIC);
 -- 
-1.7.3.2.245.g03276.dirty
+1.7.3.3
 
