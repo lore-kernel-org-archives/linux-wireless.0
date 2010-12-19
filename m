@@ -1,92 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34312 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758478Ab0LCIO2 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:57240 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385Ab0LSU7V convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 03:14:28 -0500
-Message-ID: <4CF8A6DE.4020804@candelatech.com>
-Date: Fri, 03 Dec 2010 00:14:22 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 19 Dec 2010 15:59:21 -0500
+Received: by qwa26 with SMTP id 26so2222800qwa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Dec 2010 12:59:20 -0800 (PST)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux> <4CF6D8C8.2000308@candelatech.com>
-In-Reply-To: <4CF6D8C8.2000308@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4D0DE870.2050503@free.fr>
+References: <4D0DE870.2050503@free.fr>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 19 Dec 2010 21:58:59 +0100
+Message-ID: <AANLkTik5uML3gSD5aJE8CPwew8G5shp9BJgGUK608jTp@mail.gmail.com>
+Subject: Re: Wireless channel stuck to -1 on mon0 (fix patch submission)
+To: CalimeroTeknik <calimeroteknik@free.fr>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2010 03:22 PM, Ben Greear wrote:
-> On 11/29/2010 04:44 PM, Luis R. Rodriguez wrote:
->> On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
+This is a known problem, that has basically been WONTFIXed a while
+ago. I highly disagree with the reasoning, but the decision ultimately
+rests on Johannes. In the meantime, check patches.aircrack-ng.org for
+a workaround.
+
+Johannes: I know that you consider reporting the actual channel of the
+PHY to be "confusing to users" when running with multiple virtual
+PHYs, but apparently this is what most users expect. Perhaps it
+*should* be implemented after all.
+
+On Sun, Dec 19, 2010 at 12:11 PM, CalimeroTeknik <calimeroteknik@free.fr> wrote:
+> [1.] One line summary of the problem:
+> I can't change the channel of mon0 which is stuck to -1
 >
->>> BUG: unable to handle kernel NULL pointer dereference at 00000040
->>> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
->>> *pde = 00000000
->>> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
->>> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
->>> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
->>>
->>> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
->>> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
->>> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
->>
->> Please use
->>
->> gdb drivers/net/wireless/ath/ath9k/
->> l *(ath_tx_start+0x461)
->>
->>     Luis
+> [2.] Full description of the problem/report:
+> iwconfig mon0 channel 10 gives no error but the channel stays to -1
 >
-> I managed to hit that ath_tx_start crash again, and this time there were no obvious
-> DMA or irq errors immediately preceding it.  So, it might be a real bug
-> after all.  I'll add some extra checks to see if tid->ac is NULL.
+> [3.] Keywords (i.e., modules, networking, kernel):
+> Wifi modules used :
+> iwlagn                336809  0
+> iwlcore                89975  1 iwlagn
+> mac80211              199020  2 iwlagn,iwlcore
+> cfg80211              139093  3 iwlagn,iwlcore,mac80211
+>
+> [4.] Kernel information
+> [4.1.] Kernel version (from /proc/version):
+> Linux version 2.6.37-rc6-mainline (root@m50vn) (gcc version 4.5.2 (GCC)
+> ) #1 SMP PREEMPT Sat Dec 18 15:50:20 CET 2010
+> nota bene : compiled in *fake*root.
+> [4.2.] Kernel .config file:
+> attached.
+>
+> [5.] Most recent kernel version which did not have the bug:
+> It worked on 2.6.33 and didn't work on 2.6.36
+>
+> [6.] Output of Oops.. message (if applicable) with symbolic information
+>     resolved (see Documentation/oops-tracing.txt)
+> None.
+>
+> [7.] A small shell script or example program which triggers the
+>     problem (if possible)
+> airmon-ng start wlan0
+> airodump-ng --channel 1 mon0
+>
+> You'll notice that despite any attempt of changing the channel, it stays
+> to -1.
+> [8.] Environment
+> [8.1.] Software (add the output of the ver_linux script here)
+> [8.2.] Processor information (from /proc/cpuinfo):
+> cpu family    : 6
+> model        : 23
+> model name    : Intel(R) Core(TM)2 Duo CPU     P8600  @ 2.40GHz
+>
+> [8.3.] Module information (from /proc/modules):
+> iwlagn 336809 0 - Live 0xffffffffa0317000
+> iwlcore 89975 1 iwlagn, Live 0xffffffffa01a2000
+> mac80211 199020 2 iwlagn,iwlcore, Live 0xffffffffa02c6000
+> cfg80211 139093 3 iwlagn,iwlcore,mac80211, Live 0xffffffffa01c4000
+>
+> [8.4.] Loaded driver and hardware information (/proc/ioports, /proc/iomem)
+> attached.
+>
+> [8.5.] PCI information ('lspci -vvv' as root)
+> 03:00.0 Network controller: Intel Corporation Wireless WiFi Link 5100
+>    Subsystem: Intel Corporation PRO/Wireless 5100AGN Network Connection
+>    Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx-
+>    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>    Latency: 0, Cache Line Size: 32 bytes
+>    Interrupt: pin A routed to IRQ 50
+>    Region 0: Memory at fdffe000 (64-bit, non-prefetchable) [size=8K]
+>    Capabilities: [c8] Power Management version 3
+>        Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
+> PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>        Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>    Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>        Address: 00000000fee0300c  Data: 41c1
+>    Capabilities: [e0] Express (v1) Endpoint, MSI 00
+>        DevCap:    MaxPayload 128 bytes, PhantFunc 0, Latency L0s
+> <512ns, L1 unlimited
+>            ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+>        DevCtl:    Report errors: Correctable- Non-Fatal- Fatal-
+> Unsupported-
+>            RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+>            MaxPayload 128 bytes, MaxReadReq 128 bytes
+>        DevSta:    CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+
+> TransPend-
+>        LnkCap:    Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
+> Latency L0 <128ns, L1 <32us
+>            ClockPM+ Surprise- LLActRep- BwNot-
+>        LnkCtl:    ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain-
+> CommClk+
+>            ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>        LnkSta:    Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
+> DLActive- BWMgmt- ABWMgmt-
+>    Capabilities: [100 v1] Advanced Error Reporting
+>        UESta:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>        UEMsk:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>        UESvrt:    DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+> RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>        CESta:    RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>        CEMsk:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>        AERCap:    First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+>    Capabilities: [140 v1] Device Serial Number 00-21-5d-ff-ff-9a-71-9c
+>    Kernel driver in use: iwlagn
+>    Kernel modules: iwlagn
+>
+> complete lspci -vvv attached.
+>
+> [X] : Patch proposal
+> This patch is *very* small and corrects the bug, so I think it could be
+> included in final 2.6.37.
+> http://patches.aircrack-ng.org/channel-negative-one-maxim.patch
+>
+> Thanks for reading, and keep up the good work !
+>
 
-I've made some small progress on this general issue.
 
-First, I added all sorts of debugging to try to figure out ath_tx_start crash.
-As best as I can tell, 'tid' is not NULL, but also is not a valid pointer,
-and probably something close to 0x0.  I've added yet more debugging, but haven't
-hit the problem again.
-
-I also tried stopping DMA in a loop up to 5 times if it failed to stop
-previously in the loop.  This did not appear to help at all.
-
-I also managed to make both the ath_tx_start crash and the DMA errors very hard to reproduce
-(I dare not say fixed, yet).
-
-It appears that this small patch (and possibly, the fact that I set debugging to 0x600
-instead of 0x400) makes the problems go away.  This makes me wonder if a root cause is
-something to do with repeatedly resetting the hardware too fast, as setting channels rapidly
-would tend to do that, and channels are set on association by supplicant, it appears.
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f026a03..46b1791 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1605,6 +1605,16 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
-                 else
-                         sc->sc_flags &= ~SC_OP_OFFCHANNEL;
-
-+               /* If channels & HT are the same, then don't actually do anything.
-+                */
-+               if ((sc->sc_ah->curchan == &sc->sc_ah->channels[pos]) &&
-+                   (aphy->chan_is_ht == conf_is_ht(conf))) {
-+                       ath_print(common, ATH_DBG_CONFIG,
-+                                 "Skip Set channel: %d MHz, already there.\n",
-+                                 curchan->center_freq);
-+                       goto skip_chan_change;
-+               }
-+
-                 if (aphy->state == ATH_WIPHY_SCAN ||
-                     aphy->state == ATH_WIPHY_ACTIVE)
-                         ath9k_wiphy_pause_all_forced(sc, aphy);
-
-Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
