@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:32784 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757898Ab0LMNkA convert rfc822-to-8bit (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.10]:60946 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756702Ab0LSOmp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 08:40:00 -0500
-References: <1292111474-70939-1-git-send-email-nbd@openwrt.org> <20101213111207.GA3121@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20101213111207.GA3121@vmraj-lnx.users.atheros.com>
-Mime-Version: 1.0 (iPhone Mail 8B117)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <31A8EB58-AACD-4660-9C7D-6A077152E7C7@nbd.name>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-From: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3 1/8] ath9k_hw: only use the PCIe disable register write sequence for AR5416
-Date: Mon, 13 Dec 2010 14:37:53 +0100
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
+	Sun, 19 Dec 2010 09:42:45 -0500
+Received: from [192.168.178.92] (p5B319B26.dip0.t-ipconnect.de [91.49.155.38])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by v216570639.yourvserver.net (Postfix) with ESMTPSA id 84A29DFAA0E
+	for <linux-wireless@vger.kernel.org>; Sun, 19 Dec 2010 15:42:43 +0100 (CET)
+Message-ID: <4D0E19EB.3070802@lophus.org>
+Date: Sun, 19 Dec 2010 15:42:51 +0100
+From: "Jonas H." <jonas@lophus.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Recent suspend/resume fix for which devices?
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13.12.2010, at 12:12, Rajkumar Manoharan <rmanoharan@atheros.com> wrote:
+Hello!
 
-> On Sun, Dec 12, 2010 at 05:21:07AM +0530, Felix Fietkau wrote:
->> Newer chips do not need this, and maybe these register writes could have
->> negative side effects on newer hardware.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->> drivers/net/wireless/ath/ath9k/hw.c |    6 +-----
->> 1 files changed, 1 insertions(+), 5 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->> index 516227f..7bc6d22 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath/ath9k/hw.c
->> @@ -284,11 +284,9 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
->> 
->> static void ath9k_hw_disablepcie(struct ath_hw *ah)
->> {
->> -    if (AR_SREV_9100(ah))
->> +    if (!AR_SREV_5416(ah))
->>        return;
->> 
->> -    ENABLE_REGWRITE_BUFFER(ah);
-> 
-> Why to disable multiple register write?
-Because it is only relevant for USB based devices.
+My AR9285 wireless card, used with the ath9k driver, stops working after 
+supsend/resume - I have to reboot to make it work again.
 
-- Felix
+Trying to figure out whether this is fixed for 2.6.37 I noticed commit 
+f933ebed (in Linus' tree) "ath9k_htc: Fix suspend/resume. 
+The HW has to be set to FULLSLEEP mode during suspend, ...".
+
+My question is: Does that fix also apply to my card? I realize the patch 
+only applies to ath9k_htc but I couldn't figure what "htc" stands for in 
+this context.
+
+If it doesn't, does this mailing list also function as a bug tracker?
+
+Thanks!
+Jonas
