@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944Ab0LIMsB (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43146 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab0LSJHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 07:48:01 -0500
-Subject: Re: [PATCH] cfg80211: update information elements in cached BSS
- struct
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Neumann <s.neumann@raumfeld.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291891690-26118-1-git-send-email-s.neumann@raumfeld.com>
-References: <1291891690-26118-1-git-send-email-s.neumann@raumfeld.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 13:47:56 +0100
-Message-ID: <1291898876.3540.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 19 Dec 2010 04:07:32 -0500
+MIME-Version: 1.0
+In-Reply-To: <1292501797.3612.12.camel@jlt3.sipsolutions.net>
+References: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
+	<1292501797.3612.12.camel@jlt3.sipsolutions.net>
+Date: Sun, 19 Dec 2010 11:07:29 +0200
+Message-ID: <AANLkTinb77yjqvX5WrN2hTCk=Oiqc5Bti=FWZ=RcBgPk@mail.gmail.com>
+Subject: Re: BUG: while bridging Ethernet and wireless device:
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 11:48 +0100, Sven Neumann wrote:
-> When a cached BSS struct is updated because a new beacon was received,
-> the code replaces the cached information elements by the IEs from the
-> new beacon. However it did not update the pub.information_elements
-> and pub.len_information_elements fields leaving them either pointing
-> to the old beacon IEs or in an inconsistent state where the data is
-> replaced by the new beacon IEs but len_information_elements still has
-> its value from the first beacon.
-> 
-> Fix this by updating the information elements fields if they are
-> pointing to beacon IEs.
+On Thu, Dec 16, 2010 at 2:16 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2010-12-16 at 14:11 +0200, Tomas Winkler wrote:
+>
+>> Dec 15 14:36:41 User-PC kernel: [175576.120452] kernel BUG at include/linux/skbuff.h:1178!
+>
+>> Dec 15 14:36:41 User-PC kernel: [175576.123193] EIP is at br_multicast_rcv+0xc95/0xe1c [bridge]
+>
+> So as I said to Tomas in private before -- it kinda looks like something
+> here is not handling paged SKBs correctly? But I would imaging that
+> causing more issues, unless there was a bug here that made bridging
+> require more data in the skb header than we put in there right now -- it
+> can end up being empty I believe.
+>
+> Thing is, I looked at the code and it seemed fine.
+>
+> johannes
+>
+opened bug https://bugzilla.kernel.org/show_bug.cgi?id=25202
 
-Err, no, this is intentional -- we want data from probe responses to
-"win" and be displayed preferentially. If you look at the code that
-dumps them out, that's what will happen.
-
-If you need the most up-to-date beacon IEs, use (the equivalent of) "iw
-wlan0 scan dump -b".
-
-johannes
-
+>
