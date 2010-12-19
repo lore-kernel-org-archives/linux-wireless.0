@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57972 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752806Ab0LFWC0 convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:32839 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755766Ab0LSUC6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 17:02:26 -0500
-Received: by iwn9 with SMTP id 9so707313iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 14:02:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101206215958.GJ21442@tux>
-References: <1291669987-23434-1-git-send-email-greearb@candelatech.com> <20101206215958.GJ21442@tux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 6 Dec 2010 14:02:05 -0800
-Message-ID: <AANLkTikDW6d+rTagHzXD_nFA1K7L1sVxEcFGXtrKhHXs@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Make DMA warning in ath_stoprecv WARN_ON_ONCE.
-To: "greearb@gmail.com" <greearb@gmail.com>
-Cc: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 19 Dec 2010 15:02:58 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 855094061C
+	for <linux-wireless@vger.kernel.org>; Sun, 19 Dec 2010 15:03:09 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-19 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101219200257.3848340F97@repository3.orbit-lab.org>
+Date: Sun, 19 Dec 2010 15:02:57 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 6, 2010 at 1:59 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, Dec 06, 2010 at 01:13:07PM -0800, greearb@gmail.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> This decreases spammage in the log.  A single line message
->> will still be printed, so users can be aware that problem
->> exists.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->
-> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   880bb0b..dd8c5e7  master     -> origin/master
+ * [new tag]         compat-wireless-2010-12-17 -> compat-wireless-2010-12-17
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   3547391..64bcd1b  master     -> origin/master
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-You forgot to address linville, and no need to send to ath9k-devel if
-you already know the patch is good.
+compat-wireless code metrics
 
-  Luis
+    777009 - Total upstream lines of code being pulled
+      2223 - backport code changes
+      1946 - backport code additions
+       277 - backport code deletions
+      6669 - backport from compat module
+      8892 - total backport code
+    1.1444 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1972 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20101217
+compat-wireless release: compat-wireless-2010-12-17-pc
