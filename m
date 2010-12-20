@@ -1,168 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63496 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757468Ab0LBUug (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 15:50:36 -0500
-Received: by fxm20 with SMTP id 20so1550754fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 12:50:34 -0800 (PST)
+Received: from mms1.broadcom.com ([216.31.210.17]:2151 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932744Ab0LTT6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 14:58:42 -0500
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Dec 2010 11:58:26 -0800
+Subject: RE: WL1271 chip
+Message-ID: <400C43189542CE41BC0A5B252FC90136952F0594DA@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
+ <1292843841.13129.9.camel@chilepepper>,<0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
+ <400C43189542CE41BC0A5B252FC90136952F0594D9@SJEXCHCCR02.corp.ad.broadcom.com>,<0826983CC0CB074798C42E77D8ACD07F01AF50@pdtms1.pdt.com>
+In-Reply-To: <0826983CC0CB074798C42E77D8ACD07F01AF50@pdtms1.pdt.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimNkq6p2PmRM2Dx+Syk1-YOu4dkKp7rtFRzR0Bd@mail.gmail.com>
-References: <AANLkTim4w0F4CS-yR_=EhSbPEDvWLN=7hu0VdQwegsgC@mail.gmail.com> <AANLkTimNkq6p2PmRM2Dx+Syk1-YOu4dkKp7rtFRzR0Bd@mail.gmail.com>
-From: Joshua Boyd <boydjd@jbip.net>
-Date: Thu, 2 Dec 2010 15:50:14 -0500
-Message-ID: <AANLkTimM83-pTdG8GgyZ6_j3cGaCnGzX8Rhay34LUGYf@mail.gmail.com>
-Subject: Re: Kernel oops on loading of iwlagn on 2.6.34.7-61.fc13.x86_64 #1 SMP
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whoops, the formatting of this is awful. Lets fix it:
+SnVzdCBjaGVja2VkIG9uIGtlcm5lbC5vcmcgYW5kIGluZGVlZCBpdCBpcyBub3QgaW4gbGludXgt
+Mi42LjM2LjIgKHN0YWJsZSksIGJ1dCBpdCBpcyBpbiAyLjYuMzctcmM2IChtYWluLWxpbmUpLg0K
+DQpHci4gQXZTDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQpGcm9t
+OiBCcnplem93c2tpLCBLYXJlbiBbS2FyZW4uQnJ6ZXpvd3NraUBwZHQuY29tXQ0KU2VudDogTW9u
+ZGF5LCBEZWNlbWJlciAyMCwgMjAxMCA3OjAwIFBNDQpUbzogQXJlbmQgVmFuIFNwcmllbA0KU3Vi
+amVjdDogUkU6IFdMMTI3MSBjaGlwDQoNCkNvdWxkIHlvdSB0ZWxsIG1lIHdoZXJlIHlvdSBmb3Vu
+ZCB0aGlzIGJvYXJkLXpvb20tcGVyaXBoZXJhbHMuYz8NCkkgaGF2ZSB0aGUgbGludXgtMi42LjM2
+LjIgY29kZSBhbmQgdGhlIHdsMTI3MSBpcyBub3QgaW4gdGhhdCBmaWxlLi4NCjotKQ0KdGhhbmtz
+IQ0KS2FyZW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEFyZW5kIFZhbiBT
+cHJpZWwgW21haWx0bzphcmVuZEBicm9hZGNvbS5jb21dDQpTZW50OiBNb25kYXksIERlY2VtYmVy
+IDIwLCAyMDEwIDExOjQ3IEFNDQpUbzogQnJ6ZXpvd3NraSwgS2FyZW47IGxpbnV4LXdpcmVsZXNz
+QHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IFdMMTI3MSBjaGlwDQoNCkkgYW0gYWxzbyBu
+b3QgZmFtaWxpYXIgd2l0aCBpLk1YMjMzLCBidXQgZ29vZ2xpbmcgaXQgdGhpcyBzZWVtcyB0byBi
+ZSBhIEZyZWVzY2FsZSBhcHAgcHJvY2Vzc29yIHdpdGggQVJNOTI2RUotUyBjb3JlIGFuZCBpdCBo
+YXMgU0RJTyByZXYyLjAgY29tcGxpYW50IGludGVyZmFjZSBpbnRlZ3JhdGVkLiBUaGVyZSBhIGFy
+Y2gvYXJtL21hY2gtaW14IGRpcmVjdG9yeSBjb250YWluaW5nIGkuTVgyNyBwcm9jZXNzb3Igd2hp
+Y2ggaGFzIHNvbWUgc2ltaWxhcml0aWVzIChzYW1lIGNvcmUgYW5kIE1NQy9TRCBpbnRlcmZhY2Vz
+KS4gU28gaXQgY291bGQgYmUgYSBnb29kIHN0YXJ0aW5nIHBvaW50IGZvciB5b3VyIHBvcnRpbmcg
+ZWZmb3J0Lg0KDQpBbm90aGVyIGhpbnQgbWF5IGJlIHRoYXQgU0RJTyBpcyByZWxhdGVkIHRvIE1N
+Qy9TRC4gU28gaW4gYm9hcmQtem9vbS1wZXJpcGhlcmFscy5jIHlvdSB3aWxsIGZpbmQgbW9yZSB3
+aGVuIHNlYXJjaGluZyBmb3IgJ21tYycuIGVnOg0KDQpzdGF0aWMgc3RydWN0IG9tYXAyX2hzbW1j
+X2luZm8gbW1jW10gX19pbml0ZGF0YSA9IHsNCiAgICAgICAgICAgOg0KICAgICAgICAgICA6DQog
+ICAgICAgIHsNCiAgICAgICAgICAgICAgICAubmFtZSAgICAgICAgICAgPSAid2wxMjcxIiwNCiAg
+ICAgICAgICAgICAgICAubW1jICAgICAgICAgICAgPSAzLA0KICAgICAgICAgICAgICAgIC5jYXBz
+ICAgICAgICAgICA9IE1NQ19DQVBfNF9CSVRfREFUQSwNCiAgICAgICAgICAgICAgICAuZ3Bpb193
+cCAgICAgICAgPSAtRUlOVkFMLA0KICAgICAgICAgICAgICAgIC5ncGlvX2NkICAgICAgICA9IC1F
+SU5WQUwsDQogICAgICAgICAgICAgICAgLm5vbnJlbW92YWJsZSAgID0gdHJ1ZSwNCiAgICAgICAg
+fSwNCiAgICAgICAge30gICAgICAvKiBUZXJtaW5hdG9yICovDQp9Ow0KDQpHci4gQXZTDQpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQpGcm9tOiBsaW51eC13aXJlbGVz
+cy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW2xpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVs
+Lm9yZ10gT24gQmVoYWxmIE9mIEJyemV6b3dza2ksIEthcmVuIFtLYXJlbi5Ccnplem93c2tpQHBk
+dC5jb21dDQpTZW50OiBNb25kYXksIERlY2VtYmVyIDIwLCAyMDEwIDY6MTIgUE0NClRvOiBsaW51
+eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCkNjOiBCcnplem93c2tpLCBLYXJlbg0KU3ViamVj
+dDogV0wxMjcxIGNoaXANCg0KSGkhDQpMdWNhIHN1Z2dlc3RlZCB0aGF0IEkgc2VuZCB0aGlzIHRv
+IGFsbCBvZiB5b3UhDQoNCkkgbG9va2VkIGF0IGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQtem9v
+bS1wZXJpcGhlcmFscy5jIGZpbGUuLg0KSSBkaWRuJ3Qgc2VlIGFueXRoaW5nIHNwZWNpZmljIHRv
+IFNESU8uLg0KDQpJIHdhcyBsb29raW5nIGF0IGxpbnV4LTIuNi4zNi4yLi4NCklzIHRoaXMgdGhl
+IGNvcnJlY3QgdmVyc2lvbiB0byBsb29rIGF0Pw0KDQpQbGVhc2UgcmVhZCBiZWxvdyBmb3Igb3Jp
+Z2luYWwgcXVlc3Rpb24uDQpUSEFOSyB5b3UgZXZlcnlvbmUgZm9yIEFOWSBoZWxwIHlvdSBjYW4g
+Z2l2ZSBtZSENCkthcmVuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpIaSBLYXJlbiwN
+Cg0KDQo+IEhpIEx1Y2lhbm8sDQo+DQo+IEnigJltIHZlcnkgc29ycnkgdG8gZW1haWwgIHlvdSBk
+aXJlY3RseS4NCg0KTm8gcHJvYmxlbS4gIEJ1dCBpdCBpcyBhbHdheXMgYmV0dGVyIHRvIGVtYWls
+IHRoZSBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcgbWFpbGluZyBsaXN0IHRvbywgYmVj
+YXVzZSB0aGVyZSBhcmUgbG90cyBvZiBvdGhlciBwZW9wbGUgd2hvIGNhbiBoZWxwIHlvdSB0aGVy
+ZS4NCg0KDQo+IEkgYW0gdmVyeSBuZXcgdG8gcG9ydGluZyBkcml2ZXJz4oCmDQo+DQo+IEkgaGF2
+ZSB0byBpbnRlZ3JhdGUvcG9ydCBhIFdMMTI3MSBjaGlwIChJIHRoaW5rIGl04oCZcyBnb2luZyB0
+byBiZSB0aGUNCj4gb25lDQo+DQo+IG1hbnVmYWN0dXJlZCBieSBNdXJhdGEpLg0KPg0KPiBJIHNl
+ZSB0aGF0IHlvdSBtYWludGFpbiB0aGUgd2wxMnh4IGRyaXZlcnMgb24gbGludXgtd2lyZWxlc3MN
+Cj4ga2VybmVsLm9yZy4NCj4NCj4NCj4NCj4gVGhlIHByb2Nlc3NvciBpcyBpTVgyMzMsIE9TIGlz
+IEFuZHJvaWQgKExpbnV4KS4NCj4NCj4NCj4NCj4gSSB3b3VsZCBiZSB2ZXJ5IGFwcHJlY2lhdGl2
+ZSBpZiB5b3UgY291bGQgZ2l2ZSBtZSBzb21lDQo+IGFkdmljZS9pbnN0cnVjdGlvbnMvZG9jdW1l
+bnRhdGlvbg0KPg0KPiB0aGF0IHdvdWxkIGhlbHAgbWUgb24gdW5kZXJzdGFuZC9zdGFydC9jb21w
+bGV0ZSB0aGlzIHRhc2suDQoNCldlbGwsIHRoZSB3bDEyeHggZHJpdmVyIHNob3VsZCB3b3JrIG1v
+cmUgb3IgbGVzcyBvdXQtb2YtdGhlLWJveC4gIFRoZSBvbmx5IHRoaW5nIHlvdSBuZWVkIHRvIGRv
+IGlzIHRvIHNldCB1cCB0aGUgU0RJTyBjb25uZWN0aW9uIHRvIHlvdXIgY2FyZCAoYXNzdW1pbmcg
+dGhhdCB5b3UncmUgdXNpbmcgdGhlIFNESU8gYnVzIHRvIGNvbm5lY3QgaXQpLiAgSSdtIG5vdCBm
+YW1pbGlhciB3aXRoIHRoZSBpTVgyMzMsIGJ1dCB3aXRoIE9NQVAsIGl0J3MgcHJldHR5IHNpbXBs
+ZS4gIFlvdSBjYW4gc2VlIHRoZSBhcmNoL2FybS9tYWNoLW9tYXAyL2JvYXJkLXpvb20tcGVyaXBo
+ZXJhbHMuYyBmaWxlIGluIHRoZSBMaW51eCBrZXJuZWwgZm9yIGFuIGV4YW1wbGUgb24gaG93IHRv
+IHNldCBpdCB1cCBmb3IgdGhlIFpvb20gYm9hcmQgKE9NQVAtYmFzZWQpLg0KDQoNCi0tDQpDaGVl
+cnMsDQpMdWNhLg0KDQoNCk4gICAgIHIgIHkgICBiIFggIMendiBeICneunsubiArICAgIHsgICre
+lSAsIHtheSAdyofamSAsaiAgIGYgICBoICAgeiAeIHcgICAgICAgajordiAgIHcgaiBtICAgICAg
+ICAgelorICAgICDdomoiICAhIGkgEmYgIMecICAgbyAgeSAPICkNCg==
 
-I get the following kernel oops using an Intel 5300 AGN when trying
-compat-wireless-2010-12-02:
-
-Compat-wireless backport release: compat-wireless-2010-11-23-7-g813c0e6
-Backport based on linux-next.git next-20101202
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: World regulatory domain updated:
-cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
-iwlagn: Copyright(c) 2003-2010 Intel Corporation
-------------[ cut here ]------------
-kernel BUG at /root/compat-wireless-2010-12-02/net/mac80211/main.c:540!
-invalid opcode: 0000 [#1] SMP
-last sysfs file: /sys/module/rfkill/initstate
-CPU 1
-Modules linked in: iwlagn(+) iwlcore mac80211 cfg80211 compat fuse
-deflate zlib_deflate ctr camellia cast5 rmd160 crypto_null ccm serpent
-blowfish twofish_x86_64 twofish_common xcbc cbc sha256_generic
-sha512_generic des_generic aes_x86_64 aes_generic ah6 ah4 esp6 esp4
-xfrm4_mode_beet xfrm4_tunnel tunnel4 xfrm4_mode_tunnel
-xfrm4_mode_transport xfrm6_mode_transport xfrm6_mode_ro
-xfrm6_mode_beet xfrm6_mode_tunnel ipcomp ipcomp6 xfrm_ipcomp
-xfrm6_tunnel tunnel6 af_key vboxnetadp vboxnetflt vboxdrv sunrpc
-cpufreq_ondemand acpi_cpufreq freq_table ip6t_REJECT nf_conntrack_ipv6
-ip6table_filter ip6_tables be2iscsi bnx2i cnic uio cxgb3i cxgb3 mdio
-ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr ipv6
-iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi uinput arc4 ecb
-snd_hda_codec_conexant snd_hda_intel snd_hda_codec snd_hwdep snd_seq
-snd_seq_device snd_pcm snd_timer thinkpad_acpi microcode joydev snd
-rfkill iTCO_wdt e1000e i2c_i801 iTCO_vendor_support soundcore wmi
-snd_page_alloc firewire_ohci yenta_socket rsrc_nonstatic firewire_core
-crc_itu_t ata_generic pata_acpi i915 drm_kms_helper drm i2c_algo_bit
-i2c_core video output [last unloaded: bluetooth]
-Pid: 15140, comm: modprobe Not tainted 2.6.34.7-61.fc13.x86_64 #1
-2765T6U/2765T6U
-RIP: 0010:[<ffffffffa07b824f>]  [<ffffffffa07b824f>]
-ieee80211_alloc_hw+0xba/0x3b6 [mac80211]
-RSP: 0018:ffff8802317edc78  EFLAGS: 00010246
-RAX: ffff8801bb041ae0 RBX: ffff8801bb040460 RCX: 0000000000000000
-RDX: ffff8801ea733188 RSI: ffffffffa07ae93c RDI: ffff8801bb0400c0
-RBP: ffff8802317edc98 R08: ffff8801bb040000 R09: 0000ffffffffff0a
-R10: 0000000000000000 R11: ffff8802317edbf8 R12: ffff8801bb040180
-R13: ffffffffa084fca0 R14: 00000000ffffffff R15: ffffffffa08509a0
-FS:  00007f3fae5ed700(0000) GS:ffff880002080000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00007f3fae3a500f CR3: 000000020b019000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process modprobe (pid: 15140, threadinfo ffff8802317ec000, task
-ffff880209665dc0)
-Stack:
- ffff8802317edc98 ffff880232e41000 ffffffffa08509a0 ffff880232e41000
-<0> ffff8802317edcb8 ffffffffa07fa71e ffff880232e41000 00000000fffffff4
-<0> ffff8802317edd18 ffffffffa0838e34 ffff880232e52558 ffff880232e410a0
-Call Trace:
- [<ffffffffa07fa71e>] iwl_alloc_all+0x19/0x44 [iwlcore]
- [<ffffffffa0838e34>] iwl_pci_probe+0x77/0xcb4 [iwlagn]
- [<ffffffff8120d6ad>] ? kobject_get+0x1a/0x22
- [<ffffffff8122412d>] local_pci_probe+0x17/0x1b
- [<ffffffff812250a0>] pci_device_probe+0xcd/0xfd
- [<ffffffff812c3aaf>] ? driver_sysfs_add+0x4c/0x71
- [<ffffffff812c3c7e>] driver_probe_device+0xea/0x217
- [<ffffffff812c3e08>] __driver_attach+0x5d/0x81
- [<ffffffff812c3dab>] ? __driver_attach+0x0/0x81
- [<ffffffff812c30a4>] bus_for_each_dev+0x53/0x88
- [<ffffffff812c3a0e>] driver_attach+0x1e/0x20
- [<ffffffff812c33a2>] bus_add_driver+0x11d/0x282
- [<ffffffff812c4109>] driver_register+0x9e/0x10f
- [<ffffffff812252cc>] __pci_register_driver+0x58/0xc8
- [<ffffffffa03a9000>] ? iwl_init+0x0/0x7b [iwlagn]
- [<ffffffffa03a905c>] iwl_init+0x5c/0x7b [iwlagn]
- [<ffffffffa03a9000>] ? iwl_init+0x0/0x7b [iwlagn]
- [<ffffffff81002069>] do_one_initcall+0x5e/0x159
- [<ffffffff8107cfff>] sys_init_module+0xd6/0x237
- [<ffffffff81009c72>] system_call_fastpath+0x16/0x1b
-Code: 0b eb fe 49 83 7d 30 00 75 04 0f 0b eb fe 49 83 7d 18 00 75 04
-0f 0b eb fe 49 83 7d 28 00 75 04 0f 0b eb fe 49 83 7d 48 00 75 04 <0f>
-0b eb fe 4c 89 6b 60 66 c7 43 58 01 00 49 8d bc 24 88 0e 00
-RIP  [<ffffffffa07b824f>] ieee80211_alloc_hw+0xba/0x3b6 [mac80211]
- RSP <ffff8802317edc78>
----[ end trace d39ed8c7a9907b0a ]---
-
-[jdb@carbine ~]$ uname -ar
-Linux carbine 2.6.34.7-61.fc13.x86_64 #1 SMP Tue Oct 19 04:06:30 UTC
-2010 x86_64 x86_64 x86_64 GNU/Linux
-
-
-Run after removing the offending new iwlagn:
-
-[jdb@carbine ~]$ su -c 'lspci -vvv -s 03:00.0'
-Password:
-03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
-Subsystem: Intel Corporation Device 1011
-Physical Slot: 1
-Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR+ FastB2B- DisINTx-
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0, Cache Line Size: 64 bytes
-Interrupt: pin A routed to IRQ 35
-Region 0: Memory at f4300000 (64-bit, non-prefetchable) [size=8K]
-Capabilities: [c8] Power Management version 3
-Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-Address: 00000000fee0300c  Data: 4122
-Capabilities: [e0] Express (v1) Endpoint, MSI 00
-DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
-ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-MaxPayload 128 bytes, MaxReadReq 128 bytes
-DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0
-<128ns, L1 <32us
-ClockPM+ Surprise- LLActRep- BwNot-
-LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
-BWMgmt- ABWMgmt-
-Capabilities: [100 v1] Advanced Error Reporting
-UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-MalfTLP- ECRC- UnsupReq- ACSViol-
-UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-MalfTLP- ECRC- UnsupReq- ACSViol-
-UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-MalfTLP+ ECRC- UnsupReq- ACSViol-
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-Capabilities: [140 v1] Device Serial Number 00-21-6a-ff-ff-0e-07-94
-Kernel driver in use: iwlagn
-Kernel modules: iwlagn
-
--- 
-Joshua Boyd
-JBipNet
-
-E-mail: boydjd@jbip.net
-
-http://www.jbip.net
