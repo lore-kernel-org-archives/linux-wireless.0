@@ -1,72 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33590 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399Ab0LFVTC (ORCPT
+Received: from web56807.mail.re3.yahoo.com ([66.196.97.81]:24977 "HELO
+	web56807.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754715Ab0LTLdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 16:19:02 -0500
-Received: by vws16 with SMTP id 16so2941922vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 13:19:01 -0800 (PST)
-From: greearb@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k:  Make DMA warning in ath_stoprecv WARN_ON_ONCE.
-Date: Mon,  6 Dec 2010 13:13:07 -0800
-Message-Id: <1291669987-23434-1-git-send-email-greearb@candelatech.com>
+	Mon, 20 Dec 2010 06:33:43 -0500
+Message-ID: <521330.82102.qm@web56807.mail.re3.yahoo.com>
+Date: Mon, 20 Dec 2010 03:33:42 -0800 (PST)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 1/2] compat-wireless: complete rtlwifi/RTL8192CE support
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1292625768-17318-3-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+enable driver-select for rtlwifi/rtl8192ce
+complete renaming rtlwifi entries for compat-wireless
 
-This decreases spammage in the log.  A single line message
-will still be printed, so users can be aware that problem
-exists.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
-:100644 100644 b4417d2... 082b16d... M	drivers/net/wireless/ath/ath9k/recv.c
-:100644 100644 f207007... 10cf682... M	drivers/net/wireless/ath/debug.h
- drivers/net/wireless/ath/ath9k/recv.c |    8 ++++++--
- drivers/net/wireless/ath/debug.h      |    2 ++
- 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b4417d2..082b16d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -527,8 +527,12 @@ bool ath_stoprecv(struct ath_softc *sc)
- 		sc->rx.rxlink = NULL;
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- 
--	ATH_DBG_WARN(!stopped, "Could not stop RX, we could be "
--		     "confusing the DMA engine when we start RX up\n");
-+	if (unlikely(!stopped)) {
-+		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
-+			  "Could not stop RX, we could be "
-+			  "confusing the DMA engine when we start RX up\n");
-+		ATH_DBG_WARN_ON_ONCE(!stopped);
-+	}
- 	return stopped;
- }
- 
-diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
-index f207007..10cf682 100644
---- a/drivers/net/wireless/ath/debug.h
-+++ b/drivers/net/wireless/ath/debug.h
-@@ -71,12 +71,14 @@ enum ATH_DEBUG {
- void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
- 	__attribute__ ((format (printf, 3, 4)));
- #define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
-+#define ATH_DBG_WARN_ON_ONCE(foo) WARN_ON_ONCE(foo)
- #else
- static inline void __attribute__ ((format (printf, 3, 4)))
- ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
- {
- }
- #define ATH_DBG_WARN(foo, arg)
-+#define ATH_DBG_WARN_ON_ONCE(foo)
- #endif /* CONFIG_ATH_DEBUG */
- 
- /** Returns string describing opmode, or NULL if unknown mode. */
--- 
-1.7.2.3
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -60,6 +60,7 @@ function usage {
+ 	echo -e "\t${CYAN}intel${NORMAL} < ${PURPLE} iwl3945 iwlagn ipw2100 ipw2200 ${NORMAL}>"
+ 	echo -e "\t${CYAN}iwlwifi${NORMAL} < ${PURPLE} iwl3945 iwlagn ${NORMAL}>"
+ 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
++	echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
+ 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
+ 	
+ 	echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
+@@ -332,6 +333,11 @@ case $1 in
+ 		disable_staging
+ 		disable_var_02
+ 		;;
++	rtlwifi)
++		select_drivers		CONFIG_RTL8192CE CONFIG_RTLWIFI
++		disable_staging
++		disable_bt_usb_ethernet_var
++		;;
+ 	wl12xx)
+ 		select_drivers		CONFIG_WL1251 \
+ 					CONFIG_WL12XX
 
+--- a/Makefile
++++ b/Makefile
+@@ -271,6 +271,8 @@ install-scripts:
+ 	@$(MODPROBE) -l rt73usb
+ 	@$(MODPROBE) -l rtl8180
+ 	@$(MODPROBE) -l rtl8187
++	@$(MODPROBE) -l rtlwifi
++	@$(MODPROBE) -l rtl8192ce
+ 	@$(MODPROBE) -l spectrum_cs
+ 	@$(MODPROBE) -l ssb
+ 	@$(MODPROBE) -l usb8xxx
+@@ -400,6 +402,8 @@ uninstall:
+ 	@$(MODPROBE) -l rt73usb
+ 	@$(MODPROBE) -l rtl8180
+ 	@$(MODPROBE) -l rtl8187
++	@$(MODPROBE) -l rtlwifi
++	@$(MODPROBE) -l rtl8192ce
+ 	@$(MODPROBE) -l spectrum_cs
+ 	@$(MODPROBE) -l ssb
+ 	@$(MODPROBE) -l usb8xxx
+--- a/README
++++ b/README
+@@ -159,6 +159,8 @@ rt61pci
+ rt73usb
+ rtl8180
+ rtl8187
++rtlwifi
++rtl8192ce
+ spectrum_cs
+ ssb
+ wl1251
+--- a/scripts/unload.sh
++++ b/scripts/unload.sh
+@@ -23,7 +23,7 @@ MODULES="$MODULES rt2400pci rt2500pci rt
+ MODULES="$MODULES rt2500usb rt73usb"
+ MODULES="$MODULES rt2800usb rt2800lib"
+ MODULES="$MODULES rt2x00usb rt2x00lib"
+-MODULES="$MODULES rtl8180 rtl8187"
++MODULES="$MODULES rtl8180 rtl8187 rtl8192ce rtlwifi"
+ MODULES="$MODULES mwl8k mac80211_hwsim"
+ MODULES="$MODULES at76c50x_usb at76_usb"
+ MODULES="$MODULES rndis_wlan rndis_host cdc_ether usbnet"
+--- a/scripts/wlunload.sh
++++ b/scripts/wlunload.sh
+@@ -23,7 +23,7 @@ MODULES="$MODULES rt2400pci rt2500pci rt
+ MODULES="$MODULES rt2500usb rt73usb"
+ MODULES="$MODULES rt2800usb rt2800lib"
+ MODULES="$MODULES rt2x00usb rt2x00lib"
+-MODULES="$MODULES rtl8180 rtl8187"
++MODULES="$MODULES rtl8180 rtl8187 rtl8192ce rtlwifi"
+ MODULES="$MODULES mwl8k mac80211_hwsim"
+ MODULES="$MODULES at76c50x_usb at76_usb"
+ MODULES="$MODULES rndis_wlan rndis_host cdc_ether usbnet"
+
+
+
+      
