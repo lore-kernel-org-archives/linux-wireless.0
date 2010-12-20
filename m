@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60764 "EHLO ogre.sisk.pl"
+Received: from mail.atheros.com ([12.19.149.2]:65044 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752011Ab0L1UhH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 15:37:07 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Ohad Ben-Cohen" <ohad@wizery.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-Date: Tue, 28 Dec 2010 21:36:14 +0100
-Cc: linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com> <201012282021.31695.rjw@sisk.pl> <AANLkTinPrUbaFsNMmoZJtOaF6dutLaXXQ7Uws5826n4=@mail.gmail.com>
-In-Reply-To: <AANLkTinPrUbaFsNMmoZJtOaF6dutLaXXQ7Uws5826n4=@mail.gmail.com>
+	id S932880Ab0LTRhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:37:52 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 09:37:36 -0800
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Stable Kernel <stable@kernel.org>
+Subject: [PATCH 2/2] ath9k_hw: read and backup AR_WA register value even before chip reset on.
+Date: Mon, 20 Dec 2010 23:07:36 +0530
+Message-ID: <1292866656-2253-2-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1292866656-2253-1-git-send-email-senthilkumar@atheros.com>
+References: <1292866656-2253-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012282136.14258.rjw@sisk.pl>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 28, 2010, Ohad Ben-Cohen wrote:
-> On Tue, Dec 28, 2010 at 9:21 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > It looks like you could simply do a power down-power up cycle before trying to
-> > load new firmware, just in case.  I guess that's suboptimal for some reason?
-> 
-> It would work, but we will not be able to unconditionally disable the
-> radios (e.g. airplane mode comes to mind).
+We need to read and backup AR_WA register value permanently and reading
+this after the chip is awakened results in this register being zeroed out.
 
-For _unconditional_ disabling you need to bypass the runtime PM anyway.
+This seems to fix the ASPM with L1 enabled issue that we have observed.
+The laptop becomes very slow and hangs mostly with ASPM L1 enabled without
+this fix.
 
-I guess it's best to simply disable it and invoke whatever-function-powers-off
-your device directly in those cases.
+Cc: Stable Kernel <stable@kernel.org>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   17 +++++++++--------
+ 1 files changed, 9 insertions(+), 8 deletions(-)
 
-> > Please pretend that the runtime PM framework doesn't exist for a while.  How
-> > would you design things in that case?
-> 
-> Duplicate most of runtime-PM's plumbing into the MMC/SDIO subsystem.
-> Off the top of my hat:
-> - We need the device hierarchy and the suspend/resume dependencies (a
-> single SDIO card has several logical sub-devices, a.k.a SDIO
-> functions)
-> - We need to maintain usage_count for each device, and expose the same
-> API to handle it
-> - We need autosuspend for MMC cards (power them off on inactivity)
-> - We need the same, or similar, locking plumbing
-> - We probably need the same sysfs ABI as well: autosuspend_delay_ms,
-> and even  /sys/devices/.../power/control itself is useful (not for our
-> device, but for others, sure)
-> - ...
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c9b7f1e..c6eed46 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -491,6 +491,15 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 
++	/*
++	 * Read back AR_WA into a permanent copy and set bits 14 and 17.
++	 * We need to do this to avoid RMW of this register. We cannot
++	 * read the reg when chip is asleep.
++	 */
++	ah->WARegVal = REG_READ(ah, AR_WA);
++	ah->WARegVal |= (AR_WA_D3_L1_DISABLE |
++			 AR_WA_ASPM_TIMER_BASED_DISABLE);
++
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+ 		ath_err(common, "Couldn't reset chip\n");
+ 		return -EIO;
+@@ -559,14 +568,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 
+ 	ath9k_hw_init_mode_regs(ah);
+ 
+-	/*
+-	 * Read back AR_WA into a permanent copy and set bits 14 and 17.
+-	 * We need to do this to avoid RMW of this register. We cannot
+-	 * read the reg when chip is asleep.
+-	 */
+-	ah->WARegVal = REG_READ(ah, AR_WA);
+-	ah->WARegVal |= (AR_WA_D3_L1_DISABLE |
+-			 AR_WA_ASPM_TIMER_BASED_DISABLE);
+ 
+ 	if (ah->is_pciexpress)
+ 		ath9k_hw_configpcipowersave(ah, 0, 0);
+-- 
+1.7.3.4
 
-I didn't mean that, never mind.
-
-To solve the problem with system suspend (I think) you need to:
-(1) Add a ->prepare() callback to your driver, calling pm_runtime_resume()
-    for the device.  From that point on you know that its runtime callbacks
-    won't be called and if all of the pm_runtime_get_* and pm_runtime_put_*
-    things are in balance, everything will work out nicely during resume.
-(2) Add ->suspend() and ->resume() callbacks to your driver that will
-    set the device for system suspend and bring it back to the "power on"
-    state during system resume (that will cover your error code path issue in
-    particular).
-During resume, the pm_runtime_put_sync() in dpm_complete() should put the
-device back into the low power state (if it was in that state before).
-
-Thanks,
-Rafael
