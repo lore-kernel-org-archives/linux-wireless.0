@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2085 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.19.149.2]:62392 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755919Ab0LAUQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 15:16:57 -0500
-Subject: Re: [PATCH wireless-next] MAINTAINERS: Add ATH GENERIC UTILITIES
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, peter@stuge.se,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <AANLkTinU+jWBXUdW2v9WSL2SZWQn8FHai4+=dAPTASe6@mail.gmail.com>
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
-	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
-	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
-	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
-	 <1291148375.18026.342.camel@Joe-Laptop>
-	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
-	 <1291225075.1845.177.camel@Joe-Laptop>
-	 <AANLkTinU+jWBXUdW2v9WSL2SZWQn8FHai4+=dAPTASe6@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 12:16:55 -0800
-Message-ID: <1291234615.1845.196.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S932292Ab0LTQaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 11:30:03 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 08:29:47 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH] ath9k: fix aphy / wiphy idle mismatch
+Date: Mon, 20 Dec 2010 11:29:59 -0500
+Message-ID: <1292862599-26335-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-01 at 11:46 -0800, Luis R. Rodriguez wrote:
-> On Wed, Dec 1, 2010 at 9:37 AM, Joe Perches <joe@perches.com> wrote:
-> > This file pattern is not currently shown as maintained
-> > by atheros.  Perhaps it should be?
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> Sure but its maintained by the community and Atheros hackers, not just me.
+ath9k supports its own set of virtual wiphys, and it uses
+the mac80211 idle notifications to know when a device needs
+to be idle or not. We recently changed ath9k to force idle
+on driver stop() and on resume but forgot to take into account
+ath9k's own virtual wiphy idle states. These are used internally
+by ath9k to check if the device's radio should be powered down
+on each idle call. Without this change its possible that the
+device could have been forced off but the virtual wiphy idle
+was left on.
 
-No doubt.
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-$ git log next-20101130 -- drivers/net/wireless/ath/*.[ch] | \
-	grep -P "(^Author)" | cut -f2- -d":" | sort | uniq -c | sort -rn | head
-     27  Luis R. Rodriguez <lrodriguez@atheros.com>
-      6  Felix Fietkau <nbd@openwrt.org>
-      4  Bruno Randolf <br1@einfach.org>
-      3  Sujith <Sujith.Manoharan@atheros.com>
-      3  John W. Linville <linville@tuxdriver.com>
-      3  Joe Perches <joe@perches.com>
-      3  Bob Copeland <me@bobcopeland.com>
-      2  Pavel Roskin <proski@gnu.org>
-      2  Johannes Berg <johannes@sipsolutions.net>
-      2  David S. Miller <davem@davemloft.net>
+I'm not yet sure if this actually fixes an issue but it
+certainly is a proper ammendment to the other idle fix
+submitted for stable for suspend/resume.
 
-Without any sort of MAINTAINERS entry, the results
-for files in that directory are like this:
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ drivers/net/wireless/ath/ath9k/pci.c  |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-$ ./scripts/get_maintainer.pl -f --rolestats drivers/net/wireless/ath/main.c
-"John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING [WIREL...)
-linux-wireless@vger.kernel.org (open list:NETWORKING [WIREL...)
-netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-linux-kernel@vger.kernel.org (open list)
-
-Perhaps you want to be cc'd?
-Perhaps there are atheros lists that should be cc'd?
-If cc'ing linux-wireless is good enough,
-that's good enough for me too.
-
-cheers, Joe
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4d64716..1b35175 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1354,6 +1354,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	ath9k_ps_restore(sc);
+ 
+ 	sc->ps_idle = true;
++	ath9k_set_wiphy_idle(aphy, true);
+ 	ath_radio_disable(sc, hw);
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 7ca8499..4538283 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -310,6 +310,7 @@ static int ath_pci_resume(struct device *device)
+ 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
+ 
+ 	sc->ps_idle = true;
++	ath9k_set_wiphy_idle(aphy, true);
+ 	ath_radio_disable(sc, hw);
+ 
+ 	return 0;
+-- 
+1.7.3.2.90.gd4c43
 
