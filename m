@@ -1,134 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:38509 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948Ab0LZLYj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40285 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933078Ab0LTTaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 06:24:39 -0500
-Subject: [RFC PATCH 3/6] zd1211rw: let zd_set_beacon_interval() set
-	dtim_period and add AP-beacon flag
+	Mon, 20 Dec 2010 14:30:05 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1PUlQq-00022C-KV
+	for linux-wireless@vger.kernel.org; Mon, 20 Dec 2010 14:30:04 -0500
+Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oBKJU3qR017556
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 14:30:04 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id oBKJU3LE017555
+	for linux-wireless@vger.kernel.org; Mon, 20 Dec 2010 14:30:03 -0500
+Date: Mon, 20 Dec 2010 14:30:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, zd1211-devs@lists.sourceforge.net,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Sun, 26 Dec 2010 13:24:33 +0200
-Message-ID: <20101226112433.31775.89617.stgit@fate.lan>
-In-Reply-To: <20101226112404.31775.77854.stgit@fate.lan>
-References: <20101226112404.31775.77854.stgit@fate.lan>
+Subject: new stuff for 2.6.38 needs to be posted _now_
+Message-ID: <20101220193003.GC10104@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_chip.c |   11 ++++++-----
- drivers/net/wireless/zd1211rw/zd_chip.h |    3 ++-
- drivers/net/wireless/zd1211rw/zd_mac.c  |   22 +++++++++++++---------
- 3 files changed, 21 insertions(+), 15 deletions(-)
+You may have noticed that Linus has released 2.6.37-rc6.  So, the
+merge window is around the corner!
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 91bf8bc..fdbf6ea 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -888,7 +888,8 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
- }
- 
- 
--static int set_beacon_interval(struct zd_chip *chip, u32 interval)
-+static int set_beacon_interval(struct zd_chip *chip, u32 interval,
-+			       u16 dtim_period)
- {
- 	int r;
- 	struct aw_pt_bi s;
-@@ -897,16 +898,16 @@ static int set_beacon_interval(struct zd_chip *chip, u32 interval)
- 	r = get_aw_pt_bi(chip, &s);
- 	if (r)
- 		return r;
--	s.beacon_interval = interval;
-+	s.beacon_interval = interval | (dtim_period << 16);
- 	return set_aw_pt_bi(chip, &s);
- }
- 
--int zd_set_beacon_interval(struct zd_chip *chip, u32 interval)
-+int zd_set_beacon_interval(struct zd_chip *chip, u32 interval, u16 dtim_period)
- {
- 	int r;
- 
- 	mutex_lock(&chip->mutex);
--	r = set_beacon_interval(chip, interval);
-+	r = set_beacon_interval(chip, interval, dtim_period);
- 	mutex_unlock(&chip->mutex);
- 	return r;
- }
-@@ -925,7 +926,7 @@ static int hw_init(struct zd_chip *chip)
- 	if (r)
- 		return r;
- 
--	return set_beacon_interval(chip, 100);
-+	return set_beacon_interval(chip, 100, 0);
- }
- 
- static zd_addr_t fw_reg_addr(struct zd_chip *chip, u16 offset)
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
-index 7b0c58c..1e791ba 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.h
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.h
-@@ -546,6 +546,7 @@ enum {
- #define RX_FILTER_CTRL (RX_FILTER_RTS | RX_FILTER_CTS | \
- 	RX_FILTER_CFEND | RX_FILTER_CFACK)
- 
-+#define BCN_MODE_AP			0x1000000
- #define BCN_MODE_IBSS			0x2000000
- 
- /* Monitor mode sets filter to 0xfffff */
-@@ -921,7 +922,7 @@ enum led_status {
- 
- int zd_chip_control_leds(struct zd_chip *chip, enum led_status status);
- 
--int zd_set_beacon_interval(struct zd_chip *chip, u32 interval);
-+int zd_set_beacon_interval(struct zd_chip *chip, u32 interval, u16 dtim_period);
- 
- static inline int zd_get_beacon_interval(struct zd_chip *chip, u32 *interval)
- {
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index d3f454b..71a7576 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -919,7 +919,7 @@ static void zd_op_remove_interface(struct ieee80211_hw *hw,
- 	struct zd_mac *mac = zd_hw_mac(hw);
- 	mac->type = NL80211_IFTYPE_UNSPECIFIED;
- 	mac->vif = NULL;
--	zd_set_beacon_interval(&mac->chip, 0);
-+	zd_set_beacon_interval(&mac->chip, 0, 0);
- 	zd_write_mac_addr(&mac->chip, NULL);
- }
- 
-@@ -1081,15 +1081,19 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 
- 		if (changes & BSS_CHANGED_BEACON_ENABLED) {
--			u32 interval;
--
--			if (bss_conf->enable_beacon)
--				interval = BCN_MODE_IBSS |
--						bss_conf->beacon_int;
--			else
--				interval = 0;
-+			u32 interval = 0;
-+			u16 period = 0;
-+
-+			if (bss_conf->enable_beacon) {
-+				period = bss_conf->dtim_period;
-+				interval = bss_conf->beacon_int;
-+				if (mac->type == NL80211_IFTYPE_AP)
-+					interval |= BCN_MODE_AP;
-+				else
-+					interval |= BCN_MODE_IBSS;
-+			}
- 
--			zd_set_beacon_interval(&mac->chip, interval);
-+			zd_set_beacon_interval(&mac->chip, interval, period);
- 		}
- 	} else
- 		associated = is_valid_ether_addr(bss_conf->bssid);
+For those that need a reminder, the opening of the merge window is a
+_deadline_ for new features.  Once the merge window opens, only fixes
+will be accepted for 2.6.38.  In fact, any non-fix patches need to
+already be in wireless-next-2.6 when the merge window opens if you want
+them in 2.6.38.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
+You have been warned...this means you!
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
