@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38575 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755947Ab0LAUER (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 15:04:17 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id DDD0B418D8
-	for <linux-wireless@vger.kernel.org>; Wed,  1 Dec 2010 14:59:11 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-01 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101201200416.0F2FA42FAE@repository3.orbit-lab.org>
-Date: Wed,  1 Dec 2010 15:04:15 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from pdtms1.pdt.com ([207.18.22.4]:53183 "EHLO mail.pdt.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932676Ab0LTRRV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:17:21 -0500
+From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+Subject: WL1271 chip
+Date: Mon, 20 Dec 2010 17:12:06 +0000
+Message-ID: <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
+References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
+ <1292843841.13129.9.camel@chilepepper>
+In-Reply-To: <1292843841.13129.9.camel@chilepepper>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   206c290..1a3c19a  history    -> origin/history
- + c966c49...87565f31 master     -> origin/master  (forced update)
-   7208364..e8a7e48  stable     -> origin/stable
- * [new tag]         next-20101201 -> next-20101201
- * [new tag]         v2.6.37-rc4 -> v2.6.37-rc4
-
-compat-wireless code metrics
-
-    749822 - Total upstream lines of code being pulled
-      2201 - backport code changes
-      1939 - backport code additions
-       262 - backport code deletions
-      6633 - backport from compat module
-      8834 - total backport code
-    1.1781 - % of code consists of backport work
+SGkhDQpMdWNhIHN1Z2dlc3RlZCB0aGF0IEkgc2VuZCB0aGlzIHRvIGFsbCBvZiB5b3UhDQoNCkkg
+bG9va2VkIGF0IGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQtem9vbS1wZXJpcGhlcmFscy5jIGZp
+bGUuLg0KSSBkaWRuJ3Qgc2VlIGFueXRoaW5nIHNwZWNpZmljIHRvIFNESU8uLg0KDQpJIHdhcyBs
+b29raW5nIGF0IGxpbnV4LTIuNi4zNi4yLi4NCklzIHRoaXMgdGhlIGNvcnJlY3QgdmVyc2lvbiB0
+byBsb29rIGF0Pw0KDQpQbGVhc2UgcmVhZCBiZWxvdyBmb3Igb3JpZ2luYWwgcXVlc3Rpb24uDQpU
+SEFOSyB5b3UgZXZlcnlvbmUgZm9yIEFOWSBoZWxwIHlvdSBjYW4gZ2l2ZSBtZSENCkthcmVuDQoN
+Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpIaSBLYXJlbiwNCg0KDQo+IEhpIEx1Y2lhbm8s
+DQo+ICANCj4gSeKAmW0gdmVyeSBzb3JyeSB0byBlbWFpbCAgeW91IGRpcmVjdGx5Lg0KDQpObyBw
+cm9ibGVtLiAgQnV0IGl0IGlzIGFsd2F5cyBiZXR0ZXIgdG8gZW1haWwgdGhlIGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZyBtYWlsaW5nIGxpc3QgdG9vLCBiZWNhdXNlIHRoZXJlIGFyZSBs
+b3RzIG9mIG90aGVyIHBlb3BsZSB3aG8gY2FuIGhlbHAgeW91IHRoZXJlLg0KDQoNCj4gSSBhbSB2
+ZXJ5IG5ldyB0byBwb3J0aW5nIGRyaXZlcnPigKYNCj4gDQo+IEkgaGF2ZSB0byBpbnRlZ3JhdGUv
+cG9ydCBhIFdMMTI3MSBjaGlwIChJIHRoaW5rIGl04oCZcyBnb2luZyB0byBiZSB0aGUgDQo+IG9u
+ZQ0KPiANCj4gbWFudWZhY3R1cmVkIGJ5IE11cmF0YSkuDQo+IA0KPiBJIHNlZSB0aGF0IHlvdSBt
+YWludGFpbiB0aGUgd2wxMnh4IGRyaXZlcnMgb24gbGludXgtd2lyZWxlc3MgDQo+IGtlcm5lbC5v
+cmcuDQo+IA0KPiAgDQo+IA0KPiBUaGUgcHJvY2Vzc29yIGlzIGlNWDIzMywgT1MgaXMgQW5kcm9p
+ZCAoTGludXgpLg0KPiANCj4gIA0KPiANCj4gSSB3b3VsZCBiZSB2ZXJ5IGFwcHJlY2lhdGl2ZSBp
+ZiB5b3UgY291bGQgZ2l2ZSBtZSBzb21lIA0KPiBhZHZpY2UvaW5zdHJ1Y3Rpb25zL2RvY3VtZW50
+YXRpb24NCj4gDQo+IHRoYXQgd291bGQgaGVscCBtZSBvbiB1bmRlcnN0YW5kL3N0YXJ0L2NvbXBs
+ZXRlIHRoaXMgdGFzay4NCg0KV2VsbCwgdGhlIHdsMTJ4eCBkcml2ZXIgc2hvdWxkIHdvcmsgbW9y
+ZSBvciBsZXNzIG91dC1vZi10aGUtYm94LiAgVGhlIG9ubHkgdGhpbmcgeW91IG5lZWQgdG8gZG8g
+aXMgdG8gc2V0IHVwIHRoZSBTRElPIGNvbm5lY3Rpb24gdG8geW91ciBjYXJkIChhc3N1bWluZyB0
+aGF0IHlvdSdyZSB1c2luZyB0aGUgU0RJTyBidXMgdG8gY29ubmVjdCBpdCkuICBJJ20gbm90IGZh
+bWlsaWFyIHdpdGggdGhlIGlNWDIzMywgYnV0IHdpdGggT01BUCwgaXQncyBwcmV0dHkgc2ltcGxl
+LiAgWW91IGNhbiBzZWUgdGhlIGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQtem9vbS1wZXJpcGhl
+cmFscy5jIGZpbGUgaW4gdGhlIExpbnV4IGtlcm5lbCBmb3IgYW4gZXhhbXBsZSBvbiBob3cgdG8g
+c2V0IGl0IHVwIGZvciB0aGUgWm9vbSBib2FyZCAoT01BUC1iYXNlZCkuDQoNCg0KLS0NCkNoZWVy
+cywNCkx1Y2EuDQoNCg0K
