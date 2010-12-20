@@ -1,24 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56807.mail.re3.yahoo.com ([66.196.97.81]:21081 "HELO
-	web56807.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752134Ab0LXLg1 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59309 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757900Ab0LTPz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Dec 2010 06:36:27 -0500
-Message-ID: <28292.82403.qm@web56807.mail.re3.yahoo.com>
-Date: Fri, 24 Dec 2010 03:29:43 -0800 (PST)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: carl9170 and debian squeeze
-To: linux-wireless@vger.kernel.org, Der Engel <engelster@gmail.com>
-In-Reply-To: <AANLkTimL=JSK6jcF4d97Nc-vLZdeRLj8o=MbpCas-H7z@mail.gmail.com>
+	Mon, 20 Dec 2010 10:55:59 -0500
+Received: by iwn9 with SMTP id 9so3260643iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 07:55:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <216485.77625.qm@web56801.mail.re3.yahoo.com>
+References: <216485.77625.qm@web56801.mail.re3.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 20 Dec 2010 07:55:38 -0800
+Message-ID: <AANLkTi=DJ1eZvUsPdNu35xt86Sa-=pQUBH+mj94UFj+y@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: unify some driver-select colors
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is because of driver-select. To make a long story short, download and install the entire compat-wireless suit (without driver select). If the current version fails to compile download the one from the day before and so on until you find a version which compiles entirely. Then you'll have support for all of your wireless cards.
+On Mon, Dec 20, 2010 at 3:34 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> unify driver-select colors for better user screen readbility
+>
+> Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 
+Applied and pushed both, thanks!
 
-Walter
-
-
-      
+  Luis
