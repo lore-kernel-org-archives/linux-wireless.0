@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38468 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab0L2Q4G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 11:56:06 -0500
-Received: by fxm20 with SMTP id 20so10600916fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 08:56:05 -0800 (PST)
-Message-ID: <4D1B6821.5040506@lwfinger.net>
-Date: Wed, 29 Dec 2010 10:56:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:55266 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751985Ab0LTIK2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 03:10:28 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 00:10:12 -0800
+Date: Mon, 20 Dec 2010 13:40:03 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath9k: Fix warnings on card removal
+Message-ID: <20101220081003.GA19301@vmraj-lnx.users.atheros.com>
+References: <1292660258-4063-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-To: Weedy <weedy2887@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Compile error for the last week inside rtlwifi/base.c
-References: <loom.20101228T075242-208@post.gmane.org> <4D1A0EF1.8060509@lwfinger.net> <loom.20101229T034155-409@post.gmane.org>
-In-Reply-To: <loom.20101229T034155-409@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1292660258-4063-1-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/28/2010 08:43 PM, Weedy wrote:
-> Larry Finger <Larry.Finger@...> writes:
+On Sat, Dec 18, 2010 at 01:47:37PM +0530, Rajkumar Manoharan wrote:
+> There is no point in doing register read/write operations
+> when is hardware is not present. This leads to unnecessary
+> warnings on log. This patch resolves the following
+> warnings on card removal.
 > 
->> Older kernels used create_workqueue(), which is replaced by alloc_workqueue()
->> If you really need the driver for RTL8192CE/RTL8188CE, then apply the patch
->> shown below. If you do not need the driver, then disable it in the 
->> configuration.
->>
->> Larry
-> 
-> Actually I need RTL8192USB, I guess I need to wait more?
+John,
 
-What are the USB Ids as shown by the lsusb command?
+This patch does not handle module unload case. will send v2 patch.
 
-Larry
+--
+Rajkumar
