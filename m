@@ -1,120 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38169 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755905Ab0LPOpH (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:50978 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932714Ab0LTQRR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 09:45:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtlwifi: convert to __packed notation
-Date: Thu, 16 Dec 2010 09:34:48 -0500
-Message-Id: <1292510088-7449-1-git-send-email-linville@tuxdriver.com>
+	Mon, 20 Dec 2010 11:17:17 -0500
+Received: by iyi12 with SMTP id 12so2329837iyi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 08:17:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimseBRXix3sFsHnCVBjZh6=Jfum8MGUqq1Uf6z0@mail.gmail.com>
+References: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
+ <1292556197-4820-4-git-send-email-lrodriguez@atheros.com> <1292579457.3715.2.camel@jlt3.sipsolutions.net>
+ <AANLkTimseBRXix3sFsHnCVBjZh6=Jfum8MGUqq1Uf6z0@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 20 Dec 2010 08:16:56 -0800
+Message-ID: <AANLkTimZaYX+YPUJF9PG5_fbopuSPBH_bFUkH=MabNXb@mail.gmail.com>
+Subject: Re: [RFC 3/8] cfg80211: pass DFS region to drivers through reg_notifier()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use "__packed" instead of "__attribute__ ((packed))"...
+On Fri, Dec 17, 2010 at 11:40 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Dec 17, 2010 at 1:50 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2010-12-16 at 19:23 -0800, Luis R. Rodriguez wrote:
+>>
+>>>       /* Lets us get back the wiphy on the callback */
+>>>       int (*reg_notifier)(struct wiphy *wiphy,
+>>> -                         struct regulatory_request *request);
+>>> +                         struct regulatory_request *request,
+>>> +                         u8 dfs_region);
+>>
+>> So does that mean we need to implement a reg_notifier if we want to have
+>> radar detection? Doesn't an empty reg_notifier already alter behaviour
+>
+> An empty reg_notifier() should not do anything. Its either through the
+> reg_notifier() or we add a new callback specifically for DFS. A new
+> callback may give more flexibility later if we want to pass up more
+> data.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtlwifi/pci.h                 |    6 +++---
- .../net/wireless/rtlwifi/rtl8192ce/rtl8192c-trx.h  |    6 +++---
- drivers/net/wireless/rtlwifi/wifi.h                |    8 ++++----
- 3 files changed, 10 insertions(+), 10 deletions(-)
+After some more thought I think its best to keep this within the
+reg_notifier() instead of adding a new callback, the reason being that
+we are already passing some regulatory data on it, no point in
+splitting up the calls and having those synch up on themselves later
+on the driver. But we are missing the alpha2 which I suspect drivers
+may need to request_firmware() some DFS data for the specific chipset,
+or do their own lookup on local static data. We don't currently pass
+the cfg80211_regdomain but I think it makes sense in this case, then
+the user can just check the alpha2 from it and in case other users
+need any other data from the regulatory domain they can have at it.
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
-index cdde858..d36a669 100644
---- a/drivers/net/wireless/rtlwifi/pci.h
-+++ b/drivers/net/wireless/rtlwifi/pci.h
-@@ -131,15 +131,15 @@ enum pci_bridge_vendor {
- 
- struct rtl_rx_desc {
- 	u32 dword[8];
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rtl_tx_desc {
- 	u32 dword[16];
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rtl_tx_cmd_desc {
- 	u32 dword[16];
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rtl8192_tx_ring {
- 	struct rtl_tx_desc *desc;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-trx.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-trx.h
-index 91e13c3..53d0e0a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-trx.h
-@@ -535,7 +535,7 @@ struct rx_fwinfo_92c {
- 	u8 sgi_en:1;
- 	u8 rxsc:2;
- 	u8 reserve:4;
--} __attribute__ ((packed));
-+} __packed;
- 
- struct tx_desc_92c {
- 	u32 pktsize:16;
-@@ -637,7 +637,7 @@ struct tx_desc_92c {
- 	u32 nextdescaddress64;
- 
- 	u32 reserve_pass_pcie_mm_limit[4];
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rx_desc_92c {
- 	u32 length:14;
-@@ -695,7 +695,7 @@ struct rx_desc_92c {
- 	u32 bufferaddress;
- 	u32 bufferaddress64;
- 
--} __attribute__ ((packed));
-+} __packed;
- 
- void rtl92ce_tx_fill_desc(struct ieee80211_hw *hw,
- 			  struct ieee80211_hdr *hdr,
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 0dd6824..3844dc9 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -551,13 +551,13 @@ struct rtl_hdr_3addr {
- 	u8 addr3[ETH_ALEN];
- 	__le16 seq_ctl;
- 	u8 payload[0];
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rtl_info_element {
- 	u8 id;
- 	u8 len;
- 	u8 data[0];
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rtl_probe_rsp {
- 	struct rtl_hdr_3addr header;
-@@ -567,7 +567,7 @@ struct rtl_probe_rsp {
- 	/*SSID, supported rates, FH params, DS params,
- 	   CF params, IBSS params, TIM (if beacon), RSN */
- 	struct rtl_info_element info_element[0];
--} __attribute__ ((packed));
-+} __packed;
- 
- /*LED related.*/
- /*ledpin Identify how to implement this SW led.*/
-@@ -589,7 +589,7 @@ struct rtl_qos_parameters {
- 	u8 aifs;
- 	u8 flag;
- 	__le16 tx_op;
--} __attribute__ ((packed));
-+} __packed;
- 
- struct rt_smooth_data {
- 	u32 elements[100];	/*array to store values */
--- 
-1.7.3.3
+I'm going to make this change and submit as PATCH form next. I haven't
+seen any more feeback on this so I take it that we're OK with this.
 
+  Luis
