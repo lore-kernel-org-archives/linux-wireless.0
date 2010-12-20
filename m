@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:50172 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754593Ab0L3ChM (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:35009 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754715Ab0LTOyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 21:37:12 -0500
-Message-ID: <4D1BF056.3060909@lwfinger.net>
-Date: Wed, 29 Dec 2010 20:37:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 20 Dec 2010 09:54:43 -0500
+Received: by yxt3 with SMTP id 3so1328996yxt.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 06:54:42 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: 2.6.37-rc7: Regression: b43: crashes in hwrng_register()
-References: <4D1A8200.4010609@lwfinger.net> <20101229195440.GD5838@darkside.kls.lan> <4D1BD2B0.4020101@lwfinger.net> <20101230012003.GA2665@darkside.kls.lan>
-In-Reply-To: <20101230012003.GA2665@darkside.kls.lan>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19727.28131.342814.867320@gargle.gargle.HOWL>
+Date: Mon, 20 Dec 2010 20:23:23 +0530
+To: "Jonas H." <jonas@lophus.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Recent suspend/resume fix for which devices?
+In-Reply-To: <4D0E19EB.3070802@lophus.org>
+References: <4D0E19EB.3070802@lophus.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/29/2010 07:20 PM, Mario 'BitKoenig' Holbe wrote:
+Jonas H. wrote:
+> Hello!
 > 
-> It will surely not matter: if CONFIG_B43_HWRNG would not have been
-> defined, hwrng_register() would not have been reached in the dump from
-> my first mail.
+> My AR9285 wireless card, used with the ath9k driver, stops working after 
+> supsend/resume - I have to reboot to make it work again.
 > 
-> If you really like me to try that patch, I'll do so when I'm awake again
-> and will then answer you that nothing has changed :)
+> Trying to figure out whether this is fixed for 2.6.37 I noticed commit 
+> f933ebed (in Linus' tree) "ath9k_htc: Fix suspend/resume. 
+> The HW has to be set to FULLSLEEP mode during suspend, ...".
+> 
+> My question is: Does that fix also apply to my card? I realize the patch 
+> only applies to ath9k_htc but I couldn't figure what "htc" stands for in 
+> this context.
 
-No, don't bother. I do have a different request. The byte counts for my 32-bit
-system do not match yours. Could you please use the following command to find
-the instructions that are failing?
+Nope, that commit is not relevant for ath9k, which is the driver for your card.
+ath9k_htc is a different driver.
 
-objdump -l -d drivers/char/hw_random/core.o | less
-
-Use the search to find the start of hwrng_register, then add 0x4c to the
-starting address. Once I see hte instruction that is failing, I should be able
-to find where the failure occurs.
-
-The order in which things are registered should not cause an error, but who knows?
-
-Larry
+Sujith
