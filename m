@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f180.google.com ([209.85.161.180]:42252 "EHLO
-	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752708Ab0LQI7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 03:59:54 -0500
-Received: by gxk19 with SMTP id 19so268699gxk.11
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 00:59:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
-References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com> <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
- <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com> <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
- <98BC4735-664C-491E-80CE-356BE32FA2ED@mac.com> <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 17 Dec 2010 10:59:38 +0200
-Message-ID: <AANLkTimJCg1_6cZY1JE11hpmow772cP2KspM6diuDoAE@mail.gmail.com>
-Subject: Problem bringing up wlan0 interface up with mainline wl1271 drivers
-To: Elvis Dowson <elvis.dowson@mac.com>
-Cc: panduranga <x0125717@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>,
-	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
-	"Jara, Pedro" <pedrojara@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:22035 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932676Ab0LTRGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:06:05 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlagn: fix scan tx antenna setting on 5Ghz band
+Date: Mon, 20 Dec 2010 18:05:13 +0100
+Message-Id: <1292864713-2756-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ resending to list since it rejects html subparts ]
+Looks that we do not set correctly antennas when scanning
+on 5Ghz band and when bluetooth is enabled, because
+priv->cfg->scan_tx_antennas[band] is only defined for
+IEEE80211_BAND_2GHZ. This fix choose first valid antenna.
 
-Hey Elvis,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
->
-> On Fri, Dec 17, 2010 at 10:36, Elvis Dowson <elvis.dowson@mac.com> wrote:
->>
->> Hi,
->>
->> On Dec 17, 2010, at 9:11 AM, panduranga wrote:
->>
->> # ifconfig wlan0 hw ether 11:22:33:44:55:66
->> SIOCSIFHWADDR: Cannot assign requested address
->>
->> Even trying to assign an IP address doesn't work.
->>
->> # ifconfig wlan0 inet 192.168.1.105 netmask 255.255.255.0
->> SIOCSIFFLAGS: Cannot assign requested address
->>
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 4bc82fc..099039c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1499,8 +1499,7 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	    priv->cfg->bt_params->advanced_bt_coexist &&
+ 	    priv->bt_full_concurrent) {
+ 		/* operated as 1x1 in full concurrency mode */
+-		scan_tx_antennas = first_antenna(
+-			priv->cfg->scan_tx_antennas[band]);
++		scan_tx_antennas = first_antenna(scan_tx_antennas);
+ 	}
+ 
+ 	priv->scan_tx_ant[band] = iwl_toggle_tx_ant(priv, priv->scan_tx_ant[band],
+-- 
+1.7.1
 
-Ethernet addresses with the LSB of the first octet turned on are
-considered multicast addresses. Please try:
-
-ifconfig wlan0 hw ether 00:22:33:44:55:66
-
-Regards,
-Arik
