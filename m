@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:51751 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466Ab0LOHdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 02:33:15 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 23:32:59 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>, <lrodriguez@atheros.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Add comments for making pm-qos as modparam
-Date: Wed, 15 Dec 2010 13:02:46 +0530
-Message-ID: <1292398366-4906-1-git-send-email-mshajakhan@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48711 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945Ab0LTOaP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 09:30:15 -0500
+Date: Mon, 20 Dec 2010 09:15:31 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Jonas H." <jonas@lophus.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Recent suspend/resume fix for which devices?
+Message-ID: <20101220141531.GB10104@tuxdriver.com>
+References: <4D0E19EB.3070802@lophus.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D0E19EB.3070802@lophus.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Sun, Dec 19, 2010 at 03:42:51PM +0100, Jonas H. wrote:
+> Hello!
+> 
+> My AR9285 wireless card, used with the ath9k driver, stops working
+> after supsend/resume - I have to reboot to make it work again.
+> 
+> Trying to figure out whether this is fixed for 2.6.37 I noticed
+> commit f933ebed (in Linus' tree) "ath9k_htc: Fix suspend/resume. The
+> HW has to be set to FULLSLEEP mode during suspend, ...".
+> 
+> My question is: Does that fix also apply to my card? I realize the
+> patch only applies to ath9k_htc but I couldn't figure what "htc"
+> stands for in this context.
 
-PM-QOS value can be user specified via module parameter.
-This patch adds few comments regarding this in the driver
-code.
+Probably not.  Did you try reverting it?
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+> If it doesn't, does this mailing list also function as a bug tracker?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 36f4f5a..4d64716 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1196,6 +1196,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 			ath9k_btcoex_timer_resume(sc);
- 	}
- 
-+	/* User has the option to provide pm-qos value as a module
-+	 * parameter rather than using the default value of
-+	 * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
-+	 */
- 	pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
- 
- 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
+Sorta, but not really.  There is a bugzilla instance at bugzilla.kernel.org.
+
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
