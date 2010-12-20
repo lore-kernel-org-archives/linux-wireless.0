@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34668 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751254Ab0LFLo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 06:44:27 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 03:44:12 -0800
-Date: Mon, 6 Dec 2010 17:14:02 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of
-	AR_PHY_65NM_CH0_SYNTH7 from an array for AR9485
-Message-ID: <20101206114401.GT12908@vasanth-laptop>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com> <4CF84BB8.8090007@openwrt.org> <20101203045054.GP12908@vasanth-laptop> <4CF8DF08.2060307@openwrt.org> <20101203124050.GR12908@vasanth-laptop> <4CF8E718.9070207@openwrt.org> <20101206060310.GS12908@vasanth-laptop> <4CFCBE04.7070509@openwrt.org>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:46226 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab0LTKbf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 05:31:35 -0500
+Received: by fxm18 with SMTP id 18so2844973fxm.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 02:31:34 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH 1/2] rt2x00: Write the frame *after* padding (rt2800 usb devices)
+Date: Mon, 20 Dec 2010 11:30:22 +0100
+Cc: Ismael Luceno <ismael.luceno@gmail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <1292833909-20138-1-git-send-email-ismael.luceno@gmail.com> <201012200955.22087.helmut.schaa@googlemail.com> <AANLkTi=0AkWAoNhgMbkjwQb5Byu6SVWmOaNWRYsacfU6@mail.gmail.com>
+In-Reply-To: <AANLkTi=0AkWAoNhgMbkjwQb5Byu6SVWmOaNWRYsacfU6@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CFCBE04.7070509@openwrt.org>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201012201130.22582.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I don't have any doc for this register yet.
-> I'm pretty sure that the format of the register is still exactly the
-> same. I guess they added a small frequency offset to reduce spur.
+Am Montag, 20. Dezember 2010 schrieb Julian Calaby:
+> On Mon, Dec 20, 2010 at 19:55, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+> > Hi,
+> >
+> > Am Montag, 20. Dezember 2010 schrieb Ismael Luceno:
+> >> Signed-off-by: Ismael Luceno <ismael.luceno@gmail.com>
+> >> ---
+> >>  drivers/net/wireless/rt2x00/rt2800usb.c |    7 ++++---
+> >>  1 files changed, 4 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> >> index 3e0205d..85185de 100644
+> >> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> >> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> >> @@ -378,9 +378,10 @@ static void rt2800usb_write_tx_data(struct queue_entry *entry,
+> >>        * | TXINFO | TXWI | 802.11 header | L2 pad | payload | pad | USB end pad |
+> >>        *                 |<------------- tx_pkt_len ------------->|
+> >>        */
+> >> -        rt2800_write_tx_data(entry, txdesc);
+> >> -        padding_len = roundup(entry->skb->len + 4, 4) - entry->skb->len;
+> >> -        memset(skb_put(entry->skb, padding_len), 0, padding_len);
+> >> +     padding_len = roundup(entry->skb->len + 4, 4) - entry->skb->len;
+> >> +     memset(skb_put(entry->skb, padding_len), 0, padding_len);
+> >> +
+> >> +     rt2800_write_tx_data(entry, txdesc);
+> >
+> > Could you please explain this change in more detail please?
+> > Why is it needed? rt2800_write_tx_data only adds the TXWI to the front of the
+> > buffer, doing that before or after the padding doesn't make a difference, no?
 > 
-> >> But how exactly is *one* magic number (and it's even a very small one)
-> >> worse than 14 of them, especially since anybody can verify that the
-> >> generated raw values are exactly the same?
-> > 
-> > Anyway, still this formula gets it wrong for channel 14.
-> > Lets have this table for now, I'll clean this up once I
-> > get the proper doc for this register?.
-> How did you test this? When I put this part into a test program, it
-> generates exactly the same values as the table  all channels,
-> including 14.
+> Semantically it makes more sense this way, why modify a entry before
+> writing it - but maybe the issue is that the name of the function
+> makes it's function ambiguous, maybe renaming it to something along
+> the lines of "rt2800_prepend_TXWI" would make it's purpose clearer.
 
-I just did the following
+Correct.
 
-#define CHANSEL_2G_9485(_freq) ((((freq) * 0x10000) - 215) / CHANSEL_DIV)
- for (i = 0; i < 14; i++) {
-               freq = 2412 + (i * 5);
-               printk("chan %d : %x \n",i + 1,CHANSEL_2G_9485(freq));
-      }
-
-output:
-
-chan 1 : a0ccbe
-chan 2 : a12213
-chan 3 : a17769
-chan 4 : a1ccbe
-chan 5 : a22213
-chan 6 : a27769
-chan 7 : a2ccbe
-chan 8 : a32213
-chan 9 : a37769
-chan 10 : a3ccbe
-chan 11 : a42213
-chan 12 : a47769
-chan 13 : a4ccbe
-chan 14 : a52213
-
-Vasanth
+Helmut
