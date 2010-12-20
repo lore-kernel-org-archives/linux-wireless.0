@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2453 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.19.149.2]:63473 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713Ab0LIUcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 15:32:55 -0500
-Subject: Re: [trivial PATCH 00/15] remove duplicate unlikely from IS_ERR
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org, Tobias Klauser <tklauser@distanz.ch>
-Cc: uclinux-dist-devel@blackfin.uclinux.org,
-	rtc-linux@googlegroups.com, linux-s390@vger.kernel.org,
-	osd-dev@open-osd.org, linux-arm-msm@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-	Jiri Kosina <trivial@kernel.org>,
-	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-In-Reply-To: <cover.1291923888.git.joe@perches.com>
-References: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
-	 <cover.1291923888.git.joe@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 12:32:53 -0800
-Message-ID: <1291926773.20677.26.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S932891Ab0LTRDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:03:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 09:02:50 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <kathy.giori@atheros.com>, <amod.bodas@atheros.com>,
+	<david.quan@atheros.com>, <michael.green@atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 8/8] wireless-regdb: add FCC as the DFS region for US
+Date: Mon, 20 Dec 2010 12:02:35 -0500
+Message-ID: <1292864555-28661-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 12:03 -0800, Joe Perches wrote:
-> Tobias Klauser <tklauser@distanz.ch> sent a patch to remove
-> an unnecessary unlikely from drivers/misc/c2port/core.c,
-> https://lkml.org/lkml/2010/12/9/199
+DFS master support in the US requires consideration for DFS
+requirements as defined by the FCC rules.
 
-It seems that Tobias did send all the appropriate patches,
-not as a series, but as individual patches to kernel-janitor.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ db.txt |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-c2port was the only one that went to lkml.
-
-Please ignore this series and apply Tobias' patches.
-
+diff --git a/db.txt b/db.txt
+index e63a43e..d1616ef 100644
+--- a/db.txt
++++ b/db.txt
+@@ -611,7 +611,7 @@ country TR:
+ country UA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+-country US:
++country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (3, 27)
+ 	(5170 - 5250 @ 40), (3, 17)
+ 	(5250 - 5330 @ 40), (3, 20), DFS
+-- 
+1.7.3.2.90.gd4c43
 
