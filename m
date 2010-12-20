@@ -1,436 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753391Ab0LVO2h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:28:37 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:36 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 15/18] wl1271: AP mode - encryption support
-Date: Wed, 22 Dec 2010 16:27:34 +0200
-Message-Id: <1293028057-6212-16-git-send-email-arik@wizery.com>
-In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:63456 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932891Ab0LTRCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:02:45 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 09:02:29 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <kathy.giori@atheros.com>, <amod.bodas@atheros.com>,
+	<david.quan@atheros.com>, <michael.green@atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] cfg80211: process new country regulatory flags (DFS)
+Date: Mon, 20 Dec 2010 12:02:28 -0500
+Message-ID: <1292864555-28661-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Encryption key configuration is different for AP/STA modes.
+This lets us pick up the new country regulatory flags.
+This will later be used to inform of drivers later of
+DFS parameters.
 
-AP encryption keys are recorded when the BSS is not started. On BSS
-start they are propagated to the AP (in wl1271_ap_init_hwenc).
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/wl12xx/cmd.h    |    1 -
- drivers/net/wireless/wl12xx/main.c   |  237 ++++++++++++++++++++++++++++------
- drivers/net/wireless/wl12xx/tx.c     |   13 +-
- drivers/net/wireless/wl12xx/tx.h     |    4 +
- drivers/net/wireless/wl12xx/wl12xx.h |   16 +++
- 5 files changed, 227 insertions(+), 44 deletions(-)
+ include/linux/nl80211.h  |   23 +++++++++++++++++++++++
+ include/net/regulatory.h |    1 +
+ net/wireless/nl80211.c   |    9 +++++++++
+ net/wireless/reg.c       |   26 ++++++++++++++++++++++++++
+ 4 files changed, 59 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
-index d51324d..4f2764f 100644
---- a/drivers/net/wireless/wl12xx/cmd.h
-+++ b/drivers/net/wireless/wl12xx/cmd.h
-@@ -291,7 +291,6 @@ struct wl1271_cmd_ps_params {
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 1cee56b..f5553ba 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -858,6 +858,9 @@ enum nl80211_commands {
+  *	attributes, specifying what a key should be set as default as.
+  *	See &enum nl80211_key_default_types.
+  *
++ * @NL80211_ATTR_REG_COUNTRY_FLAGS: Country specific regulatory flags.
++ *	These are @NL80211_CFLAG_DFS_*
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1040,6 +1043,8 @@ enum nl80211_attrs {
  
- /* HW encryption keys */
- #define NUM_ACCESS_CATEGORIES_COPY 4
--#define MAX_KEY_SIZE 32
+ 	NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION,
  
- enum wl1271_cmd_key_action {
- 	KEY_ADD_OR_REPLACE = 1,
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 71a67f1..5536079 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -296,6 +296,7 @@ static struct conf_drv_settings default_conf = {
++	NL80211_ATTR_REG_COUNTRY_FLAGS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1477,6 +1482,24 @@ enum nl80211_reg_rule_flags {
  };
  
- static void __wl1271_op_remove_interface(struct wl1271 *wl);
-+static void wl1271_free_ap_keys(struct wl1271 *wl);
- 
- 
- static void wl1271_device_release(struct device *dev)
-@@ -1193,6 +1194,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 	wl->flags = 0;
- 	wl->vif = NULL;
- 	wl->filters = 0;
-+	wl1271_free_ap_keys(wl);
- 	memset(wl->ap_hlid_map, 0, sizeof(wl->ap_hlid_map));
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
-@@ -1662,38 +1664,209 @@ out:
- 	kfree(fp);
- }
- 
-+int wl1271_set_default_wep_key(struct wl1271 *wl, u8 id)
-+{
-+	int ret;
-+	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
-+
-+	if (is_ap)
-+		ret = wl1271_cmd_set_ap_default_wep_key(wl, id);
-+	else
-+		ret = wl1271_cmd_set_sta_default_wep_key(wl, id);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	wl1271_debug(DEBUG_CRYPT, "default wep key idx: %d", (int)id);
-+	return 0;
-+}
-+
-+static int wl1271_record_ap_key(struct wl1271 *wl, u8 id, u8 key_type,
-+			u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
-+			u16 tx_seq_16)
-+{
-+	struct wl1271_ap_key *ap_key;
-+	int i;
-+
-+	wl1271_debug(DEBUG_CRYPT, "record ap key id %d", (int)id);
-+
-+	if (key_size > MAX_KEY_SIZE)
-+		return -EINVAL;
-+
-+	/*
-+	 * Find next free entry in ap_keys. Also check we are not replacing
-+	 * an existing key.
-+	 */
-+	for (i = 0; i < MAX_NUM_KEYS; i++) {
-+		if (wl->recorded_ap_keys[i] == NULL)
-+			break;
-+
-+		if (wl->recorded_ap_keys[i]->id == id) {
-+			wl1271_warning("trying to record key replacement");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	if (i == MAX_NUM_KEYS)
-+		return -EBUSY;
-+
-+	ap_key = kzalloc(sizeof(*ap_key), GFP_KERNEL);
-+	if (!ap_key)
-+		return -ENOMEM;
-+
-+	ap_key->id = id;
-+	ap_key->key_type = key_type;
-+	ap_key->key_size = key_size;
-+	memcpy(ap_key->key, key, key_size);
-+	ap_key->hlid = hlid;
-+	ap_key->tx_seq_32 = tx_seq_32;
-+	ap_key->tx_seq_16 = tx_seq_16;
-+
-+	wl->recorded_ap_keys[i] = ap_key;
-+	return 0;
-+}
-+
-+static void wl1271_free_ap_keys(struct wl1271 *wl)
-+{
-+	int i;
-+
-+	for (i = 0; i < MAX_NUM_KEYS; i++) {
-+		kfree(wl->recorded_ap_keys[i]);
-+		wl->recorded_ap_keys[i] = NULL;
-+	}
-+}
-+
-+static int wl1271_ap_init_hwenc(struct wl1271 *wl)
-+{
-+	int i, ret = 0;
-+	struct wl1271_ap_key *key;
-+	bool wep_key_added = false;
-+
-+	for (i = 0; i < MAX_NUM_KEYS; i++) {
-+		if (wl->recorded_ap_keys[i] == NULL)
-+			break;
-+
-+		key = wl->recorded_ap_keys[i];
-+		ret = wl1271_cmd_set_ap_key(wl, KEY_ADD_OR_REPLACE,
-+					    key->id, key->key_type,
-+					    key->key_size, key->key,
-+					    key->hlid, key->tx_seq_32,
-+					    key->tx_seq_16);
-+		if (ret < 0)
-+			goto out;
-+
-+		if (key->key_type == KEY_WEP)
-+			wep_key_added = true;
-+	}
-+
-+	if (wep_key_added) {
-+		ret = wl1271_cmd_set_ap_default_wep_key(wl, wl->default_key);
-+		if (ret < 0)
-+			goto out;
-+	}
-+
-+out:
-+	wl1271_free_ap_keys(wl);
-+	return ret;
-+}
-+
-+static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
-+		       u8 key_size, const u8 *key, u32 tx_seq_32,
-+		       u16 tx_seq_16, struct ieee80211_sta *sta)
-+{
-+	int ret;
-+	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
-+
-+	if (is_ap) {
-+		struct wl1271_station *wl_sta;
-+		u8 hlid;
-+
-+		if (sta) {
-+			wl_sta = (struct wl1271_station *)sta->drv_priv;
-+			hlid = wl_sta->hlid;
-+		} else {
-+			hlid = WL1271_AP_BROADCAST_HLID;
-+		}
-+
-+		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
-+			/*
-+			 * We do not support removing keys after AP shutdown.
-+			 * Pretend we do to make mac80211 happy.
-+			 */
-+			if (action != KEY_ADD_OR_REPLACE)
-+				return 0;
-+
-+			ret = wl1271_record_ap_key(wl, id,
-+					     key_type, key_size,
-+					     key, hlid, tx_seq_32,
-+					     tx_seq_16);
-+		} else {
-+			ret = wl1271_cmd_set_ap_key(wl, action,
-+					     id, key_type, key_size,
-+					     key, hlid, tx_seq_32,
-+					     tx_seq_16);
-+		}
-+
-+		if (ret < 0)
-+			return ret;
-+	} else {
-+		const u8 *addr;
-+		static const u8 bcast_addr[ETH_ALEN] = {
-+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-+		};
-+
-+		addr = sta ? sta->addr : bcast_addr;
-+
-+		if (is_zero_ether_addr(addr)) {
-+			/* We dont support TX only encryption */
-+			return -EOPNOTSUPP;
-+		}
-+
-+		/* The wl1271 does not allow to remove unicast keys - they
-+		   will be cleared automatically on next CMD_JOIN. Ignore the
-+		   request silently, as we dont want the mac80211 to emit
-+		   an error message. */
-+		if (action == KEY_REMOVE && !is_broadcast_ether_addr(addr))
-+			return 0;
-+
-+		ret = wl1271_cmd_set_sta_key(wl, action,
-+					     id, key_type, key_size,
-+					     key, addr, tx_seq_32,
-+					     tx_seq_16);
-+		if (ret < 0)
-+			return ret;
-+
-+		/* the default WEP key needs to be configured at least once */
-+		if (key_type == KEY_WEP) {
-+			ret = wl1271_cmd_set_sta_default_wep_key(wl,
-+							wl->default_key);
-+			if (ret < 0)
-+				return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			     struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta,
- 			     struct ieee80211_key_conf *key_conf)
- {
- 	struct wl1271 *wl = hw->priv;
--	const u8 *addr;
- 	int ret;
- 	u32 tx_seq_32 = 0;
- 	u16 tx_seq_16 = 0;
- 	u8 key_type;
- 
--	static const u8 bcast_addr[ETH_ALEN] =
--		{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
--
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 set key");
- 
--	addr = sta ? sta->addr : bcast_addr;
--
--	wl1271_debug(DEBUG_CRYPT, "CMD: 0x%x", cmd);
--	wl1271_dump(DEBUG_CRYPT, "ADDR: ", addr, ETH_ALEN);
-+	wl1271_debug(DEBUG_CRYPT, "CMD: 0x%x sta: %p", cmd, sta);
- 	wl1271_debug(DEBUG_CRYPT, "Key: algo:0x%x, id:%d, len:%d flags 0x%x",
- 		     key_conf->cipher, key_conf->keyidx,
- 		     key_conf->keylen, key_conf->flags);
- 	wl1271_dump(DEBUG_CRYPT, "KEY: ", key_conf->key, key_conf->keylen);
- 
--	if (is_zero_ether_addr(addr)) {
--		/* We dont support TX only encryption */
--		ret = -EOPNOTSUPP;
--		goto out;
--	}
--
- 	mutex_lock(&wl->mutex);
- 
- 	if (unlikely(wl->state == WL1271_STATE_OFF)) {
-@@ -1740,36 +1913,21 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	switch (cmd) {
- 	case SET_KEY:
--		ret = wl1271_cmd_set_sta_key(wl, KEY_ADD_OR_REPLACE,
--					 key_conf->keyidx, key_type,
--					 key_conf->keylen, key_conf->key,
--					 addr, tx_seq_32, tx_seq_16);
-+		ret = wl1271_set_key(wl, KEY_ADD_OR_REPLACE,
-+				 key_conf->keyidx, key_type,
-+				 key_conf->keylen, key_conf->key,
-+				 tx_seq_32, tx_seq_16, sta);
- 		if (ret < 0) {
- 			wl1271_error("Could not add or replace key");
- 			goto out_sleep;
- 		}
--
--		/* the default WEP key needs to be configured at least once */
--		if (key_type == KEY_WEP) {
--			ret = wl1271_cmd_set_sta_default_wep_key(wl,
--							     wl->default_key);
--			if (ret < 0)
--				goto out_sleep;
--		}
- 		break;
- 
- 	case DISABLE_KEY:
--		/* The wl1271 does not allow to remove unicast keys - they
--		   will be cleared automatically on next CMD_JOIN. Ignore the
--		   request silently, as we dont want the mac80211 to emit
--		   an error message. */
--		if (!is_broadcast_ether_addr(addr))
--			break;
--
--		ret = wl1271_cmd_set_sta_key(wl, KEY_REMOVE,
--					 key_conf->keyidx, key_type,
--					 key_conf->keylen, key_conf->key,
--					 addr, 0, 0);
-+		ret = wl1271_set_key(wl, KEY_REMOVE,
-+				     key_conf->keyidx, key_type,
-+				     key_conf->keylen, key_conf->key,
-+				     0, 0, sta);
- 		if (ret < 0) {
- 			wl1271_error("Could not remove key");
- 			goto out_sleep;
-@@ -1788,7 +1946,6 @@ out_sleep:
- out_unlock:
- 	mutex_unlock(&wl->mutex);
- 
--out:
- 	return ret;
- }
- 
-@@ -2015,6 +2172,10 @@ end_changed_bcn:
- 
- 				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
- 				wl1271_debug(DEBUG_AP, "started AP");
-+
-+				ret = wl1271_ap_init_hwenc(wl);
-+				if (ret < 0)
-+					goto out_sleep;
- 			}
- 		} else {
- 			if (test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 70a7bd4..830f940 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -190,7 +190,6 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 	struct ieee80211_tx_info *info;
- 	u32 extra = 0;
- 	int ret = 0;
--	u8 idx;
- 	u32 total_len;
- 
- 	if (!skb)
-@@ -203,11 +202,15 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 		extra = WL1271_TKIP_IV_SPACE;
- 
- 	if (info->control.hw_key) {
--		idx = info->control.hw_key->hw_key_idx;
-+		bool is_wep;
-+		u8 idx = info->control.hw_key->hw_key_idx;
-+		u32 cipher = info->control.hw_key->cipher;
- 
--		/* FIXME: do we have to do this if we're not using WEP? */
--		if (unlikely(wl->default_key != idx)) {
--			ret = wl1271_cmd_set_sta_default_wep_key(wl, idx);
-+		is_wep = (cipher == WLAN_CIPHER_SUITE_WEP40) ||
-+			 (cipher == WLAN_CIPHER_SUITE_WEP104);
-+
-+		if (unlikely(is_wep && wl->default_key != idx)) {
-+			ret = wl1271_set_default_wep_key(wl, idx);
- 			if (ret < 0)
- 				return ret;
- 			wl->default_key = idx;
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index 0662b19..81ba75d 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -152,4 +152,8 @@ void wl1271_tx_flush(struct wl1271 *wl);
- u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
- 
-+/* Functions from wl1271_main.c */
-+
-+int wl1271_set_default_wep_key(struct wl1271 *wl, u8 id);
-+
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 3bd03af..98532fc 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -253,6 +253,19 @@ struct wl1271_if_operations {
- 	void (*disable_irq)(struct wl1271 *wl);
- };
- 
-+#define MAX_NUM_KEYS 14
-+#define MAX_KEY_SIZE 32
-+
-+struct wl1271_ap_key {
-+	u8 id;
-+	u8 key_type;
-+	u8 key_size;
-+	u8 key[MAX_KEY_SIZE];
-+	u8 hlid;
-+	u32 tx_seq_32;
-+	u16 tx_seq_16;
+ /**
++ * enum nl80211_cflags - country regulatory flags
++ *
++ * @NL80211_CFLAG_DFS_FCC_: Country follows DFS master rules from FCC
++ * @NL80211_CFLAG_DFS_FCC_: Country follows DFS master rules from ETSI
++ * @NL80211_CFLAG_DFS_JP_: Country follows DFS master rules from JP/Telec
++ */
++enum nl80211_cflags {
++	NL80211_CFLAG_DFS_FCC		= 1<<0,
++	NL80211_CFLAG_DFS_ETSI		= 1<<1,
++	NL80211_CFLAG_DFS_JP		= 1<<2,
 +};
 +
- struct wl1271 {
- 	struct platform_device *plat_dev;
- 	struct ieee80211_hw *hw;
-@@ -438,6 +451,9 @@ struct wl1271 {
- 
- 	/* map for HLIDs of associated stations - when operating in AP mode */
- 	unsigned long ap_hlid_map[BITS_TO_LONGS(AP_MAX_STATIONS)];
++#define NL80211_CFLAG_ALL_DFS_FLAGS \
++	(NL80211_CFLAG_DFS_FCC | \
++	 NL80211_CFLAG_DFS_ETSI | \
++	 NL80211_CFLAG_DFS_JP)
 +
-+	/* recoreded keys for AP-mode - set here before AP startup */
-+	struct wl1271_ap_key *recorded_ap_keys[MAX_NUM_KEYS];
++/**
+  * enum nl80211_survey_info - survey information
+  *
+  * These attribute types are used with %NL80211_ATTR_SURVEY_INFO
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 356d6e3..9fcb603 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -85,6 +85,7 @@ struct ieee80211_reg_rule {
+ struct ieee80211_regdomain {
+ 	u32 n_reg_rules;
+ 	char alpha2[2];
++	u16 flags;
+ 	struct ieee80211_reg_rule reg_rules[];
  };
  
- struct wl1271_station {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 594a6ac..d255499 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -172,6 +172,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_MCAST_RATE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_OFFCHANNEL_TX_OK] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_KEY_DEFAULT_TYPES] = { .type = NLA_NESTED },
++	[NL80211_ATTR_REG_COUNTRY_FLAGS] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2906,6 +2907,8 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2,
+ 		cfg80211_regdomain->alpha2);
++	NLA_PUT_U16(msg, NL80211_ATTR_REG_COUNTRY_FLAGS,
++		cfg80211_regdomain->flags);
+ 
+ 	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
+ 	if (!nl_reg_rules)
+@@ -2963,6 +2966,7 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	char *alpha2 = NULL;
+ 	int rem_reg_rules = 0, r = 0;
+ 	u32 num_rules = 0, rule_idx = 0, size_of_regd;
++	u16 cflags = 0;
+ 	struct ieee80211_regdomain *rd = NULL;
+ 
+ 	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+@@ -2973,6 +2977,10 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	alpha2 = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+ 
++	if (info->attrs[NL80211_ATTR_REG_COUNTRY_FLAGS])
++		cflags =
++		 nla_get_u16(info->attrs[NL80211_ATTR_REG_COUNTRY_FLAGS]);
++
+ 	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
+ 			rem_reg_rules) {
+ 		num_rules++;
+@@ -2999,6 +3007,7 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	rd->n_reg_rules = num_rules;
+ 	rd->alpha2[0] = alpha2[0];
+ 	rd->alpha2[1] = alpha2[1];
++	rd->flags = cflags;
+ 
+ 	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
+ 			rem_reg_rules) {
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 99d4183..a3731d2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1881,6 +1881,31 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ 	}
+ }
+ 
++#define flag_check_print(_str) \
++	do { \
++		if (has_flag) \
++			pr_info(", "); \
++		pr_info(_str); \
++		has_flag = true; \
++	} while (0)
++
++static void print_country_flags(u16 flags)
++{
++	bool has_flag = false;
++
++	if (!(flags & NL80211_CFLAG_ALL_DFS_FLAGS))
++		return;
++
++	pr_info("DFS Master region:");
++
++	if (flags & NL80211_CFLAG_DFS_FCC)
++		flag_check_print("FCC");
++	if (flags & NL80211_CFLAG_DFS_ETSI)
++		flag_check_print("ETSI");
++	if (flags & NL80211_CFLAG_DFS_JP)
++		flag_check_print("JP");
++}
++
+ static void print_regdomain(const struct ieee80211_regdomain *rd)
+ {
+ 
+@@ -1908,6 +1933,7 @@ static void print_regdomain(const struct ieee80211_regdomain *rd)
+ 			pr_info("Regulatory domain changed to country: %c%c\n",
+ 				rd->alpha2[0], rd->alpha2[1]);
+ 	}
++	print_country_flags(rd->flags);
+ 	print_rd_rules(rd);
+ }
+ 
 -- 
-1.7.1
+1.7.3.2.90.gd4c43
 
