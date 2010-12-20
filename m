@@ -1,300 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2161 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932352Ab0LCDNE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 22:13:04 -0500
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org
-Cc: Peter Stuge <peter@stuge.se>, Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 1/4] ath: Add and use ath_printk and ath_<level>
-Date: Thu,  2 Dec 2010 19:12:35 -0800
-Message-Id: <241e75c84fdd26bfae1c7b8806fe64fbac5de627.1291333544.git.joe@perches.com>
-In-Reply-To: <20101202190239.GE7399@tux>
-References: <20101202190239.GE7399@tux>
-In-Reply-To: <cover.1291333543.git.joe@perches.com>
-References: <cover.1291333543.git.joe@perches.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34979 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879Ab0LTJbK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 04:31:10 -0500
+Received: by iyi12 with SMTP id 12so2039006iyi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 01:31:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201012200955.22087.helmut.schaa@googlemail.com>
+References: <1292833909-20138-1-git-send-email-ismael.luceno@gmail.com> <201012200955.22087.helmut.schaa@googlemail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 20 Dec 2010 20:30:49 +1100
+Message-ID: <AANLkTi=0AkWAoNhgMbkjwQb5Byu6SVWmOaNWRYsacfU6@mail.gmail.com>
+Subject: Re: [PATCH 1/2] rt2x00: Write the frame *after* padding (rt2800 usb devices)
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Ismael Luceno <ismael.luceno@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ath_printk and ath_<level> similar to
-dev_printk and dev_<level> from device.h
+On Mon, Dec 20, 2010 at 19:55, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+> Hi,
+>
+> Am Montag, 20. Dezember 2010 schrieb Ismael Luceno:
+>> Signed-off-by: Ismael Luceno <ismael.luceno@gmail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800usb.c |    7 ++++---
+>>  1 files changed, 4 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+>> index 3e0205d..85185de 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+>> @@ -378,9 +378,10 @@ static void rt2800usb_write_tx_data(struct queue_entry *entry,
+>>        * | TXINFO | TXWI | 802.11 header | L2 pad | payload | pad | USB end pad |
+>>        *                 |<------------- tx_pkt_len ------------->|
+>>        */
+>> -        rt2800_write_tx_data(entry, txdesc);
+>> -        padding_len = roundup(entry->skb->len + 4, 4) - entry->skb->len;
+>> -        memset(skb_put(entry->skb, padding_len), 0, padding_len);
+>> +     padding_len = roundup(entry->skb->len + 4, 4) - entry->skb->len;
+>> +     memset(skb_put(entry->skb, padding_len), 0, padding_len);
+>> +
+>> +     rt2800_write_tx_data(entry, txdesc);
+>
+> Could you please explain this change in more detail please?
+> Why is it needed? rt2800_write_tx_data only adds the TXWI to the front of the
+> buffer, doing that before or after the padding doesn't make a difference, no?
 
-This allows a more gradual rename of ath_print
-to to ath_dbg or perhaps ath_debug.
+Semantically it makes more sense this way, why modify a entry before
+writing it - but maybe the issue is that the name of the function
+makes it's function ambiguous, maybe renaming it to something along
+the lines of "rt2800_prepend_TXWI" would make it's purpose clearer.
 
-This basically removes debug.h leaving
-only an #define ath_printk ath_dbg
-there and moving all the ATH_DBG_<foo>
-enums to ath.h
+Thanks,
 
-I do not think there's much purpose for struct
-ath_common * being passed to the ath_printk
-functions, but perhaps there might be.
-
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath.h   |  103 ++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/debug.c |   20 -------
- drivers/net/wireless/ath/debug.h |   72 +--------------------------
- drivers/net/wireless/ath/main.c  |   20 +++++++
- 4 files changed, 124 insertions(+), 91 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 26bdbee..cbdd654 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -186,4 +186,107 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
- void ath_hw_cycle_counters_update(struct ath_common *common);
- int32_t ath_hw_get_listen_time(struct ath_common *common);
- 
-+extern __attribute__ ((format (printf, 3, 4))) int
-+ath_printk(const char *level, struct ath_common *common, const char *fmt, ...);
-+
-+#define ath_emerg(common, fmt, ...)				\
-+	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
-+#define ath_alert(common, fmt, ...)				\
-+	ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS__)
-+#define ath_crit(common, fmt, ...)				\
-+	ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS__)
-+#define ath_err(common, fmt, ...)				\
-+	ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS__)
-+#define ath_warn(common, fmt, ...)				\
-+	ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS__)
-+#define ath_notice(common, fmt, ...)				\
-+	ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS__)
-+#define ath_info(common, fmt, ...)				\
-+	ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS__)
-+
-+/**
-+ * enum ath_debug_level - atheros wireless debug level
-+ *
-+ * @ATH_DBG_RESET: reset processing
-+ * @ATH_DBG_QUEUE: hardware queue management
-+ * @ATH_DBG_EEPROM: eeprom processing
-+ * @ATH_DBG_CALIBRATE: periodic calibration
-+ * @ATH_DBG_INTERRUPT: interrupt processing
-+ * @ATH_DBG_REGULATORY: regulatory processing
-+ * @ATH_DBG_ANI: adaptive noise immunitive processing
-+ * @ATH_DBG_XMIT: basic xmit operation
-+ * @ATH_DBG_BEACON: beacon handling
-+ * @ATH_DBG_CONFIG: configuration of the hardware
-+ * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
-+ * @ATH_DBG_PS: power save processing
-+ * @ATH_DBG_HWTIMER: hardware timer handling
-+ * @ATH_DBG_BTCOEX: bluetooth coexistance
-+ * @ATH_DBG_BSTUCK: stuck beacons
-+ * @ATH_DBG_ANY: enable all debugging
-+ *
-+ * The debug level is used to control the amount and type of debugging output
-+ * we want to see. Each driver has its own method for enabling debugging and
-+ * modifying debug level states -- but this is typically done through a
-+ * module parameter 'debug' along with a respective 'debug' debugfs file
-+ * entry.
-+ */
-+enum ATH_DEBUG {
-+	ATH_DBG_RESET		= 0x00000001,
-+	ATH_DBG_QUEUE		= 0x00000002,
-+	ATH_DBG_EEPROM		= 0x00000004,
-+	ATH_DBG_CALIBRATE	= 0x00000008,
-+	ATH_DBG_INTERRUPT	= 0x00000010,
-+	ATH_DBG_REGULATORY	= 0x00000020,
-+	ATH_DBG_ANI		= 0x00000040,
-+	ATH_DBG_XMIT		= 0x00000080,
-+	ATH_DBG_BEACON		= 0x00000100,
-+	ATH_DBG_CONFIG		= 0x00000200,
-+	ATH_DBG_FATAL		= 0x00000400,
-+	ATH_DBG_PS		= 0x00000800,
-+	ATH_DBG_HWTIMER		= 0x00001000,
-+	ATH_DBG_BTCOEX		= 0x00002000,
-+	ATH_DBG_WMI		= 0x00004000,
-+	ATH_DBG_BSTUCK		= 0x00008000,
-+	ATH_DBG_ANY		= 0xffffffff
-+};
-+
-+#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
-+
-+#ifdef CONFIG_ATH_DEBUG
-+
-+#define ath_dbg(common, dbg_mask, fmt, ...)			\
-+({								\
-+	int rtn;						\
-+	if ((common)->debug_mask & dbg_mask)			\
-+		rtn = ath_printk(KERN_DEBUG, common, fmt,	\
-+				 ##__VA_ARGS__);		\
-+	else							\
-+		rtn = 0;					\
-+								\
-+	rtn;							\
-+})
-+#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
-+
-+#else
-+
-+static inline  __attribute__ ((format (printf, 3, 4))) int
-+ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
-+	const char *fmt, ...)
-+{
-+	return 0;
-+}
-+#define ATH_DBG_WARN(foo, arg) do {} while (0)
-+
-+#endif /* CONFIG_ATH_DEBUG */
-+
-+/** Returns string describing opmode, or NULL if unknown mode. */
-+#ifdef CONFIG_ATH_DEBUG
-+const char *ath_opmode_to_string(enum nl80211_iftype opmode);
-+#else
-+static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
-+{
-+	return "UNKNOWN";
-+}
-+#endif
-+
- #endif /* ATH_H */
-diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
-index a9600ba..5367b10 100644
---- a/drivers/net/wireless/ath/debug.c
-+++ b/drivers/net/wireless/ath/debug.c
-@@ -15,26 +15,6 @@
-  */
- 
- #include "ath.h"
--#include "debug.h"
--
--void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	if (likely(!(common->debug_mask & dbg_mask)))
--		return;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk(KERN_DEBUG "ath: %pV", &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ath_print);
- 
- const char *ath_opmode_to_string(enum nl80211_iftype opmode)
- {
-diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
-index f207007..cec951c 100644
---- a/drivers/net/wireless/ath/debug.h
-+++ b/drivers/net/wireless/ath/debug.h
-@@ -17,76 +17,6 @@
- #ifndef ATH_DEBUG_H
- #define ATH_DEBUG_H
- 
--#include "ath.h"
--
--/**
-- * enum ath_debug_level - atheros wireless debug level
-- *
-- * @ATH_DBG_RESET: reset processing
-- * @ATH_DBG_QUEUE: hardware queue management
-- * @ATH_DBG_EEPROM: eeprom processing
-- * @ATH_DBG_CALIBRATE: periodic calibration
-- * @ATH_DBG_INTERRUPT: interrupt processing
-- * @ATH_DBG_REGULATORY: regulatory processing
-- * @ATH_DBG_ANI: adaptive noise immunitive processing
-- * @ATH_DBG_XMIT: basic xmit operation
-- * @ATH_DBG_BEACON: beacon handling
-- * @ATH_DBG_CONFIG: configuration of the hardware
-- * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
-- * @ATH_DBG_PS: power save processing
-- * @ATH_DBG_HWTIMER: hardware timer handling
-- * @ATH_DBG_BTCOEX: bluetooth coexistance
-- * @ATH_DBG_BSTUCK: stuck beacons
-- * @ATH_DBG_ANY: enable all debugging
-- *
-- * The debug level is used to control the amount and type of debugging output
-- * we want to see. Each driver has its own method for enabling debugging and
-- * modifying debug level states -- but this is typically done through a
-- * module parameter 'debug' along with a respective 'debug' debugfs file
-- * entry.
-- */
--enum ATH_DEBUG {
--	ATH_DBG_RESET		= 0x00000001,
--	ATH_DBG_QUEUE		= 0x00000002,
--	ATH_DBG_EEPROM		= 0x00000004,
--	ATH_DBG_CALIBRATE	= 0x00000008,
--	ATH_DBG_INTERRUPT	= 0x00000010,
--	ATH_DBG_REGULATORY	= 0x00000020,
--	ATH_DBG_ANI		= 0x00000040,
--	ATH_DBG_XMIT		= 0x00000080,
--	ATH_DBG_BEACON		= 0x00000100,
--	ATH_DBG_CONFIG		= 0x00000200,
--	ATH_DBG_FATAL		= 0x00000400,
--	ATH_DBG_PS		= 0x00000800,
--	ATH_DBG_HWTIMER		= 0x00001000,
--	ATH_DBG_BTCOEX		= 0x00002000,
--	ATH_DBG_WMI		= 0x00004000,
--	ATH_DBG_BSTUCK		= 0x00008000,
--	ATH_DBG_ANY		= 0xffffffff
--};
--
--#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
--
--#ifdef CONFIG_ATH_DEBUG
--void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--	__attribute__ ((format (printf, 3, 4)));
--#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
--#else
--static inline void __attribute__ ((format (printf, 3, 4)))
--ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
--{
--}
--#define ATH_DBG_WARN(foo, arg)
--#endif /* CONFIG_ATH_DEBUG */
--
--/** Returns string describing opmode, or NULL if unknown mode. */
--#ifdef CONFIG_ATH_DEBUG
--const char *ath_opmode_to_string(enum nl80211_iftype opmode);
--#else
--static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
--{
--	return "UNKNOWN";
--}
--#endif
-+#define ath_print ath_dbg
- 
- #endif /* ATH_DEBUG_H */
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 487193f..c325202 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -56,3 +56,23 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
- 	return skb;
- }
- EXPORT_SYMBOL(ath_rxbuf_alloc);
-+
-+int ath_printk(const char *level, struct ath_common *common,
-+	       const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+	int rtn;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	rtn = printk("%sath: %pV", level, &vaf);
-+
-+	va_end(args);
-+
-+	return rtn;
-+}
-+EXPORT_SYMBOL(ath_printk);
 -- 
-1.7.3.2.245.g03276.dirty
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
