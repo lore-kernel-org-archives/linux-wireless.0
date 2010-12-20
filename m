@@ -1,124 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:44775 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248Ab0LLDd7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Dec 2010 22:33:59 -0500
-Date: Sat, 11 Dec 2010 21:34:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] ssb: Attempt recovery from corrupt sprom
-Message-ID: <4d0442c1.5R+Q6u6bksIzTSW6%Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2872 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932905Ab0LTRrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:47:24 -0500
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Dec 2010 09:47:09 -0800
+Subject: RE: WL1271 chip
+Message-ID: <400C43189542CE41BC0A5B252FC90136952F0594D9@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
+ <1292843841.13129.9.camel@chilepepper>,<0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
+In-Reply-To: <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current code defaults to SPROM revision 1 if there is a CRC error. In at
-least one known case, most of the corrupt contents are reasonable and
-it is possible to extract the correct MAC address and TX power settings
-from what is read. With this patch, an attempt is made to match the
-apparent revision number with certain SPROM signatures. For those revisions
-without such a feature, a reasonable guess is made. If the apparent
-revision is invalid, or if the signature does not match, the previous
-behavior is kept.
+SSBhbSBhbHNvIG5vdCBmYW1pbGlhciB3aXRoIGkuTVgyMzMsIGJ1dCBnb29nbGluZyBpdCB0aGlz
+IHNlZW1zIHRvIGJlIGEgRnJlZXNjYWxlIGFwcCBwcm9jZXNzb3Igd2l0aCBBUk05MjZFSi1TIGNv
+cmUgYW5kIGl0IGhhcyBTRElPIHJldjIuMCBjb21wbGlhbnQgaW50ZXJmYWNlIGludGVncmF0ZWQu
+IFRoZXJlIGEgYXJjaC9hcm0vbWFjaC1pbXggZGlyZWN0b3J5IGNvbnRhaW5pbmcgaS5NWDI3IHBy
+b2Nlc3NvciB3aGljaCBoYXMgc29tZSBzaW1pbGFyaXRpZXMgKHNhbWUgY29yZSBhbmQgTU1DL1NE
+IGludGVyZmFjZXMpLiBTbyBpdCBjb3VsZCBiZSBhIGdvb2Qgc3RhcnRpbmcgcG9pbnQgZm9yIHlv
+dXIgcG9ydGluZyBlZmZvcnQuDQoNCkFub3RoZXIgaGludCBtYXkgYmUgdGhhdCBTRElPIGlzIHJl
+bGF0ZWQgdG8gTU1DL1NELiBTbyBpbiBib2FyZC16b29tLXBlcmlwaGVyYWxzLmMgeW91IHdpbGwg
+ZmluZCBtb3JlIHdoZW4gc2VhcmNoaW5nIGZvciAnbW1jJy4gZWc6DQoNCnN0YXRpYyBzdHJ1Y3Qg
+b21hcDJfaHNtbWNfaW5mbyBtbWNbXSBfX2luaXRkYXRhID0gew0KICAgICAgICAgICA6DQogICAg
+ICAgICAgIDoNCiAgICAgICAgew0KICAgICAgICAgICAgICAgIC5uYW1lICAgICAgICAgICA9ICJ3
+bDEyNzEiLA0KICAgICAgICAgICAgICAgIC5tbWMgICAgICAgICAgICA9IDMsDQogICAgICAgICAg
+ICAgICAgLmNhcHMgICAgICAgICAgID0gTU1DX0NBUF80X0JJVF9EQVRBLA0KICAgICAgICAgICAg
+ICAgIC5ncGlvX3dwICAgICAgICA9IC1FSU5WQUwsDQogICAgICAgICAgICAgICAgLmdwaW9fY2Qg
+ICAgICAgID0gLUVJTlZBTCwNCiAgICAgICAgICAgICAgICAubm9ucmVtb3ZhYmxlICAgPSB0cnVl
+LA0KICAgICAgICB9LA0KICAgICAgICB7fSAgICAgIC8qIFRlcm1pbmF0b3IgKi8NCn07DQoNCkdy
+LiBBdlMNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCkZyb206IGxp
+bnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbGludXgtd2lyZWxlc3Mtb3duZXJA
+dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQnJ6ZXpvd3NraSwgS2FyZW4gW0thcmVuLkJy
+emV6b3dza2lAcGR0LmNvbV0NClNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgMjAsIDIwMTAgNjoxMiBQ
+TQ0KVG86IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KQ2M6IEJyemV6b3dza2ksIEth
+cmVuDQpTdWJqZWN0OiBXTDEyNzEgY2hpcA0KDQpIaSENCkx1Y2Egc3VnZ2VzdGVkIHRoYXQgSSBz
+ZW5kIHRoaXMgdG8gYWxsIG9mIHlvdSENCg0KSSBsb29rZWQgYXQgYXJjaC9hcm0vbWFjaC1vbWFw
+Mi9ib2FyZC16b29tLXBlcmlwaGVyYWxzLmMgZmlsZS4uDQpJIGRpZG4ndCBzZWUgYW55dGhpbmcg
+c3BlY2lmaWMgdG8gU0RJTy4uDQoNCkkgd2FzIGxvb2tpbmcgYXQgbGludXgtMi42LjM2LjIuLg0K
+SXMgdGhpcyB0aGUgY29ycmVjdCB2ZXJzaW9uIHRvIGxvb2sgYXQ/DQoNClBsZWFzZSByZWFkIGJl
+bG93IGZvciBvcmlnaW5hbCBxdWVzdGlvbi4NClRIQU5LIHlvdSBldmVyeW9uZSBmb3IgQU5ZIGhl
+bHAgeW91IGNhbiBnaXZlIG1lIQ0KS2FyZW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0N
+CkhpIEthcmVuLA0KDQoNCj4gSGkgTHVjaWFubywNCj4NCj4gSeKAmW0gdmVyeSBzb3JyeSB0byBl
+bWFpbCAgeW91IGRpcmVjdGx5Lg0KDQpObyBwcm9ibGVtLiAgQnV0IGl0IGlzIGFsd2F5cyBiZXR0
+ZXIgdG8gZW1haWwgdGhlIGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyBtYWlsaW5nIGxp
+c3QgdG9vLCBiZWNhdXNlIHRoZXJlIGFyZSBsb3RzIG9mIG90aGVyIHBlb3BsZSB3aG8gY2FuIGhl
+bHAgeW91IHRoZXJlLg0KDQoNCj4gSSBhbSB2ZXJ5IG5ldyB0byBwb3J0aW5nIGRyaXZlcnPigKYN
+Cj4NCj4gSSBoYXZlIHRvIGludGVncmF0ZS9wb3J0IGEgV0wxMjcxIGNoaXAgKEkgdGhpbmsgaXTi
+gJlzIGdvaW5nIHRvIGJlIHRoZQ0KPiBvbmUNCj4NCj4gbWFudWZhY3R1cmVkIGJ5IE11cmF0YSku
+DQo+DQo+IEkgc2VlIHRoYXQgeW91IG1haW50YWluIHRoZSB3bDEyeHggZHJpdmVycyBvbiBsaW51
+eC13aXJlbGVzcw0KPiBrZXJuZWwub3JnLg0KPg0KPg0KPg0KPiBUaGUgcHJvY2Vzc29yIGlzIGlN
+WDIzMywgT1MgaXMgQW5kcm9pZCAoTGludXgpLg0KPg0KPg0KPg0KPiBJIHdvdWxkIGJlIHZlcnkg
+YXBwcmVjaWF0aXZlIGlmIHlvdSBjb3VsZCBnaXZlIG1lIHNvbWUNCj4gYWR2aWNlL2luc3RydWN0
+aW9ucy9kb2N1bWVudGF0aW9uDQo+DQo+IHRoYXQgd291bGQgaGVscCBtZSBvbiB1bmRlcnN0YW5k
+L3N0YXJ0L2NvbXBsZXRlIHRoaXMgdGFzay4NCg0KV2VsbCwgdGhlIHdsMTJ4eCBkcml2ZXIgc2hv
+dWxkIHdvcmsgbW9yZSBvciBsZXNzIG91dC1vZi10aGUtYm94LiAgVGhlIG9ubHkgdGhpbmcgeW91
+IG5lZWQgdG8gZG8gaXMgdG8gc2V0IHVwIHRoZSBTRElPIGNvbm5lY3Rpb24gdG8geW91ciBjYXJk
+IChhc3N1bWluZyB0aGF0IHlvdSdyZSB1c2luZyB0aGUgU0RJTyBidXMgdG8gY29ubmVjdCBpdCku
+ICBJJ20gbm90IGZhbWlsaWFyIHdpdGggdGhlIGlNWDIzMywgYnV0IHdpdGggT01BUCwgaXQncyBw
+cmV0dHkgc2ltcGxlLiAgWW91IGNhbiBzZWUgdGhlIGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQt
+em9vbS1wZXJpcGhlcmFscy5jIGZpbGUgaW4gdGhlIExpbnV4IGtlcm5lbCBmb3IgYW4gZXhhbXBs
+ZSBvbiBob3cgdG8gc2V0IGl0IHVwIGZvciB0aGUgWm9vbSBib2FyZCAoT01BUC1iYXNlZCkuDQoN
+Cg0KLS0NCkNoZWVycywNCkx1Y2EuDQoNCg0KTu+/ve+/ve+/ve+/ve+/vXLvv73vv71577+977+9
+77+9Yu+/vVjvv73vv73Hp3bvv71e77+9Kd66ey5u77+9K++/ve+/ve+/ve+/vXvvv73vv70q3pXv
+v70s77+9e2F577+9HcqH2pnvv70sagfvv73vv71m77+977+977+9aO+/ve+/ve+/vXrvv70e77+9
+d++/ve+/ve+/vSDvv73vv73vv71qOit277+977+977+9d++/vWrvv71t77+977+977+977+9B++/
+ve+/ve+/ve+/vXpaK++/ve+/ve+/ve+/ve+/vd2iaiLvv73vv70h77+9aQ0K
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-John,
-
-This is 2.6.38 material.
-
-Thanks,
-
-Larry
----
-
-Index: wireless-testing/drivers/ssb/pci.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pci.c
-+++ wireless-testing/drivers/ssb/pci.c
-@@ -661,6 +661,7 @@ static int ssb_pci_sprom_get(struct ssb_
- 	const struct ssb_sprom *fallback;
- 	int err;
- 	u16 *buf;
-+	u16 revision;
- 
- 	if (!ssb_is_sprom_available(bus)) {
- 		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
-@@ -712,6 +713,52 @@ static int ssb_pci_sprom_get(struct ssb_
- 			}
- 			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
- 				   " SPROM CRC (corrupt SPROM)\n");
-+			/* At this point, we have a faulty SPROM image.
-+			 * In case only part of it is corrupt, try to
-+			 * determine what rev we might have */
-+			revision = buf[SPOFF(SSB_SPROMSIZE_WORDS_R4)] & 0x00FF;
-+			switch (revision) {
-+			case 4:
-+			case 5:
-+				/* Rev 4 and 5 have 0x5372 at byte offset
-+				 * SSB_SPROM4_SIG */
-+				if (buf[SPOFF(SSB_SPROM4_SIG)] == 0x5372)
-+					sprom->revision = revision;
-+				break;
-+			case 8:
-+				/* Rev has 0x5372 at byte offset
-+				 * SSB_SPROM8_SIG */
-+				if (buf[SPOFF(SSB_SPROM8_SIG)] == 0x5372)
-+					sprom->revision = revision;
-+				break;
-+			default:
-+				/* Try a rev 1, 2, or 3 size. This test will
-+				 * not be robust as these versions have no
-+				 * signature value */
-+				revision = buf[SPOFF(SSB_SPROMSIZE_WORDS_R123)]
-+					   & 0x00FF;
-+				switch (revision) {
-+				case 1:
-+					/* Rev 1 will have 0xFFFF in the board
-+					 * flags high position */
-+					if (buf[SPOFF(SSB_SPROM2_BFLHI)] ==
-+					    0xFFFF)
-+						sprom->revision = revision;
-+					break;
-+				case 2:
-+				case 3:
-+					/* Revs 2 and 3 will not have 0xFFFF in
-+					 * the board flags high position */
-+					if (buf[SPOFF(SSB_SPROM2_BFLHI)] !=
-+					    0xFFFF)
-+						sprom->revision = revision;
-+					break;
-+				default:
-+					/* The revision is not reasonable */
-+					break;
-+				}
-+				break;
-+			}
- 		}
- 	}
- 	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
-Index: wireless-testing/include/linux/ssb/ssb_regs.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb_regs.h
-+++ wireless-testing/include/linux/ssb/ssb_regs.h
-@@ -266,6 +266,7 @@
- #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
- 
- /* SPROM Revision 4 */
-+#define SSB_SPROM4_SIG			0x0040	/* Rev 4/5 signature */
- #define SSB_SPROM4_BFLLO		0x0044	/* Boardflags (low 16 bits) */
- #define SSB_SPROM4_BFLHI		0x0046  /* Board Flags Hi */
- #define SSB_SPROM4_IL0MAC		0x004C	/* 6 byte MAC address for a/b/g/n */
-@@ -369,6 +370,7 @@
- #define  SSB_SPROM5_GPIOB_P3_SHIFT	8
- 
- /* SPROM Revision 8 */
-+#define SSB_SPROM8_SIG			0x0080	/* Rev 8 signature */
- #define SSB_SPROM8_BOARDREV		0x0082	/* Board revision */
- #define SSB_SPROM8_BFLLO		0x0084	/* Board flags (bits 0-15) */
- #define SSB_SPROM8_BFLHI		0x0086	/* Board flags (bits 16-31) */
