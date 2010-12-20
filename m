@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f172.google.com ([209.85.214.172]:44844 "EHLO
-	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298Ab0LJWnx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 17:43:53 -0500
+Received: from nm4-vm0.bullet.mail.ird.yahoo.com ([77.238.189.211]:24894 "HELO
+	nm4-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752990Ab0LTVkR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 16:40:17 -0500
+Message-ID: <22404.31613.qm@web29501.mail.ird.yahoo.com>
+Date: Mon, 20 Dec 2010 21:34:35 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl818x: move rtl8180 and rtl8187 to separate subdirectories
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1292876752-26842-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 10 Dec 2010 14:43:32 -0800
-Message-ID: <AANLkTikNgTObTt7nfxymn+3_B1+xDOB9X1wE2bgJRnA9@mail.gmail.com>
-Subject: compat-wireless-2.6.37-rc5-3-sn.tar.bz2 release
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've sucked in all pending-stable patches from linux-next.git into a
-compat-wireless release based on upstream 2.6.37-rc5. A few patches
-required a manual backport. On top of that I've sucked in a few cherry
-picked patches:
+--- On Mon, 20/12/10, John W. Linville <linville@tuxdriver.com> wrote:
 
-mcgrof@tux ~/tmp/compat-wireless-2.6.37-rc5-3-sn $ ls -1
-linux-next-cherry-picks/
-01-ath9k-OTP.patch
-02-ath9k-no-aggr-VO.patch
-03-mac80211-no-aggr-VO.patch
-04-ath9k_hw-fix-A-MPDU-key-search-issues-on-AR9003.patch
-05-Bluetooth-Add-new-PID-for-Atheros-3011.patch
-README
+> These drivers share one header file,
+> but nothing else.  Worse, both
+> drivers use the rtl8225 part with different register
+> settings.  The
+> results has been some ugly naming -- let's simplify that.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-If you have a need for any other other patches please feel free to
-send over. This is closing in on the first formal release for a
-compat-wireless-2.6.37, please give this a good try and report any
-issues. These release are aimed at being very stable given that we are
-sucking all pending stable patches, and cherry picking a few patches
-we choose to support. Particularly you will see we have added the OTP
-stuff for AR9003. If you happen to have an AR9003 card your card may
-have either an EEPROM or OTP, and this release will support both
-cards. Both types of cards will be supported upstream as of 2.6.38.
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-Greg, if you have an issue with applying a stable patch on 2.6.37 you
-can find the respective backport in the pending-stable/backports/
-directory of the compat-wireless.git linux-2.6.37.y branch. I can
-refer you to this once gitweb has it up on the link:
 
-http://wireless.kernel.org/en/developers/stable-pending
+Seems reasonable.
 
-I should note, I have backported *all* patches that failed to apply,
-but the last one, the orinoco one is not applicable to stable as it
-failed for other reasons (compat-wireless patches/ dir)
 
-The juicy link:
-
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc5-3-sn.tar.bz2
-
-  Luis
+      
