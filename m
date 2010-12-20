@@ -1,133 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754637Ab0L2Xcs (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64450 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab0LTCdx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:48 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:47 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 14/18] wl1271: AP mode - record TX configuration settings
-Date: Thu, 30 Dec 2010 01:32:09 +0200
-Message-Id: <1293665533-7599-15-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+	Sun, 19 Dec 2010 21:33:53 -0500
+Received: by yxt3 with SMTP id 3so1115761yxt.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Dec 2010 18:33:53 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19726.49226.228941.227397@gargle.gargle.HOWL>
+Date: Mon, 20 Dec 2010 08:02:42 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis.Rodriguez@atheros.com
+Subject: [PATCH] ath9k_htc: Fix warning on device removal
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Record TX configuration settings in the "conf" member of our global
-structure (struct wl1271) if conf_tx is called when the firmware is
-not loaded.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Later on when the firmware is loaded, we apply the tx conf as part of
-the init sequence.
+The commit "ath9k_hw: warn if we cannot change the power to the chip"
+introduced a new warning to indicate chip powerup failures, but this
+is not required for devices that have been removed. Handle USB device
+removal properly by checking for unplugged status.
 
-Important for AP mode since conf_tx is called before add_interface
-(where the firmware is initialized).
+For PCI devices, this warning will still be seen when the card is pulled
+out, not sure how to check for card removal.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   72 ++++++++++++++++++++++++------------
- 1 files changed, 48 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom.h       |    2 --
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |    6 +++---
+ drivers/net/wireless/ath/ath9k/htc.h          |    5 ++---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 +----
+ drivers/net/wireless/ath/ath9k/hw.c           |    4 +++-
+ drivers/net/wireless/ath/ath9k/hw.h           |    4 ++++
+ drivers/net/wireless/ath/ath9k/wmi.c          |    2 +-
+ 7 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index ed5e2fc..8b897e3 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2314,42 +2314,66 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index f6f09d1..58e2ddc 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -23,8 +23,6 @@
+ #include <net/cfg80211.h>
+ #include "ar9003_eeprom.h"
+ 
+-#define AH_USE_EEPROM   0x1
+-
+ #ifdef __BIG_ENDIAN
+ #define AR5416_EEPROM_MAGIC 0x5aa5
+ #else
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 22b68b3..c20c8c8 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -993,16 +993,16 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
  {
- 	struct wl1271 *wl = hw->priv;
- 	u8 ps_scheme;
--	int ret;
-+	int ret = 0;
+ 	struct usb_device *udev = interface_to_usbdev(interface);
+ 	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
++	bool unplugged = (udev->state == USB_STATE_NOTATTACHED) ? true : false;
  
- 	mutex_lock(&wl->mutex);
+ 	if (hif_dev) {
+-		ath9k_htc_hw_deinit(hif_dev->htc_handle,
+-		    (udev->state == USB_STATE_NOTATTACHED) ? true : false);
++		ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
+ 		ath9k_htc_hw_free(hif_dev->htc_handle);
+ 		ath9k_hif_usb_dev_deinit(hif_dev);
+ 		usb_set_intfdata(interface, NULL);
+ 	}
  
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
+-	if (hif_dev->flags & HIF_USB_START)
++	if (!unplugged && (hif_dev->flags & HIF_USB_START))
+ 		ath9k_hif_usb_reboot(udev);
  
--	if (unlikely(wl->state == WL1271_STATE_OFF)) {
--		ret = -EAGAIN;
--		goto out;
--	}
+ 	kfree(hif_dev);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index fdf9d5f..e6c2f0a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -339,9 +339,8 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_ASSOCIATED		   BIT(7)
+ #define OP_ENABLE_BEACON	   BIT(8)
+ #define OP_LED_DEINIT		   BIT(9)
+-#define OP_UNPLUGGED		   BIT(10)
+-#define OP_BT_PRIORITY_DETECTED	   BIT(11)
+-#define OP_BT_SCAN		   BIT(12)
++#define OP_BT_PRIORITY_DETECTED    BIT(10)
++#define OP_BT_SCAN                 BIT(11)
+ 
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 0f6be35..724f545 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -851,9 +851,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
+ 	if (ret)
+ 		goto err_init;
+ 
+-	/* The device may have been unplugged earlier. */
+-	priv->op_flags &= ~OP_UNPLUGGED;
 -
--	ret = wl1271_ps_elp_wakeup(wl, false);
--	if (ret < 0)
--		goto out;
--
--	/* the txop is confed in units of 32us by the mac80211, we need us */
--	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
--				params->cw_min, params->cw_max,
--				params->aifs, params->txop << 5);
--	if (ret < 0)
--		goto out_sleep;
--
- 	if (params->uapsd)
- 		ps_scheme = CONF_PS_SCHEME_UPSD_TRIGGER;
- 	else
- 		ps_scheme = CONF_PS_SCHEME_LEGACY;
+ 	ret = ath9k_init_device(priv, devid, product, drv_info);
+ 	if (ret)
+ 		goto err_init;
+@@ -873,7 +870,7 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
  
--	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
--				 CONF_CHANNEL_TYPE_EDCF,
--				 wl1271_tx_get_queue(queue),
--				 ps_scheme, CONF_ACK_POLICY_LEGACY, 0, 0);
--	if (ret < 0)
--		goto out_sleep;
-+	if (wl->state == WL1271_STATE_OFF) {
-+		/*
-+		 * If the state is off, the parameters will be recorded and
-+		 * configured on init. This happens in AP-mode.
-+		 */
-+		struct conf_tx_ac_category *conf_ac =
-+			&wl->conf.tx.ac_conf[wl1271_tx_get_queue(queue)];
-+		struct conf_tx_tid *conf_tid =
-+			&wl->conf.tx.tid_conf[wl1271_tx_get_queue(queue)];
-+
-+		conf_ac->ac = wl1271_tx_get_queue(queue);
-+		conf_ac->cw_min = (u8)params->cw_min;
-+		conf_ac->cw_max = params->cw_max;
-+		conf_ac->aifsn = params->aifs;
-+		conf_ac->tx_op_limit = params->txop << 5;
-+
-+		conf_tid->queue_id = wl1271_tx_get_queue(queue);
-+		conf_tid->channel_type = CONF_CHANNEL_TYPE_EDCF;
-+		conf_tid->tsid = wl1271_tx_get_queue(queue);
-+		conf_tid->ps_scheme = ps_scheme;
-+		conf_tid->ack_policy = CONF_ACK_POLICY_LEGACY;
-+		conf_tid->apsd_conf[0] = 0;
-+		conf_tid->apsd_conf[1] = 0;
-+	} else {
-+		ret = wl1271_ps_elp_wakeup(wl, false);
-+		if (ret < 0)
-+			goto out;
-+
-+		/*
-+		 * the txop is confed in units of 32us by the mac80211,
-+		 * we need us
-+		 */
-+		ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
-+					params->cw_min, params->cw_max,
-+					params->aifs, params->txop << 5);
-+		if (ret < 0)
-+			goto out_sleep;
-+
-+		ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
-+					 CONF_CHANNEL_TYPE_EDCF,
-+					 wl1271_tx_get_queue(queue),
-+					 ps_scheme, CONF_ACK_POLICY_LEGACY,
-+					 0, 0);
-+		if (ret < 0)
-+			goto out_sleep;
+ 		/* Check if the device has been yanked out. */
+ 		if (hotunplug)
+-			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
++			htc_handle->drv_priv->ah->ah_flags |= AH_UNPLUGGED;
  
- out_sleep:
--	wl1271_ps_elp_sleep(wl);
-+		wl1271_ps_elp_sleep(wl);
-+	}
+ 		ath9k_deinit_device(htc_handle->drv_priv);
+ 		ath9k_deinit_wmi(htc_handle->drv_priv);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ddda76f..f41c7a2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1615,7 +1615,9 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	 * simply keep the ATH_DBG_WARN_ON_ONCE() but make
+ 	 * ath9k_hw_setpower() return type void.
+ 	 */
+-	ATH_DBG_WARN_ON_ONCE(!status);
++
++	if (!(ah->ah_flags & AH_UNPLUGGED))
++		ATH_DBG_WARN_ON_ONCE(!status);
  
- out:
- 	mutex_unlock(&wl->mutex);
+ 	return status;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 21e37d1..22bd3e8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -647,6 +647,10 @@ struct ath_nf_limits {
+ 	s16 nominal;
+ };
+ 
++/* ah_flags */
++#define AH_USE_EEPROM   0x1
++#define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
++
+ struct ath_hw {
+ 	struct ieee80211_hw *hw;
+ 	struct ath_common common;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 8f42ea7..573daca 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -250,7 +250,7 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	int time_left, ret = 0;
+ 	unsigned long flags;
+ 
+-	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
++	if (ah->ah_flags & AH_UNPLUGGED)
+ 		return 0;
+ 
+ 	skb = alloc_skb(headroom + cmd_len, GFP_ATOMIC);
 -- 
-1.7.1
+1.7.3.4
 
