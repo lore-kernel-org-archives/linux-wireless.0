@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.214.194]:41286 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754063Ab0LQTip convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 14:38:45 -0500
-Received: by iwn42 with SMTP id 42so507890iwn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 11:38:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101217063957.GB1381@senthil-lnx.users.atheros.com>
-References: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
- <1292556197-4820-4-git-send-email-lrodriguez@atheros.com> <20101217063957.GB1381@senthil-lnx.users.atheros.com>
+Received: from mail.atheros.com ([12.19.149.2]:63464 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932891Ab0LTRDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 12:03:00 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 09:02:44 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 17 Dec 2010 11:38:24 -0800
-Message-ID: <AANLkTimXQ_pk96zF0tC_pBYLzt4wnjGE-cmTsdwpyc7s@mail.gmail.com>
-Subject: Re: [RFC 3/8] cfg80211: pass DFS region to drivers through reg_notifier()
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: <linville@tuxdriver.com>
+CC: <kathy.giori@atheros.com>, <amod.bodas@atheros.com>,
+	<david.quan@atheros.com>, <michael.green@atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] iw: fix country print
+Date: Mon, 20 Dec 2010 12:02:33 -0500
+Message-ID: <1292864555-28661-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 16, 2010 at 10:39 PM, Senthil Balasubramanian
-<senthilkumar@atheros.com> wrote:
->> diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
->> index 2b14775..426b514 100644
->> --- a/drivers/net/wireless/ath/regd.c
->> +++ b/drivers/net/wireless/ath/regd.c
->> @@ -337,7 +337,8 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
->>
->>  int ath_reg_notifier_apply(struct wiphy *wiphy,
->>                          struct regulatory_request *request,
->> -                        struct ath_regulatory *reg)
->> +                        struct ath_regulatory *reg,
->> +                        u16 dfs_region)
-> may be we can maintain consistency of dfs_regsion type. It's u8 everywhere
-> except here..???
+Using a %s to pring the alpha2 may give us some extra
+data which will spew out when printing. Fix it by only
+printing the two characters we know we will get.
 
-Good catch yes, that was a typo.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ reg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/reg.c b/reg.c
+index 7f82e08..c4ee1c4 100644
+--- a/reg.c
++++ b/reg.c
+@@ -132,7 +132,7 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 	}
+ 
+ 	alpha2 = nla_data(tb_msg[NL80211_ATTR_REG_ALPHA2]);
+-	printf("country %s:\n", alpha2);
++	printf("country %c%c:\n", alpha2[0], alpha2[1]);
+ 
+ 	nla_for_each_nested(nl_rule, tb_msg[NL80211_ATTR_REG_RULES], rem_rule) {
+ 		struct nlattr *tb_rule[NL80211_FREQUENCY_ATTR_MAX + 1];
+-- 
+1.7.3.2.90.gd4c43
+
