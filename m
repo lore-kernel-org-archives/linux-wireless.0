@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:49676 "EHLO
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54570 "EHLO
 	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774Ab0LFXyR convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1757362Ab0LTMm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 18:54:17 -0500
-Received: by wyb28 with SMTP id 28so12625102wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 15:54:15 -0800 (PST)
+	Mon, 20 Dec 2010 07:42:29 -0500
+Received: by wyb28 with SMTP id 28so2797926wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 04:42:28 -0800 (PST)
+Date: Mon, 20 Dec 2010 15:42:17 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: smatch stuff: potential read past the end of the buffer
+Message-ID: <20101220124217.GU1936@bicker>
+References: <20101220083041.GQ1936@bicker>
+ <400C43189542CE41BC0A5B252FC90136952F0594D7@SJEXCHCCR02.corp.ad.broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20101203145654.GB2348@tuxdriver.com>
-References: <20101203041109.GE2988@makis.mantri>
-	<AANLkTi=n0wkMTWxJvvNHHMyjvGA25JSr8awWKMJsAv+g@mail.gmail.com>
-	<20101203145654.GB2348@tuxdriver.com>
-Date: Tue, 7 Dec 2010 01:54:13 +0200
-Message-ID: <AANLkTinW-njW6T248ndTT88k-9sBXN8j8UHT5rh_-pLw@mail.gmail.com>
-Subject: Re: [PATCH 5/6] ath5k: Update version string
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	me@bobcopeland.com, jirislaby@gmail.com, nbd@openwrt.org,
-	br1@einfach.org, sedat.dilek@googlemail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <400C43189542CE41BC0A5B252FC90136952F0594D7@SJEXCHCCR02.corp.ad.broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/3 John W. Linville <linville@tuxdriver.com>:
-> On Thu, Dec 02, 2010 at 08:17:41PM -0800, Luis R. Rodriguez wrote:
->> On Thu, Dec 2, 2010 at 8:11 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
->> >  * Change version number, we've added various new features lately.
->> >  We need to find a way to maintain this, maybe on each kernel release
->> >  or something. Also remove "EXPERIMENTAL", we aren't experimental any
->> >  more I think ;-)
->> >
->> >  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->>
->> > +MODULE_VERSION("0.7.0");
->>
->> How about just remove this all together, the version should go by the
->> kernel or git describe.
->
-> ACK -- any objections?
->
-> John
+On Mon, Dec 20, 2010 at 02:16:56AM -0800, Arend Van Spriel wrote:
+> Hi Dan,
+> 
+> Why not use min() function?
+>     index = min(COMP_HDR_LEN + osize, 2046);
+>     mchecksum = word[index] |
+>                     (word[index + 1] << 8);
+> 
+> Or would smatch miss this in its analysis?
 
-I'm OK with it, seems reasonable, after all we track changes on the
-wiki page per date with links to commits on git so there is no need to
-maintain the version field...
-http://wireless.kernel.org/en/users/Drivers/ath5k
+That would silence the warning, but is it the right fix?  I thought
+maybe we should make word a larger buffer?
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+regards,
+dan carpenter
+
+
