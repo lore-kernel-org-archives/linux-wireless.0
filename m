@@ -1,763 +1,310 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:44396 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986Ab0L2B7D (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53419 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933077Ab0LTUpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 20:59:03 -0500
-From: Bing Zhao <bzhao@marvell.com>
+	Mon, 20 Dec 2010 15:45:08 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: remove redundant event handling
-Date: Tue, 28 Dec 2010 17:59:23 -0800
-Message-Id: <1293587963-26616-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1293587963-26616-1-git-send-email-bzhao@marvell.com>
-References: <1293587963-26616-1-git-send-email-bzhao@marvell.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rtl818x: move rtl8180 and rtl8187 to separate subdirectories
+Date: Mon, 20 Dec 2010 15:25:52 -0500
+Message-Id: <1292876752-26842-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kiran Divekar <dkiran@marvell.com>
+These drivers share one header file, but nothing else.  Worse, both
+drivers use the rtl8225 part with different register settings.  The
+results has been some ugly naming -- let's simplify that.
 
-The events should be handled directly. The extra handling of
-passing them to higher layer is redundant.
-
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/mwifiex/cmdevt.c      |   46 +--------
- drivers/net/wireless/mwifiex/decl.h        |   44 ---------
- drivers/net/wireless/mwifiex/join.c        |   30 ++----
- drivers/net/wireless/mwifiex/main.c        |    1 -
- drivers/net/wireless/mwifiex/main.h        |    8 --
- drivers/net/wireless/mwifiex/scan.c        |    9 ++-
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    9 +-
- drivers/net/wireless/mwifiex/sta_event.c   |  121 +++++-------------------
- drivers/net/wireless/mwifiex/sta_ioctl.c   |    2 -
- drivers/net/wireless/mwifiex/util.c        |  142 +---------------------------
- drivers/net/wireless/mwifiex/wmm.c         |    2 -
- 11 files changed, 53 insertions(+), 361 deletions(-)
+ drivers/net/wireless/rtl818x/Makefile              |    9 ++-------
+ drivers/net/wireless/rtl818x/rtl8180/Makefile      |    5 +++++
+ .../rtl818x/{rtl8180_dev.c => rtl8180/dev.c}       |    8 ++++----
+ .../{rtl8180_grf5101.c => rtl8180/grf5101.c}       |    2 +-
+ .../{rtl8180_grf5101.h => rtl8180/grf5101.h}       |    0
+ .../{rtl8180_max2820.c => rtl8180/max2820.c}       |    2 +-
+ .../{rtl8180_max2820.h => rtl8180/max2820.h}       |    0
+ .../net/wireless/rtl818x/{ => rtl8180}/rtl8180.h   |    0
+ .../{rtl8180_rtl8225.c => rtl8180/rtl8225.c}       |    2 +-
+ .../{rtl8180_rtl8225.h => rtl8180/rtl8225.h}       |    0
+ .../rtl818x/{rtl8180_sa2400.c => rtl8180/sa2400.c} |    2 +-
+ .../rtl818x/{rtl8180_sa2400.h => rtl8180/sa2400.h} |    0
+ drivers/net/wireless/rtl818x/rtl8187/Makefile      |    5 +++++
+ .../rtl818x/{rtl8187_dev.c => rtl8187/dev.c}       |    6 +++---
+ .../rtl818x/{rtl8187_leds.c => rtl8187/leds.c}     |    2 +-
+ .../rtl818x/{rtl8187_leds.h => rtl8187/leds.h}     |    0
+ .../rtl818x/{rtl8187_rfkill.c => rtl8187/rfkill.c} |    2 +-
+ .../rtl818x/{rtl8187_rfkill.h => rtl8187/rfkill.h} |    0
+ .../net/wireless/rtl818x/{ => rtl8187}/rtl8187.h   |    2 +-
+ .../{rtl8187_rtl8225.c => rtl8187/rtl8225.c}       |    2 +-
+ .../{rtl8187_rtl8225.h => rtl8187/rtl8225.h}       |    0
+ 21 files changed, 27 insertions(+), 22 deletions(-)
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8180/Makefile
+ rename drivers/net/wireless/rtl818x/{rtl8180_dev.c => rtl8180/dev.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_grf5101.c => rtl8180/grf5101.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_grf5101.h => rtl8180/grf5101.h} (100%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_max2820.c => rtl8180/max2820.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_max2820.h => rtl8180/max2820.h} (100%)
+ rename drivers/net/wireless/rtl818x/{ => rtl8180}/rtl8180.h (100%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_rtl8225.c => rtl8180/rtl8225.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_rtl8225.h => rtl8180/rtl8225.h} (100%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_sa2400.c => rtl8180/sa2400.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8180_sa2400.h => rtl8180/sa2400.h} (100%)
+ create mode 100644 drivers/net/wireless/rtl818x/rtl8187/Makefile
+ rename drivers/net/wireless/rtl818x/{rtl8187_dev.c => rtl8187/dev.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8187_leds.c => rtl8187/leds.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8187_leds.h => rtl8187/leds.h} (100%)
+ rename drivers/net/wireless/rtl818x/{rtl8187_rfkill.c => rtl8187/rfkill.c} (98%)
+ rename drivers/net/wireless/rtl818x/{rtl8187_rfkill.h => rtl8187/rfkill.h} (100%)
+ rename drivers/net/wireless/rtl818x/{ => rtl8187}/rtl8187.h (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8187_rtl8225.c => rtl8187/rtl8225.c} (99%)
+ rename drivers/net/wireless/rtl818x/{rtl8187_rtl8225.h => rtl8187/rtl8225.h} (100%)
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 1f70cef..dee8550 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -403,40 +403,6 @@ done:
- }
- 
- /*
-- * This function handles events generated by driver.
-- *
-- * The caller can provide with either the complete event structure,
-- * or just an event ID, in which case a blank event will be created
-- * by the function automatically. If both are provided, the event body
-- * is used and the id is ignored.
-- */
--enum mwifiex_status
--mwifiex_recv_event(struct mwifiex_private *priv,
--			enum mwifiex_event_id event_id,
--			struct mwifiex_event *event)
--{
+diff --git a/drivers/net/wireless/rtl818x/Makefile b/drivers/net/wireless/rtl818x/Makefile
+index 93cbfbe..9975690 100644
+--- a/drivers/net/wireless/rtl818x/Makefile
++++ b/drivers/net/wireless/rtl818x/Makefile
+@@ -1,7 +1,2 @@
+-rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
+-rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o rtl8187_leds.o rtl8187_rfkill.o
 -
--	ENTER();
+-obj-$(CONFIG_RTL8180)	+= rtl8180.o
+-obj-$(CONFIG_RTL8187)	+= rtl8187.o
 -
--	if (event) {
--		/* The caller has provided the event. */
--		mwifiex_process_recv_event(priv->adapter, event);
--	} else {
--		struct mwifiex_event mevent;
 -
--		memset(&mevent, 0, sizeof(struct mwifiex_event));
--		mevent.bss_index = priv->bss_index;
--		mevent.event_id = event_id;
--		mevent.event_len = 0;
--
--		mwifiex_process_recv_event(priv->adapter, &mevent);
--	}
--
--	LEAVE();
--	return MWIFIEX_STATUS_SUCCESS;
--}
--
--/*
-  * This function allocates the command buffers and links them to
-  * the command free queue.
-  *
-@@ -1287,16 +1253,14 @@ mwifiex_hs_activated_event(struct mwifiex_private *priv, u8 activated)
- 		if (priv->adapter->is_hs_configured) {
- 			priv->adapter->hs_activated = true;
- 			PRINTM(MEVENT, "hs_actived\n");
--			mwifiex_recv_event(priv,
--					   MWIFIEX_EVENT_ID_DRV_HS_ACTIVATED,
--					   NULL);
-+			priv->adapter->hs_activate_wait_q_woken = true;
-+			wake_up_interruptible(
-+				&priv->adapter->hs_activate_wait_q);
- 		} else
- 			PRINTM(MWARN, "hs_activated: HS not configured !!!\n");
- 	} else {
- 		PRINTM(MEVENT, "hs_deactived\n");
- 		priv->adapter->hs_activated = false;
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_DRV_HS_DEACTIVATED,
--				   NULL);
- 	}
- 
- 	LEAVE();
-@@ -1313,11 +1277,11 @@ mwifiex_host_sleep_wakeup_event(struct mwifiex_private *priv)
- 	ENTER();
- 
- 	if (priv->adapter->is_hs_configured)
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_HS_WAKEUP, NULL);
-+		/* simulate HSCFG_CANCEL command */
-+		mwifiex_cancel_hs(priv, MWIFIEX_NO_WAIT);
- 	else
- 		PRINTM(MWARN, "hs_wakeup: Host Sleep not configured !!!\n");
- 
--
- 	LEAVE();
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 95d9642..30d66c0 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -117,43 +117,6 @@ enum mwifiex_data_frame_type {
- 	MWIFIEX_DATA_FRAME_TYPE_802_11,
- };
- 
--enum mwifiex_event_id {
--	MWIFIEX_EVENT_ID_FW_UNKNOWN = 0x00000001,
--	MWIFIEX_EVENT_ID_FW_ADHOC_LINK_SENSED,
--	MWIFIEX_EVENT_ID_FW_ADHOC_LINK_LOST,
--	MWIFIEX_EVENT_ID_FW_DISCONNECTED,
--	MWIFIEX_EVENT_ID_FW_MIC_ERR_UNI,
--	MWIFIEX_EVENT_ID_FW_MIC_ERR_MUL,
--	MWIFIEX_EVENT_ID_FW_BCN_RSSI_LOW,
--	MWIFIEX_EVENT_ID_FW_BCN_RSSI_HIGH,
--	MWIFIEX_EVENT_ID_FW_BCN_SNR_LOW,
--	MWIFIEX_EVENT_ID_FW_BCN_SNR_HIGH,
--	MWIFIEX_EVENT_ID_FW_MAX_FAIL,
--	MWIFIEX_EVENT_ID_FW_DATA_RSSI_LOW,
--	MWIFIEX_EVENT_ID_FW_DATA_RSSI_HIGH,
--	MWIFIEX_EVENT_ID_FW_DATA_SNR_LOW,
--	MWIFIEX_EVENT_ID_FW_DATA_SNR_HIGH,
--	MWIFIEX_EVENT_ID_FW_LINK_QUALITY,
--	MWIFIEX_EVENT_ID_FW_PORT_RELEASE,
--	MWIFIEX_EVENT_ID_FW_PRE_BCN_LOST,
--	MWIFIEX_EVENT_ID_FW_WMM_CONFIG_CHANGE,
--	MWIFIEX_EVENT_ID_FW_HS_WAKEUP,
--	MWIFIEX_EVENT_ID_FW_DS_AWAKE,
--	MWIFIEX_EVENT_ID_FW_BG_SCAN,
--	MWIFIEX_EVENT_ID_FW_WEP_ICV_ERR,
--	MWIFIEX_EVENT_ID_FW_STOP_TX,
--	MWIFIEX_EVENT_ID_FW_START_TX,
--	MWIFIEX_EVENT_ID_FW_BW_CHANGED,
--	MWIFIEX_EVENT_ID_HOSTWAKE_STAIE,
--
--	MWIFIEX_EVENT_ID_DRV_CONNECTED = 0x80000001,
--	MWIFIEX_EVENT_ID_DRV_DEFER_HANDLING,
--	MWIFIEX_EVENT_ID_DRV_HS_ACTIVATED,
--	MWIFIEX_EVENT_ID_DRV_HS_DEACTIVATED,
--	MWIFIEX_EVENT_ID_DRV_OBSS_SCAN_PARAM,
--	MWIFIEX_EVENT_ID_DRV_SCAN_REPORT,
--};
--
- struct mwifiex_fw_image {
- 	u8 *helper_buf;
- 	u32 helper_len;
-@@ -161,13 +124,6 @@ struct mwifiex_fw_image {
- 	u32 fw_len;
- };
- 
--struct mwifiex_event {
--	u32 bss_index;
--	enum mwifiex_event_id event_id;
--	u32 event_len;
--	u8 event_buf[1];
--};
--
- struct mwifiex_802_11_ssid {
- 	u32 ssid_len;
- 	u8 ssid[IW_ESSID_MAX_SIZE];
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 2bdecdb..8723c85 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -692,8 +692,6 @@ mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 	struct ieee_types_assoc_rsp *assoc_rsp;
- 	struct mwifiex_bssdescriptor *bss_desc;
- 	u8 enable_data = true;
--	u8 event_buf[100];
--	struct mwifiex_event *event = (struct mwifiex_event *) event_buf;
- 
- 	ENTER();
- 
-@@ -805,22 +803,16 @@ mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 	priv->adapter->dbg.num_cmd_assoc_success++;
- 
- 	PRINTM(MINFO, "ASSOC_RESP: Associated\n");
--	event->bss_index = priv->bss_index;
--	event->event_id = MWIFIEX_EVENT_ID_DRV_CONNECTED;
--	event->event_len = MWIFIEX_MAC_ADDR_LENGTH;
--	memcpy((u8 *) event->event_buf,
--	       (u8 *) priv->curr_bss_params.bss_descriptor.mac_address,
--	       MWIFIEX_MAC_ADDR_LENGTH);
- 
- 	/* Add the ra_list here for infra mode as there will be only 1 ra
- 	   always */
- 	mwifiex_ralist_add(priv,
- 			   priv->curr_bss_params.bss_descriptor.mac_address);
- 
--	mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_DRV_CONNECTED, event);
--
--	/* Send OBSS scan param to the application if available */
--	mwifiex_2040_coex_event(priv);
-+	if (!netif_carrier_ok(priv->netdev))
-+		netif_carrier_on(priv->netdev);
-+	if (netif_queue_stopped(priv->netdev))
-+		netif_wake_queue(priv->netdev);
- 
- 	if (priv->sec_info.ewpa_enabled ||
- 			priv->sec_info.wpa_enabled ||
-@@ -1486,8 +1478,6 @@ mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- 	struct mwifiex_bssdescriptor *bss_desc;
- 	u16 command = le16_to_cpu(resp->command);
- 	u16 result = le16_to_cpu(resp->result);
--	u8 event_buf[100];
--	struct mwifiex_event *event = (struct mwifiex_event *) event_buf;
- 
- 	ENTER();
- 
-@@ -1548,13 +1538,11 @@ mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- 	       priv->curr_bss_params.bss_descriptor.mac_address[4],
- 	       priv->curr_bss_params.bss_descriptor.mac_address[5]);
- 
--	event->bss_index = priv->bss_index;
--	event->event_id = MWIFIEX_EVENT_ID_DRV_CONNECTED;
--	event->event_len = MWIFIEX_MAC_ADDR_LENGTH;
--	memcpy((u8 *) event->event_buf,
--	       (u8 *) priv->curr_bss_params.bss_descriptor.mac_address,
--	       MWIFIEX_MAC_ADDR_LENGTH);
--	mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_DRV_CONNECTED, event);
-+	if (!netif_carrier_ok(priv->netdev))
-+		netif_carrier_on(priv->netdev);
-+	if (netif_queue_stopped(priv->netdev))
-+		netif_wake_queue(priv->netdev);
++obj-$(CONFIG_RTL8180)	+= rtl8180/
++obj-$(CONFIG_RTL8187)	+= rtl8187/
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/Makefile b/drivers/net/wireless/rtl818x/rtl8180/Makefile
+new file mode 100644
+index 0000000..cb4fb85
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl8180/Makefile
+@@ -0,0 +1,5 @@
++rtl8180-objs		:= dev.o rtl8225.o sa2400.o max2820.o grf5101.o
 +
- 	mwifiex_save_curr_bcn(priv);
++obj-$(CONFIG_RTL8180)	+= rtl8180.o
++
++ccflags-y += -Idrivers/net/wireless/rtl818x
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8180_dev.c
+rename to drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 707c688..5851cbc 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -24,10 +24,10 @@
+ #include <net/mac80211.h>
  
- done:
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 6f03f95..36bb35d 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -777,7 +777,6 @@ mwifiex_init_priv_params(struct mwifiex_private *priv, struct net_device *dev)
- 	priv->current_key_index = 0;
- 	priv->rate_index = AUTO_RATE;
- 	priv->media_connected = false;
--	priv->is_adhoc_link_sensed = false;
- 	memset(&priv->nick_name, 0, sizeof(priv->nick_name));
- 	priv->num_tx_timeout = 0;
- 	priv->workqueue = create_singlethread_workqueue("cfg80211_wq");
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 8e9fb0b..5b1d557 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -421,7 +421,6 @@ struct mwifiex_private {
- 	struct dentry *dfs_dev_dir;
+ #include "rtl8180.h"
+-#include "rtl8180_rtl8225.h"
+-#include "rtl8180_sa2400.h"
+-#include "rtl8180_max2820.h"
+-#include "rtl8180_grf5101.h"
++#include "rtl8225.h"
++#include "sa2400.h"
++#include "max2820.h"
++#include "grf5101.h"
+ 
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+ MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_grf5101.c b/drivers/net/wireless/rtl818x/rtl8180/grf5101.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8180_grf5101.c
+rename to drivers/net/wireless/rtl818x/rtl8180/grf5101.c
+index 5cab9df..5ee7589 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_grf5101.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/grf5101.c
+@@ -25,7 +25,7 @@
+ #include <net/mac80211.h>
+ 
+ #include "rtl8180.h"
+-#include "rtl8180_grf5101.h"
++#include "grf5101.h"
+ 
+ static const int grf5101_encode[] = {
+ 	0x0, 0x8, 0x4, 0xC,
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_grf5101.h b/drivers/net/wireless/rtl818x/rtl8180/grf5101.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8180_grf5101.h
+rename to drivers/net/wireless/rtl818x/rtl8180/grf5101.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_max2820.c b/drivers/net/wireless/rtl818x/rtl8180/max2820.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8180_max2820.c
+rename to drivers/net/wireless/rtl818x/rtl8180/max2820.c
+index 16c4655..667b336 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_max2820.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/max2820.c
+@@ -24,7 +24,7 @@
+ #include <net/mac80211.h>
+ 
+ #include "rtl8180.h"
+-#include "rtl8180_max2820.h"
++#include "max2820.h"
+ 
+ static const u32 max2820_chan[] = {
+ 	12, /* CH 1 */
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_max2820.h b/drivers/net/wireless/rtl818x/rtl8180/max2820.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8180_max2820.h
+rename to drivers/net/wireless/rtl818x/rtl8180/max2820.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8180.h
+rename to drivers/net/wireless/rtl818x/rtl8180/rtl8180.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8180/rtl8225.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8180_rtl8225.c
+rename to drivers/net/wireless/rtl818x/rtl8180/rtl8225.c
+index 69e4d47..7c4574b 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_rtl8225.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/rtl8225.c
+@@ -21,7 +21,7 @@
+ #include <net/mac80211.h>
+ 
+ #include "rtl8180.h"
+-#include "rtl8180_rtl8225.h"
++#include "rtl8225.h"
+ 
+ static void rtl8225_write(struct ieee80211_hw *dev, u8 addr, u16 data)
+ {
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_rtl8225.h b/drivers/net/wireless/rtl818x/rtl8180/rtl8225.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8180_rtl8225.h
+rename to drivers/net/wireless/rtl818x/rtl8180/rtl8225.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_sa2400.c b/drivers/net/wireless/rtl818x/rtl8180/sa2400.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8180_sa2400.c
+rename to drivers/net/wireless/rtl818x/rtl8180/sa2400.c
+index d064fcc..44771a62 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_sa2400.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/sa2400.c
+@@ -25,7 +25,7 @@
+ #include <net/mac80211.h>
+ 
+ #include "rtl8180.h"
+-#include "rtl8180_sa2400.h"
++#include "sa2400.h"
+ 
+ static const u32 sa2400_chan[] = {
+ 	0x00096c, /* ch1 */
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_sa2400.h b/drivers/net/wireless/rtl818x/rtl8180/sa2400.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8180_sa2400.h
+rename to drivers/net/wireless/rtl818x/rtl8180/sa2400.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8187/Makefile b/drivers/net/wireless/rtl818x/rtl8187/Makefile
+new file mode 100644
+index 0000000..7b62992
+--- /dev/null
++++ b/drivers/net/wireless/rtl818x/rtl8187/Makefile
+@@ -0,0 +1,5 @@
++rtl8187-objs		:= dev.o rtl8225.o leds.o rfkill.o
++
++obj-$(CONFIG_RTL8187)	+= rtl8187.o
++
++ccflags-y += -Idrivers/net/wireless/rtl818x
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8187_dev.c
+rename to drivers/net/wireless/rtl818x/rtl8187/dev.c
+index eeee244..6b82cac 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -29,11 +29,11 @@
+ #include <net/mac80211.h>
+ 
+ #include "rtl8187.h"
+-#include "rtl8187_rtl8225.h"
++#include "rtl8225.h"
+ #ifdef CONFIG_RTL8187_LEDS
+-#include "rtl8187_leds.h"
++#include "leds.h"
  #endif
- 	u8 nick_name[16];
--	bool is_adhoc_link_sensed;
- 	struct iw_statistics w_stats;
- 	u16 w_stats_wait_q_woken;
- 	wait_queue_head_t w_stats_wait_q;
-@@ -658,17 +657,10 @@ enum mwifiex_status mwifiex_recv_complete(struct mwifiex_adapter *,
+-#include "rtl8187_rfkill.h"
++#include "rfkill.h"
  
- enum mwifiex_status mwifiex_recv_packet(struct mwifiex_adapter *,
- 					struct mwifiex_buffer *mbuf);
--enum mwifiex_status mwifiex_recv_event(struct mwifiex_private *priv,
--				       enum mwifiex_event_id event_id,
--					struct mwifiex_event *event);
+ MODULE_AUTHOR("Michael Wu <flamingice@sourmilk.net>");
+ MODULE_AUTHOR("Andrea Merello <andreamrl@tiscali.it>");
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.c b/drivers/net/wireless/rtl818x/rtl8187/leds.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8187_leds.c
+rename to drivers/net/wireless/rtl818x/rtl8187/leds.c
+index 4637337..2e0de2f 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/leds.c
+@@ -20,7 +20,7 @@
+ #include <linux/eeprom_93cx6.h>
  
- struct mwifiex_buffer *mwifiex_alloc_buffer_skb(int size);
- void mwifiex_free_buffer_skb(struct mwifiex_buffer *mbuf);
+ #include "rtl8187.h"
+-#include "rtl8187_leds.h"
++#include "leds.h"
  
--enum mwifiex_status
--mwifiex_process_recv_event(struct mwifiex_adapter *adapter,
--				struct mwifiex_event *event);
--
- void mwifiex_init_adapter(struct mwifiex_adapter *adapter);
- void mwifiex_delete_bss_prio_tbl(struct mwifiex_private *priv);
+ static void led_turn_on(struct work_struct *work)
+ {
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_leds.h b/drivers/net/wireless/rtl818x/rtl8187/leds.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8187_leds.h
+rename to drivers/net/wireless/rtl818x/rtl8187/leds.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rfkill.c b/drivers/net/wireless/rtl818x/rtl8187/rfkill.c
+similarity index 98%
+rename from drivers/net/wireless/rtl818x/rtl8187_rfkill.c
+rename to drivers/net/wireless/rtl818x/rtl8187/rfkill.c
+index 03555e1..3411671 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_rfkill.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/rfkill.c
+@@ -18,7 +18,7 @@
+ #include <net/mac80211.h>
  
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 23be1de..29d457a 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -2942,8 +2942,13 @@ mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 					       ioctl_buf,
- 					       MWIFIEX_STATUS_SUCCESS);
- 		}
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_DRV_SCAN_REPORT,
--				   NULL);
-+		if (priv->report_scan_result)
-+			priv->report_scan_result = false;
-+		if (priv->scan_pending_on_block) {
-+			priv->scan_pending_on_block = false;
-+			up(&priv->async_sem);
-+		}
-+
- 	} else {
- 		/* Get scan command from scan_pending_q and put to
- 		   cmd_pending_q */
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index aba9778..a83c72a 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -90,8 +90,12 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->scan_processing = false;
- 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_DRV_SCAN_REPORT,
--				   NULL);
-+		if (priv->report_scan_result)
-+			priv->report_scan_result = false;
-+		if (priv->scan_pending_on_block) {
-+			priv->scan_pending_on_block = false;
-+			up(&priv->async_sem);
-+		}
- 		break;
+ #include "rtl8187.h"
+-#include "rtl8187_rfkill.h"
++#include "rfkill.h"
  
- 	case HostCmd_CMD_MAC_CONTROL:
-@@ -1412,7 +1416,6 @@ mwifiex_process_sta_cmdresp(struct mwifiex_private *priv,
- 		break;
- 	case HostCmd_CMD_802_11_BG_SCAN_QUERY:
- 		ret = mwifiex_ret_802_11_scan(priv, resp, ioctl_buf);
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_BG_SCAN, NULL);
- 		PRINTM(MINFO, "CMD_RESP: BG_SCAN result is ready!\n");
- 		break;
- 	case HostCmd_CMD_TXPWR_CFG:
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index 0c127f4..47140dc 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -123,43 +123,24 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
- 		LEAVE();
- 		return;
- 	}
--	mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_DISCONNECTED, NULL);
--
--	LEAVE();
--}
--
--/*
-- * This function sends the OBSS scan parameters to the application.
-- *
-- * The scan parameters are copied into a new event body and the event
-- * is sent to the application.
-- */
--void
--mwifiex_2040_coex_event(struct mwifiex_private *priv)
--{
--	u8 event_buf[100];
--	struct mwifiex_event *event = (struct mwifiex_event *) event_buf;
--	u8 ele_len;
--
--	ENTER();
--
--	if (priv->curr_bss_params.bss_descriptor.bcn_obss_scan &&
--	    priv->curr_bss_params.bss_descriptor.bcn_obss_scan->
--	    ieee_hdr.element_id == WLAN_EID_OVERLAP_BSS_SCAN_PARAM) {
--		ele_len =
--			priv->curr_bss_params.bss_descriptor.
--			bcn_obss_scan->ieee_hdr.len;
--		event->bss_index = priv->bss_index;
--		event->event_id = MWIFIEX_EVENT_ID_DRV_OBSS_SCAN_PARAM;
--		/* Copy OBSS scan parameters */
--		memcpy((u8 *) event->event_buf,
--		       (u8 *) &priv->curr_bss_params.bss_descriptor.
--		       bcn_obss_scan->obss_scan, ele_len);
--		event->event_len = ele_len;
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_DRV_OBSS_SCAN_PARAM,
--				   event);
-+	priv->media_connected = false;
-+	if (!priv->disconnect) {
-+		priv->disconnect = 1;
-+		PRINTM(MINFO, "Successfully disconnected from %pM:"
-+				" Reason code %d\n", priv->cfg_bssid,
-+				WLAN_REASON_DEAUTH_LEAVING);
-+		cfg80211_disconnected(priv->netdev,
-+				WLAN_REASON_DEAUTH_LEAVING, NULL, 0,
-+				GFP_KERNEL);
-+		queue_work(priv->workqueue, &priv->cfg_workqueue);
- 	}
--
-+	if (!netif_queue_stopped(priv->netdev))
-+		netif_stop_queue(priv->netdev);
-+	if (netif_carrier_ok(priv->netdev))
-+		netif_carrier_off(priv->netdev);
-+	/* Reset wireless stats signal info */
-+	priv->w_stats.qual.level = 0;
-+	priv->w_stats.qual.noise = 0;
- 	LEAVE();
- }
+ static bool rtl8187_is_radio_enabled(struct rtl8187_priv *priv)
+ {
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rfkill.h b/drivers/net/wireless/rtl818x/rtl8187/rfkill.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8187_rfkill.h
+rename to drivers/net/wireless/rtl818x/rtl8187/rfkill.h
+diff --git a/drivers/net/wireless/rtl818x/rtl8187.h b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8187.h
+rename to drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+index 9887816..0d7b142 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187.h
++++ b/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+@@ -16,7 +16,7 @@
+ #define RTL8187_H
  
-@@ -220,8 +201,6 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	enum mwifiex_status ret = MWIFIEX_STATUS_SUCCESS;
- 	u32 eventcause = adapter->event_cause;
--	u8 event_buf[100];
--	struct mwifiex_event *event = (struct mwifiex_event *) event_buf;
+ #include "rtl818x.h"
+-#include "rtl8187_leds.h"
++#include "leds.h"
  
- 	ENTER();
+ #define RTL8187_EEPROM_TXPWR_BASE	0x05
+ #define RTL8187_EEPROM_MAC_ADDR		0x07
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c b/drivers/net/wireless/rtl818x/rtl8187/rtl8225.c
+similarity index 99%
+rename from drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+rename to drivers/net/wireless/rtl818x/rtl8187/rtl8225.c
+index 5c6666f..908903f 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/rtl8225.c
+@@ -21,7 +21,7 @@
+ #include <net/mac80211.h>
  
-@@ -232,9 +211,10 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		break;
- 	case EVENT_LINK_SENSED:
- 		PRINTM(MEVENT, "EVENT: LINK_SENSED\n");
--		priv->adhoc_is_link_sensed = true;
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_ADHOC_LINK_SENSED,
--				NULL);
-+		if (!netif_carrier_ok(priv->netdev))
-+			netif_carrier_on(priv->netdev);
-+		if (netif_queue_stopped(priv->netdev))
-+			netif_wake_queue(priv->netdev);
- 		break;
+ #include "rtl8187.h"
+-#include "rtl8187_rtl8225.h"
++#include "rtl8225.h"
  
- 	case EVENT_DEAUTHENTICATED:
-@@ -302,8 +282,6 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		PRINTM(MEVENT, "EVENT: DS_AWAKE\n");
- 		if (adapter->is_deep_sleep)
- 			adapter->is_deep_sleep = false;
--
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_DS_AWAKE, NULL);
- 		break;
- 
- 	case EVENT_HS_ACT_REQ:
-@@ -315,14 +293,10 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 
- 	case EVENT_MIC_ERR_UNICAST:
- 		PRINTM(MEVENT, "EVENT: UNICAST MIC ERROR\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_MIC_ERR_UNI,
--				   NULL);
- 		break;
- 
- 	case EVENT_MIC_ERR_MULTICAST:
- 		PRINTM(MEVENT, "EVENT: MULTICAST MIC ERROR\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_MIC_ERR_MUL,
--				   NULL);
- 		break;
- 	case EVENT_MIB_CHANGED:
- 	case EVENT_INIT_DONE:
-@@ -332,8 +306,10 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		PRINTM(MEVENT, "EVENT: ADHOC_BCN_LOST\n");
- 		priv->adhoc_is_link_sensed = false;
- 		mwifiex_clean_txrx(priv);
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_ADHOC_LINK_LOST,
--				   NULL);
-+		if (!netif_queue_stopped(priv->netdev))
-+			netif_stop_queue(priv->netdev);
-+		if (netif_carrier_ok(priv->netdev))
-+			netif_carrier_off(priv->netdev);
- 		break;
- 
- 	case EVENT_BG_SCAN_REPORT:
-@@ -350,8 +326,6 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 
- 	case EVENT_PORT_RELEASE:
- 		PRINTM(MEVENT, "EVENT: PORT RELEASE\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_PORT_RELEASE,
--				   NULL);
- 		break;
- 
- 	case EVENT_WMM_STATUS_CHANGE:
-@@ -362,57 +336,36 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 
- 	case EVENT_RSSI_LOW:
- 		PRINTM(MEVENT, "EVENT: Beacon RSSI_LOW\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_BCN_RSSI_LOW,
--				   NULL);
- 		break;
- 	case EVENT_SNR_LOW:
- 		PRINTM(MEVENT, "EVENT: Beacon SNR_LOW\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_BCN_SNR_LOW,
--				   NULL);
- 		break;
- 	case EVENT_MAX_FAIL:
- 		PRINTM(MEVENT, "EVENT: MAX_FAIL\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_MAX_FAIL, NULL);
- 		break;
- 	case EVENT_RSSI_HIGH:
- 		PRINTM(MEVENT, "EVENT: Beacon RSSI_HIGH\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_BCN_RSSI_HIGH,
--				   NULL);
- 		break;
- 	case EVENT_SNR_HIGH:
- 		PRINTM(MEVENT, "EVENT: Beacon SNR_HIGH\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_BCN_SNR_HIGH,
--				   NULL);
- 		break;
- 	case EVENT_DATA_RSSI_LOW:
- 		PRINTM(MEVENT, "EVENT: Data RSSI_LOW\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_DATA_RSSI_LOW,
--				   NULL);
- 		break;
- 	case EVENT_DATA_SNR_LOW:
- 		PRINTM(MEVENT, "EVENT: Data SNR_LOW\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_DATA_SNR_LOW,
--				   NULL);
- 		break;
- 	case EVENT_DATA_RSSI_HIGH:
- 		PRINTM(MEVENT, "EVENT: Data RSSI_HIGH\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_DATA_RSSI_HIGH,
--				   NULL);
- 		break;
- 	case EVENT_DATA_SNR_HIGH:
- 		PRINTM(MEVENT, "EVENT: Data SNR_HIGH\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_DATA_SNR_HIGH,
--				   NULL);
- 		break;
- 	case EVENT_LINK_QUALITY:
- 		PRINTM(MEVENT, "EVENT: Link Quality\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_LINK_QUALITY,
--				   NULL);
- 		break;
- 	case EVENT_PRE_BEACON_LOST:
- 		PRINTM(MEVENT, "EVENT: Pre-Beacon Lost\n");
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_PRE_BCN_LOST,
--				   NULL);
- 		break;
- 	case EVENT_IBSS_COALESCED:
- 		PRINTM(MEVENT, "EVENT: IBSS_COALESCED\n");
-@@ -448,41 +401,17 @@ mwifiex_process_sta_event(struct mwifiex_private *priv)
- 
- 	case EVENT_WEP_ICV_ERR:
- 		PRINTM(MEVENT, "EVENT: WEP ICV error\n");
--		event->bss_index = priv->bss_index;
--		event->event_id = MWIFIEX_EVENT_ID_FW_WEP_ICV_ERR;
--		event->event_len = sizeof(struct mwifiex_event_wep_icv_err);
--		memcpy((u8 *) event->event_buf, adapter->event_body,
--		       event->event_len);
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_WEP_ICV_ERR,
--				   event);
- 		break;
- 
- 	case EVENT_BW_CHANGE:
- 		PRINTM(MEVENT, "EVENT: BW Change\n");
--		event->bss_index = priv->bss_index;
--		event->event_id = MWIFIEX_EVENT_ID_FW_BW_CHANGED;
--		event->event_len = sizeof(u8);
--		/* Copy event body from the event buffer */
--		memcpy((u8 *) event->event_buf, adapter->event_body,
--		       event->event_len);
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_BW_CHANGED,
--				   event);
- 		break;
- 
- 	case EVENT_HOSTWAKE_STAIE:
- 		PRINTM(MEVENT, "EVENT: HOSTWAKE_STAIE %d\n", eventcause);
--		event->bss_index = priv->bss_index;
--		event->event_id = MWIFIEX_EVENT_ID_HOSTWAKE_STAIE;
--		event->event_len = sizeof(u32);
--		memcpy((u8 *) event->event_buf, adapter->event_body,
--		       event->event_len);
--
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_HOSTWAKE_STAIE,
--				   event);
- 		break;
- 	default:
- 		PRINTM(MEVENT, "EVENT: unknown event id: %#x\n", eventcause);
--		mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_UNKNOWN, NULL);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index f1676bb..35df4c9 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -6033,8 +6033,6 @@ mwifiex_scan_ioctl(struct mwifiex_adapter *adapter,
- 
- 	if (priv->scan_block && ioctl_req->action == MWIFIEX_ACT_SET) {
- 		PRINTM(MCMND, "Scan is blocked during association...\n");
--		/* mwifiex_recv_event(priv,  MWIFIEX_EVENT_ID_DRV_SCAN_REPORT,
--			NULL); */
- 		LEAVE();
- 		return status;
- 	}
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 9ef5b74..55d912d 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -470,9 +470,7 @@ mwifiex_send_packet_complete(struct mwifiex_adapter *adapter,
- 					if ((GET_BSS_ROLE(adapter->priv[i]) ==
- 					     MWIFIEX_BSS_ROLE_STA)
- 					    && (adapter->priv[i]->
--						media_connected
--						|| priv->
--						is_adhoc_link_sensed)) {
-+						media_connected)) {
- 						if (netif_queue_stopped
- 						    (adapter->priv[i]->netdev))
- 							netif_wake_queue
-@@ -619,144 +617,6 @@ mwifiex_print(u32 level, s8 *pformat, ...)
- EXPORT_SYMBOL_GPL(mwifiex_print);
- 
- /*
-- * This function handles received events.
-- *
-- * Handling may include updating the traffic queue status, setting
-- * driver variables, updating statistics, sending a standard or
-- * custom wireless event to application, or broadcasting a pass
-- * through event via netlink socket.
-- */
--enum mwifiex_status
--mwifiex_process_recv_event(struct mwifiex_adapter *adapter,
--				struct mwifiex_event *event)
--{
--	struct mwifiex_private *priv = NULL;
--
--	ENTER();
--
--	PRINTM(MEVENT, "event id:0x%x\n", event->event_id);
--	priv = mwifiex_bss_index_to_priv(adapter, event->bss_index);
--	if (priv == NULL) {
--		PRINTM(MERROR, "%s: priv is null\n", __func__);
--		goto done;
--	}
--	switch (event->event_id) {
--	case MWIFIEX_EVENT_ID_FW_ADHOC_LINK_SENSED:
--		priv->is_adhoc_link_sensed = true;
--		if (!netif_carrier_ok(priv->netdev))
--			netif_carrier_on(priv->netdev);
--		if (netif_queue_stopped(priv->netdev))
--			netif_wake_queue(priv->netdev);
--		break;
--	case MWIFIEX_EVENT_ID_FW_ADHOC_LINK_LOST:
--		if (!netif_queue_stopped(priv->netdev))
--			netif_stop_queue(priv->netdev);
--		if (netif_carrier_ok(priv->netdev))
--			netif_carrier_off(priv->netdev);
--		priv->is_adhoc_link_sensed = false;
--		break;
--	case MWIFIEX_EVENT_ID_DRV_CONNECTED:
--		priv->media_connected = true;
--		if (!netif_carrier_ok(priv->netdev))
--			netif_carrier_on(priv->netdev);
--		if (netif_queue_stopped(priv->netdev))
--			netif_wake_queue(priv->netdev);
--		break;
--	case MWIFIEX_EVENT_ID_DRV_SCAN_REPORT:
--		PRINTM(MCMND, "Scan report\n");
--		if (priv->report_scan_result)
--			priv->report_scan_result = false;
--		if (priv->scan_pending_on_block) {
--			priv->scan_pending_on_block = false;
--			up(&priv->async_sem);
--		}
--		break;
--	case MWIFIEX_EVENT_ID_FW_DISCONNECTED:
--		priv->media_connected = false;
--		if (!priv->disconnect) {
--			priv->disconnect = 1;
--			PRINTM(MINFO, "Successfully disconnected from %pM:"
--					" Reason code %d\n", priv->cfg_bssid,
--					WLAN_REASON_DEAUTH_LEAVING);
--			cfg80211_disconnected(priv->netdev,
--					WLAN_REASON_DEAUTH_LEAVING, NULL, 0,
--					GFP_KERNEL);
--			queue_work(priv->workqueue, &priv->cfg_workqueue);
--		}
--		if (!netif_queue_stopped(priv->netdev))
--			netif_stop_queue(priv->netdev);
--		if (netif_carrier_ok(priv->netdev))
--			netif_carrier_off(priv->netdev);
--		/* Reset wireless stats signal info */
--		priv->w_stats.qual.level = 0;
--		priv->w_stats.qual.noise = 0;
--		break;
--	case MWIFIEX_EVENT_ID_FW_WEP_ICV_ERR:
--		DBG_HEXDUMP(MCMD_D, "WEP ICV error", event->event_buf,
--			    event->event_len);
--		break;
--
--	case MWIFIEX_EVENT_ID_DRV_DEFER_HANDLING:
--		queue_work(adapter->workqueue, &adapter->main_work);
--		break;
--	case MWIFIEX_EVENT_ID_FW_BG_SCAN:
--		break;
--	case MWIFIEX_EVENT_ID_FW_STOP_TX:
--		netif_carrier_off(priv->netdev);
--		break;
--	case MWIFIEX_EVENT_ID_FW_START_TX:
--		netif_carrier_on(priv->netdev);
--		break;
--	case MWIFIEX_EVENT_ID_FW_HS_WAKEUP:
--		/* simulate HSCFG_CANCEL command */
--		mwifiex_cancel_hs(priv, MWIFIEX_NO_WAIT);
--		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
--		break;
--	case MWIFIEX_EVENT_ID_DRV_HS_ACTIVATED:
--		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
--		if (priv) {
--			adapter->hs_activated = true;
--			adapter->hs_activate_wait_q_woken = true;
--			wake_up_interruptible(&adapter->hs_activate_wait_q);
--		}
--		break;
--	case MWIFIEX_EVENT_ID_DRV_HS_DEACTIVATED:
--		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
--		if (priv)
--			adapter->hs_activated = false;
--		break;
--
--	/* These events might be interesting to some userland? */
--	case MWIFIEX_EVENT_ID_DRV_OBSS_SCAN_PARAM:
--	case MWIFIEX_EVENT_ID_FW_BW_CHANGED:
--	case MWIFIEX_EVENT_ID_HOSTWAKE_STAIE:
--	case MWIFIEX_EVENT_ID_FW_MIC_ERR_UNI:
--	case MWIFIEX_EVENT_ID_FW_MIC_ERR_MUL:
--	case MWIFIEX_EVENT_ID_FW_BCN_RSSI_LOW:
--	case MWIFIEX_EVENT_ID_FW_BCN_RSSI_HIGH:
--	case MWIFIEX_EVENT_ID_FW_BCN_SNR_LOW:
--	case MWIFIEX_EVENT_ID_FW_BCN_SNR_HIGH:
--	case MWIFIEX_EVENT_ID_FW_MAX_FAIL:
--	case MWIFIEX_EVENT_ID_FW_DATA_RSSI_LOW:
--	case MWIFIEX_EVENT_ID_FW_DATA_SNR_LOW:
--	case MWIFIEX_EVENT_ID_FW_DATA_RSSI_HIGH:
--	case MWIFIEX_EVENT_ID_FW_DATA_SNR_HIGH:
--	case MWIFIEX_EVENT_ID_FW_LINK_QUALITY:
--	case MWIFIEX_EVENT_ID_FW_PORT_RELEASE:
--	case MWIFIEX_EVENT_ID_FW_PRE_BCN_LOST:
--	case MWIFIEX_EVENT_ID_FW_DS_AWAKE:
--	case MWIFIEX_EVENT_ID_FW_WMM_CONFIG_CHANGE:
--		break;
--
--	default:
--		break;
--	}
--done:
--	LEAVE();
--	return MWIFIEX_STATUS_SUCCESS;
--}
--
--/*
-  * This function handles get BSS information IOCTL responses.
-  *
-  * The following information type is currently supported -
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index cdb0e58..2a403ae 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -895,8 +895,6 @@ mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
- 	mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
- 	mwifiex_wmm_setup_ac_downgrade(priv);
- 
--	mwifiex_recv_event(priv, MWIFIEX_EVENT_ID_FW_WMM_CONFIG_CHANGE, NULL);
--
- 	LEAVE();
- 	return MWIFIEX_STATUS_SUCCESS;
- }
+ static void rtl8225_write_bitbang(struct ieee80211_hw *dev, u8 addr, u16 data)
+ {
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_rtl8225.h b/drivers/net/wireless/rtl818x/rtl8187/rtl8225.h
+similarity index 100%
+rename from drivers/net/wireless/rtl818x/rtl8187_rtl8225.h
+rename to drivers/net/wireless/rtl818x/rtl8187/rtl8225.h
 -- 
-1.7.0.2
+1.7.3.3
 
