@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2599 "EHLO mail.perches.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2753 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758699Ab0LNA5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 19:57:11 -0500
-From: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/8] staging: brcm80211: Cleanup include/proto/ethernet.h
-Date: Mon, 13 Dec 2010 16:56:56 -0800
-Message-Id: <cover.1292287720.git.joe@perches.com>
-To: unlisted-recipients:; (no To-header on input)
+	id S1751042Ab0LUSdW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 13:33:22 -0500
+Message-ID: <4D10F2E3.3010905@broadcom.com>
+Date: Tue, 21 Dec 2010 10:33:07 -0800
+From: "Henry Ptasinski" <henryp@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Daniel Halperin" <dhalperi@cs.washington.edu>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: vendor IEs?
+References: <AANLkTi=n4pUEy_3PYX=7wbY+zR4D8=EGDNN-NtqhFs2q@mail.gmail.com>
+ <1292928100.3563.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1292928100.3563.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the standard kernel mechanisms and remove some entries from this file.
+On 12/21/2010 02:41 AM, Johannes Berg wrote:
+> On Sun, 2010-12-19 at 16:53 -0800, Daniel Halperin wrote:
+>> Is there a compiled list of vendor-specific IEs out there?  Googling
+>> didn't offer much help.
+>
+> I'm not aware of any list, nor can there really be one since everybody
+> who has an OUI is free to define their own IEs.
+>
+> That said, some of them are of course mostly standardised, like the WFA
+> ones for WPA, WSC/WPS and P2P for instance. I don't think there's a even
+> a comprehensive list of WFA ones though other than in what you get by
+> combining all those standards.
 
-Joe Perches (8):
-  staging: brcm80211: Remove unused #defines ETHER_<foo>_LOCALADDR
-  staging: brcm80211: Convert ETHER_IS_MULTI to is_multicast_ether_addr
-  staging: brcm80211: Remove unused ether_<foo> #defines and struct
-  staging: brcm80211: Convert ETHER_IS<FOO> to is_<foo>_ether_addr
-  staging: brcm80211: Convert ETHER_ADDR_LEN to ETH_ALEN
-  staging: brcm80211: Remove ETHER_HDR_LEN, use ETH_HLEN
-  staging: brcm80211: Remove unused ETHER_TYPE_<foo> #defines
-  staging: brcm80211: Convert ETHER_TYPE_802_1X to ETH_P_PAE
+The most complete info I've seen is in the wireshark dissector, but even 
+that is not very complete.
 
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |    2 +-
- drivers/staging/brcm80211/brcmfmac/dhd_common.c    |    8 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   32 +++++-----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   38 ++++++------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |    2 +-
- drivers/staging/brcm80211/brcmfmac/wl_iw.c         |   63 ++++++++++----------
- drivers/staging/brcm80211/include/proto/ethernet.h |   54 +++--------------
- drivers/staging/brcm80211/sys/wl_mac80211.c        |    2 +-
- drivers/staging/brcm80211/sys/wlc_ampdu.c          |    2 +-
- drivers/staging/brcm80211/sys/wlc_bmac.c           |    9 ++-
- drivers/staging/brcm80211/sys/wlc_mac80211.c       |   40 +++++++------
- drivers/staging/brcm80211/util/bcmsrom.c           |   15 +++--
- 12 files changed, 118 insertions(+), 149 deletions(-)
+- Henry
 
--- 
-1.7.3.3.398.g0b0cd.dirty
 
