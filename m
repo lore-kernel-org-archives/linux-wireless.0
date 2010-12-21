@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754172Ab0LPSzg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 13:55:36 -0500
-Subject: Re: [PATCH 2/3 v2] mac80211: Let userspace enable and configure
- vendor specific path selection.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1292524200-14791-2-git-send-email-javier@cozybit.com>
-References: <1292234643.3539.6.camel@jlt3.sipsolutions.net>
-	 <1292524200-14791-2-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 19:55:34 +0100
-Message-ID: <1292525734.3612.29.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50621 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933150Ab0LUBCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 20:02:10 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/7] Small patches from compat-wirelss for mainline
+Date: Tue, 21 Dec 2010 02:01:49 +0100
+Message-Id: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 10:29 -0800, Javier Cardona wrote:
+These patches were in compat-wirelss and could go upstream, so we do not 
+have to maintain them any more.
 
-> +	ifmsh->vendor_ie_len = setup->vendor_ie_len;
-> +	if (setup->vendor_ie_len) {
-> +		new_ie = kmalloc(setup->vendor_ie_len, GFP_KERNEL);
-> +		if (new_ie)
-> +			new_ie = memcpy(new_ie, setup->vendor_ie,
-> +					setup->vendor_ie_len);
+Hauke Mehrtens (7):
+  wl1251: remove unnecessary import
+  wl12xx: remove unnecessary import
+  ssb: Use pci_is_pcie()
+  rt2x00: Use pci_is_pcie()
+  ath5k: Use pci_is_pcie()
+  ath9k: Use pci_is_pcie()
+  rtlwifi: Use pci_pcie_cap()
 
-kmemdup?
-
-
-> @@ -287,6 +287,12 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
->  	*pos++ |= sdata->u.mesh.accepting_plinks ?
->  	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
->  	*pos++ = 0x00;
-> +
-> +	if (sdata->u.mesh.vendor_ie) {
-> +		int len = sdata->u.mesh.vendor_ie_len;
-> +		const u8 *data = sdata->u.mesh.vendor_ie;
-> +		memcpy(skb_put(skb, len), data, len);
-> +	}
-
-don't you have to account for the size of these in the skb allocation?
-
-
-> +	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
-> +		setup->vendor_ie =
-> +			nla_data(tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]);
-> +		setup->vendor_ie_len =
-> +			nla_len(tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]);
-
-I think you should check that these are well-formed IEs, there's a
-utility function for that somewhere.
-
-johannes
+ drivers/net/wireless/ath/ath5k/attach.c |    2 +-
+ drivers/net/wireless/ath/ath5k/reset.c  |    4 ++--
+ drivers/net/wireless/ath/ath9k/pci.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +-
+ drivers/net/wireless/rtlwifi/pci.c      |    2 +-
+ drivers/net/wireless/wl1251/boot.c      |    1 -
+ drivers/net/wireless/wl12xx/boot.c      |    1 -
+ drivers/ssb/scan.c                      |    4 ++--
+ 8 files changed, 8 insertions(+), 10 deletions(-)
 
