@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36233 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755500Ab0LPMxl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 07:53:41 -0500
-Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org, luis.rodriguez@atheros.com
-In-Reply-To: <AANLkTimZdxQNk2hr-ekGPAWJB5YTZBqxdppOAjdbrb1i@mail.gmail.com>
-References: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
-	 <1292482775.3542.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
-	 <1292499024.3612.3.camel@jlt3.sipsolutions.net>
-	 <AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
-	 <1292501047.3612.9.camel@jlt3.sipsolutions.net>
-	 <AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
-	 <1292502934.3612.15.camel@jlt3.sipsolutions.net>
-	 <AANLkTimZdxQNk2hr-ekGPAWJB5YTZBqxdppOAjdbrb1i@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 13:53:40 +0100
-Message-ID: <1292504020.3612.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:23275 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752481Ab0LUH34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 02:29:56 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 23:29:40 -0800
+Date: Tue, 21 Dec 2010 12:59:43 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Dan Carpenter <error27@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: smatch stuff: potential read past the end of the buffer
+Message-ID: <20101221072943.GA8369@vasanth-laptop>
+References: <20101220083041.GQ1936@bicker>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101220083041.GQ1936@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 04:46 -0800, Paul Stewart wrote:
-
-> >> I haven't dug deep into it, but I can guess at a reason -- ath9k stores idle
-> >> state in two different places -- one is meant to mirror mac80211's state,
-> >> and the other one is internal, periodically computed from the state of all
-> >> wiphys. The ath9k version of the fix modified the
-> >> internal state without the mac80211 mirror.
-> >
-> > But at this point mac80211 doesn't care what the state is any more.
+On Mon, Dec 20, 2010 at 02:00:41PM +0530, Dan Carpenter wrote:
+> Hello Vasanthakumar,
 > 
-> Huh?  I'm not sure I understand this statement.  If mac80211 suspends
-> and resumes with open_count > 1 (e.g, with an associated STA), I argue
-> mac80211 _does_ care what the state is.  In fact, although we called
-> stop() on the driver, there's every expectation that on resume any state
-> stored on suspend is recovered.  Are you not assuming this?
+> Smatch complains that in linux-next 60e0c3a7 "ath9k_hw: Eeeprom changes
+> for AR9485" means there is a potential read past the end of the buffer
+> int ar9300_eeprom_restore_internal().
+> 
+> drivers/net/wireless/ath/ath9k/ar9003_eeprom.c +3381
+> 	ar9300_eeprom_restore_internal(81)
+> 	error: buffer overflow 'word' 2048 <= 4099
+> 
+> "word" is allocated with 2048 bytes:
+>         word = kzalloc(2048, GFP_KERNEL);
+> 
+> "length" can be up to 4099:
+>                 if ((!AR_SREV_9485(ah) && length >= 1024) ||
+>                     (AR_SREV_9485(ah) && length >= (4 * 1024))) {
 
-Not really -- the driver may throw away all internal state, mac80211
-will (attempt to) restore it all through drv_config() with changed = ~0.
-Evidently ath9k has some magic that makes this fail?
+Yeah, this looks buggy, the eeprom data length for AR9485 is 1088
+bytes only, I'll send out a patch, thanks for reporting this.
 
-johannes
-
+Vasanth
