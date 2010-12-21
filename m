@@ -1,664 +1,318 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:43486 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758409Ab0LNARM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 19:17:12 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/14] iwlagn: code clean up to remove duplicate code
-Date: Mon, 13 Dec 2010 16:09:32 -0800
-Message-Id: <1292285372-11373-15-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42280 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027Ab0LUOtc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 09:49:32 -0500
+Received: by wwa36 with SMTP id 36so4207697wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 06:49:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101221083042.8765.42404.stgit@localhost6.localdomain6>
+References: <20101221083020.8765.16350.stgit@localhost6.localdomain6>
+	<20101221083042.8765.42404.stgit@localhost6.localdomain6>
+Date: Tue, 21 Dec 2010 16:49:31 +0200
+Message-ID: <AANLkTikzsikgfDkE5XMsERhKAV+P+H55D3rwhKUDbfTe@mail.gmail.com>
+Subject: Re: [PATCH 5/5] ath5k: Use helper function to get eeprom mode from channel
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+2010/12/21 Bruno Randolf <br1@einfach.org>:
+> Introduce a helper function to get the EEPROM mode from channel and remove
+> multiple similar switch statements. Also since it's now easy to get the EEPROM
+> mode from the channel, use them inside the functions which need it, instead of
+> passing a redundant ee_mode parameter.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h  |    2 -
+>  drivers/net/wireless/ath/ath5k/eeprom.c |   16 +++++++
+>  drivers/net/wireless/ath/ath5k/eeprom.h |    2 +
+>  drivers/net/wireless/ath/ath5k/phy.c    |   68 +++++++------------------------
+>  drivers/net/wireless/ath/ath5k/reset.c  |   19 ++++-----
+>  5 files changed, 42 insertions(+), 65 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 5de8520..407e39c 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -1318,7 +1318,7 @@ void ath5k_hw_set_antenna_switch(struct ath5k_hw *ah, u8 ee_mode);
+>  int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
+>  /* Init function */
+>  int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+> -                               u8 mode, u8 ee_mode, bool fast);
+> +                               u8 mode, bool fast);
+>
+>  /*
+>  * Functions used internaly
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+> index 97eaa9a..80e6256 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+> @@ -1802,3 +1802,19 @@ ath5k_eeprom_detach(struct ath5k_hw *ah)
+>        for (mode = AR5K_EEPROM_MODE_11A; mode <= AR5K_EEPROM_MODE_11G; mode++)
+>                ath5k_eeprom_free_pcal_info(ah, mode);
+>  }
+> +
+> +int
+> +ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+> +{
+> +       switch (channel->hw_value & CHANNEL_MODES) {
+> +       case CHANNEL_A:
+> +       case CHANNEL_XR:
+> +               return AR5K_EEPROM_MODE_11A;
+> +       case CHANNEL_G:
+> +               return AR5K_EEPROM_MODE_11G;
+> +       case CHANNEL_B:
+> +               return AR5K_EEPROM_MODE_11B;
+> +       default:
+> +               return -1;
+> +       }
+> +}
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+> index 0017006..7c09e15 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.h
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+> @@ -517,3 +517,5 @@ struct ath5k_eeprom_info {
+>        u32     ee_antenna[AR5K_EEPROM_N_MODES][AR5K_ANT_MAX];
+>  };
+>
+> +int
+> +ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel);
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index b6e9621..9306d5f 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -1355,20 +1355,7 @@ void ath5k_hw_update_noise_floor(struct ath5k_hw *ah)
+>                return;
+>        }
+>
+> -       switch (ah->ah_current_channel->hw_value & CHANNEL_MODES) {
+> -       case CHANNEL_A:
+> -       case CHANNEL_XR:
+> -               ee_mode = AR5K_EEPROM_MODE_11A;
+> -               break;
+> -       case CHANNEL_G:
+> -               ee_mode = AR5K_EEPROM_MODE_11G;
+> -               break;
+> -       default:
+> -       case CHANNEL_B:
+> -               ee_mode = AR5K_EEPROM_MODE_11B;
+> -               break;
+> -       }
+> -
+> +       ee_mode = ath5k_eeprom_mode_from_channel(ah->ah_current_channel);
+>
+>        /* completed NF calibration, test threshold */
+>        nf = ath5k_hw_read_measured_noise_floor(ah);
+> @@ -1941,18 +1928,8 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
+>
+>        def_ant = ah->ah_def_ant;
+>
+> -       switch (channel->hw_value & CHANNEL_MODES) {
+> -       case CHANNEL_A:
+> -       case CHANNEL_XR:
+> -               ee_mode = AR5K_EEPROM_MODE_11A;
+> -               break;
+> -       case CHANNEL_G:
+> -               ee_mode = AR5K_EEPROM_MODE_11G;
+> -               break;
+> -       case CHANNEL_B:
+> -               ee_mode = AR5K_EEPROM_MODE_11B;
+> -               break;
+> -       default:
+> +       ee_mode = ath5k_eeprom_mode_from_channel(channel);
+> +       if (ee_mode < 0) {
+>                ATH5K_ERR(ah->ah_sc,
+>                        "invalid channel: %d\n", channel->center_freq);
+>                return;
+> @@ -3100,11 +3077,11 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+>  */
+>  static int
+>  ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+> -               u8 ee_mode, u8 txpower)
+> +                u8 txpower)
+>  {
+>        struct ath5k_rate_pcal_info rate_info;
+>        struct ieee80211_channel *curr_channel = ah->ah_current_channel;
+> -       u8 type;
+> +       u8 type, ee_mode;
+>        int ret;
+>
+>        if (txpower > AR5K_TUNE_MAX_TXPOWER) {
+> @@ -3112,6 +3089,13 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+>                return -EINVAL;
+>        }
+>
+> +       ee_mode = ath5k_eeprom_mode_from_channel(channel);
+> +       if (ee_mode < 0) {
+> +               ATH5K_ERR(ah->ah_sc,
+> +                       "invalid channel: %d\n", channel->center_freq);
+> +               return -EINVAL;
+> +       }
+> +
+>        /* Initialize TX power table */
+>        switch (ah->ah_radio) {
+>        case AR5K_RF5110:
+> @@ -3208,31 +3192,10 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+>
+>  int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+>  {
+> -       /*Just a try M.F.*/
+> -       struct ieee80211_channel *channel = ah->ah_current_channel;
+> -       u8 ee_mode;
+> -
+> -       switch (channel->hw_value & CHANNEL_MODES) {
+> -       case CHANNEL_A:
+> -       case CHANNEL_XR:
+> -               ee_mode = AR5K_EEPROM_MODE_11A;
+> -               break;
+> -       case CHANNEL_G:
+> -               ee_mode = AR5K_EEPROM_MODE_11G;
+> -               break;
+> -       case CHANNEL_B:
+> -               ee_mode = AR5K_EEPROM_MODE_11B;
+> -               break;
+> -       default:
+> -               ATH5K_ERR(ah->ah_sc,
+> -                       "invalid channel: %d\n", channel->center_freq);
+> -               return -EINVAL;
+> -       }
+> -
+>        ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
+>                "changing txpower to %d\n", txpower);
+>
+> -       return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
+> +       return ath5k_hw_txpower(ah, ah->ah_current_channel, txpower);
+>  }
+>
+>  /*************\
+> @@ -3240,7 +3203,7 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+>  \*************/
+>
+>  int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+> -                               u8 mode, u8 ee_mode, bool fast)
+> +                     u8 mode, bool fast)
+>  {
+>        struct ieee80211_channel *curr_channel;
+>        int ret, i;
+> @@ -3281,8 +3244,7 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+>         * RF buffer settings on 5211/5212+ so that we
+>         * properly set curve indices.
+>         */
+> -       ret = ath5k_hw_txpower(ah, channel, ee_mode,
+> -               ah->ah_txpower.txp_cur_pwr ?
+> +       ret = ath5k_hw_txpower(ah, channel, ah->ah_txpower.txp_cur_pwr ?
+>                        ah->ah_txpower.txp_cur_pwr / 2 : AR5K_TUNE_MAX_TXPOWER);
+>        if (ret)
+>                return ret;
+> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+> index 4b8b987..3c962f7 100644
+> --- a/drivers/net/wireless/ath/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath/ath5k/reset.c
+> @@ -866,15 +866,18 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
+>  }
+>
+>  static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+> -               struct ieee80211_channel *channel, u8 ee_mode)
+> +               struct ieee80211_channel *channel)
+>  {
+>        struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+>        s16 cck_ofdm_pwr_delta;
+> +       u8 ee_mode;
+>
+>        /* TODO: Add support for AR5210 EEPROM */
+>        if (ah->ah_version == AR5K_AR5210)
+>                return;
+>
+> +       ee_mode = ath5k_eeprom_mode_from_channel(channel);
+> +
+>        /* Adjust power delta for channel 14 */
+>        if (channel->center_freq == 2484)
+>                cck_ofdm_pwr_delta =
+> @@ -1020,10 +1023,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                struct ieee80211_channel *channel, bool fast, bool skip_pcu)
+>  {
+>        u32 s_seq[10], s_led[3], tsf_up, tsf_lo;
+> -       u8 mode, ee_mode;
+> +       u8 mode;
+>        int i, ret;
+>
+> -       ee_mode = 0;
+>        tsf_up = 0;
+>        tsf_lo = 0;
+>        mode = 0;
+> @@ -1070,7 +1072,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>        switch (channel->hw_value & CHANNEL_MODES) {
+>        case CHANNEL_A:
+>                mode = AR5K_MODE_11A;
+> -               ee_mode = AR5K_EEPROM_MODE_11A;
+>                break;
+>        case CHANNEL_G:
+>
+> @@ -1081,7 +1082,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                }
+>
+>                mode = AR5K_MODE_11G;
+> -               ee_mode = AR5K_EEPROM_MODE_11G;
+>                break;
+>        case CHANNEL_B:
+>
+> @@ -1092,7 +1092,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                }
+>
+>                mode = AR5K_MODE_11B;
+> -               ee_mode = AR5K_EEPROM_MODE_11B;
+>                break;
+>        case CHANNEL_XR:
+>                if (ah->ah_version == AR5K_AR5211) {
+> @@ -1101,7 +1100,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                        return -EINVAL;
+>                }
+>                mode = AR5K_MODE_XR;
+> -               ee_mode = AR5K_EEPROM_MODE_11A;
+>                break;
+>        default:
+>                ATH5K_ERR(ah->ah_sc,
+> @@ -1114,8 +1112,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>         * go on. If it fails continue with a normal reset.
+>         */
+>        if (fast) {
+> -               ret = ath5k_hw_phy_init(ah, channel, mode,
+> -                                       ee_mode, true);
+> +               ret = ath5k_hw_phy_init(ah, channel, mode, true);
+>                if (ret) {
+>                        ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_RESET,
+>                                "fast chan change failed, falling back to normal reset\n");
+> @@ -1212,7 +1209,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>        ath5k_hw_tweak_initval_settings(ah, channel);
+>
+>        /* Commit values from EEPROM */
+> -       ath5k_hw_commit_eeprom_settings(ah, channel, ee_mode);
+> +       ath5k_hw_commit_eeprom_settings(ah, channel);
+>
+>
+>        /*
+> @@ -1251,7 +1248,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>        /*
+>         * Initialize PHY
+>         */
+> -       ret = ath5k_hw_phy_init(ah, channel, mode, ee_mode, false);
+> +       ret = ath5k_hw_phy_init(ah, channel, mode, false);
+>        if (ret) {
+>                ATH5K_ERR(ah->ah_sc,
+>                        "failed to initialize PHY (%i) !\n", ret);
+>
+>
 
-Multiple devices use almost the same .cfg with minor differences.
-Use macro and remove the duplication. By doing this, reduce
-the chance for mistake while modify .cfg parameters
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |   65 +++----
- drivers/net/wireless/iwlwifi/iwl-5000.c |   89 +++------
- drivers/net/wireless/iwlwifi/iwl-6000.c |  319 +++++++++----------------------
- 3 files changed, 151 insertions(+), 322 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 94521d4..ba78bc8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -276,60 +276,49 @@ static struct iwl_ht_params iwl1000_ht_params = {
- 	.use_rts_for_aggregation = true, /* use rts/cts protection */
- };
- 
-+#define IWL_DEVICE_1000						\
-+	.fw_name_pre = IWL1000_FW_PRE,				\
-+	.ucode_api_max = IWL1000_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL1000_UCODE_API_MIN,			\
-+	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
-+	.ops = &iwl1000_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl1000_base_params,			\
-+	.led_mode = IWL_LED_BLINK
-+
- struct iwl_cfg iwl1000_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BGN",
--	.fw_name_pre = IWL1000_FW_PRE,
--	.ucode_api_max = IWL1000_UCODE_API_MAX,
--	.ucode_api_min = IWL1000_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
--	.ops = &iwl1000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl1000_base_params,
-+	IWL_DEVICE_1000,
- 	.ht_params = &iwl1000_ht_params,
--	.led_mode = IWL_LED_BLINK,
- };
- 
- struct iwl_cfg iwl1000_bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BG",
--	.fw_name_pre = IWL1000_FW_PRE,
--	.ucode_api_max = IWL1000_UCODE_API_MAX,
--	.ucode_api_min = IWL1000_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
--	.ops = &iwl1000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl1000_base_params,
--	.led_mode = IWL_LED_BLINK,
-+	IWL_DEVICE_1000,
- };
- 
-+#define IWL_DEVICE_100						\
-+	.fw_name_pre = IWL100_FW_PRE,				\
-+	.ucode_api_max = IWL100_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL100_UCODE_API_MIN,			\
-+	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
-+	.ops = &iwl1000_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl1000_base_params,			\
-+	.led_mode = IWL_LED_RF_STATE,				\
-+	.rx_with_siso_diversity = true
-+
- struct iwl_cfg iwl100_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 100 BGN",
--	.fw_name_pre = IWL100_FW_PRE,
--	.ucode_api_max = IWL100_UCODE_API_MAX,
--	.ucode_api_min = IWL100_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
--	.ops = &iwl1000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl1000_base_params,
-+	IWL_DEVICE_100,
- 	.ht_params = &iwl1000_ht_params,
--	.led_mode = IWL_LED_RF_STATE,
--	.rx_with_siso_diversity = true,
- };
- 
- struct iwl_cfg iwl100_bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 100 BG",
--	.fw_name_pre = IWL100_FW_PRE,
--	.ucode_api_max = IWL100_UCODE_API_MAX,
--	.ucode_api_min = IWL100_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
--	.ops = &iwl1000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl1000_base_params,
--	.led_mode = IWL_LED_RF_STATE,
--	.rx_with_siso_diversity = true,
-+	IWL_DEVICE_100,
- };
- 
- MODULE_FIRMWARE(IWL1000_MODULE_FIRMWARE(IWL1000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 34af9e0..79ab0a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -520,65 +520,44 @@ static struct iwl_ht_params iwl5000_ht_params = {
- 	.use_rts_for_aggregation = true, /* use rts/cts protection */
- };
- 
-+#define IWL_DEVICE_5000						\
-+	.fw_name_pre = IWL5000_FW_PRE,				\
-+	.ucode_api_max = IWL5000_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL5000_UCODE_API_MIN,			\
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,	\
-+	.ops = &iwl5000_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl5000_base_params,			\
-+	.led_mode = IWL_LED_BLINK
-+
- struct iwl_cfg iwl5300_agn_cfg = {
- 	.name = "Intel(R) Ultimate N WiFi Link 5300 AGN",
--	.fw_name_pre = IWL5000_FW_PRE,
--	.ucode_api_max = IWL5000_UCODE_API_MAX,
--	.ucode_api_min = IWL5000_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
--	.ops = &iwl5000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl5000_base_params,
-+	IWL_DEVICE_5000,
- 	.ht_params = &iwl5000_ht_params,
--	.led_mode = IWL_LED_BLINK,
- };
- 
- struct iwl_cfg iwl5100_bgn_cfg = {
- 	.name = "Intel(R) WiFi Link 5100 BGN",
--	.fw_name_pre = IWL5000_FW_PRE,
--	.ucode_api_max = IWL5000_UCODE_API_MAX,
--	.ucode_api_min = IWL5000_UCODE_API_MIN,
-+	IWL_DEVICE_5000,
- 	.valid_tx_ant = ANT_B,		/* .cfg overwrite */
- 	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
--	.ops = &iwl5000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl5000_base_params,
- 	.ht_params = &iwl5000_ht_params,
--	.led_mode = IWL_LED_BLINK,
- };
- 
- struct iwl_cfg iwl5100_abg_cfg = {
- 	.name = "Intel(R) WiFi Link 5100 ABG",
--	.fw_name_pre = IWL5000_FW_PRE,
--	.ucode_api_max = IWL5000_UCODE_API_MAX,
--	.ucode_api_min = IWL5000_UCODE_API_MIN,
-+	IWL_DEVICE_5000,
- 	.valid_tx_ant = ANT_B,		/* .cfg overwrite */
- 	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
--	.ops = &iwl5000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl5000_base_params,
--	.led_mode = IWL_LED_BLINK,
- };
- 
- struct iwl_cfg iwl5100_agn_cfg = {
- 	.name = "Intel(R) WiFi Link 5100 AGN",
--	.fw_name_pre = IWL5000_FW_PRE,
--	.ucode_api_max = IWL5000_UCODE_API_MAX,
--	.ucode_api_min = IWL5000_UCODE_API_MIN,
-+	IWL_DEVICE_5000,
- 	.valid_tx_ant = ANT_B,		/* .cfg overwrite */
- 	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
--	.ops = &iwl5000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl5000_base_params,
- 	.ht_params = &iwl5000_ht_params,
--	.led_mode = IWL_LED_BLINK,
- };
- 
- struct iwl_cfg iwl5350_agn_cfg = {
-@@ -596,35 +575,29 @@ struct iwl_cfg iwl5350_agn_cfg = {
- 	.internal_wimax_coex = true,
- };
- 
-+#define IWL_DEVICE_5150						\
-+	.fw_name_pre = IWL5150_FW_PRE,				\
-+	.ucode_api_max = IWL5150_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL5150_UCODE_API_MIN,			\
-+	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,	\
-+	.ops = &iwl5150_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl5000_base_params,			\
-+	.need_dc_calib = true,					\
-+	.led_mode = IWL_LED_BLINK,				\
-+	.internal_wimax_coex = true
-+
- struct iwl_cfg iwl5150_agn_cfg = {
- 	.name = "Intel(R) WiMAX/WiFi Link 5150 AGN",
--	.fw_name_pre = IWL5150_FW_PRE,
--	.ucode_api_max = IWL5150_UCODE_API_MAX,
--	.ucode_api_min = IWL5150_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
--	.ops = &iwl5150_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl5000_base_params,
-+	IWL_DEVICE_5150,
- 	.ht_params = &iwl5000_ht_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_BLINK,
--	.internal_wimax_coex = true,
-+
- };
- 
- struct iwl_cfg iwl5150_abg_cfg = {
- 	.name = "Intel(R) WiMAX/WiFi Link 5150 ABG",
--	.fw_name_pre = IWL5150_FW_PRE,
--	.ucode_api_max = IWL5150_UCODE_API_MAX,
--	.ucode_api_min = IWL5150_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
--	.ops = &iwl5150_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl5000_base_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_BLINK,
--	.internal_wimax_coex = true,
-+	IWL_DEVICE_5150,
- };
- 
- MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index fe5f6d0..f4bec32 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -554,235 +554,156 @@ static struct iwl_bt_params iwl6000_bt_params = {
- 	.bt_sco_disable = true,
- };
- 
-+#define IWL_DEVICE_6005						\
-+	.fw_name_pre = IWL6000G2A_FW_PRE,			\
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,		\
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,	\
-+	.ops = &iwl6000_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl6000_g2_base_params,			\
-+	.need_dc_calib = true,					\
-+	.need_temp_offset_calib = true,				\
-+	.led_mode = IWL_LED_RF_STATE
-+
- struct iwl_cfg iwl6005_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
--	.fw_name_pre = IWL6000G2A_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
-+	IWL_DEVICE_6005,
- 	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
- };
- 
- struct iwl_cfg iwl6005_2abg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6205 ABG",
--	.fw_name_pre = IWL6000G2A_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
-+	IWL_DEVICE_6005,
- };
- 
- struct iwl_cfg iwl6005_2bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6205 BG",
--	.fw_name_pre = IWL6000G2A_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--};
-+	IWL_DEVICE_6005,
-+};
-+
-+#define IWL_DEVICE_6030						\
-+	.fw_name_pre = IWL6000G2B_FW_PRE,			\
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,		\
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,	\
-+	.ops = &iwl6000g2b_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl6000_g2_base_params,			\
-+	.bt_params = &iwl6000_bt_params,			\
-+	.need_dc_calib = true,					\
-+	.need_temp_offset_calib = true,				\
-+	.led_mode = IWL_LED_RF_STATE,				\
-+	.adv_pm = true,						\
-+	/*							\
-+	 *Due to bluetooth, we transmit 2.4 GHz probes		\
-+	 * only on antenna A					\
-+	 */							\
-+	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A
- 
- struct iwl_cfg iwl6030_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
-+	IWL_DEVICE_6030,
- 	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
- struct iwl_cfg iwl6030_2abg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 ABG",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
-+	IWL_DEVICE_6030,
- };
- 
- struct iwl_cfg iwl6030_2bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 BGN",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
-+	IWL_DEVICE_6030,
- 	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
- struct iwl_cfg iwl6030_2bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 BG",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
-+	IWL_DEVICE_6030,
- };
- 
- struct iwl_cfg iwl1030_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BGN",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
-+	IWL_DEVICE_6030,
- 	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
- struct iwl_cfg iwl1030_bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BG",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
--	.need_dc_calib = true,
--	.need_temp_offset_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
-+	IWL_DEVICE_6030,
-+};
-+
-+struct iwl_cfg iwl130_bgn_cfg = {
-+	.name = "Intel(R) Centrino(R) Wireless-N 130 BGN",
-+	IWL_DEVICE_6030,
-+	.ht_params = &iwl6000_ht_params,
-+	.rx_with_siso_diversity = true,
-+};
-+
-+struct iwl_cfg iwl130_bg_cfg = {
-+	.name = "Intel(R) Centrino(R) Wireless-N 130 BG",
-+	IWL_DEVICE_6030,
-+	.rx_with_siso_diversity = true,
- };
- 
- /*
-  * "i": Internal configuration, use internal Power Amplifier
-  */
-+#define IWL_DEVICE_6000i					\
-+	.fw_name_pre = IWL6000_FW_PRE,				\
-+	.ucode_api_max = IWL6000_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL6000_UCODE_API_MIN,			\
-+	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */	\
-+	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */	\
-+	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
-+	.ops = &iwl6000_ops,					\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl6000_base_params,			\
-+	.pa_type = IWL_PA_INTERNAL,				\
-+	.led_mode = IWL_LED_BLINK
-+
- struct iwl_cfg iwl6000i_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6200 AGN",
--	.fw_name_pre = IWL6000_FW_PRE,
--	.ucode_api_max = IWL6000_UCODE_API_MAX,
--	.ucode_api_min = IWL6000_UCODE_API_MIN,
--	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */
--	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */
--	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
--	.ops = &iwl6000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	IWL_DEVICE_6000i,
- 	.ht_params = &iwl6000_ht_params,
--	.pa_type = IWL_PA_INTERNAL,
--	.led_mode = IWL_LED_BLINK,
- };
- 
- struct iwl_cfg iwl6000i_2abg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6200 ABG",
--	.fw_name_pre = IWL6000_FW_PRE,
--	.ucode_api_max = IWL6000_UCODE_API_MAX,
--	.ucode_api_min = IWL6000_UCODE_API_MIN,
--	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */
--	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */
--	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
--	.ops = &iwl6000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
--	.pa_type = IWL_PA_INTERNAL,
--	.led_mode = IWL_LED_BLINK,
-+	IWL_DEVICE_6000i,
- };
- 
- struct iwl_cfg iwl6000i_2bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6200 BG",
--	.fw_name_pre = IWL6000_FW_PRE,
--	.ucode_api_max = IWL6000_UCODE_API_MAX,
--	.ucode_api_min = IWL6000_UCODE_API_MIN,
--	.valid_tx_ant = ANT_BC,		/* .cfg overwrite */
--	.valid_rx_ant = ANT_BC,		/* .cfg overwrite */
--	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
--	.ops = &iwl6000_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
--	.pa_type = IWL_PA_INTERNAL,
--	.led_mode = IWL_LED_BLINK,
--};
-+	IWL_DEVICE_6000i,
-+};
-+
-+#define IWL_DEVICE_6050						\
-+	.fw_name_pre = IWL6050_FW_PRE,				\
-+	.ucode_api_max = IWL6050_UCODE_API_MAX,			\
-+	.ucode_api_min = IWL6050_UCODE_API_MIN,			\
-+	.ops = &iwl6050_ops,					\
-+	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,		\
-+	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,	\
-+	.mod_params = &iwlagn_mod_params,			\
-+	.base_params = &iwl6050_base_params,			\
-+	.need_dc_calib = true,					\
-+	.led_mode = IWL_LED_BLINK,				\
-+	.internal_wimax_coex = true
- 
- struct iwl_cfg iwl6050_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN",
--	.fw_name_pre = IWL6050_FW_PRE,
--	.ucode_api_max = IWL6050_UCODE_API_MAX,
--	.ucode_api_min = IWL6050_UCODE_API_MIN,
--	.ops = &iwl6050_ops,
--	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6050_base_params,
-+	IWL_DEVICE_6050,
- 	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_BLINK,
--	.internal_wimax_coex = true,
-+};
-+
-+struct iwl_cfg iwl6050_2abg_cfg = {
-+	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 ABG",
-+	IWL_DEVICE_6050,
- };
- 
- struct iwl_cfg iwl6150_bgn_cfg = {
-@@ -801,21 +722,6 @@ struct iwl_cfg iwl6150_bgn_cfg = {
- 	.internal_wimax_coex = true,
- };
- 
--struct iwl_cfg iwl6050_2abg_cfg = {
--	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 ABG",
--	.fw_name_pre = IWL6050_FW_PRE,
--	.ucode_api_max = IWL6050_UCODE_API_MAX,
--	.ucode_api_min = IWL6050_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
--	.ops = &iwl6050_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6050_base_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_BLINK,
--	.internal_wimax_coex = true,
--};
--
- struct iwl_cfg iwl6000_3agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Ultimate-N 6300 AGN",
- 	.fw_name_pre = IWL6000_FW_PRE,
-@@ -831,45 +737,6 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.led_mode = IWL_LED_BLINK,
- };
- 
--struct iwl_cfg iwl130_bgn_cfg = {
--	.name = "Intel(R) Centrino(R) Wireless-N 130 BGN",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
--	.ht_params = &iwl6000_ht_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
--	.rx_with_siso_diversity = true,
--};
--
--struct iwl_cfg iwl130_bg_cfg = {
--	.name = "Intel(R) Centrino(R) Wireless-N 130 BG",
--	.fw_name_pre = IWL6000G2B_FW_PRE,
--	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
--	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
--	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
--	.ops = &iwl6000g2b_ops,
--	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_g2_base_params,
--	.bt_params = &iwl6000_bt_params,
--	.need_dc_calib = true,
--	.led_mode = IWL_LED_RF_STATE,
--	.adv_pm = true,
--	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
--	.rx_with_siso_diversity = true,
--};
--
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6000G2A_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
 -- 
-1.7.0.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
