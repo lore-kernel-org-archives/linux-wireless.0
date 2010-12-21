@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38767 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753880Ab0L0OI0 (ORCPT
+Received: from mail-gw0-f42.google.com ([74.125.83.42]:52336 "EHLO
+	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933512Ab0LUCqS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 09:08:26 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so8482816wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:26 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/10] rt2x00: Fix comment about removed spinlock
-Date: Mon, 27 Dec 2010 15:07:35 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012271504.30848.IvDoorn@gmail.com> <201012271506.58485.IvDoorn@gmail.com> <201012271507.17065.IvDoorn@gmail.com>
-In-Reply-To: <201012271507.17065.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012271507.36789.IvDoorn@gmail.com>
+	Mon, 20 Dec 2010 21:46:18 -0500
+Received: by gwb20 with SMTP id 20so2493842gwb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 18:46:17 -0800 (PST)
+From: Ismael Luceno <ismael.luceno@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ismael Luceno <ismael.luceno@gmail.com>
+Subject: [PATCH v2] rt2x00: Fix panic on frame padding for rt2800 usb devices
+Date: Tue, 21 Dec 2010 00:41:51 -0200
+Message-Id: <1292899311-20768-1-git-send-email-ismael.luceno@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Backtrace:
+  rt2800usb_write_tx_data
+  rt2x00queue_write_tx_frame
+  rt2x00mac_tx
+  invoke_tx_handlers
+  __ieee80211_tx
+  ieee80211_tx
+  virt_to_head_page
+  ieee80211_xmit
+  ieee80211_tx_skb
+  ieee80211_scan_work
+  schedule
+  ieee80211_scan_work
+  process_one_work
+  ...
 
-The comment doesn't match the code anymore. Fix that.
+It tried to expand the skb past it's end using skb_put. So I replaced it
+with a call to skb_padto, which takes the issue into account.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Ismael Luceno <ismael.luceno@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   16 ++++++++++++----
+ 1 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index b5dad04..658542d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -610,10 +610,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 		return;
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 3e0205d..b97a4a5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -369,7 +369,10 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
+ static void rt2800usb_write_tx_data(struct queue_entry *entry,
+ 					struct txentry_desc *txdesc)
+ {
+-	u8 padding_len;
++	unsigned int len;
++	int err;
++
++	rt2800_write_tx_data(entry, txdesc);
  
  	/*
--	 * Call rt2x00_config_intf() outside of the spinlock context since
--	 * the call will sleep for USB drivers. By using the ieee80211_if_conf
--	 * values as arguments we make keep access to rt2x00_intf thread safe
--	 * even without the lock.
-+	 * Update the BSSID.
+ 	 * pad(1~3 bytes) is added after each 802.11 payload.
+@@ -378,9 +381,14 @@ static void rt2800usb_write_tx_data(struct queue_entry *entry,
+ 	 * | TXINFO | TXWI | 802.11 header | L2 pad | payload | pad | USB end pad |
+ 	 *                 |<------------- tx_pkt_len ------------->|
  	 */
- 	if (changes & BSS_CHANGED_BSSID)
- 		rt2x00lib_config_intf(rt2x00dev, intf, vif->type, NULL,
+-        rt2800_write_tx_data(entry, txdesc);
+-        padding_len = roundup(entry->skb->len + 4, 4) - entry->skb->len;
+-        memset(skb_put(entry->skb, padding_len), 0, padding_len);
++	len = roundup(entry->skb->len, 4) + 4;
++	err = skb_padto(entry->skb, len);
++	if (unlikely(err)) {
++		WARNING(entry->queue->rt2x00dev, "TX SKB padding error, out of memory\n");
++		return;
++	}
++
++	entry->skb->len = len;
+ }
+ 
+ /*
 -- 
-1.7.2.3
+1.7.3.4
 
