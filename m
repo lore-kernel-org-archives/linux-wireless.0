@@ -1,56 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout028.mac.com ([17.148.16.103]:62543 "EHLO
-	asmtpout028.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608Ab0LWVNH (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52251 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928Ab0LUOtF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 16:13:07 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII
-Received: from [192.168.1.30] ([87.201.169.175])
- by asmtp028.mac.com (Oracle Communications Messaging Exchange Server 7u4-20.01
- 64bit (built Nov 21 2010)) with ESMTPSA id <0LDW00L95G99GK70@asmtp028.mac.com>
- for linux-wireless@vger.kernel.org; Thu, 23 Dec 2010 13:12:49 -0800 (PST)
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <AANLkTinyjZ0x1jvKndotDm-xHf0c192NQfB9y9_BQxFg@mail.gmail.com>
-Date: Fri, 24 Dec 2010 01:12:29 +0400
-Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Message-id: <FF69470D-9C14-4324-BA8E-F134B2AD9DEE@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
- <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
- <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
- <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
- <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
- <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
- <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
- <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
- <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
- <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com> <4D1266FA.7080305@hauke-m.de>
- <9AD18479-91B8-42DB-8D81-2AF11DD05405@mac.com>
- <AANLkTinyjZ0x1jvKndotDm-xHf0c192NQfB9y9_BQxFg@mail.gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
+	Tue, 21 Dec 2010 09:49:05 -0500
+Received: by wyb28 with SMTP id 28so4019884wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 06:49:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101221083037.8765.68357.stgit@localhost6.localdomain6>
+References: <20101221083020.8765.16350.stgit@localhost6.localdomain6>
+	<20101221083037.8765.68357.stgit@localhost6.localdomain6>
+Date: Tue, 21 Dec 2010 16:49:03 +0200
+Message-ID: <AANLkTik01F+dCY8rM9nqkrz7mnXHEGwgjfsQfGXFEH4j@mail.gmail.com>
+Subject: Re: [PATCH 4/5] ath5k: Remove ATH5K_INI_RFGAIN defines, use band instead
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ohad,
-                   For 2.6.32, some more SDIO stuff needs to be backported. For example, I get the following error:
+2010/12/21 Bruno Randolf <br1@einfach.org>:
+> Remove redundant defines.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h |    6 +-----
+>  drivers/net/wireless/ath/ath5k/phy.c   |   18 ++++++------------
+>  drivers/net/wireless/ath/ath5k/reset.c |   11 +++--------
+>  3 files changed, 10 insertions(+), 25 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 342da28..5de8520 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -154,10 +154,6 @@
+>                udelay(1);                                              \
+>  } while (0)
+>
+> -/* Register dumps are done per operation mode */
+> -#define AR5K_INI_RFGAIN_5GHZ           0
+> -#define AR5K_INI_RFGAIN_2GHZ           1
+> -
+>  /*
+>  * Some tuneable values (these should be changeable by the user)
+>  * TODO: Make use of them and add more options OR use debug/configfs
+> @@ -1322,7 +1318,7 @@ void ath5k_hw_set_antenna_switch(struct ath5k_hw *ah, u8 ee_mode);
+>  int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
+>  /* Init function */
+>  int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+> -                               u8 mode, u8 ee_mode, u8 freq, bool fast);
+> +                               u8 mode, u8 ee_mode, bool fast);
+>
+>  /*
+>  * Functions used internaly
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 18c58cd..b6e9621 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -609,10 +609,10 @@ done:
+>  /* Write initial RF gain table to set the RF sensitivity
+>  * this one works on all RF chips and has nothing to do
+>  * with gain_F calibration */
+> -static int ath5k_hw_rfgain_init(struct ath5k_hw *ah, unsigned int freq)
+> +static int ath5k_hw_rfgain_init(struct ath5k_hw *ah, enum ieee80211_band band)
+>  {
+>        const struct ath5k_ini_rfgain *ath5k_rfg;
+> -       unsigned int i, size;
+> +       unsigned int i, size, index;
+>
+>        switch (ah->ah_radio) {
+>        case AR5K_RF5111:
+> @@ -644,17 +644,11 @@ static int ath5k_hw_rfgain_init(struct ath5k_hw *ah, unsigned int freq)
+>                return -EINVAL;
+>        }
+>
+> -       switch (freq) {
+> -       case AR5K_INI_RFGAIN_2GHZ:
+> -       case AR5K_INI_RFGAIN_5GHZ:
+> -               break;
+> -       default:
+> -               return -EINVAL;
+> -       }
+> +       index = (band == IEEE80211_BAND_2GHZ) ? 1 : 0;
+>
+>        for (i = 0; i < size; i++) {
+>                AR5K_REG_WAIT(i);
+> -               ath5k_hw_reg_write(ah, ath5k_rfg[i].rfg_value[freq],
+> +               ath5k_hw_reg_write(ah, ath5k_rfg[i].rfg_value[index],
+>                        (u32)ath5k_rfg[i].rfg_register);
+>        }
+>
+> @@ -3246,7 +3240,7 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+>  \*************/
+>
+>  int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+> -                               u8 mode, u8 ee_mode, u8 freq, bool fast)
+> +                               u8 mode, u8 ee_mode, bool fast)
+>  {
+>        struct ieee80211_channel *curr_channel;
+>        int ret, i;
+> @@ -3305,7 +3299,7 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+>                 * Write initial RF gain settings
+>                 * This should work for both 5111/5112
+>                 */
+> -               ret = ath5k_hw_rfgain_init(ah, freq);
+> +               ret = ath5k_hw_rfgain_init(ah, channel->band);
+>                if (ret)
+>                        return ret;
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+> index bc84aaa..4b8b987 100644
+> --- a/drivers/net/wireless/ath/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath/ath5k/reset.c
+> @@ -1020,13 +1020,12 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                struct ieee80211_channel *channel, bool fast, bool skip_pcu)
+>  {
+>        u32 s_seq[10], s_led[3], tsf_up, tsf_lo;
+> -       u8 mode, freq, ee_mode;
+> +       u8 mode, ee_mode;
+>        int i, ret;
+>
+>        ee_mode = 0;
+>        tsf_up = 0;
+>        tsf_lo = 0;
+> -       freq = 0;
+>        mode = 0;
+>
+>        /*
+> @@ -1071,7 +1070,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>        switch (channel->hw_value & CHANNEL_MODES) {
+>        case CHANNEL_A:
+>                mode = AR5K_MODE_11A;
+> -               freq = AR5K_INI_RFGAIN_5GHZ;
+>                ee_mode = AR5K_EEPROM_MODE_11A;
+>                break;
+>        case CHANNEL_G:
+> @@ -1083,7 +1081,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                }
+>
+>                mode = AR5K_MODE_11G;
+> -               freq = AR5K_INI_RFGAIN_2GHZ;
+>                ee_mode = AR5K_EEPROM_MODE_11G;
+>                break;
+>        case CHANNEL_B:
+> @@ -1095,7 +1092,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                }
+>
+>                mode = AR5K_MODE_11B;
+> -               freq = AR5K_INI_RFGAIN_2GHZ;
+>                ee_mode = AR5K_EEPROM_MODE_11B;
+>                break;
+>        case CHANNEL_XR:
+> @@ -1105,7 +1101,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>                        return -EINVAL;
+>                }
+>                mode = AR5K_MODE_XR;
+> -               freq = AR5K_INI_RFGAIN_5GHZ;
+>                ee_mode = AR5K_EEPROM_MODE_11A;
+>                break;
+>        default:
+> @@ -1120,7 +1115,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>         */
+>        if (fast) {
+>                ret = ath5k_hw_phy_init(ah, channel, mode,
+> -                                       ee_mode, freq, true);
+> +                                       ee_mode, true);
+>                if (ret) {
+>                        ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_RESET,
+>                                "fast chan change failed, falling back to normal reset\n");
+> @@ -1256,7 +1251,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>        /*
+>         * Initialize PHY
+>         */
+> -       ret = ath5k_hw_phy_init(ah, channel, mode, ee_mode, freq, false);
+> +       ret = ath5k_hw_phy_init(ah, channel, mode, ee_mode, false);
+>        if (ret) {
+>                ATH5K_ERR(ah->ah_sc,
+>                        "failed to initialize PHY (%i) !\n", ret);
+>
+>
 
-[   16.232482] mmc1: card claims to support voltages below the defined range. These will be ignored.
-[   16.241424] mmc1: host doesn't support card's voltages
-[   16.246643] mmc1: error -22 whilst initialising SDIO card
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 
-So, the part for handling reporting card voltages need to be added in.
-
-Also the SDIO run-time PM patches are not nearly as easy to apply to the android-rowboat-eclair-2.6.32 kernel.
-
-Is the SDIO subsystem sufficiently modular so as to allow me to take a few file and use it as a drop in 
-replacement for the 2.6.32 kernel?
-
-Elvis Dowson
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
