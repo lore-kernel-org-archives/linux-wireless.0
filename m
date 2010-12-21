@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57725 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159Ab0LCPIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 10:08:22 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 07:08:08 -0800
-Message-ID: <4CF907DB.9070506@atheros.com>
-Date: Fri, 3 Dec 2010 20:38:11 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:38681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752279Ab0LUOjH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 09:39:07 -0500
+Subject: Re: Wireless channel stuck to -1 on mon0 (fix patch submission)
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Properly use unlikely check macro
-References: <1291044477-2317-1-git-send-email-mshajakhan@atheros.com> <20101202202127.GF2358@tuxdriver.com> <4CF87597.5080900@atheros.com> <20101203145918.GC2348@tuxdriver.com>
-In-Reply-To: <20101203145918.GC2348@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	CalimeroTeknik <calimeroteknik@free.fr>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20101220141134.GA10104@tuxdriver.com>
+References: <4D0DE870.2050503@free.fr>
+	 <AANLkTik5uML3gSD5aJE8CPwew8G5shp9BJgGUK608jTp@mail.gmail.com>
+	 <1292794572.8422.0.camel@jlt3.sipsolutions.net>
+	 <20101220141134.GA10104@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Dec 2010 15:39:04 +0100
+Message-ID: <1292942344.3563.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 December 2010 08:29 PM, John W. Linville wrote:
-> On Fri, Dec 03, 2010 at 10:14:07AM +0530, Mohammed Shafi wrote:
->    
->> On Friday 03 December 2010 01:51 AM, John W. Linville wrote:
->>      
->>> On Mon, Nov 29, 2010 at 08:57:57PM +0530, Mohammed Shafi Shajakhan wrote:
->>>        
->>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>
->>>> AUTOSLEEP feature is enabled only AR9003 and later chips.So unlikely
->>>> macro should be used only to check whether auto-sleep feature is enabled
->>>>
->>>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>> ---
->>>>   drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
->>>>   1 files changed, 3 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->>>> index 262c815..751ee1b 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/recv.c
->>>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->>>> @@ -1743,10 +1743,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->>>>   		}
->>>>
->>>>   		spin_lock_irqsave(&sc->sc_pm_lock, flags);
->>>> -		if (unlikely(ath9k_check_auto_sleep(sc) ||
->>>> -			     (sc->ps_flags&   (PS_WAIT_FOR_BEACON |
->>>> +		if ((sc->ps_flags&   (PS_WAIT_FOR_BEACON |
->>>>   					      PS_WAIT_FOR_CAB |
->>>> -					      PS_WAIT_FOR_PSPOLL_DATA))))
->>>> +					      PS_WAIT_FOR_PSPOLL_DATA)) ||
->>>> +				unlikely(ath9k_hw_check_auto_sleep(sc)))
->>>>   			ath_rx_ps(sc, skb);
->>>>   		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
->>>>          
->>> What tree is this against?
->>>        
->> 2.6.37-rc4 ..Any problems in applying.Do I have to resend it based
->> on the latest pull ?
->>      
-> Did you compile it?
->
-> /home/linville/git/linux-2.6
-> [linville-8530p.local]:>  git describe
-> v2.6.37-rc4
->
-> /home/linville/git/linux-2.6
-> [linville-8530p.local]:>  grep ath9k_hw_check_auto_sleep drivers/net/wireless/ath/ath9k/*
->    
-Sorry for the trouble John  please ignore that patch.I apologize for not 
-compiling it.I will send a v2 patch  over the latest pull.
+On Mon, 2010-12-20 at 09:11 -0500, John W. Linville wrote:
+> On Sun, Dec 19, 2010 at 10:36:12PM +0100, Johannes Berg wrote:
+> > On Sun, 2010-12-19 at 21:58 +0100, Gábor Stefanik wrote:
+> > > This is a known problem, that has basically been WONTFIXed a while
+> > > ago. I highly disagree with the reasoning, but the decision ultimately
+> > > rests on Johannes. In the meantime, check patches.aircrack-ng.org for
+> > > a workaround.
+> > > 
+> > > Johannes: I know that you consider reporting the actual channel of the
+> > > PHY to be "confusing to users" when running with multiple virtual
+> > > PHYs, but apparently this is what most users expect. Perhaps it
+> > > *should* be implemented after all.
+> > 
+> > In which case it should be implemented properly, not half-baked like all
+> > the patches we've seen so far.
+> 
+> This does continue to pop-up.  Do you have a link to a description
+> of a proper implementation?
 
-> John
->    
+I don't think so -- I don't recall anyone ever asking before ;-)
+
+FWIW, I think right now we need to simply query mac80211's oper_channel
+somehow -- that'll be good enough until that goes away for real
+multi-channel operation.
+
+Using the channel that was set on the monitor interfaces like these
+patches have done is obviously flawed because monitor interfaces have
+absolutely no influence on the channel unless that's all there is.
+
+johannes
+
