@@ -1,241 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13247 "EHLO mga01.intel.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:44137 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757617Ab0LBQ5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:57:53 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/5] iwlagn: remove structure name reference to gen2
-Date: Thu,  2 Dec 2010 08:51:22 -0800
-Message-Id: <1291308684-3279-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751280Ab0LUVc5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 16:32:57 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Tue, 21 Dec 2010 22:31:57 +0100
+Cc: "Ohad Ben-Cohen" <ohad@wizery.com>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+References: <Pine.LNX.4.44L0.1012201946330.19558-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1012201946330.19558-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012212231.57420.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Tuesday, December 21, 2010, Alan Stern wrote:
+> On Mon, 20 Dec 2010, Rafael J. Wysocki wrote:
+> 
+> > > > In that case, if a device if flagged as "runtime only", we can avoid
+> > > > calling pm_runtime_get_noirq() for it in dpm_prepare() and, analogously,
+> > > > calling pm_runtime_put_sync() for it in dpm_complete().  However, we will have
+> > > > to fail system suspend (or hibernation) if a "runtime only" device has the
+> > > > power.runtime_auto flag unset.
+> > > 
+> > > Or more generally, if pm_runtime_suspended() doesn't return 'true' for 
+> > > the device.
+> > 
+> > That's not necessary, because the device may be suspended using
+> > pm_runtime_suspend() later than we check pm_runtime_suspended().
+> 
+> What if the device has a child in the RPM_ACTIVE state?  Then 
+> pm_runtime_suspend() won't do anything, even if the child really is 
+> dpm-suspended.
 
-Give the corresponding name for .cfg data structure
+Well, in fact I was thinking of leaf devices.  Following all of the children
+for non-leaf devices would pretty much nullify the whole possible gain.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c |   20 +++++-----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   58 +++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-agn.h  |   20 +++++-----
- 3 files changed, 49 insertions(+), 49 deletions(-)
+> > I'd use the "runtime only" (or perhaps better "no_dpm") flag as a declaration
+> > (if set) that the device is going to be suspended with the help of "runtime"
+> > callbacks and the driver takes the responsibility for getting things right.
+> 
+> I'm still not sure about this; the design isn't clear.  Are these
+> runtime callbacks going to come from the PM core or from the driver?  
+> If from the driver, how will the driver know when to issue them?  What
+> about coordinating async suspends (the device must be suspended after
+> its children and before its parent)?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index ec41f27..8018f38 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -552,7 +552,7 @@ static struct iwl_bt_params iwl6000_bt_params = {
- 	.bt_sco_disable = true,
- };
- 
--struct iwl_cfg iwl6000g2a_2agn_cfg = {
-+struct iwl_cfg iwl6005_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
- 	.fw_name_pre = IWL6000G2A_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -568,7 +568,7 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
- 	.led_mode = IWL_LED_RF_STATE,
- };
- 
--struct iwl_cfg iwl6000g2a_2abg_cfg = {
-+struct iwl_cfg iwl6005_2abg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6205 ABG",
- 	.fw_name_pre = IWL6000G2A_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -583,7 +583,7 @@ struct iwl_cfg iwl6000g2a_2abg_cfg = {
- 	.led_mode = IWL_LED_RF_STATE,
- };
- 
--struct iwl_cfg iwl6000g2a_2bg_cfg = {
-+struct iwl_cfg iwl6005_2bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6205 BG",
- 	.fw_name_pre = IWL6000G2A_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -598,7 +598,7 @@ struct iwl_cfg iwl6000g2a_2bg_cfg = {
- 	.led_mode = IWL_LED_RF_STATE,
- };
- 
--struct iwl_cfg iwl6000g2b_2agn_cfg = {
-+struct iwl_cfg iwl6030_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -618,7 +618,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
--struct iwl_cfg iwl6000g2b_2abg_cfg = {
-+struct iwl_cfg iwl6030_2abg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 ABG",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -637,7 +637,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
--struct iwl_cfg iwl6000g2b_2bgn_cfg = {
-+struct iwl_cfg iwl6030_2bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 BGN",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -657,7 +657,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
--struct iwl_cfg iwl6000g2b_2bg_cfg = {
-+struct iwl_cfg iwl6030_2bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 BG",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -676,7 +676,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
--struct iwl_cfg iwl6000g2b_bgn_cfg = {
-+struct iwl_cfg iwl1030_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BGN",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -696,7 +696,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
- 
--struct iwl_cfg iwl6000g2b_bg_cfg = {
-+struct iwl_cfg iwl1030_bg_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N 1030 BG",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -782,7 +782,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.led_mode = IWL_LED_BLINK,
- };
- 
--struct iwl_cfg iwl6050g2_bgn_cfg = {
-+struct iwl_cfg iwl6150_bgn_cfg = {
- 	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BGN",
- 	.fw_name_pre = IWL6050_FW_PRE,
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 50cee2b..9a6f7a0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4419,31 +4419,31 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x4239, 0x1316, iwl6000i_2abg_cfg)},
- 
- /* 6x00 Series Gen2a */
--	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6000g2a_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1306, iwl6000g2a_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1307, iwl6000g2a_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1321, iwl6000g2a_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1326, iwl6000g2a_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6000g2a_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6000g2a_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6005_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1306, iwl6005_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1307, iwl6005_2bg_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1321, iwl6005_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1326, iwl6005_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6005_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6005_2abg_cfg)},
- 
- /* 6x00 Series Gen2b */
--	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl6000g2b_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x008A, 0x5307, iwl6000g2b_bg_cfg)},
--	{IWL_PCI_DEVICE(0x008A, 0x5325, iwl6000g2b_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x008A, 0x5327, iwl6000g2b_bg_cfg)},
--	{IWL_PCI_DEVICE(0x008B, 0x5315, iwl6000g2b_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x008B, 0x5317, iwl6000g2b_bg_cfg)},
--	{IWL_PCI_DEVICE(0x0090, 0x5211, iwl6000g2b_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0090, 0x5215, iwl6000g2b_2bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6000g2b_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5201, iwl6000g2b_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5205, iwl6000g2b_2bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5206, iwl6000g2b_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5207, iwl6000g2b_2bg_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5221, iwl6000g2b_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5225, iwl6000g2b_2bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0091, 0x5226, iwl6000g2b_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl1030_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x008A, 0x5307, iwl1030_bg_cfg)},
-+	{IWL_PCI_DEVICE(0x008A, 0x5325, iwl1030_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x008A, 0x5327, iwl1030_bg_cfg)},
-+	{IWL_PCI_DEVICE(0x008B, 0x5315, iwl1030_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x008B, 0x5317, iwl1030_bg_cfg)},
-+	{IWL_PCI_DEVICE(0x0090, 0x5211, iwl6030_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0090, 0x5215, iwl6030_2bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6030_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5201, iwl6030_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5205, iwl6030_2bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5206, iwl6030_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5207, iwl6030_2bg_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5221, iwl6030_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5225, iwl6030_2bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0091, 0x5226, iwl6030_2abg_cfg)},
- 
- /* 6x50 WiFi/WiMax Series */
- 	{IWL_PCI_DEVICE(0x0087, 0x1301, iwl6050_2agn_cfg)},
-@@ -4454,12 +4454,12 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0089, 0x1316, iwl6050_2abg_cfg)},
- 
- /* 6x50 WiFi/WiMax Series Gen2 */
--	{IWL_PCI_DEVICE(0x0885, 0x1305, iwl6050g2_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0885, 0x1306, iwl6050g2_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0885, 0x1325, iwl6050g2_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0885, 0x1326, iwl6050g2_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0886, 0x1315, iwl6050g2_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0886, 0x1316, iwl6050g2_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0885, 0x1305, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0885, 0x1306, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0885, 0x1325, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0885, 0x1326, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0886, 0x1315, iwl6150_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0886, 0x1316, iwl6150_bgn_cfg)},
- 
- /* 1000 Series WiFi */
- 	{IWL_PCI_DEVICE(0x0083, 0x1205, iwl1000_bgn_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 28837a1..da30358 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -74,22 +74,22 @@ extern struct iwl_cfg iwl5100_bgn_cfg;
- extern struct iwl_cfg iwl5100_abg_cfg;
- extern struct iwl_cfg iwl5150_agn_cfg;
- extern struct iwl_cfg iwl5150_abg_cfg;
--extern struct iwl_cfg iwl6000g2a_2agn_cfg;
--extern struct iwl_cfg iwl6000g2a_2abg_cfg;
--extern struct iwl_cfg iwl6000g2a_2bg_cfg;
--extern struct iwl_cfg iwl6000g2b_bgn_cfg;
--extern struct iwl_cfg iwl6000g2b_bg_cfg;
--extern struct iwl_cfg iwl6000g2b_2agn_cfg;
--extern struct iwl_cfg iwl6000g2b_2abg_cfg;
--extern struct iwl_cfg iwl6000g2b_2bgn_cfg;
--extern struct iwl_cfg iwl6000g2b_2bg_cfg;
-+extern struct iwl_cfg iwl6005_2agn_cfg;
-+extern struct iwl_cfg iwl6005_2abg_cfg;
-+extern struct iwl_cfg iwl6005_2bg_cfg;
-+extern struct iwl_cfg iwl1030_bgn_cfg;
-+extern struct iwl_cfg iwl1030_bg_cfg;
-+extern struct iwl_cfg iwl6030_2agn_cfg;
-+extern struct iwl_cfg iwl6030_2abg_cfg;
-+extern struct iwl_cfg iwl6030_2bgn_cfg;
-+extern struct iwl_cfg iwl6030_2bg_cfg;
- extern struct iwl_cfg iwl6000i_2agn_cfg;
- extern struct iwl_cfg iwl6000i_2abg_cfg;
- extern struct iwl_cfg iwl6000i_2bg_cfg;
- extern struct iwl_cfg iwl6000_3agn_cfg;
- extern struct iwl_cfg iwl6050_2agn_cfg;
- extern struct iwl_cfg iwl6050_2abg_cfg;
--extern struct iwl_cfg iwl6050g2_bgn_cfg;
-+extern struct iwl_cfg iwl6150_bgn_cfg;
- extern struct iwl_cfg iwl1000_bgn_cfg;
- extern struct iwl_cfg iwl1000_bg_cfg;
- extern struct iwl_cfg iwl100_bgn_cfg;
--- 
-1.7.0.4
+It basically goes like this.  There's device A that is only resumed when it's
+needed to carry out an operation and is suspended immediately after that.
+There's another device B that needs A to do something during its suspend.
+So, when the suspend of B is started, A is woken up, does its work and is
+suspended again (using pm_runtime_suspend()).  Then B is suspended.
 
+We currently require that ->suspend() and ->resume() callbacks be defined
+for A (presumably pointing to the same code as its runtime callbacks) so that
+things work correctly, but perhaps we can just relax this requirement a bit?
+I'm not 100% sure that's a good idea, just considering it.
+
+Rafael
