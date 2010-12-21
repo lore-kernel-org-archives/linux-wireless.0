@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50615 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757288Ab0LUBCJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 20:02:09 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Kalle Valo <kvalo@adurom.com>
-Subject: [PATCH 1/7] wl1251: remove unnecessary import
-Date: Tue, 21 Dec 2010 02:01:50 +0100
-Message-Id: <1292893316-26694-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
-References: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52771 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288Ab0LUO3M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 09:29:12 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 21 Dec 2010 09:28:51 -0500
+Message-ID: <AANLkTikw3i29uwfp7qoejKYrJoNsGBedpO1NGo9UhmZY@mail.gmail.com>
+Subject: Linux wireless DFS meeting - 2010-12-21 05:00 UTC #linux-wireless freenode
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Kathy Giori <Kathy.Giori@atheros.com>,
+	linux-kernel@vger.kernel.org,
+	Michael Green <Michael.Green@atheros.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Vipin Mehta <Vipin.Mehta@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No function declared in gpio.h is used here.
+IRC meeting reminder for DFS today at 9am PST time (05:00 UTC, noon
+Eastern time). The meeting will take place on irc.freenode.net on
+#linux-wireless
 
-CC: Kalle Valo <kvalo@adurom.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/wl1251/boot.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+For details please see:
 
-diff --git a/drivers/net/wireless/wl1251/boot.c b/drivers/net/wireless/wl1251/boot.c
-index 61572df..d729daf 100644
---- a/drivers/net/wireless/wl1251/boot.c
-+++ b/drivers/net/wireless/wl1251/boot.c
-@@ -19,7 +19,6 @@
-  *
-  */
- 
--#include <linux/gpio.h>
- #include <linux/slab.h>
- 
- #include "reg.h"
--- 
-1.7.1
+http://wireless.kernel.org/en/developers/DFS
 
+Items I and II on the development roadmap seem to be addressed now but
+would like to review it with others on IRC and see if there are any
+questions, and hope to coordinate work for items 3 and 4 on the
+development roadmap.
+
+  Luis
