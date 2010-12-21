@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:28040 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752394Ab0LGMMn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 07:12:43 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 04:12:28 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 2.6.37 v2 1/2] ath9k: fix beacon resource related race condition
-Date: Tue, 7 Dec 2010 17:42:18 +0530
-Message-ID: <1291723939-19262-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from casper.infradead.org ([85.118.1.10]:59814 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754099Ab0LUJZy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 04:25:54 -0500
+Subject: Re: b43 N PHY status report
+From: David Woodhouse <dwmw2@infradead.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1292008120.3531.5.camel@jlt3.sipsolutions.net>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	 <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+	 <4CFFA112.7030800@lwfinger.net>
+	 <885729A3-72D4-4EFC-AAFE-D2B573E00ED9@ing.unibs.it>
+	 <1292006874.3531.4.camel@jlt3.sipsolutions.net>
+	 <4D02793E.2050004@lwfinger.net>
+	 <AANLkTik2MdDg4g4dFuB6ozZ3Pp3pPORmSAxRAbtznTLP@mail.gmail.com>
+	 <1292008120.3531.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Dec 2010 09:25:26 +0000
+Message-ID: <1292923526.2577.53.camel@macbook.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon tasklet is accesssing the bslot info for beacon generation.
-Meanwhile the same slot can be freed on interface deletion.
-Current the remove_interface disables the beacon alert after freeing the slot.
-This may leads to null pointer access.
+On Fri, 2010-12-10 at 20:08 +0100, Johannes Berg wrote:
+> On Fri, 2010-12-10 at 20:04 +0100, Gábor Stefanik wrote:
+> > On Fri, Dec 10, 2010 at 8:02 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > > On 12/10/2010 12:47 PM, Johannes Berg wrote:
+> > >> On Fri, 2010-12-10 at 19:30 +0100, Francesco Gringoli wrote:
+> > >>
+> > >>> [ 1117.516031] unregister_netdevice: waiting for wlan1 to become free. Usage count = 1
+> > >>>
+> > >>> and the device is never release (by who?). I have to reboot.
+> > >>
+> > >> That's a bug in the ipv6 code, upgrade your kernel :-)
+> > >
+> > > I would not have seen that as IPv6 is disabled in my kernels.
+> > 
+> > Are you serious? Disabling ipv6 with ipv4 exhaustion expected in January?
+> 
+> Can we stop this thread right here and go on-topic again please?
 
-This patch disables SWBA and kills the beacon tasklet to prevent access
-to the slot to be freed. After releasing the slot, swba will be enabled again
-upon the availablity of beaconing interfaces.
+On-topic:
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
-v2: updated commit log
+Anyone working on or testing network device drivers should be using
+IPv6. IPv6 will exercise code paths and network behaviour that Legacy IP
+rarely does, in particular using multicast to do neighbour discovery.
+And on wireless networks when multicast will be handled differently by
+the AP, that makes more difference than on wired where it's mostly the
+MAC filters that get neglected.
 
- drivers/net/wireless/ath/ath9k/main.c |   21 +++++++--------------
- 1 files changed, 7 insertions(+), 14 deletions(-)
+I've seen a number of broken drivers because their authors were only
+testing with Legacy IP and not IPv6.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f026a03..509da8f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1438,8 +1438,6 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
--	bool bs_valid = false;
--	int i;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "Detach Interface\n");
- 
-@@ -1453,26 +1451,21 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
-+		/* Disable SWBA interrupt */
-+		sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
- 		ath9k_ps_wakeup(sc);
-+		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 		ath9k_ps_restore(sc);
-+		tasklet_kill(&sc->bcon_tasklet);
- 	}
- 
- 	ath_beacon_return(sc, avp);
- 	sc->sc_flags &= ~SC_OP_BEACONS;
- 
--	for (i = 0; i < ARRAY_SIZE(sc->beacon.bslot); i++) {
--		if (sc->beacon.bslot[i] == vif) {
--			printk(KERN_DEBUG "%s: vif had allocated beacon "
--			       "slot\n", __func__);
--			sc->beacon.bslot[i] = NULL;
--			sc->beacon.bslot_aphy[i] = NULL;
--		} else if (sc->beacon.bslot[i])
--			bs_valid = true;
--	}
--	if (!bs_valid && (sc->sc_ah->imask & ATH9K_INT_SWBA)) {
--		/* Disable SWBA interrupt */
--		sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
-+	if (sc->nbcnvifs) {
-+		/* Re-enable SWBA interrupt */
-+		sc->sc_ah->imask |= ATH9K_INT_SWBA;
- 		ath9k_ps_wakeup(sc);
- 		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
- 		ath9k_ps_restore(sc);
+It's not hard to set up IPv6. Larry, if you need any pointers I'd be
+more than happy to help.
+
 -- 
-1.7.3.3
+dwmw2
 
