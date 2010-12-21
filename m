@@ -1,122 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:61583 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468Ab0LWHsR convert rfc822-to-8bit (ORCPT
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:33344 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751799Ab0LUUoq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 02:48:17 -0500
-Received: by ywl5 with SMTP id 5so2527482ywl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 23:48:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1293052614.14423.42.camel@powerslave>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
- <1293028057-6212-5-git-send-email-arik@wizery.com> <1293052614.14423.42.camel@powerslave>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 23 Dec 2010 09:48:01 +0200
-Message-ID: <AANLkTi=0zLoHTPt0mJ+TsqF3JoSzMUGAVq+puU2uFJE5@mail.gmail.com>
-Subject: Re: [PATCH v2 04/18] wl1271: AP-mode high level commands
-To: Luciano Coelho <luciano.coelho@nokia.com>
+	Tue, 21 Dec 2010 15:44:46 -0500
+Subject: [PATCH 6/7] rndis_wlan: add support for set_cqm_rssi_config
+To: "John W. Linville" <linville@tuxdriver.com>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Tue, 21 Dec 2010 22:44:42 +0200
+Message-ID: <20101221204442.12250.39841.stgit@fate.lan>
+In-Reply-To: <20101221204405.12250.35410.stgit@fate.lan>
+References: <20101221204405.12250.35410.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 23:16, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
->> Add commands to start/stop BSS, add/remove STA and configure encryption
->> keys. Split the encryption commands "set key" and "set default key" into
->> AP and STA specific versions.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> [...]
->
->> @@ -850,3 +943,178 @@ out_free:
->>  out:
->>       return ret;
->>  }
->> +
->> +int wl1271_cmd_start_bss(struct wl1271 *wl)
->> +{
->> +     struct wl1271_cmd_bss_start *cmd;
->> +     struct ieee80211_bss_conf *bss_conf = &wl->vif->bss_conf;
->> +     int ret;
->> +
->> +     wl1271_debug(DEBUG_CMD, "cmd start bss");
->> +
->> +     /*
->> +      * FIXME: We currently do not support hidden SSID. The real SSID
->> +      * should be fetched from mac80211 first.
->> +      */
->> +     if (wl->ssid_len == 0) {
->> +             wl1271_warning("Hidden SSID currently not supported for AP");
->> +             return -EINVAL;
->> +     }
->> +
->> +     cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
->> +     if (!cmd) {
->> +             ret = -ENOMEM;
->> +             goto out;
->> +     }
->
-> Please decide if you want to return directly here or set ret and goto
-> out.  For consistency, I'd suggest to set ret and goto out, since this
-> is how (most of) the rest of the code does.
+Device poller already reads current RSSI, so add support for
+set_cqm_rssi_config there.
 
-Fixed.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/rndis_wlan.c |   51 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 50 insertions(+), 1 deletions(-)
 
->
->
->> +int wl1271_cmd_add_sta(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
->> +{
->> +     struct wl1271_cmd_add_sta *cmd;
->> +     int ret;
->> +
->> +     wl1271_debug(DEBUG_CMD, "cmd add sta %d", (int)hlid);
->> +
->> +     cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
->> +     if (!cmd) {
->> +             ret = -ENOMEM;
->> +             goto out;
->> +     }
->> +
->> +     /* currently we don't support UAPSD */
->> +     memset(cmd->psd_type, 0, sizeof(cmd->psd_type));
->> +     cmd->sp_len = 0;
->
-> No need to memset, since you're kzalloc'ing anyway.  I guess just a good
-> comment here is enough.
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index aa21d86..0cd971a 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -478,6 +478,9 @@ struct rndis_wlan_private {
+ 	struct mutex command_lock;
+ 	unsigned long work_pending;
+ 	int last_qual;
++	s32 cqm_rssi_thold;
++	u32 cqm_rssi_hyst;
++	int last_cqm_event_rssi;
+ 
+ 	struct ieee80211_supported_band band;
+ 	struct ieee80211_channel channels[ARRAY_SIZE(rndis_channels)];
+@@ -569,6 +572,10 @@ static int rndis_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 
+ static int rndis_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev);
+ 
++static int rndis_set_cqm_rssi_config(struct wiphy *wiphy,
++					struct net_device *dev,
++					s32 rssi_thold, u32 rssi_hyst);
++
+ static const struct cfg80211_ops rndis_config_ops = {
+ 	.change_virtual_intf = rndis_change_virtual_intf,
+ 	.scan = rndis_scan,
+@@ -588,6 +595,7 @@ static const struct cfg80211_ops rndis_config_ops = {
+ 	.set_pmksa = rndis_set_pmksa,
+ 	.del_pmksa = rndis_del_pmksa,
+ 	.flush_pmksa = rndis_flush_pmksa,
++	.set_cqm_rssi_config = rndis_set_cqm_rssi_config,
+ };
+ 
+ static void *rndis_wiphy_privid = &rndis_wiphy_privid;
+@@ -2566,6 +2574,19 @@ static int rndis_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+ 	return rndis_set_oid(usbdev, OID_802_11_PMKID, &pmkid, sizeof(pmkid));
+ }
+ 
++static int rndis_set_cqm_rssi_config(struct wiphy *wiphy,
++					struct net_device *dev,
++					s32 rssi_thold, u32 rssi_hyst)
++{
++	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
++
++	priv->cqm_rssi_thold = rssi_thold;
++	priv->cqm_rssi_hyst = rssi_hyst;
++	priv->last_cqm_event_rssi = 0;
++
++	return 0;
++}
++
+ static void rndis_wlan_craft_connected_bss(struct usbnet *usbdev, u8 *bssid,
+ 					   struct ndis_80211_assoc_info *info)
+ {
+@@ -3095,6 +3116,32 @@ static int rndis_wlan_get_caps(struct usbnet *usbdev, struct wiphy *wiphy)
+ 	return retval;
+ }
+ 
++static void rndis_do_cqm(struct usbnet *usbdev, s32 rssi)
++{
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++	enum nl80211_cqm_rssi_threshold_event event;
++	int thold, hyst, last_event;
++
++	if (priv->cqm_rssi_thold >= 0 || rssi >= 0)
++		return;
++	if (priv->infra_mode != NDIS_80211_INFRA_INFRA)
++		return;
++
++	last_event = priv->last_cqm_event_rssi;
++	thold = priv->cqm_rssi_thold;
++	hyst = priv->cqm_rssi_hyst;
++
++	if (rssi < thold && (last_event == 0 || rssi < last_event - hyst))
++		event = NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW;
++	else if (rssi > thold && (last_event == 0 || rssi > last_event + hyst))
++		event = NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
++	else
++		return;
++
++	priv->last_cqm_event_rssi = rssi;
++	cfg80211_cqm_rssi_notify(usbdev->net, event, GFP_KERNEL);
++}
++
+ #define DEVICE_POLLER_JIFFIES (HZ)
+ static void rndis_device_poller(struct work_struct *work)
+ {
+@@ -3129,8 +3176,10 @@ static void rndis_device_poller(struct work_struct *work)
+ 
+ 	len = sizeof(rssi);
+ 	ret = rndis_query_oid(usbdev, OID_802_11_RSSI, &rssi, &len);
+-	if (ret == 0)
++	if (ret == 0) {
+ 		priv->last_qual = level_to_qual(le32_to_cpu(rssi));
++		rndis_do_cqm(usbdev, le32_to_cpu(rssi));
++	}
+ 
+ 	netdev_dbg(usbdev->net, "dev-poller: OID_802_11_RSSI -> %d, rssi:%d, qual: %d\n",
+ 		   ret, le32_to_cpu(rssi), level_to_qual(le32_to_cpu(rssi)));
 
-Fixed.
-
->
->
->> diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
->> index 2a1d9db..02f843c 100644
->> --- a/drivers/net/wireless/wl12xx/cmd.h
->> +++ b/drivers/net/wireless/wl12xx/cmd.h
->> @@ -54,12 +54,20 @@ struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
->>  int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, __be32 ip_addr);
->>  int wl1271_build_qos_null_data(struct wl1271 *wl);
->>  int wl1271_cmd_build_klv_null_data(struct wl1271 *wl);
->> -int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
->> -int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
->> +int wl1271_cmd_set_sta_default_wep_key(struct wl1271 *wl, u8 id);
->> +int wl1271_cmd_set_ap_default_wep_key(struct wl1271 *wl, u8 id);
->> +int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
->>                      u8 key_size, const u8 *key, const u8 *addr,
->>                      u32 tx_seq_32, u16 tx_seq_16);
->
-> Indentation?
->
->> +int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
->> +                     u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
->> +                     u16 tx_seq_16);
->
-> Ditto.
->
-
-Corrected indentations.
-
-Regards,
-Arik
