@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54255 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756433Ab0LATfz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 14:35:55 -0500
-Subject: Re: [PATCH] mac80211: Support beacon configuration via nl80211 for
- mesh interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1291229642.4199.11.camel@jlt3.sipsolutions.net>
-References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
-	 <1291184383.4199.4.camel@jlt3.sipsolutions.net>
-	 <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
-	 <1291229642.4199.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 20:35:51 +0100
-Message-ID: <1291232151.4199.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50640 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933189Ab0LUBCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 20:02:13 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH 3/7] ssb: Use pci_is_pcie()
+Date: Tue, 21 Dec 2010 02:01:52 +0100
+Message-Id: <1292893316-26694-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
+References: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-01 at 19:54 +0100, Johannes Berg wrote:
+Use function pci_is_pcie() instead of accessing struct member directly.
 
-> If we had a 'start mesh' command, like 'join IBSS', then it'd be natural
-> to have just more attributes in it. Maybe it's time to start thinking
-> about that again, although backward compatibility could be interesting.
+CC: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/scan.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Ok I started looking at this ...
-
-I have a feeling I asked this before, but can't remember -- is it
-necessary to be able to change the mesh config on the fly, while the
-mesh is active?
-
-johannes
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index ee079ab..5a0985d 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -405,10 +405,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
+ 				/* Ignore PCI cores on PCI-E cards.
+ 				 * Ignore PCI-E cores on PCI cards. */
+ 				if (dev->id.coreid == SSB_DEV_PCI) {
+-					if (bus->host_pci->is_pcie)
++					if (pci_is_pcie(bus->host_pci))
+ 						continue;
+ 				} else {
+-					if (!bus->host_pci->is_pcie)
++					if (!pci_is_pcie(bus->host_pci))
+ 						continue;
+ 				}
+ 			}
+-- 
+1.7.1
 
