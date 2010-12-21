@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.214.194]:62256 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867Ab0L1TPs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 14:15:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <201012261937.21256.rjw@sisk.pl>
-References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
- <201012261245.29680.rjw@sisk.pl> <AANLkTinvBD6NhHY7PMw9NSJNBW77-Gah8Vcow6t1aiCT@mail.gmail.com>
- <201012261937.21256.rjw@sisk.pl>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 28 Dec 2010 21:15:27 +0200
-Message-ID: <AANLkTinewad6YxXvn5gnJQ+HJn41Sg96319GQn9KRKWj@mail.gmail.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50664 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933189Ab0LUBCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 20:02:19 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 6/7] ath9k: Use pci_is_pcie()
+Date: Tue, 21 Dec 2010 02:01:55 +0100
+Message-Id: <1292893316-26694-7-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
+References: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 26, 2010 at 8:37 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> So, it only happens during asynchronous suspend?  In other words, if suspend
-> is synchronous, everything should be fine, right?
+Use function pci_is_pcie() instead of accessing struct member directly.
 
-Not necessarily.
+CC: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/ath/ath9k/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Consider this simple scenario, where a device was added after the mmc
-host controller, but before mac80211. In this case its suspend handler
-will have the chance to abort system suspend after mac80211 already
-told our driver to power down the device (but the device wasn't
-powered down yet, because the driver used pm_runtime_put_sync() which
-is disabled).
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 7ca8499..2136242 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -96,7 +96,7 @@ static void ath_pci_bt_coex_prep(struct ath_common *common)
+ 	struct pci_dev *pdev = to_pci_dev(sc->dev);
+ 	u8 aspm;
+ 
+-	if (!pdev->is_pcie)
++	if (!pci_is_pcie(pdev))
+ 		return;
+ 
+ 	pci_read_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, &aspm);
+-- 
+1.7.1
 
-Thanks,
-Ohad.
