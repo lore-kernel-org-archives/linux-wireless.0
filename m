@@ -1,37 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54921 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756466Ab0LATPh (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45593 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752038Ab0LUOs3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 14:15:37 -0500
-Received: by bwz15 with SMTP id 15so6435022bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 11:15:36 -0800 (PST)
-Message-ID: <4CF69ED1.1070406@lwfinger.net>
-Date: Wed, 01 Dec 2010 13:15:29 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Dec 2010 09:48:29 -0500
+Received: by wwa36 with SMTP id 36so4206709wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 06:48:28 -0800 (PST)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	=?UTF-8?B?R8OhYm9yIA==?= =?UTF-8?B?U3RlZmFuaWs=?=
-	<netrolller.3d@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: RFC - removal of SPROM fallback
+In-Reply-To: <20101221083026.8765.79160.stgit@localhost6.localdomain6>
+References: <20101221083020.8765.16350.stgit@localhost6.localdomain6>
+	<20101221083026.8765.79160.stgit@localhost6.localdomain6>
+Date: Tue, 21 Dec 2010 16:48:28 +0200
+Message-ID: <AANLkTi=4GWdNuBeyNefjx+-19FsLDFvD=6xP-bR4ZtP2@mail.gmail.com>
+Subject: Re: [PATCH 2/5] ath5k: Separate powertable setup and writing
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At one time, we thought that we had found BCM43xx devices with no SPROM. In the
-one case that I remember, it was because the SPROM had been relocated.
+2010/12/21 Bruno Randolf <br1@einfach.org>:
+> And rename functions which write the powertable to make it clearer.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/phy.c |   34 ++++++++++++++++------------------
+>  1 files changed, 16 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 7c6d7dc..6f0cf3a 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -2593,7 +2593,7 @@ ath5k_combine_linear_pcdac_curves(struct ath5k_hw *ah, s16* table_min,
+>
+>  /* Write PCDAC values on hw */
+>  static void
+> -ath5k_setup_pcdac_table(struct ath5k_hw *ah)
+> +ath5k_write_pcdac_table(struct ath5k_hw *ah)
+>  {
+>        u8      *pcdac_out = ah->ah_txpower.txp_pd_table;
+>        int     i;
+> @@ -2742,7 +2742,7 @@ ath5k_combine_pwr_to_pdadc_curves(struct ath5k_hw *ah,
+>
+>  /* Write PDADC values on hw */
+>  static void
+> -ath5k_setup_pwr_to_pdadc_table(struct ath5k_hw *ah, u8 ee_mode)
+> +ath5k_write_pwr_to_pdadc_table(struct ath5k_hw *ah, u8 ee_mode)
+>  {
+>        struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+>        u8 *pdadc_out = ah->ah_txpower.txp_pd_table;
+> @@ -2957,8 +2957,7 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
+>                                        (s16) pcinfo_R->freq,
+>                                        pcinfo_L->max_pwr, pcinfo_R->max_pwr);
+>
+> -       /* We are ready to go, fill PCDAC/PDADC
+> -        * table and write settings on hardware */
+> +       /* Fill PCDAC/PDADC table */
+>        switch (type) {
+>        case AR5K_PWRTABLE_LINEAR_PCDAC:
+>                /* For RF5112 we can have one or two curves
+> @@ -2971,9 +2970,6 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
+>                 * match max power value with max
+>                 * table index */
+>                ah->ah_txpower.txp_offset = 64 - (table_max[0] / 2);
+> -
+> -               /* Write settings on hw */
+> -               ath5k_setup_pcdac_table(ah);
+>                break;
+>        case AR5K_PWRTABLE_PWR_TO_PCDAC:
+>                /* We are done for RF5111 since it has only
+> @@ -2983,9 +2979,6 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
+>                /* No rate powertable adjustment for RF5111 */
+>                ah->ah_txpower.txp_min_idx = 0;
+>                ah->ah_txpower.txp_offset = 0;
+> -
+> -               /* Write settings on hw */
+> -               ath5k_setup_pcdac_table(ah);
+>                break;
+>        case AR5K_PWRTABLE_PWR_TO_PDADC:
+>                /* Set PDADC boundaries and fill
+> @@ -2993,9 +2986,6 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
+>                ath5k_combine_pwr_to_pdadc_curves(ah, table_min, table_max,
+>                                                ee->ee_pd_gains[ee_mode]);
+>
+> -               /* Write settings on hw */
+> -               ath5k_setup_pwr_to_pdadc_table(ah, ee_mode);
+> -
+>                /* Set txp.offset, note that table_min
+>                 * can be negative */
+>                ah->ah_txpower.txp_offset = table_min[0];
+> @@ -3009,6 +2999,15 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
+>        return 0;
+>  }
+>
+> +/* Write power table for current channel to hw */
+> +static void
+> +ath5k_write_channel_powertable(struct ath5k_hw *ah, u8 ee_mode, u8 type)
+> +{
+> +       if (type == AR5K_PWRTABLE_PWR_TO_PDADC)
+> +               ath5k_write_pwr_to_pdadc_table(ah, ee_mode);
+> +       else
+> +               ath5k_write_pcdac_table(ah);
+> +}
+>
+>  /*
+>  * Per-rate tx power setting
+> @@ -3159,11 +3158,10 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+>                                                        ee_mode, type);
+>                if (ret)
+>                        return ret;
+> -       /* Write cached table on hw */
+> -       } else if (type == AR5K_PWRTABLE_PWR_TO_PDADC)
+> -               ath5k_setup_pwr_to_pdadc_table(ah, ee_mode);
+> -       else
+> -               ath5k_setup_pcdac_table(ah);
+> +       }
+> +
+> +       /* Write table on hw */
+> +       ath5k_write_channel_powertable(ah, ee_mode, type);
+>
+>        /* Limit max power if we have a CTL available */
+>        ath5k_get_max_ctl_power(ah, channel);
+>
+>
 
-I now have the data from John's device that needs the revision fixup and I know
-what is wrong - it is rev 2 with corrupted CRC. The defaulting to rev 1 is
-getting almost everything wrong, including MAC address and vendor. My plan is to
-write a better fixup routine.
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-At the moment, we have some SPROM fallback code that has not been fully
-implemented, and is probably not needed. Are there any objections to stripping
-this code out of drivers/ssb/pci.c and drivers/ssb/sprom.c?
-
-Larry
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
