@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51660 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499Ab0LGTPK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 14:15:10 -0500
-Date: Tue, 7 Dec 2010 14:05:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	ath9k-devel@venema.h4ckr.net, Peter Stuge <peter@stuge.se>,
-	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 0/4] ath: logging message conversion
-Message-ID: <20101207190528.GD2700@tuxdriver.com>
-References: <20101202190239.GE7399@tux>
- <cover.1291333543.git.joe@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1291333543.git.joe@perches.com>
+Received: from smtp.nokia.com ([147.243.1.48]:62890 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828Ab0LUOCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 09:02:54 -0500
+From: luciano.coelho@nokia.com
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: check for CONFIG_MAC80211_LEDS in the tpt_led_trigger declaration
+Date: Tue, 21 Dec 2010 16:02:17 +0200
+Message-Id: <1292940137-21850-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 02, 2010 at 07:12:34PM -0800, Joe Perches wrote:
-> ath_print is misleading as it's only used with CONFIG_ATH_DEBUG.
-> 
-> Add and use the more normal <subsystem>_printk and <subsystem>_<level>
-> printk equivalents. (ath_printk and ath_<level>)
-> 
-> Fix various defects in the current uses of ath_print formats
-> and arguments: Unnecessary casts, missing newlines, multiple
-> prints, and 1 loop which can exceed array bounds.
-> 
-> Bundled and integrated the individual patches into a single patch series.
-> 
-> Joe Perches (4):
->   ath: Add and use ath_printk and ath_<level>
->   ath: Convert ath_print(.., ATH_DBG_FATAL to ath_err
->   ath: Convert ath_print to ath_dbg
->   ath: Fix ath_dbg access beyond array bound
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-Is the Atheros crew happy with this series?  They didn't seem to like
-the original patches very much...
+If CONFIG_MAC80211_LEDS is not set, ieee80211_i.h was failing to compile,
+because struct led_trigger is only declared when CONFIG_LEDS_TRIGGERS is
+set.
 
-John
+This patch adds ifdefs around the tpt_led_trigger declaration in
+ieee80211_i.h to avoid the problem.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ net/mac80211/ieee80211_i.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0817ec6..7541d42 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -631,6 +631,7 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+ };
+ 
++#ifdef CONFIG_MAC80211_LEDS
+ struct tpt_led_trigger {
+ 	struct led_trigger trig;
+ 	char name[32];
+@@ -642,6 +643,7 @@ struct tpt_led_trigger {
+ 	unsigned int active, want;
+ 	bool running;
+ };
++#endif
+ 
+ /**
+  * mac80211 scan flags - currently active scan mode
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
