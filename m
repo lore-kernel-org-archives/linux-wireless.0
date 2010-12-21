@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59196 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755394Ab0LBLNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:13:02 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:12:47 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 15/27] ath9k_hw: Configure xpa bias level for AR9485
-Date: Thu, 2 Dec 2010 03:06:59 -0800
-Message-ID: <1291288031-3409-16-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37728 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752971Ab0LUU3w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 15:29:52 -0500
+Received: by wyb28 with SMTP id 28so4349016wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 12:29:51 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: enable support for PHYs rev 3 and higher
+Date: Tue, 21 Dec 2010 21:29:44 +0100
+Message-Id: <1292963384-23684-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   12 +++++++++---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    4 ++++
- 2 files changed, 13 insertions(+), 3 deletions(-)
+John: can we still make it for 2.6.38 merge? It was tested with 14e4:432b,
+support seems to be on the same level as for PHYs 1 and 2.
+---
+ drivers/net/wireless/b43/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c85b97e..02b6150 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3449,9 +3449,15 @@ static s32 ar9003_hw_xpa_bias_level_get(struct ath_hw *ah, bool is2ghz)
- static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
--	REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
--	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB, bias >> 2);
--	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
-+
-+	if (AR_SREV_9485(ah))
-+		REG_RMW_FIELD(ah, AR_CH0_TOP2, AR_CH0_TOP2_XPABIASLVL, bias);
-+	else {
-+		REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
-+		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB,
-+			      bias >> 2);
-+		REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
-+	}
- }
- 
- static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 3394dfe..b772081 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -584,6 +584,10 @@
- #define AR_PHY_65NM_CH2_RXTX1       0x16900
- #define AR_PHY_65NM_CH2_RXTX2       0x16904
- 
-+#define AR_CH0_TOP2 (AR_SREV_9485(ah) ? 0x00016284 : 0x0001628c)
-+#define AR_CH0_TOP2_XPABIASLVL		0xf000
-+#define AR_CH0_TOP2_XPABIASLVL_S	12
-+
- #define AR_PHY_RX1DB_BIQUAD_LONG_SHIFT		0x00380000
- #define AR_PHY_RX1DB_BIQUAD_LONG_SHIFT_S	19
- #define AR_PHY_RX6DB_BIQUAD_LONG_SHIFT		0x00c00000
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 5fb0bc6..22bc9f1 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4056,7 +4056,7 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 		break;
+ #ifdef CONFIG_B43_PHY_N
+ 	case B43_PHYTYPE_N:
+-		if (phy_rev > 2)
++		if (phy_rev > 9)
+ 			unsupported = 1;
+ 		break;
+ #endif
 -- 
-1.7.0.4
+1.6.3.3
 
