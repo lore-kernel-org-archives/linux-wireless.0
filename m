@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f170.google.com ([209.85.214.170]:65431 "EHLO
-	mail-iw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970Ab0LLK6a (ORCPT
+Received: from asmtpout028.mac.com ([17.148.16.103]:52996 "EHLO
+	asmtpout028.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076Ab0LUTkS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 05:58:30 -0500
-Received: by iwn6 with SMTP id 6so7673121iwn.1
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 02:58:30 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19716.42366.724562.760266@gargle.gargle.HOWL>
-Date: Sun, 12 Dec 2010 16:05:42 +0530
-To: Seb <louis_sr@yahoo.com>
+	Tue, 21 Dec 2010 14:40:18 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from [192.168.1.30] ([87.201.169.175])
+ by asmtp028.mac.com (Oracle Communications Messaging Exchange Server 7u4-20.01
+ 64bit (built Nov 21 2010)) with ESMTPSA id <0LDS00BHNMMW2Y80@asmtp028.mac.com>
+ for linux-wireless@vger.kernel.org; Tue, 21 Dec 2010 11:40:12 -0800 (PST)
+Subject: Re: WL1271
+From: Elvis Dowson <elvis.dowson@mac.com>
+In-reply-to: <1292957433.20560.109.camel@t-dhlii>
+Date: Tue, 21 Dec 2010 23:39:54 +0400
 Cc: linux-wireless@vger.kernel.org
-Subject: Support for Ubiquiti WiFi Station Ext (USB) with Atheros AR9271 Chipset
-In-Reply-To: <53064.98461.qm@web36301.mail.mud.yahoo.com>
-References: <53064.98461.qm@web36301.mail.mud.yahoo.com>
+Message-id: <A285AB50-982B-478D-A8A1-9153560175BD@mac.com>
+References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
+ <1292843841.13129.9.camel@chilepepper>
+ <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
+ <1292879085.20560.6.camel@t-dhlii>
+ <4CC0832C-93B4-4212-BB5C-1901BB6A63D7@mac.com>
+ <1292957433.20560.109.camel@t-dhlii>
+To: "David Lynch Jr." <dhlii@dlasys.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seb wrote:
-> Hello
-> 
-> I tested this product under linux and impossible to make it works.
-> Vendor ID = 0cf3
-> Product ID = b003
+Hi,
 
-We'll add this to the supported devices list.
+On Dec 21, 2010, at 10:50 PM, David Lynch Jr. wrote:
 
-> I compiled compat-wireless to make it detected by modifying the ath9k/hif-usb.c
-> and when loading, the firmware failed
-> 
-> usb 1-1: ath9k_htc: Firmware - ar9271.fw download failed
-> ath9k_hif_usb: probe of 1-1:1.0 failed with error -22
-> usbcore: registered new interface driver ath9k_hif_usb
-> 
-> # ls -l /lib/firmware-2.6.35.8/ar9271.fw
-> -rw-r--r-- 1 root root 51280 Nov 10 05:56 /lib/firmware-2.6.35.8/ar9271.fw
+> 	I am essentially doing exactly the same thing as you are - but I am a
+> few days behind you. I noted a post of yours about 10 days ago in
+> linux-omap that you were having voltage/SDIO detection problems. I am
+> having exactly that problem at this moment.  
+> 	How did you work arround it ?
+> 	The WL1271 is attached to MMC2 on my system. All the examples in the
+> linux wireless tree are on SPI or MMC3. But I think I managed changing
+> things correctly - except that the error reports are mmc1:
+> 	Also the comments suggest that the WL1271 has its own internal voltage
+> regulation. 
+> 	That and a CY8CTMG-200 touch screen are the only major items I need
+> working to polish off this project. 
 
-It should work if the correct firmware is loaded.
-Which distribution are you using ?
-And is /lib/firmware-2.6.35.8/ the correct firmware location ?
+If you could send me the schematics, I could comment on it.
 
-Sujith
+There were a couple of hardware related problems that prevented the device from
+booting up. 
+
+Here are some of the key things to watch out for:
+
+a. You need a slow clock (SYS 32K signal from the omap processor) to the wlan module
+
+b. You need to ensure that you have a 26Mhz TXCO signal coming in for the fast clock.
+
+This would be controlled by a fixed voltage regulator. The wlan module asserts a WL_CLK_REQ
+signal high, which is a signal sent to the LDO to turn on the 26MHz TXCO.
+
+c. You need to probe MMC2 CLK signals to ensure that a 24MHz signal is being generated at the 
+output, when the MMC2 controller is initialized.
+
+d. You need to update the mux settings to ensure that the MMC2 CMD, CLK, DAT 0 to DAT3, plus
+GPIO pins for WLAN_EN and WLAN_IRQ are muxed correctly.
+
+This should take care of it. 
+
+The SDIO detection problems occured because the 26MHZ TXCO was not being turn on.
+
+You should also be aware of the TI WL1271 power up sequence, which is 10ms pulse high, 64us low,
+and then asserted high for atleast 64ms. This is taken care of in the driver code.
+
+Also use the linux-2.6.37-rc6 kernel patch, and apply the patch to read the MAC address from the nvs file.
+
+Also put the firmware and nvs file in /lib/firmware folder, and configure wpa_supplicant.conf to connect
+to a secured access point.
+
+Best regards,
+
+Elvis
