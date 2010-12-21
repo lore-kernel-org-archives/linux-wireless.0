@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:47879 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040Ab0LVV3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 16:29:49 -0500
-Subject: Re: [PATCH v2 07/18] wl1271: AP specific RX filter configuration
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1293028057-6212-8-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
-	 <1293028057-6212-8-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 23:29:46 +0200
-Message-ID: <1293053386.14423.46.camel@powerslave>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50651 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933281Ab0LUBCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Dec 2010 20:02:16 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 4/7] rt2x00: Use pci_is_pcie()
+Date: Tue, 21 Dec 2010 02:01:53 +0100
+Message-Id: <1292893316-26694-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
+References: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
-> Set filters according to the mode of operation.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+Use function pci_is_pcie() instead of accessing struct member directly.
 
-[...]
+CC: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> diff --git a/drivers/net/wireless/wl12xx/boot.h b/drivers/net/wireless/wl12xx/boot.h
-> index d67dcff..5f19a40 100644
-> --- a/drivers/net/wireless/wl12xx/boot.h
-> +++ b/drivers/net/wireless/wl12xx/boot.h
-> @@ -69,4 +69,7 @@ struct wl1271_static_data {
->  #define FREF_CLK_POLARITY_BITS 0xfffff8ff
->  #define CLK_REQ_OUTN_SEL       0x700
->  
-> +/* Functions from wl1271_main.c */
-> +void wl1271_set_default_filters(struct wl1271 *wl);
-> +
-
-This is not good.  Can't this be defined in rx.c and rx.h instead?
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index 28e6ff1..73631c6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -286,7 +286,7 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
+ 	rt2x00dev->irq = pci_dev->irq;
+ 	rt2x00dev->name = pci_name(pci_dev);
+ 
+-	if (pci_dev->is_pcie)
++	if (pci_is_pcie(pci_dev))
+ 		rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCIE);
+ 	else
+ 		rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCI);
 -- 
-Cheers,
-Luca.
+1.7.1
 
