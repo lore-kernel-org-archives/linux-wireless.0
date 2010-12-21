@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63489 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753187Ab0L3Nic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 08:38:32 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Dec 2010 05:38:15 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH] ath9k: fix beacon restart on channel change
-Date: Thu, 30 Dec 2010 19:07:44 +0530
-Message-ID: <1293716264-4516-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:37149 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752482Ab0LUSug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 13:50:36 -0500
+Subject: Re: WL1271
+From: "David Lynch Jr." <dhlii@dlasys.net>
+To: Elvis Dowson <elvis.dowson@mac.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4CC0832C-93B4-4212-BB5C-1901BB6A63D7@mac.com>
+References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
+	 <1292843841.13129.9.camel@chilepepper>
+	 <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
+	 <1292879085.20560.6.camel@t-dhlii>
+	 <4CC0832C-93B4-4212-BB5C-1901BB6A63D7@mac.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Dec 2010 13:50:33 -0500
+Message-ID: <1292957433.20560.109.camel@t-dhlii>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Restart the beacon timers only if the beacon
-was already configured. Otherwise beacons timers
-are restarted unnecessarily in unassociated state too.
+	I am essentially doing exactly the same thing as you are - but I am a
+few days behind you. I noted a post of yours about 10 days ago in
+linux-omap that you were having voltage/SDIO detection problems. I am
+having exactly that problem at this moment.  
+	How did you work arround it ?
+	The WL1271 is attached to MMC2 on my system. All the examples in the
+linux wireless tree are on SPI or MMC3. But I think I managed changing
+things correctly - except that the error reports are mmc1:
+	Also the comments suggest that the WL1271 has its own internal voltage
+regulation. 
+	That and a CY8CTMG-200 touch screen are the only major items I need
+working to polish off this project. 
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 8a1691d..fe09963 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -285,7 +285,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
- 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
--		ath_beacon_config(sc, NULL);
-+		if (sc->sc_flags & SC_OP_BEACONS)
-+			ath_beacon_config(sc, NULL);
- 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
- 		ath_start_ani(common);
- 	}
--- 
-1.7.3.4
+On Tue, 2010-12-21 at 01:31 +0400, Elvis Dowson wrote:
+> Hi,
+> 
+> On Dec 21, 2010, at 1:04 AM, David Lynch Jr. wrote:
+> 
+> > 	I am looking to get the TI WL1271 WiFi working in an Android Froyo
+> > system. 
+> > 	I have Linux kernel experience including network and wifi drivers. 
+> > 	I am gathering that there are atleast two different efforts to support
+> > the TI1271 one based on the normal Linux kernel development process and
+> > one that seems to be part of the TI Android community. 
+> > 	Can anyone comment on the relative merits of these approaches ?
+> > 
+> > 	Is it reasonable to assume that if I add the WL1271 to the Android
+> > 2.6.32 kernel tree using compat-wireless that it will properly integrate
+> > with Android ? If not could someone point me towards resources specific
+> > to Android's wireless implimentation ?
+> 
+> I too am working on the very same subject, which is to get the Murata
+> TI WL1271 chip working with Android 2.2.1.
+> 
+> Chip integration with the board was verified using the mainline wl1271
+> drivers (linux-2.6.37-rc6). 
+> 
+> With the proprietary TI drivers, I ran into issues getting it to work with my platform
+> so, while that issue is being addressed, in parallel, I am going to try to use
+> the compat-wireless package to get wl1271 working with android-2.6.32 and
+> android-2.2.1.
+> 
+> The only issue I see is I'm not sure if the mainline wl1271 driver currently supports
+> the android specific wireless commands, and its integration with wpa_supplicant
+> WEXT driver in the android repo. One could use the AWEXT wrapper core, in this
+> case, but it is something that I need to see once I get to that stage, in a couple of days.
+> 
+> Elvis Dowson
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
