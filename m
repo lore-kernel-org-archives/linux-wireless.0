@@ -1,503 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756432Ab0LRQXO (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:39785 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753858Ab0LUXls (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 11:23:14 -0500
-Message-Id: <20101218162217.138030687@sipsolutions.net>
-Date: Sat, 18 Dec 2010 17:20:47 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: implement hardware offload for
- remain-on-channel
-References: <20101218162046.876589704@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 21 Dec 2010 18:41:48 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: replace struct ieee_htinfo with ieee80211_ht_info
+Date: Tue, 21 Dec 2010 15:41:54 -0800
+Message-Id: <1292974914-12306-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+struct ieee80211_ht_info is defined in include/linux/ieee80211.h
 
-This allows drivers to support remain-on-channel
-offload if they implement smarter timing or need
-to use a device implementation like iwlwifi.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
-v2: - add missing ieee80211_recalc_idle()
+ drivers/net/wireless/mwifiex/11n.c  |   10 +++++-----
+ drivers/net/wireless/mwifiex/fw.h   |    2 +-
+ drivers/net/wireless/mwifiex/ieee.h |   10 +---------
+ drivers/net/wireless/mwifiex/join.c |   13 +++++++------
+ 4 files changed, 14 insertions(+), 21 deletions(-)
 
- include/net/mac80211.h      |   19 ++++++++++
- net/mac80211/cfg.c          |   83 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h   |   30 +++++++++++++++
- net/mac80211/driver-trace.h |   80 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h  |    8 ++++
- net/mac80211/iface.c        |    9 +++-
- net/mac80211/main.c         |    5 ++
- net/mac80211/offchannel.c   |   75 +++++++++++++++++++++++++++++++++++++++
- 8 files changed, 306 insertions(+), 3 deletions(-)
-
---- wireless-testing.orig/include/net/mac80211.h	2010-12-17 19:34:51.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2010-12-17 19:55:54.000000000 +0100
-@@ -365,6 +365,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
- 	IEEE80211_TX_CTL_LDPC			= BIT(22),
- 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
-+	IEEE80211_TX_CTL_TX_OFFCHAN		= BIT(25),
- };
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 73d2fb7..93de7ca 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -852,7 +852,7 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
+ 			ht_info->header.type =
+ 					cpu_to_le16(WLAN_EID_HT_INFORMATION);
+ 			ht_info->header.len =
+-				cpu_to_le16(sizeof(struct ieee_htinfo));
++				cpu_to_le16(sizeof(struct ieee80211_ht_info));
  
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-@@ -1824,6 +1825,12 @@ struct ieee80211_ops {
- 	int (*napi_poll)(struct ieee80211_hw *hw, int budget);
- 	int (*set_antenna)(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant);
- 	int (*get_antenna)(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
-+
-+	int (*remain_on_channel)(struct ieee80211_hw *hw,
-+				 struct ieee80211_channel *chan,
-+				 enum nl80211_channel_type channel_type,
-+				 int duration);
-+	int (*cancel_remain_on_channel)(struct ieee80211_hw *hw);
- };
+ 			memcpy((u8 *) ht_info +
+ 			       sizeof(struct mwifiex_ie_types_header),
+@@ -864,7 +864,7 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
+ 			    (priv->adapter->hw_dot_11n_dev_cap)
+ 			    || !ISSUPP_CHANWIDTH40(priv->adapter->
+ 						   usr_dot_11n_dev_cap)) {
+-				RESET_CHANWIDTH40(ht_info->ht_info.field2);
++				RESET_CHANWIDTH40(ht_info->ht_info.ht_param);
+ 			}
  
- /**
-@@ -2729,6 +2736,18 @@ void ieee80211_request_smps(struct ieee8
-  */
- void ieee80211_key_removed(struct ieee80211_key_conf *key_conf);
+ 			*buffer += sizeof(struct mwifiex_ie_types_htinfo);
+@@ -880,18 +880,18 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
+ 			sizeof(struct mwifiex_ie_types_chan_list_param_set) -
+ 			sizeof(struct mwifiex_ie_types_header));
+ 		chan_list->chan_scan_param[0].chan_number =
+-			bss_desc->bcn_ht_info->ht_info.pri_chan;
++			bss_desc->bcn_ht_info->ht_info.control_chan;
+ 		chan_list->chan_scan_param[0].radio_type =
+ 			mwifiex_band_to_radio_type((u8) bss_desc->bss_band);
  
-+/**
-+ * ieee80211_ready_on_channel - notification of remain-on-channel start
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ */
-+void ieee80211_ready_on_channel(struct ieee80211_hw *hw);
-+
-+/**
-+ * ieee80211_remain_on_channel_expired - remain_on_channel duration expired
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ */
-+void ieee80211_remain_on_channel_expired(struct ieee80211_hw *hw);
-+
- /* Rate control API */
+ 		if ((ISSUPP_CHANWIDTH40(priv->adapter->hw_dot_11n_dev_cap) &&
+ 		     ISSUPP_CHANWIDTH40(priv->adapter->usr_dot_11n_dev_cap))
+ 		    && ISALLOWED_CHANWIDTH40(bss_desc->bcn_ht_info->ht_info.
+-					     field2))
++					     ht_param))
+ 			SET_SECONDARYCHAN(chan_list->chan_scan_param[0].
+ 					  radio_type,
+ 					  GET_SECONDARYCHAN(bss_desc->
+-					  bcn_ht_info->ht_info.field2));
++					  bcn_ht_info->ht_info.ht_param));
  
- /**
---- wireless-testing.orig/net/mac80211/cfg.c	2010-12-17 19:33:22.000000000 +0100
-+++ wireless-testing/net/mac80211/cfg.c	2010-12-18 17:06:35.000000000 +0100
-@@ -1562,6 +1562,37 @@ static int ieee80211_set_bitrate_mask(st
- 	return 0;
- }
+ 		HEXDUMP("ChanList", (u8 *) chan_list,
+ 			sizeof(struct mwifiex_ie_types_chan_list_param_set));
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 834122c..f166991 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1175,7 +1175,7 @@ struct mwifiex_ie_types_htcap {
  
-+static int ieee80211_remain_on_channel_hw(struct ieee80211_local *local,
-+					  struct net_device *dev,
-+					  struct ieee80211_channel *chan,
-+					  enum nl80211_channel_type chantype,
-+					  unsigned int duration, u64 *cookie)
-+{
-+	int ret;
-+	u32 random_cookie;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	if (local->hw_roc_cookie)
-+		return -EBUSY;
-+	/* must be nonzero */
-+	random_cookie = random32() | 1;
-+
-+	*cookie = random_cookie;
-+	local->hw_roc_dev = dev;
-+	local->hw_roc_cookie = random_cookie;
-+	local->hw_roc_channel = chan;
-+	local->hw_roc_channel_type = chantype;
-+	local->hw_roc_duration = duration;
-+	ret = drv_remain_on_channel(local, chan, chantype, duration);
-+	if (ret) {
-+		local->hw_roc_channel = NULL;
-+		local->hw_roc_cookie = 0;
-+	}
-+
-+	return ret;
-+}
-+
- static int ieee80211_remain_on_channel(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       struct ieee80211_channel *chan,
-@@ -1570,16 +1601,62 @@ static int ieee80211_remain_on_channel(s
- 				       u64 *cookie)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	if (local->ops->remain_on_channel) {
-+		int ret;
-+
-+		mutex_lock(&local->mtx);
-+		ret = ieee80211_remain_on_channel_hw(local, dev,
-+						     chan, channel_type,
-+						     duration, cookie);
-+		mutex_unlock(&local->mtx);
-+
-+		return ret;
-+	}
+ struct mwifiex_ie_types_htinfo {
+ 	struct mwifiex_ie_types_header header;
+-	struct ieee_htinfo ht_info;
++	struct ieee80211_ht_info ht_info;
+ } __packed;
  
- 	return ieee80211_wk_remain_on_channel(sdata, chan, channel_type,
- 					      duration, cookie);
- }
+ struct mwifiex_ie_types_2040bssco {
+diff --git a/drivers/net/wireless/mwifiex/ieee.h b/drivers/net/wireless/mwifiex/ieee.h
+index 263380c..8888106 100644
+--- a/drivers/net/wireless/mwifiex/ieee.h
++++ b/drivers/net/wireless/mwifiex/ieee.h
+@@ -167,14 +167,6 @@ struct ieee_htcap {
+ 	u8 asel;
+ } __packed;
  
-+static int ieee80211_cancel_remain_on_channel_hw(struct ieee80211_local *local,
-+						 u64 cookie)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&local->mtx);
-+
-+	if (local->hw_roc_cookie != cookie)
-+		return -ENOENT;
-+
-+	ret = drv_cancel_remain_on_channel(local);
-+	if (ret)
-+		return ret;
-+
-+	local->hw_roc_cookie = 0;
-+	local->hw_roc_channel = NULL;
-+
-+	ieee80211_recalc_idle(local);
-+
-+	return 0;
-+}
-+
- static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
- 					      struct net_device *dev,
- 					      u64 cookie)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	if (local->ops->cancel_remain_on_channel) {
-+		int ret;
-+
-+		mutex_lock(&local->mtx);
-+		ret = ieee80211_cancel_remain_on_channel_hw(local, cookie);
-+		mutex_unlock(&local->mtx);
-+
-+		return ret;
-+	}
+-struct ieee_htinfo {
+-	u8 pri_chan;
+-	u8 field2;
+-	u16 field3;
+-	u16 field4;
+-	u8 basic_mcs_set[16];
+-} __packed;
+-
+ struct ieee_bssco_2040 {
+ 	u8 bss_co_2040_value;
+ } __packed;
+@@ -200,7 +192,7 @@ struct ieee_types_htcap {
  
- 	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
- }
-@@ -1631,6 +1708,12 @@ static int ieee80211_mgmt_tx(struct wiph
- 	     channel_type != local->_oper_channel_type))
- 		is_offchan = true;
+ struct ieee_types_htinfo {
+ 	struct ieee_types_header ieee_hdr;
+-	struct ieee_htinfo ht_info;
++	struct ieee80211_ht_info ht_info;
+ } __packed;
  
-+	if (chan == local->hw_roc_channel) {
-+		/* TODO: check channel type? */
-+		is_offchan = false;
-+		flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
-+	}
-+
- 	if (is_offchan && !offchan)
- 		return -EBUSY;
- 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-12-17 19:33:22.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-12-18 17:06:23.000000000 +0100
-@@ -938,6 +938,13 @@ struct ieee80211_local {
- 	} debugfs;
- #endif
- 
-+	struct ieee80211_channel *hw_roc_channel;
-+	struct net_device *hw_roc_dev;
-+	struct work_struct hw_roc_start, hw_roc_done;
-+	enum nl80211_channel_type hw_roc_channel_type;
-+	unsigned int hw_roc_duration;
-+	u32 hw_roc_cookie;
-+
- 	/* dummy netdev for use w/ NAPI */
- 	struct net_device napi_dev;
- 
-@@ -1129,6 +1136,7 @@ void ieee80211_offchannel_stop_beaconing
- void ieee80211_offchannel_stop_station(struct ieee80211_local *local);
- void ieee80211_offchannel_return(struct ieee80211_local *local,
- 				 bool enable_beaconing);
-+void ieee80211_hw_roc_setup(struct ieee80211_local *local);
- 
- /* interface handling */
- int ieee80211_iface_init(void);
---- wireless-testing.orig/net/mac80211/offchannel.c	2010-12-17 19:33:22.000000000 +0100
-+++ wireless-testing/net/mac80211/offchannel.c	2010-12-18 17:06:23.000000000 +0100
-@@ -14,6 +14,7 @@
-  */
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-+#include "driver-trace.h"
- 
- /*
-  * inform AP that we will go to sleep so that it will buffer the frames
-@@ -190,3 +191,77 @@ void ieee80211_offchannel_return(struct
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- }
-+
-+static void ieee80211_hw_roc_start(struct work_struct *work)
-+{
-+	struct ieee80211_local *local =
-+		container_of(work, struct ieee80211_local, hw_roc_start);
-+
-+	mutex_lock(&local->mtx);
-+
-+	if (!local->hw_roc_channel) {
-+		mutex_unlock(&local->mtx);
-+		return;
-+	}
-+
-+	ieee80211_recalc_idle(local);
-+
-+	cfg80211_ready_on_channel(local->hw_roc_dev, local->hw_roc_cookie,
-+				  local->hw_roc_channel,
-+				  local->hw_roc_channel_type,
-+				  local->hw_roc_duration,
-+				  GFP_KERNEL);
-+	mutex_unlock(&local->mtx);
-+}
-+
-+void ieee80211_ready_on_channel(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	trace_api_ready_on_channel(local);
-+
-+	ieee80211_queue_work(hw, &local->hw_roc_start);
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_ready_on_channel);
-+
-+static void ieee80211_hw_roc_done(struct work_struct *work)
-+{
-+	struct ieee80211_local *local =
-+		container_of(work, struct ieee80211_local, hw_roc_done);
-+
-+	mutex_lock(&local->mtx);
-+
-+	if (!local->hw_roc_channel) {
-+		mutex_unlock(&local->mtx);
-+		return;
-+	}
-+
-+	cfg80211_remain_on_channel_expired(local->hw_roc_dev,
-+					   local->hw_roc_cookie,
-+					   local->hw_roc_channel,
-+					   local->hw_roc_channel_type,
-+					   GFP_KERNEL);
-+
-+	local->hw_roc_channel = NULL;
-+	local->hw_roc_cookie = 0;
-+
-+	ieee80211_recalc_idle(local);
-+
-+	mutex_unlock(&local->mtx);
-+}
-+
-+void ieee80211_remain_on_channel_expired(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	trace_api_remain_on_channel_expired(local);
-+
-+	ieee80211_queue_work(hw, &local->hw_roc_done);
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_remain_on_channel_expired);
-+
-+void ieee80211_hw_roc_setup(struct ieee80211_local *local)
-+{
-+	INIT_WORK(&local->hw_roc_start, ieee80211_hw_roc_start);
-+	INIT_WORK(&local->hw_roc_done, ieee80211_hw_roc_done);
-+}
---- wireless-testing.orig/net/mac80211/main.c	2010-12-17 19:34:51.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2010-12-17 19:55:54.000000000 +0100
-@@ -603,6 +603,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 
- 	ieee80211_led_names(local);
- 
-+	ieee80211_hw_roc_setup(local);
-+
- 	return local_to_hw(local);
- }
- EXPORT_SYMBOL(ieee80211_alloc_hw);
-@@ -747,7 +749,8 @@ int ieee80211_register_hw(struct ieee802
- 		}
- 	}
- 
--	local->hw.wiphy->max_remain_on_channel_duration = 5000;
-+	if (!local->ops->remain_on_channel)
-+		local->hw.wiphy->max_remain_on_channel_duration = 5000;
- 
- 	result = wiphy_register(local->hw.wiphy);
- 	if (result < 0)
---- wireless-testing.orig/net/mac80211/iface.c	2010-12-17 19:33:22.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2010-12-17 19:55:54.000000000 +0100
-@@ -1264,7 +1264,7 @@ u32 __ieee80211_recalc_idle(struct ieee8
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int count = 0;
--	bool working = false, scanning = false;
-+	bool working = false, scanning = false, hw_roc = false;
- 	struct ieee80211_work *wk;
- 	unsigned int led_trig_start = 0, led_trig_stop = 0;
- 
-@@ -1308,6 +1308,9 @@ u32 __ieee80211_recalc_idle(struct ieee8
- 		local->scan_sdata->vif.bss_conf.idle = false;
- 	}
- 
-+	if (local->hw_roc_channel)
-+		hw_roc = true;
-+
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (sdata->old_idle == sdata->vif.bss_conf.idle)
- 			continue;
-@@ -1316,7 +1319,7 @@ u32 __ieee80211_recalc_idle(struct ieee8
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IDLE);
- 	}
- 
--	if (working || scanning)
-+	if (working || scanning || hw_roc)
- 		led_trig_start |= IEEE80211_TPT_LEDTRIG_FL_WORK;
- 	else
- 		led_trig_stop |= IEEE80211_TPT_LEDTRIG_FL_WORK;
-@@ -1328,6 +1331,8 @@ u32 __ieee80211_recalc_idle(struct ieee8
- 
- 	ieee80211_mod_tpt_led_trig(local, led_trig_start, led_trig_stop);
- 
-+	if (hw_roc)
-+		return ieee80211_idle_off(local, "hw remain-on-channel");
- 	if (working)
- 		return ieee80211_idle_off(local, "working");
- 	if (scanning)
---- wireless-testing.orig/net/mac80211/driver-ops.h	2010-12-17 19:33:22.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-ops.h	2010-12-17 19:55:54.000000000 +0100
-@@ -465,4 +465,34 @@ static inline int drv_get_antenna(struct
- 	return ret;
- }
- 
-+static inline int drv_remain_on_channel(struct ieee80211_local *local,
-+					struct ieee80211_channel *chan,
-+					enum nl80211_channel_type chantype,
-+					unsigned int duration)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_remain_on_channel(local, chan, chantype, duration);
-+	ret = local->ops->remain_on_channel(&local->hw, chan, chantype,
-+					    duration);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
-+static inline int drv_cancel_remain_on_channel(struct ieee80211_local *local)
-+{
-+	int ret;
-+
-+	might_sleep();
-+
-+	trace_drv_cancel_remain_on_channel(local);
-+	ret = local->ops->cancel_remain_on_channel(&local->hw);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
---- wireless-testing.orig/net/mac80211/driver-trace.h	2010-12-17 19:33:22.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-trace.h	2010-12-17 19:55:54.000000000 +0100
-@@ -933,6 +933,50 @@ TRACE_EVENT(drv_get_antenna,
- 	)
- );
- 
-+TRACE_EVENT(drv_remain_on_channel,
-+	TP_PROTO(struct ieee80211_local *local, struct ieee80211_channel *chan,
-+		 enum nl80211_channel_type chantype, unsigned int duration),
-+
-+	TP_ARGS(local, chan, chantype, duration),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(int, center_freq)
-+		__field(int, channel_type)
-+		__field(unsigned int, duration)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->center_freq = chan->center_freq;
-+		__entry->channel_type = chantype;
-+		__entry->duration = duration;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " freq:%dMHz duration:%dms",
-+		LOCAL_PR_ARG, __entry->center_freq, __entry->duration
-+	)
-+);
-+
-+TRACE_EVENT(drv_cancel_remain_on_channel,
-+	TP_PROTO(struct ieee80211_local *local),
-+
-+	TP_ARGS(local),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT, LOCAL_PR_ARG
-+	)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
-@@ -1170,6 +1214,42 @@ TRACE_EVENT(api_chswitch_done,
- 	)
- );
- 
-+TRACE_EVENT(api_ready_on_channel,
-+	TP_PROTO(struct ieee80211_local *local),
-+
-+	TP_ARGS(local),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT, LOCAL_PR_ARG
-+	)
-+);
-+
-+TRACE_EVENT(api_remain_on_channel_expired,
-+	TP_PROTO(struct ieee80211_local *local),
-+
-+	TP_ARGS(local),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT, LOCAL_PR_ARG
-+	)
-+);
-+
- /*
-  * Tracing for internal functions
-  * (which may also be called in response to driver calls)
-
+ struct ieee_types_2040bssco {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 9ac0c2f..9504107 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1154,17 +1154,18 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 			ht_info->header.type =
+ 				cpu_to_le16(WLAN_EID_HT_INFORMATION);
+ 			ht_info->header.len =
+-				cpu_to_le16(sizeof(struct ieee_htinfo));
+-			ht_info->ht_info.pri_chan =
++				cpu_to_le16(sizeof(struct ieee80211_ht_info));
++			ht_info->ht_info.control_chan =
+ 				(u8) priv->curr_bss_params.bss_descriptor.
+ 				channel;
+ 			if (adapter->chan_offset) {
+-				ht_info->ht_info.field2 =
++				ht_info->ht_info.ht_param =
+ 					adapter->chan_offset;
+-				SET_CHANWIDTH40(ht_info->ht_info.field2);
++				SET_CHANWIDTH40(ht_info->ht_info.ht_param);
+ 			}
+-			ht_info->ht_info.field3 = NON_GREENFIELD_STAS;
+-			ht_info->ht_info.basic_mcs_set[0] = 0xff;
++			ht_info->ht_info.operation_mode =
++				cpu_to_le16(NON_GREENFIELD_STAS);
++			ht_info->ht_info.basic_set[0] = 0xff;
+ 			HEXDUMP("ADHOC_START: HT_INFORMATION IE",
+ 				(u8 *) ht_info,
+ 				sizeof(struct mwifiex_ie_types_htinfo));
+-- 
+1.7.0.2
 
