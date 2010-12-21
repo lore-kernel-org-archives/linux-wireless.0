@@ -1,324 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:55269 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753748Ab0LEUQw convert rfc822-to-8bit (ORCPT
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:57181 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753080Ab0LUUox (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Dec 2010 15:16:52 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.37-rc4-git4: Reported regressions 2.6.35 -> 2.6.36
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+	Tue, 21 Dec 2010 15:44:53 -0500
+Subject: [PATCH 7/7] rndis_wlan: add support for set_power_mgmt
+To: "John W. Linville" <linville@tuxdriver.com>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 21 Dec 2010 22:44:49 +0200
+Message-ID: <20101221204449.12250.77510.stgit@fate.lan>
+In-Reply-To: <20101221204405.12250.35410.stgit@fate.lan>
+References: <20101221204405.12250.35410.stgit@fate.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-ID: <jyQ21do2hOF.A.qwD.m_--MB@chimera>
-Date: Sun,  5 Dec 2010 21:15:41 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-2.6.35 regressions introduced before
-2.6.36, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
-
-If you know of any other unresolved post-2.6.35 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-12-05       95       34          31
-  2010-11-19       92       38          34
-  2010-10-17       70       27          27
-  2010-10-10       56       16          15
-  2010-10-03       52       16          14
-  2010-09-26       46       15          13
-  2010-09-20       38       15          15
-  2010-09-12       28       14          13
-  2010-08-30       21       16          15
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24022
-Subject		: wireless no longer works after 1st update of 10.10 [rtl819xE:ERR in init_firmware()]
-Submitter	: njin <marconifabio@ubuntu-it.org>
-Date		: 2010-11-29 19:49 (7 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23812
-Subject		: HAL does not provide battery information on RHEL5 and CentOS-5
-Submitter	: Dag Wieers <dag@wieers.com>
-Date		: 2010-11-26 18:08 (10 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23302
-Subject		: alsa stops working after one or more hibernate or suspend cycles
-Submitter	: Werner Lemberg <wl@gnu.org>
-Date		: 2010-11-19 16:21 (17 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23132
-Subject		: without "pci=nocrs", Dell Inspiron 1545 hangs
-Submitter	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Date		: 2010-11-17 19:18 (19 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22842
-Subject		: iwl3945 suddenly stops working
-Submitter	: Felipe Contreras <felipe.contreras@gmail.com>
-Date		: 2010-11-14 11:14 (22 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22782
-Subject		: 2.6.36: general protection fault during lockfs lockspace removal
-Submitter	: nik@linuxbox.cz <nik@linuxbox.cz>
-Date		: 2010-11-12 12:05 (24 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22732
-Subject		: 2.6.37-rc1: hibernation breaks swap
-Submitter	: Zhang Rui <rui.zhang@intel.com>
-Date		: 2010-11-11 08:38 (25 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22272
-Subject		: High [extra timer interrupt] count in powertop since 2.6.36
-Submitter	: Ian Kumlien <pomac@demius.net>
-Date		: 2010-10-30 23:52 (37 days old)
-Message-ID	: <alpine.LNX.2.00.1010310148450.24290@twilight.pomac.com>
-References	: http://marc.info/?l=linux-kernel&m=128848330304431&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22172
-Subject		: alsa-util.c: snd_pcm_avail_delay() returned strange values: delay 0 is less than avail 32
-Submitter	: Tobias <devnull@plzk.org>
-Date		: 2010-11-06 09:33 (30 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22092
-Subject		: Kernel v2.6.36 trouble on USB disconnect
-Submitter	: Ketil Froyn <ketil@froyn.name>
-Date		: 2010-10-29 8:05 (38 days old)
-Message-ID	: <AANLkTik5qVxkEGVAA1PSOGk2KTW+ekHpSwttsQEWzWj+@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128833956503607&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21662
-Subject		: 2.6.35->2.6.36 regression, vanilla kernel panic, ppp or hrtimers crashing
-Submitter	: Denys Fedoryshchenko <nuclearcat@nuclearcat.com>
-Date		: 2010-10-25 9:22 (42 days old)
-Message-ID	: <201010251222.37191.nuclearcat@nuclearcat.com>
-References	: http://marc.info/?l=linux-kernel&m=128799855826011&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21652
-Subject		: several problems with intel graphics since 2.6.36
-Submitter	: Norbert Preining <preining@logic.at>
-Date		: 2010-10-27 14:32 (40 days old)
-Message-ID	: <20101027143252.GA8676@gamma.logic.tuwien.ac.at>
-References	: http://marc.info/?l=linux-kernel&m=128818998630241&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21402
-Subject		: [KVM] Noacpi Windows guest can not boot up on 32bit KVM host
-Submitter	: xudong <xudong.hao@intel.com>
-Date		: 2010-10-29 03:01 (38 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21372
-Subject		: NULL pointer deference at disk_replace_part_tbl+0x32
-Submitter	: Luis R. Rodriguez <mcgrof@gmail.com>
-Date		: 2010-10-28 17:22 (39 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20352
-Subject		: Fwd: Re: UML kernel crash of v2.6.36-rcX kernel
-Submitter	: Toralf Förster <toralf.foerster@gmx.de>
-Date		: 2010-10-13 11:28 (54 days old)
-First-Bad-Commit: http://git.kernel.org/linus/365b18189789bfa1acd9939e6312b8a4b4577b28
-Message-ID	: <201010131328.06465.toralf.foerster@gmx.de>
-References	: http://marc.info/?l=linux-kernel&m=128696930132503&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20342
-Subject		: [LogFS] [2.6.36-rc7] Deadlock in logfs_get_wblocks, hold and wait on same lock super->s_write_mutex
-Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
-Date		: 2010-10-13 9:49 (54 days old)
-Message-ID	: <AANLkTinvsMxTxEbDEFmb5M-6fYjdRvErU==Zs7+qANkV@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128696335024718&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20332
-Subject		: [LogFS] [2.6.36-rc7] Kernel BUG at lib/btree.c:465!
-Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
-Date		: 2010-10-12 18:56 (55 days old)
-Message-ID	: <AANLkTimAbCZNhLQ5nADUiAC+7JpAeJBEmjFwdxyZ-FxO@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128690910501830&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20322
-Subject		: 2.6.36-rc7: inconsistent lock state: inconsistent {IN-RECLAIM_FS-R} -> {RECLAIM_FS-ON-W} usage.
-Submitter	: Dave Jones <davej@redhat.com>
-Date		: 2010-10-11 20:10 (56 days old)
-Message-ID	: <20101011201007.GA29707@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=128682782828453&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20232
-Subject		: kworker consumes ~100% CPU on HP Elitebook 8540w running 2.6.36_rc6-git4
-Submitter	: Ozan Caglayan <ozan@pardus.org.tr>
-Date		: 2010-10-13 06:13 (54 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19802
-Subject		: [drm:init_ring_common] *ERROR* render ring head not reset to zero
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2010-10-04 20:31 (63 days old)
-Message-ID	: <201010042231.20320.thomas@m3y3r.de>
-References	: http://marc.info/?l=linux-kernel&m=128622441331199&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19782
-Subject		: 2.6.36-rc6-git2 -- BUG dentry: Poison overwritten (after resume from hibernation)
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-10-03 3:54 (64 days old)
-Message-ID	: <AANLkTimrqtzBHAZSuDhEs_3CKA6pCbM35b1BtKH=MvC_@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128607809314079&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19632
-Subject		: 2.6.36-rc6: modprobe Not tainted warning
-Submitter	: Heinz Diehl <htd@fritha.org>
-Date		: 2010-09-30 18:25 (67 days old)
-Message-ID	: <20100930182516.GA15089@fritha.org>
-References	: http://marc.info/?l=linux-kernel&m=128587114004680&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19392
-Subject		: WARNING: at drivers/net/wireless/ath/ath5k/base.c:3475 ath5k_bss_info_changed+0x44/0x168 [ath5k]()
-Submitter	: Justin Mattock <justinmattock@gmail.com>
-Date		: 2010-09-28 22:30 (69 days old)
-Message-ID	: <<AANLkTim5WCGKPvEkOkO_YnMF9pg8mvLfQoFBNUFpfa_k@mail.gmail.com>>
-References	: http://marc.info/?l=linux-kernel&m=128571307018635&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19372
-Subject		: 2.6.36-rc6: WARNING: at drivers/gpu/drm/radeon/radeon_fence.c:235 radeon_fence_wait+0x35a/0x3c0
-Submitter	: Alexey Dobriyan <adobriyan@gmail.com>
-Date		: 2010-09-29 21:29 (68 days old)
-Message-ID	: <20100929212923.GA5578@core2.telecom.by>
-References	: http://marc.info/?l=linux-kernel&m=128579579400315&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19142
-Subject		: Screen flickers when switching from the console to X
-Submitter	: Andrey Rahmatullin <wrar@wrar.name>
-Date		: 2010-09-27 12:05 (70 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19052
-Subject		: 2.6.36-rc5-git1 -- [drm:i915_report_and_clear_eir] *ERROR* EIR stuck: 0x00000010, masking
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-09-22 23:47 (75 days old)
-Message-ID	: <AANLkTikWQjUQjFJU9MO1+XbSLAEE-GARz+S+Dz2Fgu4h@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128519926626322&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19002
-Subject		: Radeon rv730 AGP/KMS/DRM kernel lockup
-Submitter	: Duncan <1i5t5.duncan@cox.net>
-Date		: 2010-09-23 16:48 (74 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17121
-Subject		: Two blank rectangles more than 10 cm long when booting
-Submitter	: Eric Valette <eric.valette@free.fr>
-Date		: 2010-08-26 17:24 (102 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17061
-Subject		: 2.6.36-rc1 on zaurus: bluetooth regression
-Submitter	: Pavel Machek <pavel@ucw.cz>
-Date		: 2010-08-21 15:24 (107 days old)
-Message-ID	: <20100821152445.GA1536@ucw.cz>
-References	: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
-Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
-Submitter	: Meelis Roos <mroos@linux.ee>
-Date		: 2010-08-19 21:03 (109 days old)
-Message-ID	: <<<alpine.SOC.1.00.1008192359310.19654@math.ut.ee>>>
-References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16951
-Subject		: hackbench regression with 2.6.36-rc1
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2010-08-18 6:18 (110 days old)
-Message-ID	: <1282112318.21202.8.camel@ymzhang.sh.intel.com>
-References	: http://marc.info/?l=linux-kernel&m=128211235904910&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21092
-Subject		: Kernel 2.6.36 Bug during quotaon on reiserfs
-Submitter	:  <markus.gapp@gmx.net>
-Date		: 2010-10-24 16:57 (43 days old)
-Handled-By	: Jan Kara <jack@suse.cz>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=35292
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20462
-Subject		: 2.6.36-rc7-git2 - panic/GPF: e1000e/vlans?
-Submitter	: Nikola Ciprich <extmaillist@linuxbox.cz>
-Date		: 2010-10-15 7:10 (52 days old)
-Message-ID	: <20101015071008.GA8714@pcnci.linuxbox.cz>
-References	: http://marc.info/?l=linux-kernel&m=128712984831303&w=2
-Handled-By	: Jesse Gross <jesse@nicira.com>
-Patch		: http://www.spinics.net/lists/netdev/msg146227.html
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20162
-Subject		: [LogFS][2.6.36.rc7+] Kernel BUG at readwrite.c:1193
-Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
-Date		: 2010-10-10 17:44 (57 days old)
-Message-ID	: <AANLkTi=JkcuWBPo+X-i+9o-BJFVqjea1J3e=Mr=HvAWF@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128673196203340&w=2
-Handled-By	:  Prasad Gajanan Joshi <prasadjoshi124@gmail.com>
-Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=20162#c1
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.35 and 2.6.36, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=16444
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/rndis_wlan.c |   48 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 48 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 0cd971a..848cc2c 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -129,6 +129,7 @@ MODULE_PARM_DESC(workaround_interval,
+ #define OID_802_11_RTS_THRESHOLD		cpu_to_le32(0x0d01020a)
+ #define OID_802_11_SUPPORTED_RATES		cpu_to_le32(0x0d01020e)
+ #define OID_802_11_CONFIGURATION		cpu_to_le32(0x0d010211)
++#define OID_802_11_POWER_MODE			cpu_to_le32(0x0d010216)
+ #define OID_802_11_BSSID_LIST			cpu_to_le32(0x0d010217)
+ 
+ 
+@@ -239,6 +240,12 @@ enum ndis_80211_addwep_bits {
+ 	NDIS_80211_ADDWEP_TRANSMIT_KEY = cpu_to_le32(1 << 31)
+ };
+ 
++enum ndis_80211_power_mode {
++	NDIS_80211_POWER_MODE_CAM,
++	NDIS_80211_POWER_MODE_MAX_PSP,
++	NDIS_80211_POWER_MODE_FAST_PSP,
++};
++
+ struct ndis_80211_auth_request {
+ 	__le32 length;
+ 	u8 bssid[6];
+@@ -503,6 +510,7 @@ struct rndis_wlan_private {
+ 
+ 	/* hardware state */
+ 	bool radio_on;
++	int power_mode;
+ 	int infra_mode;
+ 	bool connected;
+ 	u8 bssid[ETH_ALEN];
+@@ -572,6 +580,9 @@ static int rndis_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 
+ static int rndis_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev);
+ 
++static int rndis_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
++				bool enabled, int timeout);
++
+ static int rndis_set_cqm_rssi_config(struct wiphy *wiphy,
+ 					struct net_device *dev,
+ 					s32 rssi_thold, u32 rssi_hyst);
+@@ -595,6 +606,7 @@ static const struct cfg80211_ops rndis_config_ops = {
+ 	.set_pmksa = rndis_set_pmksa,
+ 	.del_pmksa = rndis_del_pmksa,
+ 	.flush_pmksa = rndis_flush_pmksa,
++	.set_power_mgmt = rndis_set_power_mgmt,
+ 	.set_cqm_rssi_config = rndis_set_cqm_rssi_config,
+ };
+ 
+@@ -694,6 +706,7 @@ static const char *oid_to_string(__le32 oid)
+ 		OID_STR(OID_802_11_ADD_KEY);
+ 		OID_STR(OID_802_11_REMOVE_KEY);
+ 		OID_STR(OID_802_11_ASSOCIATION_INFORMATION);
++		OID_STR(OID_802_11_CAPABILITY);
+ 		OID_STR(OID_802_11_PMKID);
+ 		OID_STR(OID_802_11_NETWORK_TYPES_SUPPORTED);
+ 		OID_STR(OID_802_11_NETWORK_TYPE_IN_USE);
+@@ -704,6 +717,7 @@ static const char *oid_to_string(__le32 oid)
+ 		OID_STR(OID_802_11_RTS_THRESHOLD);
+ 		OID_STR(OID_802_11_SUPPORTED_RATES);
+ 		OID_STR(OID_802_11_CONFIGURATION);
++		OID_STR(OID_802_11_POWER_MODE);
+ 		OID_STR(OID_802_11_BSSID_LIST);
+ #undef OID_STR
+ 	}
+@@ -2574,6 +2588,38 @@ static int rndis_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+ 	return rndis_set_oid(usbdev, OID_802_11_PMKID, &pmkid, sizeof(pmkid));
+ }
+ 
++static int rndis_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
++				bool enabled, int timeout)
++{
++	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
++	struct usbnet *usbdev = priv->usbdev;
++	int power_mode;
++	__le32 mode;
++	int ret;
++
++	netdev_dbg(usbdev->net, "%s(): %s, %d\n", __func__,
++				enabled ? "enabled" : "disabled",
++				timeout);
++
++	if (enabled)
++		power_mode = NDIS_80211_POWER_MODE_FAST_PSP;
++	else
++		power_mode = NDIS_80211_POWER_MODE_CAM;
++
++	if (power_mode == priv->power_mode)
++		return 0;
++
++	priv->power_mode = power_mode;
++
++	mode = cpu_to_le32(power_mode);
++	ret = rndis_set_oid(usbdev, OID_802_11_POWER_MODE, &mode, sizeof(mode));
++
++	netdev_dbg(usbdev->net, "%s(): OID_802_11_POWER_MODE -> %d\n",
++				__func__, ret);
++
++	return ret;
++}
++
+ static int rndis_set_cqm_rssi_config(struct wiphy *wiphy,
+ 					struct net_device *dev,
+ 					s32 rssi_thold, u32 rssi_hyst)
+@@ -3441,6 +3487,8 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 
+ 	set_default_iw_params(usbdev);
+ 
++	priv->power_mode = -1;
++
+ 	/* set default rts/frag */
+ 	rndis_set_wiphy_params(wiphy,
+ 			WIPHY_PARAM_FRAG_THRESHOLD | WIPHY_PARAM_RTS_THRESHOLD);
 
