@@ -1,337 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:44242 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751627Ab0LFJj2 convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:46912 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752755Ab0LUSkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 04:39:28 -0500
-Received: by wwa36 with SMTP id 36so12592211wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 01:39:27 -0800 (PST)
+	Tue, 21 Dec 2010 13:40:37 -0500
+Received: by wyb28 with SMTP id 28so4247098wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 10:40:36 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: N-PHY: update 2056 radio on channel switch on rev3+
+Date: Tue, 21 Dec 2010 19:40:19 +0100
+Message-Id: <1292956819-21166-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1292956819-21166-1-git-send-email-zajec5@gmail.com>
+References: <1292956819-21166-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4CFCA416.1010505@gmail.com>
-References: <4CFCA416.1010505@gmail.com>
-Date: Mon, 6 Dec 2010 15:09:27 +0530
-Message-ID: <AANLkTimUV3JaQPVvBp0obasc2AY0p5U7SNXiJ0av32g1@mail.gmail.com>
-Subject: Re: ar9170usb slow / poor performance
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 6, 2010 at 2:21 PM, Wade Fitzpatrick
-<wade.fitzpatrick@gmail.com> wrote:
-> I have 2 USB wireless dongles:
-> †- Generic Realtek RTL8187 using rtl8187 driver
-> †- Netgear WN111v2 [Atheros AR9001-U(2)NG] using ar9170usb driver
->
-> Performance of the Netgear has degraded severely since updating to Arch
-> Linux kernel 2.6.36.1-3 from 2.6.35.4-2, also reported by
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/59911
->
-> Note that I only installed and enabled wlan1 because wlan0 was performing so
-> badly.
->
-> # lsusb -v -d 0bda:8187
->
-> Bus 002 Device 005: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187
-> Wireless Adapter
-> Device Descriptor:
-> †bLength † † † † † † † †18
-> †bDescriptorType † † † † 1
-> †bcdUSB † † † † † † † 2.00
-> †bDeviceClass † † † † † †0 (Defined at Interface level)
-> †bDeviceSubClass † † † † 0
-> †bDeviceProtocol † † † † 0
-> †bMaxPacketSize0 † † † †64
-> †idVendor † † † † † 0x0bda Realtek Semiconductor Corp.
-> †idProduct † † † † †0x8187 RTL8187 Wireless Adapter
-> †bcdDevice † † † † † †1.00
-> †iManufacturer † † † † † 1 Manufacturer_Realtek_RTL8187_
-> †iProduct † † † † † † † †2 RTL8187_Wireless_LAN_Adapter
-> †iSerial † † † † † † † † 3 001AEF0050E6
-> †bNumConfigurations † † †1
-> †Configuration Descriptor:
-> † †bLength † † † † † † † † 9
-> † †bDescriptorType † † † † 2
-> † †wTotalLength † † † † † 39
-> † †bNumInterfaces † † † † †1
-> † †bConfigurationValue † † 1
-> † †iConfiguration † † † † †4 Wireless Network Card
-> † †bmAttributes † † † † 0x80
-> † † †(Bus Powered)
-> † †MaxPower † † † † † † †500mA
-> † †Interface Descriptor:
-> † † †bLength † † † † † † † † 9
-> † † †bDescriptorType † † † † 4
-> † † †bInterfaceNumber † † † †0
-> † † †bAlternateSetting † † † 0
-> † † †bNumEndpoints † † † † † 3
-> † † †bInterfaceClass † † † † 0 (Defined at Interface level)
-> † † †bInterfaceSubClass † † †0
-> † † †bInterfaceProtocol † † †0
-> † † †iInterface † † † † † † †5 Bulk-IN,Bulk-OUT,Bulk-OUT
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x81 †EP 1 IN
-> † † † †bmAttributes † † † † † †2
-> † † † † †Transfer Type † † † † † †Bulk
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0200 †1x 512 bytes
-> † † † †bInterval † † † † † † † 0
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x02 †EP 2 OUT
-> † † † †bmAttributes † † † † † †2
-> † † † † †Transfer Type † † † † † †Bulk
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0200 †1x 512 bytes
-> † † † †bInterval † † † † † † † 0
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x03 †EP 3 OUT
-> † † † †bmAttributes † † † † † †2
-> † † † † †Transfer Type † † † † † †Bulk
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0200 †1x 512 bytes
-> † † † †bInterval † † † † † † † 0
-> Device Qualifier (for other device speed):
-> †bLength † † † † † † † †10
-> †bDescriptorType † † † † 6
-> †bcdUSB † † † † † † † 2.00
-> †bDeviceClass † † † † † †0 (Defined at Interface level)
-> †bDeviceSubClass † † † † 0
-> †bDeviceProtocol † † † † 0
-> †bMaxPacketSize0 † † † †64
-> †bNumConfigurations † † †1
-> Device Status: † † 0x0000
-> †(Bus Powered)
->
-> # lsusb -v -d 0846:9001
->
-> Bus 002 Device 004: ID 0846:9001 NetGear, Inc. WN111(v2) RangeMax Next
-> Wireless [Atheros AR9001U-(2)NG]
-> Device Descriptor:
-> †bLength † † † † † † † †18
-> †bDescriptorType † † † † 1
-> †bcdUSB † † † † † † † 2.00
-> †bDeviceClass † † † † †255 Vendor Specific Class
-> †bDeviceSubClass † † † 255 Vendor Specific Subclass
-> †bDeviceProtocol † † † 255 Vendor Specific Protocol
-> †bMaxPacketSize0 † † † †64
-> †idVendor † † † † † 0x0846 NetGear, Inc.
-> †idProduct † † † † †0x9001 WN111(v2) RangeMax Next Wireless [Atheros
-> AR9001U-(2)NG]
-> †bcdDevice † † † † † †1.06
-> †iManufacturer † † † † †16 ATHER
-> †iProduct † † † † † † † 32 USB2.0 WLAN
-> †iSerial † † † † † † † †48 12345
-> †bNumConfigurations † † †1
-> †Configuration Descriptor:
-> † †bLength † † † † † † † † 9
-> † †bDescriptorType † † † † 2
-> † †wTotalLength † † † † † 46
-> † †bNumInterfaces † † † † †1
-> † †bConfigurationValue † † 1
-> † †iConfiguration † † † † †0
-> † †bmAttributes † † † † 0x80
-> † † †(Bus Powered)
-> † †MaxPower † † † † † † †500mA
-> † †Interface Descriptor:
-> † † †bLength † † † † † † † † 9
-> † † †bDescriptorType † † † † 4
-> † † †bInterfaceNumber † † † †0
-> † † †bAlternateSetting † † † 0
-> † † †bNumEndpoints † † † † † 4
-> † † †bInterfaceClass † † † 255 Vendor Specific Class
-> † † †bInterfaceSubClass † † †0
-> † † †bInterfaceProtocol † † †0
-> † † †iInterface † † † † † † †0
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x01 †EP 1 OUT
-> † † † †bmAttributes † † † † † †2
-> † † † † †Transfer Type † † † † † †Bulk
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0200 †1x 512 bytes
-> † † † †bInterval † † † † † † † 0
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x82 †EP 2 IN
-> † † † †bmAttributes † † † † † †2
-> † † † † †Transfer Type † † † † † †Bulk
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0200 †1x 512 bytes
-> † † † †bInterval † † † † † † † 0
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x83 †EP 3 IN
-> † † † †bmAttributes † † † † † †3
-> † † † † †Transfer Type † † † † † †Interrupt
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0040 †1x 64 bytes
-> † † † †bInterval † † † † † † † 1
-> † † †Endpoint Descriptor:
-> † † † †bLength † † † † † † † † 7
-> † † † †bDescriptorType † † † † 5
-> † † † †bEndpointAddress † † 0x04 †EP 4 OUT
-> † † † †bmAttributes † † † † † †3
-> † † † † †Transfer Type † † † † † †Interrupt
-> † † † † †Synch Type † † † † † † † None
-> † † † † †Usage Type † † † † † † † Data
-> † † † †wMaxPacketSize † † 0x0040 †1x 64 bytes
-> † † † †bInterval † † † † † † † 1
-> Device Qualifier (for other device speed):
-> †bLength † † † † † † † †10
-> †bDescriptorType † † † † 6
-> †bcdUSB † † † † † † † 2.00
-> †bDeviceClass † † † † †255 Vendor Specific Class
-> †bDeviceSubClass † † † 255 Vendor Specific Subclass
-> †bDeviceProtocol † † † 255 Vendor Specific Protocol
-> †bMaxPacketSize0 † † † †64
-> †bNumConfigurations † † †1
-> Device Status: † † 0x0000
-> †(Bus Powered)
->
-> # iwconfig
-> lo † † † †no wireless extensions.
->
-> eth0 † † †no wireless extensions.
->
-> wlan0 † † IEEE 802.11bgn †ESSID:"waddles"
-> † † † † †Mode:Managed †Frequency:2.412 GHz †Access Point: 00:22:3F:07:42:F3
-> † † † † †Bit Rate=117 Mb/s † Tx-Power=20 dBm
-> † † † † †Retry †long limit:7 † RTS thr:off † Fragment thr:off
-> † † † † †Encryption key:off
-> † † † † †Power Management:off
-> † † † † †Link Quality=34/70 †Signal level=-76 dBm
-> † † † † †Rx invalid nwid:0 †Rx invalid crypt:0 †Rx invalid frag:0
-> † † † † †Tx excessive retries:0 †Invalid misc:0 † Missed beacon:0
->
-> wlan1 † † IEEE 802.11bg †ESSID:"waddles"
-> † † † † †Mode:Managed †Frequency:2.412 GHz †Access Point: 00:22:3F:07:42:F3
-> † † † † †Bit Rate=36 Mb/s † Tx-Power=20 dBm
-> † † † † †Retry †long limit:7 † RTS thr:off † Fragment thr:off
-> † † † † †Encryption key:off
-> † † † † †Power Management:off
-> † † † † †Link Quality=44/70 †Signal level=-66 dBm
-> † † † † †Rx invalid nwid:0 †Rx invalid crypt:0 †Rx invalid frag:0
-> † † † † †Tx excessive retries:0 †Invalid misc:0 † Missed beacon:0
->
-> tun0 † † †no wireless extensions.
->
-> My network looks like this:
->
-> Linux † † † † † † † † † † † † †Router/AP † † † DSL Modem
-> (wlan0) 192.168.1.57 ---/--- 192.168.1.1 --- 192.168.0.1 --- Internet
-> (wlan1) 192.168.1.4 †---/---
->
-> Between the router and the modem is an ethernet crossover cable.
->
-> # ping 192.168.0.1
-> PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
-> 64 bytes from 192.168.0.1: icmp_seq=1 ttl=63 time=2.23 ms
-> 64 bytes from 192.168.0.1: icmp_seq=2 ttl=63 time=2.11 ms
-> 64 bytes from 192.168.0.1: icmp_seq=3 ttl=63 time=1.88 ms
-> ^C
-> --- 192.168.0.1 ping statistics ---
-> 3 packets transmitted, 3 received, 0% packet loss, time 2002ms
-> rtt min/avg/max/mdev = 1.882/2.076/2.235/0.146 ms
->
-> # route add -host 192.168.0.1 gw 192.168.1.1 dev wlan0
->
-> # netstat -nr
-> Kernel IP routing table
-> Destination † † Gateway † † † † Genmask † † † † Flags † MSS Window †irtt
-> Iface
-> 192.168.0.1 † † 192.168.1.1 † † 255.255.255.255 UGH † † † 0 0 † † † † †0
-> wlan0
-> 192.168.1.0 † † 0.0.0.0 † † † † 255.255.255.0 † U † † † † 0 0 † † † † †0
-> wlan1
-> 192.168.1.0 † † 0.0.0.0 † † † † 255.255.255.0 † U † † † † 0 0 † † † † †0
-> wlan0
-> 0.0.0.0 † † † † 192.168.1.1 † † 0.0.0.0 † † † † UG † † † †0 0 † † † † †0
-> wlan1
->
-> # ping 192.168.0.1
-> PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
-> 64 bytes from 192.168.0.1: icmp_seq=1 ttl=63 time=158 ms
-> 64 bytes from 192.168.0.1: icmp_seq=2 ttl=63 time=168 ms
-> 64 bytes from 192.168.0.1: icmp_seq=3 ttl=63 time=162 ms
-> 64 bytes from 192.168.0.1: icmp_seq=4 ttl=63 time=170 ms
-> 64 bytes from 192.168.0.1: icmp_seq=5 ttl=63 time=178 ms
-> 64 bytes from 192.168.0.1: icmp_seq=6 ttl=63 time=166 ms
-> 64 bytes from 192.168.0.1: icmp_seq=7 ttl=63 time=166 ms
-> 64 bytes from 192.168.0.1: icmp_seq=8 ttl=63 time=155 ms
-> 64 bytes from 192.168.0.1: icmp_seq=9 ttl=63 time=434 ms
-> 64 bytes from 192.168.0.1: icmp_seq=10 ttl=63 time=154 ms
-> 64 bytes from 192.168.0.1: icmp_seq=11 ttl=63 time=174 ms
-> 64 bytes from 192.168.0.1: icmp_seq=12 ttl=63 time=161 ms
-> 64 bytes from 192.168.0.1: icmp_seq=13 ttl=63 time=147 ms
-> 64 bytes from 192.168.0.1: icmp_seq=14 ttl=63 time=170 ms
-> 64 bytes from 192.168.0.1: icmp_seq=15 ttl=63 time=161 ms
-> 64 bytes from 192.168.0.1: icmp_seq=16 ttl=63 time=190 ms
-> 64 bytes from 192.168.0.1: icmp_seq=17 ttl=63 time=218 ms
-> 64 bytes from 192.168.0.1: icmp_seq=18 ttl=63 time=166 ms
-> 64 bytes from 192.168.0.1: icmp_seq=19 ttl=63 time=514 ms
-> 64 bytes from 192.168.0.1: icmp_seq=20 ttl=63 time=177 ms
-> 64 bytes from 192.168.0.1: icmp_seq=21 ttl=63 time=144 ms
-> 64 bytes from 192.168.0.1: icmp_seq=22 ttl=63 time=191 ms
-> 64 bytes from 192.168.0.1: icmp_seq=23 ttl=63 time=175 ms
-> 64 bytes from 192.168.0.1: icmp_seq=24 ttl=63 time=156 ms
-> 64 bytes from 192.168.0.1: icmp_seq=25 ttl=63 time=947 ms
-> 64 bytes from 192.168.0.1: icmp_seq=26 ttl=63 time=1833 ms
-> 64 bytes from 192.168.0.1: icmp_seq=27 ttl=63 time=2196 ms
-> 64 bytes from 192.168.0.1: icmp_seq=28 ttl=63 time=1542 ms
-> 64 bytes from 192.168.0.1: icmp_seq=29 ttl=63 time=816 ms
-> 64 bytes from 192.168.0.1: icmp_seq=30 ttl=63 time=3045 ms
-> 64 bytes from 192.168.0.1: icmp_seq=31 ttl=63 time=3181 ms
-> 64 bytes from 192.168.0.1: icmp_seq=32 ttl=63 time=2287 ms
-> 64 bytes from 192.168.0.1: icmp_seq=33 ttl=63 time=1496 ms
-> 64 bytes from 192.168.0.1: icmp_seq=34 ttl=63 time=687 ms
-> 64 bytes from 192.168.0.1: icmp_seq=35 ttl=63 time=173 ms
-> ^C
-> --- 192.168.0.1 ping statistics ---
-> 35 packets transmitted, 35 received, 0% packet loss, time 34037ms
-> rtt min/avg/max/mdev = 144.678/653.604/3181.758/855.953 ms, pipe 4
->
-> NOTE --- The higher ping times occurred when downloading a 39kB image file.
->
-> # route del -host 192.168.0.1 gw 192.168.1.1 dev wlan0
->
-> # ping 192.168.0.1
-> PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
-> 64 bytes from 192.168.0.1: icmp_seq=1 ttl=63 time=2.37 ms
-> 64 bytes from 192.168.0.1: icmp_seq=2 ttl=63 time=2.10 ms
-> 64 bytes from 192.168.0.1: icmp_seq=3 ttl=63 time=1.96 ms
-> 64 bytes from 192.168.0.1: icmp_seq=4 ttl=63 time=2.38 ms
-> ^C
-> --- 192.168.0.1 ping statistics ---
-> 4 packets transmitted, 4 received, 0% packet loss, time 3003ms
-> rtt min/avg/max/mdev = 1.964/2.206/2.388/0.187 ms
->
-> I have also tried using the carl9170 driver (2010_12_02) with
-> compat-wireless and carl9170-fw (1.9.1-1) but I found 'iwconfig' would
-> segfault when it tried to display ath0.
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+John: I ignored over 80 chars warnings, as this is very simple code
+(write-by-write, line-by-line) and I believe this can improve readibility.
+---
+ drivers/net/wireless/b43/phy_n.c |   66 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 65 insertions(+), 1 deletions(-)
 
-Can you please try with ath9k driver with the same compat wireless.Are
-you still seeing poor performance?
->
-> Can somebody help me debug it further please?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at †http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index dded231..b9bda46 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -139,6 +139,70 @@ static void b43_chantab_radio_upload(struct b43_wldev *dev,
+ 	b43_radio_write(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
+ }
+ 
++static void b43_chantab_radio_2056_upload(struct b43_wldev *dev,
++				const struct b43_nphy_channeltab_entry_rev3 *e)
++{
++	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL1, e->radio_syn_pll_vcocal1);
++	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL2, e->radio_syn_pll_vcocal2);
++	b43_radio_write(dev, B2056_SYN_PLL_REFDIV, e->radio_syn_pll_refdiv);
++	b43_radio_write(dev, B2056_SYN_PLL_MMD2, e->radio_syn_pll_mmd2);
++	b43_radio_write(dev, B2056_SYN_PLL_MMD1, e->radio_syn_pll_mmd1);
++	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER1, e->radio_syn_pll_loopfilter1);
++	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER2, e->radio_syn_pll_loopfilter2);
++	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER3, e->radio_syn_pll_loopfilter3);
++	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER4, e->radio_syn_pll_loopfilter4);
++	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER5, e->radio_syn_pll_loopfilter5);
++	b43_radio_write(dev, B2056_SYN_RESERVED_ADDR27, e->radio_syn_reserved_addr27);
++	b43_radio_write(dev, B2056_SYN_RESERVED_ADDR28, e->radio_syn_reserved_addr28);
++	b43_radio_write(dev, B2056_SYN_RESERVED_ADDR29, e->radio_syn_reserved_addr29);
++	b43_radio_write(dev, B2056_SYN_LOGEN_VCOBUF1, e->radio_syn_logen_vcobuf1);
++	b43_radio_write(dev, B2056_SYN_LOGEN_MIXER2, e->radio_syn_logen_mixer2);
++	b43_radio_write(dev, B2056_SYN_LOGEN_BUF3, e->radio_syn_logen_buf3);
++	b43_radio_write(dev, B2056_SYN_LOGEN_BUF4, e->radio_syn_logen_buf4);
++
++	b43_radio_write(dev, B2056_RX0 | B2056_RX_LNAA_TUNE, e->radio_rx0_lnaa_tune);
++	b43_radio_write(dev, B2056_RX0 | B2056_RX_LNAG_TUNE, e->radio_rx0_lnag_tune);
++
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_INTPAA_BOOST_TUNE, e->radio_tx0_intpaa_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_INTPAG_BOOST_TUNE, e->radio_tx0_intpag_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_PADA_BOOST_TUNE, e->radio_tx0_pada_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_PADG_BOOST_TUNE, e->radio_tx0_padg_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_PGAA_BOOST_TUNE, e->radio_tx0_pgaa_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_PGAG_BOOST_TUNE, e->radio_tx0_pgag_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_MIXA_BOOST_TUNE, e->radio_tx0_mixa_boost_tune);
++	b43_radio_write(dev, B2056_TX0 | B2056_TX_MIXG_BOOST_TUNE, e->radio_tx0_mixg_boost_tune);
++
++	b43_radio_write(dev, B2056_RX1 | B2056_RX_LNAA_TUNE, e->radio_rx1_lnaa_tune);
++	b43_radio_write(dev, B2056_RX1 | B2056_RX_LNAG_TUNE, e->radio_rx1_lnag_tune);
++
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_INTPAA_BOOST_TUNE, e->radio_tx1_intpaa_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_INTPAG_BOOST_TUNE, e->radio_tx1_intpag_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_PADA_BOOST_TUNE, e->radio_tx1_pada_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_PADG_BOOST_TUNE, e->radio_tx1_padg_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_PGAA_BOOST_TUNE, e->radio_tx1_pgaa_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_PGAG_BOOST_TUNE, e->radio_tx1_pgag_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_MIXA_BOOST_TUNE, e->radio_tx1_mixa_boost_tune);
++	b43_radio_write(dev, B2056_TX1 | B2056_TX_MIXG_BOOST_TUNE, e->radio_tx1_mixg_boost_tune);
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/Radio/2056Setup */
++static void b43_radio_2056_setup(struct b43_wldev *dev,
++				const struct b43_nphy_channeltab_entry_rev3 *e)
++{
++	B43_WARN_ON(dev->phy.rev < 3);
++
++	b43_chantab_radio_2056_upload(dev, e);
++	/* TODO */
++	udelay(50);
++	/* VCO calibration */
++	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL12, 0x00);
++	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x38);
++	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x18);
++	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x38);
++	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x39);
++	udelay(300);
++}
++
+ static void b43_chantab_phy_upload(struct b43_wldev *dev,
+ 				   const struct b43_phy_n_sfo_cfg *e)
+ {
+@@ -3635,7 +3699,7 @@ static int b43_nphy_set_channel(struct b43_wldev *dev,
+ 	if (dev->phy.rev >= 3) {
+ 		tmp = (channel->band == IEEE80211_BAND_5GHZ) ? 4 : 0;
+ 		b43_radio_maskset(dev, 0x08, 0xFFFB, tmp);
+-		/* TODO: PHY Radio2056 Setup (dev, tabent_r3); */
++		b43_radio_2056_setup(dev, tabent_r3);
+ 		b43_nphy_channel_setup(dev, &(tabent_r3->phy_regs), channel);
+ 	} else {
+ 		tmp = (channel->band == IEEE80211_BAND_5GHZ) ? 0x0020 : 0x0050;
+-- 
+1.6.3.3
+
