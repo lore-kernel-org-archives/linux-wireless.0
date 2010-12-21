@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40672 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719Ab0LaKdw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 05:33:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
-Date: Fri, 31 Dec 2010 11:33:49 +0100
-Message-ID: <AANLkTins7rj1o4rEcEFmVSA2=1yXZSfLdO000gqQP7cg@mail.gmail.com>
-Subject: Re: [PATCH 01/15]arch:m68k:ifpsp060:src:fpsp.S Typo change diable to disable.
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-m68k@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.1.48]:16996 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933382Ab0LUJti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 04:49:38 -0500
+Subject: Re: [patch -next] wl12xx: use after free in debug code
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Shahar Levi <shahar_levi@ti.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+In-Reply-To: <20101221040012.GD1936@bicker>
+References: <20101221040012.GD1936@bicker>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Dec 2010 11:44:25 +0200
+Message-ID: <1292924665.19436.12.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 31, 2010 at 00:07, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this
-> is correct or not.
->
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+On Tue, 2010-12-21 at 07:00 +0300, ext Dan Carpenter wrote:
+> If debugging is turned on, then wl1271_dump() dereferences a freed
+> variable.
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Applied, thank you!
 
-> ---
->  arch/m68k/ifpsp060/src/fpsp.S |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/m68k/ifpsp060/src/fpsp.S b/arch/m68k/ifpsp060/src/fpsp.S
-> index 73613b5..26e85e2 100644
-> --- a/arch/m68k/ifpsp060/src/fpsp.S
-> +++ b/arch/m68k/ifpsp060/src/fpsp.S
-> @@ -3881,7 +3881,7 @@ _fpsp_fline:
->  # FP Unimplemented Instruction stack frame and jump to that entry
->  # point.
->  #
-> -# but, if the FPU is disabled, then we need to jump to the FPU diabled
-> +# but, if the FPU is disabled, then we need to jump to the FPU disabled
->  # entry point.
->        movc            %pcr,%d0
->        btst            &0x1,%d0
 
-Gr{oetje,eeting}s,
+-- 
+Cheers,
+Luca.
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
