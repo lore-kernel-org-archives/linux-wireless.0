@@ -1,54 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12234 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754131Ab0LDBU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 20:20:59 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 17:20:45 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
-	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 1/3] ath9k: warn when we get a ATH9K_INT_TIM_TIMER and are idle
-Date: Fri, 3 Dec 2010 17:20:51 -0800
-Message-ID: <1291425653-2884-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
-References: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39376 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504Ab0LVQNm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 11:13:42 -0500
+Received: by iwn9 with SMTP id 9so5364394iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 08:13:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+ <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+ <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+ <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
+ <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 22 Dec 2010 11:13:21 -0500
+Message-ID: <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
+Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+To: Elvis Dowson <elvis.dowson@mac.com>
+Cc: "Kahn, Gery" <geryk@ti.com>, Oz Krakowski <ozk@ti.com>,
+	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not be idle when we get the ATH9K_INT_TIM_TIMER,
-otherwise we wake up the chip and that throws off the idle
-state, the driver needs to be in full sleep when idle and
-nothing should turn it awake without turning it back to
-full sleep again. If we leave the chip idle and suspend,
-upon resume the device will become unusable and we get:
+On Wed, Dec 22, 2010 at 11:09 AM, Elvis Dowson <elvis.dowson@mac.com> wrote:
+> netdev_alloc_skb_ip_align
 
-ath: Starting driver with initial channel: 5745 MHz
-ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
+I notice you have an android kernel, is that kernel a vanilla kernel
+or did it get netdev_alloc_skb_ip_align() cherry picked into it?
 
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f026a03..fd27ec9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -770,6 +770,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		if (status & ATH9K_INT_TIM_TIMER) {
- 			/* Clear RxAbort bit so that we can
- 			 * receive frames */
-+			WARN_ON(sc->ps_idle);
- 			ath9k_setpower(sc, ATH9K_PM_AWAKE);
- 			ath9k_hw_setrxabort(sc->sc_ah, 0);
- 			sc->ps_flags |= PS_WAIT_FOR_BEACON;
--- 
-1.7.3.2.90.gd4c43
-
+  Luis
