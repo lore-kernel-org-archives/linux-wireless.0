@@ -1,265 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57107 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755786Ab0LASH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 13:07:58 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2.6.37 v3 1/2] ath9k_hw: fix endian issues with CTLs on AR9003
-Date: Wed,  1 Dec 2010 19:07:46 +0100
-Message-Id: <1291226867-97857-1-git-send-email-nbd@openwrt.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:62245 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196Ab0LVO2R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 09:28:17 -0500
+Received: by wwa36 with SMTP id 36so5334430wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:16 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 08/18] wl1271: Add AP related definitions to HOST-FW interface
+Date: Wed, 22 Dec 2010 16:27:27 +0200
+Message-Id: <1293028057-6212-9-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Parsing data using bitfields is messy, because it makes endian handling
-much harder. AR9002 and earlier got it right, AR9003 got it wrong.
-This might lead to either using too high or too low tx power values,
-depending on frequency and eeprom settings.
-Fix it by getting rid of the CTL related bitfields entirely and use
-masks instead.
+Change structures in a non-destructive manner. This means no
+changes in size or location of existing members used by STA.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   73 ++++++++++++-----------
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    9 +--
- drivers/net/wireless/ath/ath9k/eeprom.c        |    6 +-
- drivers/net/wireless/ath/ath9k/eeprom.h        |   13 +---
- 4 files changed, 47 insertions(+), 54 deletions(-)
+ drivers/net/wireless/wl12xx/event.h  |    7 ++++++-
+ drivers/net/wireless/wl12xx/rx.h     |   12 ++++++++----
+ drivers/net/wireless/wl12xx/tx.h     |    9 +++++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |   18 +++++++++++++++++-
+ 4 files changed, 38 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index c418235..a7b82f0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -55,6 +55,8 @@
- #define SUB_NUM_CTL_MODES_AT_5G_40 2    /* excluding HT40, EXT-OFDM */
- #define SUB_NUM_CTL_MODES_AT_2G_40 3    /* excluding HT40, EXT-OFDM, EXT-CCK */
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index fd955f3..1d5ef67 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -116,7 +116,12 @@ struct event_mailbox {
+ 	u8 scheduled_scan_status;
+ 	u8 ps_status;
  
-+#define CTL(_tpower, _flag) ((_tpower) | ((_flag) << 6))
+-	u8 reserved_5[29];
++	/* AP FW only */
++	u8 hlid_removed;
++	__le16 sta_aging_status;
++	__le16 sta_tx_retry_exceeded;
 +
- static const struct ar9300_eeprom ar9300_default = {
- 	.eepromVersion = 2,
- 	.templateVersion = 2,
-@@ -290,20 +292,21 @@ static const struct ar9300_eeprom ar9300_default = {
- 		}
- 	 },
- 	.ctlPowerData_2G = {
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
--		 { { {60, 1}, {60, 0}, {60, 0}, {60, 1} } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
-+		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
- 
--		 { { {60, 1}, {60, 0}, {0, 0}, {0, 0} } },
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
-+		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 
--		 { { {60, 0}, {60, 1}, {60, 1}, {60, 0} } },
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
- 
--		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
--		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
-+		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
- 	 },
- 	.modalHeader5G = {
- 		/* 4 idle,t1,t2,b (4 bits per setting) */
-@@ -568,56 +571,56 @@ static const struct ar9300_eeprom ar9300_default = {
- 	.ctlPowerData_5G = {
- 		{
- 			{
--				{60, 1}, {60, 1}, {60, 1}, {60, 1},
--				{60, 1}, {60, 1}, {60, 1}, {60, 0},
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
- 			}
- 		},
- 		{
- 			{
--				{60, 1}, {60, 1}, {60, 1}, {60, 1},
--				{60, 1}, {60, 1}, {60, 1}, {60, 0},
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
- 			}
- 		},
- 		{
- 			{
--				{60, 0}, {60, 1}, {60, 0}, {60, 1},
--				{60, 1}, {60, 1}, {60, 1}, {60, 1},
-+				CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
- 			}
- 		},
- 		{
- 			{
--				{60, 0}, {60, 1}, {60, 1}, {60, 0},
--				{60, 1}, {60, 0}, {60, 0}, {60, 0},
-+				CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0),
-+				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
- 			}
- 		},
- 		{
- 			{
--				{60, 1}, {60, 1}, {60, 1}, {60, 0},
--				{60, 0}, {60, 0}, {60, 0}, {60, 0},
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
-+				CTL(60, 0), CTL(60, 0), CTL(60, 0), CTL(60, 0),
- 			}
- 		},
- 		{
- 			{
--				{60, 1}, {60, 1}, {60, 1}, {60, 1},
--				{60, 1}, {60, 0}, {60, 0}, {60, 0},
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
- 			}
- 		},
- 		{
- 			{
--				{60, 1}, {60, 1}, {60, 1}, {60, 1},
--				{60, 1}, {60, 1}, {60, 1}, {60, 1},
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
- 			}
- 		},
- 		{
- 			{
--				{60, 1}, {60, 1}, {60, 0}, {60, 1},
--				{60, 1}, {60, 1}, {60, 1}, {60, 0},
-+				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
- 			}
- 		},
- 		{
- 			{
--				{60, 1}, {60, 0}, {60, 1}, {60, 1},
--				{60, 1}, {60, 1}, {60, 0}, {60, 1},
-+				CTL(60, 1), CTL(60, 0), CTL(60, 1), CTL(60, 1),
-+				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
- 			}
- 		},
- 	 }
-@@ -1827,9 +1830,9 @@ static u16 ar9003_hw_get_direct_edge_power(struct ar9300_eeprom *eep,
- 	struct cal_ctl_data_5g *ctl_5g = eep->ctlPowerData_5G;
- 
- 	if (is2GHz)
--		return ctl_2g[idx].ctlEdges[edge].tPower;
-+		return CTL_EDGE_TPOWER(ctl_2g[idx].ctlEdges[edge]);
- 	else
--		return ctl_5g[idx].ctlEdges[edge].tPower;
-+		return CTL_EDGE_TPOWER(ctl_5g[idx].ctlEdges[edge]);
- }
- 
- static u16 ar9003_hw_get_indirect_edge_power(struct ar9300_eeprom *eep,
-@@ -1847,12 +1850,12 @@ static u16 ar9003_hw_get_indirect_edge_power(struct ar9300_eeprom *eep,
- 
- 	if (is2GHz) {
- 		if (ath9k_hw_fbin2freq(ctl_freqbin[edge - 1], 1) < freq &&
--		    ctl_2g[idx].ctlEdges[edge - 1].flag)
--			return ctl_2g[idx].ctlEdges[edge - 1].tPower;
-+		    CTL_EDGE_FLAGS(ctl_2g[idx].ctlEdges[edge - 1]))
-+			return CTL_EDGE_TPOWER(ctl_2g[idx].ctlEdges[edge - 1]);
- 	} else {
- 		if (ath9k_hw_fbin2freq(ctl_freqbin[edge - 1], 0) < freq &&
--		    ctl_5g[idx].ctlEdges[edge - 1].flag)
--			return ctl_5g[idx].ctlEdges[edge - 1].tPower;
-+		    CTL_EDGE_FLAGS(ctl_5g[idx].ctlEdges[edge - 1]))
-+			return CTL_EDGE_TPOWER(ctl_5g[idx].ctlEdges[edge - 1]);
- 	}
- 
- 	return AR9300_MAX_RATE_POWER;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 3c533bb..655b303 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -261,17 +261,12 @@ struct cal_tgt_pow_ht {
- 	u8 tPow2x[14];
++	u8 reserved_5[24];
  } __packed;
  
--struct cal_ctl_edge_pwr {
--	u8 tPower:6,
--	   flag:2;
--} __packed;
--
- struct cal_ctl_data_2g {
--	struct cal_ctl_edge_pwr ctlEdges[AR9300_NUM_BAND_EDGES_2G];
-+	u8 ctlEdges[AR9300_NUM_BAND_EDGES_2G];
+ int wl1271_event_unmask(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index 3abb26f..19fd591 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -86,10 +86,11 @@
+ /*
+  * RX Descriptor status
+  *
+- * Bits 0-2 - status
+- * Bits 3-7 - reserved
++ * Bits 0-2 - error code
++ * Bits 3-5 - process_id tag (AP mode FW)
++ * Bits 6-7 - reserved
+  */
+-#define WL1271_RX_DESC_STATUS_MASK      0x07
++#define WL1271_RX_DESC_STATUS_MASK      0x03
+ 
+ #define WL1271_RX_DESC_SUCCESS          0x00
+ #define WL1271_RX_DESC_DECRYPT_FAIL     0x01
+@@ -110,7 +111,10 @@ struct wl1271_rx_descriptor {
+ 	u8  snr;
+ 	__le32 timestamp;
+ 	u8  packet_class;
+-	u8  process_id;
++	union {
++		u8  process_id; /* STA FW */
++		u8  hlid; /* AP FW */
++	} __packed;
+ 	u8  pad_len;
+ 	u8  reserved;
+ } __packed;
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 903e5dc..0662b19 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -29,6 +29,7 @@
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
++#define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
+ /* The chipset reference driver states, that the "aid" value 1
+  * is for infra-BSS, but is still always used */
+ #define TX_HW_DEFAULT_AID                1
+@@ -77,8 +78,12 @@ struct wl1271_tx_hw_descr {
+ 	u8 id;
+ 	/* The packet TID value (as User-Priority) */
+ 	u8 tid;
+-	/* Identifier of the remote STA in IBSS, 1 in infra-BSS */
+-	u8 aid;
++	union {
++		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
++		u8 aid;
++		/* AP - host link ID (HLID) */
++		u8 hlid;
++	} __packed;
+ 	u8 reserved;
  } __packed;
  
- struct cal_ctl_data_5g {
--	struct cal_ctl_edge_pwr ctlEdges[AR9300_NUM_BAND_EDGES_5G];
-+	u8 ctlEdges[AR9300_NUM_BAND_EDGES_5G];
- } __packed;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 136e87b..ebb4a4d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -195,6 +195,11 @@ struct wl1271_stats {
+ #define NUM_TX_QUEUES              4
+ #define NUM_RX_PKT_DESC            8
  
- struct ar9300_eeprom {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 1266333..2bbf94d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -240,16 +240,16 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
- 	for (i = 0; (i < num_band_edges) &&
- 		     (pRdEdgesPower[i].bChannel != AR5416_BCHAN_UNUSED); i++) {
- 		if (freq == ath9k_hw_fbin2freq(pRdEdgesPower[i].bChannel, is2GHz)) {
--			twiceMaxEdgePower = pRdEdgesPower[i].tPower;
-+			twiceMaxEdgePower = CTL_EDGE_TPOWER(pRdEdgesPower[i].ctl);
- 			break;
- 		} else if ((i > 0) &&
- 			   (freq < ath9k_hw_fbin2freq(pRdEdgesPower[i].bChannel,
- 						      is2GHz))) {
- 			if (ath9k_hw_fbin2freq(pRdEdgesPower[i - 1].bChannel,
- 					       is2GHz) < freq &&
--			    pRdEdgesPower[i - 1].flag) {
-+			    CTL_EDGE_FLAGS(pRdEdgesPower[i - 1].ctl)) {
- 				twiceMaxEdgePower =
--					pRdEdgesPower[i - 1].tPower;
-+					CTL_EDGE_TPOWER(pRdEdgesPower[i - 1].ctl);
- 			}
- 			break;
- 		}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index dacb45e..41ad1fe 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -233,6 +233,9 @@
- 
- #define AR9287_CHECKSUM_LOCATION (AR9287_EEP_START_LOC + 1)
- 
-+#define CTL_EDGE_TPOWER(_ctl) ((_ctl) & 0x3f)
-+#define CTL_EDGE_FLAGS(_ctl) (((_ctl) >> 6) & 0x03)
++#define AP_MAX_STATIONS            5
 +
- enum eeprom_param {
- 	EEP_NFTHRESH_5,
- 	EEP_NFTHRESH_2,
-@@ -535,18 +538,10 @@ struct cal_target_power_ht {
- 	u8 tPow2x[8];
++/* Broadcast and Global links + links to stations */
++#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
++
+ /* FW status registers */
+ struct wl1271_fw_status {
+ 	__le32 intr;
+@@ -205,7 +210,18 @@ struct wl1271_fw_status {
+ 	__le32 rx_pkt_descs[NUM_RX_PKT_DESC];
+ 	__le32 tx_released_blks[NUM_TX_QUEUES];
+ 	__le32 fw_localtime;
+-	__le32 padding[2];
++
++	/* Next fields valid only in AP FW */
++
++	/*
++	 * A bitmap (where each bit represents a single HLID)
++	 * to indicate if the station is in PS mode.
++	 */
++	__le32 link_ps_bitmap;
++
++	/* Number of freed MBs per HLID */
++	u8 tx_lnk_free_blks[AP_MAX_LINKS];
++	u8 padding_1[1];
  } __packed;
  
--
--#ifdef __BIG_ENDIAN_BITFIELD
--struct cal_ctl_edges {
--	u8 bChannel;
--	u8 flag:2, tPower:6;
--} __packed;
--#else
- struct cal_ctl_edges {
- 	u8 bChannel;
--	u8 tPower:6, flag:2;
-+	u8 ctl;
- } __packed;
--#endif
- 
- struct cal_data_op_loop_ar9287 {
- 	u8 pwrPdg[2][5];
+ struct wl1271_rx_mem_pool_addr {
 -- 
-1.7.3.2
+1.7.1
 
