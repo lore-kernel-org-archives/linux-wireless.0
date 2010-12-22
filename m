@@ -1,78 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:58926 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753654Ab0LACTI (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64151 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455Ab0LVOaT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 21:19:08 -0500
-Received: by yxt3 with SMTP id 3so2622320yxt.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 18:19:08 -0800 (PST)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/3] ath5k: Fix beaconing in mesh mode
-Date: Tue, 30 Nov 2010 18:18:37 -0800
-Message-Id: <1291169919-3867-2-git-send-email-javier@cozybit.com>
-In-Reply-To: <1291169919-3867-1-git-send-email-javier@cozybit.com>
-References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
+	Wed, 22 Dec 2010 09:30:19 -0500
+Received: by iyi12 with SMTP id 12so4099534iyi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:30:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1293026525.3531.21.camel@jlt3.sipsolutions.net>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+ <1292864555-28661-3-git-send-email-lrodriguez@atheros.com> <1293026525.3531.21.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 22 Dec 2010 09:29:58 -0500
+Message-ID: <AANLkTin+GOH_EKhoXFZwo0VsS3=2RHCo68WceaJ3XC_a@mail.gmail.com>
+Subject: Re: [PATCH 1/2] cfg80211: process new country regulatory flags (DFS)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, kathy.giori@atheros.com,
+	amod.bodas@atheros.com, david.quan@atheros.com,
+	michael.green@atheros.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the oops below when attempting to bring up a mesh
-interface on ath5k hardware.
+On Wed, Dec 22, 2010 at 9:02 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2010-12-20 at 12:02 -0500, Luis R. Rodriguez wrote:
+>
+>> --- a/include/linux/nl80211.h
+>> +++ b/include/linux/nl80211.h
+>> @@ -858,6 +858,9 @@ enum nl80211_commands {
+>>   *   attributes, specifying what a key should be set as default as.
+>>   *   See &enum nl80211_key_default_types.
+>>   *
+>> + * @NL80211_ATTR_REG_COUNTRY_FLAGS: Country specific regulatory flags.
+>> + *   These are @NL80211_CFLAG_DFS_*
+>> + *
+>
+> Please also add a note "(u16)" here or so.
 
-[  128.933099] kernel BUG at drivers/net/wireless/ath/ath5k/base.c:197!
-[  128.933099] invalid opcode: 0000 [#1]
-(...)
-[  128.933099] Call Trace:
-[  128.933099]  [<c83b77fa>] ? ath5k_beacon_update+0x57/0x1f8 [ath5k]
-[  128.933099]  [<c02d9a40>] ? __sysfs_add_one+0x28/0x76
-[  128.933099]  [<c83b830e>] ? ath5k_bss_info_changed+0x13f/0x173
-[ath5k]
-[  128.933099]  [<c82ff629>] ? ieee80211_config_beacon+0xc0/0x17e
-[mac80211]
-[  128.933099]  [<c82f073e>] ?
-ieee80211_bss_info_change_notify+0x182/0x18b [mac80211]
-[  128.933099]  [<c83b81cf>] ? ath5k_bss_info_changed+0x0/0x173 [ath5k]
-[  128.933099]  [<c82ff6d6>] ? ieee80211_config_beacon+0x16d/0x17e
-[mac80211]
-[  128.933099]  [<c82ff753>] ? ieee80211_add_beacon+0x34/0x39 [mac80211]
-[  128.933099]  [<c830a4ed>] ? ieee80211s_init+0xf8/0x10f [mac80211]
-[  128.933099]  [<c830a5df>] ? ieee80211_mesh_init_sdata+0xdb/0x154 [mac80211]
----
- drivers/net/wireless/ath/ath5k/base.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+Sure.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a8d380a..73c7118 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1921,8 +1921,9 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 		/* NB: hw still stops DMA, so proceed */
- 	}
- 
--	/* refresh the beacon for AP mode */
--	if (sc->opmode == NL80211_IFTYPE_AP)
-+	/* refresh the beacon for AP or MESH mode */
-+	if (sc->opmode == NL80211_IFTYPE_AP ||
-+			sc->opmode == NL80211_IFTYPE_MESH_POINT)
- 		ath5k_beacon_update(sc->hw, vif);
- 
- 	ath5k_hw_set_txdp(ah, sc->bhalq, bf->daddr);
-@@ -2826,7 +2827,8 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 
- 	/* Assign the vap/adhoc to a beacon xmit slot. */
- 	if ((avf->opmode == NL80211_IFTYPE_AP) ||
--	    (avf->opmode == NL80211_IFTYPE_ADHOC)) {
-+	    (avf->opmode == NL80211_IFTYPE_ADHOC) ||
-+	    (avf->opmode == NL80211_IFTYPE_MESH_POINT)) {
- 		int slot;
- 
- 		WARN_ON(list_empty(&sc->bcbuf));
--- 
-1.7.1
+>> +#define flag_check_print(_str) \
+>> +     do { \
+>> +             if (has_flag) \
+>> +                     pr_info(", "); \
+>> +             pr_info(_str); \
+>> +             has_flag = true; \
+>> +     } while (0)
+>> +
+>> +static void print_country_flags(u16 flags)
+>> +{
+>
+> Can you move the define into the function, and also #undef it please?
 
+OK
+
+> Also -- it seems that this is never reported back to be printed by iw
+> reg get?
+
+Actually it is. See the changes on nl80211_get_reg(), and I tested
+this and I get it.
+
+> I think that might be needed?
+
+Yeap.
+
+> If you do, it should only report
+> the ones that the kernel knows about (i.e. mask them with the _ALL
+> thing)
+
+Sure.
+
+> Does it make sense to actually have this a bitmask rather than an enum?
+
+Good question.
+
+> Do we think there's some place that needs _multiple_ rules?
+
+Good question, I have my call with Michael scheduled for 11am PST
+time, hope to get some insight into his regulatory crystal ball then.
+
+  Luis
