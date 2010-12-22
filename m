@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60505 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752755Ab0LHUaH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58637 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164Ab0LVR1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 15:30:07 -0500
-Date: Wed, 8 Dec 2010 15:27:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] mac80211: reduce the probe response timeout after
- beacon loss
-Message-ID: <20101208202738.GG2423@tuxdriver.com>
-References: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
- <1290203740-57124-2-git-send-email-nbd@openwrt.org>
- <1290203740-57124-3-git-send-email-nbd@openwrt.org>
- <1290203740-57124-4-git-send-email-nbd@openwrt.org>
- <4CE734D9.90103@openwrt.org>
- <AANLkTikCn2GjLxfQZLw9Tj8cyH_bgGpEDiGpKVg0faht@mail.gmail.com>
- <4CEA8113.9070806@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CEA8113.9070806@openwrt.org>
+	Wed, 22 Dec 2010 12:27:38 -0500
+Subject: Re: [PATCH] iwlagn: only enable rfkill interrupt when device is
+ down
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+In-Reply-To: <1293022913-4692-1-git-send-email-sgruszka@redhat.com>
+References: <1293022913-4692-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Dec 2010 18:27:19 +0100
+Message-ID: <1293038839.3531.24.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 22, 2010 at 03:41:23PM +0100, Felix Fietkau wrote:
-> On 2010-11-22 7:49 AM, Mohammed Shafi wrote:
-> > On Sat, Nov 20, 2010 at 8:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> >> On 2010-11-19 10:55 PM, Felix Fietkau wrote:
-> >>> Waiting for 500 ms after sending a probe request seems a bit excessive,
-> >>> especially when doing 5 attempts. If the connection is bad enough to make
-> >>> multiple requests time out, then user space should try to quickly find a
-> >>> new AP.
-> > This might improve fail over roaming to a small extent but  as per the
-> > commit id d1c5091f23fed5195271e2849f89017d3a126521 it was mentioned
-> > this might affect robustness against 'slow AP's'
-> > 
-> >> Hmm, don't merge this patch yet, it can cause background scans to
-> >> trigger reconnects.
-> >>
-> > I am not sure  how this affects background scan.bgscan will be enabled
-> > even before the beacon loss and it is based on RSSI(please correct me
-> > if I am wrong).
-> I'm not sure either, this showed up in my tests. I'm pretty sure that
-> this change is not the root cause, but I don't want to see it merged
-> until the cause is figured out. My guess is that it's related to the
-> issues with the nullfunc probe request patch that Paul pointed out.
-> I'll do some more testing after I've fixed that one.
+On Wed, 2010-12-22 at 14:01 +0100, Stanislaw Gruszka wrote:
+> Since commit 6cd0b1cb872b3bf9fc5de4536404206ab74bafdd "iwlagn: fix
+> hw-rfkill while the interface is down", we enable interrupts when
+> device is not ready to receive them. However hardware, when it is in
+> some inconsistent state, can generate other than rfkill interrupts
+> and crash the system. I can reproduce crash with "kernel BUG at
+> drivers/net/wireless/iwlwifi/iwl-agn.c:1010!" message, when forcing
+> firmware restarts.
+> 
+> To fix only enable rfkill interrupt when down device and after probe.
+> I checked patch on laptop with 5100 device, rfkill change is still
+> passed to user space when device is down.
 
-I'm dropping this from my queue -- please repost if you decide it
-is warranted.
+Should the subject say "enable only rfkill interrupt when device is
+down" instead? As it is, to me it reads like rfkill interrupt would be
+disabled while up, which can't be right?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
