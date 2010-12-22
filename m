@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:55250 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab0LAPfC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42838 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900Ab0LVOCI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 10:35:02 -0500
-Received: by bwz15 with SMTP id 15so6231476bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 07:35:00 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, shafi.wireless@gmail.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCHv2] mac80211: Update last_tx_rate only for data frames
-Date: Wed,  1 Dec 2010 16:34:45 +0100
-Message-Id: <1291217685-26755-1-git-send-email-helmut.schaa@googlemail.com>
-In-Reply-To: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com>
+	Wed, 22 Dec 2010 09:02:08 -0500
+Subject: Re: [PATCH 1/2] cfg80211: process new country regulatory flags
+ (DFS)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, kathy.giori@atheros.com,
+	amod.bodas@atheros.com, david.quan@atheros.com,
+	michael.green@atheros.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1292864555-28661-3-git-send-email-lrodriguez@atheros.com>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+	 <1292864555-28661-3-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Dec 2010 15:02:05 +0100
+Message-ID: <1293026525.3531.21.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The last_tx_rate field was also updated for non-data frames that are
-often sent with a lower rate (for example management frames at 1 Mbps).
-This is confusing when the data rate is actually much higher.
+On Mon, 2010-12-20 at 12:02 -0500, Luis R. Rodriguez wrote:
 
-Hence, only update the last_tx_rate field with tx rate information
-gathered from last data frames.
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -858,6 +858,9 @@ enum nl80211_commands {
+>   *	attributes, specifying what a key should be set as default as.
+>   *	See &enum nl80211_key_default_types.
+>   *
+> + * @NL80211_ATTR_REG_COUNTRY_FLAGS: Country specific regulatory flags.
+> + *	These are @NL80211_CFLAG_DFS_*
+> + *
 
-If the rate control algorithm filled in txrc.reported_rate we don't need
-to verify this information.
+Please also add a note "(u16)" here or so.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/tx.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+> +#define flag_check_print(_str) \
+> +	do { \
+> +		if (has_flag) \
+> +			pr_info(", "); \
+> +		pr_info(_str); \
+> +		has_flag = true; \
+> +	} while (0)
+> +
+> +static void print_country_flags(u16 flags)
+> +{
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e694836..41bfbbf 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -666,10 +666,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	if (unlikely(info->control.rates[0].idx < 0))
- 		return TX_DROP;
- 
--	if (txrc.reported_rate.idx < 0)
-+	if (txrc.reported_rate.idx < 0) {
- 		txrc.reported_rate = info->control.rates[0];
--
--	if (tx->sta)
-+		if (tx->sta && ieee80211_is_data(hdr->frame_control))
-+			tx->sta->last_tx_rate = txrc.reported_rate;
-+	} else if (tx->sta)
- 		tx->sta->last_tx_rate = txrc.reported_rate;
- 
- 	if (unlikely(!info->control.rates[0].count))
--- 
-1.7.1
+Can you move the define into the function, and also #undef it please?
+
+Also -- it seems that this is never reported back to be printed by iw
+reg get? I think that might be needed? If you do, it should only report
+the ones that the kernel knows about (i.e. mask them with the _ALL
+thing)
+
+Does it make sense to actually have this a bitmask rather than an enum?
+Do we think there's some place that needs _multiple_ rules?
+
+johannes
 
