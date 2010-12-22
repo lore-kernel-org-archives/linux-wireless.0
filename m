@@ -1,83 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59010 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab0LBLHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:07:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:07:11 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 00/27] Add support for AR9485
-Date: Thu, 2 Dec 2010 03:06:44 -0800
-Message-ID: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36199 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703Ab0LVUAF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 15:00:05 -0500
+Date: Wed, 22 Dec 2010 14:52:09 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2010-12-22
+Message-ID: <20101222195209.GD10046@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Dave,
 
-	This patch set adds support for a new chip of AR9003 family.
-This chip is an 1x1 and 2.4Ghz band only.
+Three more fixes intended for 2.6.37...
 
-Vasanth
+The one from Johannes Berg avoids a NULL pointer dereference in the mesh
+code.  The one from Johannes Stezenbach fixes bug 24892, which is a
+lock-up caused by rt2x00.  Finally, you probably recognize the one from
+Meelis Roos which removes some log spam coming from hostap.  These have
+all spent several days in linux-next without any adverse effects.
 
-V2 
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
-* A New patch to find and save the max number of supported tx and rx chains.
-* Removed duplicate code in pll contorl configuration.
 
-Vasanthakumar Thiagarajan (27):
-  ath9k_hw: Define hw version macros for AR9485
-  ath9k_hw: Add initvals.h for AR9485
-  ath9k_hw: Enable hw initialization for AR9485
-  ath9k_hw: Initialize mode registers for AR9485
-  ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
-  ath9k_hw: Eeeprom changes for AR9485
-  ath9k_hw: Disable LDPC for AR9485
-  ath9k: Disable TX STBC for AR9485
-  ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
-  ath9k_hw: Find the maximum number of chains that hw supports
-  ath9k: Configure pll control for AR9485
-  ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7 from an array for
-    AR9485
-  ath9k_hw: Add a helper function to get spur channel pointer from cal
-    data for AR9003 family
-  ath9k: Read spur channel information from eeprom for AR9485
-  ath9k_hw: Configure xpa bias level for AR9485
-  ath9k_hw: Read and configure antenna diversity control for AR9485
-  ath9k_hw: Configure attenuation control  only for supported chains
-  ath9k_hw: Configure internal regulator for AR9485
-  ath9k_hw: Read and configure turnning caps to regulate freq accuracy
-  ath9k_hw: Configure power control only for the supported chains
-  ath9k_hw: Program appropriate chianmask for AR9485 before starting
-    AGC/IQ cal
-  ath9k_hw: Define IQcal correction coefficient registers using index
-  ath9k_hw: Add IQ cal changes for AR9485
-  ath9k_hw: Program appropriate register for temperature compensation
-    cal for AR9485
-  ath9k_hw: Setup paprd only for supported chains
-  ath9k_hw: Disable MRC CCK for AR9485
-  ath9k: Add device id of AR9485 to pci table
+The following changes since commit 227fb925d3d3c5e565c1f1323a530564509195f2:
 
- drivers/net/wireless/ath/ath.h                   |    1 +
- drivers/net/wireless/ath/ath9k/ani.c             |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c    |  256 ++++++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |  189 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |    2 +
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  278 +++++--
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c    |   37 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   60 ++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   70 ++-
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h |  943 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c              |   33 +-
- drivers/net/wireless/ath/ath9k/hw.h              |    5 +
- drivers/net/wireless/ath/ath9k/init.c            |    4 +-
- drivers/net/wireless/ath/ath9k/main.c            |    3 +
- drivers/net/wireless/ath/ath9k/pci.c             |   13 +
- drivers/net/wireless/ath/ath9k/reg.h             |   10 +
- 16 files changed, 1743 insertions(+), 163 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+  MAINTAINERS: email address change (2010-12-21 19:58:15 -0800)
 
+are available in the git repository at:
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Johannes Berg (1):
+      mac80211: fix mesh forwarding
+
+Johannes Stezenbach (1):
+      mac80211/rt2x00: add ieee80211_tx_status_ni()
+
+Meelis Roos (1):
+      hostap: remove netif_stop_queue from init
+
+ drivers/net/wireless/hostap/hostap_main.c |    1 -
+ drivers/net/wireless/rt2x00/rt2800pci.c   |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h      |    1 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |    9 ++++++---
+ include/net/mac80211.h                    |   28 ++++++++++++++++++++++++----
+ net/mac80211/rx.c                         |    5 ++++-
+ 6 files changed, 36 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index 25a2722..1d9aed6 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -891,7 +891,6 @@ void hostap_setup_dev(struct net_device *dev, local_info_t *local,
+ 
+ 	SET_ETHTOOL_OPS(dev, &prism2_ethtool_ops);
+ 
+-	netif_stop_queue(dev);
+ }
+ 
+ static int hostap_enable_hostapd(local_info_t *local, int rtnl_locked)
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index b267395..09a6790 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -912,6 +912,7 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	__set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_TXSTATUS_FIFO, &rt2x00dev->flags);
++	__set_bit(DRIVER_REQUIRE_TASKLET_CONTEXT, &rt2x00dev->flags);
+ 	if (!modparam_nohwcrypt)
+ 		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_SUPPORT_LINK_TUNING, &rt2x00dev->flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 94fe589..ab43e7c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -664,6 +664,7 @@ enum rt2x00_flags {
+ 	DRIVER_REQUIRE_COPY_IV,
+ 	DRIVER_REQUIRE_L2PAD,
+ 	DRIVER_REQUIRE_TXSTATUS_FIFO,
++	DRIVER_REQUIRE_TASKLET_CONTEXT,
+ 
+ 	/*
+ 	 * Driver features
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 5ba79b9..d019830 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -390,9 +390,12 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	 * through a mac80211 library call (RTS/CTS) then we should not
+ 	 * send the status report back.
+ 	 */
+-	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211))
+-		ieee80211_tx_status(rt2x00dev->hw, entry->skb);
+-	else
++	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211)) {
++		if (test_bit(DRIVER_REQUIRE_TASKLET_CONTEXT, &rt2x00dev->flags))
++			ieee80211_tx_status(rt2x00dev->hw, entry->skb);
++		else
++			ieee80211_tx_status_ni(rt2x00dev->hw, entry->skb);
++	} else
+ 		dev_kfree_skb_any(entry->skb);
+ 
+ 	/*
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9fdf982..365359b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2024,8 +2024,8 @@ static inline void ieee80211_rx_ni(struct ieee80211_hw *hw,
+  *
+  * This function may not be called in IRQ context. Calls to this function
+  * for a single hardware must be synchronized against each other. Calls
+- * to this function and ieee80211_tx_status_irqsafe() may not be mixed
+- * for a single hardware.
++ * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
++ * may not be mixed for a single hardware.
+  *
+  * @hw: the hardware the frame was transmitted by
+  * @skb: the frame that was transmitted, owned by mac80211 after this call
+@@ -2034,13 +2034,33 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			 struct sk_buff *skb);
+ 
+ /**
++ * ieee80211_tx_status_ni - transmit status callback (in process context)
++ *
++ * Like ieee80211_tx_status() but can be called in process context.
++ *
++ * Calls to this function, ieee80211_tx_status() and
++ * ieee80211_tx_status_irqsafe() may not be mixed
++ * for a single hardware.
++ *
++ * @hw: the hardware the frame was transmitted by
++ * @skb: the frame that was transmitted, owned by mac80211 after this call
++ */
++static inline void ieee80211_tx_status_ni(struct ieee80211_hw *hw,
++					  struct sk_buff *skb)
++{
++	local_bh_disable();
++	ieee80211_tx_status(hw, skb);
++	local_bh_enable();
++}
++
++/**
+  * ieee80211_tx_status_irqsafe - IRQ-safe transmit status callback
+  *
+  * Like ieee80211_tx_status() but can be called in IRQ context
+  * (internally defers to a tasklet.)
+  *
+- * Calls to this function and ieee80211_tx_status() may not be mixed for a
+- * single hardware.
++ * Calls to this function, ieee80211_tx_status() and
++ * ieee80211_tx_status_ni() may not be mixed for a single hardware.
+  *
+  * @hw: the hardware the frame was transmitted by
+  * @skb: the frame that was transmitted, owned by mac80211 after this call
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 54fb4a0e..b01e467 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1788,9 +1788,11 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 
+ 			fwd_skb = skb_copy(skb, GFP_ATOMIC);
+ 
+-			if (!fwd_skb && net_ratelimit())
++			if (!fwd_skb && net_ratelimit()) {
+ 				printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
+ 						   sdata->name);
++				goto out;
++			}
+ 
+ 			fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
+ 			memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
+@@ -1828,6 +1830,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 		}
+ 	}
+ 
++ out:
+ 	if (is_multicast_ether_addr(hdr->addr1) ||
+ 	    sdata->dev->flags & IFF_PROMISC)
+ 		return RX_CONTINUE;
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
