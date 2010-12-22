@@ -1,65 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:52541 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756638Ab0LMVne convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:43969 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865Ab0LVO2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 16:43:34 -0500
-Received: by vws16 with SMTP id 16so3883010vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 13:43:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1292276255.10280.194.camel@wwguy-ubuntu>
-References: <1292276255.10280.194.camel@wwguy-ubuntu>
-Date: Mon, 13 Dec 2010 22:43:33 +0100
-Message-ID: <AANLkTimE0muJuDv=33cnELCwhQvKUn3y9ho0qOsAZcSm@mail.gmail.com>
-Subject: Re: new iwlwifi 6005 uCode available
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Dec 2010 09:28:03 -0500
+Received: by wwi17 with SMTP id 17so5126976wwi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:01 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 03/18] wl1271: AP mode - add AP specific event
+Date: Wed, 22 Dec 2010 16:27:22 +0200
+Message-Id: <1293028057-6212-4-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/13 Guy, Wey-Yi <wey-yi.w.guy@intel.com>:
-> Version 17.168.5.1 of uCode for Intel® 6005 Series Wi-Fi
-> Adapters is now available for download from
-> http://www.intellinuxwireless.org/?n=Downloads
+Add STA-remove completion event. Unmask it during boot if operating in
+AP-mode.
+Ignore unrelated events in AP-mode.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/boot.c  |    3 +++
+ drivers/net/wireless/wl12xx/event.c |    7 ++++---
+ drivers/net/wireless/wl12xx/event.h |    1 +
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-What about releasing fixed uCode for 4965? Can you finally do sth about that?
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 4a9f929..bb4f283 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -432,6 +432,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+ 		SOFT_GEMINI_SENSE_EVENT_ID;
+ 
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
++
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+ 		wl1271_error("EVENT mask setting failed");
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index f9146f5..3376a5d 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -186,6 +186,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	int ret;
+ 	u32 vector;
+ 	bool beacon_loss = false;
++	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
+ 	wl1271_event_mbox_dump(mbox);
+ 
+@@ -218,21 +219,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
+ 	 *
+ 	 */
+-	if (vector & BSS_LOSE_EVENT_ID) {
++	if ((vector & BSS_LOSE_EVENT_ID) && !is_ap) {
+ 		wl1271_info("Beacon loss detected.");
+ 
+ 		/* indicate to the stack, that beacons have been lost */
+ 		beacon_loss = true;
+ 	}
+ 
+-	if (vector & PS_REPORT_EVENT_ID) {
++	if ((vector & PS_REPORT_EVENT_ID) && !is_ap) {
+ 		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
+ 		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+ 
+-	if (vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID)
++	if ((vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID) && !is_ap)
+ 		wl1271_event_pspoll_delivery_fail(wl);
+ 
+ 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index 6cce014..fd955f3 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -59,6 +59,7 @@ enum {
+ 	BSS_LOSE_EVENT_ID			 = BIT(18),
+ 	REGAINED_BSS_EVENT_ID			 = BIT(19),
+ 	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
++	STA_REMOVE_COMPLETE_EVENT_ID		 = BIT(21), /* AP */
+ 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
+ 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
+ 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
+-- 
+1.7.1
 
-
----------- Wiadomość przekazana dalej ----------
-Od: Rafał Miłecki <zajec5@gmail.com>
-Data: 12 grudnia 2010 19:50
-Temat: Re: Deauthentication for reason 6 using Intel 5300 in 2.6.34
-Do: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-DW: Larry Finger <Larry.Finger@lwfinger.net>, wireless
-<linux-wireless@vger.kernel.org>, "Zheng, Jiajia"
-<jiajia.zheng@intel.com>, "ipw3945-devel@lists.sourceforge.net"
-<ipw3945-devel@lists.sourceforge.net>
-
-
-W dniu 31 października 2010 16:31 użytkownik Guy, Wey-Yi
-<wey-yi.w.guy@intel.com> napisał:
-> On Sun, 2010-10-31 at 02:38 -0700, Rafał Miłecki wrote:
->> It's fu* known problem. Intel doesn't seem to care about users, they
->> have fixed firmware but didn't decide to release it for 2 months.
->>
->> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214#c19
->>
->
-> We do care very much, really sorry the delay. we need to pass regulatory
-> before we can release it. I am doing everything I can to move the
-> process  as fast as it can.
-
-What about now? After another month of waiting? I'd love to replace
-that Intel but it's integrated.
-
-If it takes so long to pass regulatory, maybe Intel should change sth?
-Right now?
-
-There is just another user complaining for that:
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/61320
-
---
-Rafał
