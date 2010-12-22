@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2182 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932426Ab0LCDNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 22:13:36 -0500
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: Peter Stuge <peter@stuge.se>, Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] ath: Fix ath_dbg access beyond array bound
-Date: Thu,  2 Dec 2010 19:12:38 -0800
-Message-Id: <f27b95daeb152de787dea20e4eefd21e65a7108e.1291333544.git.joe@perches.com>
-In-Reply-To: <20101202190239.GE7399@tux>
-References: <20101202190239.GE7399@tux>
-In-Reply-To: <cover.1291333543.git.joe@perches.com>
-References: <cover.1291333543.git.joe@perches.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:64607 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634Ab0LVRV6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 12:21:58 -0500
+Received: by iwn9 with SMTP id 9so5425493iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 09:21:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4D122B8F.5090302@hauke-m.de>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+ <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+ <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+ <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
+ <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
+ <4D122B8F.5090302@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 22 Dec 2010 12:21:38 -0500
+Message-ID: <AANLkTimRrX1HCmz2EnsA-4=ZBLUJ-86O-bpGgjEw4Lbw@mail.gmail.com>
+Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Elvis Dowson <elvis.dowson@mac.com>, "Kahn, Gery" <geryk@ti.com>,
+	Oz Krakowski <ozk@ti.com>,
+	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ar9300RateSize is not necessarily a power of 4.
+On Wed, Dec 22, 2010 at 11:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 12/22/2010 05:13 PM, Luis R. Rodriguez wrote:
+>> On Wed, Dec 22, 2010 at 11:09 AM, Elvis Dowson <elvis.dowson@mac.com> wrote:
+>>> netdev_alloc_skb_ip_align
+>>
+>> I notice you have an android kernel, is that kernel a vanilla kernel
+>> or did it get netdev_alloc_skb_ip_align() cherry picked into it?
+>>
+>>   Luis
+>
+> netdev_alloc_skb_ip_align is not defined in the 2.6.32.27 vanilla
+> kernel. Someone else (google or ti) must have backported it to this
+> kernel and added it to your kernel.
+>
+> I do not want to add some special handling into compat-wireless just for
+> some android kernel. Just remove netdev_alloc_skb_ip_align() and
+> NETDEV_POST_INIT from include/linux/compat-2.6.33.h and the compile
+> problems you posted should be fixed.
 
-Change ar9003_hw_set_target_power_eeprom
-to print the targetPowerValT2 array one per line.
+Well we did something to accommodate RHEL, I wouldn't mind supporting
+some fudge for Android so long as someone is willing to submit the
+patch and identify the kernel properly. Android is popular enough and
+I rather reduce the time it takes to use it there than to create an
+extra hurdle.
 
-ath9k_hw_ar9300_set_txpower repeated the output 4 times per line,
-change it to print the targetPowerValT2 value one per line.
-
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   27 +----------------------
- 1 files changed, 2 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 7b13a2e..34d1d7a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4086,22 +4086,9 @@ static void ar9003_hw_set_target_power_eeprom(struct ath_hw *ah, u16 freq,
- 	    ar9003_hw_eeprom_get_ht40_tgt_pwr(ah, HT_TARGET_RATE_23, freq,
- 					      is2GHz) + ht40PowerIncForPdadc;
- 
--	while (i < ar9300RateSize) {
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--
-+	for (i = 0; i < ar9300RateSize; i++) {
- 		ath_dbg(common, ATH_DBG_EEPROM,
- 			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
--		i++;
- 	}
- }
- 
-@@ -4689,17 +4676,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 
- 	for (i = 0; i < ar9300RateSize; i++) {
- 		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x\n\n", i, targetPowerValT2[i]);
--		i++;
-+			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
- 	}
- 
- 	/*
--- 
-1.7.3.2.245.g03276.dirty
-
+  Luis
