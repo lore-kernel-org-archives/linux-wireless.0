@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:55701 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932095Ab0LIUEW (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59589 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753255Ab0LVOm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 15:04:22 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id DE7E9418D8
-	for <linux-wireless@vger.kernel.org>; Thu,  9 Dec 2010 14:58:55 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-09 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101209200421.7838A40F97@repository3.orbit-lab.org>
-Date: Thu,  9 Dec 2010 15:04:21 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 22 Dec 2010 09:42:29 -0500
+Received: by iyi12 with SMTP id 12so4110319iyi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:42:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1293025638-3255-1-git-send-email-senthilkumar@atheros.com>
+References: <1293025638-3255-1-git-send-email-senthilkumar@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 22 Dec 2010 09:42:08 -0500
+Message-ID: <AANLkTi=P967+E=j4JT7fQjX0T0+yLHbFrdsT3-_CVPvn@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] ath9k_hw: Fix incorrect macversion and macrev checks
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Stable Kernel <stable@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   d345c48..b2c2e68  linux-2.6.37.y -> origin/linux-2.6.37.y
-   6545cbe..4a59d8a  master     -> origin/master
- * [new tag]         compat-wireless-2010-12-08 -> compat-wireless-2010-12-08
- * [new tag]         compat-wireless-v2.6.37-rc5-2 -> compat-wireless-v2.6.37-rc5-2
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-v2.6.37-rc5-1 -> compat-wireless-v2.6.37-rc5-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   0894957..464643e  history    -> origin/history
- + 9cf13db...df9e9ad master     -> origin/master  (forced update)
-   81e8d21..6313e3c  stable     -> origin/stable
- * [new tag]         next-20101209 -> next-20101209
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+On Wed, Dec 22, 2010 at 8:47 AM, Senthil Balasubramanian
+<senthilkumar@atheros.com> wrote:
+> There are few places where we are checking for macversion and revsions
+> before RTC is powered ON. However we are reading the macversion and
+> revisions only after RTC is powered ON and so both macversion and
+> revisions are actully zero and this leads to incorrect srev checks.
+>
+> fix this by reading the macversion and revisisons even before we start
+> using them. There is no reason why should we delay reading this info
+> until RTC is powered on as this is just a register information.
+>
+> Cc: Stable Kernel <stable@kernel.org>
+> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+> ---
+> v2 -- fixed reading revisions unnecessarily during every reset.
 
-compat-wireless code metrics
+The description can be extended explaining what specific real life
+issues this fixes and can help in the evaluation for stable, consider
+helping to the extend even Andi Kleen can read this and easily decide
+to either suck this into 2.6.35 longterm or not. To help with this it
+will help to know what chipsets are affected and so on. I suspect it
+can say something like:
 
-    752670 - Total upstream lines of code being pulled
+"This fixes programming the hardware incorrectly for x and y chipsets
+where the wrong chipset was being picked up. Without this those
+chipsets would be programmed incorrectly and would not be functional"
+
+  Luis
