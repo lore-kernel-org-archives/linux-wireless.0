@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:53635 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828Ab0LVUoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 15:44:24 -0500
-Subject: Re: [PATCH v2 02/18] wl1271: AP mode - AP specific CMD_CONFIGURE
- sub-commands
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1293028057-6212-3-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
-	 <1293028057-6212-3-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 22:44:20 +0200
-Message-ID: <1293050660.14423.20.camel@powerslave>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48511 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791Ab0LVTPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 14:15:08 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] b43: N-PHY: check for clk when setting RX core state
+Date: Wed, 22 Dec 2010 14:11:32 -0500
+Message-Id: <1293045092-12483-4-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
+References: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
-> Add AP max retries and rate policy configuration.
-> Rename STA rate policy configuration function.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+From: Rafał Miłecki <zajec5@gmail.com>
 
-[...]
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-> index 9cbc3f4..d2a68bf 100644
-> --- a/drivers/net/wireless/wl12xx/acx.h
-> +++ b/drivers/net/wireless/wl12xx/acx.h
-
-[...]
-
-> +	__le32 rate_policy_idx; /* The index of the rate policy */
-
-This comment is quite useless. ;)
-
-
-> @@ -1062,6 +1072,19 @@ struct wl1271_acx_fw_tsf_information {
->  	u8 padding[3];
->  } __packed;
->  
-> +#define WL1271_AP_MAX_TX_RETRY   100
-
-Should this be part of the conf.h settings? Should it be made more
-easily configurable?
-
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 3f2ce92..d50e880 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3282,7 +3282,7 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+ 
+ 	nphy->phyrxchain = mask;
+ 
+-	if (0 /* FIXME clk */)
++	if (!phy->clk)
+ 		return;
+ 
+ 	b43_mac_suspend(dev);
 -- 
-Cheers,
-Luca.
+1.7.3.3
 
