@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:59254 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275Ab0L3XIr (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52303 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218Ab0LVUPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:08:47 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 12/15]drivers:media:video:tvp7002.c Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:08:01 -0800
-Message-Id: <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
+	Wed, 22 Dec 2010 15:15:05 -0500
+Date: Wed, 22 Dec 2010 15:02:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/3] b43: Is this series still valid??
+Message-ID: <20101222200215.GE10046@tuxdriver.com>
+References: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTikJcCWph2OCp+eaEsdKDXT8Q374KFp=13zX+Rro@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTikJcCWph2OCp+eaEsdKDXT8Q374KFp=13zX+Rro@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this 
-is correct or not.
+On Wed, Dec 22, 2010 at 08:20:18PM +0100, Rafał Miłecki wrote:
+> 2010/12/22 John W. Linville <linville@tuxdriver.com>:
+> > I found this old series pending in my queue from months ago.  I sat on
+> > them because they had some discussion and never got reposted.
+> >
+> > Looking closer, the discussion never amounted to a NAK.  So, I tried
+> > applying them, and they applied with only minor massaging.
+> >
+> > So, are these still valid?
+> >
+> > Let me know...
+> 
+> The way we call init in one of patches may be incorrect, I'm not sure
+> if we still need to keep b_width (from other patch). I think it'll be
+> better to ignore that patches for now.
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+OK, I'll drop them -- please repost if/when they are ready...
 
----
- drivers/media/video/tvp7002.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/media/video/tvp7002.c b/drivers/media/video/tvp7002.c
-index e63b40f..c799e4e 100644
---- a/drivers/media/video/tvp7002.c
-+++ b/drivers/media/video/tvp7002.c
-@@ -789,7 +789,7 @@ static int tvp7002_query_dv_preset(struct v4l2_subdev *sd,
-  * Get the value of a TVP7002 decoder device register.
-  * Returns zero when successful, -EINVAL if register read fails or
-  * access to I2C client fails, -EPERM if the call is not allowed
-- * by diabled CAP_SYS_ADMIN.
-+ * by disabled CAP_SYS_ADMIN.
-  */
- static int tvp7002_g_register(struct v4l2_subdev *sd,
- 						struct v4l2_dbg_register *reg)
+John
 -- 
-1.6.5.2.180.gc5b3e
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
