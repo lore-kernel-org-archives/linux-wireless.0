@@ -1,721 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45681 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab0L1I7R (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455Ab0LVO17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 03:59:17 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so9170471iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:59:17 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19737.42700.466827.509230@gargle.gargle.HOWL>
-Date: Tue, 28 Dec 2010 14:28:52 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH v2 6/6] ath9k_htc: Move LED/RFKILL code to htc_drv_gpio.c
+	Wed, 22 Dec 2010 09:27:59 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:27:58 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 02/18] wl1271: AP mode - AP specific CMD_CONFIGURE sub-commands
+Date: Wed, 22 Dec 2010 16:27:21 +0200
+Message-Id: <1293028057-6212-3-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Add AP max retries and rate policy configuration.
+Rename STA rate policy configuration function.
 
-And add the copyright/license header.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    5 +
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  327 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |  313 +-----------------------
- 3 files changed, 333 insertions(+), 312 deletions(-)
+ drivers/net/wireless/wl12xx/acx.c  |   60 ++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/acx.h  |   31 +++++++++++++++++-
+ drivers/net/wireless/wl12xx/init.c |    2 +-
+ drivers/net/wireless/wl12xx/main.c |    8 ++--
+ drivers/net/wireless/wl12xx/tx.c   |    2 +-
+ 5 files changed, 93 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 34456a8..a099b3e 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -459,8 +459,13 @@ void ath9k_htc_ps_restore(struct ath9k_htc_priv *priv);
- void ath9k_ps_work(struct work_struct *work);
- bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
- 			enum ath9k_power_mode mode);
-+void ath_update_txpow(struct ath9k_htc_priv *priv);
- 
- void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv);
-+void ath9k_htc_rfkill_poll_state(struct ieee80211_hw *hw);
-+void ath9k_htc_radio_enable(struct ieee80211_hw *hw);
-+void ath9k_htc_radio_disable(struct ieee80211_hw *hw);
-+void ath9k_led_stop_brightness(struct ath9k_htc_priv *priv);
- void ath9k_init_leds(struct ath9k_htc_priv *priv);
- void ath9k_deinit_leds(struct ath9k_htc_priv *priv);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 283ff97..fe70f67 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -1,3 +1,19 @@
-+/*
-+ * Copyright (c) 2010 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
- #include "htc.h"
- 
- /******************/
-@@ -131,3 +147,314 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv)
- 	cancel_delayed_work_sync(&priv->coex_period_work);
- 	cancel_delayed_work_sync(&priv->duty_cycle_work);
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 30ff32a..99b7abd 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -751,9 +751,9 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
+ 	return 0;
  }
-+
-+/*******/
-+/* LED */
-+/*******/
-+
-+static void ath9k_led_blink_work(struct work_struct *work)
+ 
+-int wl1271_acx_rate_policies(struct wl1271 *wl)
++int wl1271_acx_sta_rate_policies(struct wl1271 *wl)
+ {
+-	struct acx_rate_policy *acx;
++	struct acx_sta_rate_policy *acx;
+ 	struct conf_tx_rate_class *c = &wl->conf.tx.sta_rc_conf;
+ 	int idx = 0;
+ 	int ret = 0;
+@@ -794,6 +794,38 @@ out:
+ 	return ret;
+ }
+ 
++int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
++		      u8 idx)
 +{
-+	struct ath9k_htc_priv *priv = container_of(work, struct ath9k_htc_priv,
-+						   ath9k_led_blink_work.work);
++	struct acx_ap_rate_policy *acx;
++	int ret = 0;
 +
-+	if (!(priv->op_flags & OP_LED_ASSOCIATED))
-+		return;
++	wl1271_debug(DEBUG_ACX, "acx ap rate policy");
 +
-+	if ((priv->led_on_duration == ATH_LED_ON_DURATION_IDLE) ||
-+	    (priv->led_off_duration == ATH_LED_OFF_DURATION_IDLE))
-+		ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 0);
-+	else
-+		ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin,
-+				  (priv->op_flags & OP_LED_ON) ? 1 : 0);
-+
-+	ieee80211_queue_delayed_work(priv->hw,
-+				     &priv->ath9k_led_blink_work,
-+				     (priv->op_flags & OP_LED_ON) ?
-+				     msecs_to_jiffies(priv->led_off_duration) :
-+				     msecs_to_jiffies(priv->led_on_duration));
-+
-+	priv->led_on_duration = priv->led_on_cnt ?
-+		max((ATH_LED_ON_DURATION_IDLE - priv->led_on_cnt), 25) :
-+		ATH_LED_ON_DURATION_IDLE;
-+	priv->led_off_duration = priv->led_off_cnt ?
-+		max((ATH_LED_OFF_DURATION_IDLE - priv->led_off_cnt), 10) :
-+		ATH_LED_OFF_DURATION_IDLE;
-+	priv->led_on_cnt = priv->led_off_cnt = 0;
-+
-+	if (priv->op_flags & OP_LED_ON)
-+		priv->op_flags &= ~OP_LED_ON;
-+	else
-+		priv->op_flags |= OP_LED_ON;
-+}
-+
-+static void ath9k_led_brightness_work(struct work_struct *work)
-+{
-+	struct ath_led *led = container_of(work, struct ath_led,
-+					   brightness_work.work);
-+	struct ath9k_htc_priv *priv = led->priv;
-+
-+	switch (led->brightness) {
-+	case LED_OFF:
-+		if (led->led_type == ATH_LED_ASSOC ||
-+		    led->led_type == ATH_LED_RADIO) {
-+			ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin,
-+					  (led->led_type == ATH_LED_RADIO));
-+			priv->op_flags &= ~OP_LED_ASSOCIATED;
-+			if (led->led_type == ATH_LED_RADIO)
-+				priv->op_flags &= ~OP_LED_ON;
-+		} else {
-+			priv->led_off_cnt++;
-+		}
-+		break;
-+	case LED_FULL:
-+		if (led->led_type == ATH_LED_ASSOC) {
-+			priv->op_flags |= OP_LED_ASSOCIATED;
-+			ieee80211_queue_delayed_work(priv->hw,
-+					     &priv->ath9k_led_blink_work, 0);
-+		} else if (led->led_type == ATH_LED_RADIO) {
-+			ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 0);
-+			priv->op_flags |= OP_LED_ON;
-+		} else {
-+			priv->led_on_cnt++;
-+		}
-+		break;
-+	default:
-+		break;
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
 +	}
-+}
 +
-+static void ath9k_led_brightness(struct led_classdev *led_cdev,
-+				 enum led_brightness brightness)
-+{
-+	struct ath_led *led = container_of(led_cdev, struct ath_led, led_cdev);
-+	struct ath9k_htc_priv *priv = led->priv;
++	acx->rate_policy.enabled_rates = cpu_to_le32(c->enabled_rates);
++	acx->rate_policy.short_retry_limit = c->short_retry_limit;
++	acx->rate_policy.long_retry_limit = c->long_retry_limit;
++	acx->rate_policy.aflags = c->aflags;
 +
-+	led->brightness = brightness;
-+	if (!(priv->op_flags & OP_LED_DEINIT))
-+		ieee80211_queue_delayed_work(priv->hw,
-+					     &led->brightness_work, 0);
-+}
++	acx->rate_policy_idx = idx;
 +
-+void ath9k_led_stop_brightness(struct ath9k_htc_priv *priv)
-+{
-+	cancel_delayed_work_sync(&priv->radio_led.brightness_work);
-+	cancel_delayed_work_sync(&priv->assoc_led.brightness_work);
-+	cancel_delayed_work_sync(&priv->tx_led.brightness_work);
-+	cancel_delayed_work_sync(&priv->rx_led.brightness_work);
-+}
++	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("Setting of ap rate policy failed: %d", ret);
++		goto out;
++	}
 +
-+static int ath9k_register_led(struct ath9k_htc_priv *priv, struct ath_led *led,
-+			      char *trigger)
-+{
-+	int ret;
-+
-+	led->priv = priv;
-+	led->led_cdev.name = led->name;
-+	led->led_cdev.default_trigger = trigger;
-+	led->led_cdev.brightness_set = ath9k_led_brightness;
-+
-+	ret = led_classdev_register(wiphy_dev(priv->hw->wiphy), &led->led_cdev);
-+	if (ret)
-+		ath_err(ath9k_hw_common(priv->ah),
-+			"Failed to register led:%s", led->name);
-+	else
-+		led->registered = 1;
-+
-+	INIT_DELAYED_WORK(&led->brightness_work, ath9k_led_brightness_work);
-+
++out:
++	kfree(acx);
 +	return ret;
 +}
 +
-+static void ath9k_unregister_led(struct ath_led *led)
-+{
-+	if (led->registered) {
-+		led_classdev_unregister(&led->led_cdev);
-+		led->registered = 0;
-+	}
-+}
+ int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
+ 		      u8 aifsn, u16 txop)
+ {
+@@ -1334,3 +1366,27 @@ out:
+ 	kfree(tsf_info);
+ 	return ret;
+ }
 +
-+void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
++int wl1271_acx_max_tx_retry(struct wl1271 *wl)
 +{
-+	priv->op_flags |= OP_LED_DEINIT;
-+	ath9k_unregister_led(&priv->assoc_led);
-+	priv->op_flags &= ~OP_LED_ASSOCIATED;
-+	ath9k_unregister_led(&priv->tx_led);
-+	ath9k_unregister_led(&priv->rx_led);
-+	ath9k_unregister_led(&priv->radio_led);
-+}
-+
-+void ath9k_init_leds(struct ath9k_htc_priv *priv)
-+{
-+	char *trigger;
++	struct wl1271_acx_max_tx_retry *acx = NULL;
 +	int ret;
 +
-+	if (AR_SREV_9287(priv->ah))
-+		priv->ah->led_pin = ATH_LED_PIN_9287;
-+	else if (AR_SREV_9271(priv->ah))
-+		priv->ah->led_pin = ATH_LED_PIN_9271;
-+	else if (AR_DEVID_7010(priv->ah))
-+		priv->ah->led_pin = ATH_LED_PIN_7010;
-+	else
-+		priv->ah->led_pin = ATH_LED_PIN_DEF;
++	wl1271_debug(DEBUG_ACX, "acx max tx retry");
 +
-+	/* Configure gpio 1 for output */
-+	ath9k_hw_cfg_output(priv->ah, priv->ah->led_pin,
-+			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+	/* LED off, active low */
-+	ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 1);
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx)
++		return -ENOMEM;
 +
-+	INIT_DELAYED_WORK(&priv->ath9k_led_blink_work, ath9k_led_blink_work);
++	acx->max_tx_retry = cpu_to_le16(WL1271_AP_MAX_TX_RETRY);
 +
-+	trigger = ieee80211_get_radio_led_name(priv->hw);
-+	snprintf(priv->radio_led.name, sizeof(priv->radio_led.name),
-+		"ath9k-%s::radio", wiphy_name(priv->hw->wiphy));
-+	ret = ath9k_register_led(priv, &priv->radio_led, trigger);
-+	priv->radio_led.led_type = ATH_LED_RADIO;
-+	if (ret)
-+		goto fail;
-+
-+	trigger = ieee80211_get_assoc_led_name(priv->hw);
-+	snprintf(priv->assoc_led.name, sizeof(priv->assoc_led.name),
-+		"ath9k-%s::assoc", wiphy_name(priv->hw->wiphy));
-+	ret = ath9k_register_led(priv, &priv->assoc_led, trigger);
-+	priv->assoc_led.led_type = ATH_LED_ASSOC;
-+	if (ret)
-+		goto fail;
-+
-+	trigger = ieee80211_get_tx_led_name(priv->hw);
-+	snprintf(priv->tx_led.name, sizeof(priv->tx_led.name),
-+		"ath9k-%s::tx", wiphy_name(priv->hw->wiphy));
-+	ret = ath9k_register_led(priv, &priv->tx_led, trigger);
-+	priv->tx_led.led_type = ATH_LED_TX;
-+	if (ret)
-+		goto fail;
-+
-+	trigger = ieee80211_get_rx_led_name(priv->hw);
-+	snprintf(priv->rx_led.name, sizeof(priv->rx_led.name),
-+		"ath9k-%s::rx", wiphy_name(priv->hw->wiphy));
-+	ret = ath9k_register_led(priv, &priv->rx_led, trigger);
-+	priv->rx_led.led_type = ATH_LED_RX;
-+	if (ret)
-+		goto fail;
-+
-+	priv->op_flags &= ~OP_LED_DEINIT;
-+
-+	return;
-+
-+fail:
-+	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
-+	ath9k_deinit_leds(priv);
-+}
-+
-+/*******************/
-+/*	Rfkill	   */
-+/*******************/
-+
-+static bool ath_is_rfkill_set(struct ath9k_htc_priv *priv)
-+{
-+	return ath9k_hw_gpio_get(priv->ah, priv->ah->rfkill_gpio) ==
-+		priv->ah->rfkill_polarity;
-+}
-+
-+void ath9k_htc_rfkill_poll_state(struct ieee80211_hw *hw)
-+{
-+	struct ath9k_htc_priv *priv = hw->priv;
-+	bool blocked = !!ath_is_rfkill_set(priv);
-+
-+	wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
-+}
-+
-+void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv)
-+{
-+	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
-+		wiphy_rfkill_start_polling(priv->hw->wiphy);
-+}
-+
-+void ath9k_htc_radio_enable(struct ieee80211_hw *hw)
-+{
-+	struct ath9k_htc_priv *priv = hw->priv;
-+	struct ath_hw *ah = priv->ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int ret;
-+	u8 cmd_rsp;
-+
-+	if (!ah->curchan)
-+		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
-+
-+	/* Reset the HW */
-+	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
-+	if (ret) {
-+		ath_err(common,
-+			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
-+			ret, ah->curchan->channel);
++	ret = wl1271_cmd_configure(wl, ACX_MAX_TX_FAILURE, acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx max tx retry failed: %d", ret);
++		goto out;
 +	}
 +
-+	ath_update_txpow(priv);
-+
-+	/* Start RX */
-+	WMI_CMD(WMI_START_RECV_CMDID);
-+	ath9k_host_rx_init(priv);
-+
-+	/* Start TX */
-+	htc_start(priv->htc);
-+	spin_lock_bh(&priv->tx_lock);
-+	priv->tx_queues_stop = false;
-+	spin_unlock_bh(&priv->tx_lock);
-+	ieee80211_wake_queues(hw);
-+
-+	WMI_CMD(WMI_ENABLE_INTR_CMDID);
-+
-+	/* Enable LED */
-+	ath9k_hw_cfg_output(ah, ah->led_pin,
-+			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
++out:
++	kfree(acx);
++	return ret;
 +}
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 9cbc3f4..d2a68bf 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -747,13 +747,23 @@ struct acx_rate_class {
+ #define ACX_TX_BASIC_RATE      0
+ #define ACX_TX_AP_FULL_RATE    1
+ #define ACX_TX_RATE_POLICY_CNT 2
+-struct acx_rate_policy {
++struct acx_sta_rate_policy {
+ 	struct acx_header header;
+ 
+ 	__le32 rate_class_cnt;
+ 	struct acx_rate_class rate_class[CONF_TX_MAX_RATE_CLASSES];
+ } __packed;
+ 
 +
-+void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
-+{
-+	struct ath9k_htc_priv *priv = hw->priv;
-+	struct ath_hw *ah = priv->ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int ret;
-+	u8 cmd_rsp;
++#define ACX_TX_AP_MODE_MGMT_RATE 4
++#define ACX_TX_AP_MODE_BCST_RATE 5
++struct acx_ap_rate_policy {
++	struct acx_header header;
 +
-+	ath9k_htc_ps_wakeup(priv);
++	__le32 rate_policy_idx; /* The index of the rate policy */
++	struct acx_rate_class rate_policy;
++} __packed;
 +
-+	/* Disable LED */
-+	ath9k_hw_set_gpio(ah, ah->led_pin, 1);
-+	ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+ struct acx_ac_cfg {
+ 	struct acx_header header;
+ 	u8 ac;
+@@ -1062,6 +1072,19 @@ struct wl1271_acx_fw_tsf_information {
+ 	u8 padding[3];
+ } __packed;
+ 
++#define WL1271_AP_MAX_TX_RETRY   100
 +
-+	WMI_CMD(WMI_DISABLE_INTR_CMDID);
-+
-+	/* Stop TX */
-+	ieee80211_stop_queues(hw);
-+	htc_stop(priv->htc);
-+	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
-+	skb_queue_purge(&priv->tx_queue);
-+
-+	/* Stop RX */
-+	WMI_CMD(WMI_STOP_RECV_CMDID);
++struct wl1271_acx_max_tx_retry {
++	struct acx_header header;
 +
 +	/*
-+	 * The MIB counters have to be disabled here,
-+	 * since the target doesn't do it.
++	 * the number of frames transmission failures before
++	 * issuing the aging event.
 +	 */
-+	ath9k_hw_disable_mib_counters(ah);
++	__le16 max_tx_retry;
++	u8 padding_1[2];
++} __packed;
 +
-+	if (!ah->curchan)
-+		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
-+
-+	/* Reset the HW */
-+	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
-+	if (ret) {
-+		ath_err(common,
-+			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
-+			ret, ah->curchan->channel);
-+	}
-+
-+	/* Disable the PHY */
-+	ath9k_hw_phy_disable(ah);
-+
-+	ath9k_htc_ps_restore(priv);
-+	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 6da5e88..ad3dd31 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -24,7 +24,7 @@ static struct dentry *ath9k_debugfs_root;
- /* Utilities */
- /*************/
+ enum {
+ 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
+ 	ACX_MEM_CFG                 = 0x0003,
+@@ -1119,6 +1142,7 @@ enum {
+ 	ACX_HT_BSS_OPERATION        = 0x0058,
+ 	ACX_COEX_ACTIVITY           = 0x0059,
+ 	ACX_SET_DCO_ITRIM_PARAMS    = 0x0061,
++	ACX_MAX_TX_FAILURE          = 0x0072,
+ 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
+ 	DOT11_CUR_TX_PWR            = 0x100D,
+ 	DOT11_RX_DOT11_MODE         = 0x1012,
+@@ -1160,7 +1184,9 @@ int wl1271_acx_set_preamble(struct wl1271 *wl, enum acx_preamble_type preamble);
+ int wl1271_acx_cts_protect(struct wl1271 *wl,
+ 			   enum acx_ctsprotect_type ctsprotect);
+ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats);
+-int wl1271_acx_rate_policies(struct wl1271 *wl);
++int wl1271_acx_sta_rate_policies(struct wl1271 *wl);
++int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
++		      u8 idx);
+ int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
+ 		      u8 aifsn, u16 txop);
+ int wl1271_acx_tid_cfg(struct wl1271 *wl, u8 queue_id, u8 channel_type,
+@@ -1186,5 +1212,6 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+ int wl1271_acx_set_ht_information(struct wl1271 *wl,
+ 				   u16 ht_operation_mode);
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
++int wl1271_acx_max_tx_retry(struct wl1271 *wl);
  
--static void ath_update_txpow(struct ath9k_htc_priv *priv)
-+void ath_update_txpow(struct ath9k_htc_priv *priv)
- {
- 	struct ath_hw *ah = priv->ah;
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 785a530..f468d71 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -322,7 +322,7 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	}
  
-@@ -840,317 +840,6 @@ set_timer:
- 				     msecs_to_jiffies(cal_interval));
- }
+ 	/* Configure TX rate classes */
+-	ret = wl1271_acx_rate_policies(wl);
++	ret = wl1271_acx_sta_rate_policies(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
--/*******/
--/* LED */
--/*******/
--
--static void ath9k_led_blink_work(struct work_struct *work)
--{
--	struct ath9k_htc_priv *priv = container_of(work, struct ath9k_htc_priv,
--						   ath9k_led_blink_work.work);
--
--	if (!(priv->op_flags & OP_LED_ASSOCIATED))
--		return;
--
--	if ((priv->led_on_duration == ATH_LED_ON_DURATION_IDLE) ||
--	    (priv->led_off_duration == ATH_LED_OFF_DURATION_IDLE))
--		ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 0);
--	else
--		ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin,
--				  (priv->op_flags & OP_LED_ON) ? 1 : 0);
--
--	ieee80211_queue_delayed_work(priv->hw,
--				     &priv->ath9k_led_blink_work,
--				     (priv->op_flags & OP_LED_ON) ?
--				     msecs_to_jiffies(priv->led_off_duration) :
--				     msecs_to_jiffies(priv->led_on_duration));
--
--	priv->led_on_duration = priv->led_on_cnt ?
--		max((ATH_LED_ON_DURATION_IDLE - priv->led_on_cnt), 25) :
--		ATH_LED_ON_DURATION_IDLE;
--	priv->led_off_duration = priv->led_off_cnt ?
--		max((ATH_LED_OFF_DURATION_IDLE - priv->led_off_cnt), 10) :
--		ATH_LED_OFF_DURATION_IDLE;
--	priv->led_on_cnt = priv->led_off_cnt = 0;
--
--	if (priv->op_flags & OP_LED_ON)
--		priv->op_flags &= ~OP_LED_ON;
--	else
--		priv->op_flags |= OP_LED_ON;
--}
--
--static void ath9k_led_brightness_work(struct work_struct *work)
--{
--	struct ath_led *led = container_of(work, struct ath_led,
--					   brightness_work.work);
--	struct ath9k_htc_priv *priv = led->priv;
--
--	switch (led->brightness) {
--	case LED_OFF:
--		if (led->led_type == ATH_LED_ASSOC ||
--		    led->led_type == ATH_LED_RADIO) {
--			ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin,
--					  (led->led_type == ATH_LED_RADIO));
--			priv->op_flags &= ~OP_LED_ASSOCIATED;
--			if (led->led_type == ATH_LED_RADIO)
--				priv->op_flags &= ~OP_LED_ON;
--		} else {
--			priv->led_off_cnt++;
--		}
--		break;
--	case LED_FULL:
--		if (led->led_type == ATH_LED_ASSOC) {
--			priv->op_flags |= OP_LED_ASSOCIATED;
--			ieee80211_queue_delayed_work(priv->hw,
--					     &priv->ath9k_led_blink_work, 0);
--		} else if (led->led_type == ATH_LED_RADIO) {
--			ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 0);
--			priv->op_flags |= OP_LED_ON;
--		} else {
--			priv->led_on_cnt++;
--		}
--		break;
--	default:
--		break;
--	}
--}
--
--static void ath9k_led_brightness(struct led_classdev *led_cdev,
--				 enum led_brightness brightness)
--{
--	struct ath_led *led = container_of(led_cdev, struct ath_led, led_cdev);
--	struct ath9k_htc_priv *priv = led->priv;
--
--	led->brightness = brightness;
--	if (!(priv->op_flags & OP_LED_DEINIT))
--		ieee80211_queue_delayed_work(priv->hw,
--					     &led->brightness_work, 0);
--}
--
--static void ath9k_led_stop_brightness(struct ath9k_htc_priv *priv)
--{
--	cancel_delayed_work_sync(&priv->radio_led.brightness_work);
--	cancel_delayed_work_sync(&priv->assoc_led.brightness_work);
--	cancel_delayed_work_sync(&priv->tx_led.brightness_work);
--	cancel_delayed_work_sync(&priv->rx_led.brightness_work);
--}
--
--static int ath9k_register_led(struct ath9k_htc_priv *priv, struct ath_led *led,
--			      char *trigger)
--{
--	int ret;
--
--	led->priv = priv;
--	led->led_cdev.name = led->name;
--	led->led_cdev.default_trigger = trigger;
--	led->led_cdev.brightness_set = ath9k_led_brightness;
--
--	ret = led_classdev_register(wiphy_dev(priv->hw->wiphy), &led->led_cdev);
--	if (ret)
--		ath_err(ath9k_hw_common(priv->ah),
--			"Failed to register led:%s", led->name);
--	else
--		led->registered = 1;
--
--	INIT_DELAYED_WORK(&led->brightness_work, ath9k_led_brightness_work);
--
--	return ret;
--}
--
--static void ath9k_unregister_led(struct ath_led *led)
--{
--	if (led->registered) {
--		led_classdev_unregister(&led->led_cdev);
--		led->registered = 0;
--	}
--}
--
--void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
--{
--	priv->op_flags |= OP_LED_DEINIT;
--	ath9k_unregister_led(&priv->assoc_led);
--	priv->op_flags &= ~OP_LED_ASSOCIATED;
--	ath9k_unregister_led(&priv->tx_led);
--	ath9k_unregister_led(&priv->rx_led);
--	ath9k_unregister_led(&priv->radio_led);
--}
--
--void ath9k_init_leds(struct ath9k_htc_priv *priv)
--{
--	char *trigger;
--	int ret;
--
--	if (AR_SREV_9287(priv->ah))
--		priv->ah->led_pin = ATH_LED_PIN_9287;
--	else if (AR_SREV_9271(priv->ah))
--		priv->ah->led_pin = ATH_LED_PIN_9271;
--	else if (AR_DEVID_7010(priv->ah))
--		priv->ah->led_pin = ATH_LED_PIN_7010;
--	else
--		priv->ah->led_pin = ATH_LED_PIN_DEF;
--
--	/* Configure gpio 1 for output */
--	ath9k_hw_cfg_output(priv->ah, priv->ah->led_pin,
--			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--	/* LED off, active low */
--	ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 1);
--
--	INIT_DELAYED_WORK(&priv->ath9k_led_blink_work, ath9k_led_blink_work);
--
--	trigger = ieee80211_get_radio_led_name(priv->hw);
--	snprintf(priv->radio_led.name, sizeof(priv->radio_led.name),
--		"ath9k-%s::radio", wiphy_name(priv->hw->wiphy));
--	ret = ath9k_register_led(priv, &priv->radio_led, trigger);
--	priv->radio_led.led_type = ATH_LED_RADIO;
--	if (ret)
--		goto fail;
--
--	trigger = ieee80211_get_assoc_led_name(priv->hw);
--	snprintf(priv->assoc_led.name, sizeof(priv->assoc_led.name),
--		"ath9k-%s::assoc", wiphy_name(priv->hw->wiphy));
--	ret = ath9k_register_led(priv, &priv->assoc_led, trigger);
--	priv->assoc_led.led_type = ATH_LED_ASSOC;
--	if (ret)
--		goto fail;
--
--	trigger = ieee80211_get_tx_led_name(priv->hw);
--	snprintf(priv->tx_led.name, sizeof(priv->tx_led.name),
--		"ath9k-%s::tx", wiphy_name(priv->hw->wiphy));
--	ret = ath9k_register_led(priv, &priv->tx_led, trigger);
--	priv->tx_led.led_type = ATH_LED_TX;
--	if (ret)
--		goto fail;
--
--	trigger = ieee80211_get_rx_led_name(priv->hw);
--	snprintf(priv->rx_led.name, sizeof(priv->rx_led.name),
--		"ath9k-%s::rx", wiphy_name(priv->hw->wiphy));
--	ret = ath9k_register_led(priv, &priv->rx_led, trigger);
--	priv->rx_led.led_type = ATH_LED_RX;
--	if (ret)
--		goto fail;
--
--	priv->op_flags &= ~OP_LED_DEINIT;
--
--	return;
--
--fail:
--	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
--	ath9k_deinit_leds(priv);
--}
--
--/*******************/
--/*	Rfkill	   */
--/*******************/
--
--static bool ath_is_rfkill_set(struct ath9k_htc_priv *priv)
--{
--	return ath9k_hw_gpio_get(priv->ah, priv->ah->rfkill_gpio) ==
--		priv->ah->rfkill_polarity;
--}
--
--static void ath9k_htc_rfkill_poll_state(struct ieee80211_hw *hw)
--{
--	struct ath9k_htc_priv *priv = hw->priv;
--	bool blocked = !!ath_is_rfkill_set(priv);
--
--	wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
--}
--
--void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv)
--{
--	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
--		wiphy_rfkill_start_polling(priv->hw->wiphy);
--}
--
--static void ath9k_htc_radio_enable(struct ieee80211_hw *hw)
--{
--	struct ath9k_htc_priv *priv = hw->priv;
--	struct ath_hw *ah = priv->ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	int ret;
--	u8 cmd_rsp;
--
--	if (!ah->curchan)
--		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
--
--	/* Reset the HW */
--	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
--	if (ret) {
--		ath_err(common,
--			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
--			ret, ah->curchan->channel);
--	}
--
--	ath_update_txpow(priv);
--
--	/* Start RX */
--	WMI_CMD(WMI_START_RECV_CMDID);
--	ath9k_host_rx_init(priv);
--
--	/* Start TX */
--	htc_start(priv->htc);
--	spin_lock_bh(&priv->tx_lock);
--	priv->tx_queues_stop = false;
--	spin_unlock_bh(&priv->tx_lock);
--	ieee80211_wake_queues(hw);
--
--	WMI_CMD(WMI_ENABLE_INTR_CMDID);
--
--	/* Enable LED */
--	ath9k_hw_cfg_output(ah, ah->led_pin,
--			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
--}
--
--static void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
--{
--	struct ath9k_htc_priv *priv = hw->priv;
--	struct ath_hw *ah = priv->ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	int ret;
--	u8 cmd_rsp;
--
--	ath9k_htc_ps_wakeup(priv);
--
--	/* Disable LED */
--	ath9k_hw_set_gpio(ah, ah->led_pin, 1);
--	ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
--
--	WMI_CMD(WMI_DISABLE_INTR_CMDID);
--
--	/* Stop TX */
--	ieee80211_stop_queues(hw);
--	htc_stop(priv->htc);
--	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
--	skb_queue_purge(&priv->tx_queue);
--
--	/* Stop RX */
--	WMI_CMD(WMI_STOP_RECV_CMDID);
--
--	/*
--	 * The MIB counters have to be disabled here,
--	 * since the target doesn't do it.
--	 */
--	ath9k_hw_disable_mib_counters(ah);
--
--	if (!ah->curchan)
--		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
--
--	/* Reset the HW */
--	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
--	if (ret) {
--		ath_err(common,
--			"Unable to reset hardware; reset status %d (freq %u MHz)\n",
--			ret, ah->curchan->channel);
--	}
--
--	/* Disable the PHY */
--	ath9k_hw_phy_disable(ah);
--
--	ath9k_htc_ps_restore(priv);
--	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
--}
--
- /**********************/
- /* mac80211 Callbacks */
- /**********************/
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7ead0ea..383631e 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1393,7 +1393,7 @@ static int wl1271_handle_idle(struct wl1271 *wl, bool idle)
+ 		}
+ 		wl->rate_set = wl1271_min_rate_get(wl);
+ 		wl->sta_rate_set = 0;
+-		ret = wl1271_acx_rate_policies(wl);
++		ret = wl1271_acx_sta_rate_policies(wl);
+ 		if (ret < 0)
+ 			goto out;
+ 		ret = wl1271_acx_keep_alive_config(
+@@ -1468,7 +1468,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			wl1271_set_band_rate(wl);
+ 
+ 		wl->basic_rate = wl1271_min_rate_get(wl);
+-		ret = wl1271_acx_rate_policies(wl);
++		ret = wl1271_acx_sta_rate_policies(wl);
+ 		if (ret < 0)
+ 			wl1271_warning("rate policy for update channel "
+ 				       "failed %d", ret);
+@@ -2017,7 +2017,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
+ 									 rates);
+ 			wl->basic_rate = wl1271_min_rate_get(wl);
+-			ret = wl1271_acx_rate_policies(wl);
++			ret = wl1271_acx_sta_rate_policies(wl);
+ 			if (ret < 0)
+ 				goto out_sleep;
+ 
+@@ -2071,7 +2071,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			/* revert back to minimum rates for the current band */
+ 			wl1271_set_band_rate(wl);
+ 			wl->basic_rate = wl1271_min_rate_get(wl);
+-			ret = wl1271_acx_rate_policies(wl);
++			ret = wl1271_acx_sta_rate_policies(wl);
+ 			if (ret < 0)
+ 				goto out_sleep;
+ 
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index b44c75c..0cf210d 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -303,7 +303,7 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
+ 		woken_up = true;
+ 
+ 		wl->rate_set = wl1271_tx_enabled_rates_get(wl, sta_rates);
+-		wl1271_acx_rate_policies(wl);
++		wl1271_acx_sta_rate_policies(wl);
+ 	}
+ 
+ 	while ((skb = wl1271_skb_dequeue(wl))) {
 -- 
-1.7.3.4
+1.7.1
 
