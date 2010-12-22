@@ -1,116 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:47313 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751748Ab0LBKvR (ORCPT
+Received: from asmtpout026.mac.com ([17.148.16.101]:50751 "EHLO
+	asmtpout026.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab0LVLaX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 05:51:17 -0500
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0773857075
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:51:16 +0900 (JST)
-Subject: [PATCH v2] lib: Improve EWMA efficiency by using bitshifts
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com,
-	johannes@sipsolutions.net
-Date: Thu, 02 Dec 2010 19:50:37 +0900
-Message-ID: <20101202105037.5654.62835.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 22 Dec 2010 06:30:23 -0500
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Received: from [192.168.1.30] ([87.201.169.175])
+ by asmtp026.mac.com (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep
+ 26 2008; 64bit)) with ESMTPSA id <0LDT005SWUMH6X60@asmtp026.mac.com> for
+ linux-wireless@vger.kernel.org; Wed, 22 Dec 2010 03:30:22 -0800 (PST)
+Subject: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+From: Elvis Dowson <elvis.dowson@mac.com>
+In-reply-to: <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+Date: Wed, 22 Dec 2010 15:30:05 +0400
+Message-id: <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
+ <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+ <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
+ <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+ <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
+ <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+To: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using bitshifts instead of division and multiplication should improve
-performance. That requires weight and factor to be powers of two, but i think
-this is something we can live with.
+Hi,
+                  I have a quick question. 
 
-Thanks to Peter Zijlstra for the improved formula!
+I downloaded the http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc6-3.tar.bz2
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+The information contained in this link mentions: http://linuxwireless.org/en/users/Download/stable/
 
---
+"You need kernel headers to compile compat-wireless. Ensure /lib/modules/$(uname -r)/build/ exists and points to the location where the kernel headers are installed. If you do not have them, read your distribution's documentation on getting help."
 
-v2:	use log2.h functions
----
- include/linux/average.h |    4 +---
- lib/average.c           |   20 ++++++++++++--------
- 2 files changed, 13 insertions(+), 11 deletions(-)
+I have Ubuntu 10.04 as host, but I'm using a cross compiler for the OMAP3530 ARM target, and the kernel directory exists in a separate folder. 
 
-diff --git a/include/linux/average.h b/include/linux/average.h
-index 7706e40..c6028fd 100644
---- a/include/linux/average.h
-+++ b/include/linux/average.h
-@@ -1,8 +1,6 @@
- #ifndef _LINUX_AVERAGE_H
- #define _LINUX_AVERAGE_H
- 
--#include <linux/kernel.h>
--
- /* Exponentially weighted moving average (EWMA) */
- 
- /* For more documentation see lib/average.c */
-@@ -26,7 +24,7 @@ extern struct ewma *ewma_add(struct ewma *avg, unsigned long val);
-  */
- static inline unsigned long ewma_read(const struct ewma *avg)
- {
--	return DIV_ROUND_CLOSEST(avg->internal, avg->factor);
-+	return avg->internal >> avg->factor;
- }
- 
- #endif /* _LINUX_AVERAGE_H */
-diff --git a/lib/average.c b/lib/average.c
-index f1d1b46..5576c28 100644
---- a/lib/average.c
-+++ b/lib/average.c
-@@ -8,6 +8,7 @@
- #include <linux/module.h>
- #include <linux/average.h>
- #include <linux/bug.h>
-+#include <linux/log2.h>
- 
- /**
-  * DOC: Exponentially Weighted Moving Average (EWMA)
-@@ -24,18 +25,21 @@
-  * ewma_init() - Initialize EWMA parameters
-  * @avg: Average structure
-  * @factor: Factor to use for the scaled up internal value. The maximum value
-- *	of averages can be ULONG_MAX/(factor*weight).
-+ *	of averages can be ULONG_MAX/(factor*weight). For performance reasons
-+ *	factor has to be a power of 2.
-  * @weight: Exponential weight, or decay rate. This defines how fast the
-- *	influence of older values decreases. Has to be bigger than 1.
-+ *	influence of older values decreases. For performance reasons weight has
-+ *	to be a power of 2.
-  *
-  * Initialize the EWMA parameters for a given struct ewma @avg.
-  */
- void ewma_init(struct ewma *avg, unsigned long factor, unsigned long weight)
- {
--	WARN_ON(weight <= 1 || factor == 0);
-+	WARN_ON(!is_power_of_2(weight) || !is_power_of_2(factor));
-+
-+	avg->weight = ilog2(weight);
-+	avg->factor = ilog2(factor);
- 	avg->internal = 0;
--	avg->weight = weight;
--	avg->factor = factor;
- }
- EXPORT_SYMBOL(ewma_init);
- 
-@@ -49,9 +53,9 @@ EXPORT_SYMBOL(ewma_init);
- struct ewma *ewma_add(struct ewma *avg, unsigned long val)
- {
- 	avg->internal = avg->internal  ?
--		(((avg->internal * (avg->weight - 1)) +
--			(val * avg->factor)) / avg->weight) :
--		(val * avg->factor);
-+		(((avg->internal << avg->weight) - avg->internal) +
-+			(val << avg->factor)) >> avg->weight :
-+		(val << avg->factor);
- 	return avg;
- }
- EXPORT_SYMBOL(ewma_add);
+How do I tell the build system to use my cross compiled kernel libraries and headers, and not pick up the host /lib/modules kernel headers? 
+
+i.e. how can I cross compile and build compat-wireless for the ARM target on the host machine? 
+
+cd /path/to/compat-wireless-2.6.32-rc5
+./scripts/driver-select <driver-name>
+make
+sudo make install
+
+
+Best regards,
+
+Elvis Dowson
 
