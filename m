@@ -1,87 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:56370 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753349Ab0LRO7d (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035Ab0LVO1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 09:59:33 -0500
-Subject: [PATCH] rndis_wlan: scanning,
-	workaround device returning incorrect bssid-list item count.
-To: "John W. Linville" <linville@tuxdriver.com>
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 18 Dec 2010 16:59:29 +0200
-Message-ID: <20101218145929.13559.78929.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 22 Dec 2010 09:27:48 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:27:47 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 01/18] wl1271: Add AP related configuration to conf_drv_settings
+Date: Wed, 22 Dec 2010 16:27:20 +0200
+Message-Id: <1293028057-6212-2-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes device returns wrong number of items in bssid-list. Appears that some specific beacons
-trigger this problem and leads to very poor scanning results. Workaround by ignoring num_items
-received from device and walkthrough full bssid-list buffer.
+Rate class configuration has been split up for AP and STA modes.
+Template related configuration likewise separated.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/rndis_wlan.c |   22 ++++++++++++++--------
- 1 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/net/wireless/wl12xx/acx.c  |    2 +-
+ drivers/net/wireless/wl12xx/cmd.c  |    4 +-
+ drivers/net/wireless/wl12xx/conf.h |   26 +++++++++++++++++++-
+ drivers/net/wireless/wl12xx/main.c |   45 ++++++++++++++++++++++++++++++++++-
+ 4 files changed, 70 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 4a4f005..8db8333 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -1967,8 +1967,8 @@ static struct cfg80211_bss *rndis_bss_info_update(struct usbnet *usbdev,
- 	int ie_len, bssid_len;
- 	u8 *ie;
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index cc4068d..30ff32a 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -754,7 +754,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
+ int wl1271_acx_rate_policies(struct wl1271 *wl)
+ {
+ 	struct acx_rate_policy *acx;
+-	struct conf_tx_rate_class *c = &wl->conf.tx.rc_conf;
++	struct conf_tx_rate_class *c = &wl->conf.tx.sta_rc_conf;
+ 	int idx = 0;
+ 	int ret = 0;
  
--	netdev_dbg(usbdev->net, " found bssid: '%.32s' [%pM]\n",
--		   bssid->ssid.essid, bssid->mac);
-+	netdev_dbg(usbdev->net, " found bssid: '%.32s' [%pM], len: %d\n",
-+		   bssid->ssid.essid, bssid->mac, le32_to_cpu(bssid->length));
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 0106628..15f4077 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -490,8 +490,8 @@ int wl1271_cmd_template_set(struct wl1271 *wl, u16 template_id,
+ 	cmd->len = cpu_to_le16(buf_len);
+ 	cmd->template_type = template_id;
+ 	cmd->enabled_rates = cpu_to_le32(rates);
+-	cmd->short_retry_limit = wl->conf.tx.rc_conf.short_retry_limit;
+-	cmd->long_retry_limit = wl->conf.tx.rc_conf.long_retry_limit;
++	cmd->short_retry_limit = wl->conf.tx.tmpl_short_retry_limit;
++	cmd->long_retry_limit = wl->conf.tx.tmpl_long_retry_limit;
+ 	cmd->index = index;
  
- 	/* parse bssid structure */
- 	bssid_len = le32_to_cpu(bssid->length);
-@@ -2008,10 +2008,10 @@ static int rndis_check_bssid_list(struct usbnet *usbdev, u8 *match_bssid,
- 	void *buf = NULL;
- 	struct ndis_80211_bssid_list_ex *bssid_list;
- 	struct ndis_80211_bssid_ex *bssid;
--	int ret = -EINVAL, len, count, bssid_len;
-+	int ret = -EINVAL, len, count, bssid_len, real_count;
- 	bool resized = false;
+ 	if (buf)
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index a16b361..47094f0 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -636,9 +636,9 @@ struct conf_tx_settings {
  
--	netdev_dbg(usbdev->net, "check_bssid_list\n");
-+	netdev_dbg(usbdev->net, "%s\n", __func__);
+ 	/*
+ 	 * Configuration for rate classes for TX (currently only one
+-	 * rate class supported.)
++	 * rate class supported). Used in non-AP mode.
+ 	 */
+-	struct conf_tx_rate_class rc_conf;
++	struct conf_tx_rate_class sta_rc_conf;
  
- 	len = CONTROL_BUFFER_SIZE;
- resize_buf:
-@@ -2035,10 +2035,13 @@ resize_buf:
- 	bssid = bssid_list->bssid;
- 	bssid_len = le32_to_cpu(bssid->length);
- 	count = le32_to_cpu(bssid_list->num_items);
--	netdev_dbg(usbdev->net, "check_bssid_list: %d BSSIDs found (buflen: %d)\n",
--		   count, len);
-+	real_count = 0;
-+	netdev_dbg(usbdev->net, "%s, buflen: %d\n", __func__, len);
+ 	/*
+ 	 * Configuration for access categories for TX rate control.
+@@ -647,6 +647,22 @@ struct conf_tx_settings {
+ 	struct conf_tx_ac_category ac_conf[CONF_TX_MAX_AC_COUNT];
  
--	while (count && ((void *)bssid + bssid_len) <= (buf + len)) {
-+	/* Device returns incorrect 'num_items'. Workaround by ignoring the
-+	 * received 'num_items' and walking through full bssid buffer instead.
+ 	/*
++	 * Configuration for rate classes in AP-mode. These rate classes
++	 * are for the AC TX queues
 +	 */
-+	while (bssid_len > 0 && ((void *)bssid + bssid_len) <= (buf + len)) {
- 		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
- 		    matched) {
- 			if (compare_ether_addr(bssid->mac, match_bssid))
-@@ -2047,9 +2050,12 @@ resize_buf:
- 
- 		bssid = (void *)bssid + bssid_len;
- 		bssid_len = le32_to_cpu(bssid->length);
--		count--;
-+		real_count++;
- 	}
- 
-+	netdev_dbg(usbdev->net, "%s, num_items from device: %d, really found: "
-+				"%d\n", __func__, count, real_count);
++	struct conf_tx_rate_class ap_rc_conf[CONF_TX_MAX_AC_COUNT];
 +
- out:
- 	kfree(buf);
- 	return ret;
++	/*
++	 * Management TX rate class for AP-mode.
++	 */
++	struct conf_tx_rate_class ap_mgmt_conf;
++
++	/*
++	 * Broadcast TX rate class for AP-mode.
++	 */
++	struct conf_tx_rate_class ap_bcst_conf;
++
++	/*
+ 	 * Configuration for TID parameters.
+ 	 */
+ 	u8 tid_conf_count;
+@@ -687,6 +703,12 @@ struct conf_tx_settings {
+ 	 * Range: CONF_HW_BIT_RATE_* bit mask
+ 	 */
+ 	u32 basic_rate_5;
++
++	/*
++	 * TX retry limits for templates
++	 */
++	u8 tmpl_short_retry_limit;
++	u8 tmpl_long_retry_limit;
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 062247e..7ead0ea 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -116,11 +116,11 @@ static struct conf_drv_settings default_conf = {
+ 	},
+ 	.tx = {
+ 		.tx_energy_detection         = 0,
+-		.rc_conf                     = {
++		.sta_rc_conf                 = {
+ 			.enabled_rates       = 0,
+ 			.short_retry_limit   = 10,
+ 			.long_retry_limit    = 10,
+-			.aflags              = 0
++			.aflags              = 0,
+ 		},
+ 		.ac_conf_count               = 4,
+ 		.ac_conf                     = {
+@@ -153,6 +153,45 @@ static struct conf_drv_settings default_conf = {
+ 				.tx_op_limit = 1504,
+ 			},
+ 		},
++		.ap_rc_conf                  = {
++			[0] = {
++				.enabled_rates = 0x1EFF,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++			[1] = {
++				.enabled_rates = 0x1EFF,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++			[2] = {
++				.enabled_rates = 0x1EFF,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++			[3] = {
++				.enabled_rates = 0x1EFF,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++		},
++		.ap_mgmt_conf = {
++			.enabled_rates       = 0x7,
++			.short_retry_limit   = 10,
++			.long_retry_limit    = 10,
++			.aflags              = 0,
++		},
++		.ap_bcst_conf = {
++			.enabled_rates       = 0x1,
++			.short_retry_limit   = 10,
++			.long_retry_limit    = 10,
++			.aflags              = 0,
++		},
++
+ 		.tid_conf_count = 4,
+ 		.tid_conf = {
+ 			[CONF_TX_AC_BE] = {
+@@ -193,6 +232,8 @@ static struct conf_drv_settings default_conf = {
+ 		.tx_compl_threshold          = 4,
+ 		.basic_rate                  = CONF_HW_BIT_RATE_1MBPS,
+ 		.basic_rate_5                = CONF_HW_BIT_RATE_6MBPS,
++		.tmpl_short_retry_limit      = 10,
++		.tmpl_long_retry_limit       = 10,
+ 	},
+ 	.conn = {
+ 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
+-- 
+1.7.1
 
