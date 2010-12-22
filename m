@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44799 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751456Ab0LPMqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 07:46:01 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 04:45:45 -0800
-Message-ID: <4D0A0A03.7000704@atheros.com>
-Date: Thu, 16 Dec 2010 18:15:55 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61892 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684Ab0LVOhN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 09:37:13 -0500
+Received: by iyi12 with SMTP id 12so4106219iyi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:37:13 -0800 (PST)
 MIME-Version: 1.0
-To: Sujith <m.sujith@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] ath9k_htc : Update txrate status to mac80211
-References: <1292499588-11636-1-git-send-email-mshajakhan@atheros.com>	<19721.65246.410283.55163@gargle.gargle.HOWL>	<4D0A012E.3090408@atheros.com> <19722.1212.579544.451006@gargle.gargle.HOWL>
-In-Reply-To: <19722.1212.579544.451006@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1293026551.3531.22.camel@jlt3.sipsolutions.net>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+ <1292864555-28661-6-git-send-email-lrodriguez@atheros.com> <1293026551.3531.22.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 22 Dec 2010 09:36:53 -0500
+Message-ID: <AANLkTikj0qgg1fsYuO5Ks7MREn1=yJiPAqEo1HfCaij_@mail.gmail.com>
+Subject: Re: [PATCH 5/8] crda: synch up nl80211.h header with upstream for
+ country flags
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, kathy.giori@atheros.com,
+	amod.bodas@atheros.com, david.quan@atheros.com,
+	michael.green@atheros.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 16 December 2010 05:53 PM, Sujith wrote:
-> Mohammed Shafi wrote:
->    
->> This patch just takes care for displaying the txrate and appropriately
->> sets mac80211 rate control flags,but completely ignores long retries.I
->> had tested it  , except retries the MCS index , txrate in userspace
->> matches with the txrate reported in debug statistics.
->>       Is there chance of any possible fix for this ?
->>      
-> Not really, unless the FW is changed so that it can report TX status.
->    
-Ok Sujith.
-thanks,
-shafi
-> Sujith
-> .
->
->    
+On Wed, Dec 22, 2010 at 9:02 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> What's the point in two patches for this?
+
+Yeah it doesn't matter.
+
+  Luis
