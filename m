@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2151 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932744Ab0LTT6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 14:58:42 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 20 Dec 2010 11:58:26 -0800
-Subject: RE: WL1271 chip
-Message-ID: <400C43189542CE41BC0A5B252FC90136952F0594DA@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
- <1292843841.13129.9.camel@chilepepper>,<0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
- <400C43189542CE41BC0A5B252FC90136952F0594D9@SJEXCHCCR02.corp.ad.broadcom.com>,<0826983CC0CB074798C42E77D8ACD07F01AF50@pdtms1.pdt.com>
-In-Reply-To: <0826983CC0CB074798C42E77D8ACD07F01AF50@pdtms1.pdt.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:33693 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab0LVBkg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Dec 2010 20:40:36 -0500
+Date: Tue, 21 Dec 2010 19:40:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192ce: Fix driver problem when radio switch
+ off at module load
+Message-ID: <4d115718.RbblalG02+GgJdyY%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SnVzdCBjaGVja2VkIG9uIGtlcm5lbC5vcmcgYW5kIGluZGVlZCBpdCBpcyBub3QgaW4gbGludXgt
-Mi42LjM2LjIgKHN0YWJsZSksIGJ1dCBpdCBpcyBpbiAyLjYuMzctcmM2IChtYWluLWxpbmUpLg0K
-DQpHci4gQXZTDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQpGcm9t
-OiBCcnplem93c2tpLCBLYXJlbiBbS2FyZW4uQnJ6ZXpvd3NraUBwZHQuY29tXQ0KU2VudDogTW9u
-ZGF5LCBEZWNlbWJlciAyMCwgMjAxMCA3OjAwIFBNDQpUbzogQXJlbmQgVmFuIFNwcmllbA0KU3Vi
-amVjdDogUkU6IFdMMTI3MSBjaGlwDQoNCkNvdWxkIHlvdSB0ZWxsIG1lIHdoZXJlIHlvdSBmb3Vu
-ZCB0aGlzIGJvYXJkLXpvb20tcGVyaXBoZXJhbHMuYz8NCkkgaGF2ZSB0aGUgbGludXgtMi42LjM2
-LjIgY29kZSBhbmQgdGhlIHdsMTI3MSBpcyBub3QgaW4gdGhhdCBmaWxlLi4NCjotKQ0KdGhhbmtz
-IQ0KS2FyZW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEFyZW5kIFZhbiBT
-cHJpZWwgW21haWx0bzphcmVuZEBicm9hZGNvbS5jb21dDQpTZW50OiBNb25kYXksIERlY2VtYmVy
-IDIwLCAyMDEwIDExOjQ3IEFNDQpUbzogQnJ6ZXpvd3NraSwgS2FyZW47IGxpbnV4LXdpcmVsZXNz
-QHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IFdMMTI3MSBjaGlwDQoNCkkgYW0gYWxzbyBu
-b3QgZmFtaWxpYXIgd2l0aCBpLk1YMjMzLCBidXQgZ29vZ2xpbmcgaXQgdGhpcyBzZWVtcyB0byBi
-ZSBhIEZyZWVzY2FsZSBhcHAgcHJvY2Vzc29yIHdpdGggQVJNOTI2RUotUyBjb3JlIGFuZCBpdCBo
-YXMgU0RJTyByZXYyLjAgY29tcGxpYW50IGludGVyZmFjZSBpbnRlZ3JhdGVkLiBUaGVyZSBhIGFy
-Y2gvYXJtL21hY2gtaW14IGRpcmVjdG9yeSBjb250YWluaW5nIGkuTVgyNyBwcm9jZXNzb3Igd2hp
-Y2ggaGFzIHNvbWUgc2ltaWxhcml0aWVzIChzYW1lIGNvcmUgYW5kIE1NQy9TRCBpbnRlcmZhY2Vz
-KS4gU28gaXQgY291bGQgYmUgYSBnb29kIHN0YXJ0aW5nIHBvaW50IGZvciB5b3VyIHBvcnRpbmcg
-ZWZmb3J0Lg0KDQpBbm90aGVyIGhpbnQgbWF5IGJlIHRoYXQgU0RJTyBpcyByZWxhdGVkIHRvIE1N
-Qy9TRC4gU28gaW4gYm9hcmQtem9vbS1wZXJpcGhlcmFscy5jIHlvdSB3aWxsIGZpbmQgbW9yZSB3
-aGVuIHNlYXJjaGluZyBmb3IgJ21tYycuIGVnOg0KDQpzdGF0aWMgc3RydWN0IG9tYXAyX2hzbW1j
-X2luZm8gbW1jW10gX19pbml0ZGF0YSA9IHsNCiAgICAgICAgICAgOg0KICAgICAgICAgICA6DQog
-ICAgICAgIHsNCiAgICAgICAgICAgICAgICAubmFtZSAgICAgICAgICAgPSAid2wxMjcxIiwNCiAg
-ICAgICAgICAgICAgICAubW1jICAgICAgICAgICAgPSAzLA0KICAgICAgICAgICAgICAgIC5jYXBz
-ICAgICAgICAgICA9IE1NQ19DQVBfNF9CSVRfREFUQSwNCiAgICAgICAgICAgICAgICAuZ3Bpb193
-cCAgICAgICAgPSAtRUlOVkFMLA0KICAgICAgICAgICAgICAgIC5ncGlvX2NkICAgICAgICA9IC1F
-SU5WQUwsDQogICAgICAgICAgICAgICAgLm5vbnJlbW92YWJsZSAgID0gdHJ1ZSwNCiAgICAgICAg
-fSwNCiAgICAgICAge30gICAgICAvKiBUZXJtaW5hdG9yICovDQp9Ow0KDQpHci4gQXZTDQpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQpGcm9tOiBsaW51eC13aXJlbGVz
-cy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW2xpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVs
-Lm9yZ10gT24gQmVoYWxmIE9mIEJyemV6b3dza2ksIEthcmVuIFtLYXJlbi5Ccnplem93c2tpQHBk
-dC5jb21dDQpTZW50OiBNb25kYXksIERlY2VtYmVyIDIwLCAyMDEwIDY6MTIgUE0NClRvOiBsaW51
-eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCkNjOiBCcnplem93c2tpLCBLYXJlbg0KU3ViamVj
-dDogV0wxMjcxIGNoaXANCg0KSGkhDQpMdWNhIHN1Z2dlc3RlZCB0aGF0IEkgc2VuZCB0aGlzIHRv
-IGFsbCBvZiB5b3UhDQoNCkkgbG9va2VkIGF0IGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQtem9v
-bS1wZXJpcGhlcmFscy5jIGZpbGUuLg0KSSBkaWRuJ3Qgc2VlIGFueXRoaW5nIHNwZWNpZmljIHRv
-IFNESU8uLg0KDQpJIHdhcyBsb29raW5nIGF0IGxpbnV4LTIuNi4zNi4yLi4NCklzIHRoaXMgdGhl
-IGNvcnJlY3QgdmVyc2lvbiB0byBsb29rIGF0Pw0KDQpQbGVhc2UgcmVhZCBiZWxvdyBmb3Igb3Jp
-Z2luYWwgcXVlc3Rpb24uDQpUSEFOSyB5b3UgZXZlcnlvbmUgZm9yIEFOWSBoZWxwIHlvdSBjYW4g
-Z2l2ZSBtZSENCkthcmVuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpIaSBLYXJlbiwN
-Cg0KDQo+IEhpIEx1Y2lhbm8sDQo+DQo+IEnigJltIHZlcnkgc29ycnkgdG8gZW1haWwgIHlvdSBk
-aXJlY3RseS4NCg0KTm8gcHJvYmxlbS4gIEJ1dCBpdCBpcyBhbHdheXMgYmV0dGVyIHRvIGVtYWls
-IHRoZSBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcgbWFpbGluZyBsaXN0IHRvbywgYmVj
-YXVzZSB0aGVyZSBhcmUgbG90cyBvZiBvdGhlciBwZW9wbGUgd2hvIGNhbiBoZWxwIHlvdSB0aGVy
-ZS4NCg0KDQo+IEkgYW0gdmVyeSBuZXcgdG8gcG9ydGluZyBkcml2ZXJz4oCmDQo+DQo+IEkgaGF2
-ZSB0byBpbnRlZ3JhdGUvcG9ydCBhIFdMMTI3MSBjaGlwIChJIHRoaW5rIGl04oCZcyBnb2luZyB0
-byBiZSB0aGUNCj4gb25lDQo+DQo+IG1hbnVmYWN0dXJlZCBieSBNdXJhdGEpLg0KPg0KPiBJIHNl
-ZSB0aGF0IHlvdSBtYWludGFpbiB0aGUgd2wxMnh4IGRyaXZlcnMgb24gbGludXgtd2lyZWxlc3MN
-Cj4ga2VybmVsLm9yZy4NCj4NCj4NCj4NCj4gVGhlIHByb2Nlc3NvciBpcyBpTVgyMzMsIE9TIGlz
-IEFuZHJvaWQgKExpbnV4KS4NCj4NCj4NCj4NCj4gSSB3b3VsZCBiZSB2ZXJ5IGFwcHJlY2lhdGl2
-ZSBpZiB5b3UgY291bGQgZ2l2ZSBtZSBzb21lDQo+IGFkdmljZS9pbnN0cnVjdGlvbnMvZG9jdW1l
-bnRhdGlvbg0KPg0KPiB0aGF0IHdvdWxkIGhlbHAgbWUgb24gdW5kZXJzdGFuZC9zdGFydC9jb21w
-bGV0ZSB0aGlzIHRhc2suDQoNCldlbGwsIHRoZSB3bDEyeHggZHJpdmVyIHNob3VsZCB3b3JrIG1v
-cmUgb3IgbGVzcyBvdXQtb2YtdGhlLWJveC4gIFRoZSBvbmx5IHRoaW5nIHlvdSBuZWVkIHRvIGRv
-IGlzIHRvIHNldCB1cCB0aGUgU0RJTyBjb25uZWN0aW9uIHRvIHlvdXIgY2FyZCAoYXNzdW1pbmcg
-dGhhdCB5b3UncmUgdXNpbmcgdGhlIFNESU8gYnVzIHRvIGNvbm5lY3QgaXQpLiAgSSdtIG5vdCBm
-YW1pbGlhciB3aXRoIHRoZSBpTVgyMzMsIGJ1dCB3aXRoIE9NQVAsIGl0J3MgcHJldHR5IHNpbXBs
-ZS4gIFlvdSBjYW4gc2VlIHRoZSBhcmNoL2FybS9tYWNoLW9tYXAyL2JvYXJkLXpvb20tcGVyaXBo
-ZXJhbHMuYyBmaWxlIGluIHRoZSBMaW51eCBrZXJuZWwgZm9yIGFuIGV4YW1wbGUgb24gaG93IHRv
-IHNldCBpdCB1cCBmb3IgdGhlIFpvb20gYm9hcmQgKE9NQVAtYmFzZWQpLg0KDQoNCi0tDQpDaGVl
-cnMsDQpMdWNhLg0KDQoNCk4gICAgIHIgIHkgICBiIFggIMendiBeICneunsubiArICAgIHsgICre
-lSAsIHtheSAdyofamSAsaiAgIGYgICBoICAgeiAeIHcgICAgICAgajordiAgIHcgaiBtICAgICAg
-ICAgelorICAgICDdomoiICAhIGkgEmYgIMecICAgbyAgeSAPICkNCg==
+If the radio enable switch is off when the driver is loaded, it is not
+possible to get radio output until the driver is unloaded and reloaded
+with the switch on.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -962,17 +962,6 @@ int rtl92ce_hw_init(struct ieee80211_hw
+ 	rtl_cam_reset_all_entry(hw);
+ 	rtl92ce_enable_hw_security_config(hw);
+ 	ppsc->rfpwr_state = ERFON;
+-	tmp_u1b = rtl_read_byte(rtlpriv, REG_MAC_PINMUX_CFG)&(~BIT(3));
+-	rtl_write_byte(rtlpriv, REG_MAC_PINMUX_CFG, tmp_u1b);
+-	tmp_u1b = rtl_read_byte(rtlpriv, REG_GPIO_IO_SEL);
+-	ppsc->rfoff_reason |= (tmp_u1b & BIT(3)) ? 0 : RF_CHANGE_BY_HW;
+-	if (ppsc->rfoff_reason > RF_CHANGE_BY_PS)
+-		rtl_ps_set_rf_state(hw, ERFOFF, ppsc->rfoff_reason, true);
+-	else {
+-		ppsc->rfpwr_state = ERFON;
+-		ppsc->rfoff_reason = 0;
+-		rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_ON);
+-	}
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
+ 	_rtl92ce_enable_aspm_back_door(hw);
+ 	rtlpriv->intf_ops->enable_aspm(hw);
+Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
+@@ -251,16 +251,14 @@ void rtl_init_rfkill(struct ieee80211_hw
+ 	bool blocked;
+ 	u8 valid = 0;
+ 
+-	/*set init state to rf on */
+-	rtlpriv->rfkill.rfkill_state = 1;
+-
+ 	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
+ 
+-	if (valid) {
+-		RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
+-			 (KERN_INFO "wireless switch is %s\n",
+-			  rtlpriv->rfkill.rfkill_state ? "on" : "off"));
++	/*set init state to that of switch */
++	rtlpriv->rfkill.rfkill_state = radio_state;
++	printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
++	       rtlpriv->rfkill.rfkill_state ? "on" : "off");
+ 
++	if (valid) {
+ 		rtlpriv->rfkill.rfkill_state = radio_state;
+ 
+ 		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
 
