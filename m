@@ -1,179 +1,552 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2109 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751646Ab0LBFNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 00:13:37 -0500
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] ath: Fix ath_dbg uses missing newlines and access beyond array bound
-Date: Wed,  1 Dec 2010 21:13:32 -0800
-Message-Id: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:43969 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151Ab0LVO2L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 09:28:11 -0500
+Received: by mail-ww0-f42.google.com with SMTP id 17so5126976wwi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:10 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 06/18] wl1271: AP mode - init sequence
+Date: Wed, 22 Dec 2010 16:27:25 +0200
+Message-Id: <1293028057-6212-7-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing newlines to ath_dbg uses
-ar9300RateSize is not a power of 4, fix to print array line by line.
+Split HW init sequence into AP/STA specific parts
 
-Signed-off-by: Joe Perches <joe@perches.com>
+The AP specific init sequence includes configuration of templates, rate
+classes, power mode, etc. Also unmask AP specific events in the event mbox.
+
+Separate the differences between AP and STA init into mode
+specific functions called from wl1271_hw_init. The first is called after
+radio configuration and the second after memory configuration.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   29 ++---------------------
- drivers/net/wireless/ath/ath9k/calib.c         |    4 +-
- drivers/net/wireless/ath/ath9k/gpio.c          |    6 ++--
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    7 ++---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    2 +-
- 5 files changed, 12 insertions(+), 36 deletions(-)
+ drivers/net/wireless/wl12xx/cmd.h          |    7 +
+ drivers/net/wireless/wl12xx/init.c         |  352 ++++++++++++++++++++++------
+ drivers/net/wireless/wl12xx/init.h         |    5 +-
+ drivers/net/wireless/wl12xx/main.c         |    4 +-
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    5 +
+ 5 files changed, 296 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index e6ae62b..beb3e87 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3342,7 +3342,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	goto fail;
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 02f843c..d51324d 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -140,6 +140,13 @@ enum cmd_templ {
+ 				  * For CTS-to-self (FastCTS) mechanism
+ 				  * for BT/WLAN coexistence (SoftGemini). */
+ 	CMD_TEMPL_ARP_RSP,
++
++	/* AP-mode specific */
++	CMD_TEMPL_AP_BEACON = 13,
++	CMD_TEMPL_AP_PROBE_RESPONSE,
++	CMD_TEMPL_AP_ARP_RSP,
++	CMD_TEMPL_DEAUTH_AP,
++
+ 	CMD_TEMPL_MAX = 0xff
+ };
  
- found:
--	ath_dbg(common, ATH_DBG_EEPROM, "Found valid EEPROM data");
-+	ath_dbg(common, ATH_DBG_EEPROM, "Found valid EEPROM data\n");
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 799c369..df6666b 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -30,27 +30,9 @@
+ #include "acx.h"
+ #include "cmd.h"
+ #include "reg.h"
++#include "tx.h"
  
- 	for (it = 0; it < MSTATE; it++) {
- 		if (!read(ah, cptr, word, COMP_HDR_LEN))
-@@ -4084,22 +4084,9 @@ static void ar9003_hw_set_target_power_eeprom(struct ath_hw *ah, u16 freq,
- 	    ar9003_hw_eeprom_get_ht40_tgt_pwr(ah, HT_TARGET_RATE_23, freq,
- 					      is2GHz) + ht40PowerIncForPdadc;
+-static int wl1271_init_hwenc_config(struct wl1271 *wl)
+-{
+-	int ret;
+-
+-	ret = wl1271_acx_feature_cfg(wl);
+-	if (ret < 0) {
+-		wl1271_warning("couldn't set feature config");
+-		return ret;
+-	}
+-
+-	ret = wl1271_cmd_set_sta_default_wep_key(wl, wl->default_key);
+-	if (ret < 0) {
+-		wl1271_warning("couldn't set default key");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+-int wl1271_init_templates_config(struct wl1271 *wl)
++int wl1271_sta_init_templates_config(struct wl1271 *wl)
+ {
+ 	int ret, i;
  
--	while (i < ar9300RateSize) {
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--
-+	for (i = 0; i < ar9300RateSize; i++) {
- 		ath_dbg(common, ATH_DBG_EEPROM,
- 			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
--		i++;
- 	}
+@@ -118,6 +100,132 @@ int wl1271_init_templates_config(struct wl1271 *wl)
+ 	return 0;
  }
  
-@@ -4687,17 +4674,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
++static int wl1271_ap_init_deauth_template(struct wl1271 *wl)
++{
++	struct wl12xx_disconn_template *tmpl;
++	int ret;
++
++	tmpl = kzalloc(sizeof(*tmpl), GFP_KERNEL);
++	if (!tmpl) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	tmpl->header.frame_ctl = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					     IEEE80211_STYPE_DEAUTH);
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_DEAUTH_AP,
++				      tmpl, sizeof(*tmpl), 0,
++				      wl1271_min_rate_get(wl));
++
++out:
++	kfree(tmpl);
++	return ret;
++}
++
++static int wl1271_ap_init_null_template(struct wl1271 *wl)
++{
++	struct ieee80211_hdr_3addr *nullfunc;
++	int ret;
++
++	nullfunc = kzalloc(sizeof(*nullfunc), GFP_KERNEL);
++	if (!nullfunc) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	nullfunc->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
++					      IEEE80211_STYPE_NULLFUNC |
++					      IEEE80211_FCTL_FROMDS);
++
++	/* nullfunc->addr1 is filled by FW */
++
++	memcpy(nullfunc->addr2, wl->mac_addr, ETH_ALEN);
++	memcpy(nullfunc->addr3, wl->mac_addr, ETH_ALEN);
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_NULL_DATA, nullfunc,
++				      sizeof(*nullfunc), 0,
++				      wl1271_min_rate_get(wl));
++
++out:
++	kfree(nullfunc);
++	return ret;
++}
++
++static int wl1271_ap_init_qos_null_template(struct wl1271 *wl)
++{
++	struct ieee80211_qos_hdr *qosnull;
++	int ret;
++
++	qosnull = kzalloc(sizeof(*qosnull), GFP_KERNEL);
++	if (!qosnull) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	qosnull->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
++					     IEEE80211_STYPE_QOS_NULLFUNC |
++					     IEEE80211_FCTL_FROMDS);
++
++	/* qosnull->addr1 is filled by FW */
++
++	memcpy(qosnull->addr2, wl->mac_addr, ETH_ALEN);
++	memcpy(qosnull->addr3, wl->mac_addr, ETH_ALEN);
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_QOS_NULL_DATA, qosnull,
++				      sizeof(*qosnull), 0,
++				      wl1271_min_rate_get(wl));
++
++out:
++	kfree(qosnull);
++	return ret;
++}
++
++static int wl1271_ap_init_templates_config(struct wl1271 *wl)
++{
++	int ret;
++
++	/*
++	 * Put very large empty placeholders for all templates. These
++	 * reserve memory for later.
++	 */
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_PROBE_RESPONSE, NULL,
++				      sizeof
++				      (struct wl12xx_probe_resp_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_BEACON, NULL,
++				      sizeof
++				      (struct wl12xx_beacon_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_DEAUTH_AP, NULL,
++				      sizeof
++				      (struct wl12xx_disconn_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_NULL_DATA, NULL,
++				      sizeof(struct wl12xx_null_data_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_QOS_NULL_DATA, NULL,
++				      sizeof
++				      (struct wl12xx_qos_null_data_template),
++				      0, WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
+ static int wl1271_init_rx_config(struct wl1271 *wl, u32 config, u32 filter)
+ {
+ 	int ret;
+@@ -145,10 +253,6 @@ int wl1271_init_phy_config(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
  
- 	for (i = 0; i < ar9300RateSize; i++) {
- 		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
--		i++;
--		ath_dbg(common, ATH_DBG_EEPROM,
--			"TPC[%02d] 0x%08x\n\n", i, targetPowerValT2[i]);
--		i++;
-+			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
+-	ret = wl1271_acx_group_address_tbl(wl, true, NULL, 0);
+-	if (ret < 0)
+-		return ret;
+-
+ 	ret = wl1271_acx_service_period_timeout(wl);
+ 	if (ret < 0)
+ 		return ret;
+@@ -213,11 +317,150 @@ static int wl1271_init_beacon_broadcast(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
++static int wl1271_sta_hw_init(struct wl1271 *wl)
++{
++	int ret;
++
++	ret = wl1271_cmd_ext_radio_parms(wl);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_sta_init_templates_config(wl);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_acx_group_address_tbl(wl, true, NULL, 0);
++	if (ret < 0)
++		return ret;
++
++	/* Initialize connection monitoring thresholds */
++	ret = wl1271_acx_conn_monit_params(wl, false);
++	if (ret < 0)
++		return ret;
++
++	/* Beacon filtering */
++	ret = wl1271_init_beacon_filter(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Bluetooth WLAN coexistence */
++	ret = wl1271_init_pta(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Beacons and boradcast settings */
++	ret = wl1271_init_beacon_broadcast(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Configure for ELP power saving */
++	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
++	if (ret < 0)
++		return ret;
++
++	/* Configure rssi/snr averaging weights */
++	ret = wl1271_acx_rssi_snr_avg_weights(wl);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_acx_sta_rate_policies(wl);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++static int wl1271_sta_hw_init_post_mem(struct wl1271 *wl)
++{
++	int ret, i;
++
++	ret = wl1271_cmd_set_sta_default_wep_key(wl, wl->default_key);
++	if (ret < 0) {
++		wl1271_warning("couldn't set default key");
++		return ret;
++	}
++
++	/* disable all keep-alive templates */
++	for (i = 0; i < CMD_TEMPL_KLV_IDX_MAX; i++) {
++		ret = wl1271_acx_keep_alive_config(wl, i,
++						   ACX_KEEP_ALIVE_TPL_INVALID);
++		if (ret < 0)
++			return ret;
++	}
++
++	/* disable the keep-alive feature */
++	ret = wl1271_acx_keep_alive_mode(wl, false);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++static int wl1271_ap_hw_init(struct wl1271 *wl)
++{
++	int ret, i;
++
++	ret = wl1271_ap_init_templates_config(wl);
++	if (ret < 0)
++		return ret;
++
++	/* Configure for power always on */
++	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
++	if (ret < 0)
++		return ret;
++
++	/* Configure initial TX rate classes */
++	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
++		ret = wl1271_acx_ap_rate_policy(wl,
++				&wl->conf.tx.ap_rc_conf[i], i);
++		if (ret < 0)
++			return ret;
++	}
++
++	ret = wl1271_acx_ap_rate_policy(wl,
++					&wl->conf.tx.ap_mgmt_conf,
++					ACX_TX_AP_MODE_MGMT_RATE);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_acx_ap_rate_policy(wl,
++					&wl->conf.tx.ap_bcst_conf,
++					ACX_TX_AP_MODE_BCST_RATE);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_acx_max_tx_retry(wl);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++static int wl1271_ap_hw_init_post_mem(struct wl1271 *wl)
++{
++	int ret;
++
++	ret = wl1271_ap_init_deauth_template(wl);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_ap_init_null_template(wl);
++	if (ret < 0)
++		return ret;
++
++	ret = wl1271_ap_init_qos_null_template(wl);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
+ int wl1271_hw_init(struct wl1271 *wl)
+ {
+ 	struct conf_tx_ac_category *conf_ac;
+ 	struct conf_tx_tid *conf_tid;
+ 	int ret, i;
++	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
+ 	ret = wl1271_cmd_general_parms(wl);
+ 	if (ret < 0)
+@@ -227,12 +470,12 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl1271_cmd_ext_radio_parms(wl);
+-	if (ret < 0)
+-		return ret;
++	/* Mode specific init */
++	if (is_ap)
++		ret = wl1271_ap_hw_init(wl);
++	else
++		ret = wl1271_sta_hw_init(wl);
+ 
+-	/* Template settings */
+-	ret = wl1271_init_templates_config(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -259,16 +502,6 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Initialize connection monitoring thresholds */
+-	ret = wl1271_acx_conn_monit_params(wl, false);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+-	/* Beacon filtering */
+-	ret = wl1271_init_beacon_filter(wl);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* Configure TX patch complete interrupt behavior */
+ 	ret = wl1271_acx_tx_config_options(wl);
+ 	if (ret < 0)
+@@ -279,21 +512,11 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Bluetooth WLAN coexistence */
+-	ret = wl1271_init_pta(wl);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* Energy detection */
+ 	ret = wl1271_init_energy_detection(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
+ 
+-	/* Beacons and boradcast settings */
+-	ret = wl1271_init_beacon_broadcast(wl);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* Default fragmentation threshold */
+ 	ret = wl1271_acx_frag_threshold(wl, wl->conf.tx.frag_threshold);
+ 	if (ret < 0)
+@@ -321,23 +544,13 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 			goto out_free_memmap;
  	}
  
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 0b6c623..b68a1ac 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -324,12 +324,12 @@ static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
+-	/* Configure TX rate classes */
+-	ret = wl1271_acx_sta_rate_policies(wl);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* Enable data path */
+ 	ret = wl1271_cmd_data_path(wl, 1);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
- 		if (nf[i] > ATH9K_NF_TOO_HIGH) {
- 			ath_dbg(common, ATH_DBG_CALIBRATE,
--				"NF[%d] (%d) > MAX (%d), correcting to MAX",
-+				"NF[%d] (%d) > MAX (%d), correcting to MAX\n",
- 				i, nf[i], ATH9K_NF_TOO_HIGH);
- 			nf[i] = limit->max;
- 		} else if (nf[i] < limit->min) {
- 			ath_dbg(common, ATH_DBG_CALIBRATE,
--				"NF[%d] (%d) < MIN (%d), correcting to NOM",
-+				"NF[%d] (%d) < MIN (%d), correcting to NOM\n",
- 				i, nf[i], limit->min);
- 			nf[i] = limit->nominal;
- 		}
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 60b2fb7..1337640 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -237,12 +237,12 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
- 		/* Detect if colocated bt started scanning */
- 		if (btcoex->bt_priority_cnt >= ATH_BT_CNT_SCAN_THRESHOLD) {
- 			ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_BTCOEX,
--				"BT scan detected");
-+				"BT scan detected\n");
- 			sc->sc_flags |= (SC_OP_BT_SCAN |
- 					 SC_OP_BT_PRIORITY_DETECTED);
- 		} else if (btcoex->bt_priority_cnt >= ATH_BT_CNT_THRESHOLD) {
- 			ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_BTCOEX,
--				"BT priority traffic detected");
-+				"BT priority traffic detected\n");
- 			sc->sc_flags |= SC_OP_BT_PRIORITY_DETECTED;
- 		}
+-	/* Configure for ELP power saving */
+-	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+ 	/* Configure HW encryption */
+-	ret = wl1271_init_hwenc_config(wl);
++	ret = wl1271_acx_feature_cfg(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
-@@ -379,7 +379,7 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
- 	struct ath_hw *ah = sc->sc_ah;
+@@ -346,21 +559,12 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
- 	ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--		"Starting btcoex timers");
-+		"Starting btcoex timers\n");
+-	/* disable all keep-alive templates */
+-	for (i = 0; i < CMD_TEMPL_KLV_IDX_MAX; i++) {
+-		ret = wl1271_acx_keep_alive_config(wl, i,
+-						   ACX_KEEP_ALIVE_TPL_INVALID);
+-		if (ret < 0)
+-			goto out_free_memmap;
+-	}
++	/* Mode specific init - post mem init */
++	if (is_ap)
++		ret = wl1271_ap_hw_init_post_mem(wl);
++	else
++		ret = wl1271_sta_hw_init_post_mem(wl);
  
- 	/* make sure duty cycle timer is also stopped when resuming */
- 	if (btcoex->hw_timer_enabled)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index d8685f0..283ff97 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -21,12 +21,12 @@ static void ath_detect_bt_priority(struct ath9k_htc_priv *priv)
- 		/* Detect if colocated bt started scanning */
- 		if (btcoex->bt_priority_cnt >= ATH_BT_CNT_SCAN_THRESHOLD) {
- 			ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--				"BT scan detected");
-+				"BT scan detected\n");
- 			priv->op_flags |= (OP_BT_SCAN |
- 					 OP_BT_PRIORITY_DETECTED);
- 		} else if (btcoex->bt_priority_cnt >= ATH_BT_CNT_THRESHOLD) {
- 			ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--				"BT priority traffic detected");
-+				"BT priority traffic detected\n");
- 			priv->op_flags |= OP_BT_PRIORITY_DETECTED;
- 		}
+-	/* disable the keep-alive feature */
+-	ret = wl1271_acx_keep_alive_mode(wl, false);
+-	if (ret < 0)
+-		goto out_free_memmap;
+-
+-	/* Configure rssi/snr averaging weights */
+-	ret = wl1271_acx_rssi_snr_avg_weights(wl);
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
-@@ -114,8 +114,7 @@ void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 	struct ath_hw *ah = priv->ah;
+diff --git a/drivers/net/wireless/wl12xx/init.h b/drivers/net/wireless/wl12xx/init.h
+index 7762421..4d37210 100644
+--- a/drivers/net/wireless/wl12xx/init.h
++++ b/drivers/net/wireless/wl12xx/init.h
+@@ -27,10 +27,13 @@
+ #include "wl12xx.h"
  
--	ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--		"Starting btcoex work");
-+	ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX, "Starting btcoex work\n");
+ int wl1271_hw_init_power_auth(struct wl1271 *wl);
+-int wl1271_init_templates_config(struct wl1271 *wl);
++int wl1271_sta_init_templates_config(struct wl1271 *wl);
+ int wl1271_init_phy_config(struct wl1271 *wl);
+ int wl1271_init_pta(struct wl1271 *wl);
+ int wl1271_init_energy_detection(struct wl1271 *wl);
+ int wl1271_hw_init(struct wl1271 *wl);
  
- 	btcoex->bt_priority_cnt = 0;
- 	btcoex->bt_priority_time = jiffies;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 1af31b5..87731c2 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1133,7 +1133,7 @@ static int ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			spin_unlock_bh(&priv->tx_lock);
- 		} else {
- 			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
--				"Tx failed");
-+				"Tx failed\n");
- 		}
- 		goto fail_tx;
- 	}
++/* Functions from wl1271_main.c */
++u32 wl1271_min_rate_get(struct wl1271 *wl);
++
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d241a12..5354190 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -434,7 +434,7 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wl1271_init_templates_config(wl);
++	ret = wl1271_sta_init_templates_config(wl);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -1363,7 +1363,7 @@ static void wl1271_set_band_rate(struct wl1271 *wl)
+ 		wl->basic_rate_set = wl->conf.tx.basic_rate_5;
+ }
+ 
+-static u32 wl1271_min_rate_get(struct wl1271 *wl)
++u32 wl1271_min_rate_get(struct wl1271 *wl)
+ {
+ 	int i;
+ 	u32 rate = 0;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_80211.h b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+index be21032..b230e72 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx_80211.h
++++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+@@ -160,4 +160,9 @@ struct wl12xx_probe_resp_template {
+ 	struct wl12xx_ie_country country;
+ } __packed;
+ 
++struct wl12xx_disconn_template {
++	struct ieee80211_header header;
++	__le16 disconn_reason;
++} __packed;
++
+ #endif
 -- 
-1.7.3.2.245.g03276.dirty
+1.7.1
 
