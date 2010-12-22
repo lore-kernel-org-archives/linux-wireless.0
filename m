@@ -1,83 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44400 "HELO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752006Ab0LCWTn (ORCPT
+Received: from mail-iy0-f194.google.com ([209.85.210.194]:43698 "EHLO
+	mail-iy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076Ab0LVTkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 17:19:43 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>, Greg KH <greg@kroah.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Fri, 3 Dec 2010 14:15:53 -0800
-Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0F9C4@SC-VEXCH1.marvell.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
- <1291380780.3499.119.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291380780.3499.119.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 22 Dec 2010 14:40:17 -0500
+Received: by iyf40 with SMTP id 40so2421225iyf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 11:40:17 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
+References: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 22 Dec 2010 14:39:56 -0500
+Message-ID: <AANLkTikGzNSWGKfFpV0CPLg8dQbjd3YN8T_ebQbfmP_r@mail.gmail.com>
+Subject: Re: [ath9k] skbuff alloc of size 3872 failed
+To: Matt Turner <mattst88@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Michael Guntsche <mike@it-loops.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
-ZW50OiBGcmlkYXksIERlY2VtYmVyIDAzLCAyMDEwIDQ6NTMgQU0NCj4gVG86IEJpbmcgWmhhbw0K
-PiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZpbGxlOyBE
-YW4gV2lsbGlhbXM7IERhdmlkIFdvb2Rob3VzZTsgQW1pdGt1bWFyIEthcndhcjsNCj4gS2lyYW4g
-RGl2ZWthcjsgR3JlZyBLSDsgRGF2aWQgUy4gTWlsbGVyDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
-MDAvMzFdIHdpcmVsZXNzOiBNYXJ2ZWxsIG13aWZpZXggZHJpdmVyIGZvciBTRDg3ODcNCj4gDQo+
-IE9uIFdlZCwgMjAxMC0xMi0wMSBhdCAxNzozMSAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+
-IFRoZSBtd2lmaWV4IGRyaXZlciBmb3IgTWFydmVsbCA4MDIuMTFuIGNoaXBzZXQgU0Q4Nzg3IGlz
-IGF2YWlsYWJsZSBhdA0KPiA+IGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9td2lmaWV4LmdpdC4gQm90
-aCBTVEEgbW9kZSBhbmQgTW9iaWxlIGhvdHNwb3QNCj4gPiBtb2RlIGFyZSBzdXBwb3J0ZWQuDQo+
-ID4NCj4gPiBnaXQgcHVsbCBnaXQ6Ly9naXQubWFydmVsbC5jb20vbXdpZmlleC5naXQgbWFzdGVy
-DQo+IA0KPiBQbGVhc2UgcG9zdCBwYXRjaGVzLCBub3QgZ2l0IHRyZWVzLg0KPiANCj4gQnV0IHNp
-bmNlIEpvaG4gaXMgaG9sZGluZyB1cyBzb21ld2hhdCBob3N0YWdlIGJ5IHNheWluZyBoZSdsbCBj
-b25zaWRlcg0KPiBtZXJnaW5nIHRoaXMsIGFuZCBhcHBhcmVudGx5IHlvdSBkb24ndCBoYXZlIHRo
-ZSB0YXN0ZSB0byBldmVuIGNvbnNpZGVyDQo+IHRoZSByZXZpZXcgY29tbWVudHMgeW91IGhhdmUg
-Z290dGVuIGJlZm9yZSwgSSB0b29rIGEgYnJpZWYgbG9vayB0bw0KPiAqcHJvdmUqIHRoYXQgdGhp
-cyBkcml2ZXIgY2Fubm90IGJlIG1lcmdlZCBhcyBpcy4NCj4gDQo+IA0KPiBIZXJlJ3MgYSBzaG9y
-dCBsaXN0IG9mIHRoaW5ncyB0byBmaXg6DQo+ICAqIF9fcGFja2VkDQo+ICAqIEVOVEVSL0xFQVZF
-IG11c3QgZ28NCj4gICogZW51bSBtd2lmaWV4X3N0YXR1cyBtdXN0IGdvIC0tIHVzZSBlcnJubw0K
-PiAgKiBwcml2YXRlIGlvY3RscyB3ZXJlIGdyYW5kZmF0aGVyZWQgaW4sDQo+ICAgIGJ1dCBhcmVu
-J3QgYWxsb3dlZCBpbiBuZXcgZHJpdmVycw0KPiAgKiBkbyB5b3UgcmVhbGx5IG5lZWQgeW91ciBv
-d24gY3J5cHRvIG1vZGUgZGVmaW5pdGlvbnM/DQo+ICAqIHlvdXIgcHNldWRvLWtlcm5lbGRvYyBj
-b21tZW50cyAiLyoqIiBkb24ndCBjb25mb3JtDQo+ICAgIHRvIHRoZSByaWdodCBmb3JtYXQNCj4g
-ICogcHJpdmF0ZSBsb2NraW5nIHdyYXBwZXJzIGFyZSBub3QgYWxsb3dlZCAobXdpZmlleF9zcGlu
-X2xvY2sgZXRjKQ0KPiAgKiBwcml2YXRlIGRlYnVnZ2luZyBsaWtlIFBSSU5UTSBpcyBub3QgYWxs
-b3dlZA0KPiAgKiB0aGVyZSdzIGV4YWN0bHkgb25lIHNwYWNlIGFmdGVyICIjaW5jbHVkZSINCj4g
-ICogc3RydWN0IGV0aF84MDNfaGRyPyBhcmUgeW91IHNlcmlvdXM/IGFuZCB5b3UgZXZlbiBoYXZl
-DQo+ICAgIGl0IHR3aWNlOiBzdHJ1Y3QgZXRoX0lJX2hkcg0KPiAgKiBlbnVtIGllZWVfdHlwZXNf
-ZWxlbWVudGlkX2UgbXVzdCBnbw0KPiAgKiBzaW1pbGFybHksIGFsbW9zdCBhbGwgb2YgaWVlZS5o
-DQo+ICAqIG5vIGJpdGZpZWxkcyBhbmQgQklHX0VORElBTl9CSVRGSUVMRCBhbGxvd2VkDQo+ICAq
-IG5vdCBhbGwgYWxsb2NhdGlvbnMgYXJlIEdGUF9BVE9NSUMsIHVzZSB3aXNlbHkgYW5kDQo+ICAg
-IEdGUF9LRVJORUwgaW4gbW9zdCBwbGFjZXMNCj4gICogYSB3aWZpIGRyaXZlciB0aGF0J3MgZG9p
-bmcgc3R1ZmYgd2l0aCBzb2NrZXRzIChubF9zaywgc2tfc29ja2V0KT8NCj4gICAgZXhwbGFpbiwg
-aW4gTVVDSCBkZXRhaWwgKG9yIHByZWZlcmFibHkganVzdCBnZXQgcmlkIG9mIGl0KQ0KPiAgKiB0
-aGVyZSdzIGRlYnVnZnNfcmVtb3ZlX3JlY3Vyc2l2ZQ0KPiAgKiBzb21lIGZ1bmN0aW9ucyBsaWtl
-IG13aWZpZXhfaXNfbmV0d29ya19jb21wYXRpYmxlIG5lZWQgdG8gYmUgYnJva2VuDQo+ICAgIGlu
-dG8gc21hbGxlciBvbmVzIHRvIGF2b2lkIHRoZSBjcmFwIGluZGVudGF0aW9uIHRoZXkgaGF2ZQ0K
-PiAgKiBtd2lmaWV4X3VhcF9hcF9jZmdfcGFyc2VfZGF0YS4gTXVzdCBJIHNheSBtb3JlPw0KPiAg
-KiBzdHJ1Y3QgbXdpZmlleF9idWZmZXIgKm1idWY/IElzIHRoaXMgYSBCU0QgZHJpdmVyPyBXZSBo
-YXZlIFNLQnMsIGdldA0KPiAgICByaWQgb2YgdGhpcy4gKE9oIGFuZCBza2JzIGhhdmUgYSBDQikN
-Cj4gICogbXdpZmlleF9pbml0X2xvY2svbXdpZmlleF9mcmVlX2xvY2sgLS0gSSdkIGxhdWdoIGlu
-IHlvdXIgZ2VuZXJhbA0KPiAgICBkaXJlY3Rpb24gaWYgaXQgd2Fzbid0IHNvIHNhZA0KPiAgKiBt
-d2lmaWV4X3V0aWxfcGVla19saXN0IGV0Yy46IGxlYXJuIGFib3V0IGxpc3QuaA0KPiAgKiBtd2lm
-aWV4X2luaXRfdGltZXIgLS0gc3RpbGwgc2FkLCBkeW5hbWljYWxseSBhbGxvY2F0aW5nIHRpbWVy
-cz8ganVzdA0KPiAgICBsaWtlIHNwaW5sb2NrcywgdGhleSBjYW4gYmUgZW1iZWRkZWQgYW5kIG1h
-a2UgeW91ciBjb2RlIHNpbXBsZXINCg0KVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgYWxsIHRoZSBk
-ZXRhaWxlZCBjb21tZW50cy4gV2Ugd2lsbCB3b3JrIG9uIHRoZXNlIGl0ZW1zIGFuZCByZS1zdWJt
-aXQgdGhlIHBhdGNoZXMuDQoNClJlZ2FyZHMsDQoNCkJpbmcNCg0KPiANCj4gT2sgZ29vZCBlbm91
-Z2gsIHRoYXQgc2hvdWxkIGtlZXAgeW91IGJ1c3kgZm9yIGEgd2hpbGUuLi4NCj4gDQo+IFRoZSBh
-Ym92ZSBpcyBtaWdodCBiZSBhIGdvb2QgYmFzaXMgZm9yIGEgVE9ETyBmaWxlIGZvciBzdGFnaW5n
-Li4uDQo+IA0KPiBqb2hhbm5lcw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
-IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVsZXNzIiBpbg0KPiB0
-aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3Jl
-IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
-Lmh0bWwNCg==
+On Wed, Dec 22, 2010 at 2:22 PM, Matt Turner <mattst88@gmail.com> wrote:
+> With the ath9k driver, I get "skbuff alloc of size 3872 failed"
+>
+> I hit this again today after not using wireless for quite sometime. It
+> looks like it was originally reported against 2.6.35-rc1. Eric Dumazet
+> provided a patch which fixed the issue, but apparently it's still not
+> upstream. Why is this?
+>
+> If it is suitable for upstream inclusion, please take my Tested-by:
+> Matt Turner <mattst88@gmail.com>
+>
+> https://patchwork.kernel.org/patch/104271/
+
+Never saw this patch, can this be posted to linux-wireless with a proper SOB?
+
+ Luis
