@@ -1,108 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48509 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740Ab0LVTPI (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452Ab0LVO2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 14:15:08 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/3] b43: N-PHY: band width setting with dumb clock control call
-Date: Wed, 22 Dec 2010 14:11:30 -0500
-Message-Id: <1293045092-12483-2-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
-References: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Dec 2010 09:28:22 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:22 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 10/18] wl1271: AP mode config in ieee80211_ops.config
+Date: Wed, 22 Dec 2010 16:27:29 +0200
+Message-Id: <1293028057-6212-11-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <zajec5@gmail.com>
+Separate configuration according to mode. AP has different rate
+set configuration and no handling of idle-state.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/b43/phy_common.c |   20 ++++++++++++++++++++
- drivers/net/wireless/b43/phy_common.h |   11 +++++++++++
- drivers/net/wireless/b43/phy_n.c      |    2 +-
- 3 files changed, 32 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   58 +++++++++++++++++++++--------------
+ 1 files changed, 35 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index b5c5ce9..113b9f1 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -482,3 +482,23 @@ struct b43_c32 b43_cordic(int theta)
- 
- 	return ret;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 59c7fb3..4b26451 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1391,7 +1391,7 @@ u32 wl1271_min_rate_get(struct wl1271 *wl)
+ 	return rate;
  }
+ 
+-static int wl1271_handle_idle(struct wl1271 *wl, bool idle)
++static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
+ {
+ 	int ret;
+ 
+@@ -1432,14 +1432,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct wl1271 *wl = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	int channel, ret = 0;
++	bool is_ap;
+ 
+ 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
++	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
++		     " changed 0x%x",
+ 		     channel,
+ 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
+ 		     conf->power_level,
+-		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
++		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
++			 changed);
+ 
+ 	/*
+ 	 * mac80211 will go to idle nearly immediately after transmitting some
+@@ -1468,31 +1471,40 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		wl->band = conf->channel->band;
+ 		wl->channel = channel;
+ 
+-		/*
+-		 * FIXME: the mac80211 should really provide a fixed rate
+-		 * to use here. for now, just use the smallest possible rate
+-		 * for the band as a fixed rate for association frames and
+-		 * other control messages.
+-		 */
+-		if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+-			wl1271_set_band_rate(wl);
+-
+-		wl->basic_rate = wl1271_min_rate_get(wl);
+-		ret = wl1271_acx_sta_rate_policies(wl);
+-		if (ret < 0)
+-			wl1271_warning("rate policy for update channel "
+-				       "failed %d", ret);
++		if (is_ap) {
++			/* set basic rates according to HW */
++			u32 rates = wl->vif->bss_conf.basic_rates;
++			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
++									rates);
++			wl->basic_rate = wl1271_min_rate_get(wl);
++		} else {
++			/*
++			 * FIXME: the mac80211 should really provide a fixed
++			 * rate to use here. for now, just use the smallest
++			 * possible rate for the band as a fixed rate for
++			 * association frames and other control messages.
++			 */
++			if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++				wl1271_set_band_rate(wl);
+ 
+-		if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
+-			ret = wl1271_join(wl, false);
++			wl->basic_rate = wl1271_min_rate_get(wl);
++			ret = wl1271_acx_sta_rate_policies(wl);
+ 			if (ret < 0)
+-				wl1271_warning("cmd join to update channel "
++				wl1271_warning("rate policy for channel "
+ 					       "failed %d", ret);
 +
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/ClkCtlClk */
-+static void b43_clock_control(struct b43_wldev *dev, u32 mode)
-+{
-+	/* TODO */
-+}
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/BmacBwSet */
-+void b43_bmac_set_b_width(struct b43_wldev *dev, u8 b_width)
-+{
-+	bool fast = dev->phy.forcefastclk;
-+	if (!fast)
-+		b43_clock_control(dev, 0);
-+	dev->phy.b_width = b_width;
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+	/* TODO: Call PHY BMAC Reset */
-+	dev->phy.ops->init(dev);
-+	if (fast)
-+		b43_clock_control(dev, 2);
-+}
-diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
-index 2401bee..2dd04cf 100644
---- a/drivers/net/wireless/b43/phy_common.h
-+++ b/drivers/net/wireless/b43/phy_common.h
-@@ -222,6 +222,9 @@ struct b43_phy {
- 	bool supports_2ghz;
- 	bool supports_5ghz;
++			if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
++				ret = wl1271_join(wl, false);
++				if (ret < 0)
++					wl1271_warning("cmd join on channel "
++						       "failed %d", ret);
++			}
+ 		}
+ 	}
  
-+	/* Band width */
-+	u8 b_width;
-+
- 	/* HT info */
- 	bool is_40mhz;
- 
-@@ -265,6 +268,9 @@ struct b43_phy {
- 	/* PHY TX errors counter. */
- 	atomic_t txerr_cnt;
- 
-+	/* Clock */
-+	bool forcefastclk;
-+
- #ifdef CONFIG_B43_DEBUG
- 	/* PHY registers locked (w.r.t. firmware) */
- 	bool phy_locked;
-@@ -440,4 +446,9 @@ bool b43_channel_type_is_40mhz(enum nl80211_channel_type channel_type);
- 
- struct b43_c32 b43_cordic(int theta);
- 
-+/**
-+ * b43_bmac_set_b_width - Set band width
-+ */
-+void b43_bmac_set_b_width(struct b43_wldev *dev, u8 b_width);
-+
- #endif /* LINUX_B43_PHY_COMMON_H_ */
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index a1aa570..3f2ce92 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3595,7 +3595,7 @@ static int b43_nphy_set_channel(struct b43_wldev *dev,
- 
- 	if (b43_channel_type_is_40mhz(phy->channel_type) !=
- 		b43_channel_type_is_40mhz(channel_type))
--		; /* TODO: BMAC BW Set (channel_type) */
-+		b43_bmac_set_b_width(dev, channel_type);
- 
- 	if (channel_type == NL80211_CHAN_HT40PLUS)
- 		b43_phy_set(dev, B43_NPHY_RXCTL,
+-	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+-		ret = wl1271_handle_idle(wl, conf->flags & IEEE80211_CONF_IDLE);
++	if (changed & IEEE80211_CONF_CHANGE_IDLE && !is_ap) {
++		ret = wl1271_sta_handle_idle(wl,
++					conf->flags & IEEE80211_CONF_IDLE);
+ 		if (ret < 0)
+ 			wl1271_warning("idle mode change failed %d", ret);
+ 	}
 -- 
-1.7.3.3
+1.7.1
 
