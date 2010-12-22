@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f180.google.com ([209.85.161.180]:48858 "EHLO
-	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755248Ab0LHPPP (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36283 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679Ab0LVMIZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 10:15:15 -0500
-Received: by gxk19 with SMTP id 19so893767gxk.11
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 07:15:14 -0800 (PST)
-Message-ID: <4CFFA112.7030800@lwfinger.net>
-Date: Wed, 08 Dec 2010 09:15:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Dec 2010 07:08:25 -0500
+Received: by qwa26 with SMTP id 26so5038860qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 04:08:24 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: b43 N PHY status report
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com> <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
-In-Reply-To: <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20101222102032.13401.10967.stgit@localhost6.localdomain6>
+References: <20101222102032.13401.10967.stgit@localhost6.localdomain6>
+Date: Wed, 22 Dec 2010 13:08:24 +0100
+Message-ID: <AANLkTikPBsA5T-Jxzpd09_gihqaP7xTZgLfHEvDMVmfp@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Move mac80211 functions into new file
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał,
+On Wed, Dec 22, 2010 at 11:20 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Move mac80211 functions into new file mac80211-ops.c to have a better
+> separation and to make base.c smaller.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/Makefile       |    1
+>  drivers/net/wireless/ath/ath5k/base.c         |  763 ++-----------------------
+>  drivers/net/wireless/ath/ath5k/mac80211-ops.c |  774 +++++++++++++++++++++++++
+>  3 files changed, 825 insertions(+), 713 deletions(-)
+>  create mode 100644 drivers/net/wireless/ath/ath5k/mac80211-ops.c
+>
 
-The N PHY driver is remarkably stable. So far, my link has been up for nearly 16
-hours under normal conditions - I have not yet tried any stress tests. Other
-than the PHY errors that you noted, my link has only reported 2 other unusual
-events. I have had 3 "Deauthentication for reason 3" from which it recovered in
-one try. Also logged are 9 instances of "RX: Packet size underrun (2)/Packet
-dropped" events. Again, these caused no problems.
+Tested against linux-next (next-20101221) and the following additional
+ath5k and mac80211 patches:
 
-Larry
+$ ls ath5k-fix/*.patch
+ath5k-fix/1-5-ath5k-Simplify-powertable-recalculation.patch
+ath5k-fix/2-5-ath5k-Separate-powertable-setup-and-writing.patch
+ath5k-fix/3-5-ath5k-Track-current-TX-power-separately-from-max-TX-power.patch
+ath5k-fix/4-5-ath5k-Remove-ATH5K_INI_RFGAIN-defines-use-band-instead.patch
+ath5k-fix/5-5-ath5k-Use-helper-function-to-get-eeprom-mode-from-channel.patch
+ath5k-fix/ath5k-Move-mac80211-functions-into-new-file.patc
 
+$ ls mac80211-fix/*.patch
+mac80211-fix/mac80211-minstrel-honor-max-retry-counts-from-cfg80211.patch
 
+Feel free to add:
 
+     Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+
+- Sedat -
