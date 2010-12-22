@@ -1,50 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:44205 "EHLO
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38303 "EHLO
 	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753974Ab0LGEMg (ORCPT
+	with ESMTP id S1751882Ab0LVSWa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 23:12:36 -0500
-Received: by qwa26 with SMTP id 26so69778qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 20:12:35 -0800 (PST)
+	Wed, 22 Dec 2010 13:22:30 -0500
+Received: by qwa26 with SMTP id 26so5420550qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 10:22:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <19709.45926.38551.25130@gargle.gargle.HOWL>
-References: <19701.62091.644444.121284@gargle.gargle.HOWL> <20101202193024.GC2358@tuxdriver.com>
- <19704.23185.565826.890275@gargle.gargle.HOWL> <AANLkTinPLPoAHxauaXj8Sj=zjyHQPyxO0ku342ersZQ4@mail.gmail.com>
- <19709.45926.38551.25130@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 6 Dec 2010 20:12:15 -0800
-Message-ID: <AANLkTinNF2dnacLof_knM3OAf6ADCCPsb8DO1VE6c31U@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
-To: Sujith <m.sujith@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1293009307.3531.13.camel@jlt3.sipsolutions.net>
+References: <1293009307.3531.13.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 22 Dec 2010 10:22:08 -0800
+Message-ID: <AANLkTik9PS-wKYg=XC0bUaZ=a99d-FdUmzZfvALVQ9Tv@mail.gmail.com>
+Subject: Re: [PATCH 2.6.37] mac80211: fix mesh forwarding
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 6, 2010 at 8:09 PM, Sujith <m.sujith@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->> Just curious, if you revert this patch and apply the ones I just
->> posted, does it fix it, or is this patch required either way?
->
-> Well, I don't see this patch in -testing, -next-2.6 or -2.6.
-> Maybe Linville overlooked this patch.
->
-> Applying 4/5 and 5/5 from your series seems to fix the issue though.
-> I am able to suspend/resume without hiccups with UB95.
->
-> But, I think this is purely an ath9k issue, mac80211 is probably right in
-> assuming that only devices that have been issued ~IEEE80211_CONF_IDLE
-> would have their radios enabled anyway.
->
-> ath9k doesn't differentiate between init/start and enables the radio
-> (setting it to AWAKE mode) in the initialization sequence.
-> Why should mac80211 issue a CONF_IDLE notification when the device
-> was never powered up .. ?
+Johannes,
 
-That's the thing, the device was powered up, lifted from idle, but we
-never got notified we are back in idle, since we stop the device but
-never issue the idle call since the open_count was already 0 after a
-device stop.
+Had I encountered this I would have changed the "failed to clone mesh
+frame" message to "I'm about to crash".  Your fix is better.
 
-  Luis
+Thanks!
+
+On Wed, Dec 22, 2010 at 1:15 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Under memory pressure, the mac80211 mesh code
+> may helpfully print a message that it failed
+> to clone a mesh frame and then will proceed
+> to crash trying to use it anyway. Fix that.
+>
+> Cc: stable@kernel.org [2.6.27+]
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Acked-by: Javier Cardona <javier@cozybit.com>
+
+> ---
+>  net/mac80211/rx.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> --- wireless-testing.orig/net/mac80211/rx.c     2010-12-22 10:05:58.000000000 +0100
+> +++ wireless-testing/net/mac80211/rx.c  2010-12-22 10:06:08.000000000 +0100
+> @@ -1831,9 +1831,11 @@ ieee80211_rx_h_mesh_fwding(struct ieee80
+>
+>                        fwd_skb = skb_copy(skb, GFP_ATOMIC);
+>
+> -                       if (!fwd_skb && net_ratelimit())
+> +                       if (!fwd_skb && net_ratelimit()) {
+>                                printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
+>                                                   sdata->name);
+> +                               goto out;
+> +                       }
+>
+>                        fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
+>                        memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
+> @@ -1871,6 +1873,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80
+>                }
+>        }
+>
+> + out:
+>        if (is_multicast_ether_addr(hdr->addr1) ||
+>            sdata->dev->flags & IFF_PROMISC)
+>                return RX_CONTINUE;
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
