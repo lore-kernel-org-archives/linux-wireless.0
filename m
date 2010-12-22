@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f194.google.com ([209.85.210.194]:43309 "EHLO
-	mail-iy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab0L2ICB convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:40011 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab0LVTUT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 03:02:01 -0500
+	Wed, 22 Dec 2010 14:20:19 -0500
+Received: by qyj19 with SMTP id 19so6830654qyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 11:20:18 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1012281541580.22998-100000@netrider.rowland.org>
-References: <AANLkTim7pGtO=vjKmA_3O74Kwvio124cgoaMeUSB70dW@mail.gmail.com> <Pine.LNX.4.44L0.1012281541580.22998-100000@netrider.rowland.org>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 29 Dec 2010 10:01:40 +0200
-Message-ID: <AANLkTi=QT1thWxy94=imJhbbcXQ1CD36=PnkAyaaA6Hj@mail.gmail.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
+References: <1293045092-12483-1-git-send-email-linville@tuxdriver.com>
+Date: Wed, 22 Dec 2010 20:20:18 +0100
+Message-ID: <AANLkTikJcCWph2OCp+eaEsdKDXT8Q374KFp=13zX+Rro@mail.gmail.com>
+Subject: Re: [PATCH 0/3] b43: Is this series still valid??
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 28, 2010 at 11:46 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> Similarly, during system suspend mmc_suspend_host() should be
-> responsible for doing all the necessary power-down operations. †Runtime
-> PM is completely out of the picture at this time. †And this should be
-> independent of mac80211 -- in fact, the card should be powered down
-> appropriately even if the kernel doesn't have a mac80211 layer.
+2010/12/22 John W. Linville <linville@tuxdriver.com>:
+> I found this old series pending in my queue from months ago. ¬†I sat on
+> them because they had some discussion and never got reposted.
+>
+> Looking closer, the discussion never amounted to a NAK. ¬†So, I tried
+> applying them, and they applied with only minor massaging.
+>
+> So, are these still valid?
+>
+> Let me know...
 
-And it is.
+The way we call init in one of patches may be incorrect, I'm not sure
+if we still need to keep b_width (from other patch). I think it'll be
+better to ignore that patches for now.
 
-But in order to boot the firmware on resume, we need to reset the
-device. And if system suspend has been cancelled before
-mmc_power_off() was invoked, we will not be able to. So, in this case
-too, the driver will have to power the device off.
-
-It all really boils down to the same solution - we will always have to
-bypass runtime PM and directly control the power of the device.
+-- 
+Rafa≈Ç
