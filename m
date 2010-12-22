@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:57230 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661Ab0LWDDD (ORCPT
+Received: from asmtpout023.mac.com ([17.148.16.98]:40455 "EHLO
+	asmtpout023.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841Ab0LVUet (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 22:03:03 -0500
-Date: Thu, 23 Dec 2010 01:05:13 -0200
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth-next-2.6 2010-12-23
-Message-ID: <20101223030513.GB26284@vigoh>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 22 Dec 2010 15:34:49 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from [192.168.1.30] ([87.201.169.175])
+ by asmtp023.mac.com (Oracle Communications Messaging Exchange Server 7u4-20.01
+ 64bit (built Nov 21 2010)) with ESMTPSA id <0LDU001YLJTXBQ10@asmtp023.mac.com>
+ for linux-wireless@vger.kernel.org; Wed, 22 Dec 2010 12:34:49 -0800 (PST)
+Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+From: Elvis Dowson <elvis.dowson@mac.com>
+In-reply-to: <4D125B9F.7090503@hauke-m.de>
+Date: Thu, 23 Dec 2010 00:34:32 +0400
+Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Message-id: <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
+ <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+ <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
+ <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+ <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
+ <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+ <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
+ <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
+ <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
+ <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
+ <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
+ <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
+ <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
+ <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-Here are my last set of patches to 2.6.38. Biggest feature is the new
-Bluetooth Management Interface, which intends to replace all HCI raw access
-from bluetoothd. That interface is still disabled by default. However you can
-enable it via a module parameter.
-The other two patches from me is simple fixes in the stack. Tracey's patch is
-already in net-next and I only pushed it to solve a merge conflict.
+On Dec 23, 2010, at 12:12 AM, Hauke Mehrtens wrote:
 
-This time I'm using a link to my git tree inside master.kernel.org,
-git.kernel.org is really slow today.
+> Is CONFIG_CRC7=y set in your kernel config, the wl12xx module needs
+> this? If it is not set the module will not be build.
 
-Please pull or let me know any problems. Thanks.
+It wasn't :-). After enabling it in the kernel and recompiling both the kernel and 
+compat-wireless wl12xx, it generated the following modules:
+
+cfg80211.ko
+compat.ko
+compat_firmware_class.ko
+mac80211.ko
+wl1251.ko
+wl1251_sdio.ko
+wl1251_spi.ko
+wl1271.ko
+wl1271_spi.ko
+
+I haven't applied the SDIO runtime PM patches yet. 
+
+http://www.spinics.net/lists/linux-mmc/msg03966.html
+
+So, is a wl1271_sdio.ko also supposed to be generated, but didn't because I didn't add the SDIO pm patches?
+
+To use this at run-time on the target, should I do insmod for multiple modules:
+
+insmod cfg80211.ko
+insmod compat.ko
+insmod compat_firmware_class.ko
+insmod mac80211.ko
+insmod wl1271.ko
 
 
-The following changes since commit 5c4bc1ce917d93ce8f7dd498fbec6881b3d7743a:
-
-  rtlwifi: Fix large packet issue (2010-12-22 15:45:52 -0500)
-
-are available in the git repository at:
-  master.kernel.org:/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
-
-Gustavo F. Padovan (2):
-      Bluetooth: Don't accept ConfigReq if we aren't in the BT_CONFIG state
-      Bluetooth: Improve handling of HCI control channel in bind
-
-Johan Hedberg (9):
-      Bluetooth: Add Bluetooth Management interface definitions
-      Bluetooth: Add initial Bluetooth Management interface callbacks
-      Bluetooth: Make hci_send_to_sock usable for management control sockets
-      Bluetooth: Add error handling for managment command handlers
-      Bluetooth: Add read_version management command
-      Bluetooth: Add read_index_list management command
-      Bluetooth: Add read_info management command
-      Bluetooth: Add management events for controller addition & removal
-      Bluetooth: Fix __hci_request synchronization for hci_open_dev
-
-Tracey Dent (1):
-      Net: bluetooth: Makefile: Remove deprecated kbuild goal definitions
-
- include/net/bluetooth/bluetooth.h |    1 +
- include/net/bluetooth/hci.h       |    4 +
- include/net/bluetooth/hci_core.h  |    9 +-
- include/net/bluetooth/mgmt.h      |   87 +++++++++++
- net/bluetooth/Makefile            |    2 +-
- net/bluetooth/hci_core.c          |   17 ++-
- net/bluetooth/hci_event.c         |   33 +++--
- net/bluetooth/hci_sock.c          |   52 ++++++-
- net/bluetooth/l2cap.c             |    8 +-
- net/bluetooth/mgmt.c              |  308 +++++++++++++++++++++++++++++++++++++
- 10 files changed, 498 insertions(+), 23 deletions(-)
- create mode 100644 include/net/bluetooth/mgmt.h
- create mode 100644 net/bluetooth/mgmt.c
-
--- 
-Gustavo F. Padovan
-http://profusion.mobi
+Elvis Dowson
