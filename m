@@ -1,117 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f45.google.com ([209.85.215.45]:47560 "EHLO
-	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763Ab0LMLka (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:53970 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753378Ab0LVPjL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 06:40:30 -0500
-Received: by mail-ew0-f45.google.com with SMTP id 10so3803451ewy.4
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 03:40:30 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/17] rt2x00: Introduce extra queue entry sanity flag
-Date: Mon, 13 Dec 2010 12:36:18 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012131231.28313.IvDoorn@gmail.com> <201012131235.41811.IvDoorn@gmail.com> <201012131236.01268.IvDoorn@gmail.com>
-In-Reply-To: <201012131236.01268.IvDoorn@gmail.com>
+	Wed, 22 Dec 2010 10:39:11 -0500
+Received: by qyk12 with SMTP id 12so5200981qyk.12
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 07:39:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012131236.19791.IvDoorn@gmail.com>
+In-Reply-To: <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
+	<AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+	<1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
+	<AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+	<E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
+	<AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+	<F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
+Date: Wed, 22 Dec 2010 17:39:09 +0200
+Message-ID: <AANLkTimzDZ0eZsfxd6JnG3YE8Ytsj1y5wGqUELFtnxes@mail.gmail.com>
+Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+From: "Kahn, Gery" <geryk@ti.com>
+To: Elvis Dowson <elvis.dowson@mac.com>
+Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a queue entry flag ENTRY_DATA_STATUS_PENDING,
-which can be used to indicate a queue entry has
-returned from the hardware and is waiting for
-status processing. Using this flag we can add
-some extra sanity checks to prevent queue corruption.
+On Wed, Dec 22, 2010 at 13:30, Elvis Dowson <elvis.dowson@mac.com> wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c   |    1 +
- drivers/net/wireless/rt2x00/rt2x00queue.h |    6 +++++-
- drivers/net/wireless/rt2x00/rt2x00usb.c   |   12 ++++++++----
- 3 files changed, 14 insertions(+), 5 deletions(-)
+    Hi,
+                     I have a quick question.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index f3ae949..87a421b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -235,6 +235,7 @@ EXPORT_SYMBOL_GPL(rt2x00lib_dmastart);
- 
- void rt2x00lib_dmadone(struct queue_entry *entry)
- {
-+	set_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags);
- 	clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
- 	rt2x00queue_index_inc(entry->queue, Q_INDEX_DMA_DONE);
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index baa39b7..4765934 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -340,12 +340,16 @@ struct txentry_desc {
-  * @ENTRY_DATA_IO_FAILED: Hardware indicated that an IO error occured
-  *	while transfering the data to the hardware. No TX status report will
-  *	be expected from the hardware.
-+ * @ENTRY_DATA_STATUS_PENDING: The entry has been send to the device and
-+ *	returned. It is now waiting for the status reporting before the
-+ *	entry can be reused again.
-  */
- enum queue_entry_flags {
- 	ENTRY_BCN_ASSIGNED,
- 	ENTRY_OWNER_DEVICE_DATA,
- 	ENTRY_DATA_PENDING,
--	ENTRY_DATA_IO_FAILED
-+	ENTRY_DATA_IO_FAILED,
-+	ENTRY_DATA_STATUS_PENDING,
- };
- 
- /**
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index cd29ebc..8a16b51 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -195,7 +195,8 @@ static void rt2x00usb_work_txdone(struct work_struct *work)
- 		while (!rt2x00queue_empty(queue)) {
- 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 
--			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
-+			    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
- 				break;
- 
- 			rt2x00usb_work_txdone_entry(entry);
-@@ -237,7 +238,8 @@ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
- 	u32 length;
- 	int status;
- 
--	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags))
-+	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags) ||
-+	    test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
- 		return;
- 
- 	/*
-@@ -275,7 +277,8 @@ static void rt2x00usb_work_rxdone(struct work_struct *work)
- 	while (!rt2x00queue_empty(rt2x00dev->rx)) {
- 		entry = rt2x00queue_get_entry(rt2x00dev->rx, Q_INDEX_DONE);
- 
--		if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+		if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
-+		    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
- 			break;
- 
- 		/*
-@@ -327,7 +330,8 @@ static void rt2x00usb_kick_rx_entry(struct queue_entry *entry)
- 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
- 	int status;
- 
--	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
-+	    test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
- 		return;
- 
- 	rt2x00lib_dmastart(entry);
--- 
-1.7.2.3
+    I downloaded the
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc6-3.tar.bz2
 
+    The information contained in this link mentions:
+http://linuxwireless.org/en/users/Download/stable/
+
+    "You need kernel headers to compile compat-wireless. Ensure
+/lib/modules/$(uname -r)/build/ exists and points to the location
+where the kernel headers are installed. If you do not have them, read
+your distribution's documentation on getting help."
+
+    I have Ubuntu 10.04 as host, but I'm using a cross compiler for
+the OMAP3530 ARM target, and the kernel directory exists in a separate
+folder.
+
+    How do I tell the build system to use my cross compiled kernel
+libraries and headers, and not pick up the host /lib/modules kernel
+headers?
+
+ export CROSS_COMPILE=arm-none-linux-gnueabi-
+May be also
+export ARCH=arm
+
+    i.e. how can I cross compile and build compat-wireless for the ARM
+target on the host machine?
+
+    cd /path/to/compat-wireless-2.6.32-rc5
+
+copy appropriate configuration file to   /path/to/compat-wireless-2.6.
+
+    32-rc5/.config
+
+May also need to add configuration
+
+    ./scripts/driver-select <driver-name>
+    make
+    sudo make install
+
+It may be works without `sudo '. If you want all modules also
+make modules_install INSTALL_MOD_PATH=${NFSROOT}
+where NFSROOT is your directory to prepare filesystem for target
+
+
+    Best regards,
+
+    Elvis Dowson
+
+    --
+    To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+    the body of a message to majordomo@vger.kernel.org
+    More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+Gery
