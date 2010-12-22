@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57647
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750761Ab0LHQOD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35692 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924Ab0LVJOw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 11:14:03 -0500
-Date: Wed, 08 Dec 2010 08:14:29 -0800 (PST)
-Message-Id: <20101208.081429.193694468.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-12-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101203201602.GE2348@tuxdriver.com>
-References: <20101203201602.GE2348@tuxdriver.com>
+	Wed, 22 Dec 2010 04:14:52 -0500
+Subject: [PATCH 2.6.37] mac80211: fix mesh forwarding
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Dec 2010 10:15:07 +0100
+Message-ID: <1293009307.3531.13.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 3 Dec 2010 15:16:02 -0500
+From: Johannes Berg <johannes.berg@intel.com>
 
-> This is a batch of fixes intended for 2.6.37.  There are a number of
-> small fixes that speak for themselves.  Also included are a small patch
-> for ar9170 to advertise Wi-Fi Peer-to-peer capability -- not truly a
-> fix, but helpful for those developing the related userland bits and
-> harmless to everyone else.  There are also some endian related patches
-> for ath9k from Felix that are a bit large, but they mostly just refactor
-> some tables in order to fix an endian problem that can result in invalid
-> regulatory settings on some boxes.
-> 
-> Also includes are some Bluetooth patches via Gustavo Padovan:
-> 
-> "Here goes 3 simple patches intended to 2.6.37. First one is from myself
-> and fix some trivial return values. Then we also have a fix from Stefan
-> Seyfried on btusb to avoid emitting an err when we USB is autosupended.
-> Last, a patch from Bala Shanmugam that fix the firmware loading process
-> for the ath3k driver."
-> 
-> Please let me know if there are problems!
+Under memory pressure, the mac80211 mesh code
+may helpfully print a message that it failed
+to clone a mesh frame and then will proceed
+to crash trying to use it anyway. Fix that.
 
-Pulled, thanks John.
+Cc: stable@kernel.org [2.6.27+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/rx.c	2010-12-22 10:05:58.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2010-12-22 10:06:08.000000000 +0100
+@@ -1831,9 +1831,11 @@ ieee80211_rx_h_mesh_fwding(struct ieee80
+ 
+ 			fwd_skb = skb_copy(skb, GFP_ATOMIC);
+ 
+-			if (!fwd_skb && net_ratelimit())
++			if (!fwd_skb && net_ratelimit()) {
+ 				printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
+ 						   sdata->name);
++				goto out;
++			}
+ 
+ 			fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
+ 			memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
+@@ -1871,6 +1873,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80
+ 		}
+ 	}
+ 
++ out:
+ 	if (is_multicast_ether_addr(hdr->addr1) ||
+ 	    sdata->dev->flags & IFF_PROMISC)
+ 		return RX_CONTINUE;
+
+
