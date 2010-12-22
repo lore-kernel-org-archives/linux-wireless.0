@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:39424 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756189Ab0LMCKT (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753312Ab0LVO2n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 21:10:19 -0500
-Received: by pva4 with SMTP id 4so1037467pva.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 18:10:19 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19717.32860.811403.390581@gargle.gargle.HOWL>
-Date: Mon, 13 Dec 2010 07:39:32 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH v2] ath9k_htc: Add Ubiquiti wifistation ext to supported devices
+	Wed, 22 Dec 2010 09:28:43 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:42 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 17/18] wl1271: Read MAC address from NVS file on HW startup
+Date: Wed, 22 Dec 2010 16:27:36 +0200
+Message-Id: <1293028057-6212-18-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Try to read the MAC address from the on-disk NVS file.
+A non-zero MAC address is required to add an AP interface.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 45d4b24..91d6a13 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -38,6 +38,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x13D3, 0x3350) }, /* Azurewave */
- 	{ USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
- 	{ USB_DEVICE(0x040D, 0x3801) }, /* VIA */
-+	{ USB_DEVICE(0x0cf3, 0xb003) }, /* Ubiquiti WifiStation Ext */
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index eb2c3c5..a9f95c6 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3025,6 +3025,18 @@ int wl1271_register_hw(struct wl1271 *wl)
+ 	if (wl->mac80211_registered)
+ 		return 0;
  
- 	{ USB_DEVICE(0x0cf3, 0x7015),
- 	  .driver_info = AR9287_USB },  /* Atheros */
++	ret = wl1271_fetch_nvs(wl);
++	if (ret == 0) {
++		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
++
++		wl->mac_addr[0] = nvs_ptr[11];
++		wl->mac_addr[1] = nvs_ptr[10];
++		wl->mac_addr[2] = nvs_ptr[6];
++		wl->mac_addr[3] = nvs_ptr[5];
++		wl->mac_addr[4] = nvs_ptr[4];
++		wl->mac_addr[5] = nvs_ptr[3];
++	}
++
+ 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
+ 
+ 	ret = ieee80211_register_hw(wl->hw);
 -- 
-1.7.3.3
+1.7.1
 
