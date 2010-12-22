@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:1460 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758062Ab0LUHmL (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:51616 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315Ab0LVRWl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 02:42:11 -0500
-Message-ID: <4D105A51.9070702@gmail.com>
-Date: Tue, 21 Dec 2010 08:42:09 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 22 Dec 2010 12:22:41 -0500
+Received: by iwn9 with SMTP id 9so5426103iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 09:22:41 -0800 (PST)
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH 4/7] rt2x00: Use pci_is_pcie()
-References: <1292893316-26694-1-git-send-email-hauke@hauke-m.de> <1292893316-26694-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1292893316-26694-5-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTimRrX1HCmz2EnsA-4=ZBLUJ-86O-bpGgjEw4Lbw@mail.gmail.com>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+ <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+ <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+ <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
+ <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
+ <4D122B8F.5090302@hauke-m.de> <AANLkTimRrX1HCmz2EnsA-4=ZBLUJ-86O-bpGgjEw4Lbw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 22 Dec 2010 12:22:21 -0500
+Message-ID: <AANLkTi=dz1eS9fdyQiZ_P41sL77HQJzCuMVKgW36JcTx@mail.gmail.com>
+Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Elvis Dowson <elvis.dowson@mac.com>, "Kahn, Gery" <geryk@ti.com>,
+	Oz Krakowski <ozk@ti.com>,
+	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/10 02:01, Hauke Mehrtens wrote:
-> Use function pci_is_pcie() instead of accessing struct member directly.
-> 
-> CC: Ivo van Doorn <IvDoorn@gmail.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Wed, Dec 22, 2010 at 12:21 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Dec 22, 2010 at 11:47 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> On 12/22/2010 05:13 PM, Luis R. Rodriguez wrote:
+>>> On Wed, Dec 22, 2010 at 11:09 AM, Elvis Dowson <elvis.dowson@mac.com> wrote:
+>>>> netdev_alloc_skb_ip_align
+>>>
+>>> I notice you have an android kernel, is that kernel a vanilla kernel
+>>> or did it get netdev_alloc_skb_ip_align() cherry picked into it?
+>>>
+>>>   Luis
+>>
+>> netdev_alloc_skb_ip_align is not defined in the 2.6.32.27 vanilla
+>> kernel. Someone else (google or ti) must have backported it to this
+>> kernel and added it to your kernel.
+>>
+>> I do not want to add some special handling into compat-wireless just for
+>> some android kernel. Just remove netdev_alloc_skb_ip_align() and
+>> NETDEV_POST_INIT from include/linux/compat-2.6.33.h and the compile
+>> problems you posted should be fixed.
+>
+> Well we did something to accommodate RHEL, I wouldn't mind supporting
+> some fudge for Android so long as someone is willing to submit the
+> patch and identify the kernel properly. Android is popular enough and
+> I rather reduce the time it takes to use it there than to create an
+> extra hurdle.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Now that I think about it I don't think John ever respinned his
+patches for compat-wireless for RHEL.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> index 28e6ff1..73631c6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> @@ -286,7 +286,7 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
->  	rt2x00dev->irq = pci_dev->irq;
->  	rt2x00dev->name = pci_name(pci_dev);
->  
-> -	if (pci_dev->is_pcie)
-> +	if (pci_is_pcie(pci_dev))
->  		rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCIE);
->  	else
->  		rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCI);
-
+  Luis
