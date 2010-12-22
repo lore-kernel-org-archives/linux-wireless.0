@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailserver.naic.edu ([192.65.176.45]:54119 "EHLO
-	mailserver.naic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263Ab0LFE2P (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:62281 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753312Ab0LVO2r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Dec 2010 23:28:15 -0500
-Date: Mon, 6 Dec 2010 00:28:12 -0400
-From: Giacomo Comes <comes@naic.edu>
-To: Dave Kilroy <kilroyd@googlemail.com>
-Cc: Giacomo Comes <comes@naic.edu>, linux-wireless@vger.kernel.org
-Subject: Re: orinoco_cs module and WPA not working
-Message-ID: <20101206042812.GB28134@monopoli.naic.edu>
-References: <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com> <20101203001052.GA16808@monopoli.naic.edu> <AANLkTinLaa+dOiq67DAt+KYfnxUEkNgWEiE2x1NtT9RE@mail.gmail.com> <AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com> <20101203202321.GA21937@monopoli.naic.edu> <AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com> <20101204033646.GA22662@monopoli.naic.edu> <AANLkTik=nbdNUU7gzO9V17fHWZibc2LjuXDgpeRDztoM@mail.gmail.com> <20101204134732.GA24216@monopoli.naic.edu> <AANLkTinU+Xv+gNSTJnEz_tYPhcXRf=kEfkyyeuN0QPFt@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTinU+Xv+gNSTJnEz_tYPhcXRf=kEfkyyeuN0QPFt@mail.gmail.com>
+	Wed, 22 Dec 2010 09:28:47 -0500
+Received: by wwi17 with SMTP id 17so5127759wwi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:46 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 18/18] wl1271: Enable AP-mode
+Date: Wed, 22 Dec 2010 16:27:37 +0200
+Message-Id: <1293028057-6212-19-git-send-email-arik@wizery.com>
+In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 04, 2010 at 02:40:44PM +0000, Dave Kilroy wrote:
-> On Sat, Dec 4, 2010 at 1:47 PM, Giacomo Comes <comes@naic.edu> wrote:
-> > On Sat, Dec 04, 2010 at 12:01:34PM +0000, Dave Kilroy wrote:
-> >> >> I'm at a loss. I've looked at the wpa_supplicant code, and had another
-> >> >> look at the driver. The scan should be a plain wildcard scan - which
-> >> >> you've identified works.
-> >> >>
-> >> >> Does setting scan_ssid=1 in the wpa_supplicant network block change
-> >> >> the behaviour? That's usually only necessary for hidden SSIDs - but
-> >> >> I'd like to know if the scan succeeds in this case.
-> >> >
-> >> > No It doesn't work.
-> >> > But I have more informations for you.
-> >> >
-> >> > I have been testing different versions of wpa_supplicant
-> >> > and I have found that if a use wpa_supplicant 0.7.0 or earlier,
-> >> > it works. With 0.7.1 or newer it fails.
-> >> > wpa_supplicant 0.7.0 works even without applying your patch.
-> >>
-> >> I've set myself up so I can test with orinoco_usb. I can reproduce the
-> >> issue (or something that looks the same).
-> >>
-> >> After much confusion, I suspect the initial scan is being triggered
-> >> before the hardware is ready. Internally, wpa_supplicant will do an
-> >> 'ifconfig eth1 up' followed by an 'iwlist eth1 scan', and it seems the
-> >> driver/hardware wants more time between them.
-> >>
-> >> Try the following (either in two command prompts, or with
-> >> wpa_supplicant in the background):
-> >>
-> >> prompt1$ wpa_supplicant -dd -ieth1 ....
-> >>
-> >> prompt2$ ifconfig eth1 down
-> >> prompt2$ ifconfig eth1 up
-> >>
-> >> and see what wpa_supplicant is doing. If it has got scan results then
-> >> you're probably seeing what I am.
-> >
-> > You are right. After running ifconfig eth1 down,up on a second terminal,
-> > while wpa_supplicant iis running on the first terminal,
-> > it succesfully associates with the AP.
-> 
-> DOH!
-> 
-> My speculation above was incorrect. There's a really stupid driver bug
-> that's been there ever since I added WPA capability. Patch incoming.
+Indicate support for the NL80211_IFTYPE_AP interface mode to enable AP
+mode operation.
 
-I have been testing your patches and I can confirm that now the orinoco
-driver is working properly for me. Using directly wpa_supplicant and using
-networkmanager.
-Thank you very much for your work.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-The only issue still not fixed is the suspend/resume timeout.
-Can you help also with that?
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a9f95c6..ee5b262 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1073,6 +1073,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		wl->bss_type = BSS_TYPE_IBSS;
+ 		wl->set_bss_type = BSS_TYPE_STA_BSS;
+ 		break;
++	case NL80211_IFTYPE_AP:
++		wl->bss_type = BSS_TYPE_AP_BSS;
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		goto out;
+@@ -3097,7 +3100,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC);
++		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	/*
+ 	 * Maximum length of elements in scanning probe request templates
+-- 
+1.7.1
 
-Giacomo
