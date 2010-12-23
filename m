@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:63416 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933112Ab0LUJc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 04:32:58 -0500
-Subject: Re: [PATCH 2/7] wl12xx: remove unnecessary import
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1292893316-26694-3-git-send-email-hauke@hauke-m.de>
-References: <1292893316-26694-1-git-send-email-hauke@hauke-m.de>
-	 <1292893316-26694-3-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Dec 2010 11:32:43 +0200
-Message-ID: <1292923963.19436.11.camel@chilepepper>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:52682 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751651Ab0LWUEg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Dec 2010 15:04:36 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id DD5C154029E
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 15:05:31 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-23 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101223200434.A912E40F97@repository3.orbit-lab.org>
+Date: Thu, 23 Dec 2010 15:04:34 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-21 at 02:01 +0100, ext Hauke Mehrtens wrote:
-> No function declared in gpio.h is used here.
-> 
-> CC: Luciano Coelho <luciano.coelho@nokia.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   52e96b5..fc63933  linux-2.6.37.y -> origin/linux-2.6.37.y
+   cf835d5..53f8e22  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   64bcd1b..d70640f  master     -> origin/master
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+compat-wireless code metrics
 
-John, please apply this together with the rest of this set, to keep
-things simple.
+    777174 - Total upstream lines of code being pulled
+      2223 - backport code changes
+      1946 - backport code additions
+       277 - backport code deletions
+      6648 - backport from compat module
+      8871 - total backport code
+    1.1414 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1971 - % of crap code
 
--- 
-Cheers,
-Luca.
-
+Base tree: linux-next.git
+Base tree version: next-20101221
+compat-wireless release: compat-wireless-2010-12-20-1-g53f8e22-pc
