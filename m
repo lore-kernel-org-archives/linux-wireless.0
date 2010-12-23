@@ -1,134 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45593 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038Ab0LUOs3 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58128 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331Ab0LWXBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 09:48:29 -0500
-Received: by wwa36 with SMTP id 36so4206709wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 06:48:28 -0800 (PST)
+	Thu, 23 Dec 2010 18:01:48 -0500
+Received: by fxm20 with SMTP id 20so7526445fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 15:01:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20101221083026.8765.79160.stgit@localhost6.localdomain6>
-References: <20101221083020.8765.16350.stgit@localhost6.localdomain6>
-	<20101221083026.8765.79160.stgit@localhost6.localdomain6>
-Date: Tue, 21 Dec 2010 16:48:28 +0200
-Message-ID: <AANLkTi=4GWdNuBeyNefjx+-19FsLDFvD=6xP-bR4ZtP2@mail.gmail.com>
-Subject: Re: [PATCH 2/5] ath5k: Separate powertable setup and writing
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <142357.30253.qm@web56803.mail.re3.yahoo.com>
+References: <AANLkTimDPcxSthO=TAqPx4fyrU0U_WPkwMHLGGiCSMKw@mail.gmail.com>
+	<142357.30253.qm@web56803.mail.re3.yahoo.com>
+Date: Thu, 23 Dec 2010 18:01:46 -0500
+Message-ID: <AANLkTimL=JSK6jcF4d97Nc-vLZdeRLj8o=MbpCas-H7z@mail.gmail.com>
+Subject: Re: carl9170 and debian squeeze
+From: Der Engel <engelster@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/21 Bruno Randolf <br1@einfach.org>:
-> And rename functions which write the powertable to make it clearer.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/phy.c |   34 ++++++++++++++++------------------
->  1 files changed, 16 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 7c6d7dc..6f0cf3a 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -2593,7 +2593,7 @@ ath5k_combine_linear_pcdac_curves(struct ath5k_hw *ah, s16* table_min,
->
->  /* Write PCDAC values on hw */
->  static void
-> -ath5k_setup_pcdac_table(struct ath5k_hw *ah)
-> +ath5k_write_pcdac_table(struct ath5k_hw *ah)
->  {
->        u8      *pcdac_out = ah->ah_txpower.txp_pd_table;
->        int     i;
-> @@ -2742,7 +2742,7 @@ ath5k_combine_pwr_to_pdadc_curves(struct ath5k_hw *ah,
->
->  /* Write PDADC values on hw */
->  static void
-> -ath5k_setup_pwr_to_pdadc_table(struct ath5k_hw *ah, u8 ee_mode)
-> +ath5k_write_pwr_to_pdadc_table(struct ath5k_hw *ah, u8 ee_mode)
->  {
->        struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
->        u8 *pdadc_out = ah->ah_txpower.txp_pd_table;
-> @@ -2957,8 +2957,7 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
->                                        (s16) pcinfo_R->freq,
->                                        pcinfo_L->max_pwr, pcinfo_R->max_pwr);
->
-> -       /* We are ready to go, fill PCDAC/PDADC
-> -        * table and write settings on hardware */
-> +       /* Fill PCDAC/PDADC table */
->        switch (type) {
->        case AR5K_PWRTABLE_LINEAR_PCDAC:
->                /* For RF5112 we can have one or two curves
-> @@ -2971,9 +2970,6 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
->                 * match max power value with max
->                 * table index */
->                ah->ah_txpower.txp_offset = 64 - (table_max[0] / 2);
-> -
-> -               /* Write settings on hw */
-> -               ath5k_setup_pcdac_table(ah);
->                break;
->        case AR5K_PWRTABLE_PWR_TO_PCDAC:
->                /* We are done for RF5111 since it has only
-> @@ -2983,9 +2979,6 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
->                /* No rate powertable adjustment for RF5111 */
->                ah->ah_txpower.txp_min_idx = 0;
->                ah->ah_txpower.txp_offset = 0;
-> -
-> -               /* Write settings on hw */
-> -               ath5k_setup_pcdac_table(ah);
->                break;
->        case AR5K_PWRTABLE_PWR_TO_PDADC:
->                /* Set PDADC boundaries and fill
-> @@ -2993,9 +2986,6 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
->                ath5k_combine_pwr_to_pdadc_curves(ah, table_min, table_max,
->                                                ee->ee_pd_gains[ee_mode]);
->
-> -               /* Write settings on hw */
-> -               ath5k_setup_pwr_to_pdadc_table(ah, ee_mode);
-> -
->                /* Set txp.offset, note that table_min
->                 * can be negative */
->                ah->ah_txpower.txp_offset = table_min[0];
-> @@ -3009,6 +2999,15 @@ ath5k_setup_channel_powertable(struct ath5k_hw *ah,
->        return 0;
->  }
->
-> +/* Write power table for current channel to hw */
-> +static void
-> +ath5k_write_channel_powertable(struct ath5k_hw *ah, u8 ee_mode, u8 type)
-> +{
-> +       if (type == AR5K_PWRTABLE_PWR_TO_PDADC)
-> +               ath5k_write_pwr_to_pdadc_table(ah, ee_mode);
-> +       else
-> +               ath5k_write_pcdac_table(ah);
-> +}
->
->  /*
->  * Per-rate tx power setting
-> @@ -3159,11 +3158,10 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
->                                                        ee_mode, type);
->                if (ret)
->                        return ret;
-> -       /* Write cached table on hw */
-> -       } else if (type == AR5K_PWRTABLE_PWR_TO_PDADC)
-> -               ath5k_setup_pwr_to_pdadc_table(ah, ee_mode);
-> -       else
-> -               ath5k_setup_pcdac_table(ah);
-> +       }
-> +
-> +       /* Write table on hw */
-> +       ath5k_write_channel_powertable(ah, ee_mode, type);
->
->        /* Limit max power if we have a CTL available */
->        ath5k_get_max_ctl_power(ah, channel);
->
->
+Thanks for your quick replies.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+I have install compat-wireless-2010-12-23  with 'driver-select
+carl9170' because the whole thing didn't want to compile for me, the
+usb wifi card is working fine now with the carl9170 but now my
+internal intel card isn't coming up, if tried to load the iwlagn or
+iwlcore driver and get the following:
+FATAL: Error inserting iwlagn
+(/lib/modules/2.6.32-5-686/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko):
+Unknown symbol in module, or unknown parameter (see dmesg)
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+dmesg outputs the following:
+
+7.368050] iwlcore: disagrees about version of symbol
+ieee80211_start_tx_ba_cb_irqsafe
+[    7.368053] iwlcore: Unknown symbol ieee80211_start_tx_ba_cb_irqsafe
+[    7.368292] iwlcore: disagrees about version of symbol ieee80211_alloc_hw
+[    7.368293] iwlcore: Unknown symbol ieee80211_alloc_hw
+[    7.368356] iwlcore: disagrees about version of symbol ieee80211_register_hw
+[    7.368358] iwlcore: Unknown symbol ieee80211_register_hw
+[    7.368537] iwlcore: disagrees about version of symbol
+__ieee80211_get_radio_led_name
+[    7.368539] iwlcore: Unknown symbol __ieee80211_get_radio_led_name
+[    7.368602] iwlcore: disagrees about version of symbol ieee80211_wake_queue
+[    7.368604] iwlcore: Unknown symbol ieee80211_wake_queue
+[    7.368657] iwlcore: disagrees about version of symbol ieee80211_get_tkip_key
+[    7.368658] iwlcore: Unknown symbol ieee80211_get_tkip_key
+[    7.368713] iwlcore: disagrees about version of symbol
+__ieee80211_get_tx_led_name
+[    7.368714] iwlcore: Unknown symbol __ieee80211_get_tx_led_name
+[    7.368791] iwlcore: disagrees about version of symbol ieee80211_find_sta
+[    7.368793] iwlcore: Unknown symbol ieee80211_find_sta
+[    7.368876] iwlcore: disagrees about version of symbol
+ieee80211_tx_status_irqsafe
+[    7.368877] iwlcore: Unknown symbol ieee80211_tx_status_irqsafe
+[    7.368992] iwlcore: disagrees about version of symbol
+__ieee80211_get_rx_led_name
+[    7.368994] iwlcore: Unknown symbol __ieee80211_get_rx_led_name
+[    7.369100] iwlcore: disagrees about version of symbol
+ieee80211_stop_tx_ba_cb_irqsafe
+[    7.369102] iwlcore: Unknown symbol ieee80211_stop_tx_ba_cb_irqsafe
+[    7.369245] iwlcore: disagrees about version of symbol ieee80211_rx
+[    7.369246] iwlcore: Unknown symbol ieee80211_rx
+[    7.369308] iwlcore: disagrees about version of symbol ieee80211_wake_queues
+[    7.369310] iwlcore: Unknown symbol ieee80211_wake_queues
+[    7.369440] iwlcore: disagrees about version of symbol ieee80211_stop_queue
+[    7.369442] iwlcore: Unknown symbol ieee80211_stop_queue
+[    7.369494] iwlcore: disagrees about version of symbol ieee80211_stop_queues
+[    7.369496] iwlcore: Unknown symbol ieee80211_stop_queues
+[    7.369558] iwlcore: disagrees about version of symbol
+__ieee80211_get_assoc_led_name
+[    7.369560] iwlcore: Unknown symbol __ieee80211_get_assoc_led_name
+[    7.369617] iwlcore: disagrees about version of symbol
+ieee80211_scan_completed
+[    7.369619] iwlcore: Unknown symbol ieee80211_scan_completed
+[    7.369834] iwlcore: disagrees about version of symbol ieee80211_hdrlen
+[    7.369835] iwlcore: Unknown symbol ieee80211_hdrlen
+[    7.369928] iwlcore: Unknown symbol ieee80211_beacon_get
+
+Linux laptop 2.6.32-5-686 #1 SMP Fri Dec 10 16:12:40 UTC 2010 i686 GNU/Linux
+
+How can I make both cards work at the same time?
+
+Thanks,
+Der
+
+- Hide quoted text -
+On Thu, Dec 23, 2010 at 6:34 PM, Der Engel <engelster@gmail.com> wrote:
+> Hi,
+>
+> I have a ubiquiti sr71-usb wireless adapter, 'lsusb' shows it as:
+> 'Atheros Communications, Inc. AR9170 802.11n', the adapter works with
+> the ar9170.fw firmware but I'm trying to make it work with the
+> carl9170.fw, until now I have tried the following:
+>
+> I have put the carl9170.fw in /lib/firmware (debian default for
+> firmware files) without the ar9170.fw, dmesg shows that the system its
+> looking for a firmware with the exact name as 'ar9170.fw' or if it
+> doesn't find that one it tries to finds the legacy ones(ar9170-1.fw &
+> ar9170-2.fw), so it ignores carl9170.fw because is not named
+> ar9170.fw, changing the name of carl9170.fw to ar9170.fw shows the
+> following:
+>
+> dmesg | grep 9170
+> [    2.329719] usb 2-2: New USB device found, idVendor=0cf3, idProduct=9170
+> [    8.817173] usb 2-2: firmware: requesting ar9170.fw
+> [    9.862192] ar9170usb: probe of 2-2:1.0 failed with error -110
+> [    9.862227] usbcore: registered new interface driver ar9170usb
+>
+> The kernel is debian stock one:Linux laptop 2.6.32-5-686 #1 SMP Fri
+> Dec 10 16:12:40 UTC 2010 i686 GNU/Linux
+>
+> Any ideas how can I make carl9170.fw work in debian squeeze?
+>
+> Thanks,
+> Der
+
+Looks like the vendor-id/product-id is not considered in your kernel,
+check [1] if your device is listed as supported devices.
+I am not sure if the squeeze kernel has support for carl9170.
+
+An easy way is to use compat-wireless (stable or bleeding edge) which
+offers you newer wireless hardware support and features.
+The wiki in [2] has informations and instructions for you.
+
+- Sedat -
+
+[1] http://wireless.kernel.org/en/users/Devices
+[2] http://wireless.kernel.org/en/users/Download/stable/
+
+
+On Thu, Dec 23, 2010 at 2:05 PM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+>
+>> Any ideas how can I make carl9170.fw work in debian
+>> squeeze?
+>
+> Download and install compat-wireless. Then blacklist ar9170 and call carl9170 instead.
+>
+> Walter
+>
+>
+>
+>
