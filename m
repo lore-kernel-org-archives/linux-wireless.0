@@ -1,62 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:41540 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933189Ab0LTVWW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 16:22:22 -0500
-Received: by qyk12 with SMTP id 12so3672003qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 13:22:21 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:49085 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752994Ab0LWLiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Dec 2010 06:38:17 -0500
+Date: Thu, 23 Dec 2010 12:38:21 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: [PATCH v2] iwlagn: enable only rfkill interrupt when device is down
+Message-ID: <20101223113820.GA8249@redhat.com>
+References: <1293022913-4692-1-git-send-email-sgruszka@redhat.com>
+ <1293038839.3531.24.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20101220193003.GC10104@tuxdriver.com>
-References: <20101220193003.GC10104@tuxdriver.com>
-Date: Mon, 20 Dec 2010 22:22:21 +0100
-Message-ID: <AANLkTik3+WXOvAWZjvNNO+JfQx2pK0bAYs5UOpr55eyB@mail.gmail.com>
-Subject: Re: new stuff for 2.6.38 needs to be posted _now_
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1293038839.3531.24.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 20, 2010 at 8:30 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> You may have noticed that Linus has released 2.6.37-rc6.  So, the
-> merge window is around the corner!
->
-> For those that need a reminder, the opening of the merge window is a
-> _deadline_ for new features.  Once the merge window opens, only fixes
-> will be accepted for 2.6.38.  In fact, any non-fix patches need to
-> already be in wireless-next-2.6 when the merge window opens if you want
-> them in 2.6.38.  That means you need to get them posted _now_, so they
-> can be reviewed and I can find time to merge them before the deadline.
->
-> You have been warned...this means you!
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Since commit 6cd0b1cb872b3bf9fc5de4536404206ab74bafdd "iwlagn: fix
+hw-rfkill while the interface is down", we enable interrupts when
+device is not ready to receive them. However hardware, when it is in
+some inconsistent state, can generate other than rfkill interrupts
+and crash the system. I can reproduce crash with "kernel BUG at
+drivers/net/wireless/iwlwifi/iwl-agn.c:1010!" message, when forcing
+firmware restarts.
 
-Is it possible to give an overview of the current status of
-linux-wireless development going into 2.6.38?
-New features, bigger bugfixes, new drivers, etc.?
-For the drivers part you could trigger the driver maintainer(s)?
-Also, it would be nice to read from user-space news like
-wpa_supplicant, iw, crda & wireless-regdb, etc. related to the changes
-to linux-wireless (for example you should install iw in version XYZ to
-have support for new features of your driver ABC).
-I have seen cool overviews from David Miller for net-2.6, regularly
-also from rcX to rcX+1.
-This is also some sort of documenting the development in your sub-trees.
+To fix only enable rfkill interrupt when down device and after probe.
+I checked patch on laptop with 5100 device, rfkill change is still
+passed to user space when device is down.
 
-Personally, I am very interested in power-management topic (my
-hardware is ath5k and iwl3945 currently), but I am planning to upgrade
-to 802.11N (router and wlan device).
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: stable@kernel.org
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+v1 -> v2: fix topic (thanks to Johannes for correct my English :)
+ 
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    9 +++++----
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |    6 ++++++
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-- Sedat -
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d407547..f5bd584 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3280,9 +3280,10 @@ void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	flush_workqueue(priv->workqueue);
+ 
+-	/* enable interrupts again in order to receive rfkill changes */
++	/* User space software may expect getting rfkill changes
++	 * even if interface is down */
+ 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
+-	iwl_enable_interrupts(priv);
++	iwl_enable_rfkill_int(priv);
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+@@ -4190,14 +4191,14 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 * 8. Enable interrupts and read RFKILL state
+ 	 *********************************************/
+ 
+-	/* enable interrupts if needed: hw bug w/a */
++	/* enable rfkill interrupt: hw bug w/a */
+ 	pci_read_config_word(priv->pci_dev, PCI_COMMAND, &pci_cmd);
+ 	if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
+ 		pci_cmd &= ~PCI_COMMAND_INTX_DISABLE;
+ 		pci_write_config_word(priv->pci_dev, PCI_COMMAND, pci_cmd);
+ 	}
+ 
+-	iwl_enable_interrupts(priv);
++	iwl_enable_rfkill_int(priv);
+ 
+ 	/* If platform's RF_KILL switch is NOT set to KILL */
+ 	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index 3f5bedd..8821f08 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -148,6 +148,12 @@ static inline void iwl_disable_interrupts(struct iwl_priv *priv)
+ 	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
+ }
+ 
++static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
++{
++	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
++	iwl_write32(priv, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++}
++
+ static inline void iwl_enable_interrupts(struct iwl_priv *priv)
+ {
+ 	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
+-- 
+1.7.1
+
