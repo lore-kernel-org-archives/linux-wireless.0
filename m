@@ -1,176 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40294 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab0L3Aan (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:46547 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507Ab0LWRnI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 19:30:43 -0500
-Message-ID: <4D1BD2B0.4020101@lwfinger.net>
-Date: Wed, 29 Dec 2010 18:30:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 23 Dec 2010 12:43:08 -0500
+Received: by qyk12 with SMTP id 12so7089090qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 09:43:07 -0800 (PST)
 MIME-Version: 1.0
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: 2.6.37-rc7: Regression: b43: crashes in hwrng_register()
-References: <4D1A8200.4010609@lwfinger.net> <20101229195440.GD5838@darkside.kls.lan>
-In-Reply-To: <20101229195440.GD5838@darkside.kls.lan>
-Content-Type: multipart/mixed;
- boundary="------------010208050509050007020603"
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <AANLkTimDPcxSthO=TAqPx4fyrU0U_WPkwMHLGGiCSMKw@mail.gmail.com>
+References: <AANLkTimDPcxSthO=TAqPx4fyrU0U_WPkwMHLGGiCSMKw@mail.gmail.com>
+Date: Thu, 23 Dec 2010 18:43:07 +0100
+Message-ID: <AANLkTi=Q0opOAu2-dSFLTd8pXLL+yoe2xWEa3+nbNrim@mail.gmail.com>
+Subject: Re: carl9170 and debian squeeze
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Der Engel <engelster@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010208050509050007020603
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Thu, Dec 23, 2010 at 6:34 PM, Der Engel <engelster@gmail.com> wrote:
+> Hi,
+>
+> I have a ubiquiti sr71-usb wireless adapter, 'lsusb' shows it as:
+> 'Atheros Communications, Inc. AR9170 802.11n', the adapter works with
+> the ar9170.fw firmware but I'm trying to make it work with the
+> carl9170.fw, until now I have tried the following:
+>
+> I have put the carl9170.fw in /lib/firmware (debian default for
+> firmware files) without the ar9170.fw, dmesg shows that the system its
+> looking for a firmware with the exact name as 'ar9170.fw' or if it
+> doesn't find that one it tries to finds the legacy ones(ar9170-1.fw &
+> ar9170-2.fw), so it ignores carl9170.fw because is not named
+> ar9170.fw, changing the name of carl9170.fw to ar9170.fw shows the
+> following:
+>
+> dmesg | grep 9170
+> [    2.329719] usb 2-2: New USB device found, idVendor=0cf3, idProduct=9170
+> [    8.817173] usb 2-2: firmware: requesting ar9170.fw
+> [    9.862192] ar9170usb: probe of 2-2:1.0 failed with error -110
+> [    9.862227] usbcore: registered new interface driver ar9170usb
+>
+> The kernel is debian stock one:Linux laptop 2.6.32-5-686 #1 SMP Fri
+> Dec 10 16:12:40 UTC 2010 i686 GNU/Linux
+>
+> Any ideas how can I make carl9170.fw work in debian squeeze?
+>
+> Thanks,
+> Der
 
-On 12/29/2010 01:54 PM, Mario 'BitKoenig' Holbe wrote:
-> Hello Larry,
-> 
-> On Tue, Dec 28, 2010 at 06:34:08PM -0600, Larry Finger wrote:
->> Mario Holbe wrote:
->>> on 2.6.37-rc7 the b43 driver crashes in hwrng_register(). This makes the
-> ...
->>> This issue does also exist in 2.6.37-rc5.
->>> This issue does not exist in 2.6.36.2.
-> ...
->>> [ 29.868632] BUG: unable to handle kernel paging request at 907cde0c
->>> [ 29.868640] IP: [<f8d543cc>] hwrng_register+0x4c/0x139 [rng_core]
-> ...
->>> [ 29.868884] Call Trace:
->>> [ 29.868909] [<f8e5a870>] ? b43_wireless_core_init+0xd0c/0xdd6 [b43]
->>
->> I almost missed this posting.
-> 
-> You're welcome :)
-> 
->> Please post wireless problems with
->> linux-wireless@vger.kernel.org for better visibility.
-> 
-> Sorry and thanks for completing the CC: list.
-> 
->> I have a BCM4312 (14e4:4315) on a netbook that does not have this problem, thus
->> I will have to rely on your debugging. An additional difficulty is that the only
->> changes to b43 between 2.6.36 and 2.6.37 are adding an additional PCI ID, some
->> fixes to the SDIO driver, and some code for an 802.11n device. None of these
->> should affect your 802.11 b/g unit.
->>
->> Is it possible for you to bisect between 2.6.36 and 2.6.37-rc5? I wish I could
->> suggest some way to minimize the number of commits and builds, but the problem
->> could be anywhere.
-> 
-> To be honest, I never bisected such a huge amount of commits before and
-> I'm somewhat afraid of doing it.
-> 
-> However, I think I'm able to nail the issue down to:
-> commit 84c164a34ffe67908a932a2d641ec1a80c2d5435 which went to 2.6.37-rc1.
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Fri Aug 6 15:31:45 2010 -0400
-> 
->     b43: move hwrng registration driver to wireless core initialization
-> 
-> Message-ID: <1281126412-5089-1-git-send-email-linville@tuxdriver.com>
-> http://marc.info/?l=linux-wireless&m=128112658829379&w=2
-> 
-> I did 2 things:
-> 1. I (manually) reverted 84c164a34ffe67908a932a2d641ec1a80c2d5435 from
->    2.6.37-rc7: The crash disappears, b43 is useable.
-> 2. I added 84c164a34ffe67908a932a2d641ec1a80c2d5435 to 2.6.36.2: The
->    crash shows up as with vanilla 2.6.37-rc7.
-> 
-> I'm not sure why this is not reproducible for you, probably it has
-> something to do with the VIA Nano having a second HW-RNG driven by
-> via-rng. I experienced crashes in the past with earlier kernels when I
-> tried to move RNGs around via /sys/devices/virtual/misc/hw_random, but
-> never took the time to trace them down since I just got it working :)
-> 
-> Oh, I'm still able to trigger a crash with
-> $ cat /sys/devices/virtual/misc/hw_random/rng_available
-> on 2.6.37-rc7 without 84c164a34ffe67908a932a2d641ec1a80c2d5435 as well
-> as on vanilla 2.6.36.2. Probably this is (better) reproducible for you?
-> 
-> I suspect both (the 84c164a34ffe67908a932a2d641ec1a80c2d5435 crash as
-> well as the cat rng_available crash) having something to do with a
-> partially uninitialized rng-struct, or better: parts of the rng-struct
-> that are free()d too early (i.e. within its lifetime).
+Looks like the vendor-id/product-id is not considered in your kernel,
+check [1] if your device is listed as supported devices.
+I am not sure if the squeeze kernel has support for carl9170.
 
-Thanks for finding the problem. Obviously, I did not go back far enough in the
-record to find the commit that you implicate.
+An easy way is to use compat-wireless (stable or bleeding edge) which
+offers you newer wireless hardware support and features.
+The wiki in [2] has informations and instructions for you.
 
-Please show the output of "egrep "B43|RNG|RANDOM" .config".
+- Sedat -
 
-It should not matter, but please try the attached patch.
-
-Larry
-
---------------010208050509050007020603
-Content-Type: text/plain;
- name="b43_fix_hwrng_not_enabled"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="b43_fix_hwrng_not_enabled"
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -3142,19 +3142,19 @@ static int b43_rng_read(struct hwrng *rn
- }
- #endif /* CONFIG_B43_HWRNG */
- 
-+#ifdef CONFIG_B43_HWRNG
- static void b43_rng_exit(struct b43_wl *wl)
- {
--#ifdef CONFIG_B43_HWRNG
- 	if (wl->rng_initialized)
- 		hwrng_unregister(&wl->rng);
--#endif /* CONFIG_B43_HWRNG */
- }
-+#endif /* CONFIG_B43_HWRNG */
- 
-+#ifdef CONFIG_B43_HWRNG
- static int b43_rng_init(struct b43_wl *wl)
- {
- 	int err = 0;
- 
--#ifdef CONFIG_B43_HWRNG
- 	snprintf(wl->rng_name, ARRAY_SIZE(wl->rng_name),
- 		 "%s_%s", KBUILD_MODNAME, wiphy_name(wl->hw->wiphy));
- 	wl->rng.name = wl->rng_name;
-@@ -3167,10 +3167,10 @@ static int b43_rng_init(struct b43_wl *w
- 		b43err(wl, "Failed to register the random "
- 		       "number generator (%d)\n", err);
- 	}
--#endif /* CONFIG_B43_HWRNG */
- 
- 	return err;
- }
-+#endif /* CONFIG_B43_HWRNG */
- 
- static void b43_tx_work(struct work_struct *work)
- {
-@@ -4288,8 +4288,10 @@ static void b43_wireless_core_exit(struc
- 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
- 		return;
- 
-+#ifdef CONFIG_B43_HWRNG
- 	/* Unregister HW RNG driver */
- 	b43_rng_exit(dev->wl);
-+#endif
- 
- 	b43_set_status(dev, B43_STAT_UNINIT);
- 
-@@ -4420,8 +4422,10 @@ static int b43_wireless_core_init(struct
- 
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
- 
-+#ifdef CONFIG_B43_HWRNG
- 	/* Register HW RNG driver */
- 	b43_rng_init(dev->wl);
-+#endif
- 
- out:
- 	return err;
-
---------------010208050509050007020603--
+[1] http://wireless.kernel.org/en/users/Devices
+[2] http://wireless.kernel.org/en/users/Download/stable/
