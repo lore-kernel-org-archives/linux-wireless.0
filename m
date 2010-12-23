@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.sr71.net ([198.145.64.142]:52938 "EHLO blackbird.sr71.net"
+Received: from mail.atheros.com ([12.19.149.2]:47550 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756154Ab0LIVeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 16:34:16 -0500
-Subject: brcm80211 hangs when disabling wireless
-From: Dave Hansen <dave@sr71.net>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mike Rapoport <mike.rapoport@gmail.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
-Date: Thu, 09 Dec 2010 13:26:50 -0800
-Message-ID: <1291930010.7960.30.camel@nimitz>
-Mime-Version: 1.0
+	id S1751505Ab0LWBzu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 20:55:50 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 17:55:33 -0800
+Date: Thu, 23 Dec 2010 07:25:42 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stable Kernel <stable@kernel.org>
+Subject: Re: [PATCH v3 1/2] ath9k_hw: Fix incorrect macversion and macrev
+ checks
+Message-ID: <20101223015542.GA4215@senthil-lnx.users.atheros.com>
+References: <1293032660-3627-1-git-send-email-senthilkumar@atheros.com>
+ <AANLkTikGgSbAY1FRHNOoVmgVk3BKdvBtY+ir9y5BywW0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <AANLkTikGgSbAY1FRHNOoVmgVk3BKdvBtY+ir9y5BywW0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been getting hard hangs when I toggle the wireless on a Lenovo
-S10-3.  It happens both with the physical switch and the Fn-F5 key
-combo.  It's quite repeatable.  The system is quite stable when I'm not
-trying to disable the wireless, though.
-
-I've been able to get some screenshots, but the console messages don't
-make it out to the disk:
-
-	http://picasaweb.google.com/hansendc/BrcmOops#
-
-netconsole also isn't working on this hardware.  Any other suggestions
-for getting an oops out of a serial-port-challenged netbook?
-
-It isn't completely clear to me where this bug actually is.  The stack
-dump looks almost completely confined to net/mac80211/ functions, but
-there are a few error printk's from brcm80211.
-
-The first printk's are from this code, but it's apparently trying to
-transmit in the mac80211 stack anyway:
-        
-        static int wl_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-        {
-                int status;
-                wl_info_t *wl = hw->priv;
-                WL_LOCK(wl);
-                if (!wl->pub->up) {
-                        WL_ERROR(("ops->tx called while down\n"));
-                        status = -ENETDOWN;
-                        goto done;
-                }
-                status = wl_start(skb, wl);
-         done:
-                WL_UNLOCK(wl);
-                return status;
-        }
-
-I'm not completely sure that this is what is causing the hang that I'm
-seeing, but it's certainly the last thing I see on the console.  
-
-With the hardware driver in -staging, I don't expect anybody to jump out
-of their seats to fix this, I just figured someone might want to see the
-bug report.
-
--- Dave
-
+On Wed, Dec 22, 2010 at 09:22:06PM +0530, Luis R. Rodriguez wrote:
+> On Wed, Dec 22, 2010 at 10:44 AM, Senthil Balasubramanian
+> <senthilkumar@atheros.com> wrote:
+> > There are few places where we are checking for macversion and revsions
+> > before RTC is powered ON. However we are reading the macversion and
+> > revisions only after RTC is powered ON and so both macversion and
+> > revisions are actully zero and this leads to incorrect srev checks
+> >
+> > Incorrect srev checks can cause registers to be configured wrongly and can
+> > cause unexpected behavior. Fixing this seems to address the ASPM issue that
+> > we have observed. The laptop becomes very slow and hangs mostly with ASPM L1
+> > enabled without this fix.
+> 
+> On what chipset? Or did we see this on one chipset and suspect it can
+> affect others?
+We have noticed on Merlin and it is obviously incorrect for other chipsets
+also :-(. Please feel free to rephrase/rework on this patch if you think
+something is still lacking/missing...
+> 
+>  Luis
