@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:58275 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752537Ab0LLPiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 10:38:46 -0500
-Subject: Re: [PATCH 2/2] ssb: Save sprom image for dump of device at
- alternate location
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-In-Reply-To: <4D04EB7D.1090009@lwfinger.net> (sfid-20101212_103356_973639_7B7006EC)
-References: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>
-	 (sfid-20101212_043513_712988_FFFFFFFF9320429C) <1292143551.20015.24.camel@maggie>
-	 <4D04EB7D.1090009@lwfinger.net> (sfid-20101212_103356_973639_7B7006EC)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 12 Dec 2010 16:38:39 +0100
-Message-ID: <1292168319.3572.6.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36485 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281Ab0LWHvn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Dec 2010 02:51:43 -0500
+MIME-Version: 1.0
+In-Reply-To: <201012191122.09581.rjw@sisk.pl>
+References: <AANLkTikJr+0kVPE4aSwPjZWRfA3gRSNgGwzQdSwRpo_5@mail.gmail.com>
+ <AANLkTin23vbbA7+UDzh=v060HbkLMrJjB38cs+AWScPJ@mail.gmail.com>
+ <201012182347.08635.rjw@sisk.pl> <201012191122.09581.rjw@sisk.pl>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 23 Dec 2010 09:51:22 +0200
+Message-ID: <AANLkTi=9kjmb3evOON3WMoGjqadDHqqBKVH4viT02Qf9@mail.gmail.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-12-12 at 09:34 -0600, Larry Finger wrote: 
-> On 12/12/2010 02:45 AM, Michael Büsch wrote:
-> > On Sat, 2010-12-11 at 21:35 -0600, Larry Finger wrote: 
-> >> Some recent Broadcom devices in netbooks have an SPROM that is located
-> >> at 0x0800, not the normal location of 0x1000. Initial reading of the
-> >> SPROM has been solved in a previous commit; however, dumping to a console
-> >> no longer works. This difficulty is fixed by saving the SPROM image
-> >> from the initial read, and only freeing that memory at module unload.
-> > 
-> > Ah wait. Now I get what you were talking about.
-> > Yes, those devices map the SPROM into the wireless core window.
-> > So, yes, the wireless core has to be mapped for the readout to work,
-> > of course. I don't know what other prerequisites have to be met to
-> > read the data. Maybe IHR region has to be disabled.
-> > I don't know how writing works on these devices.
-> 
-> I do not think it is worthwhile to bother to find out how to rewrite the SPROM.
-> As long as we can read it in case of questions regarding content, that should be
-> enough. In V2, I will return -ENOTSUP rather than -EINVAL as that is more
-> appropriate.
+On Sun, Dec 19, 2010 at 12:22 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> That said, I think we may do something different that perhaps will make your
+> life somewhat easier.
+...
+> So, I think we can add a "runtime only" flag working as described above.
 
-So, do we actually make sure the wireless core is mapped while reading
-SPROM from offset 0x800? I guess not and it just works by accident,
-because the core is still mapped from a previous operation.
+That will definitely solve the suspend/resume issue we're having.
 
--- 
-Greetings Michael.
+But due to /sys/devices/.../power/control, we will still have to
+bypass runtime PM for this particular device.
 
+We need a way to unconditionally power down the device, and as long as
+runtime PM can be disabled by the user, we can't use it.
+
+Thanks,
+Ohad.
