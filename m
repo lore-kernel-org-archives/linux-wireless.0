@@ -1,46 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45807
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755146Ab0LJSBO (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:57230 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661Ab0LWDDD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 13:01:14 -0500
-Date: Fri, 10 Dec 2010 10:01:41 -0800 (PST)
-Message-Id: <20101210.100141.183065894.davem@davemloft.net>
+	Wed, 22 Dec 2010 22:03:03 -0500
+Date: Thu, 23 Dec 2010 01:05:13 -0200
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-12-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101208210432.GH2423@tuxdriver.com>
-References: <20101208210432.GH2423@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: pull request: bluetooth-next-2.6 2010-12-23
+Message-ID: <20101223030513.GB26284@vigoh>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 8 Dec 2010 16:04:32 -0500
+Hi John,
 
-> Here is the latest batch of updates intended for 2.6.38.  It also
-> includes my last wireless-2.6 pull request that you just added
-> to net-2.6.
-> 
-> This includes the usual batch of drivers updates, with ath9k and
-> iwlwifi as the usual standouts.  This also includes some mac80211
-> documentation updates from Johannes, and a flurry of ath5k updates
-> from Nick.  This also includes a collection of bluetooth updates by
-> way of Gustavo, a couple of libertas updates, some more work on b43
-> N-phy support, and a variety of other patches.
+Here are my last set of patches to 2.6.38. Biggest feature is the new
+Bluetooth Management Interface, which intends to replace all HCI raw access
+from bluetoothd. That interface is still disabled by default. However you can
+enable it via a module parameter.
+The other two patches from me is simple fixes in the stack. Tracey's patch is
+already in net-next and I only pushed it to solve a merge conflict.
 
-So I pulled this in.
+This time I'm using a link to my git tree inside master.kernel.org,
+git.kernel.org is really slow today.
 
-Since I did the net-2.6 --> net-next-2.6 merge first, I ended up having
-to deal with the ar9003_eeprom.c conflicts in the ath9k driver even
-though you took care of that as well in this tree of your's.
+Please pull or let me know any problems. Thanks.
 
-But it was a good gut check since we both resolved the conflict pretty
-much the same way, so I have confidence in the merge resolution :-)
 
-Anyways, please take a look at net-next-2.6 and double-check what I
-did.
+The following changes since commit 5c4bc1ce917d93ce8f7dd498fbec6881b3d7743a:
 
-Thanks!
+  rtlwifi: Fix large packet issue (2010-12-22 15:45:52 -0500)
+
+are available in the git repository at:
+  master.kernel.org:/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
+
+Gustavo F. Padovan (2):
+      Bluetooth: Don't accept ConfigReq if we aren't in the BT_CONFIG state
+      Bluetooth: Improve handling of HCI control channel in bind
+
+Johan Hedberg (9):
+      Bluetooth: Add Bluetooth Management interface definitions
+      Bluetooth: Add initial Bluetooth Management interface callbacks
+      Bluetooth: Make hci_send_to_sock usable for management control sockets
+      Bluetooth: Add error handling for managment command handlers
+      Bluetooth: Add read_version management command
+      Bluetooth: Add read_index_list management command
+      Bluetooth: Add read_info management command
+      Bluetooth: Add management events for controller addition & removal
+      Bluetooth: Fix __hci_request synchronization for hci_open_dev
+
+Tracey Dent (1):
+      Net: bluetooth: Makefile: Remove deprecated kbuild goal definitions
+
+ include/net/bluetooth/bluetooth.h |    1 +
+ include/net/bluetooth/hci.h       |    4 +
+ include/net/bluetooth/hci_core.h  |    9 +-
+ include/net/bluetooth/mgmt.h      |   87 +++++++++++
+ net/bluetooth/Makefile            |    2 +-
+ net/bluetooth/hci_core.c          |   17 ++-
+ net/bluetooth/hci_event.c         |   33 +++--
+ net/bluetooth/hci_sock.c          |   52 ++++++-
+ net/bluetooth/l2cap.c             |    8 +-
+ net/bluetooth/mgmt.c              |  308 +++++++++++++++++++++++++++++++++++++
+ 10 files changed, 498 insertions(+), 23 deletions(-)
+ create mode 100644 include/net/bluetooth/mgmt.h
+ create mode 100644 net/bluetooth/mgmt.c
+
+-- 
+Gustavo F. Padovan
+http://profusion.mobi
