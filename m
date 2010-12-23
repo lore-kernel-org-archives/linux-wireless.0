@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34989 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753068Ab0LAPVt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 10:21:49 -0500
-Received: by wwa36 with SMTP id 36so7505119wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 07:21:48 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:48191 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077Ab0LWCEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Dec 2010 21:04:47 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 18:04:31 -0800
+Date: Thu, 23 Dec 2010 07:34:39 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stable Kernel <stable@kernel.org>
+Subject: Re: [PATCH v3 1/2] ath9k_hw: Fix incorrect macversion and macrev
+ checks
+Message-ID: <20101223020439.GC4215@senthil-lnx.users.atheros.com>
+References: <1293032660-3627-1-git-send-email-senthilkumar@atheros.com>
+ <AANLkTikGgSbAY1FRHNOoVmgVk3BKdvBtY+ir9y5BywW0@mail.gmail.com>
+ <20101223015542.GA4215@senthil-lnx.users.atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <201012011614.07163.helmut.schaa@googlemail.com>
-References: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com>
-	<AANLkTi=_61HVmSBR-9v3ukVw-mpouoaFwYE8cpfa96wH@mail.gmail.com>
-	<201012011540.45031.helmut.schaa@googlemail.com>
-	<201012011614.07163.helmut.schaa@googlemail.com>
-Date: Wed, 1 Dec 2010 20:51:46 +0530
-Message-ID: <AANLkTimEimLN_3_sKaAm8W3aop2+yh+gGugJRfrjquB6@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Update last_tx_rate only for data frames
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101223015542.GA4215@senthil-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 1, 2010 at 8:44 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Mittwoch 01 Dezember 2010 schrieb Helmut Schaa:
->> Am Mittwoch 01 Dezember 2010 schrieb Mohammed Shafi:
->> > On Wed, Dec 1, 2010 at 4:48 PM, Helmut Schaa
->> > <helmut.schaa@googlemail.com> wrote:
->> > > The last_tx_rate field was also updated for non-data frames that are
->> > > often sent with a lower rate (for example management frames at 1 Mbps).
->> > > This is confusing when the data rate is actually much higher.
->> > >
->> > > Hence, only update the last_tx_rate field with tx rate information
->> > > gathered from the last data frames.
->> >
->> > Hi Helmut,
->> >             I have a doubt,ideally should not this be taken care by the driver ?
->>
->> Sorry, I don't get your point. How should that be handled by the driver? Could
->> you please elaborate?
->
-> Ahh, did you mean that should be taken care of by the rate control algorithm?
->
-I think so but not sure..(for ex: if ministrel is used)
-
-> I agree, if the rate control algortihm returns a rate via txrc.reported_rate
-> we should just use that without further validation.
->
-> Nevertheless, if the rate control algortihm doesn't fill in txrc.reported_rate
-> we should only account data frames.
-
-I agree.
-
->
-> Will send an updated patch.
->
-> Helmut
->
+On Thu, Dec 23, 2010 at 07:25:42AM +0530, Senthilkumar Balasubramanian wrote:
+> On Wed, Dec 22, 2010 at 09:22:06PM +0530, Luis R. Rodriguez wrote:
+> > On Wed, Dec 22, 2010 at 10:44 AM, Senthil Balasubramanian
+> > <senthilkumar@atheros.com> wrote:
+> > > There are few places where we are checking for macversion and revsions
+> > > before RTC is powered ON. However we are reading the macversion and
+> > > revisions only after RTC is powered ON and so both macversion and
+> > > revisions are actully zero and this leads to incorrect srev checks
+> > >
+> > > Incorrect srev checks can cause registers to be configured wrongly and can
+> > > cause unexpected behavior. Fixing this seems to address the ASPM issue that
+> > > we have observed. The laptop becomes very slow and hangs mostly with ASPM L1
+> > > enabled without this fix.
+> > 
+> > On what chipset? Or did we see this on one chipset and suspect it can
+> > affect others?
+> We have noticed on Merlin and it is obviously incorrect for other chipsets
+This should be read as "we have noticed this issue with ar9380/ar9382"
+> also :-(. Please feel free to rephrase/rework on this patch if you think
+> something is still lacking/missing...
+> > 
+> >  Luis
