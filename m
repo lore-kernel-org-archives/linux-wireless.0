@@ -1,96 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:46260 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526Ab0LALRW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 06:17:22 -0500
-Received: by pxi15 with SMTP id 15so1046636pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 03:17:22 -0800 (PST)
-Date: Wed, 1 Dec 2010 16:47:13 +0530
-From: Senthil Balasubramanian <senthil.lnx@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org
-Subject: Re: [PATCH 2/2] ath9k: Fix STA disconnect issue due to received MIC
- failed bcast frames
-Message-ID: <20101201111713.GA1623@senthil-lnx.users.atheros.com>
-References: <1291128560-2741-1-git-send-email-senthilkumar@atheros.com>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:57725 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992Ab0LWIjr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Dec 2010 03:39:47 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PVgi9-0005Oq-8Q
+	for linux-wireless@vger.kernel.org; Thu, 23 Dec 2010 09:39:45 +0100
+Received: from ool-4a5955a5.dyn.optonline.net ([74.89.85.165])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 09:39:45 +0100
+Received: from erappleman by ool-4a5955a5.dyn.optonline.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 09:39:45 +0100
+To: linux-wireless@vger.kernel.org
+From: Eric Appleman <erappleman@gmail.com>
+Subject: Re: iwlwifi: Intel 3945ABG speed issues finally identified.
+Date: Thu, 23 Dec 2010 08:39:32 +0000 (UTC)
+Message-ID: <loom.20101223T093853-190@post.gmane.org>
+References: <loom.20101223T071403-99@post.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291128560-2741-1-git-send-email-senthilkumar@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John
+2 more commits that I missed
 
-Can you please revert this patch and apply my v2 patch? My apologies
-for the trouble...
+7d47618a2ade0cb6d8a0b2597029c383c1662fa0
+6db6340c42d027b6364d49fa99d69019aca24de4
 
-I overlooked an issue in one place and for some reason my testing
-also did not show any issue... Thanks to Felix for pointing this
-issue..
-
-Thanks
-Senthil
-
-On Tue, Nov 30, 2010 at 08:19:20PM +0530, Senthil Balasubramanian wrote:
-> AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
-> this status for MIC failed frames is buggy.
-> 
-> Due to this, MIC failure events for broadcast frames are not sent to
-> supplicant resulted in AP disconnecting the STA.
-> 
-> Able to pass Wifi Test case 5.2.18 with this fix.
-> 
-> Cc: Stable <stable@kernel.org> (2.6.36+)
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/mac.c  |    3 +--
->  drivers/net/wireless/ath/ath9k/recv.c |    4 +++-
->  2 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-> index b04b37b..7978b27 100644
-> --- a/drivers/net/wireless/ath/ath9k/mac.c
-> +++ b/drivers/net/wireless/ath/ath9k/mac.c
-> @@ -702,8 +702,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
->  			rs->rs_phyerr = phyerr;
->  		} else if (ads.ds_rxstatus8 & AR_DecryptCRCErr)
->  			rs->rs_status |= ATH9K_RXERR_DECRYPT;
-> -		else if ((ads.ds_rxstatus8 & AR_MichaelErr) &&
-> -		         rs->rs_keyix != ATH9K_RXKEYIX_INVALID)
-> +		else if (ads.ds_rxstatus8 & AR_MichaelErr)
->  			rs->rs_status |= ATH9K_RXERR_MIC;
->  		else if (ads.ds_rxstatus8 & AR_KeyMiss)
->  			rs->rs_status |= ATH9K_RXERR_DECRYPT;
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 262c815..429fa81 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -1037,9 +1037,11 @@ static void ath9k_rx_skb_postprocess(struct ath_common *common,
->  	int hdrlen, padpos, padsize;
->  	u8 keyix;
->  	__le16 fc;
-> +	bool is_mc;
->  
->  	/* see if any padding is done by the hw and remove it */
->  	hdr = (struct ieee80211_hdr *) skb->data;
-> +	is_mc = !!is_multicast_ether_addr(hdr->addr1);
->  	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
->  	fc = hdr->frame_control;
->  	padpos = ath9k_cmn_padpos(hdr->frame_control);
-> @@ -1060,7 +1062,7 @@ static void ath9k_rx_skb_postprocess(struct ath_common *common,
->  
->  	keyix = rx_stats->rs_keyix;
->  
-> -	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
-> +	if ((is_mc || !(keyix == ATH9K_RXKEYIX_INVALID)) && !decrypt_error &&
->  	    ieee80211_has_protected(fc)) {
->  		rxs->flag |= RX_FLAG_DECRYPTED;
->  	} else if (ieee80211_has_protected(fc)
-> -- 
-> 1.7.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
