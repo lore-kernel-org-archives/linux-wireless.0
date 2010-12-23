@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f66.google.com ([209.85.216.66]:64147 "EHLO
-	mail-qw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933Ab0LIQKX convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50834
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751505Ab0LWBeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 11:10:23 -0500
-Received: by qwk3 with SMTP id 3so1020427qwk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 08:10:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D00F3C3.6040801@lwfinger.net>
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
-	<4CFEFD8D.1080808@lwfinger.net>
-	<AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
-	<4D00F3C3.6040801@lwfinger.net>
-Date: Thu, 9 Dec 2010 17:10:21 +0100
-Message-ID: <AANLkTinfcVZ8X=r0w+digSJ6RoZeOCA8jEW=J6hcb7o9@mail.gmail.com>
-Subject: Re: [PATCH 0/4] Make N-PHY support experimental
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Dec 2010 20:34:44 -0500
+Date: Wed, 22 Dec 2010 17:35:13 -0800 (PST)
+Message-Id: <20101222.173513.102576612.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-12-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101222195209.GD10046@tuxdriver.com>
+References: <20101222195209.GD10046@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/9 Larry Finger <Larry.Finger@lwfinger.net>:
-> I am willing to buy a higher PHY rev device for testing. Any idea what is in a
-> 4324A-BRCM1036? See
-> http://cgi.ebay.com/Broadcom-Mini-PCI-e-802-11-a-b-g-n-Wireless-Card-/190477425068?pt=LH_DefaultDomain_0&hash=item2c5956d9ac.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 22 Dec 2010 14:52:09 -0500
 
-Shipping to: United States
+> Dave,
+> 
+> Three more fixes intended for 2.6.37...
+> 
+> The one from Johannes Berg avoids a NULL pointer dereference in the mesh
+> code.  The one from Johannes Stezenbach fixes bug 24892, which is a
+> lock-up caused by rt2x00.  Finally, you probably recognize the one from
+> Meelis Roos which removes some log spam coming from hostap.  These have
+> all spent several days in linux-next without any adverse effects.
+> 
+> Please let me know if there are problems!
 
-:(
-
--- 
-Rafał
+Pulled, thanks John.
