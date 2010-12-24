@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45352 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167Ab0LAGyb (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37206 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245Ab0LXMY6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 01:54:31 -0500
-Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201012011547.48339.br1@einfach.org>
-References: <20101110035050.23721.15617.stgit@localhost6.localdomain6>
-	 <201011241045.05708.br1@einfach.org>
-	 <1291185817.4199.5.camel@jlt3.sipsolutions.net>
-	 <201012011547.48339.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 07:54:28 +0100
-Message-ID: <1291186468.4199.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 24 Dec 2010 07:24:58 -0500
+Received: by qyj19 with SMTP id 19so8620312qyj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Dec 2010 04:24:58 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Fri, 24 Dec 2010 13:24:57 +0100
+Message-ID: <AANLkTim-SQ9KMTd-P8R_rr7Aka=2buk5cw4YPdqJQPto@mail.gmail.com>
+Subject: compat-wireless: Some ChangeLog URLs show to nirvana
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: wireless <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-01 at 15:47 +0900, Bruno Randolf wrote:
+Hi,
 
-> Already merged.
-> 
-> git show 79b1c460a0b55e55981c25c56597c4d5d2872de3
+just strived stable download website [0], and some ChangeLog web-links
+are not correct (see [1,2], didn't check all of them).
+Not sure where they sould point to.
+Can someone have a look at it?
 
-Oops, sorry -- was on iwlwifi tree which didn't merge yet and got
-confused thinking it was mac80211 only.
+Regards,
+- Sedat -
 
-johannes
-
+[0] http://wireless.kernel.org/en/users/Download/stable/
+[1] http://wireless.kernel.org/en/users/Download/stable/#compat-wireless_2.6.37_stable_releases
+[2] http://wireless.kernel.org/en/users/Download/stable/#compat-wireless_2.6.36_stable_releases
