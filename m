@@ -1,189 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33645 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709Ab0LCVaJ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63536 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476Ab0LXQqC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 16:30:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] mwifiex: remove NETLINK_MARVELL and associate madness
-Date: Fri,  3 Dec 2010 16:17:29 -0500
-Message-Id: <1291411051-12916-3-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20101203191130.GD2348@tuxdriver.com>
-References: <20101203191130.GD2348@tuxdriver.com>
+	Fri, 24 Dec 2010 11:46:02 -0500
+Received: by fxm20 with SMTP id 20so7997232fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Dec 2010 08:46:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
+References: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
+Date: Fri, 24 Dec 2010 16:46:00 +0000
+Message-ID: <AANLkTi=R58EGLrsT5sTk7JTqWvaeJ5caytHMt3VCSOki@mail.gmail.com>
+Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for 802.11j
+From: Dave Kilroy <kilroyd@googlemail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not clear how this is useful (or to whom)...firmware developers?  Maybe
-we can reconsider if you intend to open-source the firmware... :-)
+On Fri, Dec 24, 2010 at 7:44 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Extend channel to frequency mapping for 802.11j Japan 4.9GHz band, according to
+> IEEE802.11 section 17.3.8.3.2 and Annex J. Because there are now overlapping
+> channel numbers in the 2GHz and 5GHz band we can't map from channel to
+> frequency without knowing the band. This is no problem as in most contexts we
+> know the band. In places where we don't know the band (and WEXT compatibility)
+> we assume the 2GHz band for channels below 14.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+> -int ieee80211_channel_to_frequency(int chan)
+> +int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
+>  {
+> -       if (chan < 14)
+> -               return 2407 + chan * 5;
+> -
+> -       if (chan == 14)
+> -               return 2484;
+> -
+> -       /* FIXME: 802.11j 17.3.8.3.2 */
+> -       return (chan + 1000) * 5;
+> +       /* see 802.11 17.3.8.3.2 and Annex J
+> +        * there are overlapping channel numbers in 5GHz and 2GHz bands */
+> +       if (band == IEEE80211_BAND_5GHZ) {
+> +               if (chan >= 182 && chan <= 196)
+> +                       return 4000 + chan * 5;
+> +               else
+> +                       return 5000 + chan * 5;
+> +       } else { /* IEEE80211_BAND_2GHZ */
+> +               if (chan == 14)
+> +                       return 2484;
+> +               else if (chan < 14)
+> +                       return 2407 + chan * 5;
+> +               else
+> +                       return 0; /* not supported */
+> +       }
+>  }
+>  EXPORT_SYMBOL(ieee80211_channel_to_frequency);
+>
+>  int ieee80211_frequency_to_channel(int freq)
+>  {
+> +       /* see 802.11 17.3.8.3.2 and Annex J */
+>        if (freq == 2484)
+>                return 14;
+> -
+> -       if (freq < 2484)
+> +       else if (freq < 2484)
+>                return (freq - 2407) / 5;
+> -
+> -       /* FIXME: 802.11j 17.3.8.3.2 */
+> -       return freq/5 - 1000;
+> +       else if (freq >= 4910 && freq <= 4980)
+> +               return (freq - 4000) / 5;
+> +       else
+> +               return (freq - 5000) / 5;
+>  }
+>  EXPORT_SYMBOL(ieee80211_frequency_to_channel);
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/mwifiex/decl.h |    1 -
- drivers/net/wireless/mwifiex/main.c |   77 -----------------------------------
- drivers/net/wireless/mwifiex/main.h |    4 --
- drivers/net/wireless/mwifiex/util.c |    4 --
- 4 files changed, 0 insertions(+), 86 deletions(-)
+You don't have to use them, but there are a few channel/frequency
+conversion routines in include/ieee80211.h which could be reused in
+these functions.
 
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index a316446..ea27216 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -151,7 +151,6 @@ enum mwifiex_event_id {
- 	MWIFIEX_EVENT_ID_DRV_HS_ACTIVATED,
- 	MWIFIEX_EVENT_ID_DRV_HS_DEACTIVATED,
- 	MWIFIEX_EVENT_ID_DRV_OBSS_SCAN_PARAM,
--	MWIFIEX_EVENT_ID_DRV_PASSTHU,
- 	MWIFIEX_EVENT_ID_DRV_SCAN_REPORT,
- };
- 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 7359715..0c0053d 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -444,11 +444,6 @@ static void mwifiex_free_adapter(struct mwifiex_adapter *adapter)
- 		return;
- 	}
- 
--	if ((adapter->nl_sk) && ((adapter->nl_sk)->sk_socket)) {
--		sock_release((adapter->nl_sk)->sk_socket);
--		adapter->nl_sk = NULL;
--	}
--
- 	mwifiex_unregister(adapter);
- 	PRINTM(MINFO, "Free Adapter\n");
- 
-@@ -1144,68 +1139,6 @@ mwifiex_alloc_ioctl_req(u32 size)
- EXPORT_SYMBOL_GPL(mwifiex_alloc_ioctl_req);
- 
- /*
-- * This function broadcasts events generated by firmware to
-- * applications.
-- *
-- * It uses the kernel netlink system to send the events from driver
-- * to applications. Every application listening on the particular netlink
-- * socket will receive the events.
-- */
--enum mwifiex_status
--mwifiex_broadcast_event(struct mwifiex_private *priv, u8 *payload, u32 len)
--{
--	enum mwifiex_status ret = MWIFIEX_STATUS_SUCCESS;
--	struct sk_buff *skb = NULL;
--	struct nlmsghdr *nlh = NULL;
--	struct mwifiex_adapter *adapter = priv->adapter;
--	struct sock *sk = adapter->nl_sk;
--
--	ENTER();
--	if (len > NL_MAX_PAYLOAD) {
--		PRINTM(MERROR, "event size is too big!!! len=%d\n", (int) len);
--		ret = MWIFIEX_STATUS_FAILURE;
--		goto done;
--	}
--	if (sk) {
--		/* Allocate skb */
--		skb = alloc_skb(NLMSG_SPACE(NL_MAX_PAYLOAD), GFP_ATOMIC);
--		if (!skb) {
--			PRINTM(MERROR, "Could not allocate skb \
--			for netlink.\n");
--			ret = MWIFIEX_STATUS_FAILURE;
--			goto done;
--		}
--		nlh = (struct nlmsghdr *) skb->data;
--		nlh->nlmsg_len = NLMSG_SPACE(len);
--		/* From kernel */
--		nlh->nlmsg_pid = 0;
--		nlh->nlmsg_flags = 0;
--
--		/* Data */
--		skb_put(skb, nlh->nlmsg_len);
--		memcpy(NLMSG_DATA(nlh), payload, len);
--
--		/* From Kernel */
--		NETLINK_CB(skb).pid = 0;
--
--		/* Multicast group number */
--		NETLINK_CB(skb).dst_group = NL_MULTICAST_GROUP;
--
--		/* Send message */
--		netlink_broadcast(sk, skb, 0, NL_MULTICAST_GROUP, GFP_ATOMIC);
--
--		ret = MWIFIEX_STATUS_SUCCESS;
--	} else {
--		PRINTM(MERROR, "Could not send event through \
--			NETLINK. Link down.\n");
--		ret = MWIFIEX_STATUS_FAILURE;
--	}
--done:
--	LEAVE();
--	return ret;
--}
--
--/*
-  * This is the main work queue function.
-  *
-  * It handles the main process, which in turn handles the complete
-@@ -1287,16 +1220,6 @@ mwifiex_add_card(void *card, struct semaphore *sem,
- 	adapter->hs_activated = false;
- 	init_waitqueue_head(&adapter->hs_activate_wait_q);
- 
--	adapter->nl_sk =
--		netlink_kernel_create(&init_net, NETLINK_MARVELL,
--				      NL_MULTICAST_GROUP, NULL, NULL,
--				      THIS_MODULE);
--	if (adapter->nl_sk == NULL) {
--		PRINTM(MERROR, "Could not initialize netlink event passing "
--				"mechanism!\n");
--		goto err_kmalloc;
--	}
--
- 	/** Create workqueue */
- 	adapter->workqueue = create_workqueue("MWIFIEX_WORK_QUEUE");
- 	if (!adapter->workqueue)
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 8972566..8ae2048 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -75,7 +75,6 @@ struct mwifiex_drv_mode {
- #define MWIFIEX_TIMER_10S			10000
- #define MWIFIEX_TIMER_1S			1000
- 
--#define NETLINK_MARVELL     (MAX_LINKS - 1)
- #define NL_MAX_PAYLOAD      1024
- #define NL_MULTICAST_GROUP  1
- 
-@@ -563,7 +562,6 @@ struct mwifiex_adapter {
- 	atomic_t ioctl_pending;
- 	struct workqueue_struct *workqueue;
- 	struct work_struct main_work;
--	struct sock *nl_sk;
- 	struct mwifiex_bss_prio_tbl bss_prio_tbl[MWIFIEX_MAX_BSS_NUM];
- 	void *mwifiex_lock;
- 	void *main_proc_lock;
-@@ -1007,8 +1005,6 @@ int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *);
- enum mwifiex_status mwifiex_remove_card(struct mwifiex_adapter *,
- 					struct semaphore *);
- 
--enum mwifiex_status mwifiex_broadcast_event(struct mwifiex_private *priv,
--					    u8 *payload, u32 len);
- void mwifiex_get_version(struct mwifiex_adapter *adapter, char *version,
- 			 int maxlen);
- enum mwifiex_status mwifiex_request_set_mac_address(struct mwifiex_private
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index abb36f1..cc43313 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -1153,10 +1153,6 @@ mwifiex_process_recv_event(struct mwifiex_adapter *adapter,
- 						      CUS_EVT_HS_DEACTIVATED);
- 		}
- 		break;
--	case MWIFIEX_EVENT_ID_DRV_PASSTHU:
--		mwifiex_broadcast_event(priv, event->event_buf,
--					event->event_len);
--		break;
- 
- 	default:
- 		break;
--- 
-1.7.3.2
 
+Regards,
+
+Dave.
