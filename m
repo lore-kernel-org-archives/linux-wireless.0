@@ -1,76 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61596 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755472Ab0LDTm6 (ORCPT
+Received: from asmtpout024.mac.com ([17.148.16.99]:63486 "EHLO
+	asmtpout024.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023Ab0LXFRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Dec 2010 14:42:58 -0500
-Received: by wyb28 with SMTP id 28so10672961wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 11:42:57 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: comes@naic.edu, David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 1/2] orinoco: fix TKIP countermeasure behaviour
-Date: Sat,  4 Dec 2010 19:42:43 +0000
-Message-Id: <1291491764-6655-1-git-send-email-kilroyd@googlemail.com>
+	Fri, 24 Dec 2010 00:17:41 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from [192.168.1.30] ([87.201.169.175])
+ by asmtp024.mac.com (Oracle Communications Messaging Exchange Server 7u4-18.01
+ 64bit (built Jul 15 2010)) with ESMTPSA id <0LDX00FWZ2PDQN10@asmtp024.mac.com>
+ for linux-wireless@vger.kernel.org; Thu, 23 Dec 2010 21:17:40 -0800 (PST)
+Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
+From: Elvis Dowson <elvis.dowson@mac.com>
+In-reply-to: <4D1266FA.7080305@hauke-m.de>
+Date: Fri, 24 Dec 2010 09:17:24 +0400
+Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Message-id: <15BE8E73-27A7-4415-9196-B4BD56D72338@mac.com>
+References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
+ <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
+ <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
+ <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
+ <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
+ <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
+ <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
+ <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
+ <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
+ <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
+ <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
+ <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
+ <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
+ <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
+ <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com> <4D1266FA.7080305@hauke-m.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable the port when disabling countermeasures, and disable it on
-enabling countermeasures.
+Hi,
+       When working with the wl1271 backport to 2.6.32 kernel, is CONFIG_MMC_EMBEDDED_SDIO=y required? 
 
-This bug causes the response of the system to certain attacks to be
-ineffective.
-
-It also prevents wpa_supplicant from getting scan results, as
-wpa_supplicant disables countermeasures on startup - preventing the
-hardware from scanning.
-
-wpa_supplicant works with ap_mode=2 because the commit handler
-re-enables to port.
-
-The log tends to look like:
-
-State: DISCONNECTED -> SCANNING
-Starting AP scan for wildcard SSID
-Scan requested (ret=0) - scan timeout 5 seconds
-EAPOL: disable timer tick
-EAPOL: Supplicant port status: Unauthorized
-Scan timeout - try to get results
-Failed to get scan results
-Failed to get scan results - try scanning again
-Setting scan request: 1 sec 0 usec
-Starting AP scan for wildcard SSID
-Scan requested (ret=-1) - scan timeout 5 seconds
-Failed to initiate AP scan.
-
-Reported by: Giacomo Comes <comes@naic@edu>
-Signed-off by: David Kilroy <kilroyd@googlemail.com>
----
-
-John, this patch could be a candidate for either stable or security
-@kernel.org. I'm not to sure of the rules, so I haven't included a Cc...
-
----
- drivers/net/wireless/orinoco/wext.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index 519e01e..9caec9f 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -912,10 +912,10 @@ static int orinoco_ioctl_set_auth(struct net_device *dev,
- 		 */
- 		if (param->value) {
- 			priv->tkip_cm_active = 1;
--			ret = hermes_enable_port(hw, 0);
-+			ret = hermes_disable_port(hw, 0);
- 		} else {
- 			priv->tkip_cm_active = 0;
--			ret = hermes_disable_port(hw, 0);
-+			ret = hermes_enable_port(hw, 0);
- 		}
- 		break;
- 
--- 
-1.7.2.2
-
+Elvis Dowson
