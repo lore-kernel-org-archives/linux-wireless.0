@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738Ab0LPMQj (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:43568 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864Ab0LXEPw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 07:16:39 -0500
-Subject: Re: BUG: while bridging Ethernet and wireless device:
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
-References: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 13:16:37 +0100
-Message-ID: <1292501797.3612.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 23 Dec 2010 23:15:52 -0500
+Received: by qwa26 with SMTP id 26so6818292qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 20:15:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101222102032.13401.10967.stgit@localhost6.localdomain6>
+References: <20101222102032.13401.10967.stgit@localhost6.localdomain6>
+Date: Thu, 23 Dec 2010 23:15:50 -0500
+Message-ID: <AANLkTik-gp3CXhM1tR5obgkuMyLBkzDvZA5UVSJGEsu-@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Move mac80211 functions into new file
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 14:11 +0200, Tomas Winkler wrote:
+On Wed, Dec 22, 2010 at 5:20 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Move mac80211 functions into new file mac80211-ops.c to have a better
+> separation and to make base.c smaller.
 
-> Dec 15 14:36:41 User-PC kernel: [175576.120452] kernel BUG at include/linux/skbuff.h:1178!
+Or we could move the non-ops to a different file...
 
-> Dec 15 14:36:41 User-PC kernel: [175576.123193] EIP is at br_multicast_rcv+0xc95/0xe1c [bridge]
+BTW I just rebased my sta PS code and I'll be working on it this
+holiday week.. I guess I'll re-rebase it whenever I get it
+working.
 
-So as I said to Tomas in private before -- it kinda looks like something
-here is not handling paged SKBs correctly? But I would imaging that
-causing more issues, unless there was a bug here that made bridging
-require more data in the skb header than we put in there right now -- it
-can end up being empty I believe.
-
-Thing is, I looked at the code and it seemed fine.
-
-johannes
-
+-- 
+Bob Copeland %% www.bobcopeland.com
