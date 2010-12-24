@@ -1,33 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6612 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:39003 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752437Ab0L1K2C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 05:28:02 -0500
-Date: Tue, 28 Dec 2010 11:28:01 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Justin Case <justincase@yopmail.com>
-Subject: Re: stable compat-wireless releases are 404
-Message-ID: <20101228102800.GA2347@redhat.com>
-References: <loom.20101227T073819-206@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <loom.20101227T073819-206@post.gmane.org>
+	id S1752161Ab0LXQ25 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Dec 2010 11:28:57 -0500
+Subject: Re: iwlwifi: Intel 3945ABG speed issues finally identified.
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Eric Appleman <erappleman@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <loom.20101224T055254-814@post.gmane.org>
+References: <loom.20101223T071403-99@post.gmane.org>
+	 <1293120787.3997.50.camel@wwguy-huron>
+	 <loom.20101224T055254-814@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Dec 2010 08:19:51 -0800
+Message-ID: <1293207591.3997.52.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 27, 2010 at 06:39:04AM +0000, Justin Case wrote:
-> I am trying to download a stable compat-wireless release from this website:
-> http://linuxwireless.org/en/users/Download/stable/
+On Thu, 2010-12-23 at 22:16 -0800, Eric Appleman wrote:
+> Btw, I've never seen a firmware reload message in association with this bug,
+> regardless of commit, whether it be from May or December.
+
+> then most likely "stuck queue detection" is not the problem.
+
+Wey
 > 
-> however the main download site:
-> http://www.orbit-lab.org/kernel/
-> is giving 404 errors.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Luis, could you fix this?
 
-> Is there an alternative download site or mirror?
-?
-
-Stanislaw
