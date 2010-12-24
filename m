@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58568 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811Ab0L2VL7 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46765 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880Ab0LXQCG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 16:11:59 -0500
-Received: by gxk9 with SMTP id 9so1606737gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 13:11:58 -0800 (PST)
+	Fri, 24 Dec 2010 11:02:06 -0500
+Received: by fxm20 with SMTP id 20so7971751fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Dec 2010 08:02:04 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1293614508.15791.0.camel@powerslave>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
- <1293557808-27068-15-git-send-email-arik@wizery.com> <1293614508.15791.0.camel@powerslave>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 29 Dec 2010 23:11:42 +0200
-Message-ID: <AANLkTi=tTx=XZ0nFnTsds1F1X2saSYiVmgSxWL1zU-GY@mail.gmail.com>
-Subject: Re: [PATCH v3 14/18] wl1271: AP mode - record TX configuration settings
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTi=GgTWU1QmoqxM_rA8jUX7814PvZqsEGvcnc6ps@mail.gmail.com>
+References: <AANLkTimL=JSK6jcF4d97Nc-vLZdeRLj8o=MbpCas-H7z@mail.gmail.com>
+	<28292.82403.qm@web56807.mail.re3.yahoo.com>
+	<AANLkTi=GgTWU1QmoqxM_rA8jUX7814PvZqsEGvcnc6ps@mail.gmail.com>
+Date: Fri, 24 Dec 2010 11:02:04 -0500
+Message-ID: <AANLkTi=OcXfoo8gFQ+qTYDgL4XaKXiGZpUSSiL8yT_ho@mail.gmail.com>
+Subject: Re: carl9170 and debian squeeze
+From: Der Engel <engelster@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 29, 2010 at 11:21, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Tue, 2010-12-28 at 19:36 +0200, ext Arik Nemtsov wrote:
->>
->> diff --git a/drivers/net/wireless/wl12xx/main.c
->> b/drivers/net/wireless/wl12xx/main.c
->> index 3747d98..ea61ae7 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->> @@ -1433,6 +1433,8 @@ static int wl1271_op_config(struct ieee80211_hw
->> *hw, u32 changed)
->>                 goto out;
->>         }
->>
->> +       is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
->> +
->>         ret = wl1271_ps_elp_wakeup(wl, false);
->>         if (ret < 0)
->>                 goto out;
->
-> Did you forget to fix this one? As we discussed, this should be in
-> 10/18.
->
+Thank you, I'll try  and search for a version that compiles.
 
-Actually it was added in 10/18 (at the beginning of the function), but
-I forgot to remove it from 14/18.
-The correct place to set this is here after the mutex is held, so I've
-moved this line to 10/18 (for good this time I hope).
+The reason I went with bleeding-edge and not the stable version is
+because the stable versions are hosted at orbit-lab.org and all the
+download links are broken so I couldn't find another place from where
+to download it.
 
-Thanks,
-Arik
+Der
+
+On Fri, Dec 24, 2010 at 7:00 AM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+> On Fri, Dec 24, 2010 at 12:29 PM, Walter Goldens
+> <goldenstranger@yahoo.com> wrote:
+>> This is because of driver-select. To make a long story short, download and install the entire compat-wireless suit (without driver select). If the current version fails to compile download the one from the day before and so on until you find a version which compiles entirely. Then you'll have support for all of your wireless cards.
+>>
+>>
+>> Walter
+>>
+>
+> I always wonder why people start with bleeding-edge version of compat-wireless.
+> A daily bleeding-edge version might be broken, try a previous version
+> (as Walter recommended).
+> Check also the automated reports of Luis which are sent to this ML.
+> There are "half-baked" version around...
+>
+> "Der" did you try a stable .36 or stable .37-rcX of c-w?
+>
+> So you asked for carl9170 and not in combination with iwlwifi!
+> For a new topic open a new thread, please.
+> As Walter pointed out, do a full compilation of c-w.
+>
+>
+> - Sedat -
+>
