@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:45364 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757826Ab0LBOqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 09:46:09 -0500
-Received: from [172.21.40.213] (esdhcp040213.research.nokia.com [172.21.40.213])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oB2Ek78W010504
-	for <linux-wireless@vger.kernel.org>; Thu, 2 Dec 2010 16:46:07 +0200
-Subject: Re: wl12xx tree has been rebased in 02.12
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1291300798.16140.6.camel@chilepepper>
-References: <1291300798.16140.6.camel@chilepepper>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Dec 2010 16:47:03 +0200
-Message-ID: <1291301223.16140.9.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:42325 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab0LYVyU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Dec 2010 16:54:20 -0500
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
+References: <AANLkTi=aHU57xDq+-DWrN2sJsAwx_9bZ_ofy1rOmp0VH@mail.gmail.com>
+	<Pine.LNX.4.44L0.1012251046060.5079-100000@netrider.rowland.org>
+	<AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
+Date: Sat, 25 Dec 2010 22:54:18 +0100
+Message-ID: <AANLkTinBpuPZGrOZww=DbW8Z9A0qAZGNswcanSaQKOKp@mail.gmail.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-02 at 16:39 +0200, ext Luciano Coelho wrote:
-> Hi,
-> 
-> I have rebased the wl12xx tree so that it is better aligned with the
-> latest wireless-testing and wireless-next trees.
-> 
-> Please rebase or reset your local trees.
+Hi Ohad,
 
-And, BTW, this now includes a change on the MMC subsystem that requires
-the cards that can be powered off (which is the case of wl1271) to have
-the MMC_CAP_POWER_OFF_CARD flag set in the capabilities.
+On Sat, Dec 25, 2010 at 9:58 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+> On Sat, Dec 25, 2010 at 6:21 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> Right.  You may or may not realize it, but this requirement means that
+>> the driver _must_ bypass runtime PM sometimes.
+>
+> http://www.spinics.net/lists/linux-pm/msg22864.html
+>
+>> Now you've lost me.  Which of the driver's handlers are you talking
+>> about?
+>
+> The driver's handler, which is called by mac80211, and is responsible
+> to power off the device.
+> The _same_ handler is being called either during runtime or during a
+> system transition to suspend
+>
+>> What races?
+>
+> Driver thinks power is off and device is now fully reset, but it's isn't really
 
-So, check the omap2_hsmmc_info structure in your board file and, if the
-flag is not there, add it to the .caps element otherwise your card will
-fail to power on.
+maybe it's worth starting off with the description of chip power
+states and how they are mapped to runtime PM and static PM?
 
--- 
-Cheers,
-Luca.
+Most of the WLAN chips have some very low power modes, but you're
+talking about _complete_ shutdown as a suspended state for both
+runtime PM and static PM, is that correct?
 
+Thanks,
+   Vitaly
