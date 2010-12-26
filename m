@@ -1,102 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.214.194]:54540 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752081Ab0LVRkL convert rfc822-to-8bit (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:40851 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784Ab0LZLYL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 12:40:11 -0500
-Received: by iwn42 with SMTP id 42so3042742iwn.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 09:40:10 -0800 (PST)
+	Sun, 26 Dec 2010 06:24:11 -0500
+Subject: [RFC PATCH 0/6] zd1211rw: add support for AP mode
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, zd1211-devs@lists.sourceforge.net,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Sun, 26 Dec 2010 13:24:04 +0200
+Message-ID: <20101226112404.31775.77854.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Dec 2010 12:39:49 -0500
-Message-ID: <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-To: Elvis Dowson <elvis.dowson@mac.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, "Kahn, Gery" <geryk@ti.com>,
-	Oz Krakowski <ozk@ti.com>,
-	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 12:29 PM, Elvis Dowson <elvis.dowson@mac.com> wrote:
-> Hi,
->
-> On Dec 22, 2010, at 8:47 PM, Hauke Mehrtens wrote:
->
->> On 12/22/2010 05:13 PM, Luis R. Rodriguez wrote:
->>> On Wed, Dec 22, 2010 at 11:09 AM, Elvis Dowson <elvis.dowson@mac.com> wrote:
->>>> netdev_alloc_skb_ip_align
->>>
->>> I notice you have an android kernel, is that kernel a vanilla kernel
->>> or did it get netdev_alloc_skb_ip_align() cherry picked into it?
->
->
-> Yes, it is an android enabled 2.6.32 kernel. It also includes the TI
-> OMAP35xx/AM35xx platform support package SDK v03.00.01.06/
->
->
->> netdev_alloc_skb_ip_align is not defined in the 2.6.32.27 vanilla
->> kernel. Someone else (google or ti) must have backported it to this
->> kernel and added it to your kernel.
->>
->> I do not want to add some special handling into compat-wireless just for
->> some android kernel. Just remove netdev_alloc_skb_ip_align() and
->> NETDEV_POST_INIT from include/linux/compat-2.6.33.h and the compile
->> problems you posted should be fixed.
->
-> I made the following modifications, but get another error:
->
-> diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-> index c2dbc1b..468a074 100644
-> --- a/include/linux/compat-2.6.33.h
-> +++ b/include/linux/compat-2.6.33.h
-> @@ -52,19 +52,6 @@ static inline void compat_release_firmware(const struct firmware *fw)
->  #define IFF_DONT_BRIDGE 0x800          /* disallow bridging this ether dev */
->  /* source: include/linux/if.h */
->
-> -/* this will never happen on older kernels */
-> -#define NETDEV_POST_INIT 0xffff
-> -
-> -static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
-> -                unsigned int length)
-> -{
-> -       struct sk_buff *skb = netdev_alloc_skb(dev, length + NET_IP_ALIGN);
-> -
-> -       if (NET_IP_ALIGN && skb)
-> -               skb_reserve(skb, NET_IP_ALIGN);
-> -       return skb;
-> -}
-> -
->  #if defined(CONFIG_PCCARD) || defined(CONFIG_PCCARD_MODULE)
->
->  #if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
+Hello!
 
-I'd rather you figure out a way to identify that android kernel
-somehow reliably and send a patch upstream to ifdef out
-netdev_alloc_skb_ip_align() for that kernel, that way other Android
-hackers can benefit.
+This patchset adds AP mode to zd1211rw. I have done this with vendor driver
+as reference and in most parts everything appears ok. Unencrypted AP and 
+WEP appears to work without issues, driver can switch back to station mode
+without problems.
 
-> CC [M]  /tool/patches/compat-wireless-2.6.37-rc6-3-patchwork/net/mac80211/led.o
-> /tool/patches/compat-wireless-2.6.37-rc6-3-patchwork/net/mac80211/led.c: In function ‘ieee80211_led_init’:
-> /tool/patches/compat-wireless-2.6.37-rc6-3-patchwork/net/mac80211/led.c:59: error: invalid application of ‘sizeof’ to incomplete type ‘struct led_trigger’
+Now current problems are:
 
-
-This is from:
-
-void ieee80211_led_init(struct ieee80211_local *local)
-{
-        local->rx_led = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
-       ...
-}
-
-Looks good to me..  Not sure what can cause this, hrm.
-
-  Luis
+ 1. I have not been able to trigger bc/mc buffering. I have tested with
+    b43 and rndis_wlan stations.
+ 2. When connecting with b43 to WPA enabled AP (hostapd 0.7.3), I get lots of:
+	wlan2: STA 00:xx:xx:xx:xx:xx IEEE 802.1X: unauthorizing port
+	wlan2: STA 00:xx:xx:xx:xx:xx IEEE 802.11: deauthenticated
+    and then after ~1-2 minutes of retrying finally it makes connection.
+    With rndis_wlan, no problems.
+    Either I have hostapd config error (first time using hostapd), or
+    something is wrong with driver.
