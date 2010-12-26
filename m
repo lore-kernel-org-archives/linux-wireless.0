@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:45197 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755884Ab0LPOKf (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:52300 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752020Ab0LZOvx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 09:10:35 -0500
-Received: by vws16 with SMTP id 16so1292712vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 06:10:34 -0800 (PST)
-Message-ID: <4D0A1DD6.8050500@lwfinger.net>
-Date: Thu, 16 Dec 2010 08:10:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 26 Dec 2010 09:51:53 -0500
+Message-ID: <20101226165146.19173ihiyy3hyjy8@hayate.sektori.org>
+Date: Sun, 26 Dec 2010 16:51:46 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: =?utf-8?b?UmFmYcWCIA==?= =?utf-8?b?TWnFgmVja2k=?=
+	<zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	zd1211-devs@lists.sourceforge.net,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: [RFC PATCH 5/6] zd1211rw: implement beacon fetching and
+ handling ieee80211_get_buffered_bc()
+References: <20101226112404.31775.77854.stgit@fate.lan>
+ <20101226112452.31775.12810.stgit@fate.lan>
+ <AANLkTi=yN485OSM+TSPoZrG=h3M0vhAAmVgmndxp-BrG@mail.gmail.com>
+In-Reply-To: <AANLkTi=yN485OSM+TSPoZrG=h3M0vhAAmVgmndxp-BrG@mail.gmail.com>
 MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek rtl8188 support?
-References: <955019.64728.qm@web56808.mail.re3.yahoo.com>
-In-Reply-To: <955019.64728.qm@web56808.mail.re3.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2010 07:25 AM, Walter Goldens wrote:
-> Realtek has not yet sent me the code for the USB
->> devices, but as the chip
->> and core code is common, it should not be far behind.
+Quoting Rafał Miłecki <zajec5@gmail.com>:
 
-> Hey Larry,
-> 
-> Whats the status quo for the USB driver?
+> 2010/12/26 Jussi Kivilinna <jussi.kivilinna@mbnet.fi>:
+>> +       if (mac->vif || mac->vif->type == NL80211_IFTYPE_UNSPECIFIED)
+>> +               return;
+>
+> That's smelly. I think you meant negation in first part of condition.
 
-Realtek is still testing/finishing. They sent me the firmware, which I pushed to
-linux-firmware, thus that part is ready.
+Heh.. well that fixed broadcast/multicast buffering. Thanks.
 
-As we just got the code for the PCIe version into wireless-testing yesterday, I
-hope that the good news on it will help the USB effort.
+>
+>
+>> -       if (int_status & INT_CFG_NEXT_BCN)
+>> +       if (int_status & INT_CFG_NEXT_BCN) {
+>>                dev_dbg_f_limit(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
+>> -       else
+>> +               zd_beacon_done(mac);
+>> +       } else
+>>                dev_dbg_f(zd_mac_dev(mac), "Unsupported interrupt\n");
+>
+> Minor thing, check http://www.kernel.org/doc/Documentation/CodingStyle
+>
+>> This does not apply if one branch of a conditional statement is a single
+>> statement. Use braces in both branches.
+>
+> Use brackets for "else" as well please.
+>
 
-Larry
+Ok.
+
+-Jussi
 
