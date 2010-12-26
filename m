@@ -1,74 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2872 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932905Ab0LTRrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 12:47:24 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 20 Dec 2010 09:47:09 -0800
-Subject: RE: WL1271 chip
-Message-ID: <400C43189542CE41BC0A5B252FC90136952F0594D9@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
- <1292843841.13129.9.camel@chilepepper>,<0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
-In-Reply-To: <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56302 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab0LZT5H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Dec 2010 14:57:07 -0500
+Received: by bwz15 with SMTP id 15so9183392bwz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Dec 2010 11:57:05 -0800 (PST)
+Message-Id: <E1PWwiD-0003TF-Oo@debian64.daheim>
+Subject: [RFC] mac80211: ignore PSM bit of reordered frames
+To: linux-wireless@vger.kernel.org
+From: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Date: Sun, 26 Dec 2010 20:56:15 +0100
 MIME-Version: 1.0
 Content-Type: text/plain;
- charset=utf-8
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSBhbSBhbHNvIG5vdCBmYW1pbGlhciB3aXRoIGkuTVgyMzMsIGJ1dCBnb29nbGluZyBpdCB0aGlz
-IHNlZW1zIHRvIGJlIGEgRnJlZXNjYWxlIGFwcCBwcm9jZXNzb3Igd2l0aCBBUk05MjZFSi1TIGNv
-cmUgYW5kIGl0IGhhcyBTRElPIHJldjIuMCBjb21wbGlhbnQgaW50ZXJmYWNlIGludGVncmF0ZWQu
-IFRoZXJlIGEgYXJjaC9hcm0vbWFjaC1pbXggZGlyZWN0b3J5IGNvbnRhaW5pbmcgaS5NWDI3IHBy
-b2Nlc3NvciB3aGljaCBoYXMgc29tZSBzaW1pbGFyaXRpZXMgKHNhbWUgY29yZSBhbmQgTU1DL1NE
-IGludGVyZmFjZXMpLiBTbyBpdCBjb3VsZCBiZSBhIGdvb2Qgc3RhcnRpbmcgcG9pbnQgZm9yIHlv
-dXIgcG9ydGluZyBlZmZvcnQuDQoNCkFub3RoZXIgaGludCBtYXkgYmUgdGhhdCBTRElPIGlzIHJl
-bGF0ZWQgdG8gTU1DL1NELiBTbyBpbiBib2FyZC16b29tLXBlcmlwaGVyYWxzLmMgeW91IHdpbGwg
-ZmluZCBtb3JlIHdoZW4gc2VhcmNoaW5nIGZvciAnbW1jJy4gZWc6DQoNCnN0YXRpYyBzdHJ1Y3Qg
-b21hcDJfaHNtbWNfaW5mbyBtbWNbXSBfX2luaXRkYXRhID0gew0KICAgICAgICAgICA6DQogICAg
-ICAgICAgIDoNCiAgICAgICAgew0KICAgICAgICAgICAgICAgIC5uYW1lICAgICAgICAgICA9ICJ3
-bDEyNzEiLA0KICAgICAgICAgICAgICAgIC5tbWMgICAgICAgICAgICA9IDMsDQogICAgICAgICAg
-ICAgICAgLmNhcHMgICAgICAgICAgID0gTU1DX0NBUF80X0JJVF9EQVRBLA0KICAgICAgICAgICAg
-ICAgIC5ncGlvX3dwICAgICAgICA9IC1FSU5WQUwsDQogICAgICAgICAgICAgICAgLmdwaW9fY2Qg
-ICAgICAgID0gLUVJTlZBTCwNCiAgICAgICAgICAgICAgICAubm9ucmVtb3ZhYmxlICAgPSB0cnVl
-LA0KICAgICAgICB9LA0KICAgICAgICB7fSAgICAgIC8qIFRlcm1pbmF0b3IgKi8NCn07DQoNCkdy
-LiBBdlMNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCkZyb206IGxp
-bnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbGludXgtd2lyZWxlc3Mtb3duZXJA
-dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQnJ6ZXpvd3NraSwgS2FyZW4gW0thcmVuLkJy
-emV6b3dza2lAcGR0LmNvbV0NClNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgMjAsIDIwMTAgNjoxMiBQ
-TQ0KVG86IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KQ2M6IEJyemV6b3dza2ksIEth
-cmVuDQpTdWJqZWN0OiBXTDEyNzEgY2hpcA0KDQpIaSENCkx1Y2Egc3VnZ2VzdGVkIHRoYXQgSSBz
-ZW5kIHRoaXMgdG8gYWxsIG9mIHlvdSENCg0KSSBsb29rZWQgYXQgYXJjaC9hcm0vbWFjaC1vbWFw
-Mi9ib2FyZC16b29tLXBlcmlwaGVyYWxzLmMgZmlsZS4uDQpJIGRpZG4ndCBzZWUgYW55dGhpbmcg
-c3BlY2lmaWMgdG8gU0RJTy4uDQoNCkkgd2FzIGxvb2tpbmcgYXQgbGludXgtMi42LjM2LjIuLg0K
-SXMgdGhpcyB0aGUgY29ycmVjdCB2ZXJzaW9uIHRvIGxvb2sgYXQ/DQoNClBsZWFzZSByZWFkIGJl
-bG93IGZvciBvcmlnaW5hbCBxdWVzdGlvbi4NClRIQU5LIHlvdSBldmVyeW9uZSBmb3IgQU5ZIGhl
-bHAgeW91IGNhbiBnaXZlIG1lIQ0KS2FyZW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0N
-CkhpIEthcmVuLA0KDQoNCj4gSGkgTHVjaWFubywNCj4NCj4gSeKAmW0gdmVyeSBzb3JyeSB0byBl
-bWFpbCAgeW91IGRpcmVjdGx5Lg0KDQpObyBwcm9ibGVtLiAgQnV0IGl0IGlzIGFsd2F5cyBiZXR0
-ZXIgdG8gZW1haWwgdGhlIGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyBtYWlsaW5nIGxp
-c3QgdG9vLCBiZWNhdXNlIHRoZXJlIGFyZSBsb3RzIG9mIG90aGVyIHBlb3BsZSB3aG8gY2FuIGhl
-bHAgeW91IHRoZXJlLg0KDQoNCj4gSSBhbSB2ZXJ5IG5ldyB0byBwb3J0aW5nIGRyaXZlcnPigKYN
-Cj4NCj4gSSBoYXZlIHRvIGludGVncmF0ZS9wb3J0IGEgV0wxMjcxIGNoaXAgKEkgdGhpbmsgaXTi
-gJlzIGdvaW5nIHRvIGJlIHRoZQ0KPiBvbmUNCj4NCj4gbWFudWZhY3R1cmVkIGJ5IE11cmF0YSku
-DQo+DQo+IEkgc2VlIHRoYXQgeW91IG1haW50YWluIHRoZSB3bDEyeHggZHJpdmVycyBvbiBsaW51
-eC13aXJlbGVzcw0KPiBrZXJuZWwub3JnLg0KPg0KPg0KPg0KPiBUaGUgcHJvY2Vzc29yIGlzIGlN
-WDIzMywgT1MgaXMgQW5kcm9pZCAoTGludXgpLg0KPg0KPg0KPg0KPiBJIHdvdWxkIGJlIHZlcnkg
-YXBwcmVjaWF0aXZlIGlmIHlvdSBjb3VsZCBnaXZlIG1lIHNvbWUNCj4gYWR2aWNlL2luc3RydWN0
-aW9ucy9kb2N1bWVudGF0aW9uDQo+DQo+IHRoYXQgd291bGQgaGVscCBtZSBvbiB1bmRlcnN0YW5k
-L3N0YXJ0L2NvbXBsZXRlIHRoaXMgdGFzay4NCg0KV2VsbCwgdGhlIHdsMTJ4eCBkcml2ZXIgc2hv
-dWxkIHdvcmsgbW9yZSBvciBsZXNzIG91dC1vZi10aGUtYm94LiAgVGhlIG9ubHkgdGhpbmcgeW91
-IG5lZWQgdG8gZG8gaXMgdG8gc2V0IHVwIHRoZSBTRElPIGNvbm5lY3Rpb24gdG8geW91ciBjYXJk
-IChhc3N1bWluZyB0aGF0IHlvdSdyZSB1c2luZyB0aGUgU0RJTyBidXMgdG8gY29ubmVjdCBpdCku
-ICBJJ20gbm90IGZhbWlsaWFyIHdpdGggdGhlIGlNWDIzMywgYnV0IHdpdGggT01BUCwgaXQncyBw
-cmV0dHkgc2ltcGxlLiAgWW91IGNhbiBzZWUgdGhlIGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQt
-em9vbS1wZXJpcGhlcmFscy5jIGZpbGUgaW4gdGhlIExpbnV4IGtlcm5lbCBmb3IgYW4gZXhhbXBs
-ZSBvbiBob3cgdG8gc2V0IGl0IHVwIGZvciB0aGUgWm9vbSBib2FyZCAoT01BUC1iYXNlZCkuDQoN
-Cg0KLS0NCkNoZWVycywNCkx1Y2EuDQoNCg0KTu+/ve+/ve+/ve+/ve+/vXLvv73vv71577+977+9
-77+9Yu+/vVjvv73vv73Hp3bvv71e77+9Kd66ey5u77+9K++/ve+/ve+/ve+/vXvvv73vv70q3pXv
-v70s77+9e2F577+9HcqH2pnvv70sagfvv73vv71m77+977+977+9aO+/ve+/ve+/vXrvv70e77+9
-d++/ve+/ve+/vSDvv73vv73vv71qOit277+977+977+9d++/vWrvv71t77+977+977+977+9B++/
-ve+/ve+/ve+/vXpaK++/ve+/ve+/ve+/ve+/vd2iaiLvv73vv70h77+9aQ0K
+This patch tackles one of the problems of my
+reorder release timer patch from August.
+
+<http://www.spinics.net/lists/linux-wireless/msg57214.html>
+=>
+What if the reorder release triggers and ap_sta_ps_end
+(called by ieee80211_rx_h_sta_process) accidentally clears
+the WLAN_STA_PS_STA flag, because 100ms ago - when the STA
+was still active - frames were put into the reorder buffer.
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Alternatively, we could flush the per-tid STA reorder buffer
+content in ap_sta_ps_start, so the buffer is empty.
+
+---
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/rx.c          |    4 ++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a0cf5ab..bb71fe3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -168,6 +168,7 @@ typedef unsigned __bitwise__ ieee80211_rx_result;
+  * @IEEE80211_RX_FRAGMENTED: fragmented frame
+  * @IEEE80211_RX_AMSDU: a-MSDU packet
+  * @IEEE80211_RX_MALFORMED_ACTION_FRM: action frame is malformed
++ * @IEEE80211_RX_DEFERED_RELEASE: frame was subjected to receive reordering
+  *
+  * These are per-frame flags that are attached to a frame in the
+  * @rx_flags field of &struct ieee80211_rx_status.
+@@ -178,6 +179,7 @@ enum ieee80211_packet_rx_flags {
+ 	IEEE80211_RX_FRAGMENTED			= BIT(2),
+ 	IEEE80211_RX_AMSDU			= BIT(3),
+ 	IEEE80211_RX_MALFORMED_ACTION_FRM	= BIT(4),
++	IEEE80211_RX_DEFERED_RELEASE		= BIT(5),
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b6c2a30..e612805 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -537,6 +537,7 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+ 					    struct sk_buff_head *frames)
+ {
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
++	struct ieee80211_rx_status *status;
+ 
+ 	lockdep_assert_held(&tid_agg_rx->reorder_lock);
+ 
+@@ -546,6 +547,8 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+ 	/* release the frame from the reorder ring buffer */
+ 	tid_agg_rx->stored_mpdu_num--;
+ 	tid_agg_rx->reorder_buf[index] = NULL;
++	status = IEEE80211_SKB_RXCB(skb);
++	status->rx_flags |= IEEE80211_RX_DEFERED_RELEASE;
+ 	__skb_queue_tail(frames, skb);
+ 
+ no_frame:
+@@ -1185,6 +1188,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	 * exchange sequence.
+ 	 */
+ 	if (!ieee80211_has_morefrags(hdr->frame_control) &&
++	    !(status->rx_flags & IEEE80211_RX_DEFERED_RELEASE) &&
+ 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
+ 	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
+ 		if (test_sta_flags(sta, WLAN_STA_PS_STA)) {
+-- 
+1.7.2.3
 
