@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:62575 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754746Ab0LOPIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 10:08:44 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBFF8cVX029127
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 17:08:43 +0200
-Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current
- style
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Roger Quadros <roger.quadros@nokia.com>
-In-Reply-To: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Dec 2010 17:10:31 +0200
-Message-ID: <1292425831.32385.17.camel@chilepepper>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:33070 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752208Ab0LZUCu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Dec 2010 15:02:50 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 59DFA54248E
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Dec 2010 15:03:52 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-26 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101226200248.D9C0540F97@repository3.orbit-lab.org>
+Date: Sun, 26 Dec 2010 15:02:48 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-15 at 16:31 +0200, luciano.coelho@nokia.com wrote:
-> From: Luciano Coelho <luciano.coelho@nokia.com>
-> 
-> Change some file names and Kconfig settings so that this new module matches
-> the new way of using wl12xx instead of wl1271.
-> 
-> Also fix SDIO power enabling and disabling to match the latest way of doing
-> it.
-> 
-> Cc: Roger Quadros <roger.quadros@nokia.com>
-> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> ---
 
-Applied.
+compat-wireless code metrics
 
+    777174 - Total upstream lines of code being pulled
+      2223 - backport code changes
+      1946 - backport code additions
+       277 - backport code deletions
+      6648 - backport from compat module
+      8871 - total backport code
+    1.1414 - % of code consists of backport work
+      1532 - Crap changes not yet posted
+      1489 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1971 - % of crap code
 
--- 
-Cheers,
-Luca.
-
+Base tree: linux-next.git
+Base tree version: next-20101221
+compat-wireless release: compat-wireless-2010-12-20-1-g53f8e22-pc
