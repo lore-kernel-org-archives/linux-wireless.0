@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:60930 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757677Ab0LBXgM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 18:36:12 -0500
-Received: by iwn42 with SMTP id 42so1519049iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 15:36:12 -0800 (PST)
+Received: from ogre.sisk.pl ([217.79.144.158]:52571 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752325Ab0LZSgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Dec 2010 13:36:15 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Ohad Ben-Cohen" <ohad@wizery.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Sun, 26 Dec 2010 19:35:13 +0100
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com> <201012261245.29680.rjw@sisk.pl> <AANLkTimzNXyirnV9wGXf6R454bwEDf=poBZzevAWXEUd@mail.gmail.com>
+In-Reply-To: <AANLkTimzNXyirnV9wGXf6R454bwEDf=poBZzevAWXEUd@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1291331474-16475-1-git-send-email-eliad@wizery.com>
-References: <1291331474-16475-1-git-send-email-eliad@wizery.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 2 Dec 2010 15:35:51 -0800
-Message-ID: <AANLkTik69KDgWsHJkpAUtZY-uwAKpXLGUcrmerQbcHwM@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix pm_qos magic numbers
-To: Eliad Peller <eliad@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012261935.13238.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 2, 2010 at 3:11 PM, Eliad Peller <eliad@wizery.com> wrote:
-> the default /dev/network_latency is 2000s.
-> 1900ms = 1900000us.
-> just use consts.
->
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+On Sunday, December 26, 2010, Ohad Ben-Cohen wrote:
+> On Sun, Dec 26, 2010 at 1:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Why does the driver need the device to be reset even though it hasn't
+> > been suspeneded yet?
+> 
+> Because it is asked to stop the hardware by mac80211.
 
-I'm sorry, I don't understand what your description is saying, can you
-elaborate on it some more so that when review this on the commit log
-it is crystal clear what you meant?
+So I guess the mac80211 layer should ask it to start it again.
 
-  Luis
+Thanks,
+Rafael
