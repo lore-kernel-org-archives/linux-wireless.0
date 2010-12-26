@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f45.google.com ([209.85.215.45]:46218 "EHLO
-	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756095Ab0LHU72 (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:37084 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752020Ab0LZOua (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 15:59:28 -0500
-Received: by ewy10 with SMTP id 10so1245494ewy.4
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 12:59:26 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Chris Pechard <chrispechard@yahoo.com>
-Subject: Re: carl9170fw: custom build incompatibility issue
-Date: Wed, 8 Dec 2010 21:59:09 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <368544.4876.qm@web120203.mail.ne1.yahoo.com> <201012082052.51358.chunkeey@googlemail.com> <326185.97637.qm@web120219.mail.ne1.yahoo.com>
-In-Reply-To: <326185.97637.qm@web120219.mail.ne1.yahoo.com>
+	Sun, 26 Dec 2010 09:50:30 -0500
+Message-ID: <20101226165023.81872js0gqshj2uo@hayate.sektori.org>
+Date: Sun, 26 Dec 2010 16:50:23 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: =?utf-8?b?UmFmYcWCIA==?= =?utf-8?b?TWnFgmVja2k=?=
+	<zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	zd1211-devs@lists.sourceforge.net,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: [RFC PATCH 3/6] zd1211rw: let zd_set_beacon_interval() set
+ dtim_period and add AP-beacon flag
+References: <20101226112404.31775.77854.stgit@fate.lan>
+ <20101226112433.31775.89617.stgit@fate.lan>
+ <AANLkTikFrH0P+A-tZU1hULNja4yvWkwqb22csHtrKO76@mail.gmail.com>
+In-Reply-To: <AANLkTikFrH0P+A-tZU1hULNja4yvWkwqb22csHtrKO76@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201012082159.09406.chunkeey@googlemail.com>
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 08 December 2010 21:33:43 Chris Pechard wrote:
-> Hi Christian,
-> 
-> this is the info you requested. 
+Quoting Rafał Miłecki <zajec5@gmail.com>:
 
-The only thing wrong is the lack of fw metadata (which is kind of
-obvious since the the firmware is somewhat customizable).
+> 2010/12/26 Jussi Kivilinna <jussi.kivilinna@mbnet.fi>:
+>> -static int set_beacon_interval(struct zd_chip *chip, u32 interval)
+>> +static int set_beacon_interval(struct zd_chip *chip, u32 interval,
+>> +                              u16 dtim_period)
+>
+> That gets messy. We have interval in interval, flags in interval and
+> period in dtim_period :|
+>
+> Do you have idea what is maximum value for dtim_period? It sounds like
+> it should be 0xff.
+>
+> Could we maybe try sth like:
+> u16 interval, u8 dtim_period, u8 flags? Then we would have
+> flags << 24 | dtim_period << 16 | interval
+>
+> Or maybe to avoid problems with shifting flags (re-defining defines?),
+> we could use a little more messy
+> flags | dtim_period << 16 | interval
+>
+> Or do you have better idea? Proposed one doesn't seem really clear for me.
+>
+Vendor driver uses u16 interval, u8 dtim_p, u8 mode and selects right  
+flags based on interval. I'll something like change to that, I think  
+caller shouldn't be setting hw flags here anyway.
 
+-Jussi
 
-You have two options:
-
- - either concat carl9170.fw and carl9170.dsc into carl9170-1.fw
-   (by hand).
-
- - autogen.sh install [also adds miniboot + fw checksum]
-   (since CONFIG_CARL9170FW_MAKE_RELEASE is y,
-	and CONFIG_CARL9170FW_RELEASE_VERSION=1)
-
-Best Regards,
-	Christian 
