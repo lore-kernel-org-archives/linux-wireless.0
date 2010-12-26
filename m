@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:23780 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751209Ab0LFIaW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 03:30:22 -0500
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-057094220
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Dec 2010 17:30:21 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/3] nl80211: Export available antennas
-Date: Mon, 6 Dec 2010 17:30:16 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20101206034529.11462.48097.stgit@localhost6.localdomain6> <20101206034535.11462.70791.stgit@localhost6.localdomain6> <1291623453.3506.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291623453.3506.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012061730.16102.br1@einfach.org>
+Received: from mga03.intel.com ([143.182.124.21]:26963 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752440Ab0LZS1v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Dec 2010 13:27:51 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/3] iwlagn: fix FH error
+Date: Sun, 26 Dec 2010 10:17:57 -0800
+Message-Id: <1293387478-3297-3-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1293387478-3297-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1293387478-3297-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon December 6 2010 17:17:33 Johannes Berg wrote:
-> On Mon, 2010-12-06 at 12:45 +0900, Bruno Randolf wrote:
-> > +		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
-> > +			    dev->wiphy.available_antennas);
-> 
-> I think you should not advertise this unless it's non-zero, and unless
-> also the set/get callbacks are available.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I don't. Please check the context of this patch, esp patch 1. of this series.
+# iw wlan0 interface add moni0 type monitor flags control
+# ip link set moni0 up
 
-> Similarly, I think you shouldn't advertise the set/get CMDs when the
-> available antennas aren't set.
+causes a continuous spew of FH_ERROR from the
+device. Fix this by not setting the CTL2HOST
+filter by itself -- CTL + promisc works fine.
 
-There are no set/get commands for antennas since you preferred putting it into 
-wiphy info.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> Finally, you should check for nl80211 that the given tx/rx masks fall
-> into the available antennas mask.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d407547..b54d74d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3634,7 +3634,8 @@ void iwlagn_configure_filter(struct ieee80211_hw *hw,
+ 			changed_flags, *total_flags);
+ 
+ 	CHK(FIF_OTHER_BSS | FIF_PROMISC_IN_BSS, RXON_FILTER_PROMISC_MSK);
+-	CHK(FIF_CONTROL, RXON_FILTER_CTL2HOST_MSK);
++	/* Setting _just_ RXON_FILTER_CTL2HOST_MSK causes FH errors */
++	CHK(FIF_CONTROL, RXON_FILTER_CTL2HOST_MSK | RXON_FILTER_PROMISC_MSK);
+ 	CHK(FIF_BCN_PRBRESP_PROMISC, RXON_FILTER_BCON_AWARE_MSK);
+ 
+ #undef CHK
+-- 
+1.7.0.4
 
-Allright, I can do that. Would you prefer to reject the command in this case 
-or just apply the available mask?
-
-bruno
