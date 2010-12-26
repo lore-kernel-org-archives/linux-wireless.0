@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48665 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882Ab0LVSaK (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63072 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab0LZI1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 13:30:10 -0500
-Date: Wed, 22 Dec 2010 13:28:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: Re: [PATCH] ath9k: fix aphy / wiphy idle mismatch
-Message-ID: <20101222182851.GC10046@tuxdriver.com>
-References: <1292862599-26335-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1292862599-26335-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 26 Dec 2010 03:27:40 -0500
+Received: by wwa36 with SMTP id 36so8300613wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Dec 2010 00:27:38 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: don't join upon disassociation
+Date: Sun, 26 Dec 2010 10:27:50 +0200
+Message-Id: <1293352070-17513-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 20, 2010 at 11:29:59AM -0500, Luis R. Rodriguez wrote:
-> ath9k supports its own set of virtual wiphys, and it uses
-> the mac80211 idle notifications to know when a device needs
-> to be idle or not. We recently changed ath9k to force idle
-> on driver stop() and on resume but forgot to take into account
-> ath9k's own virtual wiphy idle states. These are used internally
-> by ath9k to check if the device's radio should be powered down
-> on each idle call. Without this change its possible that the
-> device could have been forced off but the virtual wiphy idle
-> was left on.
-> 
-> Cc: stable@kernel.org
-> Cc: Paul Stewart <pstew@google.com>
-> Cc: Amod Bodas <amod.bodas@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> 
-> I'm not yet sure if this actually fixes an issue but it
-> certainly is a proper ammendment to the other idle fix
-> submitted for stable for suspend/resume.
+wl12xx "rejoins" upon every BSS_CHANGED_BSSID notification.
+However, there is no need to rejoin after disassociation, so just
+filter out the case when the new bssid is 00:00:00:00:00:00.
 
-Can you refresh me on which patch that is?
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 062247e..7aa783c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1944,19 +1944,23 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
+ 			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
+ 
+-			ret = wl1271_cmd_build_null_data(wl);
+-			if (ret < 0)
+-				goto out_sleep;
++			if (!is_zero_ether_addr(wl->bssid)) {
++				ret = wl1271_cmd_build_null_data(wl);
++				if (ret < 0)
++					goto out_sleep;
+ 
+-			ret = wl1271_build_qos_null_data(wl);
+-			if (ret < 0)
+-				goto out_sleep;
++				ret = wl1271_build_qos_null_data(wl);
++				if (ret < 0)
++					goto out_sleep;
+ 
+-			/* filter out all packets not from this BSSID */
+-			wl1271_configure_filters(wl, 0);
++				/* filter out all packets not from this BSSID */
++				wl1271_configure_filters(wl, 0);
+ 
+-			/* Need to update the BSSID (for filtering etc) */
+-			do_join = true;
++				/*
++				 * Need to update the BSSID (for filtering etc)
++				 */
++				do_join = true;
++			}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ASSOC) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
