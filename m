@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35588 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59029 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753200Ab0LGUE0 (ORCPT
+	with ESMTP id S1752035Ab0LZMY0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 15:04:26 -0500
-Subject: Re: [PATCH] mac80211: Fix BUG in pskb_expand_head when
- transmitting shared skbs
+	Sun, 26 Dec 2010 07:24:26 -0500
+Subject: Re: [RFC PATCH 0/6] zd1211rw: add support for AP mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20101207194920.GH2700@tuxdriver.com>
-References: <1291311849-13086-1-git-send-email-helmut.schaa@googlemail.com>
-	 <20101207194920.GH2700@tuxdriver.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	zd1211-devs@lists.sourceforge.net,
+	Ulrich Kunitz <kune@deine-taler.de>
+In-Reply-To: <20101226112404.31775.77854.stgit@fate.lan>
+References: <20101226112404.31775.77854.stgit@fate.lan>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Dec 2010 21:04:17 +0100
-Message-ID: <1291752257.3607.58.camel@jlt3.sipsolutions.net>
+Date: Sun, 26 Dec 2010 13:24:23 +0100
+Message-ID: <1293366263.3537.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-07 at 14:49 -0500, John W. Linville wrote:
+On Sun, 2010-12-26 at 13:24 +0200, Jussi Kivilinna wrote:
 
-> > It would be possible to avoid another resize of the copied skb by using
-> > skb_copy_expand instead of skb_copy but that would make the patch more
-> > complex. Also, shared skbs are a corner case right now, so the resize
-> > shouldn't matter much.
-> > 
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> 
-> Is this intended for 2.6.37?  It looks like it would apply there.
+>  1. I have not been able to trigger bc/mc buffering. I have tested with
+>     b43 and rndis_wlan stations.
 
-Yeah, and probably older stable too.
+Put the stations into powersave mode. I guess neither of those actually
+support that, though you might easily pretend to support powersave in
+b43 -- even if it won't save power it'll have the AP trigger this.
+
+However, bc/mc buffering is a very important feature of AP mode, so you
+shouldn't try to support AP mode w/o it.
 
 johannes
 
