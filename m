@@ -1,121 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:59771 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426Ab0LQD4s (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35980 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008Ab0LZMhH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 22:56:48 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: use debugfs_remove_recursive()
-Date: Thu, 16 Dec 2010 19:56:46 -0800
-Message-Id: <1292558206-29423-1-git-send-email-bzhao@marvell.com>
+	Sun, 26 Dec 2010 07:37:07 -0500
+Received: by qyj19 with SMTP id 19so9620498qyj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Dec 2010 04:37:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1293366263.3537.1.camel@jlt3.sipsolutions.net>
+References: <20101226112404.31775.77854.stgit@fate.lan>
+	<1293366263.3537.1.camel@jlt3.sipsolutions.net>
+Date: Sun, 26 Dec 2010 13:37:06 +0100
+Message-ID: <AANLkTim_G3Q8tkNepERTWT-0j118ZxTbN==Z9ufCUWRa@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/6] zd1211rw: add support for AP mode
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	zd1211-devs@lists.sourceforge.net,
+	Ulrich Kunitz <kune@deine-taler.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+2010/12/26 Johannes Berg <johannes@sipsolutions.net>:
+> On Sun, 2010-12-26 at 13:24 +0200, Jussi Kivilinna wrote:
+>
+>>  1. I have not been able to trigger bc/mc buffering. I have tested with
+>>     b43 and rndis_wlan stations.
+>
+> Put the stations into powersave mode. I guess neither of those actually
+> support that, though you might easily pretend to support powersave in
+> b43 -- even if it won't save power it'll have the AP trigger this.
+>
+> However, bc/mc buffering is a very important feature of AP mode, so you
+> shouldn't try to support AP mode w/o it.
 
-instead of keeping pointers to all entries.
+What do bc and mc stand for?
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
----
- drivers/net/wireless/mwifiex/debugfs.c |   36 +++----------------------------
- drivers/net/wireless/mwifiex/main.h    |   23 --------------------
- 2 files changed, 4 insertions(+), 55 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
-index 4ea5cbc..9d23c68 100644
---- a/drivers/net/wireless/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/mwifiex/debugfs.c
-@@ -2404,14 +2404,9 @@ exit:
- }
- 
- #define MWIFIEX_DFS_ADD_FILE(name) do {                                 \
--	priv->dfs_##name =                                              \
--	debugfs_create_file(#name, 0644, priv->dfs_dev_dir,             \
--			priv, &mwifiex_dfs_##name##_fops);              \
--} while (0);
--
--#define MWIFIEX_DFS_REM_FILE(name) do {                                 \
--	if (priv->dfs_##name)                                           \
--		debugfs_remove(priv->dfs_##name);                       \
-+	if (!debugfs_create_file(#name, 0644, priv->dfs_dev_dir,        \
-+			priv, &mwifiex_dfs_##name##_fops))              \
-+		goto exit;                                               \
- } while (0);
- 
- #define MWIFIEX_DFS_FILE_OPS(name)                                      \
-@@ -2524,30 +2519,7 @@ mwifiex_dev_debugfs_remove(struct mwifiex_private *priv)
- 	if (!priv)
- 		goto exit;
- 
--	MWIFIEX_DFS_REM_FILE(info);
--	MWIFIEX_DFS_REM_FILE(debug);
--	MWIFIEX_DFS_REM_FILE(deepsleep);
--	MWIFIEX_DFS_REM_FILE(hscfg);
--	MWIFIEX_DFS_REM_FILE(amsduaggrctrl);
--	MWIFIEX_DFS_REM_FILE(txaggrprio);
--	MWIFIEX_DFS_REM_FILE(sleeppd);
--	MWIFIEX_DFS_REM_FILE(mpactrl);
--	MWIFIEX_DFS_REM_FILE(qoscfg);
--	MWIFIEX_DFS_REM_FILE(atimwindow);
--	MWIFIEX_DFS_REM_FILE(txratecfg);
--	MWIFIEX_DFS_REM_FILE(addbapara);
--	MWIFIEX_DFS_REM_FILE(addbareject);
--	MWIFIEX_DFS_REM_FILE(httxcfg);
--	MWIFIEX_DFS_REM_FILE(htcapinfo);
--	MWIFIEX_DFS_REM_FILE(getlog);
--	MWIFIEX_DFS_REM_FILE(antcfg);
--	MWIFIEX_DFS_REM_FILE(regrdwr);
--	MWIFIEX_DFS_REM_FILE(rdeeprom);
--	MWIFIEX_DFS_REM_FILE(drvdbg);
--	MWIFIEX_DFS_REM_FILE(txbufcfg);
--	MWIFIEX_DFS_REM_FILE(passphrase);
--	MWIFIEX_DFS_REM_FILE(esuppmode);
--	MWIFIEX_DFS_REM_FILE(dev_dir);
-+	debugfs_remove_recursive(priv->dfs_dev_dir);
- exit:
- 	LEAVE();
- }
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 8bb8b45..646cc55 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -419,29 +419,6 @@ struct mwifiex_private {
- 	char version_str[128];
- #ifdef CONFIG_DEBUG_FS
- 	struct dentry *dfs_dev_dir;
--	struct dentry *dfs_info;
--	struct dentry *dfs_debug;
--	struct dentry *dfs_deepsleep;
--	struct dentry *dfs_hscfg;
--	struct dentry *dfs_amsduaggrctrl;
--	struct dentry *dfs_txaggrprio;
--	struct dentry *dfs_sleeppd;
--	struct dentry *dfs_mpactrl;
--	struct dentry *dfs_qoscfg;
--	struct dentry *dfs_atimwindow;
--	struct dentry *dfs_txratecfg;
--	struct dentry *dfs_addbapara;
--	struct dentry *dfs_addbareject;
--	struct dentry *dfs_httxcfg;
--	struct dentry *dfs_htcapinfo;
--	struct dentry *dfs_getlog;
--	struct dentry *dfs_antcfg;
--	struct dentry *dfs_regrdwr;
--	struct dentry *dfs_rdeeprom;
--	struct dentry *dfs_drvdbg;
--	struct dentry *dfs_txbufcfg;
--	struct dentry *dfs_passphrase;
--	struct dentry *dfs_esuppmode;
- #endif
- 	u8 nick_name[16];
- 	bool is_adhoc_link_sensed;
 -- 
-1.7.0.2
-
+Rafał
