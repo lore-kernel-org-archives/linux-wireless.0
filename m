@@ -1,110 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:53010 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756515Ab0LBJ1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 04:27:09 -0500
-Date: Thu, 2 Dec 2010 10:27:06 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, mickflemm@gmail.com
-Message-ID: <4669012.1461291282024468.JavaMail.wlan@CHBU500181>
-In-Reply-To: <2881922.1281291281880222.JavaMail.wlan@CHBU500181>
-Subject: [PATCH v7 6/9] ath5k: Add a function to read chipset's MAC revision
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38767 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753822Ab0L0OII (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Dec 2010 09:08:08 -0500
+Received: by wyb28 with SMTP id 28so8482816wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:06 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 01/10] rt2x00: simplify txstatus_fifo handling
+Date: Mon, 27 Dec 2010 15:04:29 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201012271504.30848.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+From: Johannes Stezenbach <js@sig21.net>
 
-Add bus dependent revision read function which is used to
-determine chipset's MAC before hardware is initialized.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Johannes Stezenbach <js@sig21.net>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath5k/ath5k.h  |    4 +++-
- drivers/net/wireless/ath/ath5k/attach.c |   11 +++++++----
- drivers/net/wireless/ath/ath5k/pci.c    |    6 ++++++
- 3 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |   18 ++----------------
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
+ 2 files changed, 3 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 5d9fdc2..5e525eb 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1046,6 +1046,7 @@ struct ath5k_hw {
- 	u32			ah_phy;
- 	u32			ah_mac_srev;
- 	u16			ah_mac_version;
-+	u16			ah_mac_revision;
- 	u16			ah_phy_revision;
- 	u16			ah_radio_5ghz_revision;
- 	u16			ah_radio_2ghz_revision;
-@@ -1156,8 +1157,9 @@ void ath5k_hw_deinit(struct ath5k_hw *ah);
- int ath5k_sysfs_register(struct ath5k_softc *sc);
- void ath5k_sysfs_unregister(struct ath5k_softc *sc);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index baa1468..aa97971 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -688,14 +688,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	u32 status;
+ 	u8 qid;
  
--/*Chip id helper function */
-+/*Chip id helper functions */
- const char *ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
-+int ath5k_hw_read_srev(struct ath5k_hw *ah);
+-	while (!kfifo_is_empty(&rt2x00dev->txstatus_fifo)) {
+-		/* Now remove the tx status from the FIFO */
+-		if (kfifo_out(&rt2x00dev->txstatus_fifo, &status,
+-			      sizeof(status)) != sizeof(status)) {
+-			WARN_ON(1);
+-			break;
+-		}
+-
++	while (kfifo_get(&rt2x00dev->txstatus_fifo, &status)) {
+ 		qid = rt2x00_get_field32(status, TX_STA_FIFO_PID_QUEUE);
+ 		if (qid >= QID_RX) {
+ 			/*
+@@ -803,14 +796,7 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+ 		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
+ 			break;
  
- /* LED functions */
- int ath5k_init_leds(struct ath5k_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index 86f6fec..9dbc1fa 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -128,7 +128,8 @@ int ath5k_hw_init(struct ath5k_softc *sc)
+-		if (kfifo_is_full(&rt2x00dev->txstatus_fifo)) {
+-			WARNING(rt2x00dev, "TX status FIFO overrun,"
+-				" drop tx status report.\n");
+-			break;
+-		}
+-
+-		if (kfifo_in(&rt2x00dev->txstatus_fifo, &status,
+-			     sizeof(status)) != sizeof(status)) {
++		if (!kfifo_put(&rt2x00dev->txstatus_fifo, &status)) {
+ 			WARNING(rt2x00dev, "TX status FIFO overrun,"
+ 				"drop tx status report.\n");
+ 			break;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index c254d5a..af1d3ef 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -908,7 +908,7 @@ struct rt2x00_dev {
  	/*
- 	 * Find the mac version
+ 	 * FIFO for storing tx status reports between isr and tasklet.
  	 */
--	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	ath5k_hw_read_srev(ah);
-+	srev = ah->ah_mac_srev;
- 	if (srev < AR5K_SREV_AR5311)
- 		ah->ah_version = AR5K_AR5210;
- 	else if (srev < AR5K_SREV_AR5212)
-@@ -136,6 +137,10 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	else
- 		ah->ah_version = AR5K_AR5212;
+-	struct kfifo txstatus_fifo;
++	DECLARE_KFIFO_PTR(txstatus_fifo, u32);
  
-+	/* Get the MAC revision */
-+	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
-+	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
-+
- 	/* Fill the ath5k_hw struct with the needed functions */
- 	ret = ath5k_hw_init_desc_functions(ah);
- 	if (ret)
-@@ -146,9 +151,7 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	if (ret)
- 		goto err;
- 
--	/* Get MAC, PHY and RADIO revisions */
--	ah->ah_mac_srev = srev;
--	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
-+	/* Get PHY and RADIO revisions */
- 	ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
- 			0xffffffff;
- 	ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
-diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
-index 3f26cf2..39f0331 100644
---- a/drivers/net/wireless/ath/ath5k/pci.c
-+++ b/drivers/net/wireless/ath/ath5k/pci.c
-@@ -100,6 +100,12 @@ bool ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
- 	return -ETIMEDOUT;
- }
- 
-+int ath5k_hw_read_srev(struct ath5k_hw *ah)
-+{
-+	ah->ah_mac_srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	return 0;
-+}
-+
- /* Common ath_bus_opts structure */
- static const struct ath_bus_ops ath_pci_bus_ops = {
- 	.ath_bus_type = ATH_PCI,
+ 	/*
+ 	 * Tasklet for processing tx status reports (rt2800pci).
 -- 
-1.7.1
+1.7.2.3
 
