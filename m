@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50357 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754404Ab0LQTR0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 14:17:26 -0500
-Message-ID: <4D0BB739.3020700@hauke-m.de>
-Date: Fri, 17 Dec 2010 20:17:13 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38767 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753873Ab0L0OIY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Dec 2010 09:08:24 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so8482816wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:24 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 09/10] rt2x00: Remove unused interface spinlock
+Date: Mon, 27 Dec 2010 15:07:16 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201012271504.30848.IvDoorn@gmail.com> <201012271506.37080.IvDoorn@gmail.com> <201012271506.58485.IvDoorn@gmail.com>
+In-Reply-To: <201012271506.58485.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8192ce: Update MAINTAINERS
-References: <4d0a2c91.Nuemy+kBaD1fOuX+%Larry.Finger@lwfinger.net>
-In-Reply-To: <4d0a2c91.Nuemy+kBaD1fOuX+%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012271507.17065.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2010 04:13 PM, Larry Finger wrote:
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Index: wireless-testing/MAINTAINERS
-> ===================================================================
-> --- wireless-testing.orig/MAINTAINERS
-> +++ wireless-testing/MAINTAINERS
-> @@ -5055,6 +5055,16 @@ T:	git git://git.kernel.org/pub/scm/linu
->  S:	Maintained
->  F:	drivers/net/wireless/rtl818x/rtl8187*
->  
-> +RTL8192CE WIRELESS DRIVER
-> +M:	Larry Finger <Larry.Finger@lwfinger.net>
-> +M:	Chaoming Li <chaoming_li@realsil.com.cn>
-> +L:	linux-wireless@vger.kernel.org
-> +W:	http://linuxwireless.org/
-> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-> +S:	Maintained
-> +F:	drivers/net/wireless/rtlwifi/
-> +F:	drivers/net/wireless/rtl8192ce/
-This path is wrong, it should be drivers/net/wireless/rtlwifi/rtl8192ce/
-at least the driver is not in rivers/net/wireless/rtl8192ce/.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Hauke
+Since the last user of intf->lock is gone we can safely remove it.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    6 ------
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    1 -
+ 2 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index b3f77d4..84aaf39 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -358,12 +358,6 @@ enum rt2x00_delayed_flags {
+  */
+ struct rt2x00_intf {
+ 	/*
+-	 * All fields within the rt2x00_intf structure
+-	 * must be protected with a spinlock.
+-	 */
+-	spinlock_t lock;
+-
+-	/*
+ 	 * beacon->skb must be protected with the mutex.
+ 	 */
+ 	struct mutex beacon_skb_mutex;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 297d972..b5dad04 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -268,7 +268,6 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 	else
+ 		rt2x00dev->intf_sta_count++;
+ 
+-	spin_lock_init(&intf->lock);
+ 	spin_lock_init(&intf->seqlock);
+ 	mutex_init(&intf->beacon_skb_mutex);
+ 	intf->beacon = entry;
+-- 
+1.7.2.3
+
