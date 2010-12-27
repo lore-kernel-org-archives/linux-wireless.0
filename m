@@ -1,83 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35996 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750823Ab0LFM2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:28:09 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:27:55 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 00/27] Add support for AR9485
-Date: Mon, 6 Dec 2010 04:27:33 -0800
-Message-ID: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:49452 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754085Ab0L0UFb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Dec 2010 15:05:31 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 0D03454242C
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 15:06:36 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101227200530.68E2640F97@repository3.orbit-lab.org>
+Date: Mon, 27 Dec 2010 15:05:30 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   34367c7..a31d633  history    -> origin/history
+ + 6953948...23ffbb3 master     -> origin/master  (forced update)
+   8cad7f0..d7c1255  stable     -> origin/stable
+ * [new tag]         next-20101227 -> next-20101227
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.37-rc7 -> v2.6.37-rc7
 
-	This patch set adds support for a new chip of AR9003 family.
-This chip is an 1x1 and 2.4Ghz band only.
+compat-wireless code metrics
 
-Vasanth
-
-V3 
----
-* Replaced chansel table with a simple formula (thanks to Felix)
-* Rebased to the top of wireless-testing
-
-Vasanthakumar Thiagarajan (27):
-  ath9k_hw: Define hw version macros for AR9485
-  ath9k_hw: Add initvals.h for AR9485
-  ath9k_hw: Enable hw initialization for AR9485
-  ath9k_hw: Initialize mode registers for AR9485
-  ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
-  ath9k_hw: Eeeprom changes for AR9485
-  ath9k_hw: Disable LDPC for AR9485
-  ath9k: Disable TX STBC for AR9485
-  ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
-  ath9k_hw: Find the maximum number of chains that hw supports
-  ath9k: Configure pll control for AR9485
-  ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7 from an array for
-    AR9485
-  ath9k_hw: Add a helper function to get spur channel pointer from cal
-    data for AR9003 family
-  ath9k: Read spur channel information from eeprom for AR9485
-  ath9k_hw: Configure xpa bias level for AR9485
-  ath9k_hw: Read and configure antenna diversity control for AR9485
-  ath9k_hw: Configure attenuation control  only for supported chains
-  ath9k_hw: Configure internal regulator for AR9485
-  ath9k_hw: Read and configure turnning caps to regulate freq accuracy
-  ath9k_hw: Configure power control only for the supported chains
-  ath9k_hw: Program appropriate chianmask for AR9485 before starting
-    AGC/IQ cal
-  ath9k_hw: Define IQcal correction coefficient registers using index
-  ath9k_hw: Add IQ cal changes for AR9485
-  ath9k_hw: Program appropriate register for temperature compensation
-    cal for AR9485
-  ath9k_hw: Setup paprd only for supported chains
-  ath9k_hw: Disable MRC CCK for AR9485
-  ath9k: Add device id of AR9485 to pci table
-
- drivers/net/wireless/ath/ath.h                   |    1 +
- drivers/net/wireless/ath/ath9k/ani.c             |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c    |  256 ++++++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |  189 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |    2 +
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  278 +++++--
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c    |   37 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   60 ++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   70 ++-
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h |  943 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c              |   33 +-
- drivers/net/wireless/ath/ath9k/hw.h              |    5 +
- drivers/net/wireless/ath/ath9k/init.c            |    4 +-
- drivers/net/wireless/ath/ath9k/main.c            |    3 +
- drivers/net/wireless/ath/ath9k/pci.c             |   13 +
- drivers/net/wireless/ath/ath9k/reg.h             |   10 +
- 16 files changed, 1743 insertions(+), 163 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-
+    774936 - Total upstream lines of code being pulled
