@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:44856 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740Ab0LUN3v (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54438 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753532Ab0L0K6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 08:29:51 -0500
-Date: Tue, 21 Dec 2010 11:29:48 -0200
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: Re: [PATCH] rtl818x: move rtl8180 and rtl8187 to separate
- subdirectories
-Message-ID: <20101221112948.1aeeb444@gotham.conectiva>
-In-Reply-To: <4D0FF4DC.4010409@lwfinger.net>
-References: <1292876551-26749-1-git-send-email-linville@tuxdriver.com>
-	<4D0FF4DC.4010409@lwfinger.net>
+	Mon, 27 Dec 2010 05:58:48 -0500
+Subject: Re: [RFC] mac80211: ignore PSM bit of reordered frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <E1PWwiD-0003TF-Oo@debian64.daheim>
+References: <E1PWwiD-0003TF-Oo@debian64.daheim>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Dec 2010 11:58:47 +0100
+Message-ID: <1293447527.3544.3.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 20 Dec 2010 18:29:16 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> On 12/20/2010 02:22 PM, John W. Linville wrote:
-> > These drivers share one header file, but nothing else.  Worse, both
-> > drivers use the rtl8225 part with different register settings.  The
-> > results has been some ugly naming -- let's simplify that.
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
+On Sun, 2010-12-26 at 20:56 +0100, Christian Lamparter wrote:
+> This patch tackles one of the problems of my
+> reorder release timer patch from August.
 > 
-> This is a good time to change this as I have heard from Realtek that their
-> RTL8187SE driver that uses mac80211 is running, but not yet stable. When it is,
-> a decision can be made if it should be in .../rtl818x/rtl8187/ or
-> .../rtl818x/rtl8187se/.
+> <http://www.spinics.net/lists/linux-wireless/msg57214.html>
+> =>
+> What if the reorder release triggers and ap_sta_ps_end
+> (called by ieee80211_rx_h_sta_process) accidentally clears
+> the WLAN_STA_PS_STA flag, because 100ms ago - when the STA
+> was still active - frames were put into the reorder buffer.
 > 
-> The new driver will also allow the staging driver to be removed.
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> Alternatively, we could flush the per-tid STA reorder buffer
+> content in ap_sta_ps_start, so the buffer is empty.
 
-Ack from me too, it stays cleaner with the change.
+> + * @IEEE80211_RX_DEFERED_RELEASE: frame was subjected to receive reordering
 
-> 
-> Larry
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm ok with this, but please spell it "deferred" :-)
 
---
-[]'s
-Herton
+johannes
+
