@@ -1,42 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:4083 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753161Ab0LGCRj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 21:17:39 -0500
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0661948253
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Dec 2010 11:17:37 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/3] nl80211: Export available antennas
-Date: Tue, 7 Dec 2010 11:17:18 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20101206034529.11462.48097.stgit@localhost6.localdomain6> <201012061730.16102.br1@einfach.org> <1291624400.3506.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291624400.3506.3.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012071117.19067.br1@einfach.org>
+Received: from lo.gmane.org ([80.91.229.12]:49088 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752577Ab0L0SKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Dec 2010 13:10:09 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PXHWH-0008LL-9J
+	for linux-wireless@vger.kernel.org; Mon, 27 Dec 2010 19:10:05 +0100
+Received: from devbox.leverton.org ([217.155.219.12])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 19:10:05 +0100
+Received: from nick by devbox.leverton.org with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 19:10:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Nick Leverton <nick@leverton.org>
+Subject: printk %pV compatibility in b43 and ath for compat-wireless
+Date: Mon, 27 Dec 2010 18:05:54 +0000 (UTC)
+Message-ID: <loom.20101227T190514-850@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon December 6 2010 17:33:20 Johannes Berg wrote:
-> > > Finally, you should check for nl80211 that the given tx/rx masks fall
-> > > into the available antennas mask.
-> > 
-> > Allright, I can do that. Would you prefer to reject the command in this
-> > case or just apply the available mask?
-> 
-> I'd reject it, since userspace could have checked whether it was valid.
+Hi,
 
-Hmm, been thinking about it: the "iw phyX set antenna all" will not work in 
-that case. Unless we get the available antennas before setting "all" in iw, 
-which seems like a lot of overhead...
+I'm using compat-wireless with Debian 2.6.32 (kernel for forthcoming Debian 6.0 
+release).  It mostly works well but one thing that has crept in recently is the 
+use of new printk features such as %pV which old kernels don't support.  I 
+noticed this whilst trying the new b43 n-phy code (for which much thanks to 
+everyone involved), as I get kernel messages printed of the following form:
 
-Alternatively we can either apply the mask in mac80211 or just hand the 
-antenna masks as they are to the driver, which is what we do now.
+Dec 23 21:10:46 nickl kernel: [688182.007780] Broadcom 43xx driver loaded [ 
+Features: PMNLS, Firmware-ID: FW13 ]
+Dec 23 21:10:50 nickl kernel: [688186.100195] b43-phy0: f535bb54
+Dec 23 21:10:50 nickl kernel: [688186.198711] ADDRCONF(NETDEV_UP): wlan0: link 
+is not ready
+Dec 23 21:11:09 nickl kernel: [688205.048054] b43-phy0: f4a3bb54
+Dec 23 21:11:09 nickl kernel: [688205.145589] ADDRCONF(NETDEV_UP): wlan0: link 
+is not ready
+Dec 23 21:11:20 nickl kernel: [688216.484744] ADDRCONF(NETDEV_CHANGE): wlan0: 
+link becomes ready
+Dec 23 21:11:31 nickl kernel: [688225.667842] b43-phy0 ERROR: f56a5f34
+Dec 23 21:12:14 nickl kernel: [688235.585265] b43-phy0 ERROR: f56a5f34
+Dec 23 21:12:50 nickl kernel: [688270.140937] b43-phy0 ERROR: f56a5f34
+Dec 23 21:13:11 nickl kernel: [688306.427195] b43-phy0 ERROR: f56a5f34
+Dec 23 21:14:05 nickl kernel: [688327.492370] b43-phy0 ERROR: f56a5f34
+Dec 23 21:16:23 nickl kernel: [688381.712250] b43-phy0 ERROR: f56a5f34
+Dec 23 21:22:59 nickl kernel: [688518.942314] b43-phy0 ERROR: f56a5f34
+Dec 23 21:23:00 nickl kernel: [688529.935161] b43-phy0 ERROR: f56a5f34
 
-I think either way it's not a big deal.
+As of 20101223, the following code uses %pV, some of which can be seen above:
 
-bruno
+./drivers/net/wireless/b43/main.c:      printk(KERN_INFO "b43-%s: %pV",
+./drivers/net/wireless/b43/main.c:      printk(KERN_ERR "b43-%s ERROR: %pV",
+./drivers/net/wireless/b43/main.c:      printk(KERN_WARNING "b43-%s 
+warning: %pV",
+./drivers/net/wireless/b43/main.c:      printk(KERN_DEBUG "b43-%s debug: %pV",
+./drivers/net/wireless/ath/main.c:      rtn = printk("%sath: %pV", level, 
+&vaf);
+./drivers/net/wireless/b43legacy/main.c:        
+printk(KERN_INFO "b43legacy-%s: %pV",
+./drivers/net/wireless/b43legacy/main.c:        printk(KERN_ERR "b43legacy-%s 
+ERROR: %pV",
+./drivers/net/wireless/b43legacy/main.c:        
+printk(KERN_WARNING "b43legacy-%s warning: %pV",
+./drivers/net/wireless/b43legacy/main.c:        printk(KERN_DEBUG "b43legacy-%s 
+debug: %pV",
+
+It would be useful to know the error message behind the vararg !
+
+I tried applying the patches which introduced %pV to kernel.org, but 2.6.32 is 
+too old.  Could this be fixed either in the compat b43 driver or in a compat 
+back-feature, please ?
+
+Thankyou
+
+Nick
+
