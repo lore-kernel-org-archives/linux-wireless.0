@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:39021 "EHLO mail.atheros.com"
+Received: from smtp.nokia.com ([147.243.128.26]:59223 "EHLO mgw-da02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753507Ab0LVPob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 10:44:31 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 07:44:14 -0800
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Stable Kernel <stable@kernel.org>
-Subject: [PATCH v3 1/2] ath9k_hw: Fix incorrect macversion and macrev checks
-Date: Wed, 22 Dec 2010 21:14:20 +0530
-Message-ID: <1293032660-3627-1-git-send-email-senthilkumar@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753711Ab0L0NL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Dec 2010 08:11:58 -0500
+Subject: Re: [PATCH v2 09/18] wl1271: Configure AP on BSS info change
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1293028057-6212-10-git-send-email-arik@wizery.com>
+References: <1293028057-6212-1-git-send-email-arik@wizery.com>
+	 <1293028057-6212-10-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Dec 2010 15:11:55 +0200
+Message-ID: <1293455515.19215.3052.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are few places where we are checking for macversion and revsions
-before RTC is powered ON. However we are reading the macversion and
-revisions only after RTC is powered ON and so both macversion and
-revisions are actully zero and this leads to incorrect srev checks
+On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
+> Configure AP-specific beacon and probe response templates.
+> Start the AP when beaconing is enabled.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Incorrect srev checks can cause registers to be configured wrongly and can
-cause unexpected behavior. Fixing this seems to address the ASPM issue that
-we have observed. The laptop becomes very slow and hangs mostly with ASPM L1
-enabled without this fix.
+[...]
 
-fix this by reading the macversion and revisisons even before we start
-using them. There is no reason why should we delay reading this info
-until RTC is powered on as this is just a register information.
+>  static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+> @@ -1898,73 +1900,84 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
 
-Cc: Stable Kernel <stable@kernel.org>
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
-v2 -- fixed reading revisions unnecessarily during every reset.
-v3 -- added more information to the commit log.
+This whole wl1271_op_bss_info_changed() function was already quite long
+and hard to read.  Now, with support for AP and STA, it got even worse.
+I think this should be broken down into smaller functions.  No need to
+clean the whole function up now, but would it be possible to separate at
+least the AP and STA parts into separate functions?
 
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4b51ed4..0a0ba80 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -491,6 +491,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 
-+	ath9k_hw_read_revisions(ah);
-+
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
- 		ath_err(common, "Couldn't reset chip\n");
- 		return -EIO;
-@@ -1078,8 +1080,6 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 		return false;
- 	}
- 
--	ath9k_hw_read_revisions(ah);
--
- 	return ath9k_hw_set_reset(ah, ATH9K_RESET_WARM);
- }
- 
+> @@ -1983,11 +2018,11 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+>  						  bss_conf->cqm_rssi_thold,
+>  						  bss_conf->cqm_rssi_hyst);
+>  		if (ret < 0)
+> -			goto out;
+> +			goto out_sleep;
+
+Hmmm, nice catch.  We were going out without sleeping in case of error
+here.  But this is a cross-patch change, could you separate it and send
+as a standalone patch?
+
+
 -- 
-1.7.3.4
+Cheers,
+Luca.
 
