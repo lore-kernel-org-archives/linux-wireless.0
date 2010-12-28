@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42270 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979Ab0L2JPo (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754534Ab0L1Rhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 04:15:44 -0500
-Subject: Re: [PATCH 3/4] mwl8k: Set mac80211 rx status flags appropriately
- when hw crypto is enabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, mwl8k-devel@cozybit.com,
-	buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
-	yogesh powar <yogeshp@marvell.com>
-In-Reply-To: <1293577297-25755-4-git-send-email-thomas@cozybit.com>
-References: <1293577297-25755-1-git-send-email-thomas@cozybit.com>
-	 <1293577297-25755-4-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Dec 2010 10:15:42 +0100
-Message-ID: <1293614142.3546.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 28 Dec 2010 12:37:42 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:42 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 17/18] wl1271: Read MAC address from NVS file on HW startup
+Date: Tue, 28 Dec 2010 19:36:47 +0200
+Message-Id: <1293557808-27068-18-git-send-email-arik@wizery.com>
+In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
+References: <1293557808-27068-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-28 at 15:01 -0800, Thomas Pedersen wrote:
-> From: Nishant Sarmukadam <nishants@marvell.com>
-> 
-> When hw crypto is enabled, set rx status flags appropriately depending on
-> whether hw crypto is enabled for a particular bss.
-> Also report MIC errors to mac80211, so that counter measures can be
-> initiated
+Try to read the MAC address from the on-disk NVS file.
+A non-zero MAC address is required to add an AP interface.
 
-> +	if ((rxd->rx_status != MWL8K_8366_AP_RXSTAT_GENERAL_DECRYPT_ERR) &&
-> +		(rxd->rx_status & MWL8K_8366_AP_RXSTAT_DECRYPT_ERR_MASK) &&
-> +		(rxd->rx_status & MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR))
-> +			status->flag |= RX_FLAG_MMIC_ERROR;
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-It's not my driver, so I don't care a whole lot, but this patch has some
-pretty messed up indentation.
-
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 0751589..ed06aee 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3064,6 +3064,18 @@ int wl1271_register_hw(struct wl1271 *wl)
+ 	if (wl->mac80211_registered)
+ 		return 0;
+ 
++	ret = wl1271_fetch_nvs(wl);
++	if (ret == 0) {
++		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
++
++		wl->mac_addr[0] = nvs_ptr[11];
++		wl->mac_addr[1] = nvs_ptr[10];
++		wl->mac_addr[2] = nvs_ptr[6];
++		wl->mac_addr[3] = nvs_ptr[5];
++		wl->mac_addr[4] = nvs_ptr[4];
++		wl->mac_addr[5] = nvs_ptr[3];
++	}
++
+ 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
+ 
+ 	ret = ieee80211_register_hw(wl->hw);
+-- 
+1.7.1
 
