@@ -1,106 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.214.194]:46879 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886Ab0LMUID convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:47335 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754449Ab0L1RhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 15:08:03 -0500
-Received: by iwn42 with SMTP id 42so3377015iwn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 12:08:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D067919.2000206@tls-tautenburg.de>
-References: <49CFD043.6020708@tls-tautenburg.de> <49CFDB1F.7040902@hauke-m.de>
- <43e72e890903301147hc09cec7rc8f214450a53efa7@mail.gmail.com>
- <4BA0FE74.4070906@tls-tautenburg.de> <43e72e891003170914u1b4e4cbdpca2522b5217c077b@mail.gmail.com>
- <4BA103DE.6010402@tls-tautenburg.de> <43e72e891003170932j7d675742x4bf350d3f5961c7a@mail.gmail.com>
- <4D04F420.9030802@tls-tautenburg.de> <AANLkTinak1g2w1WA44hDb5c=qaDu41SM=b5od-_+_iMu@mail.gmail.com>
- <4D067919.2000206@tls-tautenburg.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 13 Dec 2010 12:07:41 -0800
-Message-ID: <AANLkTik01J1N=bewgpNHHY47q8umgTu7Le=quj1eVuo-@mail.gmail.com>
-Subject: Re: iwlcore not in update
-To: Bringfried Stecklum <stecklum@tls-tautenburg.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 28 Dec 2010 12:37:19 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so4468650ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:18 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 08/18] wl1271: Add AP related definitions to HOST-FW interface
+Date: Tue, 28 Dec 2010 19:36:38 +0200
+Message-Id: <1293557808-27068-9-git-send-email-arik@wizery.com>
+In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
+References: <1293557808-27068-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 13, 2010 at 11:50 AM, Bringfried Stecklum
-<stecklum@tls-tautenburg.de> wrote:
-> Luis R. Rodriguez wrote:
->>
->> On Sun, Dec 12, 2010 at 8:11 AM, Bringfried Stecklum
->> <stecklum@tls-tautenburg.de> wrote:
->>>
->>> Dear Luis,
->>>
->>> I tried to install compat-wireless-2010-12-07 a few days ago but failed.
->>> The
->>> reason is that iwlcore does not get build and installed in the update
->>> modules folder which, of course, leads unresolved symbols
->>>
->>> stecklum@extragalactix:~/System/src/compat-wireless-2.6.37-rc5-2-s$ sudo
->>> modprobe -v iwlagn
->>> insmod /lib/modules/2.6.36-1-generic/updates/compat/compat.ko
->>> insmod /lib/modules/2.6.36-1-generic/updates/net/wireless/cfg80211.ko
->>> insmod /lib/modules/2.6.36-1-generic/updates/net/mac80211/mac80211.ko
->>> insmod
->>>
->>> /lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
->>> WARNING: Error inserting iwlcore
->>>
->>> (/lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko):
->>> Invalid argument
->>> insmod
->>>
->>> /lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
->>> FATAL: Error inserting iwlagn
->>>
->>> (/lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko):
->>> Unknown symbol in module, or unknown parameter (see
->>>  dmesg)
->>>
->>> It seems I missed a change. In the past (e.g. compat-wireless-2010-05-22
->>>  and kernel 2.6.31), iwlcore.ko was build and installed
->>>
->>> stecklum@extragalactix:~/System$ locate iwlcore.ko
->>>
->>> /lib/modules/2.6.31-22-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
->>>
->>> /lib/modules/2.6.31-22-generic/updates/drivers/net/wireless/iwlwifi/iwlcore.ko
->>>
->>> /lib/modules/2.6.36-1-generic/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
->>
->> Instead of CONFIG_IWLWIFI we use CONFIG_COMPAT_IWLWIFI, and we changed
->> that the Makefile and config.mk
->>
->> mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.36.y)$ grep
->> _IWLWIFI drivers/net/wireless/iwlwifi/Makefile
->> obj-$(CONFIG_COMPAT_IWLWIFI)    += iwlcore.o
->> iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
->> iwlcore-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
->> iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-agn-debugfs.o
->> iwl3945-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-3945-debugfs.o
->>
->> mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.36.y)$ grep
->> CONFIG_COMPAT_IWLWIFI config.mk
->> CONFIG_COMPAT_IWLWIFI=m
->>
->> Can grep like this:
->>
->> mcgrof@tux ~/tmp/compat-wireless-2.6.37-rc5-4-sn $ grep
->> CONFIG_COMPAT_IWLWIFI include/linux/compat_autoconf.h
->> #ifndef CONFIG_COMPAT_IWLWIFI
->> #define CONFIG_COMPAT_IWLWIFI 1
->> #endif /* CONFIG_COMPAT_IWLWIFI *
->>
->>  Luis
->>
->
-> This is all fine and iwlcore.o gets build but at MODPOST stage 2
-> iwlcore.ko does _not_ get build, and thus still lacks in update.
+Change structures in a non-destructive manner. This means no
+changes in size or location of existing members used by STA.
 
-Hmm, odd. So you usee iwlcore.ko built?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/event.h  |    7 ++++++-
+ drivers/net/wireless/wl12xx/rx.h     |   10 +++++++---
+ drivers/net/wireless/wl12xx/tx.h     |    9 +++++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |   18 +++++++++++++++++-
+ 4 files changed, 37 insertions(+), 7 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index fd955f3..1d5ef67 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -116,7 +116,12 @@ struct event_mailbox {
+ 	u8 scheduled_scan_status;
+ 	u8 ps_status;
+ 
+-	u8 reserved_5[29];
++	/* AP FW only */
++	u8 hlid_removed;
++	__le16 sta_aging_status;
++	__le16 sta_tx_retry_exceeded;
++
++	u8 reserved_5[24];
+ } __packed;
+ 
+ int wl1271_event_unmask(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index f695553..8d048b3 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -86,8 +86,9 @@
+ /*
+  * RX Descriptor status
+  *
+- * Bits 0-2 - status
+- * Bits 3-7 - reserved
++ * Bits 0-2 - error code
++ * Bits 3-5 - process_id tag (AP mode FW)
++ * Bits 6-7 - reserved
+  */
+ #define WL1271_RX_DESC_STATUS_MASK      0x07
+ 
+@@ -110,7 +111,10 @@ struct wl1271_rx_descriptor {
+ 	u8  snr;
+ 	__le32 timestamp;
+ 	u8  packet_class;
+-	u8  process_id;
++	union {
++		u8  process_id; /* STA FW */
++		u8  hlid; /* AP FW */
++	} __packed;
+ 	u8  pad_len;
+ 	u8  reserved;
+ } __packed;
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 5ccd22e..05722a5 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -29,6 +29,7 @@
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
++#define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
+ /* The chipset reference driver states, that the "aid" value 1
+  * is for infra-BSS, but is still always used */
+ #define TX_HW_DEFAULT_AID                1
+@@ -77,8 +78,12 @@ struct wl1271_tx_hw_descr {
+ 	u8 id;
+ 	/* The packet TID value (as User-Priority) */
+ 	u8 tid;
+-	/* Identifier of the remote STA in IBSS, 1 in infra-BSS */
+-	u8 aid;
++	union {
++		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
++		u8 aid;
++		/* AP - host link ID (HLID) */
++		u8 hlid;
++	} __packed;
+ 	u8 reserved;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 136e87b..ebb4a4d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -195,6 +195,11 @@ struct wl1271_stats {
+ #define NUM_TX_QUEUES              4
+ #define NUM_RX_PKT_DESC            8
+ 
++#define AP_MAX_STATIONS            5
++
++/* Broadcast and Global links + links to stations */
++#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
++
+ /* FW status registers */
+ struct wl1271_fw_status {
+ 	__le32 intr;
+@@ -205,7 +210,18 @@ struct wl1271_fw_status {
+ 	__le32 rx_pkt_descs[NUM_RX_PKT_DESC];
+ 	__le32 tx_released_blks[NUM_TX_QUEUES];
+ 	__le32 fw_localtime;
+-	__le32 padding[2];
++
++	/* Next fields valid only in AP FW */
++
++	/*
++	 * A bitmap (where each bit represents a single HLID)
++	 * to indicate if the station is in PS mode.
++	 */
++	__le32 link_ps_bitmap;
++
++	/* Number of freed MBs per HLID */
++	u8 tx_lnk_free_blks[AP_MAX_LINKS];
++	u8 padding_1[1];
+ } __packed;
+ 
+ struct wl1271_rx_mem_pool_addr {
+-- 
+1.7.1
+
