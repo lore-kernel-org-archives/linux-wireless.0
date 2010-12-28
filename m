@@ -1,106 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43168 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932158Ab0LAVDP (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45681 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462Ab0L1I64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 16:03:15 -0500
-Message-Id: <20101201210225.939307280@sipsolutions.net>
-Date: Wed, 01 Dec 2010 21:59:43 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org
-Subject: [RFC 4/5] nl80211: refactor mesh parameter parsing
-References: <20101201205939.009530439@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 28 Dec 2010 03:58:56 -0500
+Received: by iwn9 with SMTP id 9so9170471iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:58:55 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19737.42685.373525.602985@gargle.gargle.HOWL>
+Date: Tue, 28 Dec 2010 14:28:37 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH v2 5/6] ath9k_htc: Fix fast channel change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-I'm going to need this in a new place later.
+When returning to the operating channel, a full HW
+reset has to be done instead of a fast channel change.
+Since sw_scan_complete() is called after the config() call for the
+home channel, we end up doing a FCC. Fix this issue by checking
+the OFFCHANNEL flag to determine FCC.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- net/wireless/nl80211.c |   42 ++++++++++++++++++++++++++++--------------
- 1 file changed, 28 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |   19 +++++++++----------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++------
+ 2 files changed, 11 insertions(+), 16 deletions(-)
 
---- wireless-testing.orig/net/wireless/nl80211.c	2010-12-01 21:36:43.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2010-12-01 21:39:52.000000000 +0100
-@@ -2614,7 +2614,7 @@ static int nl80211_get_mesh_params(struc
- #define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
- do {\
- 	if (table[attr_num]) {\
--		cfg.param = nla_fn(table[attr_num]); \
-+		cfg->param = nla_fn(table[attr_num]); \
- 		mask |= (1 << (attr_num - 1)); \
- 	} \
- } while (0);\
-@@ -2636,31 +2636,25 @@ static const struct nla_policy nl80211_m
- 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
- };
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 1062274..34456a8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -331,16 +331,15 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
  
--static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
-+static int nl80211_parse_mesh_params(struct genl_info *info,
-+				     struct mesh_config *cfg,
-+				     u32 *mask_out)
- {
--	u32 mask;
--	struct cfg80211_registered_device *rdev = info->user_ptr[0];
--	struct net_device *dev = info->user_ptr[1];
--	struct mesh_config cfg;
- 	struct nlattr *tb[NL80211_MESHCONF_ATTR_MAX + 1];
--	struct nlattr *parent_attr;
-+	u32 mask = 0;
+ #define OP_INVALID		   BIT(0)
+ #define OP_SCANNING		   BIT(1)
+-#define OP_FULL_RESET		   BIT(2)
+-#define OP_LED_ASSOCIATED	   BIT(3)
+-#define OP_LED_ON		   BIT(4)
+-#define OP_PREAMBLE_SHORT	   BIT(5)
+-#define OP_PROTECT_ENABLE	   BIT(6)
+-#define OP_ASSOCIATED		   BIT(7)
+-#define OP_ENABLE_BEACON	   BIT(8)
+-#define OP_LED_DEINIT		   BIT(9)
+-#define OP_BT_PRIORITY_DETECTED    BIT(10)
+-#define OP_BT_SCAN                 BIT(11)
++#define OP_LED_ASSOCIATED	   BIT(2)
++#define OP_LED_ON		   BIT(3)
++#define OP_PREAMBLE_SHORT	   BIT(4)
++#define OP_PROTECT_ENABLE	   BIT(5)
++#define OP_ASSOCIATED		   BIT(6)
++#define OP_ENABLE_BEACON	   BIT(7)
++#define OP_LED_DEINIT		   BIT(8)
++#define OP_BT_PRIORITY_DETECTED    BIT(9)
++#define OP_BT_SCAN                 BIT(10)
  
--	parent_attr = info->attrs[NL80211_ATTR_MESH_PARAMS];
--	if (!parent_attr)
-+	if (!info->attrs[NL80211_ATTR_MESH_PARAMS])
- 		return -EINVAL;
- 	if (nla_parse_nested(tb, NL80211_MESHCONF_ATTR_MAX,
--			parent_attr, nl80211_meshconf_params_policy))
-+			     info->attrs[NL80211_ATTR_MESH_PARAMS],
-+			     nl80211_meshconf_params_policy))
- 		return -EINVAL;
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 07f10dd..6da5e88 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -177,7 +177,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+-	bool fastcc = true;
++	bool fastcc;
+ 	struct ieee80211_channel *channel = hw->conf.channel;
+ 	struct ath9k_hw_cal_data *caldata;
+ 	enum htc_phymode mode;
+@@ -188,8 +188,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	if (priv->op_flags & OP_INVALID)
+ 		return -EIO;
  
--	if (!rdev->ops->set_mesh_params)
--		return -EOPNOTSUPP;
+-	if (priv->op_flags & OP_FULL_RESET)
+-		fastcc = false;
++	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+ 	htc_stop(priv->htc);
+@@ -231,8 +230,6 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		goto err;
+ 
+ 	htc_start(priv->htc);
 -
- 	/* This makes sure that there aren't more than 32 mesh config
- 	 * parameters (otherwise our bitfield scheme would not work.) */
- 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
- 
- 	/* Fill in the params struct */
--	mask = 0;
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout,
- 			mask, NL80211_MESHCONF_RETRY_TIMEOUT, nla_get_u16);
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout,
-@@ -2698,6 +2692,26 @@ static int nl80211_set_mesh_params(struc
- 			NL80211_MESHCONF_HWMP_ROOTMODE,
- 			nla_get_u8);
- 
-+	if (mask_out)
-+		*mask_out = mask;
-+	return 0;
-+}
-+
-+static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct mesh_config cfg;
-+	u32 mask;
-+	int err;
-+
-+	if (!rdev->ops->set_mesh_params)
-+		return -EOPNOTSUPP;
-+
-+	err = nl80211_parse_mesh_params(info, &cfg, &mask);
-+	if (err)
-+		return err;
-+
- 	/* Apply changes */
- 	return rdev->ops->set_mesh_params(&rdev->wiphy, dev, &cfg, mask);
- }
-
+-	priv->op_flags &= ~OP_FULL_RESET;
+ err:
+ 	ath9k_htc_ps_restore(priv);
+ 	return ret;
+@@ -1847,7 +1844,6 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	spin_lock_bh(&priv->beacon_lock);
+ 	priv->op_flags &= ~OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+-	priv->op_flags |= OP_FULL_RESET;
+ 	if (priv->op_flags & OP_ASSOCIATED) {
+ 		ath9k_htc_beacon_config(priv, priv->vif);
+ 		ath_start_ani(priv);
+-- 
+1.7.3.4
 
