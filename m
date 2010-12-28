@@ -1,64 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:45731 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751793Ab0LVMaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 07:30:10 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-Date: Wed, 22 Dec 2010 13:29:40 +0100
-Cc: "Ohad Ben-Cohen" <ohad@wizery.com>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-References: <Pine.LNX.4.44L0.1012212032590.11252-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1012212032590.11252-100000@netrider.rowland.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:33953 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527Ab0L1IMe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 03:12:34 -0500
+Received: by pzk35 with SMTP id 35so624358pzk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:12:34 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012221329.40251.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19737.39906.948870.27441@gargle.gargle.HOWL>
+Date: Tue, 28 Dec 2010 13:42:18 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 4/5] ath9k_htc: Fix fast channel change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, December 22, 2010, Alan Stern wrote:
-> On Tue, 21 Dec 2010, Rafael J. Wysocki wrote:
-> 
-> > It basically goes like this.  There's device A that is only resumed when it's
-> > needed to carry out an operation and is suspended immediately after that.
-> > There's another device B that needs A to do something during its suspend.
-> > So, when the suspend of B is started, A is woken up, does its work and is
-> > suspended again (using pm_runtime_suspend()).  Then B is suspended.
-> > 
-> > We currently require that ->suspend() and ->resume() callbacks be defined
-> > for A (presumably pointing to the same code as its runtime callbacks) so that
-> > things work correctly, but perhaps we can just relax this requirement a bit?
-> > I'm not 100% sure that's a good idea, just considering it.
-> 
-> I still don't know.  It would require a lot of special conditions: no
-> child devices, not runtime-PM-disabled, not runtime-PM-forbidden...  
-> Also, A's parent would have to be coded carefully; otherwise A's
-> runtime resume would prevent the parent from suspending.
-> 
-> This just doesn't fit very well with the runtime PM model, or at least, 
-> not in the form you described.
-> 
-> Consider this instead:  Since A is required to be functional before B
-> can be used, A must be registered before B and hence B gets suspended
-> before A.  Therefore during the prepare phase we can runtime-resume A
-> and leave it powered up; when B needs to suspend, it won't matter that
-> the runtime-PM calls are ineffective.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-We don't really need to do that, because the runtime resume _is_ functional
-during system suspend.  The only thing missing is a ->suspend() callback for A
-(and a corresponding ->resume() callback to make sure A will be available to
-B during system resume).
+When returning to the operating channel, a full HW
+reset has to be done instead of a fast channel change.
+Since sw_scan_complete() is called after the config() call for the
+home channel, we end up doing a FCC. Fix this issue by checking
+the OFFCHANNEL flag to determine FCC.
 
-> Then when A's dpm_suspend occurs, it can safely go to a low-power state and
-> stay there.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |   19 +++++++++----------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++------
+ 2 files changed, 11 insertions(+), 16 deletions(-)
 
-Agreed.
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 1062274..34456a8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -331,16 +331,15 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ 
+ #define OP_INVALID		   BIT(0)
+ #define OP_SCANNING		   BIT(1)
+-#define OP_FULL_RESET		   BIT(2)
+-#define OP_LED_ASSOCIATED	   BIT(3)
+-#define OP_LED_ON		   BIT(4)
+-#define OP_PREAMBLE_SHORT	   BIT(5)
+-#define OP_PROTECT_ENABLE	   BIT(6)
+-#define OP_ASSOCIATED		   BIT(7)
+-#define OP_ENABLE_BEACON	   BIT(8)
+-#define OP_LED_DEINIT		   BIT(9)
+-#define OP_BT_PRIORITY_DETECTED    BIT(10)
+-#define OP_BT_SCAN                 BIT(11)
++#define OP_LED_ASSOCIATED	   BIT(2)
++#define OP_LED_ON		   BIT(3)
++#define OP_PREAMBLE_SHORT	   BIT(4)
++#define OP_PROTECT_ENABLE	   BIT(5)
++#define OP_ASSOCIATED		   BIT(6)
++#define OP_ENABLE_BEACON	   BIT(7)
++#define OP_LED_DEINIT		   BIT(8)
++#define OP_BT_PRIORITY_DETECTED    BIT(9)
++#define OP_BT_SCAN                 BIT(10)
+ 
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 1b1be72..d54adeb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -177,7 +177,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+-	bool fastcc = true;
++	bool fastcc;
+ 	struct ieee80211_channel *channel = hw->conf.channel;
+ 	struct ath9k_hw_cal_data *caldata;
+ 	enum htc_phymode mode;
+@@ -188,8 +188,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	if (priv->op_flags & OP_INVALID)
+ 		return -EIO;
+ 
+-	if (priv->op_flags & OP_FULL_RESET)
+-		fastcc = false;
++	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+ 	htc_stop(priv->htc);
+@@ -231,8 +230,6 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		goto err;
+ 
+ 	htc_start(priv->htc);
+-
+-	priv->op_flags &= ~OP_FULL_RESET;
+ err:
+ 	ath9k_htc_ps_restore(priv);
+ 	return ret;
+@@ -1847,7 +1844,6 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	spin_lock_bh(&priv->beacon_lock);
+ 	priv->op_flags &= ~OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+-	priv->op_flags |= OP_FULL_RESET;
+ 	if (priv->op_flags & OP_ASSOCIATED) {
+ 		ath9k_htc_beacon_config(priv, priv->vif);
+ 		ath_start_ani(priv);
+-- 
+1.7.3.4
 
-Thanks,
-Rafael
