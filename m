@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:39578 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750835Ab0LTAPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Dec 2010 19:15:03 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] ath9k: Do not use legacy PCI power management
-Date: Mon, 20 Dec 2010 01:14:23 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <201010160036.17653.rjw@sisk.pl> <201012200032.21704.rjw@sisk.pl> <4D0E9DE3.8050100@hauke-m.de>
-In-Reply-To: <4D0E9DE3.8050100@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012200114.23527.rjw@sisk.pl>
+Received: from he.sipsolutions.net ([78.46.109.217]:42467 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751588Ab0L1JvH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 04:51:07 -0500
+Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for
+ 802.11j
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Dave Kilroy <kilroyd@googlemail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201012281843.57453.br1@einfach.org>
+References: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
+	 <AANLkTi=R58EGLrsT5sTk7JTqWvaeJ5caytHMt3VCSOki@mail.gmail.com>
+	 <201012281843.57453.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Dec 2010 10:51:01 +0100
+Message-ID: <1293529861.3526.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, December 20, 2010, Hauke Mehrtens wrote:
-> On 12/20/2010 12:32 AM, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > The ath9k driver uses legacy PCI power management (system suspend
-> > and resume) callbacks, so make it use struct dev_pm_ops callbacks and
-> > let the PCI subsystem handle all of the PCI-specific details of
-> > system power transitions.
-> > 
-> > This change has been tested on Acer Ferrari One with the
-> > Atheros AR928X PCI Express network adapter (rev. 01).
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > ---
-> > 
-> > Hi,
-> > 
-> > This patch has been sent already once under a slightly different subject
-> > and with a different changelog.  I'm not sure what happened to it that time,
-> > so here it goes again.
-> > 
-> > I'm quite confident it doesn't break things and it simplifies the driver's
-> > suspend and resume routines quite a bit, so please apply.
-> > 
-> > Thanks,
-> > Rafael
-> > 
-> Hi Rafael,
+On Tue, 2010-12-28 at 18:43 +0900, Bruno Randolf wrote:
+
+> > You don't have to use them, but there are a few channel/frequency
+> > conversion routines in include/ieee80211.h which could be reused in
+> > these functions.
 > 
-> Your patch was already applied (see commit
-> f0e94b479c987abef17eb18e5c8e0ed178d00cd4 in linux-next) or didn't I got
-> your problem?
+> Thanks for that info, I didn't know about those functions. I just checked 
+> them and it seems most of them are not used, AFAICT:
+> 
+> ieee80211_fhss_chan_to_freq - not used
+> ieee80211_freq_to_fhss_chan - not used
+> ieee80211_hr_chan_to_freq - not used
+> ieee80211_freq_to_hr_chan - not used
+> ieee80211_erp_chan_to_freq - not used
+> ieee80211_freq_to_erp_chan - not used
+> ieee80211_ofdm_chan_to_freq - not used
+> ieee80211_freq_to_ofdm_chan - not used
 
-Oh, is it?  Sorry for the noise, then.
+Cute -- we should probably just remove these.
 
-Thanks,
-Rafael
+> The only two which are used are for 2GHz channels:
+> 
+> ieee80211_dsss_chan_to_freq - atmel, airo, wl3501_cs, orinoco, rndis_wlan
+> ieee80211_freq_to_dsss_chan - atmel, airo, orinoco, zd1201
+> 
+> Anyhow i guess it would make sense to have a common channel to frequency 
+> mapping function for mac80211 and other wireless drivers? The problem is now 
+> we have to use enum ieee80211_band which is defined cfg80211.h...
+
+Well, you're a bit wrong -- the function you're modifying is part of
+cfg80211. Therefore, including cfg80211.h makes perfect sense, it's also
+defined in there (therefore, your patch subject should begin with
+"cfg80211:" instead of "mac80211:").
+
+However, of those drivers you list only orinoco and rndis_wlan already
+use cfg80211, so for the others using it would introduce an almost
+"fake" dependency. In any case, it seems like all that should be
+separate patches.
+
+johannes
+
