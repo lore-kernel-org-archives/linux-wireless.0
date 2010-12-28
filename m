@@ -1,606 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:52963 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755707Ab0LBJ07 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 04:26:59 -0500
-Date: Thu, 2 Dec 2010 10:26:56 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, mickflemm@gmail.com
-Message-ID: <9742660.1381291282013007.JavaMail.wlan@CHBU500181>
-In-Reply-To: <3897066.1181291281847588.JavaMail.wlan@CHBU500181>
-Subject: [PATCH v7 2/9] ath5k: Introduce ath5k_init_softc function as in
- ath9k
+Received: from mail-px0-f174.google.com ([209.85.212.174]:46029 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571Ab0L1IMW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 03:12:22 -0500
+Received: by pxi15 with SMTP id 15so1729832pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:12:22 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19737.39891.227133.163154@gargle.gargle.HOWL>
+Date: Tue, 28 Dec 2010 13:42:03 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 3/5] ath9k_htc: Handle FATAL events
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Split pci initialization into hardware specific
-functions and softc structure initialization.
-Make function naming similar to ones ath9k.
-Introduce ath_bus_opts in ath5k for later
-AHB bus integration.
+The device has to be reset when a FATAL event is received.
+Not doing so would leave the card in a non-working state.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/ath5k.h  |   13 +-
- drivers/net/wireless/ath/ath5k/attach.c |   10 +-
- drivers/net/wireless/ath/ath5k/base.c   |  344 ++++++++++++++++++-------------
- drivers/net/wireless/ath/ath5k/base.h   |    1 +
- drivers/net/wireless/ath/ath5k/eeprom.c |    2 +-
- 5 files changed, 217 insertions(+), 153 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    6 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   57 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/wmi.c          |   18 +++++++-
+ drivers/net/wireless/ath/ath9k/wmi.h          |    3 +-
+ 5 files changed, 84 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 899bf4b..a74f448 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1146,9 +1146,11 @@ struct ath5k_hw {
-  * Prototypes
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index e6c2f0a..1062274 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -377,7 +377,7 @@ struct ath9k_htc_priv {
+ 	struct ieee80211_vif *vif;
+ 	struct htc_beacon_config cur_beacon_conf;
+ 	unsigned int rxfilter;
+-	struct tasklet_struct wmi_tasklet;
++	struct tasklet_struct swba_tasklet;
+ 	struct tasklet_struct rx_tasklet;
+ 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
+ 	struct ath9k_htc_rx rx;
+@@ -385,6 +385,7 @@ struct ath9k_htc_priv {
+ 	struct sk_buff_head tx_queue;
+ 	struct delayed_work ath9k_ani_work;
+ 	struct work_struct ps_work;
++	struct work_struct fatal_work;
  
--/* Attach/Detach Functions */
--int ath5k_hw_attach(struct ath5k_softc *sc);
--void ath5k_hw_detach(struct ath5k_hw *ah);
-+/* Initialization and detach functions */
-+int ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops);
-+void ath5k_deinit_softc(struct ath5k_softc *sc);
-+int ath5k_hw_init(struct ath5k_softc *sc);
-+void ath5k_hw_deinit(struct ath5k_hw *ah);
- 
- int ath5k_sysfs_register(struct ath5k_softc *sc);
- void ath5k_sysfs_unregister(struct ath5k_softc *sc);
-@@ -1332,6 +1334,11 @@ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- 	iowrite32(val, ah->ah_iobase + reg);
+ 	struct mutex htc_pm_lock;
+ 	unsigned long ps_usecount;
+@@ -419,6 +420,8 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+ 	common->bus_ops->read_cachesize(common, csz);
  }
  
-+static inline void ath5k_read_cachesize(struct ath_common *common, int *csz)
++void ath9k_htc_reset(struct ath9k_htc_priv *priv);
++
+ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
+@@ -434,6 +437,7 @@ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
+ void ath9k_htc_station_work(struct work_struct *work);
+ void ath9k_htc_aggr_work(struct work_struct *work);
+ void ath9k_ani_work(struct work_struct *work);;
++void ath_start_ani(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv);
+ void ath9k_tx_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 724f545..9150ca6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -142,7 +142,7 @@ static void ath9k_deinit_priv(struct ath9k_htc_priv *priv)
+ {
+ 	ath9k_htc_exit_debug(priv->ah);
+ 	ath9k_hw_deinit(priv->ah);
+-	tasklet_kill(&priv->wmi_tasklet);
++	tasklet_kill(&priv->swba_tasklet);
+ 	tasklet_kill(&priv->rx_tasklet);
+ 	tasklet_kill(&priv->tx_tasklet);
+ 	kfree(priv->ah);
+@@ -647,13 +647,15 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	spin_lock_init(&priv->tx_lock);
+ 	mutex_init(&priv->mutex);
+ 	mutex_init(&priv->htc_pm_lock);
+-	tasklet_init(&priv->wmi_tasklet, ath9k_wmi_tasklet,
++	tasklet_init(&priv->swba_tasklet, ath9k_swba_tasklet,
+ 		     (unsigned long)priv);
+ 	tasklet_init(&priv->rx_tasklet, ath9k_rx_tasklet,
+ 		     (unsigned long)priv);
+-	tasklet_init(&priv->tx_tasklet, ath9k_tx_tasklet, (unsigned long)priv);
++	tasklet_init(&priv->tx_tasklet, ath9k_tx_tasklet,
++		     (unsigned long)priv);
+ 	INIT_DELAYED_WORK(&priv->ath9k_ani_work, ath9k_ani_work);
+ 	INIT_WORK(&priv->ps_work, ath9k_ps_work);
++	INIT_WORK(&priv->fatal_work, ath9k_fatal_work);
+ 
+ 	/*
+ 	 * Cache line size is used to size and align various
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index dd17909..1b1be72 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -116,6 +116,60 @@ void ath9k_ps_work(struct work_struct *work)
+ 	ath9k_htc_setpower(priv, ATH9K_PM_NETWORK_SLEEP);
+ }
+ 
++void ath9k_htc_reset(struct ath9k_htc_priv *priv)
 +{
-+	common->bus_ops->read_cachesize(common, csz);
-+}
-+
- static inline u32 ath5k_hw_bitswap(u32 val, unsigned int bits)
- {
- 	u32 retval = 0, bit, i;
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index ed86b9d..a84782a 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -93,16 +93,16 @@ static int ath5k_hw_post(struct ath5k_hw *ah)
- }
- 
- /**
-- * ath5k_hw_attach - Check if hw is supported and init the needed structs
-+ * ath5k_hw_init - Check if hw is supported and init the needed structs
-  *
-- * @sc: The &struct ath5k_softc we got from the driver's attach function
-+ * @sc: The &struct ath5k_softc we got from the driver's init_softc function
-  *
-  * Check if the device is supported, perform a POST and initialize the needed
-  * structs. Returns -ENOMEM if we don't have memory for the needed structs,
-  * -ENODEV if the device is not supported or prints an error msg if something
-  * else went wrong.
-  */
--int ath5k_hw_attach(struct ath5k_softc *sc)
-+int ath5k_hw_init(struct ath5k_softc *sc)
- {
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_common *common = ath5k_hw_common(ah);
-@@ -346,11 +346,11 @@ err:
- }
- 
- /**
-- * ath5k_hw_detach - Free the ath5k_hw struct
-+ * ath5k_hw_deinit - Free the ath5k_hw struct
-  *
-  * @ah: The &struct ath5k_hw
-  */
--void ath5k_hw_detach(struct ath5k_hw *ah)
-+void ath5k_hw_deinit(struct ath5k_hw *ah)
- {
- 	__set_bit(ATH_STAT_INVALID, ah->ah_sc->status);
- 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 2d7d8ba..b11ea3d 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -80,6 +80,7 @@ MODULE_SUPPORTED_DEVICE("Atheros 5xxx WLAN cards");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
- 
-+static int ath5k_init(struct ieee80211_hw *hw);
- static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
- 								bool skip_pcu);
- static int ath5k_beacon_update(struct ieee80211_hw *hw,
-@@ -192,6 +193,32 @@ static const struct ieee80211_rate ath5k_rates[] = {
- 	/* XR missing */
- };
- 
-+/* return bus cachesize in 4B word units */
-+static void ath5k_pci_read_cachesize(struct ath_common *common, int *csz)
-+{
-+	struct ath5k_softc *sc = (struct ath5k_softc *) common->priv;
-+	u8 u8tmp;
-+
-+	pci_read_config_byte(sc->pdev, PCI_CACHE_LINE_SIZE, &u8tmp);
-+	*csz = (int)u8tmp;
-+
-+	/*
-+	 * This check was put in to avoid "unplesant" consequences if
-+	 * the bootrom has not fully initialized all PCI devices.
-+	 * Sometimes the cache line size register is not set
-+	 */
-+
-+	if (*csz == 0)
-+		*csz = L1_CACHE_BYTES >> 2;   /* Use the default size */
-+}
-+
-+/* Common ath_bus_opts structure */
-+static const struct ath_bus_ops ath_pci_bus_ops = {
-+	.ath_bus_type = ATH_PCI,
-+	.read_cachesize = ath5k_pci_read_cachesize,
-+};
-+
-+
- static inline void ath5k_txbuf_free_skb(struct ath5k_softc *sc,
- 				struct ath5k_buf *bf)
- {
-@@ -2152,7 +2179,7 @@ ath5k_intr_calibration_poll(struct ath5k_hw *ah)
- 	 * AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI); */
- }
- 
--static irqreturn_t
-+irqreturn_t
- ath5k_intr(int irq, void *dev_id)
- {
- 	struct ath5k_softc *sc = dev_id;
-@@ -2338,6 +2365,158 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
- * Initialization routines *
- \*************************/
- 
-+int
-+ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
-+{
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct ath_common *common;
++	struct ath_hw *ah = priv->ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ieee80211_channel *channel = priv->hw->conf.channel;
++	struct ath9k_hw_cal_data *caldata;
++	enum htc_phymode mode;
++	__be16 htc_mode;
++	u8 cmd_rsp;
 +	int ret;
-+	int csz;
 +
-+	/* Initialize driver private data */
-+	SET_IEEE80211_DEV(hw, sc->dev);
-+	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
-+		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-+		    IEEE80211_HW_SIGNAL_DBM;
++	mutex_lock(&priv->mutex);
++	ath9k_htc_ps_wakeup(priv);
 +
-+	hw->wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_AP) |
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_ADHOC) |
-+		BIT(NL80211_IFTYPE_MESH_POINT);
++	if (priv->op_flags & OP_ASSOCIATED)
++		cancel_delayed_work_sync(&priv->ath9k_ani_work);
 +
-+	hw->extra_tx_headroom = 2;
-+	hw->channel_change_time = 5000;
++	ieee80211_stop_queues(priv->hw);
++	htc_stop(priv->htc);
++	WMI_CMD(WMI_DISABLE_INTR_CMDID);
++	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
++	WMI_CMD(WMI_STOP_RECV_CMDID);
 +
-+	/*
-+	 * Mark the device as detached to avoid processing
-+	 * interrupts until setup is complete.
-+	 */
-+	__set_bit(ATH_STAT_INVALID, sc->status);
-+
-+	sc->opmode = NL80211_IFTYPE_STATION;
-+	sc->bintval = 1000;
-+	mutex_init(&sc->lock);
-+	spin_lock_init(&sc->rxbuflock);
-+	spin_lock_init(&sc->txbuflock);
-+	spin_lock_init(&sc->block);
-+
-+
-+	/* Setup interrupt handler */
-+	ret = request_irq(sc->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
++	caldata = &priv->caldata[channel->hw_value];
++	ret = ath9k_hw_reset(ah, ah->curchan, caldata, false);
 +	if (ret) {
-+		ATH5K_ERR(sc, "request_irq failed\n");
-+		goto err;
++		ath_err(common,
++			"Unable to reset device (%u Mhz) reset status %d\n",
++			channel->center_freq, ret);
 +	}
 +
-+	/* If we passed the test, malloc an ath5k_hw struct */
-+	sc->ah = kzalloc(sizeof(struct ath5k_hw), GFP_KERNEL);
-+	if (!sc->ah) {
-+		ret = -ENOMEM;
-+		ATH5K_ERR(sc, "out of memory\n");
-+		goto err_irq;
++	ath_update_txpow(priv);
++
++	WMI_CMD(WMI_START_RECV_CMDID);
++	ath9k_host_rx_init(priv);
++
++	mode = ath9k_htc_get_curmode(priv, ah->curchan);
++	htc_mode = cpu_to_be16(mode);
++	WMI_CMD_BUF(WMI_SET_MODE_CMDID, &htc_mode);
++
++	WMI_CMD(WMI_ENABLE_INTR_CMDID);
++	htc_start(priv->htc);
++
++	if (priv->op_flags & OP_ASSOCIATED) {
++		ath9k_htc_beacon_config(priv, priv->vif);
++		ath_start_ani(priv);
 +	}
 +
-+	sc->ah->ah_sc = sc;
-+	sc->ah->ah_iobase = sc->iobase;
-+	common = ath5k_hw_common(sc->ah);
-+	common->ops = &ath5k_common_ops;
-+	common->bus_ops = bus_ops;
-+	common->ah = sc->ah;
-+	common->hw = hw;
-+	common->priv = sc;
++	ieee80211_wake_queues(priv->hw);
 +
-+	/*
-+	 * Cache line size is used to size and align various
-+	 * structures used to communicate with the hardware.
-+	 */
-+	ath5k_read_cachesize(common, &csz);
-+	common->cachelsz = csz << 2; /* convert to bytes */
-+
-+	spin_lock_init(&common->cc_lock);
-+
-+	/* Initialize device */
-+	ret = ath5k_hw_init(sc);
-+	if (ret)
-+		goto err_free_ah;
-+
-+	/* set up multi-rate retry capabilities */
-+	if (sc->ah->ah_version == AR5K_AR5212) {
-+		hw->max_rates = 4;
-+		hw->max_rate_tries = 11;
-+	}
-+
-+	hw->vif_data_size = sizeof(struct ath5k_vif);
-+
-+	/* Finish private driver data initialization */
-+	ret = ath5k_init(hw);
-+	if (ret)
-+		goto err_ah;
-+
-+	ATH5K_INFO(sc, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
-+			ath5k_chip_name(AR5K_VERSION_MAC, sc->ah->ah_mac_srev),
-+					sc->ah->ah_mac_srev,
-+					sc->ah->ah_phy_revision);
-+
-+	if (!sc->ah->ah_single_chip) {
-+		/* Single chip radio (!RF5111) */
-+		if (sc->ah->ah_radio_5ghz_revision &&
-+			!sc->ah->ah_radio_2ghz_revision) {
-+			/* No 5GHz support -> report 2GHz radio */
-+			if (!test_bit(AR5K_MODE_11A,
-+				sc->ah->ah_capabilities.cap_mode)) {
-+				ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
-+					ath5k_chip_name(AR5K_VERSION_RAD,
-+						sc->ah->ah_radio_5ghz_revision),
-+						sc->ah->ah_radio_5ghz_revision);
-+			/* No 2GHz support (5110 and some
-+			 * 5Ghz only cards) -> report 5Ghz radio */
-+			} else if (!test_bit(AR5K_MODE_11B,
-+				sc->ah->ah_capabilities.cap_mode)) {
-+				ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
-+					ath5k_chip_name(AR5K_VERSION_RAD,
-+						sc->ah->ah_radio_5ghz_revision),
-+						sc->ah->ah_radio_5ghz_revision);
-+			/* Multiband radio */
-+			} else {
-+				ATH5K_INFO(sc, "RF%s multiband radio found"
-+					" (0x%x)\n",
-+					ath5k_chip_name(AR5K_VERSION_RAD,
-+						sc->ah->ah_radio_5ghz_revision),
-+						sc->ah->ah_radio_5ghz_revision);
-+			}
-+		}
-+		/* Multi chip radio (RF5111 - RF2111) ->
-+		 * report both 2GHz/5GHz radios */
-+		else if (sc->ah->ah_radio_5ghz_revision &&
-+				sc->ah->ah_radio_2ghz_revision){
-+			ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
-+				ath5k_chip_name(AR5K_VERSION_RAD,
-+					sc->ah->ah_radio_5ghz_revision),
-+					sc->ah->ah_radio_5ghz_revision);
-+			ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
-+				ath5k_chip_name(AR5K_VERSION_RAD,
-+					sc->ah->ah_radio_2ghz_revision),
-+					sc->ah->ah_radio_2ghz_revision);
-+		}
-+	}
-+
-+	ath5k_debug_init_device(sc);
-+
-+	/* ready to process interrupts */
-+	__clear_bit(ATH_STAT_INVALID, sc->status);
-+
-+	return 0;
-+err_ah:
-+	ath5k_hw_deinit(sc->ah);
-+err_free_ah:
-+	kfree(sc->ah);
-+err_irq:
-+	free_irq(sc->irq, sc);
-+err:
-+	return ret;
++	ath9k_htc_ps_restore(priv);
++	mutex_unlock(&priv->mutex);
 +}
 +
- static int
- ath5k_stop_locked(struct ath5k_softc *sc)
+ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 				 struct ieee80211_hw *hw,
+ 				 struct ath9k_channel *hchan)
+@@ -690,7 +744,7 @@ void ath9k_htc_debug_remove_root(void)
+ /* ANI */
+ /*******/
+ 
+-static void ath_start_ani(struct ath9k_htc_priv *priv)
++void ath_start_ani(struct ath9k_htc_priv *priv)
  {
-@@ -2377,7 +2556,7 @@ ath5k_stop_locked(struct ath5k_softc *sc)
- }
- 
- static int
--ath5k_init(struct ath5k_softc *sc)
-+ath5k_init_hw(struct ath5k_softc *sc)
- {
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_common *common = ath5k_hw_common(ah);
-@@ -2575,8 +2754,9 @@ static void ath5k_reset_work(struct work_struct *work)
- }
- 
- static int
--ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
-+ath5k_init(struct ieee80211_hw *hw)
- {
-+
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_regulatory *regulatory = ath5k_hw_regulatory(ah);
-@@ -2584,7 +2764,6 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	u8 mac[ETH_ALEN] = {};
- 	int ret;
- 
--	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device);
- 
- 	/*
- 	 * Check if the MAC has multi-rate retry support.
-@@ -2725,10 +2904,10 @@ err:
- 	return ret;
- }
- 
--static void
--ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
-+void
-+ath5k_deinit_softc(struct ath5k_softc *sc)
- {
--	struct ath5k_softc *sc = hw->priv;
-+	struct ieee80211_hw *hw = sc->hw;
- 
- 	/*
- 	 * NB: the order of these is important:
-@@ -2743,6 +2922,7 @@ ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	 * XXX: ??? detach ath5k_hw ???
- 	 * Other than that, it's straightforward...
- 	 */
-+	ath5k_debug_finish_device(sc);
- 	ieee80211_unregister_hw(hw);
- 	ath5k_desc_free(sc);
- 	ath5k_txq_release(sc);
-@@ -2755,6 +2935,8 @@ ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	 * returns because we'll get called back to reclaim node
- 	 * state and potentially want to use them.
- 	 */
-+	ath5k_hw_deinit(sc->ah);
-+	free_irq(sc->irq, sc);
- }
- 
- /********************\
-@@ -2777,7 +2959,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- static int ath5k_start(struct ieee80211_hw *hw)
- {
--	return ath5k_init(hw->priv);
-+	return ath5k_init_hw(hw->priv);
- }
- 
- static void ath5k_stop(struct ieee80211_hw *hw)
-@@ -3422,7 +3604,7 @@ static int ath5k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
- 	return 0;
- }
- 
--static const struct ieee80211_ops ath5k_hw_ops = {
-+const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
- 	.start 		= ath5k_start,
- 	.stop 		= ath5k_stop,
-@@ -3456,7 +3638,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
- {
- 	void __iomem *mem;
- 	struct ath5k_softc *sc;
--	struct ath_common *common;
- 	struct ieee80211_hw *hw;
- 	int ret;
- 	u8 csz;
-@@ -3552,146 +3733,24 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 
- 	dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
- 
--	/* Initialize driver private data */
--	SET_IEEE80211_DEV(hw, &pdev->dev);
--	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
--		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
--		    IEEE80211_HW_SIGNAL_DBM;
--
--	hw->wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_AP) |
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC) |
--		BIT(NL80211_IFTYPE_MESH_POINT);
--
--	hw->extra_tx_headroom = 2;
--	hw->channel_change_time = 5000;
- 	sc = hw->priv;
- 	sc->hw = hw;
- 	sc->pdev = pdev;
- 	sc->dev = &pdev->dev;
- 	sc->irq = pdev->irq;
--
--	/*
--	 * Mark the device as detached to avoid processing
--	 * interrupts until setup is complete.
--	 */
--	__set_bit(ATH_STAT_INVALID, sc->status);
--
-+	sc->devid = id->device;
- 	sc->iobase = mem; /* So we can unmap it on detach */
--	sc->opmode = NL80211_IFTYPE_STATION;
--	sc->bintval = 1000;
--	mutex_init(&sc->lock);
--	spin_lock_init(&sc->rxbuflock);
--	spin_lock_init(&sc->txbuflock);
--	spin_lock_init(&sc->block);
- 
--	/* Set private data */
--	pci_set_drvdata(pdev, sc);
--
--	/* Setup interrupt handler */
--	ret = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
-+	/* Initialize */
-+	ret = ath5k_init_softc(sc, &ath_pci_bus_ops);
- 	if (ret) {
--		ATH5K_ERR(sc, "request_irq failed\n");
- 		goto err_free;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	unsigned long timestamp = jiffies_to_msecs(jiffies);
+@@ -1227,6 +1281,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
  	}
  
--	/* If we passed the test, malloc an ath5k_hw struct */
--	sc->ah = kzalloc(sizeof(struct ath5k_hw), GFP_KERNEL);
--	if (!sc->ah) {
--		ret = -ENOMEM;
--		ATH5K_ERR(sc, "out of memory\n");
--		goto err_irq;
--	}
--
--	sc->ah->ah_sc = sc;
--	sc->ah->ah_iobase = sc->iobase;
--	common = ath5k_hw_common(sc->ah);
--	common->ops = &ath5k_common_ops;
--	common->ah = sc->ah;
--	common->hw = hw;
--	common->cachelsz = csz << 2; /* convert to bytes */
--	spin_lock_init(&common->cc_lock);
--
--	/* Initialize device */
--	ret = ath5k_hw_attach(sc);
--	if (ret) {
--		goto err_free_ah;
--	}
--
--	/* set up multi-rate retry capabilities */
--	if (sc->ah->ah_version == AR5K_AR5212) {
--		hw->max_rates = 4;
--		hw->max_rate_tries = 11;
--	}
--
--	hw->vif_data_size = sizeof(struct ath5k_vif);
--
--	/* Finish private driver data initialization */
--	ret = ath5k_attach(pdev, hw);
--	if (ret)
--		goto err_ah;
--
--	ATH5K_INFO(sc, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
--			ath5k_chip_name(AR5K_VERSION_MAC, sc->ah->ah_mac_srev),
--					sc->ah->ah_mac_srev,
--					sc->ah->ah_phy_revision);
--
--	if (!sc->ah->ah_single_chip) {
--		/* Single chip radio (!RF5111) */
--		if (sc->ah->ah_radio_5ghz_revision &&
--			!sc->ah->ah_radio_2ghz_revision) {
--			/* No 5GHz support -> report 2GHz radio */
--			if (!test_bit(AR5K_MODE_11A,
--				sc->ah->ah_capabilities.cap_mode)) {
--				ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
--					ath5k_chip_name(AR5K_VERSION_RAD,
--						sc->ah->ah_radio_5ghz_revision),
--						sc->ah->ah_radio_5ghz_revision);
--			/* No 2GHz support (5110 and some
--			 * 5Ghz only cards) -> report 5Ghz radio */
--			} else if (!test_bit(AR5K_MODE_11B,
--				sc->ah->ah_capabilities.cap_mode)) {
--				ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
--					ath5k_chip_name(AR5K_VERSION_RAD,
--						sc->ah->ah_radio_5ghz_revision),
--						sc->ah->ah_radio_5ghz_revision);
--			/* Multiband radio */
--			} else {
--				ATH5K_INFO(sc, "RF%s multiband radio found"
--					" (0x%x)\n",
--					ath5k_chip_name(AR5K_VERSION_RAD,
--						sc->ah->ah_radio_5ghz_revision),
--						sc->ah->ah_radio_5ghz_revision);
--			}
--		}
--		/* Multi chip radio (RF5111 - RF2111) ->
--		 * report both 2GHz/5GHz radios */
--		else if (sc->ah->ah_radio_5ghz_revision &&
--				sc->ah->ah_radio_2ghz_revision){
--			ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
--				ath5k_chip_name(AR5K_VERSION_RAD,
--					sc->ah->ah_radio_5ghz_revision),
--					sc->ah->ah_radio_5ghz_revision);
--			ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
--				ath5k_chip_name(AR5K_VERSION_RAD,
--					sc->ah->ah_radio_2ghz_revision),
--					sc->ah->ah_radio_2ghz_revision);
--		}
--	}
--
--	ath5k_debug_init_device(sc);
--
--	/* ready to process interrupts */
--	__clear_bit(ATH_STAT_INVALID, sc->status);
-+	/* Set private data */
-+	pci_set_drvdata(pdev, hw);
- 
- 	return 0;
--err_ah:
--	ath5k_hw_detach(sc->ah);
--err_free_ah:
--	kfree(sc->ah);
--err_irq:
--	free_irq(pdev->irq, sc);
- err_free:
- 	ieee80211_free_hw(hw);
- err_map:
-@@ -3707,17 +3766,14 @@ err:
- static void __devexit
- ath5k_pci_remove(struct pci_dev *pdev)
- {
--	struct ath5k_softc *sc = pci_get_drvdata(pdev);
-+	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-+	struct ath5k_softc *sc = hw->priv;
- 
--	ath5k_debug_finish_device(sc);
--	ath5k_detach(pdev, sc->hw);
--	ath5k_hw_detach(sc->ah);
--	kfree(sc->ah);
--	free_irq(pdev->irq, sc);
-+	ath5k_deinit_softc(sc);
- 	pci_iounmap(pdev, sc->iobase);
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
--	ieee80211_free_hw(sc->hw);
-+	ieee80211_free_hw(hw);
+ 	/* Cancel all the running timers/work .. */
++	cancel_work_sync(&priv->fatal_work);
+ 	cancel_work_sync(&priv->ps_work);
+ 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
+ 	ath9k_led_stop_brightness(priv);
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 573daca..dc862f5 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -120,7 +120,7 @@ void ath9k_deinit_wmi(struct ath9k_htc_priv *priv)
+ 	kfree(priv->wmi);
  }
  
- #ifdef CONFIG_PM_SLEEP
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 0362f8e..aa6c32a 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -172,6 +172,7 @@ struct ath5k_softc {
- 	struct pci_dev		*pdev;
- 	struct device		*dev;		/* for dma mapping */
- 	int irq;
-+	u16 devid;
- 	void __iomem		*iobase;	/* address of the device */
- 	struct mutex		lock;		/* dev-level lock */
- 	struct ieee80211_hw	*hw;		/* IEEE 802.11 common */
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index 033eab9..a648957 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -208,7 +208,7 @@ ath5k_eeprom_init_header(struct ath5k_hw *ah)
- 	 *
- 	 * XXX: Serdes values seem to be fixed so
- 	 * no need to read them here, we write them
--	 * during ath5k_hw_attach */
-+	 * during ath5k_hw_init */
- 	AR5K_EEPROM_READ(AR5K_EEPROM_PCIE_OFFSET, val);
- 	ee->ee_serdes = (val == AR5K_EEPROM_PCIE_SERDES_SECTION) ?
- 							true : false;
+-void ath9k_wmi_tasklet(unsigned long data)
++void ath9k_swba_tasklet(unsigned long data)
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+@@ -131,6 +131,16 @@ void ath9k_wmi_tasklet(unsigned long data)
+ 
+ }
+ 
++void ath9k_fatal_work(struct work_struct *work)
++{
++	struct ath9k_htc_priv *priv = container_of(work, struct ath9k_htc_priv,
++						   fatal_work);
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++
++	ath_dbg(common, ATH_DBG_FATAL, "FATAL Event received, resetting device\n");
++	ath9k_htc_reset(priv);
++}
++
+ static void ath9k_wmi_rsp_callback(struct wmi *wmi, struct sk_buff *skb)
+ {
+ 	skb_pull(skb, sizeof(struct wmi_cmd_hdr));
+@@ -163,7 +173,11 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
+ 		switch (cmd_id) {
+ 		case WMI_SWBA_EVENTID:
+ 			wmi->beacon_pending = *(u8 *)wmi_event;
+-			tasklet_schedule(&wmi->drv_priv->wmi_tasklet);
++			tasklet_schedule(&wmi->drv_priv->swba_tasklet);
++			break;
++		case WMI_FATAL_EVENTID:
++			ieee80211_queue_work(wmi->drv_priv->hw,
++					     &wmi->drv_priv->fatal_work);
+ 			break;
+ 		case WMI_TXRATE_EVENTID:
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index ac61074..4208427 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -117,7 +117,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 		  u8 *cmd_buf, u32 cmd_len,
+ 		  u8 *rsp_buf, u32 rsp_len,
+ 		  u32 timeout);
+-void ath9k_wmi_tasklet(unsigned long data);
++void ath9k_swba_tasklet(unsigned long data);
++void ath9k_fatal_work(struct work_struct *work);
+ 
+ #define WMI_CMD(_wmi_cmd)						\
+ 	do {								\
 -- 
-1.7.1
+1.7.3.4
 
