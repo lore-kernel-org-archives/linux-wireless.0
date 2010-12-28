@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:40774 "HELO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751135Ab0LFTRf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 14:17:35 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>
-Date: Mon, 6 Dec 2010 11:14:54 -0800
-Subject: RE: [PATCH 0/3] mwifiex: remove some stuff...
-Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0FCDB@SC-VEXCH1.marvell.com>
-References: <20101203191130.GD2348@tuxdriver.com>
- <1291411051-12916-1-git-send-email-linville@tuxdriver.com>
- <477F20668A386D41ADCC57781B1F704307D5C0F9CB@SC-VEXCH1.marvell.com>
- <477F20668A386D41ADCC57781B1F704307D5C0FA31@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307D5C0FA31@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:24392 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750789Ab0L1Fbv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 00:31:51 -0500
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0778584306
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 14:31:49 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for 802.11j
+Date: Tue, 28 Dec 2010 14:31:46 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mcgrof@gmail.com
+References: <20101224074410.16337.90008.stgit@localhost6.localdomain6> <1293447459.3544.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1293447459.3544.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012281431.46536.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-> > >
-> > > Not tested...YMMV...
-> >
-> > I'll test all the patches you posted. After that, I will start working on the items suggested by
-> > Johannes.
+On Mon December 27 2010 19:57:39 Johannes Berg wrote:
+> On Fri, 2010-12-24 at 16:44 +0900, Bruno Randolf wrote:
+> >  static bool freq_is_chan_12_13_14(u16 freq)
+> >  {
+> > 
+> > -	if (freq == ieee80211_channel_to_frequency(12) ||
+> > -	    freq == ieee80211_channel_to_frequency(13) ||
+> > -	    freq == ieee80211_channel_to_frequency(14))
+> > +	if (freq == ieee80211_channel_to_frequency(12, IEEE80211_BAND_2GHZ) ||
+> > +	    freq == ieee80211_channel_to_frequency(13, IEEE80211_BAND_2GHZ) ||
+> > +	    freq == ieee80211_channel_to_frequency(14, IEEE80211_BAND_2GHZ))
+> > 
+> >  		return true;
 > 
-> I tested all 3 patches. They passed checkpatch.pl and sparse check. Some basic functions have been
-> verified OK: scan, associate, ping, iperf. I will do some more tests (security, ad-hoc, etc.) next
-> week.
+> This seems strange ... why not just hardcode the values??
+
+True, but this is not my code, I just did the change for the new function 
+parameter. It's in net/wireless/reg.c, so I'll CC: Luis.
+
+> >  	if (freq->e == 0) {
+> > 
+> > +		int band = IEEE80211_BAND_2GHZ;
 > 
+> enum?
 
-Tested-by: Amitkumar Karwar <akarwar@marvell.com>
+Ok, thanks.
 
+Any other comments on the code or purpose of this patch?
 
-Regards,
-
-Bing
-
+bruno
