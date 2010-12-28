@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:56583 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752972Ab0L1MDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 07:03:46 -0500
-Subject: Re: [PATCH v2 15/18] wl1271: AP mode - encryption support
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1293028057-6212-16-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
-	 <1293028057-6212-16-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Dec 2010 14:03:43 +0200
-Message-ID: <1293537823.24274.18.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-iy0-f194.google.com ([209.85.210.194]:44520 "EHLO
+	mail-iy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752465Ab0L1Ulu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 15:41:50 -0500
+MIME-Version: 1.0
+In-Reply-To: <201012282104.06232.rjw@sisk.pl>
+References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com>
+ <201012261937.21256.rjw@sisk.pl> <AANLkTinewad6YxXvn5gnJQ+HJn41Sg96319GQn9KRKWj@mail.gmail.com>
+ <201012282104.06232.rjw@sisk.pl>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 28 Dec 2010 22:41:29 +0200
+Message-ID: <AANLkTikxmS0sw6HeXL5QhdzBzBU3U9+hTvsPcyJay5J6@mail.gmail.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
-> Encryption key configuration is different for AP/STA modes.
-> 
-> AP encryption keys are recorded when the BSS is not started. On BSS
-> start they are propagated to the AP (in wl1271_ap_init_hwenc).
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+On Tue, Dec 28, 2010 at 10:04 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, December 28, 2010, Ohad Ben-Cohen wrote:
+>> On Sun, Dec 26, 2010 at 8:37 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > So, it only happens during asynchronous suspend?  In other words, if suspend
+>> > is synchronous, everything should be fine, right?
+>>
+>> Not necessarily.
+>
+> So it's not a race after all, is it?
 
-[...]
+There are several scenarios to the same problem.. In one of them, we
+were racing against an event that caused a suspend handler of an
+entirely unrelated device to fail. I'm trying very hard not to
+overload this thread with irrelevant details.. but anyway this forked
+discussion is a bit moot IMHO
 
-> diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-> index 0662b19..81ba75d 100644
-> --- a/drivers/net/wireless/wl12xx/tx.h
-> +++ b/drivers/net/wireless/wl12xx/tx.h
-> @@ -152,4 +152,8 @@ void wl1271_tx_flush(struct wl1271 *wl);
->  u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
->  u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
->  
-> +/* Functions from wl1271_main.c */
-> +
-> +int wl1271_set_default_wep_key(struct wl1271 *wl, u8 id);
-> +
->  #endif
+> Second, what you'd really want to do (I guess) is:
+>
+> pm_runtime_put_noidle(device);
+> device->bus->pm->runtime_suspend(device);
 
-Again, same thing.  Can we put this somewhere else?
+Yes, our workaround is somewhere in these lines. We're using it
+regardless of the system state (runtime or suspending), and frankly,
+we're happy with it, just like I said in:
 
+http://www.spinics.net/linux/lists/linux-mmc/msg05052.html
 
--- 
-Cheers,
-Luca.
-
+I still call it a workaround though...
