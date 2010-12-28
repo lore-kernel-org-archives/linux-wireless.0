@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:64019 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309Ab0L3XIM (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754488Ab0L1Rhp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:08:12 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 03/15]drivers:staging:rtl8187se:r8180_hw.h Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:07:52 -0800
-Message-Id: <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+	Tue, 28 Dec 2010 12:37:45 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:44 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 18/18] wl1271: Enable AP-mode
+Date: Tue, 28 Dec 2010 19:36:48 +0200
+Message-Id: <1293557808-27068-19-git-send-email-arik@wizery.com>
+In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
+References: <1293557808-27068-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this 
-is correct or not.
+Indicate support for the NL80211_IFTYPE_AP interface mode to enable AP
+mode operation.
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Disable 11a when operating in AP-mode (unsupported for now).
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/staging/rtl8187se/r8180_hw.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/boot.c |    4 +++-
+ drivers/net/wireless/wl12xx/main.c |    5 ++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/rtl8187se/r8180_hw.h b/drivers/staging/rtl8187se/r8180_hw.h
-index 3fca144..2911d40 100644
---- a/drivers/staging/rtl8187se/r8180_hw.h
-+++ b/drivers/staging/rtl8187se/r8180_hw.h
-@@ -554,7 +554,7 @@
- /* by amy for power save		*/
- /* by amy for antenna			*/
- #define EEPROM_SW_REVD_OFFSET 0x3f
--/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are diable.					*/
-+/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are disabled.					*/
- #define EEPROM_SW_AD_MASK			0x0300
- #define EEPROM_SW_AD_ENABLE			0x0100
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index b2f0f64..f2a3513 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -233,7 +233,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+ 	 */
+ 	if (wl->nvs_len == sizeof(struct wl1271_nvs_file) ||
+ 	    wl->nvs_len == WL1271_INI_LEGACY_NVS_FILE_SIZE) {
+-		if (wl->nvs->general_params.dual_mode_select)
++		/* for now 11a is unsupported in AP mode */
++		if (wl->bss_type != BSS_TYPE_AP_BSS &&
++		    wl->nvs->general_params.dual_mode_select)
+ 			wl->enable_11a = true;
+ 	}
  
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index ed06aee..5bd6879 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1073,6 +1073,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		wl->bss_type = BSS_TYPE_IBSS;
+ 		wl->set_bss_type = BSS_TYPE_STA_BSS;
+ 		break;
++	case NL80211_IFTYPE_AP:
++		wl->bss_type = BSS_TYPE_AP_BSS;
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		goto out;
+@@ -3136,7 +3139,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC);
++		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	/*
+ 	 * Maximum length of elements in scanning probe request templates
 -- 
-1.6.5.2.180.gc5b3e
+1.7.1
 
