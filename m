@@ -1,64 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:53024 "EHLO mail.neratec.ch"
+Received: from mx1.redhat.com ([209.132.183.28]:6612 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755937Ab0LBJ1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 04:27:13 -0500
-Date: Thu, 2 Dec 2010 10:27:11 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, mickflemm@gmail.com
-Message-ID: <4831928.1481291282029559.JavaMail.wlan@CHBU500181>
-In-Reply-To: <1705686.1261291281873611.JavaMail.wlan@CHBU500181>
-Subject: [PATCH v7 7/9] ath5k: Add initial registers values for radio RF2317
- chip.
+	id S1752437Ab0L1K2C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 05:28:02 -0500
+Date: Tue, 28 Dec 2010 11:28:01 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Justin Case <justincase@yopmail.com>
+Subject: Re: stable compat-wireless releases are 404
+Message-ID: <20101228102800.GA2347@redhat.com>
+References: <loom.20101227T073819-206@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20101227T073819-206@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Mon, Dec 27, 2010 at 06:39:04AM +0000, Justin Case wrote:
+> I am trying to download a stable compat-wireless release from this website:
+> http://linuxwireless.org/en/users/Download/stable/
+> 
+> however the main download site:
+> http://www.orbit-lab.org/kernel/
+> is giving 404 errors.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
- drivers/net/wireless/ath/ath5k/initvals.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+Luis, could you fix this?
 
-diff --git a/drivers/net/wireless/ath/ath5k/initvals.c b/drivers/net/wireless/ath/ath5k/initvals.c
-index 905e4fd..e49340d 100644
---- a/drivers/net/wireless/ath/ath5k/initvals.c
-+++ b/drivers/net/wireless/ath/ath5k/initvals.c
-@@ -1495,6 +1495,29 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool skip_pcu)
- 					rf5112_ini_bbgain, skip_pcu);
- 			break;
- 		case AR5K_RF2317:
-+
-+			ath5k_hw_ini_mode_registers(ah,
-+					ARRAY_SIZE(rf2413_ini_mode_end),
-+					rf2413_ini_mode_end, mode);
-+
-+			ath5k_hw_ini_registers(ah,
-+					ARRAY_SIZE(rf2425_ini_common_end),
-+					rf2425_ini_common_end, skip_pcu);
-+
-+			/* Override settings from rf2413_ini_mode_end */
-+			ath5k_hw_reg_write(ah, 0x00180a65, AR5K_PHY_GAIN);
-+
-+			/* Override settings from rf2413_ini_common_end */
-+			ath5k_hw_reg_write(ah, 0x00004000, AR5K_PHY_AGC);
-+			AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TPC_RG5,
-+				AR5K_PHY_TPC_RG5_PD_GAIN_OVERLAP, 0xa);
-+			ath5k_hw_reg_write(ah, 0x800000a8, 0x8140);
-+			ath5k_hw_reg_write(ah, 0x000000ff, 0x9958);
-+
-+			ath5k_hw_ini_registers(ah,
-+					ARRAY_SIZE(rf5112_ini_bbgain),
-+					rf5112_ini_bbgain, skip_pcu);
-+			break;
- 		case AR5K_RF2425:
- 
- 			ath5k_hw_ini_mode_registers(ah,
--- 
-1.7.1
+> Is there an alternative download site or mirror?
+?
 
+Stanislaw
