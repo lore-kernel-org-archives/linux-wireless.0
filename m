@@ -1,127 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63454 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932919Ab0LTRCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 12:02:43 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 09:02:27 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <kathy.giori@atheros.com>, <amod.bodas@atheros.com>,
-	<david.quan@atheros.com>, <michael.green@atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/8] wireless-regdb: Add DFS bit fields for countries
-Date: Mon, 20 Dec 2010 12:02:27 -0500
-Message-ID: <1292864555-28661-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
-References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12516 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752169Ab0L1Jn7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 04:43:59 -0500
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0149859437
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 18:43:58 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Dave Kilroy <kilroyd@googlemail.com>
+Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for 802.11j
+Date: Tue, 28 Dec 2010 18:43:57 +0900
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <20101224074410.16337.90008.stgit@localhost6.localdomain6> <AANLkTi=R58EGLrsT5sTk7JTqWvaeJ5caytHMt3VCSOki@mail.gmail.com>
+In-Reply-To: <AANLkTi=R58EGLrsT5sTk7JTqWvaeJ5caytHMt3VCSOki@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012281843.57453.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To support DFS we add the three known DFS regions which countries
-can support. In order to not modify the regulatory database scheme
-in an incompatible way we use some two pad bytes which were unused
-for this. This lets us later also add some more bits for general
-country specific regulatory data.
+On Sat December 25 2010 01:46:00 Dave Kilroy wrote:
+> On Fri, Dec 24, 2010 at 7:44 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > Extend channel to frequency mapping for 802.11j Japan 4.9GHz band,
+> > according to IEEE802.11 section 17.3.8.3.2 and Annex J. Because there
+> > are now overlapping channel numbers in the 2GHz and 5GHz band we can't
+> > map from channel to frequency without knowing the band. This is no
+> > problem as in most contexts we know the band. In places where we don't
+> > know the band (and WEXT compatibility) we assume the 2GHz band for
+> > channels below 14.
+> > 
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > ---
+> > -int ieee80211_channel_to_frequency(int chan)
+> > +int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
+> >  {
+> > -       if (chan < 14)
+> > -               return 2407 + chan * 5;
+> > -
+> > -       if (chan == 14)
+> > -               return 2484;
+> > -
+> > -       /* FIXME: 802.11j 17.3.8.3.2 */
+> > -       return (chan + 1000) * 5;
+> > +       /* see 802.11 17.3.8.3.2 and Annex J
+> > +        * there are overlapping channel numbers in 5GHz and 2GHz bands
+> > */ +       if (band == IEEE80211_BAND_5GHZ) {
+> > +               if (chan >= 182 && chan <= 196)
+> > +                       return 4000 + chan * 5;
+> > +               else
+> > +                       return 5000 + chan * 5;
+> > +       } else { /* IEEE80211_BAND_2GHZ */
+> > +               if (chan == 14)
+> > +                       return 2484;
+> > +               else if (chan < 14)
+> > +                       return 2407 + chan * 5;
+> > +               else
+> > +                       return 0; /* not supported */
+> > +       }
+> >  }
+> >  EXPORT_SYMBOL(ieee80211_channel_to_frequency);
+> > 
+> >  int ieee80211_frequency_to_channel(int freq)
+> >  {
+> > +       /* see 802.11 17.3.8.3.2 and Annex J */
+> >        if (freq == 2484)
+> >                return 14;
+> > -
+> > -       if (freq < 2484)
+> > +       else if (freq < 2484)
+> >                return (freq - 2407) / 5;
+> > -
+> > -       /* FIXME: 802.11j 17.3.8.3.2 */
+> > -       return freq/5 - 1000;
+> > +       else if (freq >= 4910 && freq <= 4980)
+> > +               return (freq - 4000) / 5;
+> > +       else
+> > +               return (freq - 5000) / 5;
+> >  }
+> >  EXPORT_SYMBOL(ieee80211_frequency_to_channel);
+> 
+> You don't have to use them, but there are a few channel/frequency
+> conversion routines in include/ieee80211.h which could be reused in
+> these functions.
 
-We keep the regulatory database intact as otherwise older CRDA
-versions will not read new regulatory file updates. Instead of
-requiring new CRDA version out in the field we can treat this
-as a regulatory update and simply have users who want DFS master
-support to upgrade their CRDA. We'll treat the DFS region assignemnts
-as a simple regulatory update.
+Thanks for that info, I didn't know about those functions. I just checked 
+them and it seems most of them are not used, AFAICT:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- db2bin.py  |    2 +-
- dbparse.py |   25 ++++++++++++++++++++-----
- 2 files changed, 21 insertions(+), 6 deletions(-)
+ieee80211_fhss_chan_to_freq - not used
+ieee80211_freq_to_fhss_chan - not used
+ieee80211_hr_chan_to_freq - not used
+ieee80211_freq_to_hr_chan - not used
+ieee80211_erp_chan_to_freq - not used
+ieee80211_freq_to_erp_chan - not used
+ieee80211_ofdm_chan_to_freq - not used
+ieee80211_freq_to_ofdm_chan - not used
 
-diff --git a/db2bin.py b/db2bin.py
-index 23d3ee2..b8a153c 100755
---- a/db2bin.py
-+++ b/db2bin.py
-@@ -116,7 +116,7 @@ countrynames.sort()
- for alpha2 in countrynames:
-     coll = countries[alpha2]
-     # struct regdb_file_reg_country
--    output.write(struct.pack('>ccxxI', str(alpha2[0]), str(alpha2[1]), reg_rules_collections[coll.permissions]))
-+    output.write(struct.pack('>cchI', str(alpha2[0]), str(alpha2[1]), coll.cflags, reg_rules_collections[coll.permissions]))
- 
- 
- if len(sys.argv) > 3:
-diff --git a/dbparse.py b/dbparse.py
-index 2c0d738..f5087f2 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -18,6 +18,12 @@ flag_definitions = {
-     'NO-HT40':		1<<10,
- }
- 
-+country_flag_definitions = {
-+    'DFS-FCC':		1<<0,
-+    'DFS-ETSI':		1<<1,
-+    'DFS-JP':		1<<2,
-+}
-+
- class FreqBand(object):
-     def __init__(self, start, end, bw, comments=None):
-         self.start = start
-@@ -61,6 +67,10 @@ class PowerRestriction(object):
-         s = self
-         return hash((s.max_ant_gain, s.max_eirp))
- 
-+class CountryFlagError(Exception):
-+    def __init__(self, cflag):
-+        self.flag = cflag
-+
- class FlagError(Exception):
-     def __init__(self, flag):
-         self.flag = flag
-@@ -90,9 +100,15 @@ class Permission(object):
-         return hash(self._as_tuple())
- 
- class Country(object):
--    def __init__(self, permissions=None, comments=None):
-+    def __init__(self, cflags, permissions=None, comments=None):
-         self._permissions = permissions or []
-         self.comments = comments or []
-+	self.cflags = 0
-+	if cflags:
-+		for cflag in cflags.split(','):
-+		    if not cflag in country_flag_definitions:
-+			raise CountryFlagError(cflag)
-+		    self.cflags |= country_flag_definitions[cflag]
- 
-     def add(self, perm):
-         assert isinstance(perm, Permission)
-@@ -224,11 +240,10 @@ class DBParser(object):
- 
-     def _parse_country(self, line):
-         try:
--            cname, line = line.split(':', 1)
-+            cname, cflags = line.split(':', 1)
-+            cflags = cflags.strip()
-             if not cname:
-                 self._syntax_error("'country' keyword must be followed by name")
--            if line:
--                self._syntax_error("extra data at end of country line")
-         except ValueError:
-             self._syntax_error("country name must be followed by colon")
- 
-@@ -239,7 +254,7 @@ class DBParser(object):
-             if len(cname) != 2:
-                 self._warn("country '%s' not alpha2" % cname)
-             if not cname in self._countries:
--                self._countries[cname] = Country(comments=self._comments)
-+                self._countries[cname] = Country(cflags, comments=self._comments)
-             self._current_countries[cname] = self._countries[cname]
-         self._comments = []
- 
--- 
-1.7.3.2.90.gd4c43
+The only two which are used are for 2GHz channels:
 
+ieee80211_dsss_chan_to_freq - atmel, airo, wl3501_cs, orinoco, rndis_wlan
+ieee80211_freq_to_dsss_chan - atmel, airo, orinoco, zd1201
+
+Anyhow i guess it would make sense to have a common channel to frequency 
+mapping function for mac80211 and other wireless drivers? The problem is now 
+we have to use enum ieee80211_band which is defined cfg80211.h...
+
+Any opinions?
+
+bruno
