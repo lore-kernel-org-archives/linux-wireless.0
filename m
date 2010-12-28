@@ -1,61 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:46359 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab0L0Vxw convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235Ab0L1RhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 16:53:52 -0500
-Received: by ywl5 with SMTP id 5so3691485ywl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 13:53:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1293455515.19215.3052.camel@powerslave>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
- <1293028057-6212-10-git-send-email-arik@wizery.com> <1293455515.19215.3052.camel@powerslave>
+	Tue, 28 Dec 2010 12:37:05 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:05 -0800 (PST)
 From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 27 Dec 2010 23:46:09 +0200
-Message-ID: <AANLkTikJEugD5QGikqEYm2FNbCmye-Xt5Uk4AVd43wgE@mail.gmail.com>
-Subject: Re: [PATCH v2 09/18] wl1271: Configure AP on BSS info change
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 03/18] wl1271: AP mode - add AP specific event
+Date: Tue, 28 Dec 2010 19:36:33 +0200
+Message-Id: <1293557808-27068-4-git-send-email-arik@wizery.com>
+In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
+References: <1293557808-27068-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 27, 2010 at 15:11, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
->> Configure AP-specific beacon and probe response templates.
->> Start the AP when beaconing is enabled.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> [...]
->
->>  static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
->> @@ -1898,73 +1900,84 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
->
-> This whole wl1271_op_bss_info_changed() function was already quite long
-> and hard to read.  Now, with support for AP and STA, it got even worse.
-> I think this should be broken down into smaller functions.  No need to
-> clean the whole function up now, but would it be possible to separate at
-> least the AP and STA parts into separate functions?
+Add STA-remove completion event. Unmask it during boot if operating in
+AP-mode.
+Ignore unrelated events in AP-mode.
 
-Sounds like a good idea. I'll separate it into 3 functions - common,
-ap and sta/ibss.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/boot.c  |    3 +++
+ drivers/net/wireless/wl12xx/event.c |    7 ++++---
+ drivers/net/wireless/wl12xx/event.h |    1 +
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
->
->
->> @@ -1983,11 +2018,11 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
->>                                                 bss_conf->cqm_rssi_thold,
->>                                                 bss_conf->cqm_rssi_hyst);
->>               if (ret < 0)
->> -                     goto out;
->> +                     goto out_sleep;
->
-> Hmmm, nice catch.  We were going out without sleeping in case of error
-> here.  But this is a cross-patch change, could you separate it and send
-> as a standalone patch?
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 4a9f929..bb4f283 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -432,6 +432,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+ 		SOFT_GEMINI_SENSE_EVENT_ID;
+ 
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
++
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+ 		wl1271_error("EVENT mask setting failed");
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index f9146f5..3376a5d 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -186,6 +186,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	int ret;
+ 	u32 vector;
+ 	bool beacon_loss = false;
++	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
+ 	wl1271_event_mbox_dump(mbox);
+ 
+@@ -218,21 +219,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
+ 	 *
+ 	 */
+-	if (vector & BSS_LOSE_EVENT_ID) {
++	if ((vector & BSS_LOSE_EVENT_ID) && !is_ap) {
+ 		wl1271_info("Beacon loss detected.");
+ 
+ 		/* indicate to the stack, that beacons have been lost */
+ 		beacon_loss = true;
+ 	}
+ 
+-	if (vector & PS_REPORT_EVENT_ID) {
++	if ((vector & PS_REPORT_EVENT_ID) && !is_ap) {
+ 		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
+ 		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+ 
+-	if (vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID)
++	if ((vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID) && !is_ap)
+ 		wl1271_event_pspoll_delivery_fail(wl);
+ 
+ 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index 6cce014..fd955f3 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -59,6 +59,7 @@ enum {
+ 	BSS_LOSE_EVENT_ID			 = BIT(18),
+ 	REGAINED_BSS_EVENT_ID			 = BIT(19),
+ 	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
++	STA_REMOVE_COMPLETE_EVENT_ID		 = BIT(21), /* AP */
+ 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
+ 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
+ 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
+-- 
+1.7.1
 
-Sure.
-
-Regards,
-Arik
