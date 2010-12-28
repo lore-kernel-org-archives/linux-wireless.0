@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:60960 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943Ab0LGVmO (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:36833 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751588Ab0L1JMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:42:14 -0500
-Received: by mail-pv0-f174.google.com with SMTP id 4so105423pva.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 13:42:13 -0800 (PST)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/3] ath5k: Prevent mesh interfaces from being counted as ad-hoc
-Date: Tue,  7 Dec 2010 13:36:55 -0800
-Message-Id: <1291757815-29867-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <20101207205829.GL2700@tuxdriver.com>
-References: <20101207205829.GL2700@tuxdriver.com>
+	Tue, 28 Dec 2010 04:12:38 -0500
+Received: by gyb11 with SMTP id 11so3712067gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 01:12:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1293526293.3526.1.camel@jlt3.sipsolutions.net>
+References: <AANLkTi=MhYzv54WvEwYGh15KC4LHyM=EVd-s+1BG8pBT@mail.gmail.com>
+	<1293526293.3526.1.camel@jlt3.sipsolutions.net>
+Date: Tue, 28 Dec 2010 03:12:35 -0600
+Message-ID: <AANLkTik9=r8tCouEg0joexH0_S9+WPfyDGDzq5fbMKOe@mail.gmail.com>
+Subject: Re: Patches submitted should apply to which git repository?
+From: Naveenan <initramd@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This results in an erroneus num_adhoc_vifs count, as the this counter
-was incremented but not decremented for mesh interfaces.
+Hi Johannes,
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/ath/ath5k/base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks for your email.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 6c35730..2bf2e28 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2998,7 +2998,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 		sc->bslot[avf->bslot] = vif;
- 		if (avf->opmode == NL80211_IFTYPE_AP)
- 			sc->num_ap_vifs++;
--		else
-+		else if (avf->opmode == NL80211_IFTYPE_ADHOC)
- 			sc->num_adhoc_vifs++;
- 	}
- 
--- 
-1.7.1
+>> I went through:
+>> http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
+>> but couldn't find this information there so was hoping someone could
+>> point the exact git repository. My current patch applies to
+>> wireless-testing but doesn't apply to wireless-2.6 (due to a trivial
+>> merge conflict) . The changes I'm making are to mac80211.
+>
+> If they're fixes and required in wireless-2.6, then you should make them
+> apply there, but ask yourself if they really need to be there. If not,
+> you can typically just submit them on top of wireless-testing, although
+> they will have to be applied to wireless-next-2.6.
 
+Would it be ok if I can send 2 different patches for both these 2 versions?
+
+Unfortunately someone changed a line of code (that is a few lines
+before my patch
+but not related to it) in a recent commit to wireless-testing and this
+makes the patch
+not apply-able to both wireless-2.6 and wireless-next.
+
+I would say that the fix is not a critical one would would be useful
+if applied to
+wireless-2.6 too.
+
+Thanks
