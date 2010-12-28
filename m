@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:44445 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752014Ab0LPJYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 04:24:08 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBG9O585004707
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:24:05 +0200
-Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current
- style
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D09D80B.1020402@nokia.com>
-References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-	 <1292423633.32385.9.camel@chilepepper>
-	 <1292424501.32385.10.camel@chilepepper>  <4D08DBDC.5070908@nokia.com>
-	 <1292490247.11205.14.camel@chilepepper>  <4D09D80B.1020402@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 11:26:04 +0200
-Message-ID: <1292491564.11205.15.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:47335 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447Ab0L1Rg5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 12:36:57 -0500
+Received: by ewy5 with SMTP id 5so4468650ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:36:56 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 00/18] AP mode support for wl12xx
+Date: Tue, 28 Dec 2010 19:36:30 +0200
+Message-Id: <1293557808-27068-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 11:12 +0200, Roger Quadros wrote:
-> >> what platform do you use to verify with mainline kernel&  sdio
-> wl1271 ?
-> >
-> > I use both our RX-71 and a Beagleboard.  I have trees which work on
-> > both, let me know if you want to clone them from my local git.
-> >
-> 
-> Yes that will be helpful. Please provide me a link to your tree that
-> works with RX-71. 
+These patches add access point mode support to the wl12xx driver.
+This mode uses a separate firmware and has a different initialization
+sequence.
 
-Ok, I'll send it to you privately.  This is on our intranet, so nobody
-else can access it from outside anyway (hopefully! ;).
+In all instances, the flow has been split according to the operating
+mode of the driver (AP/STA), so as not to affect STA mode functionality.
 
+v1->2: rebased on latest wl12xx tree
+v2->3: refactoring
 
--- 
-Cheers,
-Luca.
+Arik Nemtsov (18):
+  wl1271: Add AP related configuration to conf_drv_settings
+  wl1271: AP mode - AP specific CMD_CONFIGURE sub-commands
+  wl1271: AP mode - add AP specific event
+  wl1271: AP-mode high level commands
+  wl1271: AP mode - workaround for FW bug on station remove
+  wl1271: AP mode - init sequence
+  wl1271: AP specific RX filter configuration
+  wl1271: Add AP related definitions to HOST-FW interface
+  wl1271: Configure AP on BSS info change
+  wl1271: AP mode config in ieee80211_ops.config
+  wl1271: AP mode - change filter config
+  wl1271: AP mode - add STA add/remove ops
+  wl1271: AP mode - changes in TX path
+  wl1271: AP mode - record TX configuration settings
+  wl1271: AP mode - encryption support
+  wl1271: AP mode - fetch appropriate firmware for AP
+  wl1271: Read MAC address from NVS file on HW startup
+  wl1271: Enable AP-mode
+
+ drivers/net/wireless/wl12xx/acx.c          |   62 ++-
+ drivers/net/wireless/wl12xx/acx.h          |   29 +-
+ drivers/net/wireless/wl12xx/boot.c         |   11 +-
+ drivers/net/wireless/wl12xx/cmd.c          |  300 +++++++++-
+ drivers/net/wireless/wl12xx/cmd.h          |  147 ++++-
+ drivers/net/wireless/wl12xx/conf.h         |   52 ++-
+ drivers/net/wireless/wl12xx/event.c        |    7 +-
+ drivers/net/wireless/wl12xx/event.h        |    8 +-
+ drivers/net/wireless/wl12xx/init.c         |  352 ++++++++---
+ drivers/net/wireless/wl12xx/init.h         |    2 +-
+ drivers/net/wireless/wl12xx/main.c         |  955 +++++++++++++++++++++-------
+ drivers/net/wireless/wl12xx/rx.c           |   11 +
+ drivers/net/wireless/wl12xx/rx.h           |   11 +-
+ drivers/net/wireless/wl12xx/tx.c           |  105 +++-
+ drivers/net/wireless/wl12xx/tx.h           |   10 +-
+ drivers/net/wireless/wl12xx/wl12xx.h       |   68 ++-
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    5 +
+ 17 files changed, 1770 insertions(+), 365 deletions(-)
 
