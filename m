@@ -1,77 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752979Ab0LPG7i (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.214.194]:57724 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab0L1TFI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 01:59:38 -0500
-Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org, luis.rodriguez@atheros.com
-In-Reply-To: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
-References: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 07:59:35 +0100
-Message-ID: <1292482775.3542.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 28 Dec 2010 14:05:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <Pine.LNX.4.44L0.1012261050050.18773-100000@netrider.rowland.org>
+References: <AANLkTinyKfwcZLD5D4rdF6OpQqr79F==GRjAMBjjbupW@mail.gmail.com> <Pine.LNX.4.44L0.1012261050050.18773-100000@netrider.rowland.org>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 28 Dec 2010 21:04:47 +0200
+Message-ID: <AANLkTim7pGtO=vjKmA_3O74Kwvio124cgoaMeUSB70dW@mail.gmail.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-15 at 10:54 -0800, Paul Stewart wrote:
-> Sometimes mac80211 doesn't push idle state downwards to the
-> driver.  Specifically, there are times in some functions where
-> the "local->hw.conf.flags & IEEE80211_CONF_IDLE" may change but
-> the equivalent of "drv_config(local, IEEE80211_CONF_CHANGE_IDLE)"
-> does not end up being called.  This is usually not all that
-> problematic except, for example, suspending and resuming an idle
-> ath9k device.  If the device isn't marked idle when
-> ieee80211_stop_device() is called, the device never gets put to
-> sleep, and will end up in an unresponsive state on resume.
+On Sun, Dec 26, 2010 at 7:00 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> Hmm.  It's a little difficult to untangle the web of dev_pm_ops
+> pointers and other stuff.
 
-I thought this was solved in ath9k differently? Was that somehow
-inadequate?
+Yeah, SDIO suspend/resume is very different from other subsystems.
 
-> As a precaution, explicitly call drv_config() before
-> ieee80211_stop_device(), which should be a no-op under normal
-> circumstances, but where this problem arises, it will shut down
-> the ath9k where necessary.
+There are several layers of abstractions involved, from the host
+controller driver, to the MMC core code, to the SDIO core code, to
+finally get to the actual SDIO function driver.
 
-I'm not convinced that this makes a lot of sense. I'm sure you can come
-up with other scenarios in which we stop a device and expect it to come
-back. I'm not sure why mac80211 should be responsible for all this?
+I'll try to explain it below by addressing your questions. If
+something is still unclear, feel free to ask me.
 
-> One example where this problem occurs is when I down an interface
-> while a scan is in progress on ath9k.  If the device was not shut
-> down correctly and the system suspends and resumes repeatedly with
-> ath9k, I end up with a fatal register read error (0x7000/deadbeef)
-> when trying to bring the interface back up.
-> 
-> Signed-off-by: Paul Stewart <pstew@google.com>
-> ---
->  net/mac80211/iface.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index b6db237..5af5a89 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -536,6 +536,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
->  		if (local->ops->napi_poll)
->  			napi_disable(&local->napi);
->  		ieee80211_clear_tx_pending(local);
-> +		drv_config(local, IEEE80211_CONF_CHANGE_IDLE);
->  		ieee80211_stop_device(local);
->  
->  		/* no reconfiguring after stop! */
+> There's wl1271_suspend() and wl1271_resume()
+> (which don't do anything)
 
-I don't like this anyway -- you're calling a driver callback directly,
-and there's no guarantee that just that particular change will be used
-by the driver -- it's free to look at other state given to it in each
-callback as well. That seems problematic because of all the other logic
-that we have in ieee80211_hw_config().
+It just looks like they don't. In fact, by returning 0,
+wl1271_suspend() is telling the SDIO subsystem that it's OK to power
+down the SDIO function (in general an SDIO card can have several SDIO
+functions, each of which may be driven by a separate SDIO driver). If
+all the SDIO functions agreed, then SDIO core (mmc_sdio_suspend())
+tells MMC core (mmc_suspend_host()) it's OK to power down the card (by
+directly calling mmc_power_off()).
 
-At the very least I think you need to provide a better rationale for
-this patch and explain why the ath9k change isn't sufficient?
+> Under what circumstances does the MMC/SDIO core call
+> wl1271_sdio_set_power(), and where are those function calls?
 
-johannes
+The relations are actually reversed: the MMC/SDIO core never calls
+this function.
 
+This function is called by the wl1271 driver itself, mostly as a
+response to a request by the mac80211 layer (but also as a response to
+a hardware error), that requires manipulation of the power of the
+card.
+
+There are a handful of reasons this may happen:
+
+error recovery:
+
+wl1271_recovery_work() ->
+    __wl1271_op_remove_interface() ->
+          wl1271_power_off() ->
+               wl1271_sdio_set_power() ->
+                      wl1271_sdio_power_off() ->
+                             pm_runtime_put_sync()
+
+wlan interface goes down:
+
+ieee80211_do_stop() ->
+  wl1271_op_remove_interface() ->
+    __wl1271_op_remove_interface() ->
+          ...
+
+system suspend:
+
+__ieee80211_suspend ->
+  wl1271_op_remove_interface() ->
+      ...
+
+> The normal case is that system suspend succeeds.  Then there is no
+> race.  If system suspend fails then the failure may occur either before
+> or after the wl1271 device is powered down; _that_ is the race
+> (assuming you are using asynchronous PM).  But normally it doesn't
+> occur.
+
+True. On my setup I have stressed the solution for long nights (using
+/sys/power/pm_test) without any error. But we found other setups with
+different circumstances where this error showed up.
+
+But it's not only due to the asynchronous PM race - a device that was
+added to the device tree after the host controller, but before
+mac80211, has a chance to abort a system suspend (by returning an
+error in its suspend handler) at a point in time which will leave our
+driver thinking (erroneously) that the wl1271 was powered off.
+
+> You mean, the wl1271 device has no PM methods of its own; its power is
+> managed entirely by the parent MMC/SDIO controller?
+
+Yes.
+
+> If that's right
+> then you should call pm_runtime_no_callbacks() for the wl1271 device.
+
+Yeah, that's in my queue...
+
+>
+> Is it possible for there to be more than one device connected to the
+> same MMC/SDIO controller?
+
+Generally yes, host controllers may have several slots, but to the
+MMC/SDIO core, it is presented as each slot is a separate host
+controller (personally I have never seen such hardware, but I did find
+an example for that in the host controller's source folder).
+
+> That's for runtime PM.  What about system sleep?  It looks like
+> sdio_bus_type has no callbacks for suspend or resume, so the driver's
+> callbacks get used instead -- that would be wl1271_suspend() and
+> wl1271_resume().  But they don't do anything, so there's no power
+> change until the parent MMC/SDIO controller is suspended.  That would
+> be in mmc_sdio_suspend() and mmc_sdio_resume()?  But I can't tell what
+> pmops->suspend and pmops->resume methods they end up calling.  Are
+> these the entries in wl1271_sdio_pm_ops?  Does that mean
+> wl1271_suspend() and wl1271_resume() get called twice?
+
+No, wl1271_suspend() and wl1271_resume() are called once, but it's all
+triggered by the host controller's suspend/resume handlers.
+
+For example:
+
+omap_hsmmc_suspend() ->
+    mmc_suspend_host() ->
+        mmc_sdio_suspend() ->
+            wl1271_suspend()
+
+And then, if there are no errors, mmc_suspend_host() will eventually
+call mmc_power_off(), which powers off the card directly. So only at
+this point will our device get eventually shut down.
+
+> I think I already understand how the runtime suspend/resume paths work:
+> There are no runtime PM methods for the wl1271 device, so the PM core
+> simply propagates changes up to the parent MMC/SDIO device and ends up
+> calling mmc_runtime_suspend() or mmc_runtime_resume().  Right?
+
+Right.
+
+> What is the pathway for reset (or other similar activities that
+> require the device to be powered-down while it is in use)?
+
+During runtime, the device will have to be powered off for error
+recovery and every time the wlan interface goes down. Please see the
+pathways above.
+
+Thanks,
+Ohad.
