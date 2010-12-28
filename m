@@ -1,72 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36050 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:63170 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309Ab0LFMaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:30:04 -0500
+	id S1750873Ab0L1Hgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 02:36:35 -0500
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:29:50 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 23:36:18 -0800
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 06/27] ath9k_hw: Eeeprom changes for AR9485
-Date: Mon, 6 Dec 2010 04:27:39 -0800
-Message-ID: <1291638480-8950-7-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: Few clean ups in beacon config parameters
+Date: Tue, 28 Dec 2010 13:06:26 +0530
+Message-ID: <1293521786-13126-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calibration data are stored at 4k address (0xfff). The cal data
-for AR9485 is not compressed so its lengh can exceed 1024 limit,
-take care of that.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Some minor clean ups in assigning values to beacon config parameters
+
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 ++++++--
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    1 +
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/beacon.c |   25 +++++++++++++------------
+ 1 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 872b1a3..791e849 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3320,7 +3320,10 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	memcpy(mptr, &ar9300_default, mdata_size);
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 5e108c0..385ba03 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -566,8 +566,6 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 	 * last beacon we received (which may be none).
+ 	 */
+ 	dtimperiod = conf->dtim_period;
+-	if (dtimperiod <= 0)		/* NB: 0 if not known */
+-		dtimperiod = 1;
+ 	dtimcount = conf->dtim_count;
+ 	if (dtimcount >= dtimperiod)	/* NB: sanity check */
+ 		dtimcount = 0;
+@@ -575,8 +573,6 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 	cfpcount = 0;
  
- 	read = ar9300_read_eeprom;
--	cptr = AR9300_BASE_ADDR;
-+	if (AR_SREV_9485(ah))
-+		cptr = AR9300_BASE_ADDR_4K;
-+	else
-+		cptr = AR9300_BASE_ADDR;
- 	ath_print(common, ATH_DBG_EEPROM,
- 		"Trying EEPROM accesss at Address 0x%04x\n", cptr);
- 	if (ar9300_check_eeprom_header(ah, read, cptr))
-@@ -3363,7 +3366,8 @@ found:
- 			  "Found block at %x: code=%d ref=%d"
- 			  "length=%d major=%d minor=%d\n", cptr, code,
- 			  reference, length, major, minor);
--		if (length >= 1024) {
-+		if ((!AR_SREV_9485(ah) && length >= 1024) ||
-+		    (AR_SREV_9485(ah) && length >= (4 * 1024))) {
- 			ath_print(common, ATH_DBG_EEPROM,
- 				  "Skipping bad header\n");
- 			cptr -= COMP_HDR_LEN;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 9c14633..ce4d762 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -78,6 +78,7 @@
- #define AR9300_EEPROM_SIZE (16*1024)
- #define FIXED_CCA_THRESHOLD 15
+ 	sleepduration = conf->listen_interval * intval;
+-	if (sleepduration <= 0)
+-		sleepduration = intval;
  
-+#define AR9300_BASE_ADDR_4K 0xfff
- #define AR9300_BASE_ADDR 0x3ff
- #define AR9300_BASE_ADDR_512 0x1ff
+ 	/*
+ 	 * Pull nexttbtt forward to reflect the current
+@@ -662,8 +658,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ }
  
+ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+-				    struct ath_beacon_config *conf,
+-				    struct ieee80211_vif *vif)
++				    struct ath_beacon_config *conf)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -718,18 +713,17 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	/* Setup the beacon configuration parameters */
+ 	if (vif) {
+ 		struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+-
+ 		iftype = vif->type;
+-
+ 		cur_conf->beacon_interval = bss_conf->beacon_int;
+ 		cur_conf->dtim_period = bss_conf->dtim_period;
++	} else {
++		iftype = sc->sc_ah->opmode;
++	}
++
+ 		cur_conf->listen_interval = 1;
+ 		cur_conf->dtim_count = 1;
+ 		cur_conf->bmiss_timeout =
+ 			ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
+-	} else {
+-		iftype = sc->sc_ah->opmode;
+-	}
+ 
+ 	/*
+ 	 * It looks like mac80211 may end up using beacon interval of zero in
+@@ -740,13 +734,20 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	if (cur_conf->beacon_interval == 0)
+ 		cur_conf->beacon_interval = 100;
+ 
++	/*
++	 * Some times we dont parse dtim period from mac80211, in that case
++	 * use a default value
++	 */
++	if (cur_conf->dtim_period == 0)
++		cur_conf->dtim_period = 1;
++
+ 	switch (iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 		ath_beacon_config_ap(sc, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		ath_beacon_config_adhoc(sc, cur_conf, vif);
++		ath_beacon_config_adhoc(sc, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		ath_beacon_config_sta(sc, cur_conf);
 -- 
 1.7.0.4
 
