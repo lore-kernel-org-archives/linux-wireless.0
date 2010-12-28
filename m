@@ -1,109 +1,557 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35146 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057Ab0LFTr7 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:47335 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754416Ab0L1RhW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 14:47:59 -0500
-Message-ID: <4CFD3DE3.4000207@candelatech.com>
-Date: Mon, 06 Dec 2010 11:47:47 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux> <4CF6D8C8.2000308@candelatech.com> <4CF8A6DE.4020804@candelatech.com> <4CFAFBE1.3080505@openwrt.org> <4CFB20BA.5090300@candelatech.com> <20101206193600.GC21442@tux>
-In-Reply-To: <20101206193600.GC21442@tux>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 28 Dec 2010 12:37:22 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so4468650ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:21 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3 09/18] wl1271: Configure AP on BSS info change
+Date: Tue, 28 Dec 2010 19:36:39 +0200
+Message-Id: <1293557808-27068-10-git-send-email-arik@wizery.com>
+In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
+References: <1293557808-27068-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2010 11:36 AM, Luis R. Rodriguez wrote:
+Configure AP-specific beacon and probe response templates.
+Start the AP when beaconing is enabled.
 
-> Can you clarify the status of this issue. It remains unclear to me from
-> your above description how things are going. As I read it some things
-> look OK now but you still get a warning.
+The wl1271_bss_info_changed() function has been split into AP/STA
+specific handlers.
 
-Ok, since you asked :)
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |  340 +++++++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/wl12xx.h |    3 +
+ 2 files changed, 234 insertions(+), 109 deletions(-)
 
-I worked on this over the weekend and this morning.  I had all sorts of
-issues until I realized that I had one STA with non-configured SSID.
-It sometimes connected to one /a AP and the other STAs attempted to connect
-to another /n (on entirely different band) AP.  I basically got zero stations associated for any length
-of time due to constant channel switching.  No crashes, but lots of
-warnings about DMA failing to stop.
-
-Now..I've fixed this configuration issue (and adding steps to help prevent this mis-configuration
-again).
-
-With 16 properly configured non-encrypted stations, running with wpa-supplicant
-with netlink driver & sharing scan results,  the interfaces quickly associate.
-
-However, I do continue to see DMA warnings such as these (I had picked up my
-portable phone, and it knocked all the interfaces offline ..here
-they are coming back up after I hung up the phone).
-
-Please note that I ported Felix's 2.6.37 patch he posted this morning
-to wireless-testing and have applied it.
-
-I'm highly tempted to just make that a WARN_ON_ONCE so at least my logs
-aren't spammed so heavily with the recv.c:531 DMA warning.
-
-Dec  6 11:32:15 atom kernel: sta2: direct probe to 00:18:e7:cb:ad:6e timed out
-Dec  6 11:32:15 atom kernel: sta14: direct probe to 00:18:e7:cb:ad:6e timed out
-Dec  6 11:32:15 atom kernel: ieee80211 wiphy0: device now idle
-Dec  6 11:32:15 atom kernel: ieee80211 wiphy0: device no longer idle - scanning
-Dec  6 11:32:15 atom kernel: start_sw_scan: running-other-vifs: 0  running-station-vifs: 16, associated-stations: 0 scanning all channels.
-Dec  6 11:32:17 atom kernel: ieee80211 wiphy0: device now idle
-Dec  6 11:32:22 atom kernel: ieee80211 wiphy0: device no longer idle - scanning
-Dec  6 11:32:22 atom kernel: start_sw_scan: running-other-vifs: 0  running-station-vifs: 16, associated-stations: 0 scanning all channels.
-Dec  6 11:32:24 atom kernel: ieee80211 wiphy0: device now idle
-Dec  6 11:32:29 atom kernel: ieee80211 wiphy0: device no longer idle - scanning
-Dec  6 11:32:29 atom kernel: start_sw_scan: running-other-vifs: 0  running-station-vifs: 16, associated-stations: 0 scanning all channels.
-Dec  6 11:32:29 atom kernel: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
-Dec  6 11:32:29 atom kernel: ------------[ cut here ]------------
-Dec  6 11:32:29 atom kernel: WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:531 ath_stoprecv+0x90/0x9a [ath9)
-Dec  6 11:32:29 atom kernel: Hardware name: 945GM
-Dec  6 11:32:29 atom kernel: Could not stop RX, we could be confusing the DMA engine when we start RX up
-Dec  6 11:32:29 atom kernel: Modules linked in: michael_mic ath9k mac80211 ath9k_common ath9k_hw ath cfg80211 arc4 8021q garp stp llc macvlan pktgen isc]
-Dec  6 11:32:29 atom kernel: Pid: 2732, comm: kworker/u:2 Tainted: G        W   2.6.37-rc4-wl+ #17
-Dec  6 11:32:29 atom kernel: Call Trace:
-Dec  6 11:32:29 atom kernel: [<78436fbd>] warn_slowpath_common+0x77/0x8c
-Dec  6 11:32:29 atom kernel: [<fb7a125e>] ? ath_stoprecv+0x90/0x9a [ath9k]
-Dec  6 11:32:29 atom kernel: [<fb7a125e>] ? ath_stoprecv+0x90/0x9a [ath9k]
-Dec  6 11:32:29 atom kernel: [<7843704e>] warn_slowpath_fmt+0x2e/0x30
-Dec  6 11:32:29 atom kernel: [<fb7a125e>] ath_stoprecv+0x90/0x9a [ath9k]
-Dec  6 11:32:29 atom kernel: [<fb7a0182>] ath_set_channel+0x94/0x1f2 [ath9k]
-Dec  6 11:32:29 atom kernel: [<7845a405>] ? mark_held_locks+0x47/0x5f
-Dec  6 11:32:29 atom kernel: [<7878e7cb>] ? _raw_spin_unlock_irqrestore+0x3c/0x48
-Dec  6 11:32:29 atom kernel: [<fb7a067a>] ath9k_config+0x39a/0x479 [ath9k]
-Dec  6 11:32:29 atom kernel: [<fb6caaaa>] ieee80211_hw_config+0x11b/0x125 [mac80211]
-Dec  6 11:32:29 atom kernel: [<fb6cef1b>] ieee80211_scan_work+0x29e/0x3f7 [mac80211]
-Dec  6 11:32:29 atom kernel: [<78446f63>] ? process_one_work+0x13e/0x2bf
-Dec  6 11:32:29 atom kernel: [<78446fd4>] process_one_work+0x1af/0x2bf
-Dec  6 11:32:29 atom kernel: [<78446f63>] ? process_one_work+0x13e/0x2bf
-Dec  6 11:32:29 atom kernel: [<fb6cec7d>] ? ieee80211_scan_work+0x0/0x3f7 [mac80211]
-Dec  6 11:32:29 atom kernel: [<78448722>] worker_thread+0xf9/0x1bf
-Dec  6 11:32:29 atom kernel: [<78448629>] ? worker_thread+0x0/0x1bf
-Dec  6 11:32:29 atom kernel: [<7844b252>] kthread+0x62/0x67
-Dec  6 11:32:29 atom kernel: [<7844b1f0>] ? kthread+0x0/0x67
-Dec  6 11:32:29 atom kernel: [<784036c6>] kernel_thread_helper+0x6/0x1a
-Dec  6 11:32:29 atom kernel: ---[ end trace 617a0f44fc30537b ]---
-Dec  6 11:32:29 atom kernel: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
-
-
-On module unload, I sometimes see lots of more scary looking DMA warnings,
-..but again, system seems stable aside from the noise
-in the logs.  I will capture these and post them next time I get a clean
-set of them (previous ones were on the mis-configured STA scenario..maybe
-they only happen when you unload while driver is scanning or something like that).
-
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d1075a5..0f16307 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1843,7 +1843,7 @@ out:
+ 	return ret;
+ }
+ 
+-static void wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *skb,
++static int wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *skb,
+ 			    int offset)
+ {
+ 	u8 *ptr = skb->data + offset;
+@@ -1853,89 +1853,206 @@ static void wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *skb,
+ 		if (ptr[0] == WLAN_EID_SSID) {
+ 			wl->ssid_len = ptr[1];
+ 			memcpy(wl->ssid, ptr+2, wl->ssid_len);
+-			return;
++			return 0;
+ 		}
+ 		ptr += (ptr[1] + 2);
+ 	}
++
+ 	wl1271_error("No SSID in IEs!\n");
++	return -ENOENT;
+ }
+ 
+-static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
++static int wl1271_bss_erp_info_changed(struct wl1271 *wl,
+ 				       struct ieee80211_bss_conf *bss_conf,
+ 				       u32 changed)
+ {
+-	enum wl1271_cmd_ps_mode mode;
+-	struct wl1271 *wl = hw->priv;
+-	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
+-	bool do_join = false;
+-	bool set_assoc = false;
+-	int ret;
++	int ret = 0;
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed");
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		if (bss_conf->use_short_slot)
++			ret = wl1271_acx_slot(wl, SLOT_TIME_SHORT);
++		else
++			ret = wl1271_acx_slot(wl, SLOT_TIME_LONG);
++		if (ret < 0) {
++			wl1271_warning("Set slot time failed %d", ret);
++			goto out;
++		}
++	}
+ 
+-	mutex_lock(&wl->mutex);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		if (bss_conf->use_short_preamble)
++			wl1271_acx_set_preamble(wl, ACX_PREAMBLE_SHORT);
++		else
++			wl1271_acx_set_preamble(wl, ACX_PREAMBLE_LONG);
++	}
+ 
+-	if (unlikely(wl->state == WL1271_STATE_OFF))
+-		goto out;
++	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
++		if (bss_conf->use_cts_prot)
++			ret = wl1271_acx_cts_protect(wl, CTSPROTECT_ENABLE);
++		else
++			ret = wl1271_acx_cts_protect(wl, CTSPROTECT_DISABLE);
++		if (ret < 0) {
++			wl1271_warning("Set ctsprotect failed %d", ret);
++			goto out;
++		}
++	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
+-	if (ret < 0)
+-		goto out;
++out:
++	return ret;
++}
+ 
+-	if ((changed & BSS_CHANGED_BEACON_INT) &&
+-	    (wl->bss_type == BSS_TYPE_IBSS)) {
+-		wl1271_debug(DEBUG_ADHOC, "ad-hoc beacon interval updated: %d",
++static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
++					  struct ieee80211_vif *vif,
++					  struct ieee80211_bss_conf *bss_conf,
++					  u32 changed)
++{
++	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
++	int ret = 0;
++
++	if ((changed & BSS_CHANGED_BEACON_INT)) {
++		wl1271_debug(DEBUG_MASTER, "beacon interval updated: %d",
+ 			bss_conf->beacon_int);
+ 
+ 		wl->beacon_int = bss_conf->beacon_int;
+-		do_join = true;
+ 	}
+ 
+-	if ((changed & BSS_CHANGED_BEACON) &&
+-	    (wl->bss_type == BSS_TYPE_IBSS)) {
+-		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
++	if ((changed & BSS_CHANGED_BEACON)) {
++		struct ieee80211_hdr *hdr;
++		int ieoffset = offsetof(struct ieee80211_mgmt,
++					u.beacon.variable);
++		struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
++		u16 tmpl_id;
++
++		if (!beacon)
++			goto out;
++
++		wl1271_debug(DEBUG_MASTER, "beacon updated");
++
++		ret = wl1271_ssid_set(wl, beacon, ieoffset);
++		if (ret < 0) {
++			dev_kfree_skb(beacon);
++			goto out;
++		}
++		tmpl_id = is_ap ? CMD_TEMPL_AP_BEACON :
++				  CMD_TEMPL_BEACON;
++		ret = wl1271_cmd_template_set(wl, tmpl_id,
++					      beacon->data,
++					      beacon->len, 0,
++					      wl1271_tx_min_rate_get(wl));
++		if (ret < 0) {
++			dev_kfree_skb(beacon);
++			goto out;
++		}
++
++		hdr = (struct ieee80211_hdr *) beacon->data;
++		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++						 IEEE80211_STYPE_PROBE_RESP);
++
++		tmpl_id = is_ap ? CMD_TEMPL_AP_PROBE_RESPONSE :
++				  CMD_TEMPL_PROBE_RESPONSE;
++		ret = wl1271_cmd_template_set(wl,
++					      tmpl_id,
++					      beacon->data,
++					      beacon->len, 0,
++					      wl1271_tx_min_rate_get(wl));
++		dev_kfree_skb(beacon);
++		if (ret < 0)
++			goto out;
++	}
++
++out:
++	return ret;
++}
++
++/* AP mode changes */
++static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_bss_conf *bss_conf,
++				       u32 changed)
++{
++	int ret = 0;
+ 
+-		wl1271_debug(DEBUG_ADHOC, "ad-hoc beacon updated");
++	if ((changed & BSS_CHANGED_BASIC_RATES)) {
++		u32 rates = bss_conf->basic_rates;
++		struct conf_tx_rate_class mgmt_rc;
+ 
+-		if (beacon) {
+-			struct ieee80211_hdr *hdr;
+-			int ieoffset = offsetof(struct ieee80211_mgmt,
+-						u.beacon.variable);
++		wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl, rates);
++		wl->basic_rate = wl1271_tx_min_rate_get(wl);
++		wl1271_debug(DEBUG_AP, "basic rates: 0x%x",
++			     wl->basic_rate_set);
++
++		/* update the AP management rate policy with the new rates */
++		mgmt_rc.enabled_rates = wl->basic_rate_set;
++		mgmt_rc.long_retry_limit = 10;
++		mgmt_rc.short_retry_limit = 10;
++		mgmt_rc.aflags = 0;
++		ret = wl1271_acx_ap_rate_policy(wl, &mgmt_rc,
++						ACX_TX_AP_MODE_MGMT_RATE);
++		if (ret < 0) {
++			wl1271_error("AP mgmt policy change failed %d", ret);
++			goto out;
++		}
++	}
+ 
+-			wl1271_ssid_set(wl, beacon, ieoffset);
++	ret = wl1271_bss_beacon_info_changed(wl, vif, bss_conf, changed);
++	if (ret < 0)
++		goto out;
+ 
+-			ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON,
+-						      beacon->data,
+-						      beacon->len, 0,
+-						      wl1271_tx_min_rate_get(wl));
++	if ((changed & BSS_CHANGED_BEACON_ENABLED)) {
++		if (bss_conf->enable_beacon) {
++			if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++				ret = wl1271_cmd_start_bss(wl);
++				if (ret < 0)
++					goto out;
+ 
+-			if (ret < 0) {
+-				dev_kfree_skb(beacon);
+-				goto out_sleep;
++				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
++				wl1271_debug(DEBUG_AP, "started AP");
+ 			}
++		} else {
++			if (test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++				ret = wl1271_cmd_stop_bss(wl);
++				if (ret < 0)
++					goto out;
+ 
+-			hdr = (struct ieee80211_hdr *) beacon->data;
+-			hdr->frame_control = cpu_to_le16(
+-				IEEE80211_FTYPE_MGMT |
+-				IEEE80211_STYPE_PROBE_RESP);
++				clear_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
++				wl1271_debug(DEBUG_AP, "stopped AP");
++			}
++		}
++	}
+ 
+-			ret = wl1271_cmd_template_set(wl,
+-						      CMD_TEMPL_PROBE_RESPONSE,
+-						      beacon->data,
+-						      beacon->len, 0,
+-						      wl1271_tx_min_rate_get(wl));
+-			dev_kfree_skb(beacon);
+-			if (ret < 0)
+-				goto out_sleep;
++	ret = wl1271_bss_erp_info_changed(wl, bss_conf, changed);
++	if (ret < 0)
++		goto out;
++out:
++	return;
++}
+ 
+-			/* Need to update the SSID (for filtering etc) */
+-			do_join = true;
+-		}
++/* STA/IBSS mode changes */
++static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
++					struct ieee80211_vif *vif,
++					struct ieee80211_bss_conf *bss_conf,
++					u32 changed)
++{
++	bool do_join = false, set_assoc = false;
++	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
++	int ret;
++	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
++
++	if (is_ibss) {
++		ret = wl1271_bss_beacon_info_changed(wl, vif, bss_conf,
++						     changed);
++		if (ret < 0)
++			goto out;
+ 	}
+ 
+-	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+-	    (wl->bss_type == BSS_TYPE_IBSS)) {
++	if ((changed & BSS_CHANGED_BEACON_INT)  && is_ibss)
++		do_join = true;
++
++	/* Need to update the SSID (for filtering etc) */
++	if ((changed & BSS_CHANGED_BEACON) && is_ibss)
++		do_join = true;
++
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && is_ibss) {
+ 		wl1271_debug(DEBUG_ADHOC, "ad-hoc beaconing: %s",
+ 			     bss_conf->enable_beacon ? "enabled" : "disabled");
+ 
+@@ -1946,7 +2063,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		do_join = true;
+ 	}
+ 
+-	if (changed & BSS_CHANGED_CQM) {
++	if ((changed & BSS_CHANGED_CQM)) {
+ 		bool enable = false;
+ 		if (bss_conf->cqm_rssi_thold)
+ 			enable = true;
+@@ -1964,24 +2081,24 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	     * and enable the BSSID filter
+ 	     */
+ 	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
+-			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
++		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
+ 
+-			ret = wl1271_cmd_build_null_data(wl);
+-			if (ret < 0)
+-				goto out_sleep;
++		ret = wl1271_cmd_build_null_data(wl);
++		if (ret < 0)
++			goto out;
+ 
+-			ret = wl1271_build_qos_null_data(wl);
+-			if (ret < 0)
+-				goto out_sleep;
++		ret = wl1271_build_qos_null_data(wl);
++		if (ret < 0)
++			goto out;
+ 
+-			/* filter out all packets not from this BSSID */
+-			wl1271_configure_filters(wl, 0);
++		/* filter out all packets not from this BSSID */
++		wl1271_configure_filters(wl, 0);
+ 
+-			/* Need to update the BSSID (for filtering etc) */
+-			do_join = true;
++		/* Need to update the BSSID (for filtering etc) */
++		do_join = true;
+ 	}
+ 
+-	if (changed & BSS_CHANGED_ASSOC) {
++	if ((changed & BSS_CHANGED_ASSOC)) {
+ 		if (bss_conf->assoc) {
+ 			u32 rates;
+ 			int ieoffset;
+@@ -2000,7 +2117,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl->basic_rate = wl1271_tx_min_rate_get(wl);
+ 			ret = wl1271_acx_sta_rate_policies(wl);
+ 			if (ret < 0)
+-				goto out_sleep;
++				goto out;
+ 
+ 			/*
+ 			 * with wl1271, we don't need to update the
+@@ -2010,7 +2127,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			 */
+ 			ret = wl1271_cmd_build_ps_poll(wl, wl->aid);
+ 			if (ret < 0)
+-				goto out_sleep;
++				goto out;
+ 
+ 			/*
+ 			 * Get a template for hardware connection maintenance
+@@ -2024,17 +2141,19 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			/* enable the connection monitoring feature */
+ 			ret = wl1271_acx_conn_monit_params(wl, true);
+ 			if (ret < 0)
+-				goto out_sleep;
++				goto out;
+ 
+ 			/* If we want to go in PSM but we're not there yet */
+ 			if (test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags) &&
+ 			    !test_bit(WL1271_FLAG_PSM, &wl->flags)) {
++				enum wl1271_cmd_ps_mode mode;
++
+ 				mode = STATION_POWER_SAVE_MODE;
+ 				ret = wl1271_ps_set_mode(wl, mode,
+ 							 wl->basic_rate,
+ 							 true);
+ 				if (ret < 0)
+-					goto out_sleep;
++					goto out;
+ 			}
+ 		} else {
+ 			/* use defaults when not associated */
+@@ -2054,7 +2173,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl->basic_rate = wl1271_tx_min_rate_get(wl);
+ 			ret = wl1271_acx_sta_rate_policies(wl);
+ 			if (ret < 0)
+-				goto out_sleep;
++				goto out;
+ 
+ 			/* disable connection monitor features */
+ 			ret = wl1271_acx_conn_monit_params(wl, false);
+@@ -2062,43 +2181,17 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			/* Disable the keep-alive feature */
+ 			ret = wl1271_acx_keep_alive_mode(wl, false);
+ 			if (ret < 0)
+-				goto out_sleep;
++				goto out;
+ 
+ 			/* restore the bssid filter and go to dummy bssid */
+ 			wl1271_unjoin(wl);
+ 			wl1271_dummy_join(wl);
+ 		}
+-
+-	}
+-
+-	if (changed & BSS_CHANGED_ERP_SLOT) {
+-		if (bss_conf->use_short_slot)
+-			ret = wl1271_acx_slot(wl, SLOT_TIME_SHORT);
+-		else
+-			ret = wl1271_acx_slot(wl, SLOT_TIME_LONG);
+-		if (ret < 0) {
+-			wl1271_warning("Set slot time failed %d", ret);
+-			goto out_sleep;
+-		}
+-	}
+-
+-	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
+-		if (bss_conf->use_short_preamble)
+-			wl1271_acx_set_preamble(wl, ACX_PREAMBLE_SHORT);
+-		else
+-			wl1271_acx_set_preamble(wl, ACX_PREAMBLE_LONG);
+ 	}
+ 
+-	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+-		if (bss_conf->use_cts_prot)
+-			ret = wl1271_acx_cts_protect(wl, CTSPROTECT_ENABLE);
+-		else
+-			ret = wl1271_acx_cts_protect(wl, CTSPROTECT_DISABLE);
+-		if (ret < 0) {
+-			wl1271_warning("Set ctsprotect failed %d", ret);
+-			goto out_sleep;
+-		}
+-	}
++	ret = wl1271_bss_erp_info_changed(wl, bss_conf, changed);
++	if (ret < 0)
++		goto out;
+ 
+ 	/*
+ 	 * Takes care of: New association with HT enable,
+@@ -2110,13 +2203,13 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true);
+ 		if (ret < 0) {
+ 			wl1271_warning("Set ht cap true failed %d", ret);
+-			goto out_sleep;
++			goto out;
+ 		}
+ 			ret = wl1271_acx_set_ht_information(wl,
+ 				bss_conf->ht_operation_mode);
+ 		if (ret < 0) {
+ 			wl1271_warning("Set ht information failed %d", ret);
+-			goto out_sleep;
++			goto out;
+ 		}
+ 	}
+ 	/*
+@@ -2127,7 +2220,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, false);
+ 		if (ret < 0) {
+ 			wl1271_warning("Set ht cap false failed %d", ret);
+-			goto out_sleep;
++			goto out;
+ 		}
+ 	}
+ 
+@@ -2146,7 +2239,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			ret = wl1271_cmd_build_arp_rsp(wl, addr);
+ 			if (ret < 0) {
+ 				wl1271_warning("build arp rsp failed: %d", ret);
+-				goto out_sleep;
++				goto out;
+ 			}
+ 
+ 			ret = wl1271_acx_arp_ip_filter(wl,
+@@ -2157,18 +2250,47 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			ret = wl1271_acx_arp_ip_filter(wl, 0, addr);
+ 
+ 		if (ret < 0)
+-			goto out_sleep;
++			goto out;
+ 	}
+ 
+ 	if (do_join) {
+ 		ret = wl1271_join(wl, set_assoc);
+ 		if (ret < 0) {
+ 			wl1271_warning("cmd join failed %d", ret);
+-			goto out_sleep;
++			goto out;
+ 		}
+ 	}
+ 
+-out_sleep:
++out:
++	return;
++}
++
++static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_bss_conf *bss_conf,
++				       u32 changed)
++{
++	struct wl1271 *wl = hw->priv;
++	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
++	int ret;
++
++	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed 0x%x",
++		     (int)changed);
++
++	mutex_lock(&wl->mutex);
++
++	if (unlikely(wl->state == WL1271_STATE_OFF))
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl, false);
++	if (ret < 0)
++		goto out;
++
++	if (is_ap)
++		wl1271_bss_info_changed_ap(wl, vif, bss_conf, changed);
++	else
++		wl1271_bss_info_changed_sta(wl, vif, bss_conf, changed);
++
+ 	wl1271_ps_elp_sleep(wl);
+ 
+ out:
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index ebb4a4d..a378d52 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -57,6 +57,8 @@ enum {
+ 	DEBUG_SDIO	= BIT(14),
+ 	DEBUG_FILTERS   = BIT(15),
+ 	DEBUG_ADHOC     = BIT(16),
++	DEBUG_AP	= BIT(17),
++	DEBUG_MASTER	= (DEBUG_ADHOC | DEBUG_AP),
+ 	DEBUG_ALL	= ~0,
+ };
+ 
+@@ -284,6 +286,7 @@ struct wl1271 {
+ #define WL1271_FLAG_PSPOLL_FAILURE    (12)
+ #define WL1271_FLAG_STA_STATE_SENT    (13)
+ #define WL1271_FLAG_FW_TX_BUSY        (14)
++#define WL1271_FLAG_AP_STARTED        (15)
+ 	unsigned long flags;
+ 
+ 	struct wl1271_partition_set part;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
+
