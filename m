@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38133 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:63483 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752299Ab0LVNr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 08:47:59 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1751073Ab0L1IY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 03:24:27 -0500
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 05:47:43 -0800
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Stable Kernel <stable@kernel.org>
-Subject: [PATCH v2 1/2] ath9k_hw: Fix incorrect macversion and macrev checks
-Date: Wed, 22 Dec 2010 19:17:17 +0530
-Message-ID: <1293025638-3255-1-git-send-email-senthilkumar@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:24:10 -0800
+Date: Tue, 28 Dec 2010 13:53:56 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
+Subject: Re: [PATCH 3/5] ath9k_htc: Handle FATAL events
+Message-ID: <20101228082356.GB31274@vasanth-laptop>
+References: <19737.39891.227133.163154@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <19737.39891.227133.163154@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are few places where we are checking for macversion and revsions
-before RTC is powered ON. However we are reading the macversion and
-revisions only after RTC is powered ON and so both macversion and
-revisions are actully zero and this leads to incorrect srev checks.
+On Tue, Dec 28, 2010 at 01:42:03PM +0530, Sujith wrote:
+> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> 
+> The device has to be reset when a FATAL event is received.
+> Not doing so would leave the card in a non-working state.
+> 
+> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc.h          |    6 ++-
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++-
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   57 ++++++++++++++++++++++++-
+>  drivers/net/wireless/ath/ath9k/wmi.c          |   18 +++++++-
+>  drivers/net/wireless/ath/ath9k/wmi.h          |    3 +-
+>  5 files changed, 84 insertions(+), 8 deletions(-)
+> 
+> +void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+> +{
+> +	struct ath_hw *ah = priv->ah;
+> +	struct ath_common *common = ath9k_hw_common(ah);
+> +	struct ieee80211_channel *channel = priv->hw->conf.channel;
+> +	struct ath9k_hw_cal_data *caldata;
+> +	enum htc_phymode mode;
+> +	__be16 htc_mode;
+> +	u8 cmd_rsp;
+> +	int ret;
+> +
+> +	mutex_lock(&priv->mutex);
 
-fix this by reading the macversion and revisisons even before we start
-using them. There is no reason why should we delay reading this info
-until RTC is powered on as this is just a register information.
+This will result in a deadlock with the one in ath9k_htc_stop().
 
-Cc: Stable Kernel <stable@kernel.org>
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
-v2 -- fixed reading revisions unnecessarily during every reset.
-
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4b51ed4..0a0ba80 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -491,6 +491,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 
-+	ath9k_hw_read_revisions(ah);
-+
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
- 		ath_err(common, "Couldn't reset chip\n");
- 		return -EIO;
-@@ -1078,8 +1080,6 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 		return false;
- 	}
- 
--	ath9k_hw_read_revisions(ah);
--
- 	return ath9k_hw_set_reset(ah, ATH9K_RESET_WARM);
- }
- 
--- 
-1.7.3.4
-
+Vasanth
