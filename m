@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1317 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751371Ab0LMTbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 14:31:18 -0500
-Date: Mon, 13 Dec 2010 11:31:11 -0800
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Dave Hansen" <dave@sr71.net>
-cc: "Greg KH" <gregkh@suse.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Jason Cooper" <jason@lakedaemon.net>,
-	"Mike Rapoport" <mike.rapoport@gmail.com>,
-	"Andy Shevchenko" <andy.shevchenko@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>, arend@broadcom.com,
-	rvossen@broadcom.com
-Subject: Re: brcm80211 hangs when disabling wireless
-Message-ID: <20101213193111.GK2576@broadcom.com>
-References: <1291930010.7960.30.camel@nimitz>
- <20101209214347.GA15172@suse.de> <1291931678.7960.32.camel@nimitz>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:46056 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513Ab0L1Ikz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 03:40:55 -0500
+Received: by ywl5 with SMTP id 5so3805945ywl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:40:55 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1291931678.7960.32.camel@nimitz>
-Content-Type: text/plain;
- charset=us-ascii
+Date: Tue, 28 Dec 2010 02:40:52 -0600
+Message-ID: <AANLkTi=MhYzv54WvEwYGh15KC4LHyM=EVd-s+1BG8pBT@mail.gmail.com>
+Subject: Patches submitted should apply to which git repository?
+From: Naveenan <initramd@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 09, 2010 at 01:54:38PM -0800, Dave Hansen wrote:
-> On Thu, 2010-12-09 at 13:43 -0800, Greg KH wrote:
-> > On Thu, Dec 09, 2010 at 01:26:50PM -0800, Dave Hansen wrote:
-> > > I've been getting hard hangs when I toggle the wireless on a Lenovo
-> > > S10-3.  It happens both with the physical switch and the Fn-F5 key
-> > > combo.  It's quite repeatable.  The system is quite stable when I'm not
-> > > trying to disable the wireless, though.
-> > 
-> > What kernel version is this?
-> > 
-> > Linus's latest tree has a known bug when the wireless is suspended and
-> > then resumed.  Broadcom is working on it but no patch is forthcoming
-> > yet.  Perhaps this is the same issue.
-> 
-> Yeah, it's 2.6.37-rc5 plus a pull from:
-> 
-> 	http://kernel.ubuntu.com/git?p=ikepanhc/ideapad-laptop.git;a=summary
-> 
-> That could easily be it.  Thanks, Greg.
+Hi,
+I would like to submit a patch to linux-wireless and was wondering
+what git repository should my patch be apply-able to so that there
+wouldn't be any merge conflicts?
 
-Actually, I think it's the rfkill support (or lack thereof) that's causing you
-trouble.  But we're looking at that as well.
+I went through:
+http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
+but couldn't find this information there so was hoping someone could
+point the exact git repository. My current patch applies to
+wireless-testing but doesn't apply to wireless-2.6 (due to a trivial
+merge conflict) . The changes I'm making are to mac80211.
 
-The outstanding reported issues that I'm aware of are:
-	- 43224 crashes
-	- missing rfkill support
-	- suspend/resume problems
-	- 4313 infinite loop in some cases
-
-In terms of process, should these all get filed in bugzilla.kernel.org (or
-somewhere else), or just track them via email and our TODO list?
-
-Thanks,
-- Henry
-
-
+Thanks.
