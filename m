@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:62643 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755319Ab0LHVyD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42473 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885Ab0L1JxG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 16:54:03 -0500
-Received: by qwa26 with SMTP id 26so1797930qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 13:54:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
- <201012061714.15863.br1@einfach.org> <AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Thu, 9 Dec 2010 07:53:47 +1000
-Message-ID: <AANLkTimwprBJpnLM6_Qap1wSVboVJPQecAUgmzAnQhu-@mail.gmail.com>
-Subject: Re: ath5k: Weird Retransmission Behaviour
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Bruno Randolf <br1@einfach.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 28 Dec 2010 04:53:06 -0500
+Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for
+ 802.11j
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Dave Kilroy <kilroyd@googlemail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1293529861.3526.8.camel@jlt3.sipsolutions.net>
+References: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
+	 <AANLkTi=R58EGLrsT5sTk7JTqWvaeJ5caytHMt3VCSOki@mail.gmail.com>
+	 <201012281843.57453.br1@einfach.org>
+	 <1293529861.3526.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Dec 2010 10:53:03 +0100
+Message-ID: <1293529983.3526.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 9, 2010 at 2:08 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, Dec 6, 2010 at 3:14 AM, Bruno Randolf <br1@einfach.org> wrote:
->> But it seems weird that there are so many retransmissions. The default maximum
->> numbers of retransmissions should be 7 for short frames and 4 for long frames
->> (dot11[Short|Long]RetryLimit), and this is what is set as defaults in mac80211
->> (local->hw.conf.short_frame_max_tx_count). Seems we are getting many
->> retransmissions from minstel, i added some debug prints:
->>
->
-> I posted a patch for this about a week ago to linux-wireless.
->
-> AFAICT minstrel doesn't use these configuration parrameters
-> at all (but PID does).
+On Tue, 2010-12-28 at 10:51 +0100, Johannes Berg wrote:
 
-I only seem to have Minstrel as the only available Rate Control
-algorithm in my kernel config?
+> > ieee80211_dsss_chan_to_freq - atmel, airo, wl3501_cs, orinoco, rndis_wlan
+> > ieee80211_freq_to_dsss_chan - atmel, airo, orinoco, zd1201
+> > 
+> > Anyhow i guess it would make sense to have a common channel to frequency 
+> > mapping function for mac80211 and other wireless drivers? The problem is now 
+> > we have to use enum ieee80211_band which is defined cfg80211.h...
 
-Cheers,
+Interestingly, I just noticed that the above ones also have different
+semantics -- they try to round to the nearest channel rather than
+returning an error if the center frequency isn't exact.
 
-Jonathan
+johannes
 
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
