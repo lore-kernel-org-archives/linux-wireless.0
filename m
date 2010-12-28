@@ -1,74 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:45534 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755523Ab0LPLqY (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50395 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab0L1ILx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 06:46:24 -0500
+	Tue, 28 Dec 2010 03:11:53 -0500
+Received: by iwn9 with SMTP id 9so9147431iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:11:53 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Thu, 16 Dec 2010 12:46:23 +0100
-Message-ID: <AANLkTink67RM4mp537UxFcx4g-9Dx+ymbW0A=cCu3C4g@mail.gmail.com>
-Subject: [PATCH] iwlwifi: Fix error: struct iwl_lq_sta has no member named dbg_fixed_rate
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	John Linville <linville@tuxdriver.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Content-Type: multipart/mixed; boundary=000e0ce0da0a63b4e70497859a4c
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19737.39862.443072.985495@gargle.gargle.HOWL>
+Date: Tue, 28 Dec 2010 13:41:34 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 1/5] ath9k_htc: Fix warning on device removal
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---000e0ce0da0a63b4e70497859a4c
-Content-Type: text/plain; charset=UTF-8
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Attached patch fixes an issue with linux-next (20101216) and iwlwifi (see [1]).
+The commit "ath9k_hw: warn if we cannot change the power to the chip"
+introduced a new warning to indicate chip powerup failures, but this
+is not required for devices that have been removed. Handle USB device
+removal properly by checking for unplugged status.
 
-- Sedat -
+For PCI devices, this warning will still be seen when the card is pulled
+out, not sure how to check for card removal.
 
-[1] http://lkml.org/lkml/2010/12/16/101
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h       |    2 --
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |    6 +++---
+ drivers/net/wireless/ath/ath9k/htc.h          |    5 ++---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 +----
+ drivers/net/wireless/ath/ath9k/hw.c           |    4 +++-
+ drivers/net/wireless/ath/ath9k/hw.h           |    4 ++++
+ drivers/net/wireless/ath/ath9k/wmi.c          |    2 +-
+ 7 files changed, 14 insertions(+), 14 deletions(-)
 
---000e0ce0da0a63b4e70497859a4c
-Content-Type: text/plain; charset=UTF-8;
-	name="0001-iwlwifi-Fix-error-struct-iwl_lq_sta-has-no-member-na.patch"
-Content-Disposition: attachment;
-	filename="0001-iwlwifi-Fix-error-struct-iwl_lq_sta-has-no-member-na.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ghrl3q8y0
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index f6f09d1..58e2ddc 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -23,8 +23,6 @@
+ #include <net/cfg80211.h>
+ #include "ar9003_eeprom.h"
+ 
+-#define AH_USE_EEPROM   0x1
+-
+ #ifdef __BIG_ENDIAN
+ #define AR5416_EEPROM_MAGIC 0x5aa5
+ #else
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 22b68b3..c20c8c8 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -993,16 +993,16 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ {
+ 	struct usb_device *udev = interface_to_usbdev(interface);
+ 	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
++	bool unplugged = (udev->state == USB_STATE_NOTATTACHED) ? true : false;
+ 
+ 	if (hif_dev) {
+-		ath9k_htc_hw_deinit(hif_dev->htc_handle,
+-		    (udev->state == USB_STATE_NOTATTACHED) ? true : false);
++		ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
+ 		ath9k_htc_hw_free(hif_dev->htc_handle);
+ 		ath9k_hif_usb_dev_deinit(hif_dev);
+ 		usb_set_intfdata(interface, NULL);
+ 	}
+ 
+-	if (hif_dev->flags & HIF_USB_START)
++	if (!unplugged && (hif_dev->flags & HIF_USB_START))
+ 		ath9k_hif_usb_reboot(udev);
+ 
+ 	kfree(hif_dev);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index fdf9d5f..e6c2f0a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -339,9 +339,8 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_ASSOCIATED		   BIT(7)
+ #define OP_ENABLE_BEACON	   BIT(8)
+ #define OP_LED_DEINIT		   BIT(9)
+-#define OP_UNPLUGGED		   BIT(10)
+-#define OP_BT_PRIORITY_DETECTED	   BIT(11)
+-#define OP_BT_SCAN		   BIT(12)
++#define OP_BT_PRIORITY_DETECTED    BIT(10)
++#define OP_BT_SCAN                 BIT(11)
+ 
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 0f6be35..724f545 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -851,9 +851,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
+ 	if (ret)
+ 		goto err_init;
+ 
+-	/* The device may have been unplugged earlier. */
+-	priv->op_flags &= ~OP_UNPLUGGED;
+-
+ 	ret = ath9k_init_device(priv, devid, product, drv_info);
+ 	if (ret)
+ 		goto err_init;
+@@ -873,7 +870,7 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
+ 
+ 		/* Check if the device has been yanked out. */
+ 		if (hotunplug)
+-			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
++			htc_handle->drv_priv->ah->ah_flags |= AH_UNPLUGGED;
+ 
+ 		ath9k_deinit_device(htc_handle->drv_priv);
+ 		ath9k_deinit_wmi(htc_handle->drv_priv);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4b51ed4..fde9786 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1615,7 +1615,9 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	 * simply keep the ATH_DBG_WARN_ON_ONCE() but make
+ 	 * ath9k_hw_setpower() return type void.
+ 	 */
+-	ATH_DBG_WARN_ON_ONCE(!status);
++
++	if (!(ah->ah_flags & AH_UNPLUGGED))
++		ATH_DBG_WARN_ON_ONCE(!status);
+ 
+ 	return status;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b8ffaa5..5a3dfec 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -646,6 +646,10 @@ struct ath_nf_limits {
+ 	s16 nominal;
+ };
+ 
++/* ah_flags */
++#define AH_USE_EEPROM   0x1
++#define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
++
+ struct ath_hw {
+ 	struct ieee80211_hw *hw;
+ 	struct ath_common common;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 8f42ea7..573daca 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -250,7 +250,7 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	int time_left, ret = 0;
+ 	unsigned long flags;
+ 
+-	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
++	if (ah->ah_flags & AH_UNPLUGGED)
+ 		return 0;
+ 
+ 	skb = alloc_skb(headroom + cmd_len, GFP_ATOMIC);
+-- 
+1.7.3.4
 
-RnJvbSA3ZWRmY2I5MjE1OWYzNmNiNmFhYTdlYjFhOTQ1M2Y3NWQ3NDYxMDI4IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBTZWRhdCBEaWxlayA8c2VkYXQuZGlsZWtAZ21haWwuY29tPgpE
-YXRlOiBUaHUsIDE2IERlYyAyMDEwIDEyOjI2OjA0ICswMTAwClN1YmplY3Q6IFtQQVRDSF0gaXds
-d2lmaTogRml4IGVycm9yOiBzdHJ1Y3QgaXdsX2xxX3N0YSBoYXMgbm8gbWVtYmVyIG5hbWVkIGRi
-Z19maXhlZF9yYXRlCk1JTUUtVmVyc2lvbjogMS4wCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbjsg
-Y2hhcnNldD1VVEYtOApDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiA4Yml0CgpXaGlsZSBjb21w
-aWxpbmcgbGludXgtbmV4dCAobmV4dC0yMDEwMTIxNikgSSBmZWxsIG92ZXIgdGhpcyBicmVha2Fn
-ZToKLi4uCmRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1ycy5jOiBJbiBmdW5j
-dGlvbiDigJhpd2xfcnNfcmF0ZV9pbml04oCZOgpkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
-L2l3bC1hZ24tcnMuYzoyODc2Ojg6IGVycm9yOiDigJhzdHJ1Y3QgaXdsX2xxX3N0YeKAmSBoYXMg
-bm8gbWVtYmVyIG5hbWVkIOKAmGRiZ19maXhlZF9yYXRl4oCZCgpkYmdfZml4ZWRfcmF0ZSBpcyBv
-bmx5IHVzZWQgd2hlbiBDT05GSUdfTUFDODAyMTFfREVCVUdGUyBpcyBzZXQ6CgpbIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1ycy5oIF0KLi4uCiAjaWZkZWYgQ09ORklHX01B
-QzgwMjExX0RFQlVHRlMKICAgICAgIHN0cnVjdCBkZW50cnkgKnJzX3N0YV9kYmdmc19zY2FsZV90
-YWJsZV9maWxlOwogICAgICAgc3RydWN0IGRlbnRyeSAqcnNfc3RhX2RiZ2ZzX3N0YXRzX3RhYmxl
-X2ZpbGU7CiAgICAgICBzdHJ1Y3QgZGVudHJ5ICpyc19zdGFfZGJnZnNfcmF0ZV9zY2FsZV9kYXRh
-X2ZpbGU7CiAgICAgICBzdHJ1Y3QgZGVudHJ5ICpyc19zdGFfZGJnZnNfdHhfYWdnX3RpZF9lbl9m
-aWxlOwogICAgICAgdTMyIGRiZ19maXhlZF9yYXRlOwogI2VuZGlmCgpUaGUgaXNzdWUgd2FzIGlu
-dHJvZHVjZWQgYnkgY29tbWl0IGExZGEwNzdiYzM2MzY4ZWI3ZDYzMTJlN2U0OTI2MGYwYTNkOTJj
-Nzc6CiJpd2x3aWZpOiBjbGVhciBkYmdfZml4ZWRfcmF0ZSBkdXJpbmcgaW5pdCIKClNpZ25lZC1v
-ZmYtYnk6IFNlZGF0IERpbGVrIDxzZWRhdC5kaWxla0BnbWFpbC5jb20+Ci0tLQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJzLmMgfCAgICAyICsrCiAxIGZpbGVzIGNoYW5n
-ZWQsIDIgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tcnMuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L2l3bHdpZmkvaXdsLWFnbi1ycy5jCmluZGV4IDUwODNkYmEuLjc1ZmNkMzAgMTAwNjQ0Ci0tLSBh
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1ycy5jCisrKyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1ycy5jCkBAIC0yODczLDcgKzI4NzMsOSBAQCB2
-b2lkIGl3bF9yc19yYXRlX2luaXQoc3RydWN0IGl3bF9wcml2ICpwcml2LCBzdHJ1Y3QgaWVlZTgw
-MjExX3N0YSAqc3RhLCB1OCBzdGFfaQogCQlscV9zdGEtPmxhc3RfdHhyYXRlX2lkeCArPSBJV0xf
-RklSU1RfT0ZETV9SQVRFOwogCWxxX3N0YS0+aXNfYWdnID0gMDsKIAorI2lmZGVmIENPTkZJR19N
-QUM4MDIxMV9ERUJVR0ZTCiAJbHFfc3RhLT5kYmdfZml4ZWRfcmF0ZSA9IDA7CisjZW5kaWYKIAog
-CXJzX2luaXRpYWxpemVfbHEocHJpdiwgY29uZiwgc3RhLCBscV9zdGEpOwogfQotLSAKMS43LjIu
-MwoK
---000e0ce0da0a63b4e70497859a4c--
