@@ -1,115 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40023 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752898Ab0LETSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Dec 2010 14:18:00 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2.6.37] ath9k: fix a DMA related race condition on reset
-Date: Sun,  5 Dec 2010 20:17:53 +0100
-Message-Id: <1291576673-1462-1-git-send-email-nbd@openwrt.org>
+Received: from external1.orbit-lab.org ([128.6.192.131]:47630 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750746Ab0L1UEQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Dec 2010 15:04:16 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 2EE63540012
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 15:05:23 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101228200415.7834540F97@repository3.orbit-lab.org>
+Date: Tue, 28 Dec 2010 15:04:15 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When ath_drain_all_txq fails to stop DMA, it issues a hw reset. This reset
-happens at a very problematic point in time, when the hardware rx path has
-not been stopped yet. This could lead to memory corruption, hardware hangs
-or other issues.
-To fix these issues, simply remove the reset entirely and check the tx DMA
-stop status to prevent problems with fast channel changes.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   a31d633..9688efd  history    -> origin/history
+ + 23ffbb3...b79b3fb master     -> origin/master  (forced update)
+   d7c1255..ffc96d6  stable     -> origin/stable
+ * [new tag]         next-20101228 -> next-20101228
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/main.c  |    5 +++--
- drivers/net/wireless/ath/ath9k/xmit.c  |   22 ++++++----------------
- 3 files changed, 10 insertions(+), 19 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0d0bec3..0963071 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -329,7 +329,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp);
- struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype);
- void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq);
- int ath_tx_setup(struct ath_softc *sc, int haltype);
--void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx);
-+bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx);
- void ath_draintxq(struct ath_softc *sc,
- 		     struct ath_txq *txq, bool retry_tx);
- void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dace215..928ef68 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -244,11 +244,12 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	 * the relevant bits of the h/w.
- 	 */
- 	ath9k_hw_set_interrupts(ah, 0);
--	ath_drain_all_txq(sc, false);
-+	stopped = ath_drain_all_txq(sc, false);
- 
- 	spin_lock_bh(&sc->rx.pcu_lock);
- 
--	stopped = ath_stoprecv(sc);
-+	if (!ath_stoprecv(sc))
-+		stopped = false;
- 
- 	/* XXX: do not flush receive queue here. We don't want
- 	 * to flush data frames already in queue because of
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index f2ade24..aff0478 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1120,7 +1120,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 	}
- }
- 
--void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
-+bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -1128,7 +1128,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 	int i, npend = 0;
- 
- 	if (sc->sc_flags & SC_OP_INVALID)
--		return;
-+		return true;
- 
- 	/* Stop beacon queue */
- 	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
-@@ -1142,25 +1142,15 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 		}
- 	}
- 
--	if (npend) {
--		int r;
--
--		ath_print(common, ATH_DBG_FATAL,
--			  "Failed to stop TX DMA. Resetting hardware!\n");
--
--		spin_lock_bh(&sc->sc_resetlock);
--		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
--		if (r)
--			ath_print(common, ATH_DBG_FATAL,
--				  "Unable to reset hardware; reset status %d\n",
--				  r);
--		spin_unlock_bh(&sc->sc_resetlock);
--	}
-+	if (npend)
-+		ath_print(common, ATH_DBG_FATAL, "Failed to stop TX DMA!\n");
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_draintxq(sc, &sc->tx.txq[i], retry_tx);
- 	}
-+
-+	return !npend;
- }
- 
- void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
--- 
-1.7.3.2
-
+    774936 - Total upstream lines of code being pulled
