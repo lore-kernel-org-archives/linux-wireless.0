@@ -1,66 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout025.mac.com ([17.148.16.100]:57067 "EHLO
-	asmtpout025.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710Ab0LWPe3 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601Ab0L2Xcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 10:34:29 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=windows-1252
-Received: from [192.168.1.30] ([87.201.169.175])
- by asmtp025.mac.com (Oracle Communications Messaging Exchange Server 7u4-20.01
- 64bit (built Nov 21 2010)) with ESMTPSA id <0LDW002BV0KXHM80@asmtp025.mac.com>
- for linux-wireless@vger.kernel.org; Thu, 23 Dec 2010 07:34:13 -0800 (PST)
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <4D1266FA.7080305@hauke-m.de>
-Date: Thu, 23 Dec 2010 19:33:54 +0400
-Message-id: <326087F1-E68B-4C2F-BD3C-CF5CD222DA6F@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
- <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
- <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
- <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
- <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com>
- <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
- <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
- <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
- <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
- <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com> <4D1266FA.7080305@hauke-m.de>
-To: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+	Wed, 29 Dec 2010 18:32:36 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:35 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 08/18] wl1271: Add AP related definitions to HOST-FW interface
+Date: Thu, 30 Dec 2010 01:32:03 +0200
+Message-Id: <1293665533-7599-9-git-send-email-arik@wizery.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-       I think the .startup_delay field is missing in the fixed regulator for 2.6.32. 
+Change structures in a non-destructive manner. This means no
+changes in size or location of existing members used by STA.
 
-I recall from the datasheets that during a reset, the WL_EN line should asserted
-low for atleast 64 to 70ms before turning the power back on.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/event.h  |    7 ++++++-
+ drivers/net/wireless/wl12xx/rx.h     |   10 +++++++---
+ drivers/net/wireless/wl12xx/tx.h     |    9 +++++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |   18 +++++++++++++++++-
+ 4 files changed, 37 insertions(+), 7 deletions(-)
 
-What do you think I should do?
-
-
-/* Fixed voltage regulator for wlan module */
-static struct fixed_voltage_config beagle_vwlan = {
-	.supply_name		= "vwl1271",
-	.microvolts		= 1850000, /* 1.8V */
-	.gpio			= OMAP_BEAGLEBOARD20_WIFI_PMENA_GPIO,
-	.startup_delay		= 70000, /* 70msec */
-	.enable_high		= 1,
-	.enabled_at_boot	= 0,
-	.init_data		= &beagle_vmmc2,
-};
-
-
-  CC      arch/arm/mach-omap2/board-omap3beagle.o
-arch/arm/mach-omap2/board-omap3beagle.c:409: error: unknown field ‘startup_delay’ specified in initializer
-arch/arm/mach-omap2/board-omap3beagle.c:409: warning: large integer implicitly truncated to unsigned type
-make[1]: *** [arch/arm/mach-omap2/board-omap3beagle.o] Error 1
-make: *** [arch/arm/mach-omap2] Error 2
-
-Elvis Dowson
-
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index fd955f3..1d5ef67 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -116,7 +116,12 @@ struct event_mailbox {
+ 	u8 scheduled_scan_status;
+ 	u8 ps_status;
+ 
+-	u8 reserved_5[29];
++	/* AP FW only */
++	u8 hlid_removed;
++	__le16 sta_aging_status;
++	__le16 sta_tx_retry_exceeded;
++
++	u8 reserved_5[24];
+ } __packed;
+ 
+ int wl1271_event_unmask(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index f695553..8d048b3 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -86,8 +86,9 @@
+ /*
+  * RX Descriptor status
+  *
+- * Bits 0-2 - status
+- * Bits 3-7 - reserved
++ * Bits 0-2 - error code
++ * Bits 3-5 - process_id tag (AP mode FW)
++ * Bits 6-7 - reserved
+  */
+ #define WL1271_RX_DESC_STATUS_MASK      0x07
+ 
+@@ -110,7 +111,10 @@ struct wl1271_rx_descriptor {
+ 	u8  snr;
+ 	__le32 timestamp;
+ 	u8  packet_class;
+-	u8  process_id;
++	union {
++		u8  process_id; /* STA FW */
++		u8  hlid; /* AP FW */
++	} __packed;
+ 	u8  pad_len;
+ 	u8  reserved;
+ } __packed;
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 5ccd22e..05722a5 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -29,6 +29,7 @@
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
++#define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
+ /* The chipset reference driver states, that the "aid" value 1
+  * is for infra-BSS, but is still always used */
+ #define TX_HW_DEFAULT_AID                1
+@@ -77,8 +78,12 @@ struct wl1271_tx_hw_descr {
+ 	u8 id;
+ 	/* The packet TID value (as User-Priority) */
+ 	u8 tid;
+-	/* Identifier of the remote STA in IBSS, 1 in infra-BSS */
+-	u8 aid;
++	union {
++		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
++		u8 aid;
++		/* AP - host link ID (HLID) */
++		u8 hlid;
++	} __packed;
+ 	u8 reserved;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 136e87b..ebb4a4d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -195,6 +195,11 @@ struct wl1271_stats {
+ #define NUM_TX_QUEUES              4
+ #define NUM_RX_PKT_DESC            8
+ 
++#define AP_MAX_STATIONS            5
++
++/* Broadcast and Global links + links to stations */
++#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
++
+ /* FW status registers */
+ struct wl1271_fw_status {
+ 	__le32 intr;
+@@ -205,7 +210,18 @@ struct wl1271_fw_status {
+ 	__le32 rx_pkt_descs[NUM_RX_PKT_DESC];
+ 	__le32 tx_released_blks[NUM_TX_QUEUES];
+ 	__le32 fw_localtime;
+-	__le32 padding[2];
++
++	/* Next fields valid only in AP FW */
++
++	/*
++	 * A bitmap (where each bit represents a single HLID)
++	 * to indicate if the station is in PS mode.
++	 */
++	__le32 link_ps_bitmap;
++
++	/* Number of freed MBs per HLID */
++	u8 tx_lnk_free_blks[AP_MAX_LINKS];
++	u8 padding_1[1];
+ } __packed;
+ 
+ struct wl1271_rx_mem_pool_addr {
+-- 
+1.7.1
 
