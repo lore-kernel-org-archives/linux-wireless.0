@@ -1,88 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59188 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758351Ab0LNSjd (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754286Ab0L2XcV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 13:39:33 -0500
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 14 Dec 2010 10:39:12 -0800
-Message-ID: <AANLkTikP+jMHvDgkGTXfq58M7TEBthzuvEFoENXvxyqJ@mail.gmail.com>
-Subject: DFS development roadmap 2010-12-14
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	Vipin Mehta <Vipin.Mehta@atheros.com>,
-	Gery Kahn <geryk@ti.com>,
-	Michael Green <Michael.Green@atheros.com>,
-	wireless-regdb@lists.infradead.org,
-	Tevfik Yucek <Tevfik.Yucek@atheros.com>,
-	Susinder Gulasekaran <Susinder.Gulasekaran@atheros.com>,
-	Rich Mosko <Rich.Mosko@atheros.com>,
-	Mahboob Alem <Mahboob.Alem@atheros.com>,
-	Madhan Jaganathan <Madhan.Jaganathan@atheros.com>,
-	Sundar Sankaran <Sundar.Sankaran@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 29 Dec 2010 18:32:21 -0500
+Received: by ewy5 with SMTP id 5so4915990ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:20 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 01/18] wl1271: Add AP related configuration to conf_drv_settings
+Date: Thu, 30 Dec 2010 01:31:56 +0200
+Message-Id: <1293665533-7599-2-git-send-email-arik@wizery.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note: this is a public e-mail
+Rate class configuration has been split up for AP and STA modes.
+Template related configuration likewise separated.
 
-We had a good IRC session, and were able to at least come up with a
-development roadmap to focus on:
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.c  |    2 +-
+ drivers/net/wireless/wl12xx/cmd.c  |    4 +-
+ drivers/net/wireless/wl12xx/conf.h |   46 ++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/main.c |   45 +++++++++++++++++++++++++++++++++-
+ 4 files changed, 90 insertions(+), 7 deletions(-)
 
-http://wireless.kernel.org/en/developers/DFS#Development_roadmap
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index cc4068d..30ff32a 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -754,7 +754,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
+ int wl1271_acx_rate_policies(struct wl1271 *wl)
+ {
+ 	struct acx_rate_policy *acx;
+-	struct conf_tx_rate_class *c = &wl->conf.tx.rc_conf;
++	struct conf_tx_rate_class *c = &wl->conf.tx.sta_rc_conf;
+ 	int idx = 0;
+ 	int ret = 0;
+ 
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 0106628..15f4077 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -490,8 +490,8 @@ int wl1271_cmd_template_set(struct wl1271 *wl, u16 template_id,
+ 	cmd->len = cpu_to_le16(buf_len);
+ 	cmd->template_type = template_id;
+ 	cmd->enabled_rates = cpu_to_le32(rates);
+-	cmd->short_retry_limit = wl->conf.tx.rc_conf.short_retry_limit;
+-	cmd->long_retry_limit = wl->conf.tx.rc_conf.long_retry_limit;
++	cmd->short_retry_limit = wl->conf.tx.tmpl_short_retry_limit;
++	cmd->long_retry_limit = wl->conf.tx.tmpl_long_retry_limit;
+ 	cmd->index = index;
+ 
+ 	if (buf)
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index a16b361..7563ce3 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -496,6 +496,26 @@ struct conf_rx_settings {
+ 					CONF_HW_BIT_RATE_2MBPS)
+ #define CONF_TX_RATE_RETRY_LIMIT       10
+ 
++/*
++ * Rates supported for data packets when operating as AP. Note the absense
++ * of the 22Mbps rate. There is a FW limitation on 12 rates so we must drop
++ * one. The rate dropped is not mandatory under any operating mode.
++ */
++#define CONF_TX_AP_ENABLED_RATES       (CONF_HW_BIT_RATE_1MBPS | \
++	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS |      \
++	CONF_HW_BIT_RATE_6MBPS | CONF_HW_BIT_RATE_9MBPS |        \
++	CONF_HW_BIT_RATE_11MBPS | CONF_HW_BIT_RATE_12MBPS |      \
++	CONF_HW_BIT_RATE_18MBPS | CONF_HW_BIT_RATE_24MBPS |      \
++	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
++	CONF_HW_BIT_RATE_54MBPS)
++
++/*
++ * Default rates for management traffic when operating in AP mode. This
++ * should be configured according to the basic rate set of the AP
++ */
++#define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
++	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS)
++
+ struct conf_tx_rate_class {
+ 
+ 	/*
+@@ -636,9 +656,9 @@ struct conf_tx_settings {
+ 
+ 	/*
+ 	 * Configuration for rate classes for TX (currently only one
+-	 * rate class supported.)
++	 * rate class supported). Used in non-AP mode.
+ 	 */
+-	struct conf_tx_rate_class rc_conf;
++	struct conf_tx_rate_class sta_rc_conf;
+ 
+ 	/*
+ 	 * Configuration for access categories for TX rate control.
+@@ -647,6 +667,22 @@ struct conf_tx_settings {
+ 	struct conf_tx_ac_category ac_conf[CONF_TX_MAX_AC_COUNT];
+ 
+ 	/*
++	 * Configuration for rate classes in AP-mode. These rate classes
++	 * are for the AC TX queues
++	 */
++	struct conf_tx_rate_class ap_rc_conf[CONF_TX_MAX_AC_COUNT];
++
++	/*
++	 * Management TX rate class for AP-mode.
++	 */
++	struct conf_tx_rate_class ap_mgmt_conf;
++
++	/*
++	 * Broadcast TX rate class for AP-mode.
++	 */
++	struct conf_tx_rate_class ap_bcst_conf;
++
++	/*
+ 	 * Configuration for TID parameters.
+ 	 */
+ 	u8 tid_conf_count;
+@@ -687,6 +723,12 @@ struct conf_tx_settings {
+ 	 * Range: CONF_HW_BIT_RATE_* bit mask
+ 	 */
+ 	u32 basic_rate_5;
++
++	/*
++	 * TX retry limits for templates
++	 */
++	u8 tmpl_short_retry_limit;
++	u8 tmpl_long_retry_limit;
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 062247e..788959a 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -116,11 +116,11 @@ static struct conf_drv_settings default_conf = {
+ 	},
+ 	.tx = {
+ 		.tx_energy_detection         = 0,
+-		.rc_conf                     = {
++		.sta_rc_conf                 = {
+ 			.enabled_rates       = 0,
+ 			.short_retry_limit   = 10,
+ 			.long_retry_limit    = 10,
+-			.aflags              = 0
++			.aflags              = 0,
+ 		},
+ 		.ac_conf_count               = 4,
+ 		.ac_conf                     = {
+@@ -153,6 +153,45 @@ static struct conf_drv_settings default_conf = {
+ 				.tx_op_limit = 1504,
+ 			},
+ 		},
++		.ap_rc_conf                  = {
++			[0] = {
++				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++			[1] = {
++				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++			[2] = {
++				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++			[3] = {
++				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
++				.short_retry_limit = 10,
++				.long_retry_limit = 10,
++				.aflags      = 0,
++			},
++		},
++		.ap_mgmt_conf = {
++			.enabled_rates       = CONF_TX_AP_DEFAULT_MGMT_RATES,
++			.short_retry_limit   = 10,
++			.long_retry_limit    = 10,
++			.aflags              = 0,
++		},
++		.ap_bcst_conf = {
++			.enabled_rates       = CONF_HW_BIT_RATE_1MBPS,
++			.short_retry_limit   = 10,
++			.long_retry_limit    = 10,
++			.aflags              = 0,
++		},
++
+ 		.tid_conf_count = 4,
+ 		.tid_conf = {
+ 			[CONF_TX_AC_BE] = {
+@@ -193,6 +232,8 @@ static struct conf_drv_settings default_conf = {
+ 		.tx_compl_threshold          = 4,
+ 		.basic_rate                  = CONF_HW_BIT_RATE_1MBPS,
+ 		.basic_rate_5                = CONF_HW_BIT_RATE_6MBPS,
++		.tmpl_short_retry_limit      = 10,
++		.tmpl_long_retry_limit       = 10,
+ 	},
+ 	.conn = {
+ 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
+-- 
+1.7.1
 
-Some good news is we have a raise in hands by TI to participate in the
-development. Things we need to iron out for each development step:
-
-1) Map countries to a DFS region bit
-
-The plan is to map each country in db.txt from wireless-regdb to a DFS
-region. There are only 3 known DFS regions:
-
-  * FCC
-  * ETSI
-  * JP/Telco
-
-Michael, David, do you guys expect this to change any time soon (say
-10 years or so)? Anyone else know?
-
-I can work on this.
-
-2) Get DFS region to the driver through cfg80211
-
-This is pretty straight forward once we have 1) done, and I can work on it.
-
-3) Where do we stuff DFS parameters for each region
-
-One idea is to use the request_firmware() API as it is expected these
-parameters will be region and chipset specific. This requires a good
-review of all chipsets and with priority on the ones who have vendors
-or we have documentation for that we want to support in existing
-drivers. Today this means Atheros hardware and TI hardware.
-
-Vipin, I am curios how you intend on programming DFS with ath6kl (if
-this gets added, we should if TI is doing it ;) ), do you stuff all
-DFS parameters in firmware?
-
-Gery, how does TI do it?Most of the work here will involve hooking
-things up for mac80211 / cfg80211 / nl80211. This will consists of
-receiving DFS events from the driver for radar detection, keeping the
-NOL list, sending it to hostapd, choosing a random channel, and
-sending CSA to STAs.
-
-4) Program hw DFS parameters
-
-ath9k_hw already has some knobs for this, Felix already submitted some
-of these changes upstream. Most of the work required here will take
-place on ath9k.
-
-5) DFS events
-
-Most of the work here will involve hooking things up for mac80211 /
-cfg80211 / nl80211. This will consists of receiving DFS events from
-the driver for radar detection, keeping the NOL list, sending it to
-hostapd, choosing a random channel, and sending CSA to STAs. We can
-worry about this eventually, once we get the above 4 steps done.
-
-  Luis
