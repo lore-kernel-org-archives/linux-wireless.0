@@ -1,36 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2657 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754734Ab0LIROm (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754637Ab0L2Xcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 12:14:42 -0500
-Date: Thu, 9 Dec 2010 12:00:40 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Bruno Randolf <br1@einfach.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>, nbd@openwrt.org
-Subject: Re: ath5k: Weird Retransmission Behaviour
-Message-ID: <20101209170040.GA24840@hash.localnet>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com> <201012061714.15863.br1@einfach.org> <AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com> <AANLkTimwprBJpnLM6_Qap1wSVboVJPQecAUgmzAnQhu-@mail.gmail.com> <AANLkTim5hESSHAMYNryUwak=D4tQetZJuDEK41Yq3A+L@mail.gmail.com> <20101209123841.GA31566@hash.localnet> <AANLkTinmsG9NhiiigOrFZQUS+pdDaHSvxpN7JnjdUXs=@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTinmsG9NhiiigOrFZQUS+pdDaHSvxpN7JnjdUXs=@mail.gmail.com>
+	Wed, 29 Dec 2010 18:32:52 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:52 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 16/18] wl1271: AP mode - fetch appropriate firmware for AP
+Date: Thu, 30 Dec 2010 01:32:11 +0200
+Message-Id: <1293665533-7599-17-git-send-email-arik@wizery.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 10, 2010 at 12:34:19AM +1000, Jonathan Guerin wrote:
-> > For what it's worth, I tested pid and minstrel a while ago with a
-> > modified mac80211_hwsim, and found minstrel to be quite a bit better
-> > at rate adaptation.  So while it may be worth testing out for this
-> > particular use case, minstrel is probably the way to go in general.
-> 
-> So, while I say this with no idea how to do it, might it be worth
-> fixing Minstrel so that it adheres to mac80211's maximum retry values?
- 
-Yeah, so that's what the linked patch I posted tries to do :)
+AP and STA modes use different firmwares.
 
+Differentiate the firmware files by name and fetch the appropriate one
+when add_interface is called by mac80211. The STA firmware is chosen for
+PLT mode.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   33 ++++++++++++++++++++++++++++++---
+ drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
+ 2 files changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4ca46b2..a6de19a 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -658,9 +658,26 @@ out:
+ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ {
+ 	const struct firmware *fw;
++	const char *fw_name;
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, WL1271_FW_NAME, wl1271_wl_to_dev(wl));
++	switch (wl->bss_type) {
++	case BSS_TYPE_AP_BSS:
++		fw_name = WL1271_AP_FW_NAME;
++		break;
++	case BSS_TYPE_IBSS:
++	case BSS_TYPE_STA_BSS:
++		fw_name = WL1271_FW_NAME;
++		break;
++	default:
++		wl1271_error("no compatible firmware for bss_type %d",
++			     wl->bss_type);
++		return -EINVAL;
++	}
++
++	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
++
++	ret = request_firmware(&fw, fw_name, wl1271_wl_to_dev(wl));
+ 
+ 	if (ret < 0) {
+ 		wl1271_error("could not get firmware: %d", ret);
+@@ -674,6 +691,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
++	vfree(wl->fw);
+ 	wl->fw_len = fw->size;
+ 	wl->fw = vmalloc(wl->fw_len);
+ 
+@@ -684,7 +702,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 	}
+ 
+ 	memcpy(wl->fw, fw->data, wl->fw_len);
+-
++	wl->fw_bss_type = wl->bss_type;
+ 	ret = 0;
+ 
+ out:
+@@ -820,7 +838,8 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
+-	if (wl->fw == NULL) {
++	/* Make sure the firmware type matches the BSS type */
++	if (wl->fw == NULL || wl->fw_bss_type != wl->bss_type) {
+ 		ret = wl1271_fetch_firmware(wl);
+ 		if (ret < 0)
+ 			goto out;
+@@ -853,6 +872,8 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
++	wl->bss_type = BSS_TYPE_STA_BSS;
++
+ 	while (retries) {
+ 		retries--;
+ 		ret = wl1271_chip_wakeup(wl);
+@@ -1010,6 +1031,9 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
+ 	 *
+ 	 * The MAC address is first known when the corresponding interface
+ 	 * is added. That is where we will initialize the hardware.
++	 *
++	 * In addition, we currently have different firmwares for AP and managed
++	 * operation. We will know which to boot according to interface type.
+ 	 */
+ 
+ 	return 0;
+@@ -3183,6 +3207,9 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->flags = 0;
+ 	wl->sg_enabled = true;
+ 	wl->hw_pg_ver = -1;
++	wl->bss_type = MAX_BSS_TYPE;
++	wl->set_bss_type = MAX_BSS_TYPE;
++	wl->fw_bss_type = MAX_BSS_TYPE;
+ 
+ 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 98532fc..80e0e39 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -124,6 +124,8 @@ extern u32 wl12xx_debug_level;
+ 
+ 
+ #define WL1271_FW_NAME "wl1271-fw.bin"
++#define WL1271_AP_FW_NAME "wl1271-fw-ap.bin"
++
+ #define WL1271_NVS_NAME "wl1271-nvs.bin"
+ 
+ #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+@@ -311,6 +313,7 @@ struct wl1271 {
+ 
+ 	u8 *fw;
+ 	size_t fw_len;
++	u8 fw_bss_type;
+ 	struct wl1271_nvs_file *nvs;
+ 	size_t nvs_len;
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.1
 
