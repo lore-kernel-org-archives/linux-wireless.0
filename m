@@ -1,68 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:25762 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754963Ab0LGVYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:24:19 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 13:24:04 -0800
-Date: Tue, 7 Dec 2010 13:24:16 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	"pstew@google.com" <pstew@google.com>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH 2/3] ath9k: Fix power save count imbalance on
- ath_radio_enable()
-Message-ID: <20101207212416.GB2582@tux>
-References: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
- <1291425653-2884-3-git-send-email-lrodriguez@atheros.com>
- <AANLkTimd5ZKCWjDaVQcqx9t=_zoJC+UC5_4nkRQ-Uq8R@mail.gmail.com>
- <20101207210130.GM2700@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101207210130.GM2700@tuxdriver.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754700Ab0L2Xc5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Dec 2010 18:32:57 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:56 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 18/18] wl1271: Enable AP-mode
+Date: Thu, 30 Dec 2010 01:32:13 +0200
+Message-Id: <1293665533-7599-19-git-send-email-arik@wizery.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 07, 2010 at 01:01:30PM -0800, John W. Linville wrote:
-> On Fri, Dec 03, 2010 at 05:34:08PM -0800, Luis R. Rodriguez wrote:
-> > On Fri, Dec 3, 2010 at 5:20 PM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> > > Upon a failure we never call ath9k_ps_restore() on ath_radio_enable(),
-> > > this will throw off the sc->ps_usecount. When the sc->ps_usecount
-> > > is > 0 we never put the chip to full sleep. This drains battery,
-> > > and will also make the chip fail upon resume with:
-> > >
-> > > ath: Starting driver with initial channel: 5745 MHz
-> > > ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
-> > >
-> > > This would make the chip useless upon resume.
-> > >
-> > > I cannot prove this can happen but in theory it is so best to
-> > > avoid this race completely and not have users complain about
-> > > a broken device after resume.
-> > >
-> > > Cc: stable@kernel.org
-> > > Cc: Paul Stewart <pstew@google.com>
-> > > Cc: Amod Bodas <amod.bodas@atheros.com>
-> > > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > 
-> > John, this one is for you, sorry I failed to send it to you. And
-> > Johannes, sorry, I forgot to remove you from my send script :)
-> 
-> So, this is for 2.6.37?
+Indicate support for the NL80211_IFTYPE_AP interface mode to enable AP
+mode operation.
 
-Yes.
+Disable 11a when operating in AP-mode (unsupported for now).
 
-> FWIW, it was the only PATCH in a series of RFCs...
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/boot.c |    4 +++-
+ drivers/net/wireless/wl12xx/main.c |    5 ++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-Thanks, yes, I noted this on my PATCH 0 cover letter. If you want
-you can disrecard this though and just consider the PATCH I posted
-in my new series. Its in that series as well, but let me just iron
-out that series first, please ignore that series as well for now.
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index b2f0f64..f2a3513 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -233,7 +233,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+ 	 */
+ 	if (wl->nvs_len == sizeof(struct wl1271_nvs_file) ||
+ 	    wl->nvs_len == WL1271_INI_LEGACY_NVS_FILE_SIZE) {
+-		if (wl->nvs->general_params.dual_mode_select)
++		/* for now 11a is unsupported in AP mode */
++		if (wl->bss_type != BSS_TYPE_AP_BSS &&
++		    wl->nvs->general_params.dual_mode_select)
+ 			wl->enable_11a = true;
+ 	}
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 78d6155..8a35491 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1073,6 +1073,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		wl->bss_type = BSS_TYPE_IBSS;
+ 		wl->set_bss_type = BSS_TYPE_STA_BSS;
+ 		break;
++	case NL80211_IFTYPE_AP:
++		wl->bss_type = BSS_TYPE_AP_BSS;
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		goto out;
+@@ -3136,7 +3139,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC);
++		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	/*
+ 	 * Maximum length of elements in scanning probe request templates
+-- 
+1.7.1
 
-  Luis
