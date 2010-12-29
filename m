@@ -1,62 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:54360 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754321Ab0LGCfx (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:57549 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754492Ab0L2XcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 21:35:53 -0500
-Received: by qyk11 with SMTP id 11so4405781qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 18:35:52 -0800 (PST)
-Message-ID: <4CFD9D96.6090003@lwfinger.net>
-Date: Mon, 06 Dec 2010 20:36:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: build error without  CONFIG_MAC80211_MESH
-References: <201012071123.03046.br1@einfach.org>
-In-Reply-To: <201012071123.03046.br1@einfach.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 29 Dec 2010 18:32:25 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so4753430eye.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:24 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 03/18] wl1271: AP mode - add AP specific event
+Date: Thu, 30 Dec 2010 01:31:58 +0200
+Message-Id: <1293665533-7599-4-git-send-email-arik@wizery.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2010 08:23 PM, Bruno Randolf wrote:
-> Hi!
-> 
-> Building current wireless-testing (master-2010-12-06) without the Mesh option 
-> is broken:
-> 
->   CC [M]  net/mac80211/main.o
-> /home/br1/ath/wireless-testing/net/mac80211/main.c: In function 
-> ‘ieee80211_bss_info_change_notify’:
-> /home/br1/ath/wireless-testing/net/mac80211/main.c:250: error: ‘union 
-> <anonymous>’ has no member named ‘mesh’
-> make[3]: *** [net/mac80211/main.o] Error 1
-> make[2]: *** [net/mac80211] Error 2
-> make[1]: *** [net] Error 2
-> make: *** [sub-make] Error 2
-> 
-> It needs something like:
-> 
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 40bd12e..3d988ca 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -245,10 +245,12 @@ void ieee80211_bss_info_change_notify(struct 
-> ieee80211_sub_if_data *sdata,
->                                 sdata->vif.bss_conf.enable_beacon =
->                                         !!sdata->u.ibss.presp;
->                                 break;
-> +#ifdef CONFIG_MAC80211_MESH
->                         case NL80211_IFTYPE_MESH_POINT:
->                                 sdata->vif.bss_conf.enable_beacon =
->                                         !!sdata->u.mesh.mesh_id_len;
->                                 break;
-> +#endif
->                         default:
->                                 /* not reached */
->                                 WARN_ON(1);
+Add STA-remove completion event. Unmask it during boot if operating in
+AP-mode.
+Ignore unrelated events in AP-mode.
 
-Happens here too.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/boot.c  |    3 +++
+ drivers/net/wireless/wl12xx/event.c |    7 ++++---
+ drivers/net/wireless/wl12xx/event.h |    1 +
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 4a9f929..bb4f283 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -432,6 +432,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+ 		SOFT_GEMINI_SENSE_EVENT_ID;
+ 
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
++
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+ 		wl1271_error("EVENT mask setting failed");
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index f9146f5..3376a5d 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -186,6 +186,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	int ret;
+ 	u32 vector;
+ 	bool beacon_loss = false;
++	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
+ 	wl1271_event_mbox_dump(mbox);
+ 
+@@ -218,21 +219,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
+ 	 *
+ 	 */
+-	if (vector & BSS_LOSE_EVENT_ID) {
++	if ((vector & BSS_LOSE_EVENT_ID) && !is_ap) {
+ 		wl1271_info("Beacon loss detected.");
+ 
+ 		/* indicate to the stack, that beacons have been lost */
+ 		beacon_loss = true;
+ 	}
+ 
+-	if (vector & PS_REPORT_EVENT_ID) {
++	if ((vector & PS_REPORT_EVENT_ID) && !is_ap) {
+ 		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
+ 		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+ 
+-	if (vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID)
++	if ((vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID) && !is_ap)
+ 		wl1271_event_pspoll_delivery_fail(wl);
+ 
+ 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index 6cce014..fd955f3 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -59,6 +59,7 @@ enum {
+ 	BSS_LOSE_EVENT_ID			 = BIT(18),
+ 	REGAINED_BSS_EVENT_ID			 = BIT(19),
+ 	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
++	STA_REMOVE_COMPLETE_EVENT_ID		 = BIT(21), /* AP */
+ 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
+ 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
+ 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
+-- 
+1.7.1
+
