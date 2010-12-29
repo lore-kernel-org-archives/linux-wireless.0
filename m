@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52726 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753945Ab0LLUCu (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35236 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753345Ab0L2QMS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 15:02:50 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 6A8CA418D3
-	for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 15:02:43 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-12 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101212200249.2E81440F97@repository3.orbit-lab.org>
-Date: Sun, 12 Dec 2010 15:02:49 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 29 Dec 2010 11:12:18 -0500
+MIME-Version: 1.0
+In-Reply-To: <1293635067.3546.16.camel@jlt3.sipsolutions.net>
+References: <AANLkTikYvBspVmAZ0DCMXJ-3WxkotwX+n8NpTtM+97_i@mail.gmail.com>
+	<1293635067.3546.16.camel@jlt3.sipsolutions.net>
+Date: Wed, 29 Dec 2010 18:12:16 +0200
+Message-ID: <AANLkTi=XQ2DE==ggJHfokUE1=opDVOFxQNeqwY1xZN_8@mail.gmail.com>
+Subject: Re: BUG: while bridging Ethernet and wireless device:
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?B?WU9TSElGVUpJIEhpZGVha2kgLyDlkInol6Toi7HmmI4=?=
+	<yoshfuji@linux-ipv6.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2010/12/29 Johannes Berg <johannes@sipsolutions.net>:
+> On Thu, 2010-12-16 at 14:11 +0200, Tomas Winkler wrote:
+>> Will be happy if someone can give me some more insight. (kernel 2.6.37-rc5)
+>
+> Tomas looked into it a bit more and told me that it happens on IPv6
+> packets. To recap, he gets
+>
+> kernel BUG at include/linux/skbuff.h:1178!
+> with
+> EIP: [<f83edd65>] br_multicast_rcv+0xc95/0xe1c [bridge]
+>
+> Also remember that the packets are almost fully nonlinear, when they get
+> here they likely have almost no data in the skb header.
+>
+> I then looked at br_multicast_ipv6_rcv(), and it looks fishy:
+>
+> Up to:
+>        skb2 = skb_clone(skb, GFP_ATOMIC);
+>
+> everything's fine, since ipv6_skip_exthdr() will use
+> skb_header_pointer(). At this point, offset is the result of
+> ipv6_skip_exthdr(). Remember that skb_clone() is not skb_copy().
 
-compat-wireless code metrics
+So far I can confirm that switching to sbk_copy fixes the crash.
 
-    752722 - Total upstream lines of code being pulled
-      2198 - backport code changes
-      1935 - backport code additions
-       263 - backport code deletions
-      6637 - backport from compat module
-      8835 - total backport code
-    1.1737 - % of code consists of backport work
-      1532 - Crap changes not yet posted
-      1489 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2035 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101210
-compat-wireless release: compat-wireless-2010-12-10-1-gc0f962a-pc
+Thanks
+Tomas
