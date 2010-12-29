@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36136 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752542Ab0LFMcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:32:08 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:31:53 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 21/27] ath9k_hw: Program appropriate chianmask for AR9485 before starting AGC/IQ cal
-Date: Mon, 6 Dec 2010 04:27:54 -0800
-Message-ID: <1291638480-8950-22-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:42278 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216Ab0L2JSc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Dec 2010 04:18:32 -0500
+Subject: Re: [PATCH 4/4] mwl8k: Enable HW encryption for AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, mwl8k-devel@cozybit.com,
+	buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+In-Reply-To: <1293614230.3546.4.camel@jlt3.sipsolutions.net>
+References: <1293577297-25755-1-git-send-email-thomas@cozybit.com>
+	 <1293577297-25755-5-git-send-email-thomas@cozybit.com>
+	 <1293614230.3546.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Dec 2010 10:18:30 +0100
+Message-ID: <1293614310.3546.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On Wed, 2010-12-29 at 10:17 +0100, Johannes Berg wrote:
+> On Tue, 2010-12-28 at 15:01 -0800, Thomas Pedersen wrote:
+> 
+> > @@ -824,15 +827,22 @@ static void mwl8k_encapsulate_tx_frame(struct sk_buff *skb)
+> >  	header_pad = 0;
+> >  	data_pad = 0;
+> >  	if (key_conf != NULL) {
+> > -		if (key_conf->alg == ALG_WEP) {
+> > +		switch (key_conf->cipher) {
+> 
+> how can this patch possibly apply? key_conf->alg hasn't existed in a
+> LONG time, so I don't see how you can be removing a line containing it?!
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 4c94c9e..f218613 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -723,7 +723,9 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	val = REG_READ(ah, AR_ENT_OTP);
- 	ath_print(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
- 
--	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
-+	if (AR_SREV_9485(ah))
-+		ar9003_hw_set_chain_masks(ah, 0x1, 0x1);
-+	else if (val & AR_ENT_OTP_CHAIN2_DISABLE)
- 		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
- 	else
- 		/*
--- 
-1.7.0.4
+Oh, never mind, patch 2/4 is adding this code, so it can never
+compile...........
+
+johannes
 
