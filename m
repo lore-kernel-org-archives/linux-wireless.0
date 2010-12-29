@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.zhaw.ch ([160.85.104.50]:64762 "EHLO mx1.zhaw.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102Ab0LIPIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 10:08:21 -0500
-From: Tobias Klauser <tklauser@distanz.ch>
-To: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] staging: brcm80211: Remove redundant unlikely()
-Date: Thu,  9 Dec 2010 16:01:07 +0100
-Message-Id: <1291906867-1485-1-git-send-email-tklauser@distanz.ch>
+Received: from he.sipsolutions.net ([78.46.109.217]:42274 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017Ab0L2JRM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Dec 2010 04:17:12 -0500
+Subject: Re: [PATCH 4/4] mwl8k: Enable HW encryption for AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, mwl8k-devel@cozybit.com,
+	buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
+	Pradeep Nemavat <pnemavat@marvell.com>
+In-Reply-To: <1293577297-25755-5-git-send-email-thomas@cozybit.com>
+References: <1293577297-25755-1-git-send-email-thomas@cozybit.com>
+	 <1293577297-25755-5-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Dec 2010 10:17:10 +0100
+Message-ID: <1293614230.3546.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IS_ERR() already implies unlikely(), so it can be omitted here.
+On Tue, 2010-12-28 at 15:01 -0800, Thomas Pedersen wrote:
 
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> @@ -824,15 +827,22 @@ static void mwl8k_encapsulate_tx_frame(struct sk_buff *skb)
+>  	header_pad = 0;
+>  	data_pad = 0;
+>  	if (key_conf != NULL) {
+> -		if (key_conf->alg == ALG_WEP) {
+> +		switch (key_conf->cipher) {
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 0d7aa4a..edf300d 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3196,7 +3196,7 @@ s32 wl_cfg80211_attach(struct net_device *ndev, void *data)
- 	}
- 	WL_DBG(("func %p\n", wl_cfg80211_get_sdio_func()));
- 	wdev = wl_alloc_wdev(sizeof(struct wl_iface), &wl_cfg80211_get_sdio_func()->dev);
--	if (unlikely(IS_ERR(wdev)))
-+	if (IS_ERR(wdev))
- 		return -ENOMEM;
- 
- 	wdev->iftype = wl_mode_to_nl80211_iftype(WL_MODE_BSS);
--- 
-1.7.0.4
+how can this patch possibly apply? key_conf->alg hasn't existed in a
+LONG time, so I don't see how you can be removing a line containing it?!
+
+johannes
 
