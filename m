@@ -1,68 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40436 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751469Ab0LAS6G (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754492Ab0L2Xc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 13:58:06 -0500
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oB1Iw5Zl004833
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 1 Dec 2010 10:58:06 -0800
-Message-ID: <4CF69ABD.1060204@candelatech.com>
-Date: Wed, 01 Dec 2010 10:58:05 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k:  DMA error without scan optimization.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 29 Dec 2010 18:32:29 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:29 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v4 05/18] wl1271: AP mode - workaround for FW bug on station remove
+Date: Thu, 30 Dec 2010 01:32:00 +0200
+Message-Id: <1293665533-7599-6-git-send-email-arik@wizery.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As a work-around, I disabled the scan optimization by running one
-wpa-supplicant per interface.  This makes the system much more stable,
-and it ran overnight with 30 STA interfaces at low speed (64kbps
-tx + rx for each STA).
+Sometimes an event indicating station removal is not sent up by
+firmware. We work around this by always indicating success in when
+a wait for the event timeouts.
 
-This morning, I bumped speed to 384Kbps, and it ran fine for 30
-minutes or so.  Then, I noticed this error on the console.
+Temporary workaround until a FW fix is introduced.
 
-The system seems OK still, but I figure it's a matter of time.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c |   26 +++++++++++++++++++++-----
+ 1 files changed, 21 insertions(+), 5 deletions(-)
 
-Any suggestions for working around this error?  Maybe try
-stopping DMA several times in a loop?
-
-sta7: detected beacon loss from AP - sending probe request
-ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
-------------[ cut here ]------------
-WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532 ath_stoprecv+0x90/0x9a [ath9k]()
-Hardware name: PDSBM
-Could not stop RX, we could be confusing the DMA engine when we start RX up
-Modules linked in: michael_mic aes_i586 aes_generic 8021q garp stp llc macvlan pktgen fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb 
-ath9k mac80211 ath9k_common ath9k_hw microcode ath e1000e cfg80211 iTCO_wdt iTCO_vendor_support pcspkr i2c_i801 i915 drm_kms_helper drm i2c_algo_bit i2c_core 
-video output [last unloaded: ipt_addrtype]
-Pid: 24656, comm: kworker/u:2 Tainted: G        W   2.6.37-rc3-wl+ #53
-Call Trace:
-  [<78436fe9>] warn_slowpath_common+0x77/0x8c
-  [<f8f6c19e>] ? ath_stoprecv+0x90/0x9a [ath9k]
-  [<f8f6c19e>] ? ath_stoprecv+0x90/0x9a [ath9k]
-  [<7843707a>] warn_slowpath_fmt+0x2e/0x30
-  [<f8f6c19e>] ath_stoprecv+0x90/0x9a [ath9k]
-  [<f8f6a495>] ath_reset+0x55/0x163 [ath9k]
-  [<7844090e>] ? process_timeout+0x0/0xa
-  [<f8f6b9c9>] ath_hw_check+0x3f/0x4a [ath9k]
-  [<78447000>] process_one_work+0x1af/0x2bf
-  [<78446f8f>] ? process_one_work+0x13e/0x2bf
-  [<f8f6b98a>] ? ath_hw_check+0x0/0x4a [ath9k]
-  [<7844874e>] worker_thread+0xf9/0x1bf
-  [<78448655>] ? worker_thread+0x0/0x1bf
-  [<7844b27e>] kthread+0x62/0x67
-  [<7844b21c>] ? kthread+0x0/0x67
-  [<784036c6>] kernel_thread_helper+0x6/0x1a
----[ end trace c9b5512870bdacf6 ]---
-ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
-
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index eb723f0..4a51fd2 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -222,7 +222,7 @@ int wl1271_cmd_ext_radio_parms(struct wl1271 *wl)
+  * Poll the mailbox event field until any of the bits in the mask is set or a
+  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
+  */
+-static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
++static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
+ {
+ 	u32 events_vector, event;
+ 	unsigned long timeout;
+@@ -231,7 +231,8 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ 
+ 	do {
+ 		if (time_after(jiffies, timeout)) {
+-			ieee80211_queue_work(wl->hw, &wl->recovery_work);
++			wl1271_debug(DEBUG_CMD, "timeout waiting for event %d",
++				     (int)mask);
+ 			return -ETIMEDOUT;
+ 		}
+ 
+@@ -249,6 +250,19 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ 	return 0;
+ }
+ 
++static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
++{
++	int ret;
++
++	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
++	if (ret != 0) {
++		ieee80211_queue_work(wl->hw, &wl->recovery_work);
++		return ret;
++	}
++
++	return 0;
++}
++
+ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
+ {
+ 	struct wl1271_cmd_join *join;
+@@ -1108,9 +1122,11 @@ int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid)
+ 		goto out_free;
+ 	}
+ 
+-	ret = wl1271_cmd_wait_for_event(wl, STA_REMOVE_COMPLETE_EVENT_ID);
+-	if (ret < 0)
+-		wl1271_error("cmd remove sta event completion error");
++	/*
++	 * We are ok with a timeout here. The event is sometimes not sent
++	 * due to a firmware bug.
++	 */
++	wl1271_cmd_wait_for_event_or_timeout(wl, STA_REMOVE_COMPLETE_EVENT_ID);
+ 
+ out_free:
+ 	kfree(cmd);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
