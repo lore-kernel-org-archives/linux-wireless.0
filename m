@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54026 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753758Ab0LNKsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 05:48:18 -0500
-Message-ID: <4D074B67.9050309@openwrt.org>
-Date: Tue, 14 Dec 2010 11:48:07 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith <m.sujith@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Sujith.Manoharan@atheros.com
-Subject: Re: [PATCH] ath9k_htc: Remove PCI specific configuration
-References: <19718.55706.982211.137208@gargle.gargle.HOWL>
-In-Reply-To: <19718.55706.982211.137208@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:53949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab0L3IxR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Dec 2010 03:53:17 -0500
+Subject: Re: [PATCH] mac80211: fix mesh forwarding when ratelimited too
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Milton Miller <miltonm@bga.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Javier Cardona <javier@cozybit.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <mac80211-rx-ratelimit-goto@mdm.bga.com>
+References: <1293009307.3531.13.camel@jlt3.sipsolutions.net>
+	 <AANLkTik9PS-wKYg=XC0bUaZ=a99d-FdUmzZfvALVQ9Tv@mail.gmail.com>
+	 <201012262159.oBQLxOsw008865@hera.kernel.org>
+	 <mac80211-rx-ratelimit-goto@mdm.bga.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Dec 2010 09:53:09 +0100
+Message-ID: <1293699189.4055.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-14 3:42 AM, Sujith wrote:
-> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Thu, 2010-12-30 at 02:01 -0600, Milton Miller wrote:
+> Commit b51aff057c9d0ef6c529dc25fd9f775faf7b6c63 said:
 > 
-> There is no need to configure PCI related registers for
-> USB devices.
+>     Under memory pressure, the mac80211 mesh code
+>     may helpfully print a message that it failed
+>     to clone a mesh frame and then will proceed
+>     to crash trying to use it anyway. Fix that.
+>     
+> Avoid the reference whenever the frame copy is unsuccessful
+> regardless of the debug message being suppressed or printed.
 > 
-> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> Cc: stable@kernel.org [2.6.27+] 
+> Signed-off-by: Milton Miller <miltonm@bga.com>
 > ---
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 0f373be..2662553 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -568,10 +568,12 @@ static int __ath9k_hw_init(struct ath_hw *ah)
->  	ah->WARegVal |= (AR_WA_D3_L1_DISABLE |
->  			 AR_WA_ASPM_TIMER_BASED_DISABLE);
+> I chose a seperate if vs nesting the ratelimit check to avoid shifting
+> the printk further to the right.
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index b01e467..e98668f 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1788,11 +1788,11 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
 >  
-> -	if (ah->is_pciexpress)
-> +	if (ah->is_pciexpress) {
->  		ath9k_hw_configpcipowersave(ah, 0, 0);
-> -	else
-> -		ath9k_hw_disablepcie(ah);
-> +	} else {
-> +		if (common->bus_ops->ath_bus_type != ATH_USB)
-> +			ath9k_hw_disablepcie(ah);
-> +	}
-I don't really see the point of this check, since (with my other patch)
-ath9k_hw_disablepcie already checks for AR_SREV_5416, which won't return
-true on any USB based device.
+>  			fwd_skb = skb_copy(skb, GFP_ATOMIC);
+>  
+> -			if (!fwd_skb && net_ratelimit()) {
+> +			if (!fwd_skb && net_ratelimit())
+>  				printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
+>  						   sdata->name);
+> +			if (!fwd_skb)
+>  				goto out;
+> -			}
 
-- Felix
+Oops, good catch! Thanks.
+
+johannes
+
