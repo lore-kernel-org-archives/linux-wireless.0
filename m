@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55012 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753919Ab0LGWGp (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:59254 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753105Ab0L3XIz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 17:06:45 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] wireless: Remove spurious warning in mlme.c
-Date: Tue,  7 Dec 2010 14:06:39 -0800
-Message-Id: <1291759599-14698-1-git-send-email-greearb@candelatech.com>
+	Thu, 30 Dec 2010 18:08:55 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 14/15]include:media:davinci:vpss.h Typo change diable to disable.
+Date: Thu, 30 Dec 2010 15:08:03 -0800
+Message-Id: <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The below patch fixes a typo "diable" to "disable". Please let me know if this 
+is correct or not.
 
-Seems that we should not be warning if all of the
-authtry_bsses are already NULL.
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-:100644 100644 d7680f2... 866d016... M	net/wireless/mlme.c
- net/wireless/mlme.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ include/media/davinci/vpss.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index d7680f2..866d016 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -266,7 +266,7 @@ EXPORT_SYMBOL(cfg80211_send_disassoc);
- static void __cfg80211_auth_remove(struct wireless_dev *wdev, const u8 *addr)
- {
- 	int i;
--	bool done = false;
-+	bool done = true;
+diff --git a/include/media/davinci/vpss.h b/include/media/davinci/vpss.h
+index c59cc02..b586495 100644
+--- a/include/media/davinci/vpss.h
++++ b/include/media/davinci/vpss.h
+@@ -44,7 +44,7 @@ struct vpss_pg_frame_size {
+ 	short pplen;
+ };
  
- 	ASSERT_WDEV_LOCK(wdev);
- 
-@@ -277,9 +277,10 @@ static void __cfg80211_auth_remove(struct wireless_dev *wdev, const u8 *addr)
- 			cfg80211_unhold_bss(wdev->authtry_bsses[i]);
- 			cfg80211_put_bss(&wdev->authtry_bsses[i]->pub);
- 			wdev->authtry_bsses[i] = NULL;
--			done = true;
- 			break;
- 		}
-+		else if (wdev->authtry_bsses[i])
-+			done = false;
- 	}
- 
- 	WARN_ON(!done);
+-/* Used for enable/diable VPSS Clock */
++/* Used for enable/disable VPSS Clock */
+ enum vpss_clock_sel {
+ 	/* DM355/DM365 */
+ 	VPSS_CCDC_CLOCK,
 -- 
-1.7.2.3
+1.6.5.2.180.gc5b3e
 
