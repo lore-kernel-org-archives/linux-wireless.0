@@ -1,53 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45591 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234Ab0LFUWd (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:13721 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755249Ab0L3VAV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 15:22:33 -0500
-Message-ID: <4CFD4602.1030304@candelatech.com>
-Date: Mon, 06 Dec 2010 12:22:26 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Thu, 30 Dec 2010 16:00:21 -0500
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: Stephen Hemminger <shemminger@vyatta.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-References: <4CF44543.9070605@candelatech.com>	<20101130004424.GC1901@tux>	<4CF6D8C8.2000308@candelatech.com>	<4CF8A6DE.4020804@candelatech.com>	<4CFAFBE1.3080505@openwrt.org>	<4CFB20BA.5090300@candelatech.com>	<20101206193600.GC21442@tux>	<4CFD3DE3.4000207@candelatech.com> <AANLkTingy7fPH14hW_mg8_YcotX29pYCu910Gw48grrD@mail.gmail.com>
-In-Reply-To: <AANLkTingy7fPH14hW_mg8_YcotX29pYCu910Gw48grrD@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Thu, 30 Dec 2010 23:00:13 +0200
+Subject: RE: [PATCH net-2.6] bridge: fix br_multicast_ipv6_rcv for paged skbs
+Message-ID: <6F5C1D715B2DA5498A628E6B9C124F04019BF36A8D@hasmsx504.ger.corp.intel.com>
+References: <AANLkTi=XQ2DE==ggJHfokUE1=opDVOFxQNeqwY1xZN_8@mail.gmail.com>
+	<1293708753-17728-1-git-send-email-tomas.winkler@intel.com>
+	<20101230104656.6c5a4b4e@nehalam>
+	<1293735134.21956.1.camel@jlt3.sipsolutions.net>
+ <20101230110609.08b7ee38@nehalam>
+In-Reply-To: <20101230110609.08b7ee38@nehalam>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2010 12:11 PM, Björn Smedman wrote:
-> On Mon, Dec 6, 2010 at 8:47 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> With 16 properly configured non-encrypted stations, running with
->> wpa-supplicant
->> with netlink driver&  sharing scan results,  the interfaces quickly
->> associate.
->>
->> However, I do continue to see DMA warnings such as these (I had picked up my
->> portable phone, and it knocked all the interfaces offline ..here
->> they are coming back up after I hung up the phone).
+
+
+> -----Original Message-----
+> From: Stephen Hemminger [mailto:shemminger@vyatta.com]
+> Sent: Thursday, December 30, 2010 9:06 PM
+> To: Johannes Berg
+> Cc: Winkler, Tomas; davem@davemloft.net; netdev@vger.kernel.org; linux-
+> wireless@vger.kernel.org
+> Subject: Re: [PATCH net-2.6] bridge: fix br_multicast_ipv6_rcv for paged
+> skbs
+> 
+> On Thu, 30 Dec 2010 19:52:14 +0100
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > On Thu, 2010-12-30 at 10:46 -0800, Stephen Hemminger wrote:
+> >
+> > > This doesn't look correct. The calculation of the offset doesn't look
+> correct.
+> > > Just following the skb_clone(), the skb_pull value is "offset".
+> > > Also, the other checks return -EINVAL for incorrectly formed packet.
+> > >
+> > > --- a/net/bridge/br_multicast.c	2010-12-30 10:29:58.579510488 -0800
+> > > +++ b/net/bridge/br_multicast.c	2010-12-30 10:43:27.273386691 -0800
+> > > @@ -1464,6 +1464,9 @@ static int br_multicast_ipv6_rcv(struct
+> > >  	if (offset < 0 || nexthdr != IPPROTO_ICMPV6)
+> > >  		return 0;
+> > >
+> > > +	if (!pskb_may_pull(skb, offset))
+> > > +		return -EINVAL;
+> > > +
+> > >  	/* Okay, we found ICMPv6 header */
+> > >  	skb2 = skb_clone(skb, GFP_ATOMIC);
+> > >  	if (!skb2)
+> >
+> > Wouldn't that make more sense after the clone anyway? But if you look at
+> > my email, you'll find that there's potentially, and conditionally, more
+> > stuff that will be read from the skb's header, which hasn't necessarily
+> > been pulled in, so I think this still won't fix all the issues.
+> >
+> > Seeing how this only affects some ICMPv6 packets, maybe we should just
+> > use skb_copy() instead?
+> 
+> It comes out cleaner, and the check can be simplified.
+> 
+> --- a/net/bridge/br_multicast.c	2010-12-30 10:47:12.031733855 -0800
+> +++ b/net/bridge/br_multicast.c	2010-12-30 11:00:12.135801266 -0800
+> @@ -1465,19 +1465,19 @@ static int br_multicast_ipv6_rcv(struct
+>  		return 0;
+> 
+>  	/* Okay, we found ICMPv6 header */
+> -	skb2 = skb_clone(skb, GFP_ATOMIC);
+> +	skb2 = skb_copy(skb, GFP_ATOMIC);
+>  	if (!skb2)
+>  		return -ENOMEM;
+> 
+> +	err = -EINVAL;
+> +	if (skb2->len < offset + sizeof(*icmp6h))
+> +		goto out;
+> +
+>  	len -= offset - skb_network_offset(skb2);
+> 
+>  	__skb_pull(skb2, offset);
+>  	skb_reset_transport_header(skb2);
+> 
+> -	err = -EINVAL;
+> -	if (!pskb_may_pull(skb2, sizeof(*icmp6h)))
+> -		goto out;
+> -
+>  	icmp6h = icmp6_hdr(skb2);
+> 
+>  	switch (icmp6h->icmp6_type) {
+> 
 >
-> Is there some theory as to why using multiple interfaces cause so many
-> problems with DMA?
+Sorry for dump question but isn't there performance penalty on using skb_copy vs. skb_clone?
 
-Seems pretty directly related to channel changes and/or resets, and exacerbated
-by other interfaces sending data while another is scanning, for instance.
+Anyhow Below is a code snippet from ip6_input.c so you probably would want to fix it all over. 
+BTW offset and the pointer arithmetic really gives the same number +1, I'm not surly why the original author would thought it be safer than just using offset.
 
-Other issues we've found in the past have been various races that you wouldn't
-normally see with a single VIF.
+					offset = ipv6_skip_exthdr(skb, sizeof(*hdr),
+                                                          &nexthdr);
+                                if (offset < 0)
+                                        goto out;
+ 
+                                if (nexthdr != IPPROTO_ICMPV6)
+                                        goto out;
+ 
+                                if (!pskb_may_pull(skb, (skb_network_header(skb) +
+                                                   offset + 1 - skb->data)))
+                                        goto out;
+ 
+                                icmp6 = (struct icmp6hdr *)(skb_network_header(skb) + offset);
 
-Thanks,
-Ben
-
->
-> /Björn
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Thanks
+Tomas
+
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
