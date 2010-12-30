@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:50751 "EHLO
-	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667Ab0LPPuj (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:34556 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753213Ab0L3XIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 10:50:39 -0500
-Received: from tupu.netikka.net (tupu [172.16.83.90])
-	by mbox1-feedback.netikka.net (Postfix) with ESMTP id D6A97127754
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 17:44:35 +0200 (EET)
-Received: from netlandzone.dyndns.org (c718.ip14.netikka.fi [94.22.88.206])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by tupu.netikka.net (Postfix) with ESMTPS id A882D4B005F
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 17:44:34 +0200 (EET)
-Received: from [192.168.0.33] (gto.netland.fin [192.168.0.33])
-	by netlandzone.dyndns.org (8.14.3/8.14.3) with ESMTP id oBGFiYw5012745
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 17:44:34 +0200
-Message-ID: <4D0A33E2.9090509@pcuf.fi>
-Date: Thu, 16 Dec 2010 17:44:34 +0200
-From: Jar <jar@pcuf.fi>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: rt2400pci.ko and it's AES/WPA2 support [Not subscribed to the list]
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 30 Dec 2010 18:08:51 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 13/15]drivers:isdn:mISDN:dsp_cmx.c Typo change diable to disable.
+Date: Thu, 30 Dec 2010 15:08:02 -0800
+Message-Id: <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+The below patch fixes a typo "diable" to "disable". Please let me know if this 
+is correct or not.
 
-I can't find direct answer from the net archives. But in case of someone 
-knows: Does the rt2400pci.ko support AES encryption and/or WPA2 in 
-newest kernels and wpa_supplicant?
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
+---
+ drivers/isdn/mISDN/dsp_cmx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/isdn/mISDN/dsp_cmx.c b/drivers/isdn/mISDN/dsp_cmx.c
+index 76d9e67..309bacf 100644
+--- a/drivers/isdn/mISDN/dsp_cmx.c
++++ b/drivers/isdn/mISDN/dsp_cmx.c
+@@ -112,7 +112,7 @@
+  * Disable rx-data:
+  * If cmx is realized in hardware, rx data will be disabled if requested by
+  * the upper layer. If dtmf decoding is done by software and enabled, rx data
+- * will not be diabled but blocked to the upper layer.
++ * will not be disabled but blocked to the upper layer.
+  *
+  * HFC conference engine:
+  * If it is possible to realize all features using hardware, hardware will be
 -- 
-Best Regards, Jar
+1.6.5.2.180.gc5b3e
+
