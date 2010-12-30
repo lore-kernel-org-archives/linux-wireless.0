@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38599 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752114Ab0LQJ51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 04:57:27 -0500
-Message-ID: <4D0B33F9.2030302@kernel.org>
-Date: Fri, 17 Dec 2010 10:57:13 +0100
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:56171 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967Ab0L3WKO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Dec 2010 17:10:14 -0500
+Received: by ewy5 with SMTP id 5so5240547ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Dec 2010 14:10:12 -0800 (PST)
+Date: Fri, 31 Dec 2010 01:08:47 +0300
+From: Sergey Matyukevich <geomatsi@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFT] rtlwifi: use alloc_workqueue
-References: <1292529589-5904-1-git-send-email-linville@tuxdriver.com> <4D0ADCBC.1000300@lwfinger.net>
-In-Reply-To: <4D0ADCBC.1000300@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: wl1271: how to use without runtime pm
+Message-ID: <20101231010847.79a55fda@lair>
+In-Reply-To: <AANLkTim55FJ_cBE1M7HmhVagfphntZZBLSs9NjTmK_F+@mail.gmail.com>
+References: <20101230000737.74d30852@lair>
+	<AANLkTim55FJ_cBE1M7HmhVagfphntZZBLSs9NjTmK_F+@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, 29 Dec 2010 23:22:05 +0200
+Ohad Ben-Cohen <ohad@wizery.com> wrote:
 
-On 12/17/2010 04:45 AM, Larry Finger wrote:
-> On 12/16/2010 01:59 PM, John W. Linville wrote:
->> create_workqueue is deprecated.  The workqueue usage does not seem to
->> demand any special treatment, so do not set any flags either.
->>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> ---
->> I don't have the hardware to test...
+> On Wed, Dec 29, 2010 at 11:07 PM, Sergey Matyukevich
+> <geomatsi@gmail.com> wrote:
+> > So the question is: what is the proper use of wl1271 driver in the
+> > case when  wl1271 card is powered all the time ?
 > 
-> Hold off on this one. It seems to break the driver, but I do not
-> know why just yet.
+> The wl1271 driver assumes it can control the power of the card.
+> 
+> If your card's power is always on, you will not be able to toggle the
+> interface down and up (as you have experienced).
+> 
+> It might be possible to change the driver around this "limitation",
+> but I'm not sure anyone has ever really tried.
 
-There are two differences between create_workqueue(name) and
-alloc_workqueue(name, 0, 0).
+A simple solution which comes to mind would be to perform some kind of
+'complete soft reset procedure' for wl1271 card in the beginning of the
+function 'wl1271_op_add_interface'. But I guess such a feature is not
+available for this card. Qtherwise it would be already implemented by
+Luciano and his colleagues.
 
-* The former has WQ_MEM_RECLAIM set and forward progress is guaranteed
-  regardless of memory pressure.  In this case, this shouldn't make
-  any difference.
-
-* The former has @max_active set to 1 while the latter to
-  WQ_DFL_ACTIVE.  IOW, works queued on the same CPU would be allowed
-  to run concurrently while before conversion only different CPUs can
-  run works queued to the workqueue in parallel.  This usually
-  shouldn't make difference either as works could have run in parallel
-  on different CPUs before too.
-
-Does alloc_workqueue(name, 0, 1) fix the problem?  If so, it might be
-that the current workqueue usage has problem too.
-
-Thanks.
-
--- 
-tejun
+Thanks, 
+Sergey
