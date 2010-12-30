@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44457 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753610Ab0LGXNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 18:13:33 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 15:13:18 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
-	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 4/5] ath9k: skip ATH9K_INT_TIM_TIMER when we are idle
-Date: Tue, 7 Dec 2010 15:13:22 -0800
-Message-ID: <1291763603-26546-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
-References: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61063 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808Ab0L3X1V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Dec 2010 18:27:21 -0500
+Received: by fxm20 with SMTP id 20so11552483fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Dec 2010 15:27:20 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Chin Shi Hong <cshong87@gmail.com>
+Subject: Re: Get slow speed when using ar9170usb driver.
+Date: Fri, 31 Dec 2010 00:27:13 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTimYqrqUK2EjnyvkwvsFM+6b7ZMTGjBQrWFT712T@mail.gmail.com> <AANLkTikeehA_cMHndCRidknqVc7Y49_JmPbt4+Np6jDx@mail.gmail.com>
+In-Reply-To: <AANLkTikeehA_cMHndCRidknqVc7Y49_JmPbt4+Np6jDx@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201012310027.14433.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not be idle when we get the ATH9K_INT_TIM_TIMER,
-otherwise its a sign of something broken in our design with
-our idle state machine and mac80211. Skip these and WARN once
-just in case this is triggerable.
+On Thursday 30 December 2010 16:55:18 Chin Shi Hong wrote:
+> Dear All,
 
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Hello,
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 669fe6c..5d31eca 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -765,6 +765,8 @@ irqreturn_t ath_isr(int irq, void *dev)
- 
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
- 		if (status & ATH9K_INT_TIM_TIMER) {
-+			if (ATH_DBG_WARN_ON_ONCE(sc->ps_idle))
-+				goto chip_reset;
- 			/* Clear RxAbort bit so that we can
- 			 * receive frames */
- 			ath9k_setpower(sc, ATH9K_PM_AWAKE);
--- 
-1.7.3.2.90.gd4c43
+> Wireless adapter model: TP-LINK WN821NC (USB 300Mbps Wireless N adapter)
+> Output of lsusb: Bus 001 Device 007: ID 0cf3:1002 Atheros
+> Communications, Inc. TP-Link TL-WN821N v2 [Atheros AR9001U-(2)NG]
+> Wireless router: TP-LINK W8960N (300Mbps Wireless N router)
 
+That's weird, according to TP-Link's website there wasn't any WN821NC
+with a WN821N v2. They "only" let you download the driver for
+WN821N v3. v3 very different from the previous v2 generation, it has
+new chips (AR7015+AR9287?) and needs the ath9k_htc driver.
+
+Are you sure, you didn't get ripped off here and someone else
+has "your" v3?
+
+> Driver name ar9170usb
+> Linux distro: Ubuntu 10.10 64 bit
+> Kernel version: 2.6.35-24-generic
+> 
+> If I use Ndiswrapper + Windows XP driver, I can get full 300Mbps.
+Have you measured that (with iperf/netperf)? Or is it just the
+"Connection Information" pop-up which simply displays "speed: 300 Mbits" ?
+
+> At the same distance, if I use ar9170usb driver, I can only get
+> maximum 54Mbps speed.
+That's true. here's ar9170usb wiki page:
+<http://wireless.kernel.org/en/users/Drivers/ar9170#features> => working
+	"802.11 a/b/g"
+
+Also, the old stack (in 2.6.35) does not have minstrel_ht
+(rate control algorithm for 11n) so ar9170usb is limited to
+the legacy b/g rates.
+
+Furthermore, the old driver lacks any support for aggregation, so the
+uplink throughput (even with the fastest 300 mbits rate and under
+"perfect" lab conditions) would struggle to get to 40 mbit and beyond.
+
+--
+
+The quickest way around limitations is via backports:
+visit <http://wireless.kernel.org/en/users/Download>
+and get compat-wireless:
+
+<http://wireless.kernel.org/en/users/Download#Getting_compat-wireless_on_Ubuntu>
+
+Then, you can migrate to carl9170 (a new driver with a new firmware)
+for more information, see:
+<http://wireless.kernel.org/en/users/Drivers/carl9170>
+
+However, this "new" driver+fw is still in development. You definitely
+want to keep your compat-wireless package up-to-date.
+
+Best Regards,
+	Christian
