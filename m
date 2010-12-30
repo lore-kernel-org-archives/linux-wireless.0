@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12236 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754131Ab0LDBVC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 20:21:02 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 17:20:47 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
-	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH 2/3] ath9k: Fix power save count imbalance on ath_radio_enable()
-Date: Fri, 3 Dec 2010 17:20:52 -0800
-Message-ID: <1291425653-2884-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
-References: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:58873 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752973Ab0L3XIf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Dec 2010 18:08:35 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 09/15]drivers:usb:host Typo change diable to disable.
+Date: Thu, 30 Dec 2010 15:07:58 -0800
+Message-Id: <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon a failure we never call ath9k_ps_restore() on ath_radio_enable(),
-this will throw off the sc->ps_usecount. When the sc->ps_usecount
-is > 0 we never put the chip to full sleep. This drains battery,
-and will also make the chip fail upon resume with:
+The below patch fixes a typo "diable" to "disable" and also fixes another typo in a comment. 
+Please let me know if this is correct or not.
 
-ath: Starting driver with initial channel: 5745 MHz
-ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-This would make the chip useless upon resume.
-
-I cannot prove this can happen but in theory it is so best to
-avoid this race completely and not have users complain about
-a broken device after resume.
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/usb/host/fhci-hcd.c |    4 ++--
+ drivers/usb/host/fhci-tds.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fd27ec9..97ddb32 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -903,8 +903,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	if (ath_startrecv(sc) != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to restart recv logic\n");
--		spin_unlock_bh(&sc->sc_pcu_lock);
--		return;
-+		goto out;
- 	}
- 	if (sc->sc_flags & SC_OP_BEACONS)
- 		ath_beacon_config(sc, NULL);	/* restart beacons */
-@@ -918,6 +917,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+diff --git a/drivers/usb/host/fhci-hcd.c b/drivers/usb/host/fhci-hcd.c
+index 20092a2..12fd184 100644
+--- a/drivers/usb/host/fhci-hcd.c
++++ b/drivers/usb/host/fhci-hcd.c
+@@ -98,13 +98,13 @@ void fhci_usb_enable_interrupt(struct fhci_usb *usb)
+ 	usb->intr_nesting_cnt--;
+ }
  
- 	ieee80211_wake_queues(hw);
-+out:
- 	spin_unlock_bh(&sc->sc_pcu_lock);
+-/* diable the usb interrupt */
++/* disable the usb interrupt */
+ void fhci_usb_disable_interrupt(struct fhci_usb *usb)
+ {
+ 	struct fhci_hcd *fhci = usb->fhci;
  
- 	ath9k_ps_restore(sc);
+ 	if (usb->intr_nesting_cnt == 0) {
+-		/* diable the timer interrupt */
++		/* disable the timer interrupt */
+ 		disable_irq_nosync(fhci->timer->irq);
+ 
+ 		/* disable the usb interrupt */
+diff --git a/drivers/usb/host/fhci-tds.c b/drivers/usb/host/fhci-tds.c
+index 7be548c..38fe058 100644
+--- a/drivers/usb/host/fhci-tds.c
++++ b/drivers/usb/host/fhci-tds.c
+@@ -271,8 +271,8 @@ void fhci_init_ep_registers(struct fhci_usb *usb, struct endpoint *ep,
+ 
+ /*
+  * Collect the submitted frames and inform the application about them
+- * It is also prepearing the TDs for new frames. If the Tx interrupts
+- * are diabled, the application should call that routine to get
++ * It is also preparing the TDs for new frames. If the Tx interrupts
++ * are disabled, the application should call that routine to get
+  * confirmation about the submitted frames. Otherwise, the routine is
+  * called frome the interrupt service routine during the Tx interrupt.
+  * In that case the application is informed by calling the application
 -- 
-1.7.3.2.90.gd4c43
+1.6.5.2.180.gc5b3e
 
