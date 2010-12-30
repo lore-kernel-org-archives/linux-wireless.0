@@ -1,91 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:31709 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078Ab0LMGDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 01:03:07 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 22:02:52 -0800
-Date: Mon, 13 Dec 2010 11:32:53 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 5/7] ath9k_hw: fix PA predistortion training power
-	selection
-Message-ID: <20101213060253.GA13721@vasanth-laptop>
-References: <1292160877-50618-1-git-send-email-nbd@openwrt.org> <1292160877-50618-2-git-send-email-nbd@openwrt.org> <1292160877-50618-3-git-send-email-nbd@openwrt.org> <1292160877-50618-4-git-send-email-nbd@openwrt.org> <1292160877-50618-5-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1292160877-50618-5-git-send-email-nbd@openwrt.org>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:64019 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967Ab0L3XIF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Dec 2010 18:08:05 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 01/15]arch:m68k:ifpsp060:src:fpsp.S Typo change diable to disable.
+Date: Thu, 30 Dec 2010 15:07:50 -0800
+Message-Id: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 12, 2010 at 07:04:35PM +0530, Felix Fietkau wrote:
-> The EEPROM contains scale factors for the tx power, which define
-> the range of allowable difference between target power and training
-> power. If the difference is too big, PA predistortion cannot be used.
-> For 2.4 GHz there is only one scale factor, for 5 GHz there are
-> three, depending on the specific frequency range.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 ++
->  drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |   99 ++++++++++++++++++++----
->  drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    8 ++
->  drivers/net/wireless/ath/ath9k/hw.h            |    2 +
->  drivers/net/wireless/ath/ath9k/main.c          |    4 +-
->  5 files changed, 104 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> index 5ad37d0..ff03b42 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> @@ -4798,6 +4798,14 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
->  	/* Write target power array to registers */
->  	ar9003_hw_tx_power_regwrite(ah, targetPowerValT2);
->  	ar9003_hw_calibration_apply(ah, chan->channel);
-> +
-> +	if (IS_CHAN_2GHZ(chan))
-> +		i = ALL_TARGET_HT20_0_8_16;
-> +	else if (IS_CHAN_HT40(chan))
-> +		i = ALL_TARGET_HT40_7;
+The below patch fixes a typo "diable" to "disable". Please let me know if this 
+is correct or not.
 
-It looks like ALL_TARGET_HT40_0_8_16 being used in 11NGHT40.
-> +	else
-> +		i = ALL_TARGET_HT20_7;
-> +	ah->paprd_target_power = targetPowerValT2[i];
->  }
->  
->  static u16 ath9k_hw_ar9300_get_spur_channel(struct ath_hw *ah,
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> +static int get_streams(int mask)
-> +{
-> +	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
-> +}
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-ah->caps.max_txchains can be used instead of this function.
+---
+ arch/m68k/ifpsp060/src/fpsp.S |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> +
-> +static int ar9003_get_training_power_5g(struct ath_hw *ah)
-> +{
-> +	struct ath_common *common = ath9k_hw_common(ah);
-> +	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-> +	struct ar9300_modal_eep_header *hdr = &eep->modalHeader5G;
-> +	struct ath9k_channel *chan = ah->curchan;
-> +	unsigned int power, scale, delta;
-> +
-> +	if (chan->channel >= 5700)
-> +		scale = MS(hdr->papdRateMaskHt20, AR9300_PAPRD_SCALE_1);
-> +	else if (chan->channel >= 5400)
-> +		scale = MS(hdr->papdRateMaskHt40, AR9300_PAPRD_SCALE_2);
-> +	else
-> +		scale = MS(hdr->papdRateMaskHt40, AR9300_PAPRD_SCALE_1);
+diff --git a/arch/m68k/ifpsp060/src/fpsp.S b/arch/m68k/ifpsp060/src/fpsp.S
+index 73613b5..26e85e2 100644
+--- a/arch/m68k/ifpsp060/src/fpsp.S
++++ b/arch/m68k/ifpsp060/src/fpsp.S
+@@ -3881,7 +3881,7 @@ _fpsp_fline:
+ # FP Unimplemented Instruction stack frame and jump to that entry
+ # point.
+ #
+-# but, if the FPU is disabled, then we need to jump to the FPU diabled
++# but, if the FPU is disabled, then we need to jump to the FPU disabled
+ # entry point.
+ 	movc		%pcr,%d0
+ 	btst		&0x1,%d0
+-- 
+1.6.5.2.180.gc5b3e
 
-A helper function would be nice to get the paprd scale factor which
-will also be used to disable paprd for particular rates. Anyway, i'm
-doing changes to disable paprd based on scale factor and tx power,
-i'll add a helper in my series.
- 
-Vasanth
