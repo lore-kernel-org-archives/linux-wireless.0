@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.sr71.net ([198.145.64.142]:55721 "EHLO blackbird.sr71.net"
+Received: from mail.vyatta.com ([76.74.103.46]:44422 "EHLO mail.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757103Ab0LIVyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 16:54:40 -0500
-Subject: Re: brcm80211 hangs when disabling wireless
-From: Dave Hansen <dave@sr71.net>
-To: Greg KH <gregkh@suse.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mike Rapoport <mike.rapoport@gmail.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20101209214347.GA15172@suse.de>
-References: <1291930010.7960.30.camel@nimitz>
-	 <20101209214347.GA15172@suse.de>
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
-Date: Thu, 09 Dec 2010 13:54:38 -0800
-Message-ID: <1291931678.7960.32.camel@nimitz>
+	id S1752049Ab0L3TGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Dec 2010 14:06:14 -0500
+Date: Thu, 30 Dec 2010 11:06:09 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomas.winkler@intel.com>, davem@davemloft.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-2.6] bridge: fix br_multicast_ipv6_rcv for paged
+ skbs
+Message-ID: <20101230110609.08b7ee38@nehalam>
+In-Reply-To: <1293735134.21956.1.camel@jlt3.sipsolutions.net>
+References: <AANLkTi=XQ2DE==ggJHfokUE1=opDVOFxQNeqwY1xZN_8@mail.gmail.com>
+	<1293708753-17728-1-git-send-email-tomas.winkler@intel.com>
+	<20101230104656.6c5a4b4e@nehalam>
+	<1293735134.21956.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 13:43 -0800, Greg KH wrote:
-> On Thu, Dec 09, 2010 at 01:26:50PM -0800, Dave Hansen wrote:
-> > I've been getting hard hangs when I toggle the wireless on a Lenovo
-> > S10-3.  It happens both with the physical switch and the Fn-F5 key
-> > combo.  It's quite repeatable.  The system is quite stable when I'm not
-> > trying to disable the wireless, though.
+On Thu, 30 Dec 2010 19:52:14 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> On Thu, 2010-12-30 at 10:46 -0800, Stephen Hemminger wrote:
 > 
-> What kernel version is this?
+> > This doesn't look correct. The calculation of the offset doesn't look correct.
+> > Just following the skb_clone(), the skb_pull value is "offset".
+> > Also, the other checks return -EINVAL for incorrectly formed packet.
+> > 
+> > --- a/net/bridge/br_multicast.c	2010-12-30 10:29:58.579510488 -0800
+> > +++ b/net/bridge/br_multicast.c	2010-12-30 10:43:27.273386691 -0800
+> > @@ -1464,6 +1464,9 @@ static int br_multicast_ipv6_rcv(struct
+> >  	if (offset < 0 || nexthdr != IPPROTO_ICMPV6)
+> >  		return 0;
+> >  
+> > +	if (!pskb_may_pull(skb, offset))
+> > +		return -EINVAL;
+> > +
+> >  	/* Okay, we found ICMPv6 header */
+> >  	skb2 = skb_clone(skb, GFP_ATOMIC);
+> >  	if (!skb2)
 > 
-> Linus's latest tree has a known bug when the wireless is suspended and
-> then resumed.  Broadcom is working on it but no patch is forthcoming
-> yet.  Perhaps this is the same issue.
+> Wouldn't that make more sense after the clone anyway? But if you look at
+> my email, you'll find that there's potentially, and conditionally, more
+> stuff that will be read from the skb's header, which hasn't necessarily
+> been pulled in, so I think this still won't fix all the issues.
+> 
+> Seeing how this only affects some ICMPv6 packets, maybe we should just
+> use skb_copy() instead?
 
-Yeah, it's 2.6.37-rc5 plus a pull from:
+It comes out cleaner, and the check can be simplified.
 
-	http://kernel.ubuntu.com/git?p=ikepanhc/ideapad-laptop.git;a=summary
+--- a/net/bridge/br_multicast.c	2010-12-30 10:47:12.031733855 -0800
++++ b/net/bridge/br_multicast.c	2010-12-30 11:00:12.135801266 -0800
+@@ -1465,19 +1465,19 @@ static int br_multicast_ipv6_rcv(struct
+ 		return 0;
+ 
+ 	/* Okay, we found ICMPv6 header */
+-	skb2 = skb_clone(skb, GFP_ATOMIC);
++	skb2 = skb_copy(skb, GFP_ATOMIC);
+ 	if (!skb2)
+ 		return -ENOMEM;
+ 
++	err = -EINVAL;
++	if (skb2->len < offset + sizeof(*icmp6h))
++		goto out;
++
+ 	len -= offset - skb_network_offset(skb2);
+ 
+ 	__skb_pull(skb2, offset);
+ 	skb_reset_transport_header(skb2);
+ 
+-	err = -EINVAL;
+-	if (!pskb_may_pull(skb2, sizeof(*icmp6h)))
+-		goto out;
+-
+ 	icmp6h = icmp6_hdr(skb2);
+ 
+ 	switch (icmp6h->icmp6_type) {
 
-That could easily be it.  Thanks, Greg.
 
--- Dave
 
+-- 
