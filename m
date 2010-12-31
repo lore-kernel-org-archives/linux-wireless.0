@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39131 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757295Ab0LBQi7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58736
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753902Ab0LaUpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:38:59 -0500
-Subject: Re: "Kernel bug detected" when using pktgen together with
- mac80211_hwsim
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <201012021731.09440.helmut.schaa@googlemail.com>
-References: <201012021731.09440.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Dec 2010 17:38:58 +0100
-Message-ID: <1291307938.3481.48.camel@jlt3.sipsolutions.net>
+	Fri, 31 Dec 2010 15:45:03 -0500
+Date: Fri, 31 Dec 2010 12:45:33 -0800 (PST)
+Message-Id: <20101231.124533.15243601.davem@davemloft.net>
+To: stephen.hemminger@vyatta.com
+Cc: tomas.winkler@intel.com, shemminger@vyatta.com,
+	johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-2.6] bridge: fix br_multicast_ipv6_rcv for paged
+ skbs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <9mk4bme8o97ir27xi8a9fbsd.1293750376929@email.android.com>
+References: <9mk4bme8o97ir27xi8a9fbsd.1293750376929@email.android.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-02 at 17:31 +0100, Helmut Schaa wrote:
+From: Stephen Hemminger <stephen.hemminger@vyatta.com>
+Date: Thu, 30 Dec 2010 15:06:16 -0800
 
-> Unfortunately pktgen keeps a reference to the skb and thus pskb_expand_head
-> triggers a BUG when called from mac80211. I worked around that issue by adding
-> a skb_copy for shared skbs.
-> 
-> Maybe, someone else has a better idea on how to fix that?
+> Although copy is slower for large packets, this is a non performance
+> path. The code in question is for bridged multicast Ipv6 ICMP
+> packets. This case is so uncritical it could be done in BASIC and no
+> one could possibly care!
 
-Oops! That seems like the right way to fix it though.
+I still think we should be judicious and keep using skb_clone() here.
 
-johannes
+Simply combine the two pskb_may_pull() calls into one on "skb2" after
+the clone and before the blind __skb_pull() call.  Then add a error
+path "out:" called "out_nopush:" for the error path to goto.
+
+Also, I think the "+ 1" in the ipv6 stack code comes from the fact that
+the parsing loop can "peek" into the next header's byte to see the type.
+And I really don't think it's relevant here.
+
+Also, all of these "x_header + ... + 1 - skb->data" factors are
+irrelevent and shouldn't be used.  Just pass "offset + sizeof(*icmp6h)"
+to pskb_may_pull().
 
