@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32877 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756943Ab0LAU26 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 15:28:58 -0500
-Subject: [PATCH/RFC] mac80211: use configured mesh TTL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimgfRvqp=-CDU=G8o-ZfD4fVbf3j-AdXCVtoM6c@mail.gmail.com>
-References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
-	 <1291184383.4199.4.camel@jlt3.sipsolutions.net>
-	 <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
-	 <1291229642.4199.11.camel@jlt3.sipsolutions.net>
-	 <1291232151.4199.12.camel@jlt3.sipsolutions.net>
-	 <AANLkTimgfRvqp=-CDU=G8o-ZfD4fVbf3j-AdXCVtoM6c@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Dec 2010 21:28:57 +0100
-Message-ID: <1291235337.4199.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:49814 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108Ab0LaK0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Dec 2010 05:26:13 -0500
+Message-ID: <4D1DAF7B.4020504@redhat.com>
+Date: Fri, 31 Dec 2010 08:24:59 -0200
+From: Mauro Carvalho Chehab <mchehab@redhat.com>
+MIME-Version: 1.0
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: trivial@kernel.org, linux-m68k@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 12/15]drivers:media:video:tvp7002.c Typo change diable
+ to disable.
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-It seems the configured mesh TTL should be used,
-not the default value.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mesh_pathtbl.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
---- wireless-testing.orig/net/mac80211/mesh_pathtbl.c	2010-12-01 21:26:47.000000000 +0100
-+++ wireless-testing/net/mac80211/mesh_pathtbl.c	2010-12-01 21:27:42.000000000 +0100
-@@ -467,8 +467,8 @@ void mesh_plink_broken(struct sta_info *
- 			mpath->flags &= ~MESH_PATH_ACTIVE;
- 			++mpath->sn;
- 			spin_unlock_bh(&mpath->state_lock);
--			mesh_path_error_tx(MESH_TTL, mpath->dst,
--					cpu_to_le32(mpath->sn),
-+			mesh_path_error_tx(sdata->u.mesh.mshcfg.dot11MeshTTL,
-+					mpath->dst, cpu_to_le32(mpath->sn),
- 					cpu_to_le16(PERR_RCODE_DEST_UNREACH),
- 					bcast, sdata);
- 		} else
-@@ -614,7 +614,8 @@ void mesh_path_discard_frame(struct sk_b
- 		mpath = mesh_path_lookup(da, sdata);
- 		if (mpath)
- 			sn = ++mpath->sn;
--		mesh_path_error_tx(MESH_TTL, skb->data, cpu_to_le32(sn),
-+		mesh_path_error_tx(sdata->u.mesh.mshcfg.dot11MeshTTL, skb->data,
-+				   cpu_to_le32(sn),
- 				   cpu_to_le16(PERR_RCODE_NO_ROUTE), ra, sdata);
- 	}
- 
-
+Em 30-12-2010 21:08, Justin P. Mattock escreveu:
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+> 
+> ---
+>  drivers/media/video/tvp7002.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/media/video/tvp7002.c b/drivers/media/video/tvp7002.c
+> index e63b40f..c799e4e 100644
+> --- a/drivers/media/video/tvp7002.c
+> +++ b/drivers/media/video/tvp7002.c
+> @@ -789,7 +789,7 @@ static int tvp7002_query_dv_preset(struct v4l2_subdev *sd,
+>   * Get the value of a TVP7002 decoder device register.
+>   * Returns zero when successful, -EINVAL if register read fails or
+>   * access to I2C client fails, -EPERM if the call is not allowed
+> - * by diabled CAP_SYS_ADMIN.
+> + * by disabled CAP_SYS_ADMIN.
+>   */
+>  static int tvp7002_g_register(struct v4l2_subdev *sd,
+>  						struct v4l2_dbg_register *reg)
 
