@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:49006 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab0LGVzj (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48302 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753871Ab0LaRlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:55:39 -0500
+	Fri, 31 Dec 2010 12:41:16 -0500
+Date: Fri, 31 Dec 2010 20:41:00 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org,
+	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
+	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
+	spi-devel-general@lists.sourceforge.net,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to
+ disable.
+Message-ID: <20101231174100.GF1886@bicker>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <20101231064515.GC3733@angua.secretlab.ca>
+ <4D1D7DAE.7060504@gmail.com>
+ <20101231091136.GC1886@bicker>
+ <4D1DE616.7010105@gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Tue, 7 Dec 2010 22:55:38 +0100
-Message-ID: <AANLkTimhXLc-YkgPg9So71eOeOtDupnkGyZCEzvK6si3@mail.gmail.com>
-Subject: [PATCH] ath5k: Fix modinfo does not list alias -> pci-id lines
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	Bruno Randolf <br1@einfach.org>
-Content-Type: multipart/mixed; boundary=0016363b7f62acd7150496d9102c
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D1DE616.7010105@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016363b7f62acd7150496d9102c
-Content-Type: text/plain; charset=UTF-8
+On Fri, Dec 31, 2010 at 06:17:58AM -0800, Justin P. Mattock wrote:
+> >Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
+> >
+> >Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
+> >
+> >regards,
+> >dan carpenter
+> >
+> 
+> alright.. so having the backlash is alright for the subject
 
-This patch fixes an issue in wirless-next-2.6 / linux-next
-(next-20101207) with ath5k and wrong modinfo output.
+Well really my point is not so much about backslashes vs colons, it's
+about getting the *one* correct prefix.  This stuff is probably
+scriptable most of the time, but you may still be required to think a
+little on the corner cases.
 
-- Sedat -
+Here is a script to get you started.
 
---0016363b7f62acd7150496d9102c
-Content-Type: text/x-diff; charset=US-ASCII;
-	name="0001-ath5k-Fix-modinfo-does-not-list-alias-pci-id-lines.patch"
-Content-Disposition: attachment;
-	filename="0001-ath5k-Fix-modinfo-does-not-list-alias-pci-id-lines.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ghfbup610
+git log --format="%s" drivers/spi/dw_spi.c | \
+	head -n 20 |                         \
+	perl -ne 's/(.*):.*/$1/; print' |    \
+	sort | uniq -c | sort -rn |          \
+	perl -ne 's/^\W+\d+ //; print' |     \
+	head -n 1
 
-RnJvbSAzOTRjM2NhNGZkYzBlOGU5MmQ4MTE3YzFkYTJlZmRjOTE3MzYyYzUyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBTZWRhdCBEaWxlayA8c2VkYXQuZGlsZWtAZ21haWwuY29tPgpE
-YXRlOiBUdWUsIDcgRGVjIDIwMTAgMjI6MzU6NTAgKzAxMDAKU3ViamVjdDogW1BBVENIXSBhdGg1
-azogRml4IG1vZGluZm8gZG9lcyBub3QgbGlzdCBhbGlhcyAtPiBwY2ktaWQgbGluZXMKClRoZSBB
-SEIgYnVzIHN1cHBvcnQgcGF0Y2hzZXQgbW92ZWQgdGhlIHRhYmxlICJLbm93biBQQ0kgaWRzIiBm
-cm9tIGJhc2UuYwp0byBwY2kuYyAtIHVuZm9ydHVuYXRlbHksIE1PRFVMRV9ERVZJQ0VfVEFCTEUo
-KSB3YXMgbm90IHRyYW5zZmVycmVkLgpXaXRoIHRoaXMgZml4ICdtb2RpbmZvIGF0aDVrJyBsaXN0
-cyB0aGUgYWxpYXMgLT4gcGNpLWlkIGxpbmVzLCBhZ2Fpbi4KClRoZSBpc3N1ZSB3YXMgaW50cm9k
-dWNlZCBieToKICAgY29tbWl0IGU1YjA0NmQ4NmZhYzYwOWY2MzZkMTI3YTM4ZGU5NGExNzVjN2U4
-M2IKICAgImF0aDVrOiBNb3ZlIFBDSSBidXMgZnVuY3Rpb25zIHRvIHNlcGFyYXRlIGZpbGUuIgot
-LS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9wY2kuYyB8ICAgIDEgKwogMSBmaWxl
-cyBjaGFuZ2VkLCAxIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDVrL3BjaS5jIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvYXRoL2F0aDVrL3BjaS5jCmluZGV4IDM5ZjAzMzEuLjdmOGM1YjAgMTAwNjQ0Ci0tLSBhL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9wY2kuYworKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGgvYXRoNWsvcGNpLmMKQEAgLTQ1LDYgKzQ1LDcgQEAgc3RhdGljIERFRklORV9QQ0lf
-REVWSUNFX1RBQkxFKGF0aDVrX3BjaV9pZF90YWJsZSkgPSB7CiAJeyBQQ0lfVkRFVklDRShBVEhF
-Uk9TLCAweDAwMWQpIH0sIC8qIDI0MTcgTmFsYSAqLwogCXsgMCB9CiB9OworTU9EVUxFX0RFVklD
-RV9UQUJMRShwY2ksIGF0aDVrX3BjaV9pZF90YWJsZSk7CiAKIC8qIHJldHVybiBidXMgY2FjaGVz
-aXplIGluIDRCIHdvcmQgdW5pdHMgKi8KIHN0YXRpYyB2b2lkIGF0aDVrX3BjaV9yZWFkX2NhY2hl
-c2l6ZShzdHJ1Y3QgYXRoX2NvbW1vbiAqY29tbW9uLCBpbnQgKmNzeikKLS0gCjEuNy4yLjMKCg==
---0016363b7f62acd7150496d9102c--
+regards,
+dan carpenter
