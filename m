@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:50388 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751570Ab0LQV1w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 16:27:52 -0500
-Date: Fri, 17 Dec 2010 23:27:50 +0200 (EET)
-From: Meelis Roos <mroos@linux.ee>
-To: David Miller <davem@davemloft.net>
-cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] hostap: remove netif_stop_queue from init
-In-Reply-To: <20101210.094747.193727608.davem@davemloft.net>
-Message-ID: <alpine.SOC.1.00.1012172324340.24976@math.ut.ee>
-References: <alpine.SOC.1.00.1012100020110.26229@math.ut.ee> <20101209.195315.193716225.davem@davemloft.net> <alpine.SOC.1.00.1012100918300.15996@math.ut.ee> <20101210.094747.193727608.davem@davemloft.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37434 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750838Ab0LaJLx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Dec 2010 04:11:53 -0500
+Date: Fri, 31 Dec 2010 12:11:36 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org,
+	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
+	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
+	spi-devel-general@lists.sourceforge.net,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to
+ disable.
+Message-ID: <20101231091136.GC1886@bicker>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <20101231064515.GC3733@angua.secretlab.ca>
+ <4D1D7DAE.7060504@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D1D7DAE.7060504@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix runtime warning with backtrace from hostap by removing 
-netif_stop_queue() call before register_netdev. Tested to work fine on 
-hostap_pci Prism 2.5.
+On Thu, Dec 30, 2010 at 10:52:30PM -0800, Justin P. Mattock wrote:
+> On 12/30/2010 10:45 PM, Grant Likely wrote:
+> >On Thu, Dec 30, 2010 at 03:07:51PM -0800, Justin P. Mattock wrote:
+> >>The below patch fixes a typo "diable" to "disable". Please let me know if this
+> >>is correct or not.
+> >>
+> >>Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+> >
+> >applied, thanks.
+> >
+> >g.
+> 
+> ahh.. thanks.. just cleared up the left out diabled that I had
+> thought I forgotten(ended up separating comments and code and
+> forgot)
 
-Signed-off-by: Meelis Roos <mroos@linux.ee>
+This is really just defensiveness and random grumbling and grumpiness on
+my part, but one reason I may have missed the first patch is because
+your subject lines are crap.
 
-diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
-index 25a2722..1d9aed6 100644
---- a/drivers/net/wireless/hostap/hostap_main.c
-+++ b/drivers/net/wireless/hostap/hostap_main.c
-@@ -891,7 +891,6 @@ void hostap_setup_dev(struct net_device *dev, local_info_t *local,
- 
- 	SET_ETHTOOL_OPS(dev, &prism2_ethtool_ops);
- 
--	netif_stop_queue(dev);
- }
- 
- static int hostap_enable_hostapd(local_info_t *local, int rtnl_locked)
+Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
 
--- 
-Meelis Roos (mroos@linux.ee)
+Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
+
+regards,
+dan carpenter
