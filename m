@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753310Ab0LGJlx (ORCPT
+Received: from mail-pz0-f66.google.com ([209.85.210.66]:62643 "EHLO
+	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459Ab0LaOPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 04:41:53 -0500
-Subject: Re: [PATCH] mwifiex: remove some element ID's definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-In-Reply-To: <1291702585-30285-1-git-send-email-bzhao@marvell.com>
-References: <1291702585-30285-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Dec 2010 10:41:51 +0100
-Message-ID: <1291714911.3607.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 31 Dec 2010 09:15:23 -0500
+Message-ID: <4D1DE58C.1050305@gmail.com>
+Date: Fri, 31 Dec 2010 06:15:40 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Mauro Carvalho Chehab <maurochehab@gmail.com>
+CC: trivial@kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 14/15]include:media:davinci:vpss.h Typo change diable
+ to disable.
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com> <1293750484-1161-13-git-send-email-justinmattock@gmail.com> <1293750484-1161-14-git-send-email-justinmattock@gmail.com> <4D1DAFF5.3090108@gmail.com>
+In-Reply-To: <4D1DAFF5.3090108@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-12-06 at 22:16 -0800, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Those are already defined in include/linux/ieee80211.h
-> under "enum ieee80211_eid".
+On 12/31/2010 02:27 AM, Mauro Carvalho Chehab wrote:
+> Em 30-12-2010 21:08, Justin P. Mattock escreveu:
+>> The below patch fixes a typo "diable" to "disable". Please let me know if this
+>> is correct or not.
+>>
+>> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+> Acked-by: Mauro Carvalho Chehab<mchehab@redhat.com>
+>
+> PS.: Next time, please c/c linux-media ONLY on patches related to media
+> drivers (/drivers/video and the corresponding include files). Having to
+> dig into a series of 15 patches to just actually look on 3 patches
+> is not nice.
+>
 
-Good patch :)
+alright...
 
-> -	enum ieee_types_elementid_e element_id;
-> +	enum ieee80211_eid element_id;
+>>
+>> ---
+>>   include/media/davinci/vpss.h |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/include/media/davinci/vpss.h b/include/media/davinci/vpss.h
+>> index c59cc02..b586495 100644
+>> --- a/include/media/davinci/vpss.h
+>> +++ b/include/media/davinci/vpss.h
+>> @@ -44,7 +44,7 @@ struct vpss_pg_frame_size {
+>>   	short pplen;
+>>   };
+>>
+>> -/* Used for enable/diable VPSS Clock */
+>> +/* Used for enable/disable VPSS Clock */
+>>   enum vpss_clock_sel {
+>>   	/* DM355/DM365 */
+>>   	VPSS_CCDC_CLOCK,
+>
+>
 
-You should probably just use a u8, since that'll match better what the
-value really is, it can't have any more values than that and an enum
-really is an "int" not a "u8". Also lets you remove the typecasts (that
-I don't think are necessary to start with)
-
->  enum ieee_types_elementid_e {
-
->  	BSSCO_2040 = 72,
->  	OVERLAP_BSS_SCAN_PARAM = 74,
->  	EXT_CAPABILITY = 127,
-
-I think you should add these remaining ones into the WLAN_EID_ namespace
-instead of keeping them.
-
-> +	WPS_IE = WLAN_EID_VENDOR_SPECIFIC,
-> +	WMM_IE = WLAN_EID_VENDOR_SPECIFIC,
-
-And these seem just plain misleading since they don't identify
-anything ... one could be tempted to use both in a switch() statement
-for example. I'd replace their use with just vendor-specific I think
-(although I'm aware that some older code we have in the stack does this
-as well, IIRC)
-
-johannes
-
+Justin P. Mattock
