@@ -1,214 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754286Ab0L2XcV (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:46268 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753882Ab0LaUEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:21 -0500
-Received: by ewy5 with SMTP id 5so4915990ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:20 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
+	Fri, 31 Dec 2010 15:04:21 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 94F50542498
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2010 15:05:33 -0500 (EST)
+Subject: Compat-wireless release for 2010-12-31 is baked
 To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 01/18] wl1271: Add AP related configuration to conf_drv_settings
-Date: Thu, 30 Dec 2010 01:31:56 +0200
-Message-Id: <1293665533-7599-2-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+Message-Id: <20101231200419.9088A40F97@repository3.orbit-lab.org>
+Date: Fri, 31 Dec 2010 15:04:19 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rate class configuration has been split up for AP and STA modes.
-Template related configuration likewise separated.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   dc86c6c..9b210cb  history    -> origin/history
+ + e635401...bfa221f master     -> origin/master  (forced update)
+   387c31c..3643e0e  stable     -> origin/stable
+ * [new tag]         next-20101231 -> next-20101231
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c  |    2 +-
- drivers/net/wireless/wl12xx/cmd.c  |    4 +-
- drivers/net/wireless/wl12xx/conf.h |   46 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/wl12xx/main.c |   45 +++++++++++++++++++++++++++++++++-
- 4 files changed, 90 insertions(+), 7 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index cc4068d..30ff32a 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -754,7 +754,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
- int wl1271_acx_rate_policies(struct wl1271 *wl)
- {
- 	struct acx_rate_policy *acx;
--	struct conf_tx_rate_class *c = &wl->conf.tx.rc_conf;
-+	struct conf_tx_rate_class *c = &wl->conf.tx.sta_rc_conf;
- 	int idx = 0;
- 	int ret = 0;
- 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 0106628..15f4077 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -490,8 +490,8 @@ int wl1271_cmd_template_set(struct wl1271 *wl, u16 template_id,
- 	cmd->len = cpu_to_le16(buf_len);
- 	cmd->template_type = template_id;
- 	cmd->enabled_rates = cpu_to_le32(rates);
--	cmd->short_retry_limit = wl->conf.tx.rc_conf.short_retry_limit;
--	cmd->long_retry_limit = wl->conf.tx.rc_conf.long_retry_limit;
-+	cmd->short_retry_limit = wl->conf.tx.tmpl_short_retry_limit;
-+	cmd->long_retry_limit = wl->conf.tx.tmpl_long_retry_limit;
- 	cmd->index = index;
- 
- 	if (buf)
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index a16b361..7563ce3 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -496,6 +496,26 @@ struct conf_rx_settings {
- 					CONF_HW_BIT_RATE_2MBPS)
- #define CONF_TX_RATE_RETRY_LIMIT       10
- 
-+/*
-+ * Rates supported for data packets when operating as AP. Note the absense
-+ * of the 22Mbps rate. There is a FW limitation on 12 rates so we must drop
-+ * one. The rate dropped is not mandatory under any operating mode.
-+ */
-+#define CONF_TX_AP_ENABLED_RATES       (CONF_HW_BIT_RATE_1MBPS | \
-+	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS |      \
-+	CONF_HW_BIT_RATE_6MBPS | CONF_HW_BIT_RATE_9MBPS |        \
-+	CONF_HW_BIT_RATE_11MBPS | CONF_HW_BIT_RATE_12MBPS |      \
-+	CONF_HW_BIT_RATE_18MBPS | CONF_HW_BIT_RATE_24MBPS |      \
-+	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
-+	CONF_HW_BIT_RATE_54MBPS)
-+
-+/*
-+ * Default rates for management traffic when operating in AP mode. This
-+ * should be configured according to the basic rate set of the AP
-+ */
-+#define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
-+	CONF_HW_BIT_RATE_2MBPS | CONF_HW_BIT_RATE_5_5MBPS)
-+
- struct conf_tx_rate_class {
- 
- 	/*
-@@ -636,9 +656,9 @@ struct conf_tx_settings {
- 
- 	/*
- 	 * Configuration for rate classes for TX (currently only one
--	 * rate class supported.)
-+	 * rate class supported). Used in non-AP mode.
- 	 */
--	struct conf_tx_rate_class rc_conf;
-+	struct conf_tx_rate_class sta_rc_conf;
- 
- 	/*
- 	 * Configuration for access categories for TX rate control.
-@@ -647,6 +667,22 @@ struct conf_tx_settings {
- 	struct conf_tx_ac_category ac_conf[CONF_TX_MAX_AC_COUNT];
- 
- 	/*
-+	 * Configuration for rate classes in AP-mode. These rate classes
-+	 * are for the AC TX queues
-+	 */
-+	struct conf_tx_rate_class ap_rc_conf[CONF_TX_MAX_AC_COUNT];
-+
-+	/*
-+	 * Management TX rate class for AP-mode.
-+	 */
-+	struct conf_tx_rate_class ap_mgmt_conf;
-+
-+	/*
-+	 * Broadcast TX rate class for AP-mode.
-+	 */
-+	struct conf_tx_rate_class ap_bcst_conf;
-+
-+	/*
- 	 * Configuration for TID parameters.
- 	 */
- 	u8 tid_conf_count;
-@@ -687,6 +723,12 @@ struct conf_tx_settings {
- 	 * Range: CONF_HW_BIT_RATE_* bit mask
- 	 */
- 	u32 basic_rate_5;
-+
-+	/*
-+	 * TX retry limits for templates
-+	 */
-+	u8 tmpl_short_retry_limit;
-+	u8 tmpl_long_retry_limit;
- };
- 
- enum {
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 062247e..788959a 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -116,11 +116,11 @@ static struct conf_drv_settings default_conf = {
- 	},
- 	.tx = {
- 		.tx_energy_detection         = 0,
--		.rc_conf                     = {
-+		.sta_rc_conf                 = {
- 			.enabled_rates       = 0,
- 			.short_retry_limit   = 10,
- 			.long_retry_limit    = 10,
--			.aflags              = 0
-+			.aflags              = 0,
- 		},
- 		.ac_conf_count               = 4,
- 		.ac_conf                     = {
-@@ -153,6 +153,45 @@ static struct conf_drv_settings default_conf = {
- 				.tx_op_limit = 1504,
- 			},
- 		},
-+		.ap_rc_conf                  = {
-+			[0] = {
-+				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+			[1] = {
-+				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+			[2] = {
-+				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+			[3] = {
-+				.enabled_rates = CONF_TX_AP_ENABLED_RATES,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+		},
-+		.ap_mgmt_conf = {
-+			.enabled_rates       = CONF_TX_AP_DEFAULT_MGMT_RATES,
-+			.short_retry_limit   = 10,
-+			.long_retry_limit    = 10,
-+			.aflags              = 0,
-+		},
-+		.ap_bcst_conf = {
-+			.enabled_rates       = CONF_HW_BIT_RATE_1MBPS,
-+			.short_retry_limit   = 10,
-+			.long_retry_limit    = 10,
-+			.aflags              = 0,
-+		},
-+
- 		.tid_conf_count = 4,
- 		.tid_conf = {
- 			[CONF_TX_AC_BE] = {
-@@ -193,6 +232,8 @@ static struct conf_drv_settings default_conf = {
- 		.tx_compl_threshold          = 4,
- 		.basic_rate                  = CONF_HW_BIT_RATE_1MBPS,
- 		.basic_rate_5                = CONF_HW_BIT_RATE_6MBPS,
-+		.tmpl_short_retry_limit      = 10,
-+		.tmpl_long_retry_limit       = 10,
- 	},
- 	.conn = {
- 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
--- 
-1.7.1
-
+    774936 - Total upstream lines of code being pulled
