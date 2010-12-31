@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35163 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202Ab0LCTPK (ORCPT
+Received: from mail-px0-f194.google.com ([209.85.212.194]:41709 "EHLO
+	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab0LaGwL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 14:15:10 -0500
-Date: Fri, 3 Dec 2010 14:11:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <20101203191130.GD2348@tuxdriver.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
- <1291380780.3499.119.camel@jlt3.sipsolutions.net>
- <477F20668A386D41ADCC57781B1F704307D59F9D6D@SC-VEXCH1.marvell.com>
- <77956EDC1B917843AC9B7965A3BD78B058FEF48E24@SC-VEXCH2.marvell.com>
- <1291401568.3499.142.camel@jlt3.sipsolutions.net>
+	Fri, 31 Dec 2010 01:52:11 -0500
+Message-ID: <4D1D7DAE.7060504@gmail.com>
+Date: Thu, 30 Dec 2010 22:52:30 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291401568.3499.142.camel@jlt3.sipsolutions.net>
+To: Grant Likely <grant.likely@secretlab.ca>
+CC: trivial@kernel.org, devel@driverdev.osuosl.org,
+	linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-m68k@lists.linux-m68k.org,
+	spi-devel-general@lists.sourceforge.net,
+	linux-media@vger.kernel.org, Dan Carpenter <error27@gmail.com>
+Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <20101231064515.GC3733@angua.secretlab.ca>
+In-Reply-To: <20101231064515.GC3733@angua.secretlab.ca>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 03, 2010 at 07:39:28PM +0100, Johannes Berg wrote:
-> On Fri, 2010-12-03 at 09:01 -0800, Frank Huang wrote:
-> 	
-> > [snip]
-> 
-> Mind you, there will definitely be more things to change in this
-> driver ... that was just the tip of the iceberg really.
+On 12/30/2010 10:45 PM, Grant Likely wrote:
+> On Thu, Dec 30, 2010 at 03:07:51PM -0800, Justin P. Mattock wrote:
+>> The below patch fixes a typo "diable" to "disable". Please let me know if this
+>> is correct or not.
+>>
+>> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>
+> applied, thanks.
+>
+> g.
 
-FWIW, I think it would be worthwhile to remove the uAP bits, at least
-for working towards the initial merge.  That can live out of tree
-at least for now.
+ahh.. thanks.. just cleared up the left out diabled that I had thought I 
+forgotten(ended up separating comments and code and forgot)
+>
+>>
+>> ---
+>>   drivers/spi/dw_spi.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/spi/dw_spi.c b/drivers/spi/dw_spi.c
+>> index 0838c79..7c3cf21 100644
+>> --- a/drivers/spi/dw_spi.c
+>> +++ b/drivers/spi/dw_spi.c
+>> @@ -592,7 +592,7 @@ static void pump_transfers(unsigned long data)
+>>   		spi_set_clk(dws, clk_div ? clk_div : chip->clk_div);
+>>   		spi_chip_sel(dws, spi->chip_select);
+>>
+>> -		/* Set the interrupt mask, for poll mode just diable all int */
+>> +		/* Set the interrupt mask, for poll mode just disable all int */
+>>   		spi_mask_intr(dws, 0xff);
+>>   		if (imask)
+>>   			spi_umask_intr(dws, imask);
+>> --
+>> 1.6.5.2.180.gc5b3e
+>>
+>>
+>> ------------------------------------------------------------------------------
+>> Learn how Oracle Real Application Clusters (RAC) One Node allows customers
+>> to consolidate database storage, standardize their database environment, and,
+>> should the need arise, upgrade to a full multi-node Oracle RAC database
+>> without downtime or disruption
+>> http://p.sf.net/sfu/oracle-sfdevnl
+>> _______________________________________________
+>> spi-devel-general mailing list
+>> spi-devel-general@lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/spi-devel-general
+>
 
-That will remove some of the wireless events stuff.  Probably the
-other wireless events stuff can be removed as well.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Justin P. Mattock
