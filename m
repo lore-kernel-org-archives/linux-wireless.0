@@ -1,144 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36150 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751556Ab0LFMcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:32:33 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:32:18 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 25/27] ath9k_hw: Setup paprd only for supported chains
-Date: Mon, 6 Dec 2010 04:27:58 -0800
-Message-ID: <1291638480-8950-26-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:40913 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459Ab0LaNkk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Dec 2010 08:40:40 -0500
+Received: by ewy5 with SMTP id 5so5410119ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2010 05:40:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AANLkTi=c1XvwzJjZx+WH0uSSxn8++CCFJ-pJkxa4MtaQ@mail.gmail.com>
+References: <AANLkTimYqrqUK2EjnyvkwvsFM+6b7ZMTGjBQrWFT712T@mail.gmail.com>
+	<AANLkTikeehA_cMHndCRidknqVc7Y49_JmPbt4+Np6jDx@mail.gmail.com>
+	<201012310027.14433.chunkeey@googlemail.com>
+	<AANLkTi=c1XvwzJjZx+WH0uSSxn8++CCFJ-pJkxa4MtaQ@mail.gmail.com>
+Date: Fri, 31 Dec 2010 08:40:38 -0500
+Message-ID: <AANLkTikTHecf=yDcUgaJ-2RbzVzX5hpr_xbBTDgtiKeb@mail.gmail.com>
+Subject: Re: Get slow speed when using ar9170usb driver.
+From: Chin Shi Hong <cshong87@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   37 ++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |   16 ++++++++---
- 2 files changed, 36 insertions(+), 17 deletions(-)
+On Thu, Dec 30, 2010 at 9:54 PM, Chin Shi Hong <cshong87@gmail.com> wrote:
+> On Fri, Dec 31, 2010 at 7:27 AM, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+>> On Thursday 30 December 2010 16:55:18 Chin Shi Hong wrote:
+>>> Dear All,
+>>
+>> Hello,
+>>
+>>> Wireless adapter model: TP-LINK WN821NC (USB 300Mbps Wireless N adapter)
+>>> Output of lsusb: Bus 001 Device 007: ID 0cf3:1002 Atheros
+>>> Communications, Inc. TP-Link TL-WN821N v2 [Atheros AR9001U-(2)NG]
+>>> Wireless router: TP-LINK W8960N (300Mbps Wireless N router)
+>>
+>> That's weird, according to TP-Link's website there wasn't any WN821NC
+>> with a WN821N v2. They "only" let you download the driver for
+>> WN821N v3. v3 very different from the previous v2 generation, it has
+>> new chips (AR7015+AR9287?) and needs the ath9k_htc driver.
+>
+> WN821NC is actually WN821N shipped with USB cradle. WN821N itself does
+> not ship with any USB Cradle. The character 'C' in WN821NC mean
+> "Cradle". If you purchase WN821N, you will not get any USB Cradle.
+> But, if you purchase WN821NC, what you get is actually WN821N + USB
+> Cradle.
+>
+>> Are you sure, you didn't get ripped off here and someone else
+>> has "your" v3?
+>
+> According to the information printed at the back of my wireless
+> adapter, it is WN821N v2.
+>
+>>> Driver name ar9170usb
+>>> Linux distro: Ubuntu 10.10 64 bit
+>>> Kernel version: 2.6.35-24-generic
+>>>
+>>> If I use Ndiswrapper + Windows XP driver, I can get full 300Mbps.
+>> Have you measured that (with iperf/netperf)? Or is it just the
+>> "Connection Information" pop-up which simply displays "speed: 300 Mbits" ?
+>
+> The 300Mbps is just "display". But, when I test my speed on Windows XP
+> with jperf, it ever reach maximum 2xxMbps.
+>
+>>> At the same distance, if I use ar9170usb driver, I can only get
+>>> maximum 54Mbps speed.
+>> That's true. here's ar9170usb wiki page:
+>> <http://wireless.kernel.org/en/users/Drivers/ar9170#features> => working
+>>        "802.11 a/b/g"
+>>
+>> Also, the old stack (in 2.6.35) does not have minstrel_ht
+>> (rate control algorithm for 11n) so ar9170usb is limited to
+>> the legacy b/g rates.
+>>
+>> Furthermore, the old driver lacks any support for aggregation, so the
+>> uplink throughput (even with the fastest 300 mbits rate and under
+>> "perfect" lab conditions) would struggle to get to 40 mbit and beyond.
+>>
+>> --
+>>
+>> The quickest way around limitations is via backports:
+>> visit <http://wireless.kernel.org/en/users/Download>
+>> and get compat-wireless:
+>>
+>> <http://wireless.kernel.org/en/users/Download#Getting_compat-wireless_on_Ubuntu>
+>>
+>> Then, you can migrate to carl9170 (a new driver with a new firmware)
+>> for more information, see:
+>> <http://wireless.kernel.org/en/users/Drivers/carl9170>
+>>
+>> However, this "new" driver+fw is still in development. You definitely
+>> want to keep your compat-wireless package up-to-date.
+>>
+>> Best Regards,
+>>        Christian
+>>
+>
+> Will try carl9170 again later.
+>
+> Regards,
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 850bc98..74cff43 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -21,10 +21,12 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- {
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B0,
- 		      AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE, !!val);
--	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B1,
--		      AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE, !!val);
--	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B2,
--		      AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE, !!val);
-+	if (ah->caps.tx_chainmask & BIT(1))
-+		REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B1,
-+			      AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE, !!val);
-+	if (ah->caps.tx_chainmask & BIT(2))
-+		REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B2,
-+			      AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE, !!val);
- }
- EXPORT_SYMBOL(ar9003_paprd_enable);
- 
-@@ -57,7 +59,8 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK, am_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK, ht40_mask);
- 
--	for (i = 0; i < 3; i++) {
-+
-+	for (i = 0; i < ah->caps.max_txchains; i++) {
- 		REG_RMW_FIELD(ah, ctrl0[i],
- 			      AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK, 1);
- 		REG_RMW_FIELD(ah, ctrl1[i],
-@@ -102,8 +105,14 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_NUM_CORR_STAGES, 7);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_MIN_LOOPBACK_DEL, 1);
--	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
--		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP, -6);
-+	if (AR_SREV_9485(ah))
-+		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
-+			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
-+			      -3);
-+	else
-+		REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
-+			      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP,
-+			      -6);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_TRAINER_CNTL3,
- 		      AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE,
- 		      -15);
-@@ -620,13 +629,15 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- 		      AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL,
- 		      training_power);
- 
--	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL1_B1,
--		      AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL,
--		      training_power);
-+	if (ah->caps.tx_chainmask & BIT(1))
-+		REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL1_B1,
-+			      AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL,
-+			      training_power);
- 
--	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL1_B2,
--		      AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL,
--		      training_power);
-+	if (ah->caps.tx_chainmask & BIT(2))
-+		REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL1_B2,
-+			      AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL,
-+			      training_power);
- }
- EXPORT_SYMBOL(ar9003_paprd_populate_single_table);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 00cd3e5..6f811c7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -987,7 +987,9 @@
- #define AR_PHY_PAPRD_CTRL1_PAPRD_MAG_SCALE_FACT		0x0ffe0000
- #define AR_PHY_PAPRD_CTRL1_PAPRD_MAG_SCALE_FACT_S	17
- 
--#define AR_PHY_PAPRD_TRAINER_CNTL1				(AR_SM_BASE + 0x490)
-+#define AR_PHY_PAPRD_TRAINER_CNTL1				(AR_SM_BASE + \
-+								 (AR_SREV_9485(ah) ? \
-+								  0x580 : 0x490))
- #define AR_PHY_PAPRD_TRAINER_CNTL1_CF_CF_PAPRD_TRAIN_ENABLE	0x00000001
- #define AR_PHY_PAPRD_TRAINER_CNTL1_CF_CF_PAPRD_TRAIN_ENABLE_S	0
- #define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_AGC2_SETTLING	0x0000007e
-@@ -1003,11 +1005,15 @@
- #define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_LB_SKIP		0x0003f000
- #define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_LB_SKIP_S		12
- 
--#define AR_PHY_PAPRD_TRAINER_CNTL2				(AR_SM_BASE + 0x494)
-+#define AR_PHY_PAPRD_TRAINER_CNTL2				(AR_SM_BASE + \
-+								 (AR_SREV_9485(ah) ? \
-+								  0x584 : 0x494))
- #define AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN	0xFFFFFFFF
- #define AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN_S	0
- 
--#define AR_PHY_PAPRD_TRAINER_CNTL3				(AR_SM_BASE + 0x498)
-+#define AR_PHY_PAPRD_TRAINER_CNTL3				(AR_SM_BASE + \
-+								 (AR_SREV_9485(ah) ? \
-+								  0x588 : 0x498))
- #define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE	0x0000003f
- #define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE_S	0
- #define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP		0x00000fc0
-@@ -1023,7 +1029,9 @@
- #define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_BBTXMIX_DISABLE	0x20000000
- #define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_BBTXMIX_DISABLE_S	29
- 
--#define AR_PHY_PAPRD_TRAINER_CNTL4				(AR_SM_BASE + 0x49c)
-+#define AR_PHY_PAPRD_TRAINER_CNTL4				(AR_SM_BASE + \
-+								 (AR_SREV_9485(ah) ? \
-+								  0x58c : 0x49c))
- #define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_NUM_TRAIN_SAMPLES	0x03ff0000
- #define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_NUM_TRAIN_SAMPLES_S	16
- #define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_SAFETY_DELTA	0x0000f000
--- 
-1.7.0.4
+carl9170 not work. Error when trying to run "sudo modprobe carl9170":
+"FATAL: Error inserting carl9170
+(/lib/modules/2.6.35-22-generic/updates/drivers/net/wireless/ath/carl9170/carl9170.ko):
+Invalid argument".
 
+regards,
