@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53301 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979Ab0L2JOt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 04:14:49 -0500
-Subject: Re: [PATCH 2/4] mwl8k: Add encapsulation of data packet for crypto
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, mwl8k-devel@cozybit.com,
-	buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-In-Reply-To: <1293577297-25755-3-git-send-email-thomas@cozybit.com>
-References: <1293577297-25755-1-git-send-email-thomas@cozybit.com>
-	 <1293577297-25755-3-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Dec 2010 10:14:46 +0100
-Message-ID: <1293614086.3546.2.camel@jlt3.sipsolutions.net>
+Received: from lo.gmane.org ([80.91.229.12]:42615 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751374Ab0LaIZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Dec 2010 03:25:02 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PYaIG-0008RF-0b
+	for linux-wireless@vger.kernel.org; Fri, 31 Dec 2010 09:25:00 +0100
+Received: from bas1-woodbridge48-1176129448.dsl.bell.ca ([70.26.79.168])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2010 09:25:00 +0100
+Received: from weedy2887 by bas1-woodbridge48-1176129448.dsl.bell.ca with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2010 09:25:00 +0100
+To: linux-wireless@vger.kernel.org
+From: Weedy <weedy2887@gmail.com>
+Subject: Re: Compile error for the last week inside rtlwifi/base.c
+Date: Fri, 31 Dec 2010 08:24:48 +0000 (UTC)
+Message-ID: <loom.20101231T092257-492@post.gmane.org>
+References: <loom.20101228T075242-208@post.gmane.org> <4D1A0EF1.8060509@lwfinger.net> <loom.20101229T034155-409@post.gmane.org> <4D1B6821.5040506@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-28 at 15:01 -0800, Thomas Pedersen wrote:
+Larry Finger <Larry.Finger@...> writes:
 
-> Different head and tail pads will be needed for crypto depending on
-> the crypto mode. Add support to encapsulate the packets with
-> appropriate pad values. Also, fill the header in case of CCMP.
+> 
+> On 12/28/2010 08:43 PM, Weedy wrote:
+> > Larry Finger <Larry.Finger@...> writes:
+> > 
+> > Actually I need RTL8192USB, I guess I need to wait more?
+> 
+> What are the USB Ids as shown by the lsusb command?
+> 
+> Larry
 
-Err, mac80211 is perfectly capable of generating the CCMP header, you
-should use that functionality (and maybe memmove it elsewhere if needed)
-
-johannes
+  idVendor           0x0bda Realtek Semiconductor Corp.
+  idProduct          0x8171 RTL8188SU 802.11n WLAN Adapter
 
