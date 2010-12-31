@@ -1,69 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59040 "EHLO mail.atheros.com"
+Received: from cantor2.suse.de ([195.135.220.15]:53493 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab0LBLIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:08:42 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:08:28 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 03/27] ath9k_hw: Enable hw initialization for AR9485
-Date: Thu, 2 Dec 2010 03:06:47 -0800
-Message-ID: <1291288031-3409-4-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753744Ab0LaPGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Dec 2010 10:06:16 -0500
+Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to
+ disable.
+From: James Bottomley <James.Bottomley@suse.de>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Dan Carpenter <error27@gmail.com>,
+	Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org,
+	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
+	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
+	spi-devel-general@lists.sourceforge.net,
+	linux-media@vger.kernel.org
+In-Reply-To: <4D1DE616.7010105@gmail.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+	 <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+	 <20101231064515.GC3733@angua.secretlab.ca> <4D1D7DAE.7060504@gmail.com>
+	 <20101231091136.GC1886@bicker>  <4D1DE616.7010105@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 31 Dec 2010 09:06:08 -0600
+Message-ID: <1293807968.3085.1.camel@mulgrave.site>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also make it a supported mac
+On Fri, 2010-12-31 at 06:17 -0800, Justin P. Mattock wrote:
+> On 12/31/2010 01:11 AM, Dan Carpenter wrote:
+> > On Thu, Dec 30, 2010 at 10:52:30PM -0800, Justin P. Mattock wrote:
+> >> On 12/30/2010 10:45 PM, Grant Likely wrote:
+> >>> On Thu, Dec 30, 2010 at 03:07:51PM -0800, Justin P. Mattock wrote:
+> >>>> The below patch fixes a typo "diable" to "disable". Please let me know if this
+> >>>> is correct or not.
+> >>>>
+> >>>> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+> >>>
+> >>> applied, thanks.
+> >>>
+> >>> g.
+> >>
+> >> ahh.. thanks.. just cleared up the left out diabled that I had
+> >> thought I forgotten(ended up separating comments and code and
+> >> forgot)
+> >
+> > This is really just defensiveness and random grumbling and grumpiness on
+> > my part, but one reason I may have missed the first patch is because
+> > your subject lines are crap.
+> >
+> > Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
+> >
+> > Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
+> >
+> > regards,
+> > dan carpenter
+> >
+> 
+> alright.. so having the backlash is alright for the subject
+> 
+> Thanks for the pointer on this..
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |    1 +
- drivers/net/wireless/ath/ath9k/hw.c        |    1 +
- drivers/net/wireless/ath/ath9k/hw.h        |    1 +
- 3 files changed, 3 insertions(+), 0 deletions(-)
+There is actually no specific form.  Most of us edit this part of the
+subject line anyway to conform to whatever (nonuniform) conventions we
+use.  I just use <component>: with no scsi or drivers prefix because the
+git tree is tagged [SCSI]; others are different.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index c2a0571..0e3e259 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -24,6 +24,7 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
- {
- 	switch (macversion) {
- 	case AR_SREV_VERSION_9300:
-+	case AR_SREV_VERSION_9485:
- 		return true;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9b1ee7f..f533aad 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -629,6 +629,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	case AR9287_DEVID_PCIE:
- 	case AR2427_DEVID_PCIE:
- 	case AR9300_DEVID_PCIE:
-+	case AR9300_DEVID_AR9485_PCIE:
- 		break;
- 	default:
- 		if (common->bus_ops->ath_bus_type == ATH_USB)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5fcfa48..bde1df3 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -44,6 +44,7 @@
- #define AR9287_DEVID_PCI	0x002d
- #define AR9287_DEVID_PCIE	0x002e
- #define AR9300_DEVID_PCIE	0x0030
-+#define AR9300_DEVID_AR9485_PCIE 0x0032
- 
- #define AR5416_AR9100_DEVID	0x000b
- 
--- 
-1.7.0.4
+James
+
 
