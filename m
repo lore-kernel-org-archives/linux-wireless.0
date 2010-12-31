@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:44425 "EHLO
-	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753746Ab0LPQzG (ORCPT
+Received: from mail-pz0-f66.google.com ([209.85.210.66]:52337 "EHLO
+	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750872Ab0LaGzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 11:55:06 -0500
-Message-ID: <4D0A4467.3000208@pcuf.fi>
-Date: Thu, 16 Dec 2010 18:55:03 +0200
-From: Jar <jar@pcuf.fi>
+	Fri, 31 Dec 2010 01:55:01 -0500
+Message-ID: <4D1D7A74.3030803@gmail.com>
+Date: Thu, 30 Dec 2010 22:38:44 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rt2400pci.ko and it's AES/WPA2 support [Not subscribed to the
- list]
-References: <4D0A33E2.9090509@pcuf.fi> <AANLkTinxi_VrCeboC0j2T_oMtQxvYP_oAzmXXr4KNetA@mail.gmail.com>
-In-Reply-To: <AANLkTinxi_VrCeboC0j2T_oMtQxvYP_oAzmXXr4KNetA@mail.gmail.com>
+To: Dan Carpenter <error27@gmail.com>, trivial@kernel.org,
+	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
+	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
+	spi-devel-general@lists.sourceforge.net,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH 15/15]drivers:spi:dw_spi.c Typo change diable to disable.
+References: <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com> <1293750484-1161-13-git-send-email-justinmattock@gmail.com> <1293750484-1161-14-git-send-email-justinmattock@gmail.com> <1293750484-1161-15-git-send-email-justinmattock@gmail.com> <20101231063433.GB1886@bicker>
+In-Reply-To: <20101231063433.GB1886@bicker>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16.12.2010 18:42, Ivo Van Doorn wrote:
-> Yes, it does support it. It is all software encryption though, since there
-> is no hardware acceleration possible with this hardware.
+On 12/30/2010 10:34 PM, Dan Carpenter wrote:
+> On Thu, Dec 30, 2010 at 03:08:04PM -0800, Justin P. Mattock wrote:
+>> The below patch fixes a typo "diable" to "disable". Please let me know if this
+>> is correct or not.
+>>
+>> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>
+>> ---
+>>   drivers/spi/dw_spi.c |    6 +++---
+>
+> You missed one from this file:
+>
+> /* Set the interrupt mask, for poll mode just diable all int */
+>                                                ^^^^^^
+> regards,
+> dan carpenter
+>
+>
 
-Thanks a lot!!!! Now I only have to find reason why Lubuntu wants to use 
-TKIP and not AES, even when the access point advertises AES (and TKIP) 
-capability in the scan results.
+oh-man... my grepping wasn't so grepping after all.. thanks for that 
+I'll resend this one
 
--- 
-Best Regards, Jar
+Justin P. Mattock
