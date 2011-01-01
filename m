@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:12597 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752559Ab1AYEPq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 23:15:46 -0500
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-064998944
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 13:15:44 +0900 (JST)
-Subject: [PATCH 5/6] ath9k: Remove unused IEEE80211_WEP_NKID
-To: linville@tuxdriver.com
+Received: from postler.einfach.org ([86.59.21.14]:55713 "EHLO home.einfach.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610Ab1AAOvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jan 2011 09:51:12 -0500
 From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 25 Jan 2011 13:15:43 +0900
-Message-ID: <20110125041543.6944.64829.stgit@localhost6.localdomain6>
-In-Reply-To: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
-References: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH 1/6] ath5k: Always write tx powertable on hw
+Date: Sat, 1 Jan 2011 23:51:07 +0900
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
+	nbd@openwrt.org, sedat.dilek@googlemail.com
+References: <20101203040300.GA2988@makis.mantri> <AANLkTinD+XrkXeUR2PNqj4eVVvTmrh8a9c4UEy0Nr7JE@mail.gmail.com>
+In-Reply-To: <AANLkTinD+XrkXeUR2PNqj4eVVvTmrh8a9c4UEy0Nr7JE@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101012351.07339.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IEEE80211_WEP_NKID is not used in ath9k any more since the key handling code
-has been moved to ath/.
+On Thursday 30 December 2010 06:02:29 Bob Copeland wrote:
+> On Thu, Dec 2, 2010 at 11:03 PM, Nick Kossifidis <mickflemm@gmail.com> 
+wrote:
+> >  * By skipping tx power table calibration we also skip setting
+> >  tx power table on hw. Make sure we always write tx power table
+> >  on hw since it gets cleared on reset.
+> > 
+> >  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> 
+> Just a very late heads-up, this patch seems to be causing problems
+> for me.
+> 
+> Seems a bit weird given the content, but the symptom is that
+> when I bring up the device none of my probe requests are actually
+> getting sent, according to wireshark captures from another device.
+> Reverting just this patch helps, so my power table must be broken
+> at start up.
+> 
+> I saw that Bruno had a later series that touched this area, so I'll
+> try them next.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
- drivers/net/wireless/ath/ath9k/common.h |    2 --
- 2 files changed, 0 insertions(+), 3 deletions(-)
+Yep, they should fix that problem. Please try them and report if they don't.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index dab0271..3472b84 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -537,7 +537,6 @@ struct ath_ant_comb {
- #define ATH_CABQ_READY_TIME     80      /* % of beacon interval */
- #define ATH_MAX_SW_RETRIES      10
- #define ATH_CHAN_MAX            255
--#define IEEE80211_WEP_NKID      4       /* number of key ids */
- 
- #define ATH_TXPOWER_MAX         100     /* .5 dBm units */
- #define ATH_RATE_DUMMY_MARKER   0
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index a126bdd..4c7020b 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -23,8 +23,6 @@
- 
- /* Common header for Atheros 802.11n base driver cores */
- 
--#define IEEE80211_WEP_NKID 4
--
- #define WME_NUM_TID             16
- #define WME_BA_BMP_SIZE         64
- #define WME_MAX_BA              WME_BA_BMP_SIZE
-
+Bruno
