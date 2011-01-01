@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:58321 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303Ab1AEUJK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 15:09:10 -0500
-Received: by qyk12 with SMTP id 12so17766470qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 12:09:09 -0800 (PST)
+Received: from wormhole.pha.com.au ([203.3.69.5]:50950 "EHLO mail.pha.com.au"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750887Ab1AAGzq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jan 2011 01:55:46 -0500
+Date: Sat, 1 Jan 2011 17:48:32 +1100 (EST)
+From: Finn Thain <fthain@telegraphics.com.au>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+cc: trivial@kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 03/15]drivers:staging:rtl8187se:r8180_hw.h Typo change
+ diable to disable.
+In-Reply-To: <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+Message-ID: <alpine.LNX.2.00.1012311722580.24460@nippy.intranet>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1294257239.12561.12.camel@Joe-Laptop>
-References: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
-	<1294256409.12561.8.camel@Joe-Laptop>
-	<AANLkTi=v3oHGiQjASQqChmmsXHuv=UF17_A9XdeFeFNR@mail.gmail.com>
-	<1294257239.12561.12.camel@Joe-Laptop>
-Date: Wed, 5 Jan 2011 15:09:09 -0500
-Message-ID: <AANLkTinN2Ctehx-Lop7jm+jdR7Q3bTaY6EhbSdg7zBe_@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/3] ath5k: move nohwcrypt to ath_common structure
-From: Bob Copeland <me@bobcopeland.com>
-To: Joe Perches <joe@perches.com>
-Cc: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 5, 2011 at 2:53 PM, Joe Perches <joe@perches.com> wrote:
->
-> bool is OK.
->
 
-Yes, I was agreeing, just pointing out (for my own benefit, I guess) that
-the old rule of using int for bool modparams no longer holds.
+On Thu, 30 Dec 2010, Justin P. Mattock wrote:
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  drivers/staging/rtl8187se/r8180_hw.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/staging/rtl8187se/r8180_hw.h b/drivers/staging/rtl8187se/r8180_hw.h
+> index 3fca144..2911d40 100644
+> --- a/drivers/staging/rtl8187se/r8180_hw.h
+> +++ b/drivers/staging/rtl8187se/r8180_hw.h
+> @@ -554,7 +554,7 @@
+>  /* by amy for power save		*/
+>  /* by amy for antenna			*/
+>  #define EEPROM_SW_REVD_OFFSET 0x3f
+> -/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are diable.					*/
+> +/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are disabled.					*/
+
+I think, "other values disable" was what you meant?
+
+Finn
+
+>  #define EEPROM_SW_AD_MASK			0x0300
+>  #define EEPROM_SW_AD_ENABLE			0x0100
+>  
+> 
