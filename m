@@ -1,239 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43656 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502Ab1ATRco (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 12:32:44 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 2/3] mac80211: Support scanning only current active channel.
-Date: Thu, 20 Jan 2011 09:32:29 -0800
-Message-Id: <1295544750-6704-2-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1295544750-6704-1-git-send-email-greearb@candelatech.com>
-References: <1295544750-6704-1-git-send-email-greearb@candelatech.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39368 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752693Ab1AAO0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jan 2011 09:26:37 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/4] compat-wireless: remove patches applied mainline
+Date: Sat,  1 Jan 2011 15:26:19 +0100
+Message-Id: <1293891981-22151-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1293891981-22151-1-git-send-email-hauke@hauke-m.de>
+References: <1293891981-22151-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The removed parts are now in mainline and do not have to be backported
+any more.
 
-This allows user-space to request scan on only the current
-channel and have that not interfere with other traffic.
-
-Especially useful when using virtual stations that must
-all run on the same channel anyway.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-:100644 100644 78af32d... 7cd7af8... M	net/mac80211/driver-ops.h
-:100644 100644 fbabbc2... 8c6d253... M	net/mac80211/driver-trace.h
-:100644 100644 c47d7c0... 388db0e... M	net/mac80211/ieee80211_i.h
-:100644 100644 1236710... b1767a5... M	net/mac80211/rx.c
-:100644 100644 fb274db... b42e5ad... M	net/mac80211/scan.c
- net/mac80211/driver-ops.h   |   12 ++++++++
- net/mac80211/driver-trace.h |   18 ++++++++++++
- net/mac80211/ieee80211_i.h  |    3 ++
- net/mac80211/rx.c           |    1 +
- net/mac80211/scan.c         |   61 +++++++++++++++++++++++++++++++-----------
- 5 files changed, 79 insertions(+), 16 deletions(-)
+ patches/06-header-changes.patch |   20 ---------
+ patches/20-pcidev.patch         |   83 ---------------------------------------
+ 2 files changed, 0 insertions(+), 103 deletions(-)
+ delete mode 100644 patches/20-pcidev.patch
 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 78af32d..7cd7af8 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -201,6 +201,18 @@ static inline void drv_sw_scan_start(struct ieee80211_local *local)
- 	trace_drv_return_void(local);
- }
- 
-+static inline void drv_sw_scan_start_cur(struct ieee80211_local *local,
-+					 bool cur_channel_only)
-+{
-+	might_sleep();
-+
-+	trace_drv_sw_scan_start_cur(local);
-+	if (local->ops->sw_scan_start_cur)
-+		local->ops->sw_scan_start_cur(&local->hw,
-+					      cur_channel_only);
-+	trace_drv_return_void(local);
-+}
-+
- static inline void drv_sw_scan_complete(struct ieee80211_local *local)
- {
- 	might_sleep();
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index fbabbc2..8c6d253 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -457,6 +457,24 @@ TRACE_EVENT(drv_sw_scan_start,
- 	)
- );
- 
-+TRACE_EVENT(drv_sw_scan_start_cur,
-+	TP_PROTO(struct ieee80211_local *local),
-+
-+	TP_ARGS(local),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT, LOCAL_PR_ARG
-+	)
-+);
-+
- TRACE_EVENT(drv_sw_scan_complete,
- 	TP_PROTO(struct ieee80211_local *local),
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c47d7c0..388db0e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -660,6 +660,8 @@ struct tpt_led_trigger {
-  *	that the scan completed.
-  * @SCAN_ABORTED: Set for our scan work function when the driver reported
-  *	a scan complete for an aborted scan.
-+ * @SCAN_ON_CUR_CHANNEL:  Set when we are scanning only on the current
-+ *      channel.  This means no off/on-channel logic needs to be run.
-  */
- enum {
- 	SCAN_SW_SCANNING,
-@@ -667,6 +669,7 @@ enum {
- 	SCAN_OFF_CHANNEL,
- 	SCAN_COMPLETED,
- 	SCAN_ABORTED,
-+	SCAN_ON_CUR_CHANNEL,
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1236710..b1767a5 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2749,6 +2749,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		local->dot11ReceivedFragmentCount++;
- 
- 	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
-+		     test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning) ||
- 		     test_bit(SCAN_OFF_CHANNEL, &local->scanning)))
- 		status->rx_flags |= IEEE80211_RX_IN_SCAN;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index fb274db..b42e5ad 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -293,11 +293,17 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+	if (!test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning))
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+
- 	if (!was_hw_scan) {
- 		ieee80211_configure_filter(local);
- 		drv_sw_scan_complete(local);
--		ieee80211_offchannel_return(local, true);
-+		if (!test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning))
-+			/* Don't call this if we never left the channel. */
-+			ieee80211_offchannel_return(local, true);
-+		else
-+			__clear_bit(SCAN_ON_CUR_CHANNEL, &local->scanning);
- 	}
- 
- 	mutex_lock(&local->mtx);
-@@ -338,15 +344,28 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 	 * nullfunc frames and probe requests will be dropped in
- 	 * ieee80211_tx_h_check_assoc().
- 	 */
--	drv_sw_scan_start(local);
- 
--	ieee80211_offchannel_stop_beaconing(local);
-+	if (local->ops->sw_scan_start_cur &&
-+	    local->scan_req->n_channels == 1 &&
-+	    local->scan_req->channels[0] == local->hw.conf.channel) {
-+		__set_bit(SCAN_ON_CUR_CHANNEL, &local->scanning);
-+		drv_sw_scan_start_cur(local, true);
-+	} else
-+		drv_sw_scan_start(local);
-+
-+	/* If we are scanning one channel, and only our own channel
-+	 * then we don't need to call the off-channel logic.
-+	 */
-+	if (!test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning)) {
-+		ieee80211_offchannel_stop_beaconing(local);
-+		local->leave_oper_channel_time = 0;
-+	}
- 
--	local->leave_oper_channel_time = 0;
- 	local->next_scan_state = SCAN_DECISION;
- 	local->scan_channel_idx = 0;
- 
--	drv_flush(local, false);
-+	if (!test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning))
-+		drv_flush(local, false);
- 
- 	ieee80211_configure_filter(local);
- 
-@@ -522,10 +541,14 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 			local->next_scan_state = SCAN_SET_CHANNEL;
- 	} else {
- 		/*
--		 * we're on the operating channel currently, let's
--		 * leave that channel now to scan another one
-+		 * We're on the operating channel currently, Leave that
-+		 * channel only if we are probing more than the current
-+		 * channel.
- 		 */
--		local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
-+		if (test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning))
-+			local->next_scan_state = SCAN_SET_CHANNEL;
-+		else
-+			local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
- 	}
- 
- 	*next_delay = 0;
-@@ -559,14 +582,19 @@ static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *loca
- {
- 	/* switch back to the operating channel */
- 	local->scan_channel = NULL;
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
--	/*
--	 * Only re-enable station mode interface now; beaconing will be
--	 * re-enabled once the full scan has been completed.
-+	/* We only return if we ever left, and should never leave if
-+	 * scanning single channel that is also the operating channel.
- 	 */
--	ieee80211_offchannel_return(local, false);
-+	if (!test_bit(SCAN_ON_CUR_CHANNEL, &local->scanning)) {
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
-+		/*
-+		 * Only re-enable station mode interface now; beaconing will be
-+		 * re-enabled once the full scan has been completed.
-+		 */
-+		ieee80211_offchannel_return(local, false);
-+	}
- 	__clear_bit(SCAN_OFF_CHANNEL, &local->scanning);
- 
- 	*next_delay = HZ / 5;
-@@ -583,8 +611,9 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	chan = local->scan_req->channels[local->scan_channel_idx];
- 
- 	local->scan_channel = chan;
--	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
--		skip = 1;
-+	if (local->hw.conf.channel != chan)
-+		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
-+			skip = 1;
- 
- 	/* advance state machine to next channel/band */
- 	local->scan_channel_idx++;
+diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
+index 0b90d4c..6e4ae56 100644
+--- a/patches/06-header-changes.patch
++++ b/patches/06-header-changes.patch
+@@ -26,16 +26,6 @@ cases.
+  #include "wifi.h"
+  #include "rc.h"
+  #include "base.h"
+---- a/drivers/net/wireless/wl1251/boot.c
+-+++ b/drivers/net/wireless/wl1251/boot.c
+-@@ -19,7 +19,6 @@
+-  *
+-  */
+- 
+--#include <linux/gpio.h>
+- #include <linux/slab.h>
+- 
+- #include "reg.h"
+ --- a/drivers/net/wireless/wl1251/main.c
+ +++ b/drivers/net/wireless/wl1251/main.c
+ @@ -24,6 +24,9 @@
+@@ -60,16 +50,6 @@ cases.
+  #include <linux/spi/spi.h>
+  #include <linux/wl12xx.h>
+  
+---- a/drivers/net/wireless/wl12xx/boot.c
+-+++ b/drivers/net/wireless/wl12xx/boot.c
+-@@ -21,7 +21,6 @@
+-  *
+-  */
+- 
+--#include <linux/gpio.h>
+- #include <linux/slab.h>
+- 
+- #include "acx.h"
+ --- a/net/mac80211/key.c
+ +++ b/net/mac80211/key.c
+ @@ -22,6 +22,9 @@
+diff --git a/patches/20-pcidev.patch b/patches/20-pcidev.patch
+deleted file mode 100644
+index d576ce8..0000000
+--- a/patches/20-pcidev.patch
++++ /dev/null
+@@ -1,83 +0,0 @@
+-Older kernels than 2.6.24 do not have the is_pcie member as part of
+-the struct pci_dev, to help with that we use the compat-2.6.24.c supplied
+-compat_is_pcie() when needed.
+-
+---- a/drivers/net/wireless/ath/ath5k/attach.c
+-+++ b/drivers/net/wireless/ath/ath5k/attach.c
+-@@ -276,7 +276,7 @@ int ath5k_hw_init(struct ath5k_softc *sc
+- 	/*
+- 	 * Write PCI-E power save settings
+- 	 */
+--	if ((ah->ah_version == AR5K_AR5212) && pdev && (pdev->is_pcie)) {
+-+	if ((ah->ah_version == AR5K_AR5212) && pdev && (pci_is_pcie(pdev))) {
+- 		ath5k_hw_reg_write(ah, 0x9248fc00, AR5K_PCIE_SERDES);
+- 		ath5k_hw_reg_write(ah, 0x24924924, AR5K_PCIE_SERDES);
+- 
+---- a/drivers/net/wireless/ath/ath5k/reset.c
+-+++ b/drivers/net/wireless/ath/ath5k/reset.c
+-@@ -537,7 +537,7 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah
+- 	 * we ingore that flag for PCI-E cards. On PCI cards
+- 	 * this flag gets cleared after 64 PCI clocks.
+- 	 */
+--	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
+-+	bus_flags = (pdev && pci_is_pcie(pdev)) ? 0 : AR5K_RESET_CTL_PCI;
+- 
+- 	if (ah->ah_version == AR5K_AR5210) {
+- 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+-@@ -594,7 +594,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw
+- 	 * we ingore that flag for PCI-E cards. On PCI cards
+- 	 * this flag gets cleared after 64 PCI clocks.
+- 	 */
+--	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
+-+	bus_flags = (pdev && pci_is_pcie(pdev)) ? 0 : AR5K_RESET_CTL_PCI;
+- 
+- 	if (ah->ah_version == AR5K_AR5210) {
+- 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+---- a/drivers/net/wireless/ath/ath9k/pci.c
+-+++ b/drivers/net/wireless/ath/ath9k/pci.c
+-@@ -96,7 +96,7 @@ static void ath_pci_bt_coex_prep(struct
+- 	struct pci_dev *pdev = to_pci_dev(sc->dev);
+- 	u8 aspm;
+- 
+--	if (!pdev->is_pcie)
+-+	if (!pci_is_pcie(pdev))
+- 		return;
+- 
+- 	pci_read_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, &aspm);
+---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+-@@ -301,7 +301,7 @@ int rt2x00pci_probe(struct pci_dev *pci_
+- 	rt2x00dev->irq = pci_dev->irq;
+- 	rt2x00dev->name = pci_name(pci_dev);
+- 
+--	if (pci_dev->is_pcie)
+-+	if (pci_is_pcie(pci_dev))
+- 		rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCIE);
+- 	else
+- 		rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_PCI);
+---- a/drivers/net/wireless/rtlwifi/pci.c
+-+++ b/drivers/net/wireless/rtlwifi/pci.c
+-@@ -1608,7 +1608,7 @@ static bool _rtl_pci_find_adapter(struct
+- 		pcipriv->ndis_adapter.pcibridge_funcnum =
+- 		    PCI_FUNC(bridge_pdev->devfn);
+- 		pcipriv->ndis_adapter.pcibridge_pciehdr_offset =
+--		    bridge_pdev->pcie_cap;
+-+		    pci_pcie_cap(bridge_pdev);
+- 		pcipriv->ndis_adapter.pcicfg_addrport =
+- 		    (pcipriv->ndis_adapter.pcibridge_busnum << 16) |
+- 		    (pcipriv->ndis_adapter.pcibridge_devnum << 11) |
+---- a/drivers/ssb/scan.c
+-+++ b/drivers/ssb/scan.c
+-@@ -405,10 +405,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
+- 				/* Ignore PCI cores on PCI-E cards.
+- 				 * Ignore PCI-E cores on PCI cards. */
+- 				if (dev->id.coreid == SSB_DEV_PCI) {
+--					if (bus->host_pci->is_pcie)
+-+					if (pci_is_pcie(bus->host_pci))
+- 						continue;
+- 				} else {
+--					if (!bus->host_pci->is_pcie)
+-+					if (!pci_is_pcie(bus->host_pci))
+- 						continue;
+- 				}
+- 			}
 -- 
-1.7.2.3
+1.7.1
 
