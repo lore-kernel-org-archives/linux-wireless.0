@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4821 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751980Ab1AYWHg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 17:07:36 -0500
-From: "Brett Rudley" <brudley@broadcom.com>
-To: "Richard Riley" <rileyrg@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 25 Jan 2011 14:07:18 -0800
-Subject: RE: bcm4313/bcrm80211 and debian liquirix
-Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE13CD6E92B2@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <vnbp34slhy.fsf@news.eternal-september.org>
-In-Reply-To: <vnbp34slhy.fsf@news.eternal-september.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39235 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752693Ab1AAOYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jan 2011 09:24:03 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat: add generic functions for suspend/resume
+Date: Sat,  1 Jan 2011 15:23:35 +0100
+Message-Id: <1293891815-22087-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1293891815-22087-1-git-send-email-hauke@hauke-m.de>
+References: <1293891815-22087-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes it should.  This issue recently appeared and I believe a patch has already been submitted.
+This define is used to generate a suspend and a resume function for pci
+devices using the old power management interface. The new interface was
+introduced in kernel 2.6.29.
 
-The fix is to simply delete that offending line. (It was a bogus check in the first place).
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.29.h |   34 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-Thanks
-Brett
-
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Richard Riley
-> Sent: Tuesday, January 25, 2011 1:48 PM
-> To: linux-wireless@vger.kernel.org
-> Subject: bcm4313/bcrm80211 and debian liquirix
-> 
-> 
-> According to docs I googled up the brcm80211 driver should work with the
-> bcm4313 wireless device.
-> 
-> I have installed the debian firmware-brcm80211 package but when I
-> modprobe the bcrm80211 module there is kernel panic, I get the black
-> screen of death and a dump saying  (reading off the
-> laptop screen)
-> 
-> !(sdu->cloned) failed : file wlc_mac80211.c line 5140
-> 
-> 
-> I'm fairly new to all this so any pointers greatfully received. My
-> kernel is:-
-> 
-> Linux asus1015pem 2.6.37-0.slh.7-aptosid-686 #1 SMP PREEMPT Sun Jan 16
-> 23:16:55 UTC 2011 i686 GNU/Linux
-> 
-> 
-> If I can provide more info please let me know and let me know how.
-> 
-> regards
-> 
-> r.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index 78b2d58..b4e1236 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -278,6 +278,36 @@ static inline struct net *read_pnet(struct net * const *pnet)
+ 
+ extern int		init_dummy_netdev(struct net_device *dev);
+ 
++#define compat_pci_suspend(fn)						\
++	int fn##_compat(struct pci_dev *pdev, pm_message_t state) 	\
++	{								\
++		int r;							\
++									\
++		r = fn(&pdev->dev);					\
++		if (r)							\
++			return r;					\
++									\
++		pci_save_state(pdev);					\
++		pci_disable_device(pdev);				\
++		pci_set_power_state(pdev, PCI_D3hot);			\
++									\
++		return 0;						\
++	}
++
++#define compat_pci_resume(fn)						\
++	int fn##_compat(struct pci_dev *pdev)				\
++	{								\
++		int r;							\
++									\
++		pci_set_power_state(pdev, PCI_D0);			\
++		r = pci_enable_device(pdev);				\
++		if (r)							\
++			return r;					\
++		pci_restore_state(pdev);				\
++									\
++		return fn(&pdev->dev);					\
++	}
++
+ #else
+ 
+ static inline void netdev_attach_ops(struct net_device *dev,
+@@ -285,6 +315,10 @@ static inline void netdev_attach_ops(struct net_device *dev,
+ {
+ 	dev->netdev_ops = ops;
+ }
++
++#define compat_pci_suspend(fn)
++#define compat_pci_resume(fn)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
+ #endif /*  LINUX_26_29_COMPAT_H */
+-- 
+1.7.1
 
