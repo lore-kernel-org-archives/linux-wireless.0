@@ -1,119 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:45755 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753997Ab1AaSrx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:47:53 -0500
-Subject: [PATCH 05/22] zd1211rw: move set_multicast_hash and set_rx_filter
-	from workers to configure_filter
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	Jussi Kivilinna <jussi.kivilina@mbnet.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Mon, 31 Jan 2011 20:47:46 +0200
-Message-ID: <20110131184746.10044.66051.stgit@fate.lan>
-In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
-References: <20110131184657.10044.98610.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39224 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610Ab1AAOYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Jan 2011 09:24:00 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat: backport alloc_workqueue
+Date: Sat,  1 Jan 2011 15:23:34 +0100
+Message-Id: <1293891815-22087-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1293891815-22087-1-git-send-email-hauke@hauke-m.de>
+References: <1293891815-22087-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Workers not needed anymore since configure_filter may sleep. Keep
-mac->multicast_hash for later use (hw reset).
+This is needed by rtlwifi.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilina@mbnet.fi>
+The function signature of __create_workqueue changed in kernel 2.6.28,
+so two different defines are needed.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c |   38 ++++++--------------------------
- drivers/net/wireless/zd1211rw/zd_mac.h |    2 --
- 2 files changed, 7 insertions(+), 33 deletions(-)
+ include/linux/compat-2.6.28.h |    2 ++
+ include/linux/compat-2.6.36.h |    4 ++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 8b3d779..75d9a13 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -927,31 +927,6 @@ static void zd_process_intr(struct work_struct *work)
- }
+diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
+index b9024d6..fdb8fb2 100644
+--- a/include/linux/compat-2.6.28.h
++++ b/include/linux/compat-2.6.28.h
+@@ -236,6 +236,8 @@ extern int n_tty_ioctl_helper(struct tty_struct *tty, struct file *file,
  
+ int pci_wake_from_d3(struct pci_dev *dev, bool enable);
  
--static void set_multicast_hash_handler(struct work_struct *work)
--{
--	struct zd_mac *mac =
--		container_of(work, struct zd_mac, set_multicast_hash_work);
--	struct zd_mc_hash hash;
--
--	spin_lock_irq(&mac->lock);
--	hash = mac->multicast_hash;
--	spin_unlock_irq(&mac->lock);
--
--	zd_chip_set_multicast_hash(&mac->chip, &hash);
--}
--
--static void set_rx_filter_handler(struct work_struct *work)
--{
--	struct zd_mac *mac =
--		container_of(work, struct zd_mac, set_rx_filter_work);
--	int r;
--
--	dev_dbg_f(zd_mac_dev(mac), "\n");
--	r = set_rx_filter(mac);
--	if (r)
--		dev_err(zd_mac_dev(mac), "set_rx_filter_handler error %d\n", r);
--}
--
- static u64 zd_op_prepare_multicast(struct ieee80211_hw *hw,
- 				   struct netdev_hw_addr_list *mc_list)
- {
-@@ -983,6 +958,7 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
- 	};
- 	struct zd_mac *mac = zd_hw_mac(hw);
- 	unsigned long flags;
-+	int r;
++#define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
  
- 	/* Only deal with supported flags */
- 	changed_flags &= SUPPORTED_FIF_FLAGS;
-@@ -1004,11 +980,13 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
- 	mac->multicast_hash = hash;
- 	spin_unlock_irqrestore(&mac->lock, flags);
+ #endif /* LINUX_26_28_COMPAT_H */
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 1f2f507..74d2309 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -97,6 +97,10 @@ struct pm_qos_request_list {
+ static inline __attribute__ ((format (printf, 1, 2)))
+ int no_printk(const char *s, ...) { return 0; }
  
--	/* XXX: these can be called here now, can sleep now! */
--	queue_work(zd_workqueue, &mac->set_multicast_hash_work);
-+	zd_chip_set_multicast_hash(&mac->chip, &hash);
++#ifndef alloc_workqueue
++#define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
++#endif
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
  
--	if (changed_flags & FIF_CONTROL)
--		queue_work(zd_workqueue, &mac->set_rx_filter_work);
-+	if (changed_flags & FIF_CONTROL) {
-+		r = set_rx_filter(mac);
-+		if (r)
-+			dev_err(zd_mac_dev(mac), "set_rx_filter error %d\n", r);
-+	}
- 
- 	/* no handling required for FIF_OTHER_BSS as we don't currently
- 	 * do BSSID filtering */
-@@ -1164,9 +1142,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
- 
- 	zd_chip_init(&mac->chip, hw, intf);
- 	housekeeping_init(mac);
--	INIT_WORK(&mac->set_multicast_hash_work, set_multicast_hash_handler);
- 	INIT_WORK(&mac->set_rts_cts_work, set_rts_cts_work);
--	INIT_WORK(&mac->set_rx_filter_work, set_rx_filter_handler);
- 	INIT_WORK(&mac->process_intr, zd_process_intr);
- 
- 	SET_IEEE80211_DEV(hw, &intf->dev);
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
-index a6d86b9..f28ecb9 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-@@ -173,9 +173,7 @@ struct zd_mac {
- 	spinlock_t intr_lock;
- 	struct ieee80211_hw *hw;
- 	struct housekeeping housekeeping;
--	struct work_struct set_multicast_hash_work;
- 	struct work_struct set_rts_cts_work;
--	struct work_struct set_rx_filter_work;
- 	struct work_struct process_intr;
- 	struct zd_mc_hash multicast_hash;
- 	u8 intr_buffer[USB_MAX_EP_INT_BUFFER];
+ #endif /* LINUX_26_36_COMPAT_H */
+-- 
+1.7.1
 
