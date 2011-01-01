@@ -1,123 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53576 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129Ab1ADTgh (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:46698 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752610Ab1AAOxL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 14:36:37 -0500
-Received: by iyi12 with SMTP id 12so13271425iyi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 11:36:37 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sat, 1 Jan 2011 09:53:11 -0500
+Message-ID: <4D1F3FEE.7@gmail.com>
+Date: Sat, 01 Jan 2011 06:53:34 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19747.30389.751676.478131@gargle.gargle.HOWL>
-Date: Wed, 5 Jan 2011 01:06:21 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH] ath9k_htc: Really fix packet injection
+To: Dan Carpenter <error27@gmail.com>,
+	Finn Thain <fthain@telegraphics.com.au>,
+	devel@driverdev.osuosl.org, trivial@kernel.org,
+	linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-m68k@lists.linux-m68k.org,
+	spi-devel-general@lists.sourceforge.net,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH 03/15]drivers:staging:rtl8187se:r8180_hw.h Typo change
+ diable to disable.
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <alpine.LNX.2.00.1012311722580.24460@nippy.intranet> <4D1EDB22.2020308@gmail.com> <20110101090931.GH1886@bicker>
+In-Reply-To: <20110101090931.GH1886@bicker>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On 01/01/2011 01:09 AM, Dan Carpenter wrote:
+> On Fri, Dec 31, 2010 at 11:43:30PM -0800, Justin P. Mattock wrote:
+>> On 12/31/2010 10:48 PM, Finn Thain wrote:
+>>>> -/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are diable.					*/
+>>>> +/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are disabled.					*/
+>>>
+>>> I think, "other values disable" was what you meant?
+>>>
+>>> Finn
+>>>
+>>>>   #define EEPROM_SW_AD_MASK			0x0300
+>>>>   #define EEPROM_SW_AD_ENABLE			0x0100
+>>>>
+>>>>
+>>>
+>>
+>> no! I changed it to disabled to make it proper..
+>
+> Finn is obviously right, but maybe a compromise would be:
+>
+> Only the value EEPROM_SW_AD_ENABLE means "enable", other values mean
+> "disable".
+>
+> regards,
+> dan carpenter
+>
 
-The chainmask value along with other configuration has to be set
-on the target for packet injection. Fix this and also move the monitor
-interface addition before the channel set segment to ensure that
-the opmode is updated properly.
+ahh.. I see what you your saying now.. alright let me send this out that 
+way..
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   37 +++++++++++++++++-------
- 2 files changed, 27 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index a099b3e..1ce506f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -433,6 +433,7 @@ void ath9k_htc_txep(void *priv, struct sk_buff *skb, enum htc_endpoint_id ep_id,
- void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
- 			enum htc_endpoint_id ep_id, bool txok);
- 
-+int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv);
- void ath9k_htc_station_work(struct work_struct *work);
- void ath9k_htc_aggr_work(struct work_struct *work);
- void ath9k_ani_work(struct work_struct *work);;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 845b4c9..f4d576b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -301,6 +301,16 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
- 
- 	priv->nstations++;
- 
-+	/*
-+	 * Set chainmask etc. on the target.
-+	 */
-+	ret = ath9k_htc_update_cap_target(priv);
-+	if (ret)
-+		ath_dbg(common, ATH_DBG_CONFIG,
-+			"Failed to update capability in target\n");
-+
-+	priv->ah->is_monitoring = true;
-+
- 	return 0;
- 
- err_vif:
-@@ -328,6 +338,7 @@ static int ath9k_htc_remove_monitor_interface(struct ath9k_htc_priv *priv)
- 	}
- 
- 	priv->nstations--;
-+	priv->ah->is_monitoring = false;
- 
- 	return 0;
- }
-@@ -419,7 +430,7 @@ static int ath9k_htc_remove_station(struct ath9k_htc_priv *priv,
- 	return 0;
- }
- 
--static int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
-+int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
- {
- 	struct ath9k_htc_cap_target tcap;
- 	int ret;
-@@ -1186,6 +1197,20 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
- 
-+	/*
-+	 * Monitor interface should be added before
-+	 * IEEE80211_CONF_CHANGE_CHANNEL is handled.
-+	 */
-+	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-+		if (conf->flags & IEEE80211_CONF_MONITOR) {
-+			if (ath9k_htc_add_monitor_interface(priv))
-+				ath_err(common, "Failed to set monitor mode\n");
-+			else
-+				ath_dbg(common, ATH_DBG_CONFIG,
-+					"HW opmode set to Monitor mode\n");
-+		}
-+	}
-+
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
- 		struct ieee80211_channel *curchan = hw->conf.channel;
- 		int pos = curchan->hw_value;
-@@ -1221,16 +1246,6 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		ath_update_txpow(priv);
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
--		if (conf->flags & IEEE80211_CONF_MONITOR) {
--			if (ath9k_htc_add_monitor_interface(priv))
--				ath_err(common, "Failed to set monitor mode\n");
--			else
--				ath_dbg(common, ATH_DBG_CONFIG,
--					"HW opmode set to Monitor mode\n");
--		}
--	}
--
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
- 		mutex_lock(&priv->htc_pm_lock);
- 		if (!priv->ps_idle) {
--- 
-1.7.3.4
-
+Justin P. Mattock
