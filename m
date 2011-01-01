@@ -1,89 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa01-08.prod.phx3.secureserver.net ([72.167.82.88]:59670
-	"HELO p3plsmtpa01-08.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751564Ab1AROdv (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:59886 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751318Ab1AAUDg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 09:33:51 -0500
-Message-ID: <BB274B92115347F9A8E250DEF0C2B732@ChuckPC>
-From: "Chuck Crisler" <ccrisler@vgocom.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-References: <D323CFEF4DEC4E18AFF56742F78C16B6@ChuckPC> <1295347932.3563.13.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295347932.3563.13.camel@jlt3.sipsolutions.net>
-Subject: Re: intermittent eap authentication failure
-Date: Tue, 18 Jan 2011 09:33:40 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="utf-8";
-	reply-type=original
+	Sat, 1 Jan 2011 15:03:36 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 8F227540EA5
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Jan 2011 15:04:31 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110101200315.7F06840F97@repository3.orbit-lab.org>
+Date: Sat,  1 Jan 2011 15:03:15 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is the MAC80211 code. I am looking to find the exact code that 
-re-associates. We are running an old kernel (2.6.31.6) but can't update 
-right now.
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Our app is a mobile video conferencing system (a robot). It is imperative 
-that my connection to the network always be good. When you get  a session 
-timeout from the AP there isn't any reason to do a scan. The MAC driver can 
-send the association request and then notify the supplicant when it receives 
-the assosication response. The supplicant can then handle the higher layer 
-authentication. With the minor supplicant change that I included earler this 
-works with all authentication schemes. However, I have removed the 2 lines 
-that dealt with setting the EAP authentication to NULL. I think that they 
-were causing the EAP problems. The result is that now I re-connect after a 
-session timeout withint 0.75 seconds.
+compat-wireless code metrics
 
-Another problem that I found is that sometimes (not often) the Cisco WLC was 
-sending us a second deauthentication while we were still 'disconnected'. The 
-MAC driver dutifully sent that to the supplicant which was busy trying to 
-re-authenticate, again causing a mess. Now, I have changed the MAC driver to 
-drop that second deauth message if we aren't connected. It works a lot 
-better.
-
-The response that Daniel Halperin made to Larry Finger concerning the reason 
-code 4 (inactivity) isn't correct. That may be the intent but Cisco sends 
-that reason code more often. I have received it withint 3 seconds of 
-receiving an association response. Again, not often but it does happen. I am 
-currently working to understand why the Cisco WLC does this and have 
-extensive logging enabled on my WLC. Unfortuantely, all of the failures are 
-occurring after the WLC times out my putty session!
-
-More to come.
-
------ Original Message ----- 
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "Chuck Crisler" <ccrisler@vgocom.com>
-Cc: <linux-wireless@vger.kernel.org>
-Sent: Tuesday, January 18, 2011 5:52 AM
-Subject: Re: intermittent eap authentication failure
-
-
-> Chuck,
->
->> Sometime ago I found a conflict between the supplicant and the MAC80211 
->> code
->> dealing with Cisco session timeouts. When we were 'deauthenticated', the 
->> MAC
->> code notified the supplicant AND re-associated with the AP.
->
-> That doesn't seem right, mac80211 will never re-associate by itself.
->
->> We modified the driver so that if it received a
->> de-auth with reason code 1 (undefined?), it would *NOT* notify the
->> supplicant but would re-associate, then notify the supplicant of the new
->> association.
->
-> What's that driver you're talking about? A mac80211 driver that
-> reassociates by itself doesn't seem right at all.
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+    774936 - Total upstream lines of code being pulled
