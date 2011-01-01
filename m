@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36403 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277Ab1AEIBA convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47610 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568Ab1AAVfW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 03:01:00 -0500
-Received: by yxt3 with SMTP id 3so5914380yxt.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 00:00:59 -0800 (PST)
+	Sat, 1 Jan 2011 16:35:22 -0500
+Message-ID: <4D1F9E12.2060006@gmail.com>
+Date: Sat, 01 Jan 2011 13:35:14 -0800
+From: Stephen Boyd <bebarino@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201101041936.47573.helmut.schaa@googlemail.com>
-References: <AANLkTinM9oPV=CJ3iUP2=fEH=+fRP5JPMO4tHLOZzHrS@mail.gmail.com>
-	<AANLkTimPmCZ3O0WKe4OH1z4+rmtUtAr2wqsrFOUCJg_Q@mail.gmail.com>
-	<201101041936.47573.helmut.schaa@googlemail.com>
-Date: Wed, 5 Jan 2011 02:00:59 -0600
-Message-ID: <AANLkTimV8xmFdfQcyQX4OdDkggR5mCdBiuFtWsgEkBEu@mail.gmail.com>
-Subject: Re: (rt61pci/hostapd) no packet activity when encryption is enabled
- and interface is bridged
-From: C Anthony Risinger <anthony@extof.me>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
+To: Heinz Diehl <htd@fancy-poultry.org>
+CC: users@rt2x00.serialmonkey.com, Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
+References: <4D1DAF0A.40000@gmail.com> <20110101102817.GC6981@fancy-poultry.org>
+In-Reply-To: <20110101102817.GC6981@fancy-poultry.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 4, 2011 at 12:36 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Dienstag, 4. Januar 2011 schrieb C Anthony Risinger:
->> On Mon, Jan 3, 2011 at 10:30 PM, C Anthony Risinger <anthony@extof.me> wrote:
->> >
->> > problem summary: an rt61pci driven card does not seem to allow any
->> > packets to enter/exit it's bridge ONLY WHEN ENCRYPTION is enabled;
->> > without it, everything works perfectly.
->>
->> hmmmmm....
->>
->> it would seem:
->>
->> options rt61pci nohwcrypt=1
->>
->> solves the problem.  what does this mean?  do i have a bad chip?
->
-> I don't think so. Might be related to [1].
+On 01/01/11 02:28, Heinz Diehl wrote:
+> On 31.12.2010, Stephen Boyd wrote: 
+> 
+>> [ 9085.714105] BUG: unable to handle kernel NULL pointer dereference at
+>> 00000000000000a4
+>> [ 9085.714816] IP: [<ffffffffa0025458>] rt2x00lib_txdone+0x36/0x249
+>> [rt2x00lib]
+>> [ 9085.715017] PGD 215fd067 PUD 292f4067 PMD 0
+>> [ 9085.715017] Oops: 0000 [#1] SMP
+>> [ 9085.715017] last sysfs file:
+>> /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+>> [ 9085.715017] CPU 1
+>> [ 9085.715017] Modules linked in: usb_storage thermal snd_seq_oss
+>> snd_seq_midi snd_seq_dummy snd_pcm_oss snd_mixer_oss snd_hrtimer
+>> snd_emu10k1_synth snd_emux_synth snd_seq_virmidi snd_seq_midi_event
+>> snd_seq_midi_emul snd_seq scsi_wait_scan powernow_k8 mperf i2c_i801 fuse
+>> fan snd_emu10k1 snd_rawmidi snd_ac97_codec ac97_bus snd_pcm
+>> snd_seq_device snd_timer snd_page_alloc snd_util_mem rt73usb crc_itu_t
+>> rt2x00usb snd_hwdep snd processor r8169 via82cxxx rt2x00lib soundcore
+>> mii button k8temp
+>> [ 9085.715017]
+>> [ 9085.715017] Pid: 11513, comm: kworker/1:0 Not tainted 2.6.37-rc7+ #27
+>> MS-7094/MS-7094
+> [....]
+> 
+> I'm not quite shure on this, but it reminds me on this bug here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=24892
+> 
 
-i think you might have called it (did not verify)!  i built
-compat-wireless 12/26/2010 and i am now able to use the hwencrypt
-option.  thanks!
-
-> [1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=fa8b4b22d543b4052602b0c86065150613ed19e8
-
-C Anthony
+I believe I had the latest net tree merged into 2.6.37-rc7 in which case
+the patch mentioned in that bugzilla would already be applied.
