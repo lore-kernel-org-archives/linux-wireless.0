@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:50866 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751301Ab1AXVpg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 16:45:36 -0500
-Subject: Re: [PATCH] wl12xx: disable auto-arp
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1295893143-6981-1-git-send-email-eliad@wizery.com>
-References: <1295893143-6981-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 23:45:45 +0200
-Message-ID: <1295905545.4430.6.camel@pimenta>
-MIME-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:47016 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751192Ab1ABUCb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Jan 2011 15:02:31 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id BC9555424EC
+	for <linux-wireless@vger.kernel.org>; Sun,  2 Jan 2011 15:03:48 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-02 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110102200230.99EF940F97@repository3.orbit-lab.org>
+Date: Sun,  2 Jan 2011 15:02:30 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-24 at 19:19 +0100, Eliad Peller wrote:
-> The auto-arp feature sometimes has unexpected side effects (e.g. firmware
-> crashes, no ARP replies, etc.)
-> disable it until it will be solved.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Damn that we're having problems with this feature again. :( It looked so
-promising!
+compat-wireless code metrics
 
-Anyway, applied this, let's hope the issue can be fixed in the near
-future.
-
--- 
-Cheers,
-Luca.
-
+    774936 - Total upstream lines of code being pulled
