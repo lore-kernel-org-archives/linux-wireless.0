@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39470 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab1AIPfl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 10:35:41 -0500
-Received: by iwn9 with SMTP id 9so18522176iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Jan 2011 07:35:40 -0800 (PST)
+Received: from cantor2.suse.de ([195.135.220.15]:46759 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754745Ab1ACPBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 10:01:43 -0500
+Date: Mon, 3 Jan 2011 16:01:41 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Mauro Carvalho Chehab <maurochehab@gmail.com>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 14/15]include:media:davinci:vpss.h Typo change diable to
+ disable.
+In-Reply-To: <4D1DAFF5.3090108@gmail.com>
+Message-ID: <alpine.LNX.2.00.1101031600510.26685@pobox.suse.cz>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-13-git-send-email-justinmattock@gmail.com> <1293750484-1161-14-git-send-email-justinmattock@gmail.com> <4D1DAFF5.3090108@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4D29C3D1.4020804@openwrt.org>
-References: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
-	<4D28FF57.9040706@openwrt.org>
-	<4D290307.4080807@candelatech.com>
-	<4D290450.8070700@openwrt.org>
-	<4D290A2C.6040803@candelatech.com>
-	<AANLkTim0=1wpPGPDZZzVjO0u_jvv5knA2=v4b-dTfRFq@mail.gmail.com>
-	<4D29C3D1.4020804@openwrt.org>
-Date: Sun, 9 Jan 2011 16:35:40 +0100
-Message-ID: <AANLkTinu9zC3fdMrqmmN__WFd3tMP7Waszp26O2PAtoP@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Implement rx copy-break.
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/9 Felix Fietkau <nbd@openwrt.org>:
-> On 2011-01-09 7:15 AM, Björn Smedman wrote:
->>
->> I think we should also consider the added stability/saneness with this
->> patch. I for one would be willing to live with some extra cpu load if
->> that means the unstoppable rx dma problem can be contained (all the
->> time).
->
-> I don't think this patch has anything to do with the rx dma stop issue.
+On Fri, 31 Dec 2010, Mauro Carvalho Chehab wrote:
 
-Ok, so if you have a machine gun that can go off at any time and is
-impossible to stop you don't think it makes a difference where it's
-pointed? ;) Just kidding, and call me superstitious, but I would feel
-much better knowing ath9k is pointing that half-broken dma engine at
-it's own data only, at least until it's 100% stable.
+> Em 30-12-2010 21:08, Justin P. Mattock escreveu:
+> > The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> > is correct or not.
+> > 
+> > Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
 
-/Björn
+Applied.
+
+> 
+> PS.: Next time, please c/c linux-media ONLY on patches related to media
+> drivers (/drivers/video and the corresponding include files). Having to
+> dig into a series of 15 patches to just actually look on 3 patches 
+> is not nice.
+
+Absolutely.
+
+Justin, no kernel developer should be afraid of being CCed. But try to 
+avoid really unnecessary spamming (which this was).
+
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
