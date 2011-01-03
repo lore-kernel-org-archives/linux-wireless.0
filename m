@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:63109 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752652Ab1AXVRE convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45203 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab1ACFoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 16:17:04 -0500
-Received: by qyk12 with SMTP id 12so5036954qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 13:17:04 -0800 (PST)
+	Mon, 3 Jan 2011 00:44:06 -0500
+Date: Mon, 3 Jan 2011 08:43:55 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] mac80211: potential null dereference in mesh forwarding
+Message-ID: <20110103054355.GP1886@bicker>
 MIME-Version: 1.0
-In-Reply-To: <1295894723-28346-1-git-send-email-padovan@profusion.mobi>
-References: <1295894723-28346-1-git-send-email-padovan@profusion.mobi>
-Date: Mon, 24 Jan 2011 22:17:04 +0100
-Message-ID: <AANLkTi=GqWNd6yu0CeWAzt9ZRgCDkFRgwMExZiqEUr3Z@mail.gmail.com>
-Subject: Re: [PATCH] brcm80211: fix error report string
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Gustavo F. Padovan" <padovan@profusion.mobi>
-Cc: brudley@broadcom.com, henryp@broadcom.com, dowan@broadcom.com,
-	vossen@broadcom.com, arend@broadcom.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/24 Gustavo F. Padovan <padovan@profusion.mobi>:
-> Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
-> ---
->  drivers/staging/brcm80211/sys/wlc_mac80211.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> index 5eb41d6..ee1bcc5 100644
-> --- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> +++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> @@ -6910,7 +6910,7 @@ prep_mac80211_status(struct wlc_info *wlc, d11rxhdr_t *rxh, struct sk_buff *p,
->                preamble = 0;
->                if (IS_CCK(rspec)) {
->                        if (rxh->PhyRxStatus_0 & PRXS0_SHORTH)
-> -                               WL_ERROR("Short CCK\n");
-> +                               WL_ERROR("%s: Short CCK\n, __func__");
+The printk() is supposed to be ratelimited but we should always goto out
+when fwd_skb is NULL.  Otherwise it gets dereferenced on the next line.
 
-I have no idea how WL_ERROR works, but are you sure of that?
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-You wrote:
-"%s: Short CCK\n, __func__"
-
-Didn't you mean:
-"%s: Short CCK\n", __func__
-?
-
--- 
-Rafał
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5e9d3bc..dc8b566 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1831,8 +1831,9 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 
+ 			fwd_skb = skb_copy(skb, GFP_ATOMIC);
+ 
+-			if (!fwd_skb && net_ratelimit()) {
+-				printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
++			if (!fwd_skb) {
++				if (net_ratelimit())
++					printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
+ 						   sdata->name);
+ 				goto out;
+ 			}
