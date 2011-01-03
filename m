@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38346 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818Ab1AONeM (ORCPT
+Received: from mail-iy0-f194.google.com ([209.85.210.194]:51344 "EHLO
+	mail-iy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755542Ab1ACRYL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 08:34:12 -0500
+	Mon, 3 Jan 2011 12:24:11 -0500
+Received: by iyf40 with SMTP id 40so6384963iyf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jan 2011 09:24:11 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201101131423.51640.helmut.schaa@googlemail.com>
-References: <m31v4hkmkf.fsf@ingo.homenetwork>
-	<201101131423.51640.helmut.schaa@googlemail.com>
-Date: Sat, 15 Jan 2011 14:34:11 +0100
-Message-ID: <AANLkTimMVdsGONSD9OmnX2eJk51H5Pzj4K8irHa=E-qx@mail.gmail.com>
-Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Ingo Brunberg <ingo_brunberg@web.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <0826983CC0CB074798C42E77D8ACD07F063277@pdtms1.pdt.com>
+References: <0826983CC0CB074798C42E77D8ACD07F0616CB@pdtms1.pdt.com>
+ <AANLkTimH1aFuBfgD8g50YJjto9Mx3jRaPJMa5veG1o+z@mail.gmail.com> <0826983CC0CB074798C42E77D8ACD07F063277@pdtms1.pdt.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Mon, 3 Jan 2011 19:23:50 +0200
+Message-ID: <AANLkTime2kkcRqA8m2D=Z24vaw+kZea6jHVTbfALLj1+@mail.gmail.com>
+Subject: Re: wl1271 status/update
+To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Karen,
 
-> Just a shot in the dark but since the stack trace shows the newly added
-> watchdog this might be the result of a race between a regular txdone work
-> (mac80211 workqueue) vs the watchdog work (global workqueue).
+On Mon, Jan 3, 2011 at 7:00 PM, Brzezowski, Karen
+<Karen.Brzezowski@pdt.com> wrote:
+...
+> I see things about compat-wireless, mac80211, sdio runtime pm support,
+> lenient generic runtime pm callbacks,
+> etc..
 >
-> I guess the following situation could happen:
-> A regular tx done work calls rt2x00lib_txdone which first sets entry->skb to
-> NULL, calls the driver specific clear_entry and afterwards increases
-> Q_INDEX_DONE. If the watchdog work calls rt2x00lib_txdone on a different CPU
-> inbetween the skb might be NULL and cause the above oops.
+> I don't really understand.. do i need all of this for wl1271...
 
-This could be, would be interesting to know if compat-wireless also shows
-this problem. Because the queue refactoring code which should have solved
-these race conditions was added after 2.6.37.
+compat-wireless will build you the mac80211 layer and the wl1271
+driver as external modules.
 
-Ivo
+Normally that should have been enough, but in order to support the
+SDIO interface of the wl1271 we had to change a few stuff in the
+kernel (mainly add runtime PM support into the SDIO subsystem).
+
+Those changes were merged into 2.6.37, so users of older kernels have
+to backport them manually. Here's the list of items you need:
+
+* SDIO runtime PM (11 patches)
+* The "lenient pm callbacks" patch (a really small and trivial patch)
+* "wl12xx: add platform data passing support" (that one is not
+mentioned in the wiki yet for some reason, here's its link:
+http://www.mail-archive.com/linux-omap@vger.kernel.org/msg34839.html)
+
+But if you're using 2.6.31 you may need other stuff too.. E.g. I'm not
+sure that SDIO suspend/resume even made it to 2.6.31 at all...
+
+> is there any high level documentation as to how wl1271 fits into linux/android?
+
+Hmm.. the wiki ?  :)
+
+Regards,
+Ohad.
