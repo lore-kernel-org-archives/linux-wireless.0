@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57536 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755286Ab1ATJyp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 04:54:45 -0500
-Subject: Re: [RFC 1/4] mac80211: support for IEEE80211N in IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20110120T103741-140@post.gmane.org>
-References: <201101191438.01161.alexander.simon@saxnet.de>
-	 <1295447708.4685.5.camel@jlt3.sipsolutions.net>
-	 <loom.20110120T093834-982@post.gmane.org>
-	 <1295515469.3693.17.camel@jlt3.sipsolutions.net>
-	 <loom.20110120T103741-140@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Jan 2011 10:54:43 +0100
-Message-ID: <1295517283.3693.31.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:59979 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752930Ab1ACVZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 16:25:15 -0500
+To: Jouni Malinen <j@w1.fi>
+Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, Jouni Malinen <Jouni.Malinen@atheros.com>
+Subject: Re: [PATCH] Revert "ath9k: Parse DTIM period from mac80211"
+References: <1293691681-3574-1-git-send-email-mshajakhan@atheros.com>
+	<871v4xgdfp.fsf@purkki.adurom.net> <20110102085300.GA14217@jm.kir.nu>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 03 Jan 2011 23:25:12 +0200
+In-Reply-To: <20110102085300.GA14217@jm.kir.nu> (Jouni Malinen's message of "Sun\, 2 Jan 2011 10\:53\:00 +0200")
+Message-ID: <87vd25fznr.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-20 at 09:48 +0000, Alexander Simon wrote:
+Jouni Malinen <j@w1.fi> writes:
 
-> > Well, then maybe I just discussed this with him -- there's similar code
-> > building the HT IEs for stations, that code should be shared.
+> On Sat, Jan 01, 2011 at 11:50:50AM +0200, Kalle Valo wrote:
+>> Mohammed Shafi Shajakhan <mshajakhan@atheros.com> writes:
+>> > * Preventing association with broken AP's
+>> 
+>> How can different dtim value cause problems with association? Power
+>> save should not be even enabled during association. Or do you mean
+>> there are problems after association, for example during eap
+>> negotation?
+>
+> It is not the DTIM value, it is the part of having to receive a Beacon
+> frame before even trying to associate. This is very much a corner case,
+> but well, that behavior did change with the commit.
 
-> So you mean my patch 2/4? It could work but you would have to change util.c of
-> course. I was pretty sure you wouldn't have accepted that.
+[...]
 
-Of course I'd accept that :-) Reducing duplicated code is good, and I
-can deal with patches touching many files. Though it'd be nice to do the
-necessary refactoring first.
+> The real issue (as far as I can tell) was that ath9k was changed to
+> require mac80211 to get it DTIM period before association. I'm not aware
+> of any need for that with ath9k. It should have no problems updating PS
+> parameters after association and as such, should not require mac80211 to
+> figure DTIM period out before being able to associate. This change is
+> not about hardcoding DTIM period; it is about removing unneeded change
+> that added extra latency without any real gain.
 
-A nice touch, btw, would be if you included a diffstat. Maybe you should
-look at using quilt or git to submit patches which help you automate a
-lot of things.
+Ah, sorry. I misunderstood the case here then.
 
+I have a feeling ath9k consumes quite a lot of power already, even
+when I use dtim 10, and I was worried if ath9k power consumption even
+increases more :)
 
-> Ok, separating cfg from mac. No big deal. I'll have to look how to advertise
-> something...
-
-Look at WIPHY_FLAG_IBSS_RSN in net/wireless and net/mac80211 -- that's
-how things can be advertised. Also, for this one of course you have
-NL80211_ATTR_SUPPORT_IBSS_RSN.
-
-> But i would appreciate if you could comment on the design of the patch itself.
-> Basically i just took Benoits approach and made it running. A separate option
-> for setting channel_type isn't necessary. You could also tell by iw whether to
-> use HT or not. Or no option at all, a module option ibss_ht etc. Or even setting
-> full options as hostapd does via iw.
-
-I'm sorry, I don't understand what you mean by "a separate option"? With
-the approach that you've posted patches for you need to tell iw whether
-you want HT or not, right?
-
-johannes
-
+-- 
+Kalle Valo
