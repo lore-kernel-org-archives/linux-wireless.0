@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:23084 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753563Ab1AYKVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 05:21:35 -0500
-From: juuso.oikarinen@nokia.com
-To: linville@tuxdriver.com
+Received: from he.sipsolutions.net ([78.46.109.217]:59078 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755526Ab1ACSQQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 13:16:16 -0500
+Subject: Re: OOPS at ieee80211_aes_ccm_encrypt()?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: Allow non-zero indexes for device specific pair-wise ciphers
-Date: Tue, 25 Jan 2011 12:21:22 +0200
-Message-Id: <1295950882-16785-1-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <20110103201138.146879onsq0vcqqg@hayate.sektori.org>
+References: <20110103001006.13085vt89qfm6pcs@hayate.sektori.org>
+	 <1294073190.3436.2.camel@jlt3.sipsolutions.net>
+	 <20110103201138.146879onsq0vcqqg@hayate.sektori.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 Jan 2011 19:16:14 +0100
+Message-ID: <1294078574.3436.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Mon, 2011-01-03 at 20:11 +0200, Jussi Kivilinna wrote:
+> Quoting Johannes Berg <johannes@sipsolutions.net>:
+> 
+> >
+> > It looks like it. Can you reproduce this fairly easily? I wonder if it's
+> > an RCU problem, we do key lookups under RCU but I see no grace period
+> > right now ... try the patch below, I'll look into it in more detail.
+> >
+> 
+> I have been running tests past two weeks and this came up once. I have  
+> been running hostapd with wpa_group_rekey=30 and wpa_ptk_rekey=60 and  
+> doing 'nc < /dev/zero > /dev/null' at both ends and 'ping -f'. When  
+> this crash happened other end was rndis_wlan. I'll try reproducing,  
+> but doubt it will.
 
-Some vendor specific cipher suites require non-zero key indexes for pairwise
-keys, but as of currently, the cfg80211 does not allow it.
+Alright, thanks. In the meantime, I dug through the code and history and
+saw that there was a synchronize_rcu that I accidentally removed, so
+I'll just send out the patch with more commentary.
 
-As validating they cipher parameters for vendor specific cipher suites is the
-job of the driver or hardware/firmware, change the cfg80211 to allow also
-non-zero pairwise key indexes for vendor specific ciphers.
+johannes
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- net/wireless/util.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 4ed065d..6a750bc 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -167,12 +167,15 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 
- 	/*
- 	 * Disallow pairwise keys with non-zero index unless it's WEP
--	 * (because current deployments use pairwise WEP keys with
--	 * non-zero indizes but 802.11i clearly specifies to use zero)
-+	 * or a vendor specific cipher (because current deployments use
-+	 * pairwise WEP keys with non-zero indices and for vendor specific
-+	 * ciphers this should be validated in the driver or hardware level
-+	 * - but 802.11i clearly specifies to use zero)
- 	 */
- 	if (pairwise && key_idx &&
--	    params->cipher != WLAN_CIPHER_SUITE_WEP40 &&
--	    params->cipher != WLAN_CIPHER_SUITE_WEP104)
-+	    ((params->cipher == WLAN_CIPHER_SUITE_TKIP) ||
-+	     (params->cipher == WLAN_CIPHER_SUITE_CCMP) ||
-+	     (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC)))
- 		return -EINVAL;
- 
- 	switch (params->cipher) {
--- 
-1.7.1
 
