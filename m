@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:47016 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751192Ab1ABUCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jan 2011 15:02:31 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id BC9555424EC
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Jan 2011 15:03:48 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-02 is baked
+Received: from comal.ext.ti.com ([198.47.26.152]:50440 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754503Ab1ACNlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 08:41:13 -0500
+From: Shahar Levi <shahar_levi@ti.com>
 To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110102200230.99EF940F97@repository3.orbit-lab.org>
-Date: Sun,  2 Jan 2011 15:02:30 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 0/2] wl12xx: BA Initiator & receiver support
+Date: Mon,  3 Jan 2011 15:42:42 +0200
+Message-Id: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+That series gather two patches:
+[PATCH v5] wl12xx: BA initiator support
+[PATCH v3] wl12xx: BA receiver support
 
-compat-wireless code metrics
+Add 80211n BA initiator & receiver session support wl1271 driver.
+BA initiator session management included in FW independently.
+Include supported FW version auto detection mechanism.
 
-    774936 - Total upstream lines of code being pulled
+Next step is to implement HW flag that in case of wl12xx driver indicates
+  mac80211 to use BA win size of 8.
+
+Shahar Levi (2):
+  wl12xx: BA initiator support
+  wl12xx: BA receiver support
+
+ drivers/net/wireless/wl12xx/acx.c    |   86 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h    |   62 +++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/boot.c   |   41 +++++++++++++++-
+ drivers/net/wireless/wl12xx/conf.h   |    7 +++
+ drivers/net/wireless/wl12xx/init.c   |   50 ++++++++++++++++++++
+ drivers/net/wireless/wl12xx/main.c   |   73 +++++++++++++++++++++++++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |   15 ++++++-
+ 7 files changed, 323 insertions(+), 11 deletions(-)
+
