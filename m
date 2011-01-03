@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:40611 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755592Ab1AaL2x (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:44346 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119Ab1ACFqk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:28:53 -0500
-Date: Mon, 31 Jan 2011 13:28:41 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Why is wmm_param required for HT40- in mlme.c
-Message-ID: <20110131112841.GA2628@jm.kir.nu>
-References: <4D44F94F.8040707@candelatech.com>
- <1296380208.3616.0.camel@jlt3.sipsolutions.net>
- <4D45A2B1.5050006@erley.org>
+	Mon, 3 Jan 2011 00:46:40 -0500
+Date: Mon, 3 Jan 2011 08:46:29 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch -next] ath5k: ath5k_eeprom_mode_from_channel() returns
+ signed
+Message-ID: <20110103054629.GR1886@bicker>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D45A2B1.5050006@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 30, 2011 at 12:41:05PM -0500, Pat Erley wrote:
-> Having run into this same issue before, I considered adding some
-> default values for the case that wmm is not configured, but someone
-> tries to enable 802.11n, I just never decided where the best spot
-> for that would be.  Should this sort of thing be a hostapd default
-> or somewhere in the cfg80211/mac80211 layer?  I was thinking this
-> should be something that hostapd does.
-> 
-> As I see it, there are a few ways to prevent this problem:
-> 
-> 1. Hostapd doesn't allow 802.11n to be enabled without wmm
+ath5k_eeprom_mode_from_channel() returns -1 on error but we're storing
+the result in "ee_mode" which is an unsigned char.  This breaks the
+error handling.  This patch makes "ee_mode" an int.
 
-I don't think that that would ever happen since as far as I can tell,
-WMM is not required from 802.11n based on any standard or specification.
-(Sure, there may be some non-IEEE certifications that require it, but
-hostapd is not limited by such requirements; it just needs to allow one
-to implement a device to meet such needs.)
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-> 2. Hostapd does allow 802.11n to be enabled without wmm, but uses
->    defaults
-
-What do you mean with "defaults" here?
-
-> 3. Hostapd doesn't care about this, and the kernel doesn't allow
->    802.11n without wmm
-
-My comment on (1) would apply here.
-
-> 4. Hostapd doesn't care, but the kernel makes the correnctions
-
-I don't think that that would be a good idea either and well, not really
-at all suitable for the current design of where the HT/WMM IEs come from
-for management frames in AP mode.
-
-> I believe 2 is the cleanest solution.  So that the packets passed
-> from hostapd can make it through unmolested, and new hostapd versions
-> can work with older kernels.  Any other solution I'm not thinking of?
-
-I do not fully understand what (2) is, but it may be close enough to
-what I think would be a reasonable approach:
-- for non-AP STA case, allows association with HT even if WMM (or IEEE
-  802.11 QoS) is not enabled (mac80211 change)
-- for AP case, make hostapd default to enabling WMM with default EDCA
-  parameters if HT is enabled and there is no explicit configuration
-  for disabling WMM
-- if WMM is explicitly disabled in hostapd.conf, allow IEEE 802.11n
-  to be enabled without WMM/QoS
-
-The main focus here is to make it less likely for users to end up
-configuring something they did not plan on doing while not removing
-flexibility in configuration. I don't know any particularly good reasons
-for disabling WMM/QoS/aggregation, but that is not good enough
-justification to make it impossible to do so.
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 9306d5f..78c26fd 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1916,7 +1916,8 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
+ 	struct ieee80211_channel *channel = ah->ah_current_channel;
+ 	bool use_def_for_tx, update_def_on_tx, use_def_for_rts, fast_div;
+ 	bool use_def_for_sg;
+-	u8 def_ant, tx_ant, ee_mode;
++	int ee_mode;
++	u8 def_ant, tx_ant;
+ 	u32 sta_id1 = 0;
  
--- 
-Jouni Malinen                                            PGP id EFC895FA
+ 	/* if channel is not initialized yet we can't set the antennas
+@@ -3081,7 +3082,8 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ {
+ 	struct ath5k_rate_pcal_info rate_info;
+ 	struct ieee80211_channel *curr_channel = ah->ah_current_channel;
+-	u8 type, ee_mode;
++	int ee_mode;
++	u8 type;
+ 	int ret;
+ 
+ 	if (txpower > AR5K_TUNE_MAX_TXPOWER) {
