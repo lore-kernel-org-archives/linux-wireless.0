@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33145 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038Ab1A3Qj3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932069Ab1ACQqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 11:39:29 -0500
-Message-ID: <4D45943E.2050409@candelatech.com>
-Date: Sun, 30 Jan 2011 08:39:26 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k: Still seeing DMA issues in latest wireless-testing.
-References: <4D439AEA.6020101@candelatech.com> <AANLkTinSxnxYdUuQGWRr-fA8HF_JotQfG3S1QWEwS3K=@mail.gmail.com>
-In-Reply-To: <AANLkTinSxnxYdUuQGWRr-fA8HF_JotQfG3S1QWEwS3K=@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 3 Jan 2011 11:46:35 -0500
+Subject: Re: OOPS at ieee80211_aes_ccm_encrypt()?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20110103001006.13085vt89qfm6pcs@hayate.sektori.org>
+References: <20110103001006.13085vt89qfm6pcs@hayate.sektori.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 Jan 2011 17:46:30 +0100
+Message-ID: <1294073190.3436.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2011 07:54 AM, Björn Smedman wrote:
-> On Sat, Jan 29, 2011 at 5:43 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> Looks like some potentially nice ath9k patches just got merged into
->> wireless-testing.  It has been stable and fast so far, but I
->> do still see DMA issues in the logs.
->>
->> This is on a system with 30 STAs associated with a flakey netgear running
->> HT40-, and 30 associated with a cisco running HT20.  (Through some luck,
->> the netgear managed to send proper ht-info channel this time,
->> so the NIC went HT40-).
->
-> Ben, the fact that you see much more of these DMA issues when you're
-> running your virtual STAs suggests to me that root cause is some race
-> condition between dma and cpu. The main difference between the 60 STA
-> use-case and the one STA use case is that rx irq processing will take
-> longer with multiple STAs, right? Is there some other difference?
+On Mon, 2011-01-03 at 00:10 +0200, Jussi Kivilinna wrote:
 
-I don't know.  I see it even when not running much traffic.
+> While doing stress testing on zd1211rw AP-mode I run into this problem  
+> that I don't think has that much to do with zd1211rw:
 
-I also see DMA on my AP system, which has a single AP and one idle
-station.  Granted, I have 128 or so stations connected to the AP,
-but again, the stations are mostly idle.
+[snip]
 
-Other folks see the DMA issues too...and most probably just don't report
-them anymore...
+> Is key being used after freeing?
 
-Thanks,
-Ben
+It looks like it. Can you reproduce this fairly easily? I wonder if it's
+an RCU problem, we do key lookups under RCU but I see no grace period
+right now ... try the patch below, I'll look into it in more detail.
 
->
-> /Björn
+johannes
+
+--- wireless-testing.orig/net/mac80211/key.c	2011-01-03 17:44:54.000000000 +0100
++++ wireless-testing/net/mac80211/key.c	2011-01-03 17:45:41.000000000 +0100
+@@ -379,6 +379,8 @@ static void __ieee80211_key_destroy(stru
+ 	if (!key)
+ 		return;
+ 
++	synchronize_rcu();
++
+ 	if (key->local)
+ 		ieee80211_key_disable_hw_accel(key);
+ 
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
