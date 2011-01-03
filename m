@@ -1,377 +1,437 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36940 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961Ab1ARMvI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 07:51:08 -0500
-Subject: [PATCH] mac80211: track receiver's aggregation reorder buffer size
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Jan 2011 13:51:05 +0100
-Message-ID: <1295355065.3563.19.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from bear.ext.ti.com ([192.94.94.41]:48836 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754400Ab1ACNlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 08:41:12 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v5 1/2] wl12xx: BA initiator support
+Date: Mon,  3 Jan 2011 15:42:43 +0200
+Message-Id: <1294062164-3459-2-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add 80211n BA initiator session support wl1271 driver.
+Include BA supported FW version auto detection mechanism.
+BA initiator session management included in FW independently.
 
-The aggregation code currently doesn't implement the
-buffer size negotiation. It will always request a max
-buffer size (which is fine, if a little pointless, as
-the mac80211 code doesn't know and might just use 0
-instead), but if the peer requests a smaller size it
-isn't possible to honour this request.
-
-In order to fix this, look at the buffer size in the
-addBA response frame, keep track of it and pass it to
-the driver in the ampdu_action callback when called
-with the IEEE80211_AMPDU_TX_OPERATIONAL action. That
-way the driver can limit the number of subframes in
-aggregates appropriately.
-
-Note that this doesn't fix any drivers apart from the
-addition of the new argument -- they all need to be
-updated separately to use this variable!
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 ---
- drivers/net/wireless/ath/ar9170/main.c        |    3 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    2 +-
- drivers/net/wireless/ath/ath9k/main.c         |    2 +-
- drivers/net/wireless/ath/carl9170/main.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c        |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-agn.h        |    3 ++-
- drivers/net/wireless/mac80211_hwsim.c         |    3 ++-
- drivers/net/wireless/mwl8k.c                  |    3 ++-
- drivers/net/wireless/rt2x00/rt2800lib.c       |    3 ++-
- drivers/net/wireless/rt2x00/rt2800lib.h       |    3 ++-
- drivers/net/wireless/rtlwifi/core.c           |    3 ++-
- include/net/mac80211.h                        |    7 ++++++-
- net/mac80211/agg-rx.c                         |    4 ++--
- net/mac80211/agg-tx.c                         |   20 +++++++++++++++++---
- net/mac80211/driver-ops.h                     |    6 +++---
- net/mac80211/driver-trace.h                   |   11 +++++++----
- net/mac80211/sta_info.h                       |    2 ++
- 17 files changed, 56 insertions(+), 24 deletions(-)
+Limitation:
+- For now only one BA per direction is supported
 
---- wireless-testing.orig/include/net/mac80211.h	2011-01-18 13:46:47.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2011-01-18 13:50:21.000000000 +0100
-@@ -1731,6 +1731,10 @@ enum ieee80211_ampdu_mlme_action {
-  * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
-  * 	is the first frame we expect to perform the action on. Notice
-  * 	that TX/RX_STOP can pass NULL for this parameter.
-+ *	The @buf_size parameter is only valid when the action is set to
-+ *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's reorder
-+ *	buffer size (number of subframes) for this session -- aggregates
-+ *	containing more subframes than this may not be transmitted to the peer.
-  *	Returns a negative error code on failure.
-  *	The callback can sleep.
-  *
-@@ -1833,7 +1837,8 @@ struct ieee80211_ops {
- 	int (*ampdu_action)(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
-+			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			    u8 buf_size);
- 	int (*get_survey)(struct ieee80211_hw *hw, int idx,
- 		struct survey_info *survey);
- 	void (*rfkill_poll)(struct ieee80211_hw *hw);
---- wireless-testing.orig/net/mac80211/agg-tx.c	2011-01-18 13:44:44.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2011-01-18 13:50:21.000000000 +0100
-@@ -190,7 +190,7 @@ int ___ieee80211_stop_tx_ba_session(stru
+Changes from v1:
+- Remove wl1271_op_ampdu_action()
+- set CONF_BA_INACTIVITY_TIMEOUT as configurable value
+- Clean to Linux code style.
+
+Changes from v2:
+- Two new ACX commands ACX_BA_SESSION_POLICY_CFG & ACX_BA_SESSION_RX_SETUP
+- New struct wl1271_acx_ba_session_policy
+- Calling wl1271_set_ba_policies() once in init
+- Use ieee80211_back_parties
+- Rebase to latest
+
+Changes from v3:
+- New FW file name due to new FW API
+
+Changes from v4:
+- Reverse change of "New FW file name due to new FW API"
+- Add supported FW version auto detection mechanism (Parsing fw version once and
+  use it to validate BA support)
+
+ drivers/net/wireless/wl12xx/acx.c    |   50 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h    |   41 ++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/boot.c   |   41 +++++++++++++++++++++++++--
+ drivers/net/wireless/wl12xx/conf.h   |    7 +++++
+ drivers/net/wireless/wl12xx/init.c   |   50 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/main.c   |   14 ++++++---
+ drivers/net/wireless/wl12xx/wl12xx.h |   15 +++++++++-
+ 7 files changed, 207 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index cc4068d..54fd68d 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1309,6 +1309,56 @@ out:
+ 	return ret;
+ }
  
- 	ret = drv_ampdu_action(local, sta->sdata,
- 			       IEEE80211_AMPDU_TX_STOP,
--			       &sta->sta, tid, NULL);
-+			       &sta->sta, tid, NULL, 0);
- 
- 	/* HW shall not deny going back to legacy */
- 	if (WARN_ON(ret)) {
-@@ -311,7 +311,7 @@ void ieee80211_tx_ba_session_handle_star
- 	start_seq_num = sta->tid_seq[tid] >> 4;
- 
- 	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
--			       &sta->sta, tid, &start_seq_num);
-+			       &sta->sta, tid, &start_seq_num, 0);
- 	if (ret) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "BA request denied - HW unavailable for"
-@@ -487,7 +487,8 @@ static void ieee80211_agg_tx_operational
- 
- 	drv_ampdu_action(local, sta->sdata,
- 			 IEEE80211_AMPDU_TX_OPERATIONAL,
--			 &sta->sta, tid, NULL);
-+			 &sta->sta, tid, NULL,
-+			 sta->ampdu_mlme.tid_tx[tid]->buf_size);
- 
- 	/*
- 	 * synchronize with TX path, while splicing the TX path
-@@ -742,9 +743,11 @@ void ieee80211_process_addba_resp(struct
++/* Configure BA session initiator\receiver parameters setting in the FW. */
++int wl1271_acx_set_ba_session(struct wl1271 *wl,
++			      enum ieee80211_back_parties direction,
++			      u8 tid_index, u8 policy)
++{
++	struct wl1271_acx_ba_session_policy *acx;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx ba session setting");
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	/* ANY role */
++	acx->role_id = 0xff;
++	acx->tid = tid_index;
++	acx->enable = policy;
++	acx->win_size = BA_WIN_SIZE;
++	acx->ba_direction = direction;
++
++	switch (direction) {
++	case WLAN_BACK_INITIATOR:
++		acx->inactivity_timeout = wl->conf.ht.inactivity_timeout;
++		break;
++	case WLAN_BACK_RECIPIENT:
++		acx->inactivity_timeout = 0;
++		break;
++	default:
++		wl1271_error("Incorrect acx command id=%x\n", direction);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = wl1271_cmd_configure(wl,
++				   ACX_BA_SESSION_POLICY_CFG,
++				   acx,
++				   sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx ba session setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
  {
- 	struct tid_ampdu_tx *tid_tx;
- 	u16 capab, tid;
-+	u8 buf_size;
+ 	struct wl1271_acx_fw_tsf_information *tsf_info;
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 9cbc3f4..df48468 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1051,6 +1051,40 @@ struct wl1271_acx_ht_information {
+ 	u8 padding[3];
+ } __packed;
  
- 	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
- 	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-+	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
- 
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 
-@@ -767,12 +770,23 @@ void ieee80211_process_addba_resp(struct
- 
- 	if (le16_to_cpu(mgmt->u.action.u.addba_resp.status)
- 			== WLAN_STATUS_SUCCESS) {
-+		/*
-+		 * IEEE 802.11-2007 7.3.1.14:
-+		 * In an ADDBA Response frame, when the Status Code field
-+		 * is set to 0, the Buffer Size subfield is set to a value
-+		 * of at least 1.
-+		 */
-+		if (!buf_size)
-+			goto out;
++#define BA_WIN_SIZE 8
 +
- 		if (test_and_set_bit(HT_AGG_STATE_RESPONSE_RECEIVED,
- 				     &tid_tx->state)) {
- 			/* ignore duplicate response */
- 			goto out;
- 		}
- 
-+		tid_tx->buf_size = buf_size;
++struct wl1271_acx_ba_session_policy {
++	struct acx_header header;
++	/*
++	 * Specifies role Id, Range 0-7, 0xFF means ANY role.
++	 * Future use. For now this field is irrelevant
++	 */
++	u8 role_id;
++	/*
++	 * Specifies Link Id, Range 0-31, 0xFF means ANY  Link Id.
++	 * Not applicable if Role Id is set to ANY.
++	 */
++	u8 link_id;
 +
- 		if (test_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state))
- 			ieee80211_agg_tx_operational(local, sta, tid);
++	u8 tid;
++
++	u8 enable;
++
++	/* Windows size in number of packets */
++	u16 win_size;
++
++	/*
++	 * As initiator inactivity timeout in time units(TU) of 1024us.
++	 * As receiver reserved
++	 */
++	u16 inactivity_timeout;
++
++	/* Initiator = 1/Receiver = 0 */
++	u8 ba_direction;
++
++	u8 padding[3];
++} __packed;
++
+ struct wl1271_acx_fw_tsf_information {
+ 	struct acx_header header;
  
---- wireless-testing.orig/net/mac80211/sta_info.h	2011-01-18 13:44:44.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.h	2011-01-18 13:48:49.000000000 +0100
-@@ -82,6 +82,7 @@ enum ieee80211_sta_info_flags {
-  * @state: session state (see above)
-  * @stop_initiator: initiator of a session stop
-  * @tx_stop: TX DelBA frame when stopping
-+ * @buf_size: reorder buffer size at receiver
-  *
-  * This structure's lifetime is managed by RCU, assignments to
-  * the array holding it must hold the aggregation mutex.
-@@ -101,6 +102,7 @@ struct tid_ampdu_tx {
- 	u8 dialog_token;
- 	u8 stop_initiator;
- 	bool tx_stop;
-+	u8 buf_size;
+@@ -1113,8 +1147,8 @@ enum {
+ 	ACX_RSSI_SNR_WEIGHTS        = 0x0052,
+ 	ACX_KEEP_ALIVE_MODE         = 0x0053,
+ 	ACX_SET_KEEP_ALIVE_CONFIG   = 0x0054,
+-	ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
+-	ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
++	ACX_BA_SESSION_POLICY_CFG   = 0x0055,
++	ACX_BA_SESSION_RX_SETUP     = 0x0056,
+ 	ACX_PEER_HT_CAP             = 0x0057,
+ 	ACX_HT_BSS_OPERATION        = 0x0058,
+ 	ACX_COEX_ACTIVITY           = 0x0059,
+@@ -1185,6 +1219,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+ 				    bool allow_ht_operation);
+ int wl1271_acx_set_ht_information(struct wl1271 *wl,
+ 				   u16 ht_operation_mode);
++int wl1271_acx_set_ba_session(struct wl1271 *wl,
++			      enum ieee80211_back_parties direction,
++			      u8 tid_index, u8 policy);
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
+ 
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 4a9f929..cd42e12 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -101,6 +101,39 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
+ 	wl1271_write32(wl, ACX_REG_ECPU_CONTROL, cpu_ctrl);
+ }
+ 
++static void wl1271_save_fw_ver(struct wl1271 *wl)
++{
++	char fw_ver_str[ETHTOOL_BUSINFO_LEN];
++	char *fw_ver_point;
++	int ret, i;
++
++	/* copy the fw version to temp str */
++	strncpy(fw_ver_str, wl->chip.fw_ver_str, sizeof(fw_ver_str));
++
++	for (i = (WL12XX_NUM_FW_VER - 1); i > 0; --i) {
++		/* find the last '.' */
++		fw_ver_point = strrchr(fw_ver_str, '.');
++
++		/* read version number */
++		ret = strict_strtoul(fw_ver_point+1, 10, &(wl->chip.fw_ver[i]));
++		if (ret < 0) {
++			wl1271_warning("fw version incorrect value");
++			memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
++			return;
++		}
++
++		/* clean '.' */
++		*fw_ver_point = '\0';
++	}
++
++	ret = strict_strtoul(fw_ver_point-1, 10, &(wl->chip.fw_ver[0]));
++	if (ret < 0) {
++		wl1271_warning("fw version incorrect value");
++		memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
++		return;
++	}
++}
++
+ static void wl1271_boot_fw_version(struct wl1271 *wl)
+ {
+ 	struct wl1271_static_data static_data;
+@@ -108,11 +141,13 @@ static void wl1271_boot_fw_version(struct wl1271 *wl)
+ 	wl1271_read(wl, wl->cmd_box_addr, &static_data, sizeof(static_data),
+ 		    false);
+ 
+-	strncpy(wl->chip.fw_ver, static_data.fw_version,
+-		sizeof(wl->chip.fw_ver));
++	strncpy(wl->chip.fw_ver_str, static_data.fw_version,
++		sizeof(wl->chip.fw_ver_str));
+ 
+ 	/* make sure the string is NULL-terminated */
+-	wl->chip.fw_ver[sizeof(wl->chip.fw_ver) - 1] = '\0';
++	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
++
++	wl1271_save_fw_ver(wl);
+ }
+ 
+ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index a16b361..41df771 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1090,6 +1090,12 @@ struct conf_rf_settings {
+ 	u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
  };
  
- /**
---- wireless-testing.orig/net/mac80211/agg-rx.c	2011-01-18 13:46:47.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-rx.c	2011-01-18 13:48:49.000000000 +0100
-@@ -76,7 +76,7 @@ void ___ieee80211_stop_rx_ba_session(str
- #endif /* CONFIG_MAC80211_HT_DEBUG */
++#define CONF_BA_INACTIVITY_TIMEOUT 10000
++
++struct conf_ht_setting {
++	u16 inactivity_timeout;
++};
++
+ struct conf_drv_settings {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+@@ -1100,6 +1106,7 @@ struct conf_drv_settings {
+ 	struct conf_roam_trigger_settings roam_trigger;
+ 	struct conf_scan_settings scan;
+ 	struct conf_rf_settings rf;
++	struct conf_ht_setting ht;
+ };
  
- 	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
--			     &sta->sta, tid, NULL))
-+			     &sta->sta, tid, NULL, 0))
- 		printk(KERN_DEBUG "HW problem - can not stop rx "
- 				"aggregation for tid %d\n", tid);
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 785a530..5482b85 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -213,6 +213,51 @@ static int wl1271_init_beacon_broadcast(struct wl1271 *wl)
+ 	return 0;
+ }
  
-@@ -290,7 +290,7 @@ void ieee80211_process_addba_request(str
- 	}
- 
- 	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
--			       &sta->sta, tid, &start_seq_num);
-+			       &sta->sta, tid, &start_seq_num, 0);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "Rx A-MPDU request on tid %d result %d\n", tid, ret);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
---- wireless-testing.orig/net/mac80211/driver-ops.h	2011-01-18 13:44:44.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-ops.h	2011-01-18 13:48:49.000000000 +0100
-@@ -382,17 +382,17 @@ static inline int drv_ampdu_action(struc
- 				   struct ieee80211_sub_if_data *sdata,
- 				   enum ieee80211_ampdu_mlme_action action,
- 				   struct ieee80211_sta *sta, u16 tid,
--				   u16 *ssn)
-+				   u16 *ssn, u8 buf_size)
++static void wl1271_check_ba_support(struct wl1271 *wl)
++{
++
++	/* validate FW cose ver x.x.x.50-60.x */
++	if ((wl->chip.fw_ver[3] >= WL12XX_BA_SUPPORT_FW_COST_VER2_START) &&
++	    (wl->chip.fw_ver[3] < WL12XX_BA_SUPPORT_FW_COST_VER2_END)) {
++		wl->ba_support = true;
++		return;
++	}
++
++	/* validate FW sub ver x.x.x.>= 33.339 */
++	if ((wl->chip.fw_ver[4] == WL12XX_BA_SUPPORT_FW_SUB_VER) &&
++	    (wl->chip.fw_ver[4] >= WL12XX_BA_SUPPORT_FW_COST_VER1)) {
++		wl->ba_support = true;
++		return;
++	}
++
++	wl->ba_support = false;
++}
++
++static int wl1271_set_ba_policies(struct wl1271 *wl)
++{
++	u8 tid_index;
++	u8 ret = 0;
++
++	/* Reset the BA RX indicators */
++	wl->ba_allowed = true;
++	wl->ba_rx_bitmap = 0;
++
++	/* validate that FW support BA */
++	wl1271_check_ba_support(wl);
++
++	if (wl->ba_support)
++		/* 802.11n initiator BA session setting */
++		for (tid_index = 0; tid_index < CONF_TX_MAX_TID_COUNT;
++		      ++tid_index) {
++			ret = wl1271_acx_set_ba_session(wl, WLAN_BACK_INITIATOR,
++							tid_index, true);
++			if (ret < 0)
++				break;
++		}
++
++	return ret;
++}
++
+ int wl1271_hw_init(struct wl1271 *wl)
  {
- 	int ret = -EOPNOTSUPP;
+ 	struct conf_tx_ac_category *conf_ac;
+@@ -364,6 +409,11 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
- 	might_sleep();
++	/* Configure initiator BA sessions policies */
++	ret = wl1271_set_ba_policies(wl);
++	if (ret < 0)
++		goto out_free_memmap;
++
+ 	return 0;
  
--	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn);
-+	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, buf_size);
+  out_free_memmap:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 062247e..c44462d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -233,7 +233,7 @@ static struct conf_drv_settings default_conf = {
+ 		.avg_weight_rssi_beacon       = 20,
+ 		.avg_weight_rssi_data         = 10,
+ 		.avg_weight_snr_beacon        = 20,
+-		.avg_weight_snr_data          = 10
++		.avg_weight_snr_data          = 10,
+ 	},
+ 	.scan = {
+ 		.min_dwell_time_active        = 7500,
+@@ -252,6 +252,9 @@ static struct conf_drv_settings default_conf = {
+ 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 		},
+ 	},
++	.ht = {
++		.inactivity_timeout = CONF_BA_INACTIVITY_TIMEOUT,
++	},
+ };
  
- 	if (local->ops->ampdu_action)
- 		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
--					       sta, tid, ssn);
-+					       sta, tid, ssn, buf_size);
+ static void __wl1271_op_remove_interface(struct wl1271 *wl);
+@@ -827,7 +830,7 @@ int wl1271_plt_start(struct wl1271 *wl)
  
- 	trace_drv_return_int(local, ret);
+ 		wl->state = WL1271_STATE_PLT;
+ 		wl1271_notice("firmware booted in PLT mode (%s)",
+-			      wl->chip.fw_ver);
++			      wl->chip.fw_ver_str);
+ 		goto out;
  
---- wireless-testing.orig/net/mac80211/driver-trace.h	2011-01-18 13:44:44.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-trace.h	2011-01-18 13:48:49.000000000 +0100
-@@ -784,9 +784,9 @@ TRACE_EVENT(drv_ampdu_action,
- 		 struct ieee80211_sub_if_data *sdata,
- 		 enum ieee80211_ampdu_mlme_action action,
- 		 struct ieee80211_sta *sta, u16 tid,
--		 u16 *ssn),
-+		 u16 *ssn, u8 buf_size),
+ irq_disable:
+@@ -1061,11 +1064,11 @@ power_off:
  
--	TP_ARGS(local, sdata, action, sta, tid, ssn),
-+	TP_ARGS(local, sdata, action, sta, tid, ssn, buf_size),
+ 	wl->vif = vif;
+ 	wl->state = WL1271_STATE_ON;
+-	wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
++	wl1271_info("firmware booted (%s)", wl->chip.fw_ver_str);
  
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
-@@ -794,6 +794,7 @@ TRACE_EVENT(drv_ampdu_action,
- 		__field(u32, action)
- 		__field(u16, tid)
- 		__field(u16, ssn)
-+		__field(u8, buf_size)
- 		VIF_ENTRY
- 	),
+ 	/* update hw/fw version info in wiphy struct */
+ 	wiphy->hw_version = wl->chip.id;
+-	strncpy(wiphy->fw_version, wl->chip.fw_ver,
++	strncpy(wiphy->fw_version, wl->chip.fw_ver_str,
+ 		sizeof(wiphy->fw_version));
  
-@@ -804,11 +805,13 @@ TRACE_EVENT(drv_ampdu_action,
- 		__entry->action = action;
- 		__entry->tid = tid;
- 		__entry->ssn = ssn ? *ssn : 0;
-+		__entry->buf_size = buf_size;
- 	),
+ 	/*
+@@ -2090,7 +2093,8 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl1271_warning("Set ht cap true failed %d", ret);
+ 			goto out_sleep;
+ 		}
+-			ret = wl1271_acx_set_ht_information(wl,
++
++		ret = wl1271_acx_set_ht_information(wl,
+ 				bss_conf->ht_operation_mode);
+ 		if (ret < 0) {
+ 			wl1271_warning("Set ht information failed %d", ret);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 01711fe..7b34393 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -38,6 +38,11 @@
+ #define DRIVER_NAME "wl1271"
+ #define DRIVER_PREFIX DRIVER_NAME ": "
  
- 	TP_printk(
--		LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT " action:%d tid:%d",
--		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->action, __entry->tid
-+		LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT " action:%d tid:%d buf:%d",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->action,
-+		__entry->tid, __entry->buf_size
- 	)
- );
++#define WL12XX_BA_SUPPORT_FW_SUB_VER           339
++#define WL12XX_BA_SUPPORT_FW_COST_VER1          33
++#define WL12XX_BA_SUPPORT_FW_COST_VER2_START    50
++#define WL12XX_BA_SUPPORT_FW_COST_VER2_END      60
++
+ enum {
+ 	DEBUG_NONE	= 0,
+ 	DEBUG_IRQ	= BIT(0),
+@@ -161,10 +166,13 @@ struct wl1271_partition_set {
  
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2011-01-18 13:48:49.000000000 +0100
-@@ -1945,7 +1945,8 @@ static int ar9170_conf_tx(struct ieee802
- static int ar9170_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       enum ieee80211_ampdu_mlme_action action,
--			       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			       u8 buf_size)
- {
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2011-01-18 13:48:49.000000000 +0100
-@@ -1548,7 +1548,7 @@ static int ath9k_htc_ampdu_action(struct
- 				  struct ieee80211_vif *vif,
- 				  enum ieee80211_ampdu_mlme_action action,
- 				  struct ieee80211_sta *sta,
--				  u16 tid, u16 *ssn)
-+				  u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 	struct ath9k_htc_sta *ista;
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2011-01-18 13:48:49.000000000 +0100
-@@ -2029,7 +2029,7 @@ static int ath9k_ampdu_action(struct iee
- 			      struct ieee80211_vif *vif,
- 			      enum ieee80211_ampdu_mlme_action action,
- 			      struct ieee80211_sta *sta,
--			      u16 tid, u16 *ssn)
-+			      u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
---- wireless-testing.orig/drivers/net/wireless/ath/carl9170/main.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/carl9170/main.c	2011-01-18 13:48:49.000000000 +0100
-@@ -1279,7 +1279,7 @@ static int carl9170_op_ampdu_action(stru
- 				    struct ieee80211_vif *vif,
- 				    enum ieee80211_ampdu_mlme_action action,
- 				    struct ieee80211_sta *sta,
--				    u16 tid, u16 *ssn)
-+				    u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ar9170 *ar = hw->priv;
- 	struct carl9170_sta_info *sta_info = (void *) sta->drv_priv;
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-01-18 13:46:37.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-01-18 13:50:22.000000000 +0100
-@@ -3425,7 +3425,8 @@ int iwlagn_mac_set_key(struct ieee80211_
- int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			    u8 buf_size)
- {
- 	struct iwl_priv *priv = hw->priv;
- 	int ret = -EINVAL;
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.h	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.h	2011-01-18 13:48:49.000000000 +0100
-@@ -374,7 +374,8 @@ void iwlagn_mac_update_tkip_key(struct i
- int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
-+			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			    u8 buf_size);
- int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta);
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2011-01-18 13:48:49.000000000 +0100
-@@ -943,7 +943,8 @@ static int mac80211_hwsim_testmode_cmd(s
- static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif,
- 				       enum ieee80211_ampdu_mlme_action action,
--				       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+				       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+				       u8 buf_size)
- {
- 	switch (action) {
- 	case IEEE80211_AMPDU_TX_START:
---- wireless-testing.orig/drivers/net/wireless/mwl8k.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/mwl8k.c	2011-01-18 13:48:49.000000000 +0100
-@@ -4356,7 +4356,8 @@ static int mwl8k_get_survey(struct ieee8
- static int
- mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		   enum ieee80211_ampdu_mlme_action action,
--		   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+		   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+		   u8 buf_size)
- {
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.c	2011-01-18 13:48:49.000000000 +0100
-@@ -3533,7 +3533,8 @@ EXPORT_SYMBOL_GPL(rt2800_get_tsf);
+ struct wl1271;
  
- int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum ieee80211_ampdu_mlme_action action,
--			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			u8 buf_size)
- {
- 	int ret = 0;
++#define WL12XX_NUM_FW_VER 5
++
+ /* FIXME: I'm not sure about this structure name */
+ struct wl1271_chip {
+ 	u32 id;
+-	char fw_ver[21];
++	char fw_ver_str[ETHTOOL_BUSINFO_LEN];
++	unsigned long fw_ver[WL12XX_NUM_FW_VER];
+ };
  
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.h	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.h	2011-01-18 13:48:49.000000000 +0100
-@@ -198,7 +198,8 @@ int rt2800_conf_tx(struct ieee80211_hw *
- u64 rt2800_get_tsf(struct ieee80211_hw *hw);
- int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum ieee80211_ampdu_mlme_action action,
--			struct ieee80211_sta *sta, u16 tid, u16 *ssn);
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			u8 buf_size);
- int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- 		      struct survey_info *survey);
+ struct wl1271_stats {
+@@ -399,6 +407,11 @@ struct wl1271 {
  
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/core.c	2011-01-18 13:44:45.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rtlwifi/core.c	2011-01-18 13:48:49.000000000 +0100
-@@ -748,7 +748,8 @@ static void rtl_op_sta_notify(struct iee
- static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       enum ieee80211_ampdu_mlme_action action,
--			       struct ieee80211_sta *sta, u16 tid, u16 * ssn)
-+			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			       u8 buf_size)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	/* Most recently reported noise in dBm */
+ 	s8 noise;
++
++	/* RX BA constraint value */
++	bool ba_support;
++	u8 ba_allowed;
++	u8 ba_rx_bitmap;
+ };
  
-
+ int wl1271_plt_start(struct wl1271 *wl);
+-- 
+1.7.0.4
 
