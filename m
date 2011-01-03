@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wipro-blr-out01.wipro.com ([203.91.198.74]:53646 "EHLO
-	wipro-blr-out02.wipro.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754921Ab1A1EFl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 23:05:41 -0500
-From: <raghunathan.kailasanathan@wipro.com>
-To: <Larry.Finger@lwfinger.net>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 28 Jan 2011 09:35:35 +0530
-Subject: RE: unable to put RTL8192SU in master mode
-Message-ID: <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D5E7@BLR-SJP-MB02.wipro.com>
-References: <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D579@BLR-SJP-MB02.wipro.com>
- <4D4183BD.3060609@lwfinger.net>
-In-Reply-To: <4D4183BD.3060609@lwfinger.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:36987 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753570Ab1ACUC0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 15:02:26 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id ED677540C36
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Jan 2011 15:03:44 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-03 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110103200224.AD62D40F97@repository3.orbit-lab.org>
+Date: Mon,  3 Jan 2011 15:02:24 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
+compat-wireless code metrics
 
-> -----Original Message-----
-> From: Larry Finger [mailto:larry.finger@gmail.com] On Behalf Of Larry
-> Finger
-> The driver from the Realtek web site is named 8712u, and the one in the
-> kernel
-> staging tree (2.6.37 and later) is called r8712u. Which one are you
-> using? They
-> are not the same.
-> 
-
-Thanks Larry. I am using the 8712u, so it should be the realtek one. I am on
-a older kernel (2.6.27) hence using the staging one would require some backporting 
-effort.
-
-BTW what are the key differences between both ? 
-
-
---RK
+    774936 - Total upstream lines of code being pulled
