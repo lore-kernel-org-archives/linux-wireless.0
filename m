@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:38099 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090Ab1AQLVQ convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:44566 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119Ab1ACHPe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 06:21:16 -0500
-From: Florian Fainelli <florian@openwrt.org>
-To: Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>
-Subject: Re: Merging SSB and HND/AI support
-Date: Mon, 17 Jan 2011 12:20:52 +0100
-Cc: Jonas Gorski <jonas.gorski@gmail.com>, linux-mips@linux-mips.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com> <1295261783.24530.3.camel@maggie>
-In-Reply-To: <1295261783.24530.3.camel@maggie>
+	Mon, 3 Jan 2011 02:15:34 -0500
+Received: by iyi12 with SMTP id 12so11876159iyi.19
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Jan 2011 23:15:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101171220.52292.florian@openwrt.org>
+In-Reply-To: <AANLkTi=w+EEdROx5NCBEe2fLv6RM-7fGSoNEpQ-tBZYo@mail.gmail.com>
+References: <AANLkTi=w+EEdROx5NCBEe2fLv6RM-7fGSoNEpQ-tBZYo@mail.gmail.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Sun, 2 Jan 2011 23:15:13 -0800
+Message-ID: <AANLkTind_8HzraBGxyA90ymQ_e3uJV+iykMNKzekRLA9@mail.gmail.com>
+Subject: Fwd: mac80211+iwlwifi bug with HT rates?
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 17 January 2011 11:56:23 Michael BÃ¼sch wrote:
-> On Mon, 2011-01-17 at 11:46 +0100, Jonas Gorski wrote:
-> > Hello,
-> > 
-> > I am currently looking into adding support for the newer Broadcom
-> > BCM47xx/53xx SoCs. They require having HND/AI support, which probably
-> > means merging the current SSB code and the HND/AI code from the
-> > brcm80211 driver. Is anyone already working on this?
-> > 
-> > As far as I can see, there are two possibilities:
-> > 
-> > a) Merge the HND/AI code into the current SSB code, or
-> > 
-> > b) add the missing code for SoCs to brcm80211 and replace the SSB code
-> > with it.
-> 
-> Why can't we keep those two platforms separated?
+linux-wireless spam filter rejected our school's google appliance
+mail, trying again as plain text.
 
-That is also what I am wondering about. Considering that previous BCM47xx 
-platforms use a MIPS4k core and newer one use MIPS74k or later, you would not 
-be able to build a single kernel for both which takes advantages of compile-
-time optimizations targetting MIPS74k. If this ist not a big concern, then 
-let's target a single kernel.
+Sorry,
+Dan
 
-> Is there really a lot of shared code between SSB and HND/AI?
-> 
-> It's true that there's currently a lot of device functionality built
-> into ssb. Like pci bridge, mips core, extif, etc...
-> If you take all that code out, you're probably not left with anything.
-> 
-> So why do we need to replace or merge SSB in the first place? Can't
-> it co-exist with HND/AI?
+---------- Forwarded message ----------
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Sun, Jan 2, 2011 at 11:13 PM
+Subject: mac80211+iwlwifi bug with HT rates?
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Cc: Swati Rallapalli <swati@cs.utexas.edu>
+
+
+I'm trying to track down an anomaly with a 3-stream 802.11n AP.
+iwlwifi is saying that a single antenna should be sufficient even when
+the AP supports 3 streams.  Here's what I've tracked down:
+Code in iwl-agn-rxon.c uses the ht_cap TX MCS parameters to determine
+how many streams the other side supports:
+<http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=blob;f=drivers/net/wireless/iwlwifi/iwl-agn-rxon.c;h=d33e4db7e56cab88abc3281d04adf32162b8020e;hb=HEAD#l470>
+Yet, it looks like mac80211 doesn't actually set those variables at
+all!  In net/mac80211/ht.c, when converting the IE to the Station HT
+cap:
+<http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=blob;f=net/mac80211/ht.c;h=75d679d75e63e92143d55a47601a1dfc1377ba03;hb=HEAD#l21>
+we first zero out the HT CAP (line 30) and then never actually set the
+ht_cap->mcs.tx_params variables at all.  Grep says that's the only use
+of mcs.tx_params in that directory, so I'm pretty confident mac80211
+just never does that.  Thus iwlwifi thinks it only needs to have 1 RX
+antenna enabled (though it defaults to a minimum of 2 when possible)
+and basically fails to receive 3 stream packets.
+Is this a bug in iwlwifi or mac80211?
+Thanks,
+Dan
