@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53880 "EHLO mail.atheros.com"
+Received: from cantor.suse.de ([195.135.220.2]:49256 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020Ab1AaN4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 08:56:43 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 05:56:23 -0800
-Date: Mon, 31 Jan 2011 19:25:55 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: disable ps if an AP type vif is present
-Message-ID: <20110131135554.GC14176@vmraj-lnx.users.atheros.com>
-References: <1296394571-3317-1-git-send-email-rmanoharan@atheros.com>
- <1296473558.3812.15.camel@jlt3.sipsolutions.net>
- <20110131115341.GB14176@vmraj-lnx.users.atheros.com>
- <1296475637.3812.18.camel@jlt3.sipsolutions.net>
+	id S932098Ab1ACPJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Jan 2011 10:09:27 -0500
+Date: Mon, 3 Jan 2011 16:09:26 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 08/15]drivers:scsi:lpfc:lpfc_init.c Typo change diable
+ to disable.
+In-Reply-To: <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
+Message-ID: <alpine.LNX.2.00.1101031609050.26685@pobox.suse.cz>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1296475637.3812.18.camel@jlt3.sipsolutions.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 31, 2011 at 05:37:16PM +0530, Johannes Berg wrote:
-> On Mon, 2011-01-31 at 17:23 +0530, Rajkumar Manoharan wrote:
-> 
-> > > >  	list_for_each_entry(sdata, &local->interfaces, list) {
-> > > >  		if (!ieee80211_sdata_running(sdata))
-> > > >  			continue;
-> > > > +		if (((sdata->vif.type == NL80211_IFTYPE_AP) ||
-> > > > +		     (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) &&
-> > > > +		    !sdata->vif.p2p) {
-> > > > +			count = 0;
-> > > > +			break;
-> > > 
-> > > I'd leave out the P2P check for now -- as soon as you have more than one
-> > > interface we don't go to PS,
-> > Not exactly. we are counting only station type, though we have multi vifs.
-> 
-> Right -- that was confusing.
-> 
-> > >and we don't have NoA things etc. yet.
-> > the p2p check means that infra AP only.
-> 
-> Yeah but do we have any drivers that handle PS in P2P mode? I guess
-> iwlwifi might if you have the right firmware, but ath9k surely won't?
-> I'd rather not have to worry about it right now.
-Ok. I leave the p2p check and send the patch. Thanks for the review.
+On Thu, 30 Dec 2010, Justin P. Mattock wrote:
 
---
-Rajkumar
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
+Folded patched 8, 9, 10 and 13 together and applied.
+
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
