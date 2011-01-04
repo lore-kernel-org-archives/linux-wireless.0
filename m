@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45483 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757625Ab1ANRcW (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47799 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991Ab1ADTpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 12:32:22 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Show max retry-counts in kernel messages.
-Date: Fri, 14 Jan 2011 09:32:18 -0800
-Message-Id: <1295026338-21765-1-git-send-email-greearb@candelatech.com>
+	Tue, 4 Jan 2011 14:45:07 -0500
+Date: Tue, 4 Jan 2011 14:43:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: Re: [PATCH v2 1/6] ath9k_htc: Fix warning on device removal
+Message-ID: <20110104194337.GB13239@tuxdriver.com>
+References: <19737.42640.829281.50449@gargle.gargle.HOWL>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <19737.42640.829281.50449@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, Dec 28, 2010 at 02:27:52PM +0530, Sujith wrote:
+> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> 
+> The commit "ath9k_hw: warn if we cannot change the power to the chip"
+> introduced a new warning to indicate chip powerup failures, but this
+> is not required for devices that have been removed. Handle USB device
+> removal properly by checking for unplugged status.
+> 
+> For PCI devices, this warning will still be seen when the card is pulled
+> out, not sure how to check for card removal.
+> 
+> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 45fbb9e... eecbb1f... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+This doesn't seem to apply cleanly?
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 45fbb9e..eecbb1f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1972,9 +1972,9 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 				wiphy_debug(local->hw.wiphy,
- 					    "%s: No ack for nullfunc frame to"
--					    " AP %pM, try %d\n",
-+					    " AP %pM, try %d/%i\n",
- 					    sdata->name, bssid,
--					    ifmgd->probe_send_count);
-+					    ifmgd->probe_send_count, max_tries);
- #endif
- 				ieee80211_mgd_probe_ap_send(sdata);
- 			} else {
-@@ -2001,10 +2001,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 			wiphy_debug(local->hw.wiphy,
- 				    "%s: No probe response from AP %pM"
--				    " after %dms, try %d\n",
-+				    " after %dms, try %d/%i\n",
- 				    sdata->name,
- 				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ,
--				    ifmgd->probe_send_count);
-+				    ifmgd->probe_send_count, max_tries);
- #endif
- 			ieee80211_mgd_probe_ap_send(sdata);
- 		} else {
+John
 -- 
-1.7.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
