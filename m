@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45283
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752048Ab1AFTdl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36781 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291Ab1ADTAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 14:33:41 -0500
-Date: Thu, 06 Jan 2011 11:34:13 -0800 (PST)
-Message-Id: <20110106.113413.179942748.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-01-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110105215133.GA2369@tuxdriver.com>
-References: <20110105215133.GA2369@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 4 Jan 2011 14:00:06 -0500
+Date: Tue, 4 Jan 2011 13:49:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: kathy.giori@atheros.com, amod.bodas@atheros.com,
+	david.quan@atheros.com, michael.green@atheros.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/8] wireless: DFS region support
+Message-ID: <20110104184928.GA13239@tuxdriver.com>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 5 Jan 2011 16:51:34 -0500
+On Mon, Dec 20, 2010 at 12:02:26PM -0500, Luis R. Rodriguez wrote:
+> This series has a list of changes to kernel and userspace to start addressing
+> DFS region support. I've cheated and figured out a way to alter the current
+> regulatory database in such a way that it remains backwards compatible with
+> older databases so that no new CRDAs are required and we don't have to provide
+> two releases for old kernels and newer kernels for wireless-regdb updates.
+> 
+> In the end we end up passing the DFS region to the drivers. In terms of our DFS
+> development roadmap this covers parts I and II as promissed that I would take care
+> of by tomorrow, and leaves open now the chance for developers to start working
+> on part III: "Where do we stuff DFS parameters for each region":
+> 
+> http://wireless.kernel.org/en/developers/DFS
+> 
+> In tomorrow's meeting we can cover who is going to work on part III. People who
+> want to work on part III can start using these patches on their systems.
+> 
+> John, lets wait to merge these until Wednesday, I post these in patch form as I
+> think they are ready but tomorrow's discussions may push us to alter this a
+> bit, not sure. I will also review what we have done here with Michael Green so
+> he is on the same page.
 
-> Dave,
-> 
-> Here is another big batch of updates intended for 2.6.38.  It should
-> be the last big one, but I still have a few patches in the queue that meet
-> the posting date requirements and that might merit inclusion -- we'll
-> see...
-> 
-> Again, this is the usual batch of driver updates from all the major
-> players.  Also, mac80211 gets a little action.  The bluetooth team makes
-> a showing as well.
-> 
-> Please let me know if there are problems!
+Well, now there has been plenty of time to reflect...comments? :-)
 
-Pulled, thanks John.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
