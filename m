@@ -1,143 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54399 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753137Ab1AURqn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 12:46:43 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:56179 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751075Ab1ADXt5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 18:49:57 -0500
+Subject: [RFC PATCH 15/17] zd1211rw: collect driver settings and add function
+	to restore theim
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k_hw: replace magic values in register writes with proper defines
-Date: Fri, 21 Jan 2011 18:46:35 +0100
-Message-Id: <1295631995-27637-1-git-send-email-nbd@openwrt.org>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:49:52 +0200
+Message-ID: <20110104234952.25309.81382.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   24 ++++++++++++------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    2 ++
- 2 files changed, 14 insertions(+), 12 deletions(-)
+We need HW hard reset later in patchset to reset device after TX-stall.
+Collect all settings that we have set to driver for later reset and
+add restore function.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 4819747..a256556 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3959,19 +3959,19 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   69 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/zd1211rw/zd_mac.h |    1 
+ 2 files changed, 70 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index bee3e21..4c3e92a 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -141,6 +141,9 @@ static void housekeeping_disable(struct zd_mac *mac);
+ static void beacon_init(struct zd_mac *mac);
+ static void beacon_enable(struct zd_mac *mac);
+ static void beacon_disable(struct zd_mac *mac);
++static void set_rts_cts(struct zd_mac *mac, unsigned int short_preamble);
++static int zd_mac_config_beacon(struct ieee80211_hw *hw,
++				struct sk_buff *beacon);
+ 
+ static int zd_reg2alpha2(u8 regdomain, char *alpha2)
  {
- #define POW_SM(_r, _s)     (((_r) & 0x3f) << (_s))
- 	/* make sure forced gain is not set */
--	REG_WRITE(ah, 0xa458, 0);
-+	REG_WRITE(ah, AR_PHY_TX_FORCED_GAIN, 0);
+@@ -339,6 +342,68 @@ static void zd_op_stop(struct ieee80211_hw *hw)
+ 		dev_kfree_skb_any(skb);
+ }
  
- 	/* Write the OFDM power per rate set */
- 
- 	/* 6 (LSB), 9, 12, 18 (MSB) */
--	REG_WRITE(ah, 0xa3c0,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(0),
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_6_24], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_6_24], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_6_24], 8) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_6_24], 0));
- 
- 	/* 24 (LSB), 36, 48, 54 (MSB) */
--	REG_WRITE(ah, 0xa3c4,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(1),
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_54], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_48], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_36], 8) |
-@@ -3980,14 +3980,14 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	/* Write the CCK power per rate set */
- 
- 	/* 1L (LSB), reserved, 2L, 2S (MSB) */
--	REG_WRITE(ah, 0xa3c8,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(2),
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_1L_5L], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_1L_5L], 16) |
- 		  /* POW_SM(txPowerTimes2,  8) | this is reserved for AR9003 */
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_1L_5L], 0));
- 
- 	/* 5.5L (LSB), 5.5S, 11L, 11S (MSB) */
--	REG_WRITE(ah, 0xa3cc,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(3),
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_11S], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_11L], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_LEGACY_5S], 8) |
-@@ -3997,7 +3997,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	/* Write the HT20 power per rate set */
- 
- 	/* 0/8/16 (LSB), 1-3/9-11/17-19, 4, 5 (MSB) */
--	REG_WRITE(ah, 0xa3d0,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(4),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_5], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_4], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_1_3_9_11_17_19], 8) |
-@@ -4005,7 +4005,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	    );
- 
- 	/* 6 (LSB), 7, 12, 13 (MSB) */
--	REG_WRITE(ah, 0xa3d4,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(5),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_13], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_12], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_7], 8) |
-@@ -4013,7 +4013,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	    );
- 
- 	/* 14 (LSB), 15, 20, 21 */
--	REG_WRITE(ah, 0xa3e4,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(9),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_21], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_20], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_15], 8) |
-@@ -4023,7 +4023,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	/* Mixed HT20 and HT40 rates */
- 
- 	/* HT20 22 (LSB), HT20 23, HT40 22, HT40 23 (MSB) */
--	REG_WRITE(ah, 0xa3e8,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(10),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_23], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_22], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT20_23], 8) |
-@@ -4035,7 +4035,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	 * correct PAR difference between HT40 and HT20/LEGACY
- 	 * 0/8/16 (LSB), 1-3/9-11/17-19, 4, 5 (MSB)
- 	 */
--	REG_WRITE(ah, 0xa3d8,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(6),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_5], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_4], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_1_3_9_11_17_19], 8) |
-@@ -4043,7 +4043,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	    );
- 
- 	/* 6 (LSB), 7, 12, 13 (MSB) */
--	REG_WRITE(ah, 0xa3dc,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(7),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_13], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_12], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_7], 8) |
-@@ -4051,7 +4051,7 @@ static int ar9003_hw_tx_power_regwrite(struct ath_hw *ah, u8 * pPwrArray)
- 	    );
- 
- 	/* 14 (LSB), 15, 20, 21 */
--	REG_WRITE(ah, 0xa3ec,
-+	REG_WRITE(ah, AR_PHY_POWER_TX_RATE(11),
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_21], 24) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_20], 16) |
- 		  POW_SM(pPwrArray[ALL_TARGET_HT40_15], 8) |
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 59bab6b..8bdda2c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -486,6 +486,8 @@
- #define AR_PHY_HEAVYCLIP_40      (AR_SM_BASE + 0x1ac)
- #define AR_PHY_ILLEGAL_TXRATE    (AR_SM_BASE + 0x1b0)
- 
-+#define AR_PHY_POWER_TX_RATE(_d) (AR_SM_BASE + 0x1c0 + ((_d) << 2))
++static int zd_restore_settings(struct zd_mac *mac)
++{
++	struct sk_buff *beacon;
++	struct zd_mc_hash multicast_hash;
++	unsigned int short_preamble;
++	int r, beacon_interval, beacon_period;
++	u8 channel;
 +
- #define AR_PHY_PWRTX_MAX         (AR_SM_BASE + 0x1f0)
- #define AR_PHY_POWER_TX_SUB      (AR_SM_BASE + 0x1f4)
++	dev_dbg_f(zd_mac_dev(mac), "\n");
++
++	spin_lock_irq(&mac->lock);
++	multicast_hash = mac->multicast_hash;
++	short_preamble = mac->short_preamble;
++	beacon_interval = mac->beacon.interval;
++	beacon_period = mac->beacon.period;
++	channel = mac->channel;
++	spin_unlock_irq(&mac->lock);
++
++	r = set_mac_and_bssid(mac);
++	if (r < 0) {
++		dev_dbg_f(zd_mac_dev(mac), "set_mac_and_bssid failed, %d\n", r);
++		return r;
++	}
++
++	r = zd_chip_set_channel(&mac->chip, channel);
++	if (r < 0) {
++		dev_dbg_f(zd_mac_dev(mac), "zd_chip_set_channel failed, %d\n",
++			  r);
++		return r;
++	}
++
++	set_rts_cts(mac, short_preamble);
++
++	r = zd_chip_set_multicast_hash(&mac->chip, &multicast_hash);
++	if (r < 0) {
++		dev_dbg_f(zd_mac_dev(mac),
++			  "zd_chip_set_multicast_hash failed, %d\n", r);
++		return r;
++	}
++
++	if (mac->type == NL80211_IFTYPE_MESH_POINT ||
++	    mac->type == NL80211_IFTYPE_ADHOC ||
++	    mac->type == NL80211_IFTYPE_AP) {
++		if (mac->vif != NULL) {
++			beacon = ieee80211_beacon_get(mac->hw, mac->vif);
++			if (beacon) {
++				zd_mac_config_beacon(mac->hw, beacon);
++				kfree_skb(beacon);
++			}
++		}
++
++		zd_set_beacon_interval(&mac->chip, beacon_interval,
++					beacon_period, mac->type);
++
++		spin_lock_irq(&mac->lock);
++		mac->beacon.last_update = jiffies;
++		spin_unlock_irq(&mac->lock);
++	}
++
++	return 0;
++}
++
+ /**
+  * zd_mac_tx_status - reports tx status of a packet if required
+  * @hw - a &struct ieee80211_hw pointer
+@@ -1008,6 +1073,10 @@ static int zd_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	struct ieee80211_conf *conf = &hw->conf;
  
--- 
-1.7.3.2
++	spin_lock_irq(&mac->lock);
++	mac->channel = conf->channel->hw_value;
++	spin_unlock_irq(&mac->lock);
++
+ 	return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
+ }
+ 
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
+index 4b1edb2..155d4b8 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+@@ -192,6 +192,7 @@ struct zd_mac {
+ 	u8 intr_buffer[USB_MAX_EP_INT_BUFFER];
+ 	u8 regdomain;
+ 	u8 default_regdomain;
++	u8 channel;
+ 	int type;
+ 	int associated;
+ 	unsigned long flags;
 
