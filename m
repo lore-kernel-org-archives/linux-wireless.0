@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42004 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895Ab1AFAPs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43282 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954Ab1ADLGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 19:15:48 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/5] ath9k:  Initialize ah->hw
-Date: Wed,  5 Jan 2011 16:15:15 -0800
-Message-Id: <1294272919-7068-1-git-send-email-greearb@candelatech.com>
+	Tue, 4 Jan 2011 06:06:01 -0500
+Subject: Re: Hidden SSID and WLAN powersave
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1294138841.4166.38.camel@wimaxnb.nmp.nokia.com>
+References: <1294136801.4166.30.camel@wimaxnb.nmp.nokia.com>
+	 <1294138071.3511.0.camel@jlt3.sipsolutions.net>
+	 <1294138841.4166.38.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 04 Jan 2011 12:05:59 +0100
+Message-ID: <1294139159.3511.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, 2011-01-04 at 13:00 +0200, Juuso Oikarinen wrote:
 
-Previous code left it NULL.
+> > > As result, the STA does not ever enter WLAN PSM.
+> > > 
+> > > Anyone stumbled on this issue?
+> > 
+> > I haven't come across it, but we don't test hidden SSIDs much ...
+> > sounds perfectly logical.
+> 
+> I would fix this, but I'm afraid I don't know enough about the mac80211
+> to make a valid decision on how to go about that.
+> 
+> For PSM, this is an issue about the TIM IE, or more specifically the
+> DTIM period. AFAIK, all the bss entries with the same BSSID should share
+> the same DTIM period - I think this is valid for other cases with
+> multiple SSIDs on one BSSID too.
+> 
+> 
+> Any suggestions on how to approach this issue?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 b0e5e716.. 9ca87de... M	drivers/net/wireless/ath/ath9k/init.c
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I'd probably see if you can update all the matching BSS structs with the
+received beacon IEs.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b0e5e716..9ca87de 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -536,6 +536,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	if (!ah)
- 		return -ENOMEM;
- 
-+	ah->hw = sc->hw;
- 	ah->hw_version.devid = devid;
- 	ah->hw_version.subsysid = subsysid;
- 	sc->sc_ah = ah;
--- 
-1.7.2.3
+johannes
 
