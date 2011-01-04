@@ -1,50 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36242 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924Ab1AGCpi (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:53861 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751055Ab1ADXsl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 21:45:38 -0500
-Message-ID: <4D267E4D.7000608@candelatech.com>
-Date: Thu, 06 Jan 2011 18:45:33 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 4 Jan 2011 18:48:41 -0500
+Subject: [RFC PATCH 06/17] zd1211rw: support setting BSSID for AP mode
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:48:36 +0200
+Message-ID: <20110104234836.25309.11362.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [ath9k-devel] [PATCH 3/3] ath9k: Keep track of stations for debugfs.
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com> <1294361165-15308-3-git-send-email-greearb@candelatech.com> <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com>
-In-Reply-To: <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2011 06:30 PM, Luis R. Rodriguez wrote:
-> On Thu, Jan 6, 2011 at 4:46 PM,<greearb@candelatech.com>  wrote:
->> +#define ATH9K_MAX_STATIONS 1024
->
-> How about making this a Kconfig with a default to a value of the known
-> (by you) max workable number of STAs that one can use on ath9k, which
-> is modifiable to other values by power of two up to 1024. Advise in
-> the kconfig that if more STAs are used then some issue may arise but
-> should be reported (so the issue can be fixed). This way by default
-> normal users (you're not normal) won't enable>  max known workable
-> stable number of STAs on ath9k.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |   39 +++++++++++++++++++++++--------
+ drivers/net/wireless/zd1211rw/zd_chip.h |    1 +
+ drivers/net/wireless/zd1211rw/zd_mac.c  |   25 +++++++++++++++++++-
+ drivers/net/wireless/zd1211rw/zd_mac.h  |    1 +
+ 4 files changed, 55 insertions(+), 11 deletions(-)
 
-This is just for debugging at this point.  It wastes a bit of memory
-when debugfs is enabled, but otherwise doesn't affect anything.  It's
-not even really a problem if there are more stations than fit in
-the array.
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 8c05737..f1813a2 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -369,16 +369,12 @@ error:
+ 	return r;
+ }
+ 
+-/* MAC address: if custom mac addresses are to be used CR_MAC_ADDR_P1 and
+- *              CR_MAC_ADDR_P2 must be overwritten
+- */
+-int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
++static int zd_write_mac_addr_common(struct zd_chip *chip, const u8 *mac_addr,
++				    const struct zd_ioreq32 *in_reqs,
++				    const char *type)
+ {
+ 	int r;
+-	struct zd_ioreq32 reqs[2] = {
+-		[0] = { .addr = CR_MAC_ADDR_P1 },
+-		[1] = { .addr = CR_MAC_ADDR_P2 },
+-	};
++	struct zd_ioreq32 reqs[2] = {in_reqs[0], in_reqs[1]};
+ 
+ 	if (mac_addr) {
+ 		reqs[0].value = (mac_addr[3] << 24)
+@@ -387,9 +383,9 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
+ 			      |  mac_addr[0];
+ 		reqs[1].value = (mac_addr[5] <<  8)
+ 			      |  mac_addr[4];
+-		dev_dbg_f(zd_chip_dev(chip), "mac addr %pM\n", mac_addr);
++		dev_dbg_f(zd_chip_dev(chip), "%s addr %pM\n", type, mac_addr);
+ 	} else {
+-		dev_dbg_f(zd_chip_dev(chip), "set NULL mac\n");
++		dev_dbg_f(zd_chip_dev(chip), "set NULL %s\n", type);
+ 	}
+ 
+ 	mutex_lock(&chip->mutex);
+@@ -398,6 +394,29 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
+ 	return r;
+ }
+ 
++/* MAC address: if custom mac addresses are to be used CR_MAC_ADDR_P1 and
++ *              CR_MAC_ADDR_P2 must be overwritten
++ */
++int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
++{
++	static const struct zd_ioreq32 reqs[2] = {
++		[0] = { .addr = CR_MAC_ADDR_P1 },
++		[1] = { .addr = CR_MAC_ADDR_P2 },
++	};
++
++	return zd_write_mac_addr_common(chip, mac_addr, reqs, "mac");
++}
++
++int zd_write_bssid(struct zd_chip *chip, const u8 *bssid)
++{
++	static const struct zd_ioreq32 reqs[2] = {
++		[0] = { .addr = CR_BSSID_P1 },
++		[1] = { .addr = CR_BSSID_P2 },
++	};
++
++	return zd_write_mac_addr_common(chip, bssid, reqs, "bssid");
++}
++
+ int zd_read_regdomain(struct zd_chip *chip, u8 *regdomain)
+ {
+ 	int r;
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
+index f8bbf7d..7b0c58c 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/zd1211rw/zd_chip.h
+@@ -881,6 +881,7 @@ static inline u8 _zd_chip_get_channel(struct zd_chip *chip)
+ u8  zd_chip_get_channel(struct zd_chip *chip);
+ int zd_read_regdomain(struct zd_chip *chip, u8 *regdomain);
+ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr);
++int zd_write_bssid(struct zd_chip *chip, const u8 *bssid);
+ int zd_chip_switch_radio_on(struct zd_chip *chip);
+ int zd_chip_switch_radio_off(struct zd_chip *chip);
+ int zd_chip_enable_int(struct zd_chip *chip);
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 9284643..0ef27db 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -231,6 +231,26 @@ static int set_rx_filter(struct zd_mac *mac)
+ 	return zd_iowrite32(&mac->chip, CR_RX_FILTER, filter);
+ }
+ 
++static int set_mac_and_bssid(struct zd_mac *mac)
++{
++	int r;
++
++	if (!mac->vif)
++		return -1;
++
++	r = zd_write_mac_addr(&mac->chip, mac->vif->addr);
++	if (r)
++		return r;
++
++	/* Vendor driver after setting MAC either sets BSSID for AP or
++	 * filter for other modes.
++	 */
++	if (mac->type != NL80211_IFTYPE_AP)
++		return set_rx_filter(mac);
++	else
++		return zd_write_bssid(&mac->chip, mac->vif->addr);
++}
++
+ static int set_mc_hash(struct zd_mac *mac)
+ {
+ 	struct zd_mc_hash hash;
+@@ -888,7 +908,9 @@ static int zd_op_add_interface(struct ieee80211_hw *hw,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	return zd_write_mac_addr(&mac->chip, vif->addr);
++	mac->vif = vif;
++
++	return set_mac_and_bssid(mac);
+ }
+ 
+ static void zd_op_remove_interface(struct ieee80211_hw *hw,
+@@ -896,6 +918,7 @@ static void zd_op_remove_interface(struct ieee80211_hw *hw,
+ {
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	mac->type = NL80211_IFTYPE_UNSPECIFIED;
++	mac->vif = NULL;
+ 	zd_set_beacon_interval(&mac->chip, 0);
+ 	zd_write_mac_addr(&mac->chip, NULL);
+ }
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
+index ff7ef30..0ec6bde 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+@@ -172,6 +172,7 @@ struct zd_mac {
+ 	spinlock_t lock;
+ 	spinlock_t intr_lock;
+ 	struct ieee80211_hw *hw;
++	struct ieee80211_vif *vif;
+ 	struct housekeeping housekeeping;
+ 	struct work_struct set_rts_cts_work;
+ 	struct work_struct process_intr;
 
-I can reproduce all my problems with < 128, so if you'd prefer
-the number be smaller, that's fine with me.  I don't think it's
-worth a configurable value, however.
-
-Thanks,
-Ben
-
->
->    Luis
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
