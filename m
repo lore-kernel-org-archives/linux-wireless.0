@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:19412 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753888Ab1AGF7p (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47136 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944Ab1ADSAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 00:59:45 -0500
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0438359982
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Jan 2011 14:59:42 +0900 (JST)
-Subject: [PATCH 4/4] iw: Add signal average to station dump information
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Date: Fri, 07 Jan 2011 15:00:41 +0900
-Message-ID: <20110107060041.21507.24000.stgit@localhost6.localdomain6>
-In-Reply-To: <20110107060025.21507.11061.stgit@localhost6.localdomain6>
-References: <20110107060025.21507.11061.stgit@localhost6.localdomain6>
+	Tue, 4 Jan 2011 13:00:08 -0500
+Date: Tue, 4 Jan 2011 12:56:21 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-m68k@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+	spi-devel-general@lists.sourceforge.net,
+	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 07/15]drivers:net:wireless:iwlwifi Typo change diable to
+ disable.
+Message-ID: <20110104175621.GB11333@tuxdriver.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print station signal average in station dump.
+On Thu, Dec 30, 2010 at 03:07:56PM -0800, Justin P. Mattock wrote:
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Acked-by: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- station.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/station.c b/station.c
-index be2301f..6581d50 100644
---- a/station.c
-+++ b/station.c
-@@ -107,6 +107,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 	if (sinfo[NL80211_STA_INFO_SIGNAL])
- 		printf("\n\tsignal:  \t%d dBm",
- 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
-+	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
-+		printf("\n\tsignal avg:\t%d dBm",
-+			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
- 
- 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
- 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
