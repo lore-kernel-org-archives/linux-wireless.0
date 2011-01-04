@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:54934 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752793Ab1A1TuR (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:53269 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283Ab1ADSTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 14:50:17 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH]drivers:wireless:acx.h change initate to initiate
-Date: Fri, 28 Jan 2011 11:50:04 -0800
-Message-Id: <1296244204-3890-1-git-send-email-justinmattock@gmail.com>
+	Tue, 4 Jan 2011 13:19:14 -0500
+Received: from hpaq3.eem.corp.google.com (hpaq3.eem.corp.google.com [172.25.149.3])
+	by smtp-out.google.com with ESMTP id p04IJDgS010703
+	for <linux-wireless@vger.kernel.org>; Tue, 4 Jan 2011 10:19:13 -0800
+Received: from iym14 (iym14.prod.google.com [10.241.52.14])
+	by hpaq3.eem.corp.google.com with ESMTP id p04IIkZw008606
+	for <linux-wireless@vger.kernel.org>; Tue, 4 Jan 2011 10:19:11 -0800
+Received: by iym14 with SMTP id 14so14539396iym.29
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 10:19:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101216174410.GB5677@tux>
+References: <1292482775.3542.8.camel@jlt3.sipsolutions.net>
+	<AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
+	<1292499024.3612.3.camel@jlt3.sipsolutions.net>
+	<AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
+	<1292501047.3612.9.camel@jlt3.sipsolutions.net>
+	<AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
+	<1292502934.3612.15.camel@jlt3.sipsolutions.net>
+	<AANLkTimZdxQNk2hr-ekGPAWJB5YTZBqxdppOAjdbrb1i@mail.gmail.com>
+	<1292504020.3612.17.camel@jlt3.sipsolutions.net>
+	<AANLkTinWkYK2Zu1LsKw9YQ4dAXJ2b_quEvZLc59-c_5q@mail.gmail.com>
+	<20101216174410.GB5677@tux>
+Date: Tue, 4 Jan 2011 10:19:05 -0800
+Message-ID: <AANLkTinvrdj4jbzH3COVZ9gW8W0h0em7uD6DBWBEXUp=@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
+From: Paul Stewart <pstew@google.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not sure if this is a typo or not. if it is then feel free to take this.
+On Thu, Dec 16, 2010 at 9:44 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> Try this:
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Happy new year.  I've tried this patch, and the system continues to
+suspend and resume successfully (i.e, the fix from the earlier patches
+continues to alleviate the original problem), however the system
+continues to be "deaf" to beacons at resume time if the system
+suspends and resumes while associated.  You don't need a ChromeOS
+system to reproduce this issue.  Just associate to the network and
+suspend/resume.  On resume the system believes it should be
+associated, but then the beacon loss timer kicks in and we
+disassociate, since we are never successful in receiving a response.
 
----
- drivers/net/wireless/wl12xx/acx.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index 7bd8e4d..c56088b 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -987,7 +987,7 @@ struct wl1271_acx_ht_capabilities {
- 	 *         Note, driver will still leave space for HT control in packets
- 	 *         regardless of the value of this field. FW will be responsible
- 	 *         to drop the HT field from any frame when this Bit set to 0.
--	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
-+	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initiate RD.
- 	 *         Exact policy setting for this feature is TBD.
- 	 *         Note, this bit can only be set to 1 if bit 3 is set to 1.
- 	 */
--- 
-1.6.5.GIT
-
+--
+Paul
