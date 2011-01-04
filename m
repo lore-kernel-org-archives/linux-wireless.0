@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47136 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944Ab1ADSAI (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38582 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750801Ab1ADWbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 13:00:08 -0500
-Date: Tue, 4 Jan 2011 12:56:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-m68k@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 07/15]drivers:net:wireless:iwlwifi Typo change diable to
- disable.
-Message-ID: <20110104175621.GB11333@tuxdriver.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+	Tue, 4 Jan 2011 17:31:06 -0500
+Received: by wyb28 with SMTP id 28so14795861wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 14:31:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <AANLkTikCcgEiqeJLDn0Pes_2=usj6ZXo7hhL48MBnH_-@mail.gmail.com>
+References: <AANLkTim0AM3=T=TMu79ZQi79+CKANamBcz620n2xm8bW@mail.gmail.com>
+	<201101041946.56978.helmut.schaa@googlemail.com>
+	<AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
+	<AANLkTi=KFG-7GPw2=6VTZqEceEcJM6OdWoTQaN_83NqP@mail.gmail.com>
+	<AANLkTikREOFV+WGWgo9yh9bTrz346kF0muKE8gs5N+km@mail.gmail.com>
+	<AANLkTikCcgEiqeJLDn0Pes_2=usj6ZXo7hhL48MBnH_-@mail.gmail.com>
+Date: Tue, 4 Jan 2011 23:31:03 +0100
+Message-ID: <AANLkTin0W1_Tjr1zj0D0U+VeBpoGFRmB9iCdOfnMB-nR@mail.gmail.com>
+Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
+From: Wolfgang Kufner <wolfgang.kufner@gmail.com>
+To: Aleksandar Milivojevic <alex@milivojevic.org>
+Cc: Luis Correia <buga@loide.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 30, 2010 at 03:07:56PM -0800, Justin P. Mattock wrote:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this 
-> is correct or not.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-Acked-by: John W. Linville <linville@tuxdriver.com>
+Hi Aleksandar,	
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I know just about nothing about regulatory domains but I think it
+might be good to try with a current compat-wireless next. I notice
+that the these log lines:
+
+"cfg80211: Received country IE:"
+"cfg80211: We intersect both of these and get:"
+
+do not exist in linux-next anymore since this commit:
+http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commit;h=4f366c5dabcb936dd5754a35188bd699181fe1ce
+
+Maybe a fix for this issue is already in compat-wireless.
+
+HTH,
+Wolfgang
