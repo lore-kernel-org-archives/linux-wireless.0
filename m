@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lider.pardus.org.tr ([193.140.100.216]:51821 "EHLO
-	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755301Ab1AaJD4 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41530 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989Ab1ADPuz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 04:03:56 -0500
-Message-ID: <4D467AFC.7090503@pardus.org.tr>
-Date: Mon, 31 Jan 2011 11:03:56 +0200
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+	Tue, 4 Jan 2011 10:50:55 -0500
+Received: by vws16 with SMTP id 16so6097851vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 07:50:55 -0800 (PST)
 MIME-Version: 1.0
-To: Joey Lee <jlee@novell.com>
-CC: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org
-Subject: Re: Rfkill always soft/hard blocked upon boot
-References: <4D455DC1.6010909@pardus.org.tr> <4D45B338.8010802@lwfinger.net> <4D45B776.4000403@pardus.org.tr> <4D46B4340200002300027E82@novprvlin0050.provo.novell.com>
-In-Reply-To: <4D46B4340200002300027E82@novprvlin0050.provo.novell.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1292963384-23684-1-git-send-email-zajec5@gmail.com>
+References: <1292963384-23684-1-git-send-email-zajec5@gmail.com>
+Date: Tue, 4 Jan 2011 16:50:54 +0100
+Message-ID: <AANLkTikwKOLJ6A-DTEuVg43_g_cWgDg2xK4M6qQ0Lm4U@mail.gmail.com>
+Subject: Re: [PATCH] b43: N-PHY: enable support for PHYs rev 3 and higher
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31.01.2011 04:08, Joey Lee wrote:
+W dniu 21 grudnia 2010 21:29 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> John: can we still make it for 2.6.38 merge? It was tested with 14e4:432b,
+> support seems to be on the same level as for PHYs 1 and 2.
 
-> Does it possible share your machine's model name, dmidecode and
-> acpidump?
+John, I dont see patches for rev3+ in wireless-testing. Any problems with them?
 
-Yes of course. I have the acpidump and dmidecode outputs but I could not 
-extract the tables from the acpidump output. It gave an error about the 
-table headers and their lengths.
+It means:
+[PATCH 1/4] b43: use correct firmware for newer cores
+[PATCH 2/4 v2] b43: N-PHY: implement radio 2056 init steps
+[PATCH 3/4] b43: N-PHY: add init tables for 2056 radio
+[PATCH 4/4] b43: N-PHY: avoid PHY hangs for rev 3 and 4
 
-This is a local (Turkish) brand laptop. The manufacturer is Casper. 
-Model is Nirvana i7 (Casper Nirvana i7 CNTKI-620A). It can be an exact 
-clone-copy of a popular laptop as it happens with these no-name stuff.
-
-acpidump:
-  http://bugs.pardus.org.tr/attachment.cgi?id=6673
-
-dmidecode:
-  http://bugs.pardus.org.tr/attachment.cgi?id=6674
-
-
-
-
+[PATCH 1/2] b43: N-PHY: use correct channel tables for rev4+
+[PATCH 2/2 v2] b43: N-PHY: update 2056 radio on channel switch on rev3+
+and this one.
 
 -- 
-Pardus Linux
-http://www.pardus.org.tr/eng
+Rafał
