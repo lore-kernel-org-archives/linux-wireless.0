@@ -1,309 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41674 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753583Ab1A3MYf (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:40158 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010Ab1ADXr7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:35 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so2146783eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:34 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/21] rt2x00: Convert rt61pci to use tasklets
-Date: Sun, 30 Jan 2011 13:19:08 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201101301316.04044.IvDoorn@gmail.com> <201101301318.14610.IvDoorn@gmail.com> <201101301318.39263.IvDoorn@gmail.com>
-In-Reply-To: <201101301318.39263.IvDoorn@gmail.com>
+	Tue, 4 Jan 2011 18:47:59 -0500
+Subject: [RFC PATCH 01/17] zd1211rw: fix tx-queue disabling
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:47:54 +0200
+Message-ID: <20110104234754.25309.54906.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101301319.08812.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+When stress testing AP-mode I hit OOPS when unpluging or rmmodding
+driver.
 
-Fix interrupt processing on slow machines by using individual tasklets
-for each different device interrupt. This ensures that while a RX or TX
-status tasklet is scheduled only the according device interrupt is
-masked and other interrupts such as TBTT can still be processed.
+It appears that when tx-queue is disabled, tx-urbs might be left pending.
+These can cause ehci to call non-existing tx_urb_complete() (after rmmod)
+or uninitialized/reseted private structure (after disconnect()). Add skb
+queue for submitted packets and unlink pending urbs on zd_usb_disable_tx().
 
-Also, this allows us to use tasklet_hi_schedule for TBTT processing
-which is required to not send out beacons with a wrong DTIM count (due
-to delayed periodic beacon updates). Furthermore, this improves the
-latency between the TBTT and sending out buffered multi- and broadcast
-traffic.
+Part of the problem seems to be usb->free_urb_list that isn't always
+working as it should, causing machine freeze when trying to free the list
+in zd_usb_disable_tx(). Caching free urbs isn't what other drivers seem
+to be doing (usbnet for example) so strip free_usb_list.
 
-As a nice bonus, the interrupt handling overhead should be much lower.
-
-Compile-tested only.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |  175 ++++++++++++++++++++++++---------
- 1 files changed, 130 insertions(+), 45 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_usb.c |  113 ++++++++++++++------------------
+ drivers/net/wireless/zd1211rw/zd_usb.h |    3 -
+ 2 files changed, 51 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index f14cc45..351055d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1142,6 +1142,11 @@ static void rt61pci_start_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR0, reg);
- 		break;
- 	case QID_BEACON:
-+		/*
-+		 * Allow the tbtt tasklet to be scheduled.
-+		 */
-+		tasklet_enable(&rt2x00dev->tbtt_tasklet);
-+
- 		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
-@@ -1221,6 +1226,11 @@ static void rt61pci_stop_queue(struct data_queue *queue)
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
- 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
-+		/*
-+		 * Wait for possibly running tbtt tasklets.
-+		 */
-+		tasklet_disable(&rt2x00dev->tbtt_tasklet);
- 		break;
- 	default:
- 		break;
-@@ -1710,6 +1720,7 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	int mask = (state == STATE_RADIO_IRQ_OFF) ||
- 		   (state == STATE_RADIO_IRQ_OFF_ISR);
- 	u32 reg;
-+	unsigned long flags;
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 06041cb..ed5379b 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -778,15 +778,34 @@ void zd_usb_disable_rx(struct zd_usb *usb)
+ void zd_usb_disable_tx(struct zd_usb *usb)
+ {
+ 	struct zd_usb_tx *tx = &usb->tx;
++	struct sk_buff_head *q = &tx->submitted_queue;
++	struct sk_buff *skb, *skbnext;
+ 	unsigned long flags;
+-	struct list_head *pos, *n;
++	int qlen;
  
- 	/*
- 	 * When interrupts are being enabled, the interrupt registers
-@@ -1721,12 +1732,21 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 
- 		rt2x00pci_register_read(rt2x00dev, MCU_INT_SOURCE_CSR, &reg);
- 		rt2x00pci_register_write(rt2x00dev, MCU_INT_SOURCE_CSR, reg);
+ 	spin_lock_irqsave(&tx->lock, flags);
+-	list_for_each_safe(pos, n, &tx->free_urb_list) {
+-		list_del(pos);
+-		usb_free_urb(list_entry(pos, struct urb, urb_list));
+-	}
+ 	tx->enabled = 0;
++	spin_unlock(&tx->lock);
 +
-+		/*
-+		 * Enable tasklets.
-+		 */
-+		tasklet_enable(&rt2x00dev->txstatus_tasklet);
-+		tasklet_enable(&rt2x00dev->rxdone_tasklet);
-+		tasklet_enable(&rt2x00dev->autowake_tasklet);
- 	}
- 
- 	/*
- 	 * Only toggle the interrupts bits we are going to use.
- 	 * Non-checked interrupt bits are disabled by default.
- 	 */
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+
- 	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDONE, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDONE, mask);
-@@ -1746,6 +1766,17 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&reg, MCU_INT_MASK_CSR_7, mask);
- 	rt2x00_set_field32(&reg, MCU_INT_MASK_CSR_TWAKEUP, mask);
- 	rt2x00pci_register_write(rt2x00dev, MCU_INT_MASK_CSR, reg);
-+
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+
-+	if (state == STATE_RADIO_IRQ_OFF) {
-+		/*
-+		 * Ensure that all tasklets are finished.
-+		 */
-+		tasklet_disable(&rt2x00dev->txstatus_tasklet);
-+		tasklet_disable(&rt2x00dev->rxdone_tasklet);
-+		tasklet_disable(&rt2x00dev->autowake_tasklet);
++	/* unlink all submitted tx-urbs */
++	spin_lock(&q->lock);
++	skb_queue_walk_safe(q, skb, skbnext) {
++		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++		usb_unlink_urb(info->rate_driver_data[1]);
 +	}
++	qlen = skb_queue_len(q);
++	spin_unlock(&q->lock);
++
++	/* wait until unlink has completed */
++	while (qlen > 0) {
++		msleep(20);
++
++		spin_lock(&q->lock);
++		qlen = skb_queue_len(q);
++		spin_unlock(&q->lock);
++	}
++
++	spin_lock(&tx->lock);
+ 	tx->submitted_urbs = 0;
+ 	/* The stopped state is ignored, relying on ieee80211_wake_queues()
+ 	 * in a potentionally following zd_usb_enable_tx().
+@@ -814,56 +833,6 @@ void zd_usb_enable_tx(struct zd_usb *usb)
+ 	spin_unlock_irqrestore(&tx->lock, flags);
  }
  
- static int rt61pci_enable_radio(struct rt2x00_dev *rt2x00dev)
-@@ -2223,61 +2254,80 @@ static void rt61pci_wakeup(struct rt2x00_dev *rt2x00dev)
- 	rt61pci_config(rt2x00dev, &libconf, IEEE80211_CONF_CHANGE_PS);
- }
- 
--static irqreturn_t rt61pci_interrupt_thread(int irq, void *dev_instance)
-+static void rt61pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
-+				     struct rt2x00_field32 irq_field)
+-/**
+- * alloc_tx_urb - provides an tx URB
+- * @usb: a &struct zd_usb pointer
+- *
+- * Allocates a new URB. If possible takes the urb from the free list in
+- * usb->tx.
+- */
+-static struct urb *alloc_tx_urb(struct zd_usb *usb)
+-{
+-	struct zd_usb_tx *tx = &usb->tx;
+-	unsigned long flags;
+-	struct list_head *entry;
+-	struct urb *urb;
+-
+-	spin_lock_irqsave(&tx->lock, flags);
+-	if (list_empty(&tx->free_urb_list)) {
+-		urb = usb_alloc_urb(0, GFP_ATOMIC);
+-		goto out;
+-	}
+-	entry = tx->free_urb_list.next;
+-	list_del(entry);
+-	urb = list_entry(entry, struct urb, urb_list);
+-out:
+-	spin_unlock_irqrestore(&tx->lock, flags);
+-	return urb;
+-}
+-
+-/**
+- * free_tx_urb - frees a used tx URB
+- * @usb: a &struct zd_usb pointer
+- * @urb: URB to be freed
+- *
+- * Frees the transmission URB, which means to put it on the free URB
+- * list.
+- */
+-static void free_tx_urb(struct zd_usb *usb, struct urb *urb)
+-{
+-	struct zd_usb_tx *tx = &usb->tx;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&tx->lock, flags);
+-	if (!tx->enabled) {
+-		usb_free_urb(urb);
+-		goto out;
+-	}
+-	list_add(&urb->urb_list, &tx->free_urb_list);
+-out:
+-	spin_unlock_irqrestore(&tx->lock, flags);
+-}
+-
+ static void tx_dec_submitted_urbs(struct zd_usb *usb)
  {
--	struct rt2x00_dev *rt2x00dev = dev_instance;
--	u32 reg = rt2x00dev->irqvalue[0];
--	u32 reg_mcu = rt2x00dev->irqvalue[1];
-+	unsigned long flags;
-+	u32 reg;
- 
- 	/*
--	 * Handle interrupts, walk through all bits
--	 * and run the tasks, the bits are checked in order of
--	 * priority.
-+	 * Enable a single interrupt. The interrupt mask register
-+	 * access needs locking.
- 	 */
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
- 
--	/*
--	 * 1 - Rx ring done interrupt.
--	 */
--	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_RXDONE))
--		rt2x00pci_rxdone(rt2x00dev);
-+	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
-+	rt2x00_set_field32(&reg, irq_field, 0);
-+	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 
--	/*
--	 * 2 - Tx ring done interrupt.
--	 */
--	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TXDONE))
--		rt61pci_txdone(rt2x00dev);
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+}
- 
--	/*
--	 * 3 - Handle MCU command done.
--	 */
--	if (reg_mcu)
--		rt2x00pci_register_write(rt2x00dev,
--					 M2H_CMD_DONE_CSR, 0xffffffff);
-+static void rt61pci_enable_mcu_interrupt(struct rt2x00_dev *rt2x00dev,
-+					 struct rt2x00_field32 irq_field)
-+{
-+	unsigned long flags;
-+	u32 reg;
- 
- 	/*
--	 * 4 - MCU Autowakeup interrupt.
-+	 * Enable a single MCU interrupt. The interrupt mask register
-+	 * access needs locking.
- 	 */
--	if (rt2x00_get_field32(reg_mcu, MCU_INT_SOURCE_CSR_TWAKEUP))
--		rt61pci_wakeup(rt2x00dev);
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
- 
--	/*
--	 * 5 - Beacon done interrupt.
--	 */
--	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_BEACON_DONE))
--		rt2x00lib_beacondone(rt2x00dev);
-+	rt2x00pci_register_read(rt2x00dev, MCU_INT_MASK_CSR, &reg);
-+	rt2x00_set_field32(&reg, irq_field, 0);
-+	rt2x00pci_register_write(rt2x00dev, MCU_INT_MASK_CSR, reg);
- 
--	/* Enable interrupts again. */
--	rt2x00dev->ops->lib->set_device_state(rt2x00dev,
--					      STATE_RADIO_IRQ_ON_ISR);
--	return IRQ_HANDLED;
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
+ 	struct zd_usb_tx *tx = &usb->tx;
+@@ -878,7 +847,7 @@ static void tx_dec_submitted_urbs(struct zd_usb *usb)
+ 	spin_unlock_irqrestore(&tx->lock, flags);
  }
  
-+static void rt61pci_txstatus_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	rt61pci_txdone(rt2x00dev);
-+	rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_TXDONE);
-+}
-+
-+static void rt61pci_tbtt_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	rt2x00lib_beacondone(rt2x00dev);
-+	rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_BEACON_DONE);
-+}
-+
-+static void rt61pci_rxdone_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	rt2x00pci_rxdone(rt2x00dev);
-+	rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_RXDONE);
-+}
-+
-+static void rt61pci_autowake_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	rt61pci_wakeup(rt2x00dev);
-+	rt2x00pci_register_write(rt2x00dev,
-+				 M2H_CMD_DONE_CSR, 0xffffffff);
-+	rt61pci_enable_mcu_interrupt(rt2x00dev, MCU_INT_MASK_CSR_TWAKEUP);
-+}
- 
- static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
+-static void tx_inc_submitted_urbs(struct zd_usb *usb)
++static void tx_inc_submitted_urbs(struct zd_usb *usb, struct urb *urb)
  {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
--	u32 reg_mcu;
--	u32 reg;
-+	u32 reg_mcu, mask_mcu;
-+	u32 reg, mask;
+ 	struct zd_usb_tx *tx = &usb->tx;
+ 	unsigned long flags;
+@@ -929,8 +898,9 @@ free_urb:
+ 	 */
+ 	info = IEEE80211_SKB_CB(skb);
+ 	usb = &zd_hw_mac(info->rate_driver_data[0])->chip.usb;
++	skb_unlink(skb, &usb->tx.submitted_queue);
+ 	zd_mac_tx_to_dev(skb, urb->status);
+-	free_tx_urb(usb, urb);
++	usb_free_urb(urb);
+ 	tx_dec_submitted_urbs(usb);
+ 	return;
+ resubmit:
+@@ -955,11 +925,22 @@ resubmit:
+  */
+ int zd_usb_tx(struct zd_usb *usb, struct sk_buff *skb)
+ {
+-	int r;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	int r, enabled;
+ 	struct usb_device *udev = zd_usb_to_usbdev(usb);
+ 	struct urb *urb;
++	struct zd_usb_tx *tx = &usb->tx;
 +	unsigned long flags;
  
- 	/*
- 	 * Get the interrupt sources & saved to local variable.
-@@ -2295,14 +2345,46 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return IRQ_HANDLED;
+-	urb = alloc_tx_urb(usb);
++	spin_lock_irqsave(&tx->lock, flags);
++	enabled = tx->enabled;
++	spin_unlock_irqrestore(&tx->lock, flags);
++	if (!enabled) {
++		r = -ENOENT;
++		goto out;
++	}
++
++	urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!urb) {
+ 		r = -ENOMEM;
+ 		goto out;
+@@ -968,13 +949,18 @@ int zd_usb_tx(struct zd_usb *usb, struct sk_buff *skb)
+ 	usb_fill_bulk_urb(urb, udev, usb_sndbulkpipe(udev, EP_DATA_OUT),
+ 		          skb->data, skb->len, tx_urb_complete, skb);
  
--	/* Store irqvalues for use in the interrupt thread. */
--	rt2x00dev->irqvalue[0] = reg;
--	rt2x00dev->irqvalue[1] = reg_mcu;
-+	/*
-+	 * Schedule tasklets for interrupt handling.
-+	 */
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_RXDONE))
-+		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
++	info->rate_driver_data[1] = urb;
++	skb_queue_tail(&tx->submitted_queue, skb);
 +
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TXDONE))
-+		tasklet_schedule(&rt2x00dev->txstatus_tasklet);
-+
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_BEACON_DONE))
-+		tasklet_hi_schedule(&rt2x00dev->tbtt_tasklet);
-+
-+	if (rt2x00_get_field32(reg_mcu, MCU_INT_SOURCE_CSR_TWAKEUP))
-+		tasklet_schedule(&rt2x00dev->autowake_tasklet);
-+
-+	/*
-+	 * Since INT_MASK_CSR and INT_SOURCE_CSR use the same bits
-+	 * for interrupts and interrupt masks we can just use the value of
-+	 * INT_SOURCE_CSR to create the interrupt mask.
-+	 */
-+	mask = reg;
-+	mask_mcu = reg_mcu;
-+
-+	/*
-+	 * Disable all interrupts for which a tasklet was scheduled right now,
-+	 * the tasklet will reenable the appropriate interrupts.
-+	 */
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+
-+	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
-+	reg |= mask;
-+	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
- 
--	/* Disable interrupts, will be enabled again in the interrupt thread. */
--	rt2x00dev->ops->lib->set_device_state(rt2x00dev,
--					      STATE_RADIO_IRQ_OFF_ISR);
--	return IRQ_WAKE_THREAD;
-+	rt2x00pci_register_read(rt2x00dev, MCU_INT_MASK_CSR, &reg);
-+	reg |= mask_mcu;
-+	rt2x00pci_register_write(rt2x00dev, MCU_INT_MASK_CSR, reg);
-+
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+
-+	return IRQ_HANDLED;
+ 	r = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (r)
++	if (r) {
++		skb_unlink(skb, &tx->submitted_queue);
+ 		goto error;
+-	tx_inc_submitted_urbs(usb);
++	}
++	tx_inc_submitted_urbs(usb, urb);
+ 	return 0;
+ error:
+-	free_tx_urb(usb, urb);
++	usb_free_urb(urb);
+ out:
+ 	return r;
+ }
+@@ -1007,7 +993,7 @@ static inline void init_usb_tx(struct zd_usb *usb)
+ 	spin_lock_init(&tx->lock);
+ 	tx->enabled = 0;
+ 	tx->stopped = 0;
+-	INIT_LIST_HEAD(&tx->free_urb_list);
++	skb_queue_head_init(&tx->submitted_queue);
+ 	tx->submitted_urbs = 0;
  }
  
- /*
-@@ -2896,7 +2978,10 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
+@@ -1240,6 +1226,7 @@ static void disconnect(struct usb_interface *intf)
+ 	ieee80211_unregister_hw(hw);
  
- static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
- 	.irq_handler		= rt61pci_interrupt,
--	.irq_handler_thread	= rt61pci_interrupt_thread,
-+	.txstatus_tasklet	= rt61pci_txstatus_tasklet,
-+	.tbtt_tasklet		= rt61pci_tbtt_tasklet,
-+	.rxdone_tasklet		= rt61pci_rxdone_tasklet,
-+	.autowake_tasklet	= rt61pci_autowake_tasklet,
- 	.probe_hw		= rt61pci_probe_hw,
- 	.get_firmware_name	= rt61pci_get_firmware_name,
- 	.check_firmware		= rt61pci_check_firmware,
--- 
-1.7.2.3
+ 	/* Just in case something has gone wrong! */
++	zd_usb_disable_tx(usb);
+ 	zd_usb_disable_rx(usb);
+ 	zd_usb_disable_int(usb);
+ 
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
+index 1b1655c..b71baa0 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.h
++++ b/drivers/net/wireless/zd1211rw/zd_usb.h
+@@ -185,7 +185,6 @@ struct zd_usb_rx {
+ /**
+  * struct zd_usb_tx - structure used for transmitting frames
+  * @lock: lock for transmission
+- * @free_urb_list: list of free URBs, contains all the URBs, which can be used
+  * @submitted_urbs: atomic integer that counts the URBs having sent to the
+  *	device, which haven't been completed
+  * @enabled: enabled flag, indicates whether tx is enabled
+@@ -193,7 +192,7 @@ struct zd_usb_rx {
+  */
+ struct zd_usb_tx {
+ 	spinlock_t lock;
+-	struct list_head free_urb_list;
++	struct sk_buff_head submitted_queue;
+ 	int submitted_urbs;
+ 	int enabled;
+ 	int stopped;
 
