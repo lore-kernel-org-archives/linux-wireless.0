@@ -1,154 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:32787 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753990Ab1AKAy1 convert rfc822-to-8bit
+Received: from web31507.mail.mud.yahoo.com ([68.142.198.136]:44489 "HELO
+	web31507.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751004Ab1ADBp1 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 19:54:27 -0500
-Received: by mail-fx0-f48.google.com with SMTP id 2so19353147fxm.35
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 16:54:26 -0800 (PST)
+	Mon, 3 Jan 2011 20:45:27 -0500
+Message-ID: <75410.15386.qm@web31507.mail.mud.yahoo.com>
+Date: Mon, 3 Jan 2011 17:45:25 -0800 (PST)
+From: Ming-Ching Tiew <mctiew@yahoo.com>
+Subject: Re: Tp-link wn7200nd - cannot associate
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTinBGj6Q1DoGogerhFDMD0ZR1OVYqjSucc-a4oPu@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1294674256.1992.141.camel@pimenta>
-References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
-	<1294062164-3459-3-git-send-email-shahar_levi@ti.com>
-	<1294674256.1992.141.camel@pimenta>
-Date: Tue, 11 Jan 2011 02:54:26 +0200
-Message-ID: <AANLkTimNRzc9M0wKZsQLMh4ihSHEeycFJ-S34CA=jPAc@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] wl12xx: BA receiver support
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 10, 2011 at 5:44 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2011-01-03 at 14:42 +0100, Shahar Levi wrote:
->> Add new ampdu_action ops to support receiver BA.
->> The BA initiator session management in FW independently.
->>
->> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
->> ---
->
-> Some comments.
-Thanks for your review.
 
->
->
->
->> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
->> index 54fd68d..f33ab50 100644
->> --- a/drivers/net/wireless/wl12xx/acx.c
->> +++ b/drivers/net/wireless/wl12xx/acx.c
->> @@ -1359,6 +1359,42 @@ out:
->> † † † return ret;
->> †}
->>
->> +/* setup BA session receiver setting in the FW. */
->> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
->> + † † † † † † † † † † † † † † † † † †u16 *ssn, u8 policy)
->
-> You don't modify ssn here, so why pass it as a pointer? Use u16 directly
-> here instead.
->
-> Actually it's even worse. †As stated in mac80211.h, ssn can be NULL
-> here, so you would be accessing a NULL pointer in that case.
->
-> I see that you check "policy", which indicates whether ssn is valid or
-> not, but why not make it cleaner by checking if ssn is NULL and setting
-> it to zero before passing instead?
-good chtch. it was left from previous implantation. will be fix.
 
->
->
->> + † † † acx->enable = policy;
->
-> Also, because of this, it would make more sense if policy was a boolean
-> and was called "enable" instead.
-np, will be fix
+--- On Mon, 1/3/11, Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> wrote:
 
->
->
->> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
->> index c44462d..04b69ab 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->> @@ -2251,6 +2251,64 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
->> † † † return 0;
->> †}
->>
->> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->> + † † † † † † † † † † † †enum ieee80211_ampdu_mlme_action action,
->> + † † † † † † † † † † † †struct ieee80211_sta *sta, u16 tid, u16 *ssn)
->> +{
->> + † † struct wl1271 *wl = hw->priv;
->> + † † int ret;
->> +
->> + † † mutex_lock(&wl->mutex);
->> +
->> + † † if (unlikely(wl->state == WL1271_STATE_OFF)) {
->> + † † † † † † ret = -EAGAIN;
->> + † † † † † † goto out;
->> + † † }
->> +
->> + † † ret = wl1271_ps_elp_wakeup(wl, false);
->> + † † if (ret < 0)
->> + † † † † † † goto out;
->> +
->> + † † switch (action) {
->> + † † case IEEE80211_AMPDU_RX_START:
->> + † † † † † † if ((wl->ba_allowed) && (wl->ba_support)) {
->
-> I'm a bit confused. †What is ba_allowed, actually? In the previous patch
-> you always call wl1271_set_ba_policies() which always sets it to true.
-> So it seems quite useless.
-ba_allowed belong to next path "Stop BA session event from device". i
-will move it.
+> >
+> > I have a TP-LINK WN7200ND, I am tested it with Kernel
+> 2.6.36.1 and 2.6.35.10, basically after inserting the USB,
+> the interface is up and it can never associate with any
+> access point.
+> >
+> > #lsmod |grep rt2
+> >
+> > rt2800usb ¬† ¬† ¬† ¬† ¬† ¬† ¬† 7632 ¬†0
+> > rt2800lib ¬† ¬† ¬† ¬† ¬† ¬† ¬†20328 ¬†1 rt2800usb
+> > rt2x00usb ¬† ¬† ¬† ¬† ¬† ¬† ¬† 4628 ¬†2
+> rt2800usb,rt2800lib
+> > rt2x00lib ¬† ¬† ¬† ¬† ¬† ¬† ¬†15408 ¬†2
+> rt2800lib,rt2x00usb
+> > mac80211 ¬† ¬† ¬† ¬† ¬† ¬† ¬†122068 ¬†2
+> rt2x00usb,rt2x00lib
+> > cfg80211 ¬† ¬† ¬† ¬† ¬† ¬† ¬† 92252 ¬†2
+> rt2x00lib,mac80211
+> >
+> > There are a lot of similar complaints on the net, this
+> is one example :-
+> >
+> > http://ubuntuforums.org/showthread.php?t=1530095
+> >
+> > There don't seem to be any issue with 'iwlist wlanX
+> scan'. But just can't associate.
+> >
+> > Any recommendation ? Any debug information I should
+> provide ?
+> 
+> Are your networks encrypted? How? What is output of
+> wpa_supplicant? Did you try
+> nohwcrypt=1
+> ?
+> 
 
->
->
->> + † † † † † † † † † † ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
->> + † † † † † † † † † † † † † † † † † † † † † † † † † † † † † † †true);
->> + † † † † † † † † † † if (!ret)
->> + † † † † † † † † † † † † † † wl->ba_rx_bitmap |= BIT(tid);
->> + † † † † † † } else
->> + † † † † † † † † † † ret = -EPERM;
->
-> The indentation is wrong here. †And -EPERM is definitely not the right
-> return code for this. †It should probably -ENOTSUPP or something like
-> that.
-any error will be good. i go on "Operation not permitted". will be fix.
+Thanks for the reply. Now I am suspecting that it's the power supply to the usb device. The device is supposed to be 500mW, what do I have to do to check indeed the notebook usb power supply is not enough ?
 
->
->> + † † /*
->> + † † †* The BA initiator session management in FW independently.
->> + † † †* Falling break here on purpose for all TX APDU commands.
->> + † † †*/
->> + † † case IEEE80211_AMPDU_TX_START:
->> + † † case IEEE80211_AMPDU_TX_STOP:
->> + † † case IEEE80211_AMPDU_TX_OPERATIONAL:
->> + † † † † † † ret = -EINVAL;
->> + † † † † † † break;
->
-> -EINVAL? Actually, should mac80211 even call us with these actions? I
-> don't remember now, did you implement the way to prevent mac80211 from
-> trying to to AMPDU_TX by itself?
-the mac souldn't call those due to the fact the rate management is in the FW.
+Regards.
 
->
->
->> +
->> + † † default:
->> + † † † † † † wl1271_error("Incorrect ampdu action id=%x\n", action);
->> + † † † † † † ret = -ENODEV;
->
-> -ENODEV? All these error codes look quite random to me. †Can you explain
-> your choices?
-amm, i am trying to remeber why i use that one without success. i will
-switch it to EINVAL.
 
->
->
-> --
-> Cheers,
-> Luca.
-Shahar
+      
