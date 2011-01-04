@@ -1,63 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:44864 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752116Ab1ANHKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 02:10:07 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PddnR-0002xX-Cl
-	for linux-wireless@vger.kernel.org; Fri, 14 Jan 2011 08:10:05 +0100
-Received: from 213-134-188-132.home.aster.pl ([213.134.188.132])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 08:10:05 +0100
-Received: from dot by 213-134-188-132.home.aster.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 08:10:05 +0100
-To: linux-wireless@vger.kernel.org
-From: Tomasz <dot@poczta.fm>
-Subject: ath9k  - cannot reconnect few meters from the antenna
-Date: Thu, 13 Jan 2011 22:46:37 +0000 (UTC)
-Message-ID: <loom.20110113T233025-142@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:49508 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299Ab1ADQnm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 11:43:42 -0500
+Received: by bwz15 with SMTP id 15so14712374bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 08:43:41 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Chin Shi Hong <cshong87@gmail.com>
+Subject: Re: Tp-link wn7200nd - cannot associate
+Date: Tue, 4 Jan 2011 17:42:28 +0100
+Cc: "Ming-Ching Tiew" <mctiew@yahoo.com>,
+	linux-wireless@vger.kernel.org
+References: <651997.51284.qm@web31502.mail.mud.yahoo.com> <AANLkTimk8pnx3F+pwVTZ6sA+=-_h+4u+i=YTzp05Qf=A@mail.gmail.com>
+In-Reply-To: <AANLkTimk8pnx3F+pwVTZ6sA+=-_h+4u+i=YTzp05Qf=A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101041742.28794.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All
-I've spend a lot of time on this issue and I cannot fix it, thus I am asking for
-help
-It looks like that:
+Am Montag, 3. Januar 2011 schrieb Chin Shi Hong:
+> Good luck with you. My rt3090 also not work on 64 bit ubuntu but work
+> on 32 bit ubuntu.
 
-I am running wireless access point based on:
-Ubuntu 10.04  vmlinuz-2.6.32-27-generic
-compat-wireless-2010-12-26
-hostapd 0.7.3 (wpa/wpa2)
-Dnsmasq version 2.52
-Zotac Ion board
-Minipcie card: ieee80211 phy0: Atheros AR9285 Rev:2
-ath9k driver
-Single antenna (but the behaviour with two antenna is similar)
+Might be fixed with [1].
 
-Everything works perfectly fine when I am within the few meters from the antenna.
-So the clients are connecting and I get 25 mbps data rates.
-But if more then 10 meters from the antenna strange things are happening.
-- If I am connected to the network and will walk away everything works perfect.
-- But if i disconnect (disassociate) when I am away I cannot connect back. -
-this also means I cannot connect when turning the notebook on :)
-- if I go closer to antenna I am able to connect and while walking away the
-connection seems perfectly stable ...
+Helmut
 
-My first idea is the congestion control issue ... But maybe some will have the
-better idea.
-
-
-Regards
-Tomasz
-
-
-
--- 
-Tomek
-
-
+[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=412b31334b831a8c2909afaca017c5a236ac2dd0
