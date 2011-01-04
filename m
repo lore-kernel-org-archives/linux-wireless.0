@@ -1,57 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48352 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048Ab1AaRfe (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:43608 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055Ab1ADXsY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 12:35:34 -0500
-Message-ID: <4D46F2E2.3090905@candelatech.com>
-Date: Mon, 31 Jan 2011 09:35:30 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 4 Jan 2011 18:48:24 -0500
+Subject: [RFC PATCH 04/17] zd1211rw: move set_multicast_hash and set_rx_filter
+	from workers to configure_filter
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:48:19 +0200
+Message-ID: <20110104234819.25309.44441.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Why is wmm_param required for HT40- in mlme.c
-References: <4D44F94F.8040707@candelatech.com>	 <1296380208.3616.0.camel@jlt3.sipsolutions.net>	 <4D45A128.6060905@candelatech.com> <1296471791.3812.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296471791.3812.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2011 03:03 AM, Johannes Berg wrote:
-> On Sun, 2011-01-30 at 09:34 -0800, Ben Greear wrote:
->> On 01/30/2011 01:36 AM, Johannes Berg wrote:
->>> On Sat, 2011-01-29 at 21:38 -0800, Ben Greear wrote:
->>>> I tried to set up hostapd to do HT40-, but for whatever reason,
->>>> it's not sending any wmm_param options, so the stations will not
->>>> associate with HT40- enabled due to the check below.
->>>>
->>>> Is it really *reqired* that wmm_param exist to enable HT mode?
->>>>
->>>>    From mlme.c:
->>>> 	if (elems.ht_info_elem&&   elems.wmm_param&&
->>>> 	(sdata->local->hw.queues>= 4)&&
->>>> 	!(ifmgd->flags&   IEEE80211_STA_DISABLE_11N))
->>>> 		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
->>>> 					       cbss->bssid, ap_ht_cap_flags);
->>>
->>> 802.11n-2009 says it is required.
->>
->> Do you know the pertinent section, or some keywords to search for?  I'm
->> unable to find anything useful.
->
-> No, I got confused. 802.11n says an HT STA is a QoS STA (5.2.9), but in
-> practice WMM is tested/certified instead of QoS.
+Workers not needed anymore since configure_filter may sleep. Keep
+mac->multicast_hash for later use (hw reset).
 
-So maybe we can remove that check for wmm_param, but put in a printk
-to warn users that their AP is probably mis-configured?
+Signed-off-by: Jussi Kivilinna <jussi.kivilina@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   38 ++++++--------------------------
+ drivers/net/wireless/zd1211rw/zd_mac.h |    2 --
+ 2 files changed, 7 insertions(+), 33 deletions(-)
 
-Thanks,
-Ben
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 43307bd..ca3b4e1 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -923,31 +923,6 @@ static void zd_process_intr(struct work_struct *work)
+ }
+ 
+ 
+-static void set_multicast_hash_handler(struct work_struct *work)
+-{
+-	struct zd_mac *mac =
+-		container_of(work, struct zd_mac, set_multicast_hash_work);
+-	struct zd_mc_hash hash;
+-
+-	spin_lock_irq(&mac->lock);
+-	hash = mac->multicast_hash;
+-	spin_unlock_irq(&mac->lock);
+-
+-	zd_chip_set_multicast_hash(&mac->chip, &hash);
+-}
+-
+-static void set_rx_filter_handler(struct work_struct *work)
+-{
+-	struct zd_mac *mac =
+-		container_of(work, struct zd_mac, set_rx_filter_work);
+-	int r;
+-
+-	dev_dbg_f(zd_mac_dev(mac), "\n");
+-	r = set_rx_filter(mac);
+-	if (r)
+-		dev_err(zd_mac_dev(mac), "set_rx_filter_handler error %d\n", r);
+-}
+-
+ static u64 zd_op_prepare_multicast(struct ieee80211_hw *hw,
+ 				   struct netdev_hw_addr_list *mc_list)
+ {
+@@ -979,6 +954,7 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
+ 	};
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	unsigned long flags;
++	int r;
+ 
+ 	/* Only deal with supported flags */
+ 	changed_flags &= SUPPORTED_FIF_FLAGS;
+@@ -1000,11 +976,13 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
+ 	mac->multicast_hash = hash;
+ 	spin_unlock_irqrestore(&mac->lock, flags);
+ 
+-	/* XXX: these can be called here now, can sleep now! */
+-	queue_work(zd_workqueue, &mac->set_multicast_hash_work);
++	zd_chip_set_multicast_hash(&mac->chip, &hash);
+ 
+-	if (changed_flags & FIF_CONTROL)
+-		queue_work(zd_workqueue, &mac->set_rx_filter_work);
++	if (changed_flags & FIF_CONTROL) {
++		r = set_rx_filter(mac);
++		if (r)
++			dev_err(zd_mac_dev(mac), "set_rx_filter error %d\n", r);
++	}
+ 
+ 	/* no handling required for FIF_OTHER_BSS as we don't currently
+ 	 * do BSSID filtering */
+@@ -1160,9 +1138,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
+ 
+ 	zd_chip_init(&mac->chip, hw, intf);
+ 	housekeeping_init(mac);
+-	INIT_WORK(&mac->set_multicast_hash_work, set_multicast_hash_handler);
+ 	INIT_WORK(&mac->set_rts_cts_work, set_rts_cts_work);
+-	INIT_WORK(&mac->set_rx_filter_work, set_rx_filter_handler);
+ 	INIT_WORK(&mac->process_intr, zd_process_intr);
+ 
+ 	SET_IEEE80211_DEV(hw, &intf->dev);
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
+index a6d86b9..f28ecb9 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+@@ -173,9 +173,7 @@ struct zd_mac {
+ 	spinlock_t intr_lock;
+ 	struct ieee80211_hw *hw;
+ 	struct housekeeping housekeeping;
+-	struct work_struct set_multicast_hash_work;
+ 	struct work_struct set_rts_cts_work;
+-	struct work_struct set_rx_filter_work;
+ 	struct work_struct process_intr;
+ 	struct zd_mc_hash multicast_hash;
+ 	u8 intr_buffer[USB_MAX_EP_INT_BUFFER];
 
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
