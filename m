@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48652 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073Ab1AFUqT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50625 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099Ab1ADSPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 15:46:19 -0500
-Received: by iyi12 with SMTP id 12so15214807iyi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 12:46:18 -0800 (PST)
+	Tue, 4 Jan 2011 13:15:08 -0500
+Date: Tue, 4 Jan 2011 13:11:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: N-PHY: enable support for PHYs rev 3 and higher
+Message-ID: <20110104181140.GC11333@tuxdriver.com>
+References: <1292963384-23684-1-git-send-email-zajec5@gmail.com>
+ <AANLkTikwKOLJ6A-DTEuVg43_g_cWgDg2xK4M6qQ0Lm4U@mail.gmail.com>
+ <4D234604.8010602@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1294334198-20501-1-git-send-email-hauke@hauke-m.de>
-References: <1294334198-20501-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 6 Jan 2011 12:45:58 -0800
-Message-ID: <AANLkTi=-SNRtDy+oiUUcSTjqM5JU7VO7fTcFrLsgcxhw@mail.gmail.com>
-Subject: Re: [PATCH] compat: backport kfifo
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4D234604.8010602@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 6, 2011 at 9:16 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This is a copy of the hole kfifo implementation from a recent kernel
-> version. When we ship this implementation we do not have to backport
-> any kfifo related stuff any more.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Tue, Jan 04, 2011 at 10:08:36AM -0600, Larry Finger wrote:
+> On 01/04/2011 09:50 AM, Rafał Miłecki wrote:
+> > W dniu 21 grudnia 2010 21:29 użytkownik Rafał Miłecki
+> > <zajec5@gmail.com> napisał:
+> >> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> >> ---
+> >> John: can we still make it for 2.6.38 merge? It was tested with 14e4:432b,
+> >> support seems to be on the same level as for PHYs 1 and 2.
+> > 
+> > John, I dont see patches for rev3+ in wireless-testing. Any problems with them?
+> > 
+> > It means:
+> > [PATCH 1/4] b43: use correct firmware for newer cores
+> > [PATCH 2/4 v2] b43: N-PHY: implement radio 2056 init steps
+> > [PATCH 3/4] b43: N-PHY: add init tables for 2056 radio
+> > [PATCH 4/4] b43: N-PHY: avoid PHY hangs for rev 3 and 4
+> > 
+> > [PATCH 1/2] b43: N-PHY: use correct channel tables for rev4+
+> > [PATCH 2/2 v2] b43: N-PHY: update 2056 radio on channel switch on rev3+
+> > and this one.
+> 
+> John,
+> 
+> I have been testing these patches with a 14e4:432b device for at least two
+> weeks. With them, the driver still does not handle WPA/WPA2 encryption and falls
+> over with OFDM rates, but it is rock solid with WEP encryption and at 11 Mb/s.
+> Rafał and I have some ideas why the limitations, but the holidays have
+> interfered with debugging.
+> 
+> Larry
 
-Awesome stuff !! Just forgot the:
+And with merging...
 
-ifeq ($(CONFIG_COMPAT_KERNEL_36),y)
- export CONFIG_COMPAT_KFIFO=m
-endif #CONFIG_COMPAT_KERNEL_36
+I hope to get caught-up soon.
 
-on the Makefile but I'll add it. Thanks!
-
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
