@@ -1,71 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lider.pardus.org.tr ([193.140.100.216]:43287 "EHLO
-	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753427Ab1A3Mq6 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:35066 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750980Ab1ADUEa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:46:58 -0500
-Message-ID: <4D455DC1.6010909@pardus.org.tr>
-Date: Sun, 30 Jan 2011 14:46:57 +0200
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, platform-driver-x86@vger.kernel.org
-Subject: Rfkill always soft/hard blocked upon boot
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 4 Jan 2011 15:04:30 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4EBA9540A3C
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Jan 2011 15:05:51 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-04 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110104200428.E881540F97@repository3.orbit-lab.org>
+Date: Tue,  4 Jan 2011 15:04:28 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   9b210cb..959f374  history    -> origin/history
+ + bfa221f...924c697 master     -> origin/master  (forced update)
+   3643e0e..03ed6a3  stable     -> origin/stable
+ * [new tag]         next-20110104 -> next-20110104
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-How to fix or debug the $subject? You always have to press Fn+F2 to hard 
-unblock the rfkill after every boot on a local brand laptop.
+compat-wireless code metrics
 
-If the rfkill switch is really a switch which can be toggled on/off, 
-this makes sense. If you keep it Off, it will come as blocked. But it 
-seems that on this machine Fn+F2 controls the hard block state.
-
-It should either be saved in somewhere (I've read that there is a 
-persistent knob for rfkill drivers in sysfs which tells whether the 
-state is kept in a non-volatile space across boots or not) or all soft 
-and this kind of Fn+Fx hard blocks should be explicitly disabled by 
-kernel during boots.
-
-I don't have direct access to the machine but the owner will help if you 
-need any output, etc.
-
-After booting:
-
-0: hci0: Bluetooth
-         Soft blocked: no
-         Hard blocked: no
-1: phy0: Wireless LAN
-         Soft blocked: no
-         Hard blocked: yes
-
-After pressing Fn+F2:
-0: phy0: Wireless LAN
-         Soft blocked: no
-         Hard blocked: no
-1: hci0: Bluetooth
-         Soft blocked: no
-         Hard blocked: no
-
-03:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless 
-Network Adapter (PCI-Express) (rev 01)
-         Subsystem: Device 1a3b:1089
-         Flags: bus master, fast devsel, latency 0, IRQ 17
-         Memory at f1d00000 (64-bit, non-prefetchable) [size=64K]
-         Capabilities: [40] Power Management version 3
-         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
-         Capabilities: [60] Express Legacy Endpoint, MSI 00
-         Capabilities: [100] Advanced Error Reporting
-         Capabilities: [140] Virtual Channel
-         Capabilities: [160] Device Serial Number 00-15-17-ff-ff-24-14-12
-         Capabilities: [170] Power Budgeting <?>
-         Kernel driver in use: ath9k
-         Kernel modules: ath9k
-
-This is on 2.6.37. I'm waiting for the dmesg output.
-
--- 
-Pardus Linux
-http://www.pardus.org.tr/eng
+    774934 - Total upstream lines of code being pulled
