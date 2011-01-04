@@ -1,28 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39171 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab1AJVfo (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38957 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317Ab1ADSTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 16:35:44 -0500
-Received: by iwn9 with SMTP id 9so19580145iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 13:35:44 -0800 (PST)
+	Tue, 4 Jan 2011 13:19:15 -0500
+Received: by fxm20 with SMTP id 20so14325365fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 10:19:14 -0800 (PST)
+Message-ID: <4D2364A9.3050707@lwfinger.net>
+Date: Tue, 04 Jan 2011 12:19:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
-References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE13CD2B113F@SJEXCHCCR01.corp.ad.broadcom.com>
- <AANLkTimkgrc19QCdeOhc+huTsrGCD_Y8cqHnz_dQjc5y@mail.gmail.com> <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
-From: Jamie Kitson <jamie@kitten-x.com>
-Date: Mon, 10 Jan 2011 21:35:23 +0000
-Message-ID: <AANLkTingheCkPNvc+8qM5oQh8NHPAX2h4Z6C1YZEFRBc@mail.gmail.com>
-Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
-To: Brett Rudley <brudley@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: N-PHY: enable support for PHYs rev 3 and higher
+References: <1292963384-23684-1-git-send-email-zajec5@gmail.com> <AANLkTikwKOLJ6A-DTEuVg43_g_cWgDg2xK4M6qQ0Lm4U@mail.gmail.com> <4D234604.8010602@lwfinger.net> <20110104181140.GC11333@tuxdriver.com>
+In-Reply-To: <20110104181140.GC11333@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't know if it makes any difference but I tried again, this time
-with a 2.6.37 kernel and got a slightly different error (almost
-immediately x started, I guess when wireless was coming up):
+On 01/04/2011 12:11 PM, John W. Linville wrote:
+> On Tue, Jan 04, 2011 at 10:08:36AM -0600, Larry Finger wrote:
+>> On 01/04/2011 09:50 AM, Rafał Miłecki wrote:
+>>> W dniu 21 grudnia 2010 21:29 użytkownik Rafał Miłecki
+>>> <zajec5@gmail.com> napisał:
+>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>>> ---
+>>>> John: can we still make it for 2.6.38 merge? It was tested with 14e4:432b,
+>>>> support seems to be on the same level as for PHYs 1 and 2.
+>>>
+>>> John, I dont see patches for rev3+ in wireless-testing. Any problems with them?
+>>>
+>>> It means:
+>>> [PATCH 1/4] b43: use correct firmware for newer cores
+>>> [PATCH 2/4 v2] b43: N-PHY: implement radio 2056 init steps
+>>> [PATCH 3/4] b43: N-PHY: add init tables for 2056 radio
+>>> [PATCH 4/4] b43: N-PHY: avoid PHY hangs for rev 3 and 4
+>>>
+>>> [PATCH 1/2] b43: N-PHY: use correct channel tables for rev4+
+>>> [PATCH 2/2 v2] b43: N-PHY: update 2056 radio on channel switch on rev3+
+>>> and this one.
+>>
+>> John,
+>>
+>> I have been testing these patches with a 14e4:432b device for at least two
+>> weeks. With them, the driver still does not handle WPA/WPA2 encryption and falls
+>> over with OFDM rates, but it is rock solid with WEP encryption and at 11 Mb/s.
+>> Rafał and I have some ideas why the limitations, but the holidays have
+>> interfered with debugging.
+>>
+>> Larry
+> 
+> And with merging...
+> 
+> I hope to get caught-up soon.
 
-http://farm6.static.flickr.com/5246/5343639268_88ee4da55e_b.jpg
+I hope there are some rtlwifi/rtl8192ce updates there as well. I'll wait for
+some new merges before I bug you about the specific patches.
+
+Larry
