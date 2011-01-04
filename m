@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34251 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab1AOBlT convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44144 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980Ab1ADVFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 20:41:19 -0500
-Received: by iyj18 with SMTP id 18so3031389iyj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 17:41:17 -0800 (PST)
+	Tue, 4 Jan 2011 16:05:01 -0500
+Received: by fxm20 with SMTP id 20so14481670fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 13:05:00 -0800 (PST)
+Message-ID: <4D238B83.7020607@lwfinger.net>
+Date: Tue, 04 Jan 2011 15:05:07 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4D309086.7070703@openwrt.org>
-References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
-	<4D309086.7070703@openwrt.org>
-Date: Sat, 15 Jan 2011 02:41:17 +0100
-Message-ID: <AANLkTimAxXKiM_wBToLXfBxfwF1xbi+KZVHTQE-6fc0i@mail.gmail.com>
-Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and beacons
- with multiple vifs.
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net
+To: Philip Prindeville <philipp_subx@redfish-solutions.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Breakage in rtlwifi/base.c for 2010-12-24
+References: <4D237C41.70607@redfish-solutions.com>
+In-Reply-To: <4D237C41.70607@redfish-solutions.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 14, 2011 at 7:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Do we really need all those counters? Wouldn't it be better to iterate over
-> active interfaces instead?
+On 01/04/2011 02:00 PM, Philip Prindeville wrote:
+> Anyone else seeing the following breakage?  I'm building the 2010-12-24
+> snapshot against 2.6.27.49:
+> 
+>   CC [M] 
+> /home/philipp/astlinux/build_i586/compat-wireless-2010-12-24/drivers/net/wireless/rtlwifi/base.o
+> 
+> /home/philipp/astlinux/build_i586/compat-wireless-2010-12-24/drivers/net/wireless/rtlwifi/base.c:
+> In function '_rtl_init_deferred_work':
+> /home/philipp/astlinux/build_i586/compat-wireless-2010-12-24/drivers/net/wireless/rtlwifi/base.c:229:
+> error: implicit declaration of function 'alloc_workqueue'
+> /home/philipp/astlinux/build_i586/compat-wireless-2010-12-24/drivers/net/wireless/rtlwifi/base.c:229:
+> warning: assignment makes pointer from integer without a cast
 
-I think iterating over active interfaces is better, especially if we
-set up more fine-graned ah-> variables that make sense in themselves
-for stuff like power save and tsf sync. But that's just my two cents.
+The call create_workqueue() is obsolete and is being replaced by
+alloc_workqueue(). Unfortunately, older kernels do not have the newer call. A
+patch for compat-wireless has been submitted, but I don't think the package has
+rebuilt successfully since then. You have two options: (1) if you do not need a
+driver for the RTL8192CE/RTL8187CE cards, then deselect them from the build, or
+(2) Find the line in drivers/net/wireless/rtlwifi/base.c that says
+       rtlpriv->works.rtl_wq = alloc_workqueue(rtlpriv->cfg->name, 0, 0);
+and replace it with
+       rtlpriv->works.rtl_wq = create_workqueue(rtlpriv->cfg->name);
 
-As an example of something that may be more or less impossible to do
-without iteration consider multiple vifs with different beacon
-intervals. This could be handled by computing a greatest common
-devisor of all beacon intervals and using this for SWBA.
-
-/Björn
+Larry
