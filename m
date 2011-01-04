@@ -1,83 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47579 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838Ab1AET1E (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44728 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037Ab1ADSiA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 14:27:04 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath5k-devel@venema.h4ckr.net, ath9k-devel@venema.h4ckr.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] ath9k: use nohwcrypt in ath_common structure
-Date: Wed,  5 Jan 2011 14:22:07 -0500
-Message-Id: <1294255328-14322-2-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
-References: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
+	Tue, 4 Jan 2011 13:38:00 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 15so14819122bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 10:37:59 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: C Anthony Risinger <anthony@extof.me>
+Subject: Re: (rt61pci/hostapd) no packet activity when encryption is enabled and interface is bridged
+Date: Tue, 4 Jan 2011 19:36:47 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTinM9oPV=CJ3iUP2=fEH=+fRP5JPMO4tHLOZzHrS@mail.gmail.com> <AANLkTimPmCZ3O0WKe4OH1z4+rmtUtAr2wqsrFOUCJg_Q@mail.gmail.com>
+In-Reply-To: <AANLkTimPmCZ3O0WKe4OH1z4+rmtUtAr2wqsrFOUCJg_Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101041936.47573.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath/ath9k/init.c  |    5 +++--
- drivers/net/wireless/ath/ath9k/main.c  |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Am Dienstag, 4. Januar 2011 schrieb C Anthony Risinger:
+> On Mon, Jan 3, 2011 at 10:30 PM, C Anthony Risinger <anthony@extof.me> wrote:
+> >
+> > problem summary: an rt61pci driven card does not seem to allow any
+> > packets to enter/exit it's bridge ONLY WHEN ENCRYPTION is enabled;
+> > without it, everything works perfectly.
+> 
+> hmmmmm....
+> 
+> it would seem:
+> 
+> options rt61pci nohwcrypt=1
+> 
+> solves the problem.  what does this mean?  do i have a bad chip?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index fcc087c..0e97352 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -664,7 +664,6 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- }
- 
- extern struct ieee80211_ops ath9k_ops;
--extern int modparam_nohwcrypt;
- extern int led_blink;
- extern int ath9k_pm_qos_value;
- extern bool is_ath9k_unloaded;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b6643b5..9aafd29 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -29,7 +29,7 @@ static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
- module_param_named(debug, ath9k_debug, uint, 0);
- MODULE_PARM_DESC(debug, "Debugging mask");
- 
--int modparam_nohwcrypt;
-+static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
-@@ -552,6 +552,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	common->priv = sc;
- 	common->debug_mask = ath9k_debug;
- 	common->btcoex_enabled = ath9k_btcoex_enable == 1;
-+	common->nohwcrypt = modparam_nohwcrypt;
- 	spin_lock_init(&common->cc_lock);
- 
- 	spin_lock_init(&sc->wiphy_lock);
-@@ -653,7 +654,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
- 
--	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || modparam_nohwcrypt)
-+	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || common->nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
- 
- 	hw->wiphy->interface_modes =
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a818e4f..b2149ee 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1829,7 +1829,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int ret = 0;
- 
--	if (modparam_nohwcrypt)
-+	if (common->nohwcrypt)
- 		return -ENOSPC;
- 
- 	mutex_lock(&sc->mutex);
--- 
-1.7.3.4
+I don't think so. Might be related to [1].
 
+Helmut
+
+[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=fa8b4b22d543b4052602b0c86065150613ed19e8
