@@ -1,38 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43559 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463Ab1AJQD3 (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:60589 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055Ab1ADXs6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 11:03:29 -0500
-Subject: Re: [PATCH v4 00/18] AP mode support for wl12xx
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Jan 2011 18:03:32 +0200
-Message-ID: <1294675412.1992.143.camel@pimenta>
+	Tue, 4 Jan 2011 18:48:58 -0500
+Subject: [RFC PATCH 08/17] zd1211rw: let zd_set_beacon_interval() set
+	dtim_period and add AP-beacon flag
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:48:53 +0200
+Message-ID: <20110104234853.25309.36926.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-30 at 00:31 +0100, Arik Nemtsov wrote:
-> These patches add access point mode support to the wl12xx driver.
-> This mode uses a separate firmware and has a different initialization
-> sequence.
-> 
-> In all instances, the flow has been split according to the operating
-> mode of the driver (AP/STA), so as not to affect STA mode functionality.
-> 
-> v1->2: rebased on latest wl12xx tree
-> v2->3: refactoring
-> v3->4: cross-patch fix
+Add support for AP-mode beacon. Also disable beacon when interface is set
+down as otherwise hw will keep flooding NEXT_BCN interrupts.
 
-Applied the series, thanks Arik!
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |   33 ++++++++++++++++++++++++++-----
+ drivers/net/wireless/zd1211rw/zd_chip.h |    4 +++-
+ drivers/net/wireless/zd1211rw/zd_mac.c  |   17 ++++++++--------
+ 3 files changed, 40 insertions(+), 14 deletions(-)
 
--- 
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index f1813a2..fa90d06 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -887,14 +887,36 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ }
+ 
+ 
+-static int set_beacon_interval(struct zd_chip *chip, u32 interval)
++static int set_beacon_interval(struct zd_chip *chip, u16 interval,
++			       u8 dtim_period, int type)
+ {
+ 	int r;
+ 	struct aw_pt_bi s;
++	u32 b_interval, mode_flag;
+ 
+ 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
+ 
+-	r = zd_iowrite32_locked(chip, interval, CR_BCN_INTERVAL);
++	if (interval > 0) {
++		switch (type) {
++		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_MESH_POINT:
++			mode_flag = BCN_MODE_IBSS;
++			break;
++		case NL80211_IFTYPE_AP:
++			mode_flag = BCN_MODE_AP;
++			break;
++		default:
++			mode_flag = 0;
++			break;
++		}
++	} else {
++		dtim_period = 0;
++		mode_flag = 0;
++	}
++
++	b_interval = mode_flag | (dtim_period << 16) | interval;
++
++	r = zd_iowrite32_locked(chip, b_interval, CR_BCN_INTERVAL);
+ 	if (r)
+ 		return r;
+ 	r = get_aw_pt_bi(chip, &s);
+@@ -903,12 +925,13 @@ static int set_beacon_interval(struct zd_chip *chip, u32 interval)
+ 	return set_aw_pt_bi(chip, &s);
+ }
+ 
+-int zd_set_beacon_interval(struct zd_chip *chip, u32 interval)
++int zd_set_beacon_interval(struct zd_chip *chip, u16 interval, u8 dtim_period,
++			   int type)
+ {
+ 	int r;
+ 
+ 	mutex_lock(&chip->mutex);
+-	r = set_beacon_interval(chip, interval);
++	r = set_beacon_interval(chip, interval, dtim_period, type);
+ 	mutex_unlock(&chip->mutex);
+ 	return r;
+ }
+@@ -927,7 +950,7 @@ static int hw_init(struct zd_chip *chip)
+ 	if (r)
+ 		return r;
+ 
+-	return set_beacon_interval(chip, 100);
++	return set_beacon_interval(chip, 100, 0, NL80211_IFTYPE_UNSPECIFIED);
+ }
+ 
+ static zd_addr_t fw_reg_addr(struct zd_chip *chip, u16 offset)
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
+index 7b0c58c..14e4402 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/zd1211rw/zd_chip.h
+@@ -546,6 +546,7 @@ enum {
+ #define RX_FILTER_CTRL (RX_FILTER_RTS | RX_FILTER_CTS | \
+ 	RX_FILTER_CFEND | RX_FILTER_CFACK)
+ 
++#define BCN_MODE_AP			0x1000000
+ #define BCN_MODE_IBSS			0x2000000
+ 
+ /* Monitor mode sets filter to 0xfffff */
+@@ -921,7 +922,8 @@ enum led_status {
+ 
+ int zd_chip_control_leds(struct zd_chip *chip, enum led_status status);
+ 
+-int zd_set_beacon_interval(struct zd_chip *chip, u32 interval);
++int zd_set_beacon_interval(struct zd_chip *chip, u16 interval, u8 dtim_period,
++			   int type);
+ 
+ static inline int zd_get_beacon_interval(struct zd_chip *chip, u32 *interval)
+ {
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 9dde27a..6be406e 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -926,7 +926,7 @@ static void zd_op_remove_interface(struct ieee80211_hw *hw,
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	mac->type = NL80211_IFTYPE_UNSPECIFIED;
+ 	mac->vif = NULL;
+-	zd_set_beacon_interval(&mac->chip, 0);
++	zd_set_beacon_interval(&mac->chip, 0, 0, NL80211_IFTYPE_UNSPECIFIED);
+ 	zd_write_mac_addr(&mac->chip, NULL);
+ }
+ 
+@@ -1054,15 +1054,16 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		if (changes & BSS_CHANGED_BEACON_ENABLED) {
+-			u32 interval;
++			u16 interval = 0;
++			u8 period = 0;
+ 
+-			if (bss_conf->enable_beacon)
+-				interval = BCN_MODE_IBSS |
+-						bss_conf->beacon_int;
+-			else
+-				interval = 0;
++			if (bss_conf->enable_beacon) {
++				period = bss_conf->dtim_period;
++				interval = bss_conf->beacon_int;
++			}
+ 
+-			zd_set_beacon_interval(&mac->chip, interval);
++			zd_set_beacon_interval(&mac->chip, interval, period,
++					       mac->type);
+ 		}
+ 	} else
+ 		associated = is_valid_ether_addr(bss_conf->bssid);
 
