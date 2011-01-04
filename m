@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16093 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753599Ab1AYNxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 08:53:33 -0500
-Date: Tue, 25 Jan 2011 14:52:50 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, Bruno Randolf <br1@einfach.org>,
-	jirislaby@gmail.com, lrodriguez@atheros.com
-Subject: Re: [PATCH 1/2] ath5k: fix error handling in ath5k_hw_dma_stop
-Message-ID: <20110125135249.GA2610@redhat.com>
-References: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
+Received: from sypressi.dnainternet.net ([83.102.40.135]:55413 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055Ab1ADXsQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 18:48:16 -0500
+Subject: [RFC PATCH 03/17] zd1211rw: fix beacon interval setup
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:48:11 +0200
+Message-ID: <20110104234811.25309.34778.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 24, 2011 at 11:31:43PM -0500, Bob Copeland wrote:
-> Review spotted a problem with the error handling in ath5k_hw_dma_stop:
-> a successful return from ath5k_hw_stop_tx_dma will be treated as
-> an error, so we always bail out of the loop after processing a single
-> active queue.  As a result, we may not actually stop some queues during
-> reset.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
-> These two patches fix some buglets I found when reviewing some old code.
-> 
->  drivers/net/wireless/ath/ath5k/dma.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
-> index 0064be7..e828b98 100644
-> --- a/drivers/net/wireless/ath/ath5k/dma.c
-> +++ b/drivers/net/wireless/ath/ath5k/dma.c
-> @@ -838,7 +838,7 @@ int ath5k_hw_dma_stop(struct ath5k_hw *ah)
->  	for (i = 0; i < qmax; i++) {
->  		err = ath5k_hw_stop_tx_dma(ah, i);
->  		/* -EINVAL -> queue inactive */
-> -		if (err != -EINVAL)
-> +		if (err && err != -EINVAL)
->  			return err;
->  	}
+Vendor driver uses CR_BNC_INTERVAL at various places, one is HW_EnableBeacon()
+that combinies beacon interval with BSS-type flag and DTIM value in upper
+16bit of u32. The other one is HW_UpdateBcnInterval() that set_aw_pt_bi()
+appears to be based on. HW_UpdateBcnInterval() takes interval argument as u16
+and uses that for calculations, set_aw_pt_bi() uses u32 value that has flags
+and dtim in upper part. This clearly seems wrong. Also HW_UpdateBcnInterval()
+updates only lower 16bit part of CR_BNC_INTERVAL. So make set_aw_pt_bi() do
+calculations on only lower u16 part of s->beacon_interval.
 
-Patch is good, but does not make code fully correct. When last queue
-is inactive, we return -EINVAL from ath5_hw_dma_stop(). So we need
-also:
+Also set 32bit beacon interval register before reading values from device,
+as HW_EnableBeacon() on vendor driver does. This is required to make beacon
+work on AP-mode, simply reading and then writing updated values is not enough
+at least with zd1211b.
 
- 		if (err && err != -EINVAL)
- 			return err;
-+		err = 0;
- 	}
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-But perhaps, would be better just return 0 from 
-ath5k_hw_stop_tx_dma() when queue is inactive.
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 6effe18..8c05737 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -848,11 +848,12 @@ static int get_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ {
+ 	struct zd_ioreq32 reqs[3];
++	u16 b_interval = s->beacon_interval & 0xffff;
+ 
+-	if (s->beacon_interval <= 5)
+-		s->beacon_interval = 5;
+-	if (s->pre_tbtt < 4 || s->pre_tbtt >= s->beacon_interval)
+-		s->pre_tbtt = s->beacon_interval - 1;
++	if (b_interval <= 5)
++		b_interval = 5;
++	if (s->pre_tbtt < 4 || s->pre_tbtt >= b_interval)
++		s->pre_tbtt = b_interval - 1;
+ 	if (s->atim_wnd_period >= s->pre_tbtt)
+ 		s->atim_wnd_period = s->pre_tbtt - 1;
+ 
+@@ -861,7 +862,7 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ 	reqs[1].addr = CR_PRE_TBTT;
+ 	reqs[1].value = s->pre_tbtt;
+ 	reqs[2].addr = CR_BCN_INTERVAL;
+-	reqs[2].value = s->beacon_interval;
++	reqs[2].value = (s->beacon_interval & ~0xffff) | b_interval;
+ 
+ 	return zd_iowrite32a_locked(chip, reqs, ARRAY_SIZE(reqs));
+ }
+@@ -873,10 +874,13 @@ static int set_beacon_interval(struct zd_chip *chip, u32 interval)
+ 	struct aw_pt_bi s;
+ 
+ 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
++
++	r = zd_iowrite32_locked(chip, interval, CR_BCN_INTERVAL);
++	if (r)
++		return r;
+ 	r = get_aw_pt_bi(chip, &s);
+ 	if (r)
+ 		return r;
+-	s.beacon_interval = interval;
+ 	return set_aw_pt_bi(chip, &s);
+ }
+ 
 
-I think that could fix "ath5k phy0: can't reset hardware (-5)"
-bugs reported in a few places, so patch should go to stable
-as well.
-
-Stanislaw
