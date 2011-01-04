@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45289 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42368 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418Ab1A1OB1 (ORCPT
+	with ESMTP id S1750840Ab1ADKrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 09:01:27 -0500
-Subject: Re: [PATCH 1/2] net/wireless/nl80211.c: Avoid call to
- genlmsg_cancel
+	Tue, 4 Jan 2011 05:47:53 -0500
+Subject: Re: Hidden SSID and WLAN powersave
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Julia Lawall <julia@diku.dk>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1296224232-8115-1-git-send-email-julia@diku.dk>
-References: <1296224232-8115-1-git-send-email-julia@diku.dk>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1294136801.4166.30.camel@wimaxnb.nmp.nokia.com>
+References: <1294136801.4166.30.camel@wimaxnb.nmp.nokia.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Jan 2011 15:01:07 +0100
-Message-ID: <1296223267.5118.7.camel@jlt3.sipsolutions.net>
+Date: Tue, 04 Jan 2011 11:47:51 +0100
+Message-ID: <1294138071.3511.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-01-28 at 15:17 +0100, Julia Lawall wrote:
+On Tue, 2011-01-04 at 12:26 +0200, Juuso Oikarinen wrote:
+> Hi,
+> 
+> I stumbled upon a PSM issue when a hidden SSID is used. It seems that
+> mac80211 is not going to power-save mode with hidden SSID AP's at all.
+> 
+> As far as I can see the following happens:
+> 
+> - When generally scanning, the AP is getting a bss entry with a zero
+> SSID.
+> - When associating, a probe-req is sent to the AP with the SSID, and as
+> result a probe-response is received with the hidden SSID in place -> a
+> second bss entry is created for the AP, now with the real SSID.
+> - After association, mac80211 executes ieee80211_recalc_ps(), but does
+> not go to powersave because the beacon-ies are missing.
+> - A new beacon is received for the BSSID, but it updates the bss entry
+> with the zero SSID, ieee80211_recalc_ps() gets called, but for the
+> associated bss entry the beacon-ies are still missing.
+> 
+> As result, the STA does not ever enter WLAN PSM.
+> 
+> Anyone stumbled on this issue?
 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 9b62710..864ddfb 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2718,7 +2718,7 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
->  	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
->  			     NL80211_CMD_GET_MESH_CONFIG);
->  	if (!hdr)
-> -		goto nla_put_failure;
-> +		goto out;
-
-
-> @@ -2954,7 +2955,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
->  	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
->  			     NL80211_CMD_GET_REG);
->  	if (!hdr)
-> -		goto nla_put_failure;
-> +		goto put_failure;
->  
->  	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2,
->  		cfg80211_regdomain->alpha2);
-
-Seems fine. Actually, since the message is freed anyhow, the call to
-genlmsg_cancel is *completely* unnecessary, I just put it in to make it
-nest better and not rely on it not having side effects.
-
-But why did you call the label differently? :)
+I haven't come across it, but we don't test hidden SSIDs much ...
+sounds perfectly logical.
 
 johannes
 
