@@ -1,80 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52208 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756534Ab1AGCH5 (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:43006 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751055Ab1ADXsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 21:07:57 -0500
-Received: by wyb28 with SMTP id 28so16991004wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:07:56 -0800 (PST)
-Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	greearb@candelatech.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net
-In-Reply-To: <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-	 <201101070205.00886.chunkeey@googlemail.com>
-	 <1294363427.2704.23.camel@edumazet-laptop>
-	 <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 03:07:52 +0100
-Message-ID: <1294366072.2704.32.camel@edumazet-laptop>
-Mime-Version: 1.0
+	Tue, 4 Jan 2011 18:48:32 -0500
+Subject: [RFC PATCH 05/17] zd1211rw: move set_rts_cts_work to bss_info_changed
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Date: Wed, 05 Jan 2011 01:48:28 +0200
+Message-ID: <20110104234828.25309.21518.stgit@fate.lan>
+In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
+References: <20110104234745.25309.72030.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le jeudi 06 janvier 2011 à 17:57 -0800, Luis R. Rodriguez a écrit :
-> On Thu, Jan 6, 2011 at 5:23 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> > Le vendredi 07 janvier 2011 à 02:04 +0100, Christian Lamparter a écrit :
-> >> On Friday 07 January 2011 01:46:03 greearb@candelatech.com wrote:
-> >> > From: Ben Greear <greearb@candelatech.com>
-> >> >
-> >> > Patch is from Eric Dumazet, as described here:
-> >> > https://patchwork.kernel.org/patch/104271/
-> >> >
-> >> > Reported-by: Michael Guntsche <mike@it-loops.com>
-> >> > Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
-> >> > Signed-off-by: Ben Greear <greearb@candelatech.com>
-> >> > ---
-> >> >
-> >> > NOTE:  This needs review by ath9k and/or other informed
-> >> > people.
-> >>
-> >> Does the hardware support vector-i/o for rx (like for instance iwlagn)?
-> >> Else, this change would break A-MSDU rx - which is a mandatory feature
-> >> (although, not very popular) of 802.11n -
-> >>
-> >> See for example 802.11n-2009 9.7c:
-> >>
-> >> "Support for the reception of an A-MSDU, where [...], is mandatory for
-> >> an HT STA"
-> >>
-> >> And 7.1.2 "The maximum frame body size is determined by the maximum
-> >> MSDU size (2304 octets) OR the maximum A-MSDU (3839 or 7935 octets,
-> >> depending upon the STA's capability), plus any overhead from security
-> >> encapsulation.
-> >
-> > Then, only solution is to mark this broken, and perform a copy of each
-> > received frame, to keep a order-1 buffer(s) allocated for hardware.
-> 
-> -ENOTPOSSIBLE -- its an WFA requirement to RX AMSDU.
-> 
-> > Its too easy to have memory allocation failures for high order pages and
-> > freeze the card.
-> 
-> Can't we us paged RX skbs, which mac80211 supports now?
-> 
-> See 2f301227a1ede57504694e1f64839839f5737cac and friends.
-> 
+As bss_info_changed may sleep, we can as well set RTS_CTS register right away.
+Keep mac->short_preamble for later use (hw reset).
 
-Maybe you dont understand the point. A fix is needed for stable kernels.
-paged RX skbs is probably a bit complex, even if copy/pasted from other
-drivers.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   27 +++++----------------------
+ drivers/net/wireless/zd1211rw/zd_mac.h |    3 ---
+ 2 files changed, 5 insertions(+), 25 deletions(-)
 
-If the hardware needs 8192 bytes (or 16384) buffers to perform its
-operation, it should not give them back to linux, because there is no
-guarantee it can allocate fresh ones for the next frames.
-
-
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index ca3b4e1..9284643 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -994,20 +994,9 @@ static void zd_op_configure_filter(struct ieee80211_hw *hw,
+ 	 * time. */
+ }
+ 
+-static void set_rts_cts_work(struct work_struct *work)
++static void set_rts_cts(struct zd_mac *mac, unsigned int short_preamble)
+ {
+-	struct zd_mac *mac =
+-		container_of(work, struct zd_mac, set_rts_cts_work);
+-	unsigned long flags;
+-	unsigned int short_preamble;
+-
+ 	mutex_lock(&mac->chip.mutex);
+-
+-	spin_lock_irqsave(&mac->lock, flags);
+-	mac->updating_rts_rate = 0;
+-	short_preamble = mac->short_preamble;
+-	spin_unlock_irqrestore(&mac->lock, flags);
+-
+ 	zd_chip_set_rts_cts_rate_locked(&mac->chip, short_preamble);
+ 	mutex_unlock(&mac->chip.mutex);
+ }
+@@ -1018,7 +1007,6 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				   u32 changes)
+ {
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+-	unsigned long flags;
+ 	int associated;
+ 
+ 	dev_dbg_f(zd_mac_dev(mac), "changes: %x\n", changes);
+@@ -1056,15 +1044,11 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	/* TODO: do hardware bssid filtering */
+ 
+ 	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
+-		spin_lock_irqsave(&mac->lock, flags);
++		spin_lock_irq(&mac->lock);
+ 		mac->short_preamble = bss_conf->use_short_preamble;
+-		if (!mac->updating_rts_rate) {
+-			mac->updating_rts_rate = 1;
+-			/* FIXME: should disable TX here, until work has
+-			 * completed and RTS_CTS reg is updated */
+-			queue_work(zd_workqueue, &mac->set_rts_cts_work);
+-		}
+-		spin_unlock_irqrestore(&mac->lock, flags);
++		spin_unlock_irq(&mac->lock);
++
++		set_rts_cts(mac, bss_conf->use_short_preamble);
+ 	}
+ }
+ 
+@@ -1138,7 +1122,6 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
+ 
+ 	zd_chip_init(&mac->chip, hw, intf);
+ 	housekeeping_init(mac);
+-	INIT_WORK(&mac->set_rts_cts_work, set_rts_cts_work);
+ 	INIT_WORK(&mac->process_intr, zd_process_intr);
+ 
+ 	SET_IEEE80211_DEV(hw, &intf->dev);
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
+index f28ecb9..ff7ef30 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+@@ -189,9 +189,6 @@ struct zd_mac {
+ 	/* Short preamble (used for RTS/CTS) */
+ 	unsigned int short_preamble:1;
+ 
+-	/* flags to indicate update in progress */
+-	unsigned int updating_rts_rate:1;
+-
+ 	/* whether to pass frames with CRC errors to stack */
+ 	unsigned int pass_failed_fcs:1;
+ 
 
