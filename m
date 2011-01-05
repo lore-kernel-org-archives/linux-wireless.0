@@ -1,321 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54723 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754061Ab1ASLvD (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47581 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029Ab1AET1F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 06:51:03 -0500
-Subject: [PATCH] mac80211: use DECLARE_EVENT_CLASS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 19 Jan 2011 12:50:59 +0100
-Message-ID: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 5 Jan 2011 14:27:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@venema.h4ckr.net, ath9k-devel@venema.h4ckr.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] ath9k_htc: use nohwcrypt in ath_common structure
+Date: Wed,  5 Jan 2011 14:22:08 -0500
+Message-Id: <1294255328-14322-3-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
+References: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-For events that include only the local struct as
-their parameter, we can use DECLARE_EVENT_CLASS
-and save quite some binary size across segments
-as well lines of code.
-
-   text	   data	    bss	    dec	    hex	filename
- 375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
- 367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
-  -8272   -1408       0   -9680   -25d0 delta
-
-Some more tracepoints with identical arguments
-could be combined like this but for now this is
-the one that benefits most.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/driver-trace.h |  197 ++++++--------------------------------------
- 1 file changed, 28 insertions(+), 169 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 +++--
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
---- wireless-testing.orig/net/mac80211/driver-trace.h	2011-01-19 12:46:39.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-trace.h	2011-01-19 12:47:23.000000000 +0100
-@@ -38,7 +38,7 @@ static inline void trace_ ## name(proto)
-  * Tracing for driver callbacks.
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index a099b3e..64d1684 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -42,7 +42,6 @@
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
  
--TRACE_EVENT(drv_return_void,
-+DECLARE_EVENT_CLASS(local_only_evt,
- 	TP_PROTO(struct ieee80211_local *local),
- 	TP_ARGS(local),
- 	TP_STRUCT__entry(
-@@ -50,6 +50,11 @@ TRACE_EVENT(drv_return_void,
- 	TP_printk(LOCAL_PR_FMT, LOCAL_PR_ARG)
- );
+ extern struct ieee80211_ops ath9k_htc_ops;
+-extern int htc_modparam_nohwcrypt;
  
-+DEFINE_EVENT(local_only_evt, drv_return_void,
-+	TP_PROTO(struct ieee80211_local *local),
-+	TP_ARGS(local)
-+);
-+
- TRACE_EVENT(drv_return_int,
- 	TP_PROTO(struct ieee80211_local *local, int ret),
- 	TP_ARGS(local, ret),
-@@ -78,40 +83,14 @@ TRACE_EVENT(drv_return_u64,
- 	TP_printk(LOCAL_PR_FMT " - %llu", LOCAL_PR_ARG, __entry->ret)
- );
+ enum htc_phymode {
+ 	HTC_MODE_AUTO		= 0,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 38433f9..2f1d494 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -24,8 +24,8 @@ static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
+ module_param_named(debug, ath9k_debug, uint, 0);
+ MODULE_PARM_DESC(debug, "Debugging mask");
  
--TRACE_EVENT(drv_start,
-+DEFINE_EVENT(local_only_evt, drv_start,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
+-int htc_modparam_nohwcrypt;
+-module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
++static int modparam_nohwcrypt;
++module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
  
--TRACE_EVENT(drv_stop,
-+DEFINE_EVENT(local_only_evt, drv_stop,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
+ #define CHAN2G(_freq, _idx)  { \
+@@ -641,6 +641,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	common->hw = priv->hw;
+ 	common->priv = priv;
+ 	common->debug_mask = ath9k_debug;
++	common->nohwcrypt = modparam_nohwcrypt;
  
- TRACE_EVENT(drv_add_interface,
-@@ -439,40 +418,14 @@ TRACE_EVENT(drv_hw_scan,
- 	)
- );
+ 	spin_lock_init(&priv->wmi->wmi_lock);
+ 	spin_lock_init(&priv->beacon_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 845b4c9..4c7ca46 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1372,7 +1372,7 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	int ret = 0;
  
--TRACE_EVENT(drv_sw_scan_start,
-+DEFINE_EVENT(local_only_evt, drv_sw_scan_start,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
+-	if (htc_modparam_nohwcrypt)
++	if (common->nohwcrypt)
+ 		return -ENOSPC;
  
--TRACE_EVENT(drv_sw_scan_complete,
-+DEFINE_EVENT(local_only_evt, drv_sw_scan_complete,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
- TRACE_EVENT(drv_get_stats,
-@@ -702,23 +655,9 @@ TRACE_EVENT(drv_conf_tx,
- 	)
- );
- 
--TRACE_EVENT(drv_get_tsf,
-+DEFINE_EVENT(local_only_evt, drv_get_tsf,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT,
--		LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
- TRACE_EVENT(drv_set_tsf,
-@@ -742,41 +681,14 @@ TRACE_EVENT(drv_set_tsf,
- 	)
- );
- 
--TRACE_EVENT(drv_reset_tsf,
-+DEFINE_EVENT(local_only_evt, drv_reset_tsf,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
--TRACE_EVENT(drv_tx_last_beacon,
-+DEFINE_EVENT(local_only_evt, drv_tx_last_beacon,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT,
--		LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
- TRACE_EVENT(drv_ampdu_action,
-@@ -962,22 +874,9 @@ TRACE_EVENT(drv_remain_on_channel,
- 	)
- );
- 
--TRACE_EVENT(drv_cancel_remain_on_channel,
-+DEFINE_EVENT(local_only_evt, drv_cancel_remain_on_channel,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
- /*
-@@ -1072,23 +971,9 @@ TRACE_EVENT(api_stop_tx_ba_cb,
- 	)
- );
- 
--TRACE_EVENT(api_restart_hw,
-+DEFINE_EVENT(local_only_evt, api_restart_hw,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT,
--		LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
- TRACE_EVENT(api_beacon_loss,
-@@ -1217,40 +1102,14 @@ TRACE_EVENT(api_chswitch_done,
- 	)
- );
- 
--TRACE_EVENT(api_ready_on_channel,
-+DEFINE_EVENT(local_only_evt, api_ready_on_channel,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
--TRACE_EVENT(api_remain_on_channel_expired,
-+DEFINE_EVENT(local_only_evt, api_remain_on_channel_expired,
- 	TP_PROTO(struct ieee80211_local *local),
--
--	TP_ARGS(local),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT, LOCAL_PR_ARG
--	)
-+	TP_ARGS(local)
- );
- 
- /*
-
+ 	mutex_lock(&priv->mutex);
+-- 
+1.7.3.4
 
