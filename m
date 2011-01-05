@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:39202 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094Ab1A3TLS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:11:18 -0500
-Message-ID: <4D45B7C8.60203@davizone.at>
-Date: Sun, 30 Jan 2011 20:11:04 +0100
-From: David Gnedt <david.gnedt@davizone.at>
+Received: from qult.net ([82.238.217.46]:40396 "EHLO qult.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751110Ab1AEOTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jan 2011 09:19:49 -0500
+Received: from zenon.in.qult.net ([192.168.128.3])
+	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <i@lri.fr>)
+	id 1PaUDL-0007CV-LL
+	for linux-wireless@vger.kernel.org; Wed, 05 Jan 2011 15:19:47 +0100
+Received: from ig by zenon.in.qult.net with local (Exim 4.72)
+	(envelope-from <i@lri.fr>)
+	id 1PaUDI-0005nJ-Sf
+	for linux-wireless@vger.kernel.org; Wed, 05 Jan 2011 15:19:44 +0100
+Date: Wed, 5 Jan 2011 15:19:44 +0100
+From: Ignacy Gawedzki <i@lri.fr>
+To: linux-wireless@vger.kernel.org
+Subject: Re: About clocks in the carl9170 firmware
+Message-ID: <20110105141944.GA8013@zenon.in.qult.net>
+References: <20110105111314.GA23794@zenon.in.qult.net>
+ <AANLkTi=WQwx5hOxeGweFOLVtpss54NZsRyV0tkBqf4CP@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 09/18] wl1251: enable adhoc mode
-References: <4D45A5CF.6050603@davizone.at>
-In-Reply-To: <4D45A5CF.6050603@davizone.at>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTi=WQwx5hOxeGweFOLVtpss54NZsRyV0tkBqf4CP@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable adhoc support in wl1251 driver.
+On Wed, Jan 05, 2011 at 08:57:14AM -0500, thus spake Brian Prodoehl:
+> On Wed, Jan 5, 2011 at 6:13 AM, Ignacy Gawedzki <i@lri.fr> wrote:
+> > Hi,
+> >
+> > A few months ago, Christian Lamparter suggested to me the use of
+> > get_clock_counter() in the carl9170 firmware code for time measurement
+> > purposes.
+> >
+> > I just got back to that, after a long period of other things to do instead.
+> >
+> > According to the results of a few tests I've been running yesterday, it looks
+> > that this clock is 44Mhz, not 40Mhz, nor 80Mhz.
+> 
+> I have seen the same thing.  In 802.11g mode, that clock counter runs
+> at 44MHz.  There are rumors that this changes with operating mode.
+> Its easy to believe that it would run at 80MHz in turbo (40MHz
+> channel-width) mode.  But, I haven't tested that, and can only say
+> that I've seen that clock counter run at 44MHz as well.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
-Sorry for the partly broken patches, I thought I configured my client the
-right way. I tried to stop the mails at my mailserver, but it was mostly
-already too late.
----
- drivers/net/wireless/wl1251/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+That would make sense indeed.
 
-diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
-index 387878f..4a6d529 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -1428,7 +1428,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 		IEEE80211_HW_SUPPORTS_UAPSD |
- 		IEEE80211_HW_SUPPORTS_CQM_RSSI;
- 
--	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+					 BIT(NL80211_IFTYPE_ADHOC);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1251_band_2ghz;
- 
+> 
+> > According to Christian, the clock source, as accessed through
+> > get_clock_counter() is stable and does not depend on calls to clock_set().
+> > This is further corroborated by the definition and use of the
+> > AR9170_TICKS_PER_MICROSECOND *constant* in timer.h.  But still, how comes that
+> > constant is 80 then?
+> 
+> Does anything in the firmware really rely on that constant being
+> right?  I'm more familiar with ar9170usb and the open firmware for
+> that, where the constants were also wrong, but nothing used them
+> except for some delay functions, for which the accuracy wasn't
+> critical.
+
+AFAICT, the delay functions are used during initialization and AGC
+calibration.  I have no idea whether the accuracy is critical or not in these
+parts.
+
+In any case, there is room for developing an accurate clock, assuming that it
+always changes on request of the firmware and never by itself.  I'll give it a
+try and test whether it breaks everything or not. =)
+
 -- 
-1.7.0.4
-
-
+I used to have a sig, but I've stopped smoking now.
