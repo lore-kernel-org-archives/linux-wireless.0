@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47830 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754034Ab1AJUKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 15:10:11 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: David Miller <davem@davemloft.net>
-Subject: [Bug 24592] Re: 2.6.37-rc8: Reported regressions from 2.6.36
-Date: Mon, 10 Jan 2011 21:09:31 +0100
-Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com,
-	florian@mickler.org, akpm@linux-foundation.org,
-	torvalds@linux-foundation.org, kernel-testers@vger.kernel.org,
-	netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
-References: <96DQe4a_2tH.A.cFB.l27GNB@chimera> <20110110.000813.173856001.davem@davemloft.net>
-In-Reply-To: <20110110.000813.173856001.davem@davemloft.net>
+Received: from web31507.mail.mud.yahoo.com ([68.142.198.136]:38435 "HELO
+	web31507.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751010Ab1AEB24 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 20:28:56 -0500
+Message-ID: <512985.80004.qm@web31507.mail.mud.yahoo.com>
+Date: Tue, 4 Jan 2011 17:28:54 -0800 (PST)
+From: Ming-Ching Tiew <mctiew@yahoo.com>
+Subject: Re: Tp-link wn7200nd - cannot associate
+To: Chin Shi Hong <cshong87@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201101041742.28794.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101102109.32177.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, January 10, 2011, David Miller wrote:
-> From: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
+
+
+
+--- On Tue, 1/4/11, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+
+> Chin Shi Hong:
+> > Good luck with you. My rt3090 also not work on 64 bit
+> ubuntu but work
+> > on 32 bit ubuntu.
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
-> > Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
-> > Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
-> > Date		: 2010-12-08 21:09 (22 days old)
+> Might be fixed with [1].
 > 
-> This bug is intended to be fixed by:
+> Helmut
 > 
-> commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
-> Author: David S. Miller <davem@davemloft.net>
-> Date:   Wed Jan 5 15:38:53 2011 -0800
-> 
->     af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
->     
->     unix_release() can asynchornously set socket->sk to NULL, and
->     it does so without holding the unix_state_lock() on "other"
->     during stream connects.
->     
->     However, the reverse mapping, sk->sk_socket, is only transitioned
->     to NULL under the unix_state_lock().
->     
->     Therefore make the security hooks follow the reverse mapping instead
->     of the forward mapping.
->     
->     Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
->     Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
->     Signed-off-by: David S. Miller <davem@davemloft.net>
+> [1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=412b31334b831a8c2909afaca017c5a236ac2dd0
+> --
+
+I am not using it on a 64 bit system. I have found out that for my case, it is not totally cannot associate. It's able to associate, but it breaks quite easily and it has great difficulty in establishing the association. 
+
+I am pretty sure it's a different problem from the 64bit thingie.
+
+My notebook does have a built-in intel board using iwlagn. It is able to associate even when the network-manager is showing 2 bars of signal. Whereas using using wn7200nd, the network-manager is showing FULL 4 bars of signal, yet it has great difficulty in establishing association and after association, it breaks away from that easily.
+
+I will try to loan a powered usb hub to see it makes any difference. 
+
+Regards.
+
+
+      
