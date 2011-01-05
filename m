@@ -1,147 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65238 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab1AWVDL (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:46101 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298Ab1AEG5p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 16:03:11 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so3406578fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 13:03:10 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 2/6] nl80211: Pass probe response data to drivers
-Date: Sun, 23 Jan 2011 23:02:55 +0200
-Message-Id: <1295816579-28925-3-git-send-email-arik@wizery.com>
-In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	Wed, 5 Jan 2011 01:57:45 -0500
+Received: by wwa36 with SMTP id 36so15983923wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 22:57:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTin0W1_Tjr1zj0D0U+VeBpoGFRmB9iCdOfnMB-nR@mail.gmail.com>
+References: <AANLkTim0AM3=T=TMu79ZQi79+CKANamBcz620n2xm8bW@mail.gmail.com>
+	<201101041946.56978.helmut.schaa@googlemail.com>
+	<AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
+	<AANLkTi=KFG-7GPw2=6VTZqEceEcJM6OdWoTQaN_83NqP@mail.gmail.com>
+	<AANLkTikREOFV+WGWgo9yh9bTrz346kF0muKE8gs5N+km@mail.gmail.com>
+	<AANLkTikCcgEiqeJLDn0Pes_2=usj6ZXo7hhL48MBnH_-@mail.gmail.com>
+	<AANLkTin0W1_Tjr1zj0D0U+VeBpoGFRmB9iCdOfnMB-nR@mail.gmail.com>
+Date: Tue, 4 Jan 2011 22:57:44 -0800
+Message-ID: <AANLkTimCsvR2zBfS+oCudhcUz68qPJhXM9-eu1L-FWHp@mail.gmail.com>
+Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
+From: Aleksandar Milivojevic <alex@milivojevic.org>
+To: Wolfgang Kufner <wolfgang.kufner@gmail.com>
+Cc: Luis Correia <buga@loide.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow usermode to pass probe-response data. This data can be used as a
-template probe-response offloading.
+On Tue, Jan 4, 2011 at 2:31 PM, Wolfgang Kufner
+<wolfgang.kufner@gmail.com> wrote:
+> Hi Aleksandar,
+>
+> I know just about nothing about regulatory domains but I think it
+> might be good to try with a current compat-wireless next. I notice
+> that the these log lines:
+>
+> "cfg80211: Received country IE:"
+> "cfg80211: We intersect both of these and get:"
+>
+> do not exist in linux-next anymore since this commit:
+> http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commit;h=4f366c5dabcb936dd5754a35188bd699181fe1ce
+>
+> Maybe a fix for this issue is already in compat-wireless.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- include/linux/nl80211.h |    9 +++++++++
- include/net/cfg80211.h  |    3 +++
- net/wireless/nl80211.c  |   32 ++++++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+), 0 deletions(-)
+Might be.  I'll try compiling linux-next and see if it helps (could be
+few days, I need to setup this box for the task first).
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 821ffb9..ba19c4b 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -410,6 +410,9 @@
-  *	notification. This event is used to indicate that an unprotected
-  *	disassociation frame was dropped when MFP is in use.
-  *
-+ * @NL80211_CMD_SET_PROBE_RESP: Set a Probe Response template to an access
-+ *	point interface
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -522,6 +525,8 @@ enum nl80211_commands {
- 	NL80211_CMD_UNPROT_DEAUTHENTICATE,
- 	NL80211_CMD_UNPROT_DISASSOCIATE,
- 
-+	NL80211_CMD_SET_PROBE_RESP,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -887,6 +892,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_MESH_CONFIG: Mesh configuration parameters, a nested attribute
-  *	containing attributes from &enum nl80211_meshconf_params.
-  *
-+ * @NL80211_ATTR_PROBE_RESP: Probe Response template data
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1074,6 +1081,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_TX,
- 	NL80211_ATTR_WIPHY_ANTENNA_AVAIL_RX,
- 
-+	NL80211_ATTR_PROBE_RESP,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 03b1b0c..8b3f427 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1366,6 +1366,9 @@ struct cfg80211_ops {
- 
- 	int	(*set_antenna)(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant);
- 	int	(*get_antenna)(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant);
-+
-+	int	(*set_probe_resp)(struct wiphy *wiphy, struct net_device *dev,
-+				  u8 *resp, size_t resp_len);
- };
- 
- /*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ce5453d..50151a2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -172,6 +172,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_MCAST_RATE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_OFFCHANNEL_TX_OK] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_KEY_DEFAULT_TYPES] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_PROBE_RESP] = { .type = NLA_BINARY,
-+				      .len = IEEE80211_MAX_DATA_LEN },
- };
- 
- /* policy for the key attributes */
-@@ -1917,6 +1919,28 @@ static int nl80211_del_beacon(struct sk_buff *skb, struct genl_info *info)
- 	return rdev->ops->del_beacon(&rdev->wiphy, dev);
- }
- 
-+static int nl80211_set_probe_resp(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	u8 *resp;
-+	size_t resp_len;
-+
-+	if (!rdev->ops->set_probe_resp)
-+		return -EOPNOTSUPP;
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP)
-+		return -EOPNOTSUPP;
-+
-+	if (!info->attrs[NL80211_ATTR_PROBE_RESP])
-+		return -EINVAL;
-+
-+	resp = nla_data(info->attrs[NL80211_ATTR_PROBE_RESP]);
-+	resp_len = nla_len(info->attrs[NL80211_ATTR_PROBE_RESP]);
-+
-+	return rdev->ops->set_probe_resp(&rdev->wiphy, dev, resp, resp_len);
-+}
-+
- static const struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] = {
- 	[NL80211_STA_FLAG_AUTHORIZED] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_SHORT_PREAMBLE] = { .type = NLA_FLAG },
-@@ -5266,6 +5290,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_PROBE_RESP,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.doit = nl80211_set_probe_resp,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
--- 
-1.7.1
+In the mean-time I played with things a bit.
 
+I've created /etc/modprobe.d/cfg80211 as follows:
+options cfg80211 ieee80211_regdom=US
+
+This seems to have set user preference so that enabled frequencies are
+set correctly initially (and also instead of switching to "world" (00)
+when it looses connection to my AP, now it switches to US instead).
+
+Next, I installed the "iw" tool, and it showed interesting results.
+When connected to my Apple wireless router (5GHz WiFi-a/n network), I
+get:
+
+# iw reg get
+country 98:
+	(5170 - 5250 @ 40), (3, 17)
+	(5735 - 5835 @ 40), (3, 30)
+
+The log files show switching from US to 98 and back to US, but output
+of iw reg get always claims country is 98 with above two frequency
+ranges.
+
+On the other hand, if I connect to my Linksys router (2.4GHz WiFi-b/g
+network), there's no mention in log files about any switching between
+regulatory domains, and output of iw reg get shows country correctly
+set to US:
+
+# iw reg get
+country US:
+	(2402 - 2472 @ 40), (3, 27)
+	(5170 - 5250 @ 40), (3, 17)
+	(5250 - 5330 @ 40), (3, 20), DFS
+	(5490 - 5600 @ 40), (3, 20), DFS
+	(5650 - 5710 @ 40), (3, 20), DFS
+	(5735 - 5835 @ 40), (3, 30)
+
+However, after several minutes, the connection to my Linksys WiFi
+router fails again with nothing useful logged, the green LED on
+WUSB600N wireless adapter goes off permanently, and attempt to connect
+to any network (either of my two WiFi networks) fails.  NetworkManager
+still shows list of all networks (on both 2.4GHz and 5GHz bands), and
+output of iw reg get still shows country set to US and all frequencies
+listed for US as per above.
