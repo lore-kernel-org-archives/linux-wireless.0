@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:18613 "EHLO mail.atheros.com"
+Received: from mail.perches.com ([173.55.12.10]:2974 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753924Ab1AGCtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 21:49:13 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:48:56 -0800
-Date: Thu, 6 Jan 2011 18:49:09 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH 3/3] ath9k: Keep track of stations for
- debugfs.
-Message-ID: <20110107024909.GD20431@tux>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
- <1294361165-15308-3-git-send-email-greearb@candelatech.com>
- <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com>
- <4D267E4D.7000608@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D267E4D.7000608@candelatech.com>
+	id S1751379Ab1AETyB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jan 2011 14:54:01 -0500
+Subject: Re: [PATCH 1/3] ath5k: move nohwcrypt to ath_common structure
+From: Joe Perches <joe@perches.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	ath9k-devel@venema.h4ckr.net
+In-Reply-To: <AANLkTi=v3oHGiQjASQqChmmsXHuv=UF17_A9XdeFeFNR@mail.gmail.com>
+References: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
+	 <1294256409.12561.8.camel@Joe-Laptop>
+	 <AANLkTi=v3oHGiQjASQqChmmsXHuv=UF17_A9XdeFeFNR@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 05 Jan 2011 11:53:59 -0800
+Message-ID: <1294257239.12561.12.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 06, 2011 at 06:45:33PM -0800, Ben Greear wrote:
-> On 01/06/2011 06:30 PM, Luis R. Rodriguez wrote:
-> > On Thu, Jan 6, 2011 at 4:46 PM,<greearb@candelatech.com>  wrote:
-> >> +#define ATH9K_MAX_STATIONS 1024
-> >
-> > How about making this a Kconfig with a default to a value of the known
-> > (by you) max workable number of STAs that one can use on ath9k, which
-> > is modifiable to other values by power of two up to 1024. Advise in
-> > the kconfig that if more STAs are used then some issue may arise but
-> > should be reported (so the issue can be fixed). This way by default
-> > normal users (you're not normal) won't enable>  max known workable
-> > stable number of STAs on ath9k.
-> 
-> This is just for debugging at this point.  It wastes a bit of memory
-> when debugfs is enabled, but otherwise doesn't affect anything.  It's
-> not even really a problem if there are more stations than fit in
-> the array.
+On Wed, 2011-01-05 at 14:49 -0500, Bob Copeland wrote:
+> On Wed, Jan 5, 2011 at 2:40 PM, Joe Perches <joe@perches.com> wrote:
+> > On Wed, 2011-01-05 at 14:22 -0500, John W. Linville wrote:
+> >> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+> > []
+> >> +     bool nohwcrypt;
+> >> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> >> -int modparam_nohwcrypt;
+> >> +static int modparam_nohwcrypt;
+> >>  module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+> > bool/int matching?
+> It used to be the case that you had to use ints here.  Google tells me
+> that changed about 2 years ago, so bool should be ok.
 
-I meant to use the value as a limit on the # of STAs you can create
-with one ath9k device. The debugfs can still be used as you did,
-only that the limit would come from the kconfig value.
+bool is OK.
 
-> I can reproduce all my problems with < 128, so if you'd prefer
-> the number be smaller, that's fine with me.  I don't think it's
-> worth a configurable value, however.
+modparam_nohwcrypt is declared int and should be declared bool.
+Also should be declared and used as bool in ath9k and ath9k_htc too.
 
-I thikn we should limit the # STAs to whatever it is that you can
-use in a realiable way, this should be a driver limitation, but
-I figured you'd want to configure this to a higher value yourself
-for whatever tests you are doing. We should fix it though but at
-least other clueless users would not go over stable limit you have
-found.
-
-  Luis
