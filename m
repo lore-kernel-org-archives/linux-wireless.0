@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41226 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159Ab1AGWyL convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49557 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005Ab1AEOAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 17:54:11 -0500
-Received: by wyb28 with SMTP id 28so17864369wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 14:54:10 -0800 (PST)
+	Wed, 5 Jan 2011 09:00:06 -0500
+Date: Wed, 5 Jan 2011 08:59:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wl12xx maintainer's email address will change
+Message-ID: <20110105135905.GB2337@tuxdriver.com>
+References: <1293782724.15791.14.camel@powerslave>
+ <1294222323.14110.53.camel@pimenta>
 MIME-Version: 1.0
-In-Reply-To: <20110107202224.GI21588@tux>
-References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
-	<AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
-	<20110107024432.GC20431@tux>
-	<201101071111.17423.helmut.schaa@googlemail.com>
-	<AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
-	<20110107202224.GI21588@tux>
-Date: Fri, 7 Jan 2011 14:54:10 -0800
-Message-ID: <AANLkTi=m4BzXBR4vohkxT9zKpXxmZSO347qG8=p-FTO1@mail.gmail.com>
-Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
-From: Aleksandar Milivojevic <alex@milivojevic.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Wolfgang Kufner <wolfgang.kufner@gmail.com>,
-	Luis Correia <buga@loide.net>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1294222323.14110.53.camel@pimenta>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 7, 2011 at 12:22 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> You may want to try checing the 'iw event -t' output while the issue happens.
-> Maybe it is due to a roaming issue, if you are using a large BSS and roam
-> in between you may want to try using wpa_supplicant with nl80211 and use
-> the new bgscan module from wpa_supplicant to trigger you to only switch
-> based on triggered events from nl80211 like signal rssi changes.
->
-> Here is an example supplicant conf that uses the bgscan module:
->
-> # WPA-PSK/TKIP
->
-> ctrl_interface=/var/run/wpa_supplicant
->
-> network={
->        ssid="my-corp-cool-bss"
->        bgscan="simple:30:-45:300"
->        key_mgmt=WPA-PSK
->        proto=RSN
->        pairwise=CCMP
->        group=CCMP
->        psk="foobar_is_great"
-> }
->
-> No Linux distributions today uses this other than ChromeOS, but they should
-> all change to use it.
+On Wed, Jan 05, 2011 at 12:12:03PM +0200, Luciano Coelho wrote:
+> On Fri, 2010-12-31 at 09:05 +0100, Luciano Coelho wrote:
+> > Hi,
+> > 
+> > Sorry for the spam for those who are not working with wl12xx.
+> > 
+> > Today is the last day when my current email address
+> > (luciano.coelho@nokia.com) is valid.  So please send all requests or
+> > questions that are supposed to reach me to the linux-wireless mailing
+> > list, so I can still read them.
+> > 
+> > My new email address will be available by the beginning of next week.
+> 
+> Okay, now my new email address is available.  I'll send a patch to fix
+> the MAINTAINERS information shortly.
+> 
+> The new email address is coelho@ti.com, please use that one when
+> submitting patches from now on.
 
-I doubt it would help in this case, since things are very static.
-There's only single AP (typical home network environment).  The
-wireless card is plugged into (and sits directly on top of) an
-desktop, so its position in space is rather static (if I wanted to
-make a bad attempt at being funny, I'd add "relative to the AP").
+I suppose that we can safely presume that your new employer is happy
+with your wl12xx maintainer duties... :-)
 
-I'll check out what "iw event -t" has to say over the weekend.
+Congrats!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
