@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52422 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651Ab1ASKLP (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59369 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953Ab1AEN5Q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 05:11:15 -0500
+	Wed, 5 Jan 2011 08:57:16 -0500
+Received: by qwa26 with SMTP id 26so15670538qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 05:57:15 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1295430682.4685.1.camel@jlt3.sipsolutions.net>
-References: <AANLkTi=DLpfpLYAftktUKa5grNyTeT0-reyjEsrr-NwR@mail.gmail.com>
-	<1295430682.4685.1.camel@jlt3.sipsolutions.net>
-Date: Wed, 19 Jan 2011 17:11:14 +0700
-Message-ID: <AANLkTimdBRXebouUbnrXhUczqgeadAR=kHrrhB5MksP=@mail.gmail.com>
-Subject: Re: [2.6.38-rc1] iwlagn lock misuse...
-From: Daniel J Blueman <daniel.blueman@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <20110105111314.GA23794@zenon.in.qult.net>
+References: <20110105111314.GA23794@zenon.in.qult.net>
+Date: Wed, 5 Jan 2011 08:57:14 -0500
+Message-ID: <AANLkTi=WQwx5hOxeGweFOLVtpss54NZsRyV0tkBqf4CP@mail.gmail.com>
+Subject: Re: About clocks in the carl9170 firmware
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-On 19 January 2011 16:51, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2011-01-19 at 16:44 +0700, Daniel J Blueman wrote:
->> Booting an instrumented 2.6.38-rc1 kernel with an Intel WiFi Link 5300
->> card and associating with an access point, I see a lockdep warning
->> [attached].
->>
->> This is essentially (struct iwl_priv)->lock being taken with
->> interrupts disabled in iwl-agn-ict.c:152 [1] and the same lock taken
->> with interrupts enabled in rx.c:2476 [2] (confirmed via disassembly).
->>
->> It feels like this would have been introduced in this commit:
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6e8cc38d5b05bb812f89a35bd9bf52405e67d0df
+On Wed, Jan 5, 2011 at 6:13 AM, Ignacy Gawedzki <i@lri.fr> wrote:
+> Hi,
 >
-> I think you're running into a lockdep false positive, it's not actually
-> the same lock and lockdep confuses a few skb queue locks. Please apply
-> this patch
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=53c16b8e752e8e58f4313f1155f3afadf78311bb
-> and see if the problem persists.
+> A few months ago, Christian Lamparter suggested to me the use of
+> get_clock_counter() in the carl9170 firmware code for time measurement
+> purposes.
+>
+> I just got back to that, after a long period of other things to do instead.
+>
+> According to the results of a few tests I've been running yesterday, it looks
+> that this clock is 44Mhz, not 40Mhz, nor 80Mhz.
 
-Good move; it addresses the false-positive. I hope it can hit 2.6.38-rc2.
+I have seen the same thing.  In 802.11g mode, that clock counter runs
+at 44MHz.  There are rumors that this changes with operating mode.
+Its easy to believe that it would run at 80MHz in turbo (40MHz
+channel-width) mode.  But, I haven't tested that, and can only say
+that I've seen that clock counter run at 44MHz as well.
 
-Thanks,
-  Daniel
--- 
-Daniel J Blueman
+> According to Christian, the clock source, as accessed through
+> get_clock_counter() is stable and does not depend on calls to clock_set().
+> This is further corroborated by the definition and use of the
+> AR9170_TICKS_PER_MICROSECOND *constant* in timer.h.  But still, how comes that
+> constant is 80 then?
+
+Does anything in the firmware really rely on that constant being
+right?  I'm more familiar with ar9170usb and the open firmware for
+that, where the constants were also wrong, but nothing used them
+except for some delay functions, for which the accuracy wasn't
+critical.
+
+> I'm obviously missing something here.  I would be really thankful to anybody
+> who could explain how these clocks/timers work and how they are supposed to be
+> used.
+>
+> Thanks,
+>
+> Ignacy
+
+-Brian
