@@ -1,125 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:42751 "EHLO comal.ext.ti.com"
+Received: from mail.atheros.com ([12.19.149.2]:23723 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756246Ab1AKSHJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 13:07:09 -0500
-Received: from dlep34.itg.ti.com ([157.170.170.115])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0BI78cj030459
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:07:09 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep34.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0BI782e021520
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:07:08 -0600 (CST)
-Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0BI784t023603
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:07:08 -0600 (CST)
-From: <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: jonathanc@ti.com
-Subject: [PATCH] wl12xx: lock the RCU when accessing sta via ieee80211_find_sta()
-Date: Tue, 11 Jan 2011 20:07:21 +0200
-Message-ID: <1294769241-3118-1-git-send-email-coelho@ti.com>
+	id S1751649Ab1AES3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jan 2011 13:29:10 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 10:28:41 -0800
+Date: Wed, 5 Jan 2011 10:28:38 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Kathy Giori <Kathy.Giori@Atheros.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	David Quan <David.Quan@Atheros.com>,
+	Michael Green <Michael.Green@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/8] wireless: DFS region support
+Message-ID: <20110105182838.GC10391@tux>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+ <20110104184928.GA13239@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110104184928.GA13239@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+On Tue, Jan 04, 2011 at 10:49:28AM -0800, John W. Linville wrote:
+> On Mon, Dec 20, 2010 at 12:02:26PM -0500, Luis R. Rodriguez wrote:
+> > This series has a list of changes to kernel and userspace to start addressing
+> > DFS region support. I've cheated and figured out a way to alter the current
+> > regulatory database in such a way that it remains backwards compatible with
+> > older databases so that no new CRDAs are required and we don't have to provide
+> > two releases for old kernels and newer kernels for wireless-regdb updates.
+> > 
+> > In the end we end up passing the DFS region to the drivers. In terms of our DFS
+> > development roadmap this covers parts I and II as promissed that I would take care
+> > of by tomorrow, and leaves open now the chance for developers to start working
+> > on part III: "Where do we stuff DFS parameters for each region":
+> > 
+> > http://wireless.kernel.org/en/developers/DFS
+> > 
+> > In tomorrow's meeting we can cover who is going to work on part III. People who
+> > want to work on part III can start using these patches on their systems.
+> > 
+> > John, lets wait to merge these until Wednesday, I post these in patch form as I
+> > think they are ready but tomorrow's discussions may push us to alter this a
+> > bit, not sure. I will also review what we have done here with Michael Green so
+> > he is on the same page.
+> 
+> Well, now there has been plenty of time to reflect...comments? :-)
 
-We were calling ieee80211_find_sta() and the sta returned by it
-without locking the RCU, which is required by mac80211.
+I'll reduce the number of bits to 8 instead of 16 for the DFS regions, I'll also
+try to schedule a call with Michael to finalize his review on this and then I'll
+respin and submit again.
 
-Fix this and reorganize slightly the area of the code where the sta is
-used.
-
-Reported-by: Jonathan DE CESCO <jonathanc@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |   60 +++++++++++++++++++----------------
- 1 files changed, 33 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 862ec9c..67732ea 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2219,7 +2219,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 	bool do_join = false, set_assoc = false;
- 	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
- 	int ret;
--	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
-+	struct ieee80211_sta *sta;
- 
- 	if (is_ibss) {
- 		ret = wl1271_bss_beacon_info_changed(wl, vif, bss_conf,
-@@ -2376,36 +2376,42 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 	if (ret < 0)
- 		goto out;
- 
--	/*
--	 * Takes care of: New association with HT enable,
--	 *                HT information change in beacon.
--	 */
--	if (sta &&
--	    (changed & BSS_CHANGED_HT) &&
--	    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
--		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true);
--		if (ret < 0) {
--			wl1271_warning("Set ht cap true failed %d", ret);
--			goto out;
--		}
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta(vif, bss_conf->bssid);
-+	if (sta)  {
-+		/* handle new association with HT and HT information change */
-+		if ((changed & BSS_CHANGED_HT) &&
-+		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
-+			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
-+							     true);
-+			if (ret < 0) {
-+				wl1271_warning("Set ht cap true failed %d",
-+					       ret);
-+				rcu_read_unlock();
-+				goto out;
-+			}
- 			ret = wl1271_acx_set_ht_information(wl,
--				bss_conf->ht_operation_mode);
--		if (ret < 0) {
--			wl1271_warning("Set ht information failed %d", ret);
--			goto out;
-+						bss_conf->ht_operation_mode);
-+			if (ret < 0) {
-+				wl1271_warning("Set ht information failed %d",
-+					       ret);
-+				rcu_read_unlock();
-+				goto out;
-+			}
- 		}
--	}
--	/*
--	 * Takes care of: New association without HT,
--	 *                Disassociation.
--	 */
--	else if (sta && (changed & BSS_CHANGED_ASSOC)) {
--		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, false);
--		if (ret < 0) {
--			wl1271_warning("Set ht cap false failed %d", ret);
--			goto out;
-+		/* handle new association without HT and disassociation */
-+		else if (changed & BSS_CHANGED_ASSOC) {
-+			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
-+							     false);
-+			if (ret < 0) {
-+				wl1271_warning("Set ht cap false failed %d",
-+					       ret);
-+				rcu_read_unlock();
-+				goto out;
-+			}
- 		}
- 	}
-+	rcu_read_unlock();
- 
- 	if (changed & BSS_CHANGED_ARP_FILTER) {
- 		__be32 addr = bss_conf->arp_addr_list[0];
--- 
-1.7.1
-
+  Luis
