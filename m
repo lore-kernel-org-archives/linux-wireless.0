@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58189 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753Ab1AGA5c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 19:57:32 -0500
-Received: by iyi12 with SMTP id 12so15372119iyi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:57:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 6 Jan 2011 16:57:11 -0800
-Message-ID: <AANLkTin2YS4akjJpAhagqesoNO-5D=ngbMJLOqS8-yQu@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
- one page.
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Eric Dumazet <eric.dumazet@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:49446 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751564Ab1AEAbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 19:31:52 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/5] iwlagn: return error if PAN disable timeout
+Date: Tue,  4 Jan 2011 16:22:02 -0800
+Message-Id: <1294186923-4582-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 6, 2011 at 4:46 PM,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> Patch is from Eric Dumazet, as described here:
-> https://patchwork.kernel.org/patch/104271/
->
-> Reported-by: Michael Guntsche <mike@it-loops.com>
-> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Did he SOB it?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 99e9650..6e80f10 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -74,8 +74,10 @@ static int iwlagn_disable_pan(struct iwl_priv *priv,
+ 		signed long wait_res;
+ 
+ 		wait_res = iwlagn_wait_notification(priv, &disable_wait, HZ);
+-		if (wait_res == 0)
++		if (wait_res == 0) {
+ 			IWL_ERR(priv, "Timed out waiting for PAN disable\n");
++			ret = -EIO;
++		}
+ 	}
+ 
+ 	return ret;
+-- 
+1.7.0.4
+
