@@ -1,50 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43883 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754046Ab1AaMLv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 07:11:51 -0500
-Subject: Re: [PATCH v2 06/10] mac80211: add HW flag for disabling auto
- link-PS in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <AANLkTin9vOQJqDJezzBMjjRyGNDYGEwOwgT_aFk2NBYD@mail.gmail.com>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
-	 <1296472589-26401-7-git-send-email-arik@wizery.com>
-	 <1296473043.3812.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTin9vOQJqDJezzBMjjRyGNDYGEwOwgT_aFk2NBYD@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 13:11:50 +0100
-Message-ID: <1296475910.3812.27.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:59070 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751560Ab1AEAbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 19:31:52 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/5] iwlagn: properly wait for PAN disable
+Date: Tue,  4 Jan 2011 16:22:01 -0800
+Message-Id: <1294186923-4582-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 13:49 +0200, Arik Nemtsov wrote:
-> On Mon, Jan 31, 2011 at 13:24, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > It'd be nicer if you could separate out mac80211 patches, but then Luca
-> > needs to hold off merging until John picked up the mac80211 patch.
-> 
-> Yea that would complicate matters a bit. Does the ordering of the
-> patches bother you?
+From: Johannes Berg <johannes.berg@intel.com>
 
-It just makes it more complicated for me to pick out the right thing --
-I almost missed that there was a mac80211 patch in this huge series.
+Previously I hacked this with an msleep(300)
+which was fine since we never had longer PAN
+time slots, but now that we will have them I
+need to fix that. Use the new notification
+wait support to properly wait for the WIPAN
+deactivation complete signal from the ucode.
 
-> > Also, come to think of it, the ieee80211_sta_block_awake will not be
-> > effective I think? Or will it?
-> 
-> Haven't noticed any adverse effects. ap_sta_ps_end() still checks if
-> the station is blocked before delivering queued packets.
-> 
-> Also is should be pretty hard to find a driver that uses both mechanisms.
-> If it wants to block a station from waking up, it can simply not call
-> ieee80211_sta_ps_transition().
-> 
-> Should work though.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   15 ++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    1 +
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-Good point, thanks for looking.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 6d140bd..99e9650 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -52,10 +52,14 @@ static int iwlagn_disable_pan(struct iwl_priv *priv,
+ 			      struct iwl_rxon_context *ctx,
+ 			      struct iwl_rxon_cmd *send)
+ {
++	struct iwl_notification_wait disable_wait;
+ 	__le32 old_filter = send->filter_flags;
+ 	u8 old_dev_type = send->dev_type;
+ 	int ret;
+ 
++	iwlagn_init_notification_wait(priv, &disable_wait, NULL,
++				      REPLY_WIPAN_DEACTIVATION_COMPLETE);
++
+ 	send->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	send->dev_type = RXON_DEV_TYPE_P2P;
+ 	ret = iwl_send_cmd_pdu(priv, ctx->rxon_cmd, sizeof(*send), send);
+@@ -63,11 +67,16 @@ static int iwlagn_disable_pan(struct iwl_priv *priv,
+ 	send->filter_flags = old_filter;
+ 	send->dev_type = old_dev_type;
+ 
+-	if (ret)
++	if (ret) {
+ 		IWL_ERR(priv, "Error disabling PAN (%d)\n", ret);
++		iwlagn_remove_notification(priv, &disable_wait);
++	} else {
++		signed long wait_res;
+ 
+-	/* FIXME: WAIT FOR PAN DISABLE */
+-	msleep(300);
++		wait_res = iwlagn_wait_notification(priv, &disable_wait, HZ);
++		if (wait_res == 0)
++			IWL_ERR(priv, "Timed out waiting for PAN disable\n");
++	}
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index f893d4a..abe2479 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -189,6 +189,7 @@ enum {
+ 	REPLY_WIPAN_WEPKEY = 0xb8,	/* use REPLY_WEPKEY structure */
+ 	REPLY_WIPAN_P2P_CHANNEL_SWITCH = 0xb9,
+ 	REPLY_WIPAN_NOA_NOTIFICATION = 0xbc,
++	REPLY_WIPAN_DEACTIVATION_COMPLETE = 0xbd,
+ 
+ 	REPLY_MAX = 0xff
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+index c373b53..e4b953d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+@@ -108,6 +108,7 @@ const char *get_cmd_string(u8 cmd)
+ 		IWL_CMD(REPLY_WIPAN_WEPKEY);
+ 		IWL_CMD(REPLY_WIPAN_P2P_CHANNEL_SWITCH);
+ 		IWL_CMD(REPLY_WIPAN_NOA_NOTIFICATION);
++		IWL_CMD(REPLY_WIPAN_DEACTIVATION_COMPLETE);
+ 	default:
+ 		return "UNKNOWN";
+ 
+-- 
+1.7.0.4
 
