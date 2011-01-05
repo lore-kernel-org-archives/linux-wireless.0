@@ -1,79 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63884 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:23483 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756039Ab1AKPJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 10:09:28 -0500
-Subject: Re: [PATCH] cfg80211: Extend channel to frequency mapping for
- 802.11j
-From: Dan Williams <dcbw@redhat.com>
-To: Brian Prodoehl <bprodoehl@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	libertas-dev@lists.infradead.org, Bruno Randolf <br1@einfach.org>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	users@rt2x00.serialmonkey.com
-Date: Tue, 11 Jan 2011 09:09:35 -0600
-In-Reply-To: <AANLkTimg_udpa78Fbq+-48rOC38_jg_afaME=PYCsChr@mail.gmail.com>
-References: <20110107052600.18730.98168.stgit@localhost6.localdomain6>
-	 <201101081243.56629.br1@einfach.org>
-	 <AANLkTimYjvJbm9DPPDWWCsD76_DnFcBG3a2Z_B8Mhpzm@mail.gmail.com>
-	 <201101111817.40309.br1@einfach.org>
-	 <1294748329.3611.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTimg_udpa78Fbq+-48rOC38_jg_afaME=PYCsChr@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1294758578.1808.1.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1751447Ab1AES0V convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jan 2011 13:26:21 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 10:26:04 -0800
+Date: Wed, 5 Jan 2011 10:26:17 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Paul Stewart <pstew@google.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amod Bodas <amod@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
+Message-ID: <20110105182617.GB10391@tux>
+References: <AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
+ <1292501047.3612.9.camel@jlt3.sipsolutions.net>
+ <AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
+ <1292502934.3612.15.camel@jlt3.sipsolutions.net>
+ <AANLkTimZdxQNk2hr-ekGPAWJB5YTZBqxdppOAjdbrb1i@mail.gmail.com>
+ <1292504020.3612.17.camel@jlt3.sipsolutions.net>
+ <AANLkTinWkYK2Zu1LsKw9YQ4dAXJ2b_quEvZLc59-c_5q@mail.gmail.com>
+ <20101216174410.GB5677@tux>
+ <AANLkTinvrdj4jbzH3COVZ9gW8W0h0em7uD6DBWBEXUp=@mail.gmail.com>
+ <AANLkTikDP_uF_jGh5bNyMv17VoZB=9u-SrdWRUQ15gRb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <AANLkTikDP_uF_jGh5bNyMv17VoZB=9u-SrdWRUQ15gRb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-11 at 08:16 -0500, Brian Prodoehl wrote:
-> On Tue, Jan 11, 2011 at 7:18 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2011-01-11 at 18:17 +0900, Bruno Randolf wrote:
+On Tue, Jan 04, 2011 at 02:29:53PM -0800, Paul Stewart wrote:
+> On Tue, Jan 4, 2011 at 10:19 AM, Paul Stewart <pstew@google.com> wrote:
+> > On Thu, Dec 16, 2010 at 9:44 AM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> >> Try this:
 > >
-> >> > compat-wireless-2011-01-07.orig/drivers/net/wireless/libertas/cfg.c 2011-0
-> >> > 1-07 15:03:59.000000000 -0500
-> >> > +++
-> >> > compat-wireless-2011-01-07/drivers/net/wireless/libertas/cfg.c      2011-01-08
-> >> > 07:51:23.947290769 -0500
-> >> > @@ -607,7 +607,8 @@
-> >> >             /* No channel, no luck */
-> >> >             if (chan_no != -1) {
-> >> >                     struct wiphy *wiphy = priv->wdev->wiphy;
-> >> > -                   int freq = ieee80211_channel_to_frequency(chan_no);
-> >> > +                   int freq = ieee80211_channel_to_frequency(chan_no,
-> >> > +                                   chan_no <= 14 ? IEEE80211_BAND_2GHZ :
-> >> IEEE80211_BAND_5GHZ);
-> >>
-> >> The whole point of having the band argument is to avoid this. We now have
-> >> overlapping channel numbers: channel 8 and 12 are defined in 5GHz as well as
-> >> in 2.4GHz (that is for 20MHz channel width, there are more for 10 and 5MHz
-> >> width, but we don't support that yet). The band has to come from the hardware
-> >> or driver configuration.
-> >
-> > I don't think libertas (or orinoco) support the frequencies that
-> > overlap, and they use the channel number in HW config, so it should be
-> > fine.
-> >
-> > johannes
+> > Happy new year.  I've tried this patch, and the system continues to
+> > suspend and resume successfully (i.e, the fix from the earlier patches
+> > continues to alleviate the original problem), however the system
+> > continues to be "deaf" to beacons at resume time if the system
+> > suspends and resumes while associated.  You don't need a ChromeOS
+> > system to reproduce this issue.  Just associate to the network and
+> > suspend/resume.  On resume the system believes it should be
+> > associated, but then the beacon loss timer kicks in and we
+> > disassociate, since we are never successful in receiving a response.
 > 
-> That's what it looked like to me, as well, for libertas.  For rt2x00,
-> with it's dependence on binary firmwares from Ralink, extending the
-> channel set seems very far from trivial.  Ralink advertises compliance
-> with 802.11j (http://web.ralinktech.com/ralink/data/RT2800.pdf).  A
-> year and a half ago I asked them directly what that compliance means
-> (4.9GHz channels?  10MHz channel width?  misprint?) and didn't get a
-> response.  A way to pull the band for rt2x00 didn't pop out at me, but
-> if the maintainers have suggestions, that'll be great.  Also, if they
-> have some idea what the level of 802.11j compliance is, I'd love to
-> know!
+> Whoops.  I didn't apply that change correctly.  Actually, I think this
+> change works.  I think I may have spotted a couple of unrelated
+> anomalies I'll trace down and address separately.
 
-While some libertas/fullmac devices do apparently support A, I haven't
-seen any in person or heard of them in real use.  And the current
-libertas driver certainly doesn't support 802.11a and wont, unless we
-magically find a part that does.
+Great, I think this patch got sucked up already, I'll check.
 
-Dan
-
-
+  Luis
