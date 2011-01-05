@@ -1,100 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.techwires.net ([79.140.39.242]:22529 "EHLO mx.techwires.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751742Ab1AQQUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 11:20:04 -0500
-In-Reply-To: <201101171621.29863.bernhard.schmidt@saxnet.de>
-References: <201101171621.29863.bernhard.schmidt@saxnet.de>
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 17 Jan 2011 09:31:03 +0100
-Subject: [PATCH 1/5] mac80211: add DFS related channel flags
-Cc: <lrodriguez@atheros.com>, <nbd@openwrt.org>, <dubowoj@neratec.com>,
-	<zefir.kurtisi@neratec.com>, <simon.wunderlich@saxnet.de>
-Message-Id: <20110117161133.66B54207E@mx.techwires.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52031 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298Ab1AEW5s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jan 2011 17:57:48 -0500
+Received: by iwn9 with SMTP id 9so15730783iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 14:57:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110105182617.GB10391@tux>
+References: <AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
+ <1292501047.3612.9.camel@jlt3.sipsolutions.net> <AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
+ <1292502934.3612.15.camel@jlt3.sipsolutions.net> <AANLkTimZdxQNk2hr-ekGPAWJB5YTZBqxdppOAjdbrb1i@mail.gmail.com>
+ <1292504020.3612.17.camel@jlt3.sipsolutions.net> <AANLkTinWkYK2Zu1LsKw9YQ4dAXJ2b_quEvZLc59-c_5q@mail.gmail.com>
+ <20101216174410.GB5677@tux> <AANLkTinvrdj4jbzH3COVZ9gW8W0h0em7uD6DBWBEXUp=@mail.gmail.com>
+ <AANLkTikDP_uF_jGh5bNyMv17VoZB=9u-SrdWRUQ15gRb@mail.gmail.com> <20110105182617.GB10391@tux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 5 Jan 2011 14:57:27 -0800
+Message-ID: <AANLkTikT8cS-ZD=MPC+XUTeXbca3gt2=Epj4XU__+4uH@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
+To: Paul Stewart <pstew@google.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amod Bodas <amod@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before a radar channel can be used, a full CAC has be done, the
-IEEE80211_CHAN_RADAR_CLEAR flags indicates that this has been done. If either
-during CAC or in-service monitoring interference is detected, the channel is
-added to NOL and marked with IEEE80211_CHAN_RADAR_INTERFERENCE.
----
- include/linux/nl80211.h |    6 ++++++
- include/net/cfg80211.h  |   18 ++++++++++++------
- net/wireless/nl80211.c  |    4 ++++
- 3 files changed, 22 insertions(+), 6 deletions(-)
+On Wed, Jan 5, 2011 at 10:26 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Jan 04, 2011 at 02:29:53PM -0800, Paul Stewart wrote:
+>> On Tue, Jan 4, 2011 at 10:19 AM, Paul Stewart <pstew@google.com> wrote:
+>> > On Thu, Dec 16, 2010 at 9:44 AM, Luis R. Rodriguez
+>> > <lrodriguez@atheros.com> wrote:
+>> >> Try this:
+>> >
+>> > Happy new year.  I've tried this patch, and the system continues to
+>> > suspend and resume successfully (i.e, the fix from the earlier patches
+>> > continues to alleviate the original problem), however the system
+>> > continues to be "deaf" to beacons at resume time if the system
+>> > suspends and resumes while associated.  You don't need a ChromeOS
+>> > system to reproduce this issue.  Just associate to the network and
+>> > suspend/resume.  On resume the system believes it should be
+>> > associated, but then the beacon loss timer kicks in and we
+>> > disassociate, since we are never successful in receiving a response.
+>>
+>> Whoops.  I didn't apply that change correctly.  Actually, I think this
+>> change works.  I think I may have spotted a couple of unrelated
+>> anomalies I'll trace down and address separately.
+>
+> Great, I think this patch got sucked up already, I'll check.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index e3c9ec7..acb3c33 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1371,6 +1371,10 @@ enum nl80211_band_attr {
-  *	(100 * dBm).
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-+ * @NL80211_FREQUENCY_ATTR_RADAR_CLEAR: during a full CAC no interference has
-+ *	been detected
-+ * @NL80211_FREQUENCY_ATTR_RADAR_INTERFERENCE: either during a CAC or
-+ *	in-service monitoring radar interference was detected
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-  */
- enum nl80211_frequency_attr {
-@@ -1381,6 +1385,8 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_IBSS,
- 	NL80211_FREQUENCY_ATTR_RADAR,
- 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-+	NL80211_FREQUENCY_ATTR_RADAR_CLEAR,
-+	NL80211_FREQUENCY_ATTR_RADAR_INTERFERENCE,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1322695..1e9a052 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -98,14 +98,20 @@ enum ieee80211_band {
-  * 	is not permitted.
-  * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
-  * 	is not permitted.
-+ * @IEEE80211_CHAN_RADAR_CLEAR: during a full CAC no interference has
-+ *	been detected
-+ * @IEEE80211_CHAN_RADAR_INTERFERENCE: either during a CAC or
-+ *	in-service monitoring radar interference was detected
-  */
- enum ieee80211_channel_flags {
--	IEEE80211_CHAN_DISABLED		= 1<<0,
--	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
--	IEEE80211_CHAN_NO_IBSS		= 1<<2,
--	IEEE80211_CHAN_RADAR		= 1<<3,
--	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
--	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
-+	IEEE80211_CHAN_DISABLED			= 1<<0,
-+	IEEE80211_CHAN_PASSIVE_SCAN		= 1<<1,
-+	IEEE80211_CHAN_NO_IBSS			= 1<<2,
-+	IEEE80211_CHAN_RADAR			= 1<<3,
-+	IEEE80211_CHAN_NO_HT40PLUS		= 1<<4,
-+	IEEE80211_CHAN_NO_HT40MINUS		= 1<<5,
-+	IEEE80211_CHAN_RADAR_CLEAR		= 1<<6,
-+	IEEE80211_CHAN_RADAR_INTERFERENCE	= 1<<7,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f4eb3ea..0524423 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -307,6 +307,10 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
- 	if (chan->flags & IEEE80211_CHAN_RADAR)
- 		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
-+	if (chan->flags & IEEE80211_CHAN_RADAR_CLEAR)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR_CLEAR);
-+	if (chan->flags & IEEE80211_CHAN_RADAR_INTERFERENCE)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR_INTERFERENCE);
- 
- 	NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 		    DBM_TO_MBM(chan->max_power));
--- 
-1.5.6.5
+Indeed, John just sent this to David as part of the queued up patches
+for 2.6.38.
 
+  Luis
