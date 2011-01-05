@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:21573 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753755Ab1A0JTn (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40987 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751711Ab1AEUEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 04:19:43 -0500
-Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0300419980
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 18:19:41 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: Re: [PATCH 6/6] ath: Fix WEP hardware encryption
-Date: Thu, 27 Jan 2011 18:19:31 +0900
-Cc: Jouni Malinen <j@w1.fi>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <20110125041522.6944.22566.stgit@localhost6.localdomain6> <201101261936.02831.br1@einfach.org> <20110127055105.GA23779@vasanth-laptop>
-In-Reply-To: <20110127055105.GA23779@vasanth-laptop>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101271819.31727.br1@einfach.org>
+	Wed, 5 Jan 2011 15:04:08 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id B82B654080C
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Jan 2011 15:05:30 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-05 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110105200406.44EEA40F97@repository3.orbit-lab.org>
+Date: Wed,  5 Jan 2011 15:04:06 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu January 27 2011 14:51:05 Vasanthakumar Thiagarajan wrote:
-> On Wed, Jan 26, 2011 at 04:06:02PM +0530, Bruno Randolf wrote:
-> > On Wed January 26 2011 18:37:00 Jouni Malinen wrote:
-> > > On Wed, Jan 26, 2011 at 11:38:53AM +0900, Bruno Randolf wrote:
-> > > > Even without my patch, WEP does not work with multiple vifs.
-> > > 
-> > > Are you sure about that?
-> > 
-> > Yes, I'm sure. Please test it yourself, if you don't believe me. :)
-> > I'm using ath5k, not ath9k, BTW.
-> 
-> Using a key cache entry without seeing it's availability would
-> certainly break multi vif operation with WEP in at least one
-> interface. Did you test the following
-> 
-> 1. Associate sta vif1 with TKIP and
-> 2. Bring up ap vif2 with WEP and configure the key at index 1.
-> 
-> With your patch, the AP wep key would probably override the GTK of STA
-> interface.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   959f374..b616059  history    -> origin/history
+ + 924c697...dcd2e87 master     -> origin/master  (forced update)
+   03ed6a3..989d873  stable     -> origin/stable
+ * [new tag]         next-20110105 -> next-20110105
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Ok, right. I have to admit that i did not think about this case and just about 
-multiple AP interfaces. So please just drop my patch for now.
+compat-wireless code metrics
 
-bruno
+    775083 - Total upstream lines of code being pulled
