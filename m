@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:60985 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847Ab1ATSyt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 13:54:49 -0500
-Received: by eye27 with SMTP id 27so466195eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 10:54:47 -0800 (PST)
-Date: Thu, 20 Jan 2011 21:54:40 +0300
-From: Paul Fertser <fercerpav@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: Fwd: [Linux Wireless] Update of "en/users/Drivers/carl9170" by
-	PaulFertser
-Message-ID: <20110120185440.GA25136@home.lan>
-References: <20110120183210.13527.33808@he.sipsolutions.net> <AANLkTi=EDRimawaentk_ppcrsTf1Rex7H9QJspktaa3C@mail.gmail.com> <20110120184336.GK3333@home.lan> <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:59070 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751574Ab1AEAbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 19:31:52 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/5] iwlwifi: fix 4965 notification wait setup
+Date: Tue,  4 Jan 2011 16:22:03 -0800
+Message-Id: <1294186923-4582-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 20, 2011 at 10:50:43AM -0800, Luis R. Rodriguez wrote:
-> On Thu, Jan 20, 2011 at 10:43 AM, Paul Fertser <fercerpav@gmail.com> wrote:
-> > On Thu, Jan 20, 2011 at 10:37:20AM -0800, Luis R. Rodriguez wrote:
-> >> Huh?
-> >
-> > Christian asked me to add that info to the wiki, is something i wrote wrong?
-> 
-> It is unclear to me, are you saying carl9170 does not support QoS and
-> aggregation?
+From: Johannes Berg <johannes.berg@intel.com>
 
-At the same time, apparently, yes. This commit[1] has more
-clarifications.
+The notification wait support code is shared
+between 4965 and other AGN devices, so 4965
+also has to initialize the data structures
+for it, otherwise it crashes.
 
-[1] http://git.kernel.org/?p=linux/kernel/git/chr/carl9170fw.git;a=commitdiff;h=39be7dc384e0dd45dc36b4b517fd9fae874b06f0
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 3f1e5f1..d9a7d93 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2316,6 +2316,11 @@ static void iwl4965_rx_handler_setup(struct iwl_priv *priv)
+ 	priv->rx_handlers[REPLY_RX] = iwlagn_rx_reply_rx;
+ 	/* Tx response */
+ 	priv->rx_handlers[REPLY_TX] = iwl4965_rx_reply_tx;
++
++	/* set up notification wait support */
++	spin_lock_init(&priv->_agn.notif_wait_lock);
++	INIT_LIST_HEAD(&priv->_agn.notif_waits);
++	init_waitqueue_head(&priv->_agn.notif_waitq);
+ }
+ 
+ static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
 -- 
-Be free, use free (http://www.gnu.org/philosophy/free-sw.html) software!
-mailto:fercerpav@gmail.com
+1.7.0.4
+
