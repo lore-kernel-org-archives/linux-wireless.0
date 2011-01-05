@@ -1,162 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38198 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000Ab1AHPde (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47838 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752006Ab1AESpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 10:33:34 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k:  Implement rx copy-break.
-Date: Sat,  8 Jan 2011 07:33:20 -0800
-Message-Id: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
+	Wed, 5 Jan 2011 13:45:11 -0500
+Date: Wed, 5 Jan 2011 13:30:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Kathy Giori <Kathy.Giori@atheros.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/8] wireless: DFS region support
+Message-ID: <20110105183018.GA2725@tuxdriver.com>
+References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
+ <20110104184928.GA13239@tuxdriver.com>
+ <20110105182838.GC10391@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110105182838.GC10391@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wed, Jan 05, 2011 at 10:28:38AM -0800, Luis R. Rodriguez wrote:
+> On Tue, Jan 04, 2011 at 10:49:28AM -0800, John W. Linville wrote:
+> > On Mon, Dec 20, 2010 at 12:02:26PM -0500, Luis R. Rodriguez wrote:
+> > > This series has a list of changes to kernel and userspace to start addressing
+> > > DFS region support. I've cheated and figured out a way to alter the current
+> > > regulatory database in such a way that it remains backwards compatible with
+> > > older databases so that no new CRDAs are required and we don't have to provide
+> > > two releases for old kernels and newer kernels for wireless-regdb updates.
+> > > 
+> > > In the end we end up passing the DFS region to the drivers. In terms of our DFS
+> > > development roadmap this covers parts I and II as promissed that I would take care
+> > > of by tomorrow, and leaves open now the chance for developers to start working
+> > > on part III: "Where do we stuff DFS parameters for each region":
+> > > 
+> > > http://wireless.kernel.org/en/developers/DFS
+> > > 
+> > > In tomorrow's meeting we can cover who is going to work on part III. People who
+> > > want to work on part III can start using these patches on their systems.
+> > > 
+> > > John, lets wait to merge these until Wednesday, I post these in patch form as I
+> > > think they are ready but tomorrow's discussions may push us to alter this a
+> > > bit, not sure. I will also review what we have done here with Michael Green so
+> > > he is on the same page.
+> > 
+> > Well, now there has been plenty of time to reflect...comments? :-)
+> 
+> I'll reduce the number of bits to 8 instead of 16 for the DFS regions, I'll also
+> try to schedule a call with Michael to finalize his review on this and then I'll
+> respin and submit again.
 
-This saves us constantly allocating large, multi-page
-skbs.  It should fix the order-1 allocation errors reported,
-and in a 60-vif scenario, this significantly decreases CPU
-utilization, and latency, and increases bandwidth.
+Well, since Linus released 2.6.37 yesterday there is now no great hurry...
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 b2497b8... ea2f67c... M	drivers/net/wireless/ath/ath9k/recv.c
- drivers/net/wireless/ath/ath9k/recv.c |   92 ++++++++++++++++++++++-----------
- 1 files changed, 61 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b2497b8..ea2f67c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -16,6 +16,7 @@
- 
- #include "ath9k.h"
- #include "ar9003_mac.h"
-+#include <linux/pci.h>
- 
- #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
- 
-@@ -1623,7 +1624,7 @@ div_comb_done:
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- {
- 	struct ath_buf *bf;
--	struct sk_buff *skb = NULL, *requeue_skb;
-+	struct sk_buff *skb = NULL, *requeue_skb = NULL;
- 	struct ieee80211_rx_status *rxs;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1634,7 +1635,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	 */
- 	struct ieee80211_hw *hw = NULL;
- 	struct ieee80211_hdr *hdr;
--	int retval;
-+	int retval, len;
-+	bool use_copybreak = true;
- 	bool decrypt_error = false;
- 	struct ath_rx_status rs;
- 	enum ath9k_rx_qtype qtype;
-@@ -1702,42 +1704,70 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
- 			rxs->mactime += 0x100000000ULL;
- 
--		/* Ensure we always have an skb to requeue once we are done
--		 * processing the current buffer's skb */
--		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
--
--		/* If there is no memory we ignore the current RX'd frame,
--		 * tell hardware it can give us a new frame using the old
--		 * skb and put it at the tail of the sc->rx.rxbuf list for
--		 * processing. */
--		if (!requeue_skb)
--			goto requeue;
--
--		/* Unmap the frame */
--		dma_unmap_single(sc->dev, bf->bf_buf_addr,
--				 common->rx_bufsize,
--				 dma_type);
-+		len = rs.rs_datalen + ah->caps.rx_status_len;
-+		if (use_copybreak) {
-+			skb = netdev_alloc_skb(NULL, len);
-+			if (!skb) {
-+				skb = bf->bf_mpdu;
-+				use_copybreak = false;
-+				goto non_copybreak;
-+			}
-+		} else {
-+non_copybreak:
-+			/* Ensure we always have an skb to requeue once we are
-+			 * done processing the current buffer's skb */
-+			requeue_skb = ath_rxbuf_alloc(common,
-+						      common->rx_bufsize,
-+						      GFP_ATOMIC);
-+
-+			/* If there is no memory we ignore the current RX'd
-+			 * frame, tell hardware it can give us a new frame
-+			 * using the old skb and put it at the tail of the
-+			 * sc->rx.rxbuf list for processing. */
-+			if (!requeue_skb)
-+				goto requeue;
-+
-+			/* Unmap the frame */
-+			dma_unmap_single(sc->dev, bf->bf_buf_addr,
-+					 common->rx_bufsize,
-+					 dma_type);
-+		}
- 
--		skb_put(skb, rs.rs_datalen + ah->caps.rx_status_len);
-+		skb_put(skb, len);
- 		if (ah->caps.rx_status_len)
- 			skb_pull(skb, ah->caps.rx_status_len);
- 
-+		if (use_copybreak) {
-+			struct pci_dev *pdev = to_pci_dev(sc->dev);
-+			pci_dma_sync_single_for_cpu(pdev, bf->bf_buf_addr,
-+						    len, PCI_DMA_FROMDEVICE);
-+			skb_copy_from_linear_data(bf->bf_mpdu, skb->data, len);
-+			pci_dma_sync_single_for_device(pdev, bf->bf_buf_addr,
-+						       len, PCI_DMA_FROMDEVICE);
-+			memcpy(skb->cb, bf->bf_mpdu->cb, sizeof(skb->cb));
-+			rxs =  IEEE80211_SKB_RXCB(skb);
-+		}
-+
- 		ath9k_rx_skb_postprocess(common, skb, &rs,
- 					 rxs, decrypt_error);
- 
--		/* We will now give hardware our shiny new allocated skb */
--		bf->bf_mpdu = requeue_skb;
--		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
--						 common->rx_bufsize,
--						 dma_type);
--		if (unlikely(dma_mapping_error(sc->dev,
--			  bf->bf_buf_addr))) {
--			dev_kfree_skb_any(requeue_skb);
--			bf->bf_mpdu = NULL;
--			bf->bf_buf_addr = 0;
--			ath_err(common, "dma_mapping_error() on RX\n");
--			ath_rx_send_to_mac80211(hw, sc, skb);
--			break;
-+		if (!use_copybreak) {
-+			/* We will now give hardware our shiny new allocated
-+			 * skb */
-+			bf->bf_mpdu = requeue_skb;
-+			bf->bf_buf_addr = dma_map_single(sc->dev,
-+							 requeue_skb->data,
-+							 common->rx_bufsize,
-+							 dma_type);
-+			if (unlikely(dma_mapping_error(sc->dev,
-+						       bf->bf_buf_addr))) {
-+				dev_kfree_skb_any(requeue_skb);
-+				bf->bf_mpdu = NULL;
-+				bf->bf_buf_addr = 0;
-+				ath_err(common, "dma_mapping_error() on RX\n");
-+				ath_rx_send_to_mac80211(hw, sc, skb);
-+				break;
-+			}
- 		}
- 
- 		/*
+John
 -- 
-1.7.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
