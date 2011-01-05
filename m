@@ -1,32 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16997 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:59070 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753343Ab1A1QZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 11:25:52 -0500
-Subject: Re: [PATCH 8/8] iwlwifi: introduce iwl_bt_statistics
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1296229671-3041-8-git-send-email-sgruszka@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-	 <1296229671-3041-8-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Jan 2011 08:24:18 -0800
-Message-ID: <1296231858.7388.19.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1751400Ab1AEAbu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Jan 2011 19:31:50 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/5] iwlagn: make iwl_rx_handle static
+Date: Tue,  4 Jan 2011 16:21:59 -0800
+Message-Id: <1294186923-4582-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Fri, 2011-01-28 at 07:47 -0800, Stanislaw Gruszka wrote:
-> We use priv->cfg->bt_params && priv->cfg->bt_params->bt_statistics
-> conditional in few places, merge it into one function.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+It's not used or likely to be needed from other
+files, so it can be static.
 
-Wey
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
+ 2 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5f11dc2..bd7ae27 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -846,7 +846,7 @@ static void iwl_setup_rx_handlers(struct iwl_priv *priv)
+  * the appropriate handlers, including command responses,
+  * frame-received notifications, and other notifications.
+  */
+-void iwl_rx_handle(struct iwl_priv *priv)
++static void iwl_rx_handle(struct iwl_priv *priv)
+ {
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	struct iwl_rx_packet *pkt;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index da30358..e725784 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -185,7 +185,6 @@ void iwlagn_rx_reply_rx(struct iwl_priv *priv,
+ 		     struct iwl_rx_mem_buffer *rxb);
+ void iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
+ 			 struct iwl_rx_mem_buffer *rxb);
+-void iwl_rx_handle(struct iwl_priv *priv);
+ 
+ /* tx */
+ void iwl_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq);
+-- 
+1.7.0.4
 
