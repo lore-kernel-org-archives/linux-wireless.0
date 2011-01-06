@@ -1,72 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36158 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754660Ab1AGSDO (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:32842 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab1AFWXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 13:03:14 -0500
-Received: by fxm20 with SMTP id 20so17161499fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 10:03:13 -0800 (PST)
-Message-ID: <4D27556C.3010901@lwfinger.net>
-Date: Fri, 07 Jan 2011 12:03:24 -0600
+	Thu, 6 Jan 2011 17:23:37 -0500
+Received: by eye27 with SMTP id 27so7434873eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 14:23:36 -0800 (PST)
+Message-ID: <4D2640F3.3000505@lwfinger.net>
+Date: Thu, 06 Jan 2011 16:23:47 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Odd behavior of ssb, b43, b43legacy, and b44
-References: <4D262109.20504@lwfinger.net>	 (sfid-20110106_210800_770742_63AA2C67) <1294371276.15564.0.camel@maggie>	 <4D269711.1040003@lwfinger.net> (sfid-20110107_053108_647486_0233929A) <1294411555.18385.1.camel@maggie>
-In-Reply-To: <1294411555.18385.1.camel@maggie>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Question about iwl3945
+References: <4D262CED.5070409@lwfinger.net> <1294347881.25228.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1294347881.25228.0.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2011 08:45 AM, Michael Büsch wrote:
-> On Thu, 2011-01-06 at 22:31 -0600, Larry Finger wrote: 
->> On 01/06/2011 09:34 PM, Michael Büsch wrote:
->>>
->>> Does one of these wireless cards have a dangling ethernet core? I would
->>> not be surprised...
+On 01/06/2011 03:04 PM, Johannes Berg wrote:
+> On Thu, 2011-01-06 at 14:58 -0600, Larry Finger wrote:
+>> Is there any reason why the Intel3495 wireless card using the iwl3945 driver
+>> with kernel 2.6.34 does not work in AP mode using hostapd? The message is
 >>
->> Yes. The core scan for the BCM4303 is as follows:
->>
->> ssb: Core 0 found: IEEE 802.11 (cc 0x812, rev 0x02, vendor 0x4243)
->> ssb: Core 1 found: PCMCIA (cc 0x80D, rev 0x00, vendor 0x4243)
->> ssb: Core 2 found: Fast Ethernet (cc 0x806, rev 0x02, vendor 0x4243)
->> ssb: Core 3 found: V90 (cc 0x807, rev 0x01, vendor 0x4243)
->> ssb: Core 4 found: PCI (cc 0x804, rev 0x03, vendor 0x4243)
->> ssb: Sonics Silicon Backplane found on PCI device 0000:01:09.0
->>
->> Larry
->>
+>> nl80211: Failed to set interface wlan0 into AP mode
+>> nl80211 driver initialization failed.
 > 
-> Can you please try this patch?
-> 
-> 
-> Index: linux-2.6.37/drivers/ssb/scan.c
-> ===================================================================
-> --- linux-2.6.37.orig/drivers/ssb/scan.c	2011-01-07 15:35:10.518000002 +0100
-> +++ linux-2.6.37/drivers/ssb/scan.c	2011-01-07 15:45:54.231998930 +0100
-> @@ -420,6 +420,16 @@
->  			bus->pcicore.dev = dev;
->  #endif /* CONFIG_SSB_DRIVER_PCICORE */
->  			break;
-> +		case SSB_DEV_ETHERNET:
-> +			if (bus->bustype == SSB_BUSTYPE_PCI) {
-> +				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
-> +				    (bus->host_pci->device & 0xFF00) == 0x4300) {
-> +					/* This is a dangling ethernet core on a
-> +					 * wireless device. Ignore it. */
-> +					continue;
-> +				}
-> +			}
-> +			break;
->  		default:
->  			break;
->  		}
-> 
-> 
+> Neither 3945 nor 4965 can ever support AP mode due to firmware
+> restrictions, sorry.
 
-That patch fixes the problem. Thanks.
+Thanks. Don't worry, I'm not trying to convert a $600 laptop into a $30 access
+point! In fact, I already own 4 APs. A year ago, I wrote a howto for the
+openSUSE forums, and someone is trying to follow my prescription. He had some
+nasty things to say about the 3945 when I gave him the bad news. Unfortunately,
+he will be buying another wifi card and not an AP.
 
 Larry
-
