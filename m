@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41852 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961Ab1AXSaf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58401 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab1AFViH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 13:30:35 -0500
-Message-ID: <4D3DC535.7040300@candelatech.com>
-Date: Mon, 24 Jan 2011 10:30:13 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k: fix misplaced debug code
-References: <1295892714-985-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1295892714-985-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 6 Jan 2011 16:38:07 -0500
+Message-Id: <20110106213715.504494360@sipsolutions.net>
+Date: Thu, 06 Jan 2011 22:36:47 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: add doc short section on LED triggers
+References: <20110106213643.454994320@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/24/2011 10:11 AM, Felix Fietkau wrote:
-> The commit 'ath9k: Add more information to debugfs xmit file.' added more
-> debug counters to ath9k and also added some lines of code to ath9k_hw.
->
-> Since ath9k_hw is also used by ath9k_htc, its code must not depend on ath9k
-> data structures. In this case it was not fatal, but it's still wrong, so
-> the code needs to be moved back to ath9k.
->
-> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
-> Cc: Ben Greear<greearb@candelatech.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for fixing that..I wasn't aware of that problem.
+Just create a section to collect the LED trigger
+functions and add a very short description as to
+what drivers should do.
 
-Thanks,
-Ben
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/DocBook/80211.tmpl |   21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--- wireless-testing.orig/Documentation/DocBook/80211.tmpl	2011-01-06 22:30:55.000000000 +0100
++++ wireless-testing/Documentation/DocBook/80211.tmpl	2011-01-06 22:33:25.000000000 +0100
+@@ -285,10 +285,6 @@ MISSING
+ !Finclude/net/mac80211.h ieee80211_ops
+ !Finclude/net/mac80211.h ieee80211_alloc_hw
+ !Finclude/net/mac80211.h ieee80211_register_hw
+-!Finclude/net/mac80211.h ieee80211_get_tx_led_name
+-!Finclude/net/mac80211.h ieee80211_get_rx_led_name
+-!Finclude/net/mac80211.h ieee80211_get_assoc_led_name
+-!Finclude/net/mac80211.h ieee80211_get_radio_led_name
+ !Finclude/net/mac80211.h ieee80211_unregister_hw
+ !Finclude/net/mac80211.h ieee80211_free_hw
+       </chapter>
+@@ -399,6 +395,23 @@ MISSING
+         </para>
+       </partintro>
+ 
++      <chapter id="led-support">
++        <title>LED support</title>
++        <para>
++         Mac80211 supports various ways of blinking LEDs. Wherever possible,
++         device LEDs should be exposed as LED class devices and hooked up to
++         the appropriate trigger, which will then be triggered appropriately
++         by mac80211.
++        </para>
++!Finclude/net/mac80211.h ieee80211_get_tx_led_name
++!Finclude/net/mac80211.h ieee80211_get_rx_led_name
++!Finclude/net/mac80211.h ieee80211_get_assoc_led_name
++!Finclude/net/mac80211.h ieee80211_get_radio_led_name
++!Finclude/net/mac80211.h ieee80211_tpt_blink
++!Finclude/net/mac80211.h ieee80211_tpt_led_trigger_flags
++!Finclude/net/mac80211.h ieee80211_create_tpt_led_trigger
++      </chapter>
++
+       <chapter id="hardware-crypto-offload">
+         <title>Hardware crypto acceleration</title>
+ !Pinclude/net/mac80211.h Hardware crypto acceleration
+
 
