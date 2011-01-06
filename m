@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59235 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753076Ab1AQOUw (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:56154 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751257Ab1AFUEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 09:20:52 -0500
-Subject: Re: [PATCH] mac80211: drop non-auth 3-addr data frames when
- running as a 4-addr station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1295098708-99081-1-git-send-email-nbd@openwrt.org>
-References: <1295098708-99081-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 17 Jan 2011 15:20:50 +0100
-Message-ID: <1295274050.3726.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 Jan 2011 15:04:14 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id CFD9A5407CD
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Jan 2011 15:05:39 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-06 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110106200413.4007940F97@repository3.orbit-lab.org>
+Date: Thu,  6 Jan 2011 15:04:13 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-01-15 at 14:38 +0100, Felix Fietkau wrote:
-> When running as a 4-addr station against an AP that has the 4-addr VLAN
-> interface and the main 3-addr AP interface bridged together, sometimes
-> frames originating from the station were looping back from the 3-addr AP
-> interface, causing the bridge code to emit warnings about receiving frames
-> with its own source address.
-> I'm not sure why this is happening yet, but I think it's a good idea to
-> drop all frames (except 802.1x/EAP frames) that do not match the configured
-> addressing mode, including 4-address frames sent to a 3-address station.
-> User test reports indicate that the problem goes away with this patch.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  net/mac80211/rx.c |    8 ++++++--
->  1 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a6701ed..54e3108 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1561,9 +1561,13 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->  	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
->  		return -1;
->  
-> +	if (!ieee80211_802_1x_port_control(rx) &&
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   fc63933..07667d5  linux-2.6.37.y -> origin/linux-2.6.37.y
+   53f8e22..c46a7ef  master     -> origin/master
+ * [new tag]         compat-wireless-2011-01-05 -> compat-wireless-2011-01-05
+ * [new tag]         compat-wireless-v2.6.37-1 -> compat-wireless-v2.6.37-1
+ * [new tag]         compat-wireless-v2.6.37-rc6-2 -> compat-wireless-v2.6.37-rc6-2
+ * [new tag]         compat-wireless-v2.6.37-rc6-3 -> compat-wireless-v2.6.37-rc6-3
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   d70640f..dcd6955  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   b616059..91493a5  history    -> origin/history
+ + dcd2e87...47ec851 master     -> origin/master  (forced update)
+   989d873..3c0eee3  stable     -> origin/stable
+ * [new tag]         next-20110106 -> next-20110106
+ * [new tag]         v2.6.37    -> v2.6.37
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-I think you need a different check there. This just checks the STA is
-authorized.
+compat-wireless code metrics
 
-johannes
-
+    781248 - Total upstream lines of code being pulled
