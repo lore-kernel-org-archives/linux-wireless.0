@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58510 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753017Ab1A0Nek (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:38772 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab1AFVx7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 08:34:40 -0500
-Subject: Re: Question on power-save
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D40C122.9020402@candelatech.com>
-References: <4D40C122.9020402@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 Jan 2011 14:34:38 +0100
-Message-ID: <1296135278.3622.38.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 Jan 2011 16:53:59 -0500
+Message-ID: <20110106235351.13153spun8nuf6qs@hayate.sektori.org>
+Date: Thu, 06 Jan 2011 23:53:51 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: [RFC PATCH 13/17] zd1211rw: use stack for small cmd-buffers
+References: <20110104234745.25309.72030.stgit@fate.lan>
+ <20110104234935.25309.7558.stgit@fate.lan>
+ <1294219627.3590.0.camel@jlt3.sipsolutions.net>
+ <1294340139.5021.8.camel@dcbw.foobar.com>
+In-Reply-To: <1294340139.5021.8.camel@dcbw.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-26 at 16:49 -0800, Ben Greear wrote:
-> I was looking at this ps_enable method:
-> 
-> static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+Quoting Dan Williams <dcbw@redhat.com>:
 
-If you read the comment in front of the function, is it clearer?
+> On Wed, 2011-01-05 at 10:27 +0100, Johannes Berg wrote:
+>> On Wed, 2011-01-05 at 01:49 +0200, Jussi Kivilinna wrote:
+>> > Use stack for allocing small < 64 byte arrays.
+>>
+>> I don't think this is valid -- DMA memory can't be from the stack.
 
-Yes, it disables PS locally, but it tells the AP we've gone to PS.
+Oh, my reply to Johannes didn't go to list.
 
-johannes
+>
+> It's almost certainly not valid.  You'll get BUGs from the kernel in
+> this case, though it'll still probably work.
+
+Ok, will not use stack for urb transfer_buffers.
+
+-Jussi
 
