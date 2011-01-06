@@ -1,76 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:52439 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903Ab1ADMyA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 07:54:00 -0500
-Subject: Re: [PATCH] wl12xx: don't join upon disassociation
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1293352070-17513-1-git-send-email-eliad@wizery.com>
-References: <1293352070-17513-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 04 Jan 2011 14:53:41 +0200
-Message-ID: <1294145621.4166.118.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:42004 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752895Ab1AFAPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Jan 2011 19:15:48 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/5] ath9k:  Initialize ah->hw
+Date: Wed,  5 Jan 2011 16:15:15 -0800
+Message-Id: <1294272919-7068-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-12-26 at 10:27 +0200, ext Eliad Peller wrote:
-> wl12xx "rejoins" upon every BSS_CHANGED_BSSID notification.
-> However, there is no need to rejoin after disassociation, so just
-> filter out the case when the new bssid is 00:00:00:00:00:00.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
->  drivers/net/wireless/wl12xx/main.c |   24 ++++++++++++++----------
->  1 files changed, 14 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 062247e..7aa783c 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -1944,19 +1944,23 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
->  	    memcmp(wl->bssid, bss_conf->bssid, ETH_ALEN)) {
->  			memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
->  
-> -			ret = wl1271_cmd_build_null_data(wl);
-> -			if (ret < 0)
-> -				goto out_sleep;
-> +			if (!is_zero_ether_addr(wl->bssid)) {
-> +				ret = wl1271_cmd_build_null_data(wl);
-> +				if (ret < 0)
-> +					goto out_sleep;
->  
-> -			ret = wl1271_build_qos_null_data(wl);
-> -			if (ret < 0)
-> -				goto out_sleep;
-> +				ret = wl1271_build_qos_null_data(wl);
-> +				if (ret < 0)
-> +					goto out_sleep;
->  
-> -			/* filter out all packets not from this BSSID */
-> -			wl1271_configure_filters(wl, 0);
-> +				/* filter out all packets not from this BSSID */
-> +				wl1271_configure_filters(wl, 0);
->  
-> -			/* Need to update the BSSID (for filtering etc) */
-> -			do_join = true;
-> +				/*
-> +				 * Need to update the BSSID (for filtering etc)
-> +				 */
-> +				do_join = true;
-> +			}
->  	}
->  
->  	if (changed & BSS_CHANGED_ASSOC) {
+From: Ben Greear <greearb@candelatech.com>
 
-The device still stays joined after disassoc, right? I guess the device
-should be receiving/transmitting frames while not idle.
+Previous code left it NULL.
 
-That is why we did have a specific dummy-join in disassoc, and also the
-BSSID filters etc are cleared!
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 b0e5e716.. 9ca87de... M	drivers/net/wireless/ath/ath9k/init.c
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
--Juuso
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index b0e5e716..9ca87de 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -536,6 +536,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	if (!ah)
+ 		return -ENOMEM;
+ 
++	ah->hw = sc->hw;
+ 	ah->hw_version.devid = devid;
+ 	ah->hw_version.subsysid = subsysid;
+ 	sc->sc_ah = ah;
+-- 
+1.7.2.3
 
