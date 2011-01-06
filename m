@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166Ab1AYK1Q (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46432 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755202Ab1AFXxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 05:27:16 -0500
-Subject: Re: [PATCH] cfg80211: Allow non-zero indexes for device specific
- pair-wise ciphers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: juuso.oikarinen@nokia.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1295950882-16785-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1295950882-16785-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 25 Jan 2011 11:27:10 +0100
-Message-ID: <1295951230.3650.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 Jan 2011 18:53:18 -0500
+Message-ID: <4D2655E6.3020304@candelatech.com>
+Date: Thu, 06 Jan 2011 15:53:10 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Matt Turner <mattst88@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Michael Guntsche <mike@it-loops.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [ath9k] skbuff alloc of size 3872 failed
+References: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
+In-Reply-To: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-25 at 12:21 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Some vendor specific cipher suites require non-zero key indexes for pairwise
-> keys, but as of currently, the cfg80211 does not allow it.
+On 12/22/2010 11:22 AM, Matt Turner wrote:
+> With the ath9k driver, I get "skbuff alloc of size 3872 failed"
+>
+> I hit this again today after not using wireless for quite sometime. It
+> looks like it was originally reported against 2.6.35-rc1. Eric Dumazet
+> provided a patch which fixed the issue, but apparently it's still not
+> upstream. Why is this?
+>
+> If it is suitable for upstream inclusion, please take my Tested-by:
+> Matt Turner<mattst88@gmail.com>
+>
+> https://patchwork.kernel.org/patch/104271/
 
-Well, technically, that is incorrect -- just adding a vendor-specific
-cipher to 802.11-2007 (11i) will uphold that requirement. Using
-different mechanisms like WAPI might run afoul of this check... But
-technically WAPI could also use CCMP etc. and then you might have to use
-non-zero even for CCMP, so this code would again be wrong.
+I applied this patch and it seems to work fine, but there
+were some questions by Eric in the patchwork thread that should probably
+be answered by ath9k folks.
 
-OTOH, I don't really see a good way to capture this in code...
+For instance:
 
-johannes
+IEEE80211_MAX_MPDU_LEN being 3840 + somebits is suspect, since it doesnt
+match 802.11 specs.
+
+It should be more close of 2304 + MAC header (32bytes) + FCS (4 bytes) ?
+
+
+Eric:  If the patch is fine as is, and if you are too busy to
+submit it, I can do so with your Signed-off-by if you want.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
