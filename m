@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:51087 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754573Ab1A3UDV (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42006 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753056Ab1AFAPs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 15:03:21 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id DC1245400F2
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 15:05:36 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-30 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110130200319.C852240F97@repository3.orbit-lab.org>
-Date: Sun, 30 Jan 2011 15:03:19 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 5 Jan 2011 19:15:48 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 3/5] ath9k:  Remove un-used member from ath_node.
+Date: Wed,  5 Jan 2011 16:15:17 -0800
+Message-Id: <1294272919-7068-3-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294272919-7068-1-git-send-email-greearb@candelatech.com>
+References: <1294272919-7068-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
-compat-wireless code metrics
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 2c31f51... 8855539... M	drivers/net/wireless/ath/ath9k/ath9k.h
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-    782984 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1982 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1955 - % of crap code
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 2c31f51..8855539 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -342,7 +342,6 @@ struct ath_vif {
+ 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
+ 	enum nl80211_iftype av_opmode;
+ 	struct ath_buf *av_bcbuf;
+-	struct ath_tx_control av_btxctl;
+ 	u8 bssid[ETH_ALEN]; /* current BSSID from config_interface */
+ };
+ 
+-- 
+1.7.2.3
 
-Base tree: linux-next.git
-Base tree version: next-20110121
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
