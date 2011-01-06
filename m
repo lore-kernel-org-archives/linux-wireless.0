@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34818 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754954Ab1AaMJL (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51182 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281Ab1AFUHx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 07:09:11 -0500
-Subject: Re: [RFC] mac80211: deauthenticate STAs before suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
-	Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110131114717.GA2919@jm.kir.nu>
-References: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
-	 <1296473261.3812.12.camel@jlt3.sipsolutions.net>
-	 <20110131113835.GA14176@vmraj-lnx.users.atheros.com>
-	 <20110131114717.GA2919@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 13:09:08 +0100
-Message-ID: <1296475748.3812.22.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 Jan 2011 15:07:53 -0500
+Received: by wwa36 with SMTP id 36so17785234wwa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 12:07:52 -0800 (PST)
+Message-ID: <4D262109.20504@lwfinger.net>
+Date: Thu, 06 Jan 2011 14:07:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Odd behavior of ssb, b43, b43legacy, and b44
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 13:47 +0200, Jouni Malinen wrote:
-> On Mon, Jan 31, 2011 at 05:08:35PM +0530, Rajkumar Manoharan wrote:
-> > On Mon, Jan 31, 2011 at 04:57:41PM +0530, Johannes Berg wrote:
-> > > Is that a big problem? We actually had this intentionally, and we go to
-> > > PS before going to sleep, so if the sleep is very short then we will not
-> > > be disconnected. Also, it's much easier this way to implement WoWLAN.
-> > I looked it as a problem ;) And if we use NM/supplicant, obviously the STA
-> > got disconnected. So just to align with that I sent the RFC.
-> 
-> While this may behave differently if NM is running (wpa_supplicant
-> should not be being the disconnection on suspend), the comment about
-> Wake-on-WLAN is something that should be considered here. I would expect
-> there to be some interest in being able to support it and forcing a
-> disconnection on suspend would make that impossible. In addition,
-> extended PS mode from 802.11v will make it even more desirable to be
-> able to sleep for extended periods of time without dropping the
-> association for some use cases. If we force a disconnection here, we
-> would need to have a flag for disabling that if there is any chance of
-> the association being of use for something else after the resume or if
-> Wake-on-WLAN is enabled.
+Michael,
 
-I just don't see why we need the additional complexity of disabling it
-and then re-enabling it conditionally when we want WoWL or 11v extended
-PS?
+On one of my boxes, I have installed two PCI-format BCM43xx cards for testing.
+One is a BCM4306 Rev. 3, which uses b43. The other is a BCM4303, which uses
+b43legacy. The output of lspci -nn for these devices is
 
-IOW, I'd rather leave it as is. It seems there isn't really a problem,
-but rather a perceived inconsistency that is being "fixed"?
+01:09.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g
+Wireless LAN Controller [14e4:4320] (rev 03)
+01:0a.0 Network controller [0280]: Broadcom Corporation BCM4303 802.11b Wireless
+LAN Controller [14e4:4301] (rev 02)
 
-johannes
+Upon booting, I noticed the following messages in the log:
 
+ b44: b44.c:v2.0
+ b44: Invalid MAC address found in EEPROM
+ b44 ssb1:1: Problem fetching invariants of chip, aborting
+
+ b44: probe of ssb1:1 failed with error -22
+
+As this box does not have a b44 installed, I wondered why this was happening.
+When I unloaded all the drivers and used modprobe to load ssb, I found that b43,
+b43legacy and b44 were all loaded. The console output is
+
+finger@pam:~> lsmod | grep b4             <== none loaded
+finger@pam:~> sudo modprobe -v ssb        <== load ssb
+insmod /lib/modules/2.6.37-wl+/kernel/drivers/ssb/ssb.ko
+
+The above looks normal, but look at what is now resident!
+
+finger@pam:~> lsmod | grep b4
+b43legacy             115302  0
+b44                    28767  0
+b43                   174321  0
+ssb                    38157  3 b43legacy,b44,b43
+mac80211              266240  2 b43legacy,b43
+cfg80211              161930  3 b43legacy,b43,mac80211
+
+Any idea why loading ssb should silently load b43legacy AND b44? Any ideas on
+where to look?
+
+Thanks,
+
+Larry
