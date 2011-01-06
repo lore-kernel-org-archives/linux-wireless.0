@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:42525 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754206Ab1AaW6E (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58394 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab1AFViF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:58:04 -0500
-Message-ID: <4D473E72.3050307@davizone.at>
-Date: Mon, 31 Jan 2011 23:57:54 +0100
-From: David Gnedt <david.gnedt@davizone.at>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
-References: <4D45A583.3060605@davizone.at> <4D45B7B2.40001@davizone.at> <87r5btdsb8.fsf@purkki.adurom.net>
-In-Reply-To: <87r5btdsb8.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 Jan 2011 16:38:05 -0500
+Message-Id: <20110106213715.096887040@sipsolutions.net>
+Date: Thu, 06 Jan 2011 22:36:45 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/4] cfg80211: add mesh join/leave callback docs
+References: <20110106213643.454994320@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 2011-01-31 16:08, schrieb Kalle Valo:
-> How did you test the patches? For example, what hardware did you use
-> etc.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I tested the patches with compat-wireless and a modified fremantle 2.6.28 kernel
-on my Nokia N900.
+When I made the patch to add mesh join/leave I
+didn't pay attention to docs because it was a
+proof of concept, and then when we actually did
+merge it I forgot -- add docs now.
 
-> About the code from fremantle kernels. Few weeks ago nokia sent me
-> privately the original patches from their internal git tree, I gave
-> some comments and never heard back. So, in theory I should have all
-> the fremantle patches somewhere in my email archives. I would just
-> need to clean them up and send them here. I'll go over your patches
-> and let's see what we should do.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-It would be interesting if I missed some features. I diffed the drivers, but I
-am not 100% sure if I overlooked something useful.
-One thing I haven't included in this patchset is the netlink interface from the
-fremantle code for NVS loading because I thought it wouldn't be accepted anyway.
+--- wireless-testing.orig/include/net/cfg80211.h	2011-01-06 22:20:06.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2011-01-06 22:20:41.000000000 +0100
+@@ -1103,6 +1103,8 @@ struct cfg80211_pmksa {
+  * @change_mpath: change a given mesh path
+  * @get_mpath: get a mesh path for the given parameters
+  * @dump_mpath: dump mesh path callback -- resume dump at index @idx
++ * @join_mesh: join the mesh network with the specified parameters
++ * @leave_mesh: leave the current mesh network
+  *
+  * @get_mesh_config: Get the current mesh configuration
+  *
+
+
