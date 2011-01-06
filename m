@@ -1,61 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51445 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752776Ab1AGWew (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58398 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064Ab1AFViG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 17:34:52 -0500
-Received: by wwa36 with SMTP id 36so18976953wwa.1
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 14:34:51 -0800 (PST)
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
- one page.
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D2791BD.7050502@candelatech.com>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-	 <1294397880.3467.1.camel@jlt3.sipsolutions.net>
-	 <4D275CCC.90905@candelatech.com>  <20110107200913.GF21588@tux>
-	 <1294432018.2709.2.camel@edumazet-laptop>
-	 <4D2791BD.7050502@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 23:26:11 +0100
-Message-ID: <1294439171.2709.6.camel@edumazet-laptop>
+	Thu, 6 Jan 2011 16:38:06 -0500
+Message-Id: <20110106213715.303217480@sipsolutions.net>
+Date: Thu, 06 Jan 2011 22:36:46 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] nl80211: add/fix mesh docs
+References: <20110106213643.454994320@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le vendredi 07 janvier 2011 à 14:20 -0800, Ben Greear a écrit :
-> On 0
-> > Using skb_copy() is wrong then, since it makes a copy (order-1
-> > allocations)
-> >
-> > It should use :
-> >   skb_alloc( actual_size_of_frame  not the 3840 thing ...)
-> >   copy(data)
-> 
-> We need the extra stuff copied too I think (like skb->cb).
-> 
-> If you could provide a bit more complete example code, I'll be happy
-> to test it...
+From: Johannes Berg <johannes.berg@intel.com>
 
-take a random drivers/net using copybreak ... say ... tg3.c
+Some mesh attribute/command docs are missing or
+have errors in the name so they don't match, fix
+all of them.
 
-lines 4785
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/nl80211.h |   20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-len = length_of_the_current_frame
-copy_skb = netdev_alloc_skb(...,  len); 
-// allocates exact required size not a byte more....
-...
-skb_copy_from_linear_data(skb, copy_skb->data, len);
-...
-skb_put(skb, len);
-...
-
-
-
-
+--- wireless-testing.orig/include/linux/nl80211.h	2011-01-06 22:21:07.000000000 +0100
++++ wireless-testing/include/linux/nl80211.h	2011-01-06 22:28:07.000000000 +0100
+@@ -148,6 +148,10 @@
+  * @NL80211_CMD_SET_MPATH:  Set mesh path attributes for mesh path to
+  * 	destination %NL80211_ATTR_MAC on the interface identified by
+  * 	%NL80211_ATTR_IFINDEX.
++ * @NL80211_CMD_NEW_MPATH: Create a new mesh path for the destination given by
++ *	%NL80211_ATTR_MAC via %NL80211_ATTR_MPATH_NEXT_HOP.
++ * @NL80211_CMD_DEL_MPATH: Delete a mesh path to the destination given by
++ *	%NL80211_ATTR_MAC.
+  * @NL80211_CMD_NEW_PATH: Add a mesh path with given attributes to the
+  *	the interface identified by %NL80211_ATTR_IFINDEX.
+  * @NL80211_CMD_DEL_PATH: Remove a mesh path identified by %NL80211_ATTR_MAC
+@@ -612,7 +616,7 @@ enum nl80211_commands {
+  *	consisting of a nested array.
+  *
+  * @NL80211_ATTR_MESH_ID: mesh id (1-32 bytes).
+- * @NL80211_ATTR_PLINK_ACTION: action to perform on the mesh peer link.
++ * @NL80211_ATTR_STA_PLINK_ACTION: action to perform on the mesh peer link.
+  * @NL80211_ATTR_MPATH_NEXT_HOP: MAC address of the next hop for a mesh path.
+  * @NL80211_ATTR_MPATH_INFO: information about a mesh_path, part of mesh path
+  * 	info given for %NL80211_CMD_GET_MPATH, nested attribute described at
+@@ -879,7 +883,9 @@ enum nl80211_commands {
+  *	See &enum nl80211_key_default_types.
+  *
+  * @NL80211_ATTR_MESH_SETUP: Optional mesh setup parameters.  These cannot be
+- * changed once the mesh is active.
++ *	changed once the mesh is active.
++ * @NL80211_ATTR_MESH_CONFIG: Mesh configuration parameters, a nested attribute
++ *	containing attributes from &enum nl80211_meshconf_params.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1225,8 +1231,6 @@ enum nl80211_rate_info {
+  * @NL80211_STA_INFO_INACTIVE_TIME: time since last activity (u32, msecs)
+  * @NL80211_STA_INFO_RX_BYTES: total received bytes (u32, from this station)
+  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this station)
+- * @__NL80211_STA_INFO_AFTER_LAST: internal
+- * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
+  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
+  * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+@@ -1236,6 +1240,11 @@ enum nl80211_rate_info {
+  * @NL80211_STA_INFO_TX_RETRIES: total retries (u32, to this station)
+  * @NL80211_STA_INFO_TX_FAILED: total failed packets (u32, to this station)
+  * @NL80211_STA_INFO_SIGNAL_AVG: signal strength average (u8, dBm)
++ * @NL80211_STA_INFO_LLID: the station's mesh LLID
++ * @NL80211_STA_INFO_PLID: the station's mesh PLID
++ * @NL80211_STA_INFO_PLINK_STATE: peer link state for the station
++ * @__NL80211_STA_INFO_AFTER_LAST: internal
++ * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -1626,7 +1635,7 @@ enum nl80211_mntr_flags {
+  * @NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME: The interval of time (in TUs)
+  * that it takes for an HWMP information element to propagate across the mesh
+  *
+- * @NL80211_MESHCONF_ROOTMODE: whether root mode is enabled or not
++ * @NL80211_MESHCONF_HWMP_ROOTMODE: whether root mode is enabled or not
+  *
+  * @NL80211_MESHCONF_ELEMENT_TTL: specifies the value of TTL field set at a
+  * source mesh point for path selection elements.
+@@ -1678,6 +1687,7 @@ enum nl80211_meshconf_params {
+  * element that vendors will use to identify the path selection methods and
+  * metrics in use.
+  *
++ * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+  */
+ enum nl80211_mesh_setup_params {
 
 
