@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58665 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:63964 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754805Ab1A1Qn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 11:43:56 -0500
-Subject: Re: [PATCH 6/8] iwl3945: do not use agn specific IWL_RATE_COUNT
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110128163301.GE2452@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-	 <1296229671-3041-6-git-send-email-sgruszka@redhat.com>
-	 <1296231648.7388.16.camel@wwguy-ubuntu>  <20110128163301.GE2452@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Jan 2011 08:42:22 -0800
-Message-ID: <1296232942.7388.24.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1751910Ab1AGUJO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 15:09:14 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:08:57 -0800
+Date: Fri, 7 Jan 2011 12:09:13 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
+ one page.
+Message-ID: <20110107200913.GF21588@tux>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+ <1294397880.3467.1.camel@jlt3.sipsolutions.net>
+ <4D275CCC.90905@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4D275CCC.90905@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw,
-
-On Fri, 2011-01-28 at 08:33 -0800, Stanislaw Gruszka wrote:
-> On Fri, Jan 28, 2011 at 08:20:48AM -0800, wwguy wrote:
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-> > > @@ -213,6 +213,7 @@ enum {
-> > >  	 IWL_CCK_BASIC_RATES_MASK)
-> > >  
-> > >  #define IWL_RATES_MASK ((1 << IWL_RATE_COUNT) - 1)
-> > > +#define IWL_RATES_MASK_3945 ((1 << IWL_RATE_COUNT_3945) - 1)
-> > >  
-> > 
-> > Why define 3945 in agn header file?
-> > I understand iwl-agn-rs.h is include in iwl-dev.h, which is not the
-> > right thing to do. but specify 3945 in agn header file make it even more
-> > confuse.
+On Fri, Jan 07, 2011 at 10:34:52AM -0800, Ben Greear wrote:
+> On 01/07/2011 02:58 AM, Johannes Berg wrote:
+> > On Thu, 2011-01-06 at 16:46 -0800, greearb@candelatech.com wrote:
+> >> From: Ben Greear<greearb@candelatech.com>
+> >>
+> >> Patch is from Eric Dumazet, as described here:
+> >> https://patchwork.kernel.org/patch/104271/
+> >>
+> >> Reported-by: Michael Guntsche<mike@it-loops.com>
+> >> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
+> >> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> >> ---
+> >>
+> >> NOTE:  This needs review by ath9k and/or other informed
+> >> people.
+> >
+> > This doesn't make sense. It might help, but it'll probably lead to not
+> > being able to receive all frames off the air.
+> >
+> > If this is an issue, ath9k should do paged RX like iwlwifi.
 > 
-> $ grep 3945 drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-> struct iwl3945_rate_info {
-> 	IWL_RATE_COUNT_3945 = IWL_RATE_COUNT - 1,
->  * iwl3945_rate_scale_init - Initialize the rate scale table based on
->  * assoc info
-> extern void iwl3945_rate_scale_init(struct ieee80211_hw *hw, s32
-> sta_id);
-> extern void iwl3945_rs_rate_init(struct iwl_priv *priv,
-> extern int iwl3945_rate_control_register(void);
-> extern void iwl3945_rate_control_unregister(void);
+> Ok, I backed this out..but now I'm back to getting buffer allocation
+> failures (and this is on a system with 2GB RAM).
 > 
-> This file contains 3945 data, I agree this is confused
-> and need cleanup :)
+> Seems it's coming from mac80211 instead of ath9k, at least most of
+> the time (I'm using 60 stations, so it probably needs to make lots of
+> copies in the rx path).  The traffic I'm generating/receiving is 1024 byte UDP
+> payloads.
 > 
-we are in the process of split 3945/4965 driver from _agn_
+> Does this mean I really received a packet that was 3872 bytes long,
+> or is the skb_copy allocating/copying empty data?
 
-if it is ok for you, could you wait for we done the work to see if
-anything need to be clean up 
+Good question. The buffer we setup for DMA should be large since we
+need to support AMSDU RX up to a certain bytes of RX data for the frame.
+Harwdware should tell us the right size for the RX'd data and the skb
+should be set with that size, respectively. Following this logic,
+skb_copy() should only allocate on the order of the required skb->len.
 
+Remember that trick we did to force the older memory leak issues by
+forcing an skb_copy() on every RX'd frame and then just discarding that
+buffer immediately? You can try to do the same and print the skb->len
+there, just to check what's going on.
 
-Thanks
-Wey
-
-
-
+  Luis
