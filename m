@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:50811 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab1AWAD5 (ORCPT
+Received: from webmail.3eti.com ([65.220.88.141]:32157 "EHLO webmail.3eti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754757Ab1AGR6R convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jan 2011 19:03:57 -0500
-Received: by bwz15 with SMTP id 15so2636416bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Jan 2011 16:03:56 -0800 (PST)
-Message-Id: <ffb8e21e6d549c2b229e7a4177586b7923805a96.1295740096.git.chunkeey@googlemail.com>
-In-Reply-To: <2137e711f16faed3f59698cbcb210a1e650dd34c.1295740096.git.chunkeey@googlemail.com>
-References: <2137e711f16faed3f59698cbcb210a1e650dd34c.1295740096.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 23 Jan 2011 00:10:01 +0100
-Subject: [PATCH 2/3] carl9170: enable wake-on-lan feature testing
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Fri, 7 Jan 2011 12:58:17 -0500
+From: Chaoxing Lin <CLin@3eti.com>
+To: 'Ben Greear' <greearb@candelatech.com>
+CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
+Subject: RE: hostapd hangs on quit, multi-BSSID scenario
+Date: Fri, 7 Jan 2011 17:58:30 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D9E@RockMX01.rock.corp>
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
+ <4D275236.4040202@candelatech.com>
+In-Reply-To: <4D275236.4040202@candelatech.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/fw.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+1. I don't know how to use GDB. Consider me entry level developer.
+2. It should not be related the change I made on ath9k. The reasons are
+	a. My change is simple, linux/drivers/net/wireless/ath/ath9k/ath9k.h: change ATH_BCBUF from 4 to 12
+	b. Without my change, driver accepts up to 3 extra BSSID. But hostapd still hangs on quit. Hostapd quits well if there only one extra BSSID.
 
-diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
-index 546b4e4..a4e5b44 100644
---- a/drivers/net/wireless/ath/carl9170/fw.c
-+++ b/drivers/net/wireless/ath/carl9170/fw.c
-@@ -264,6 +264,9 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
- 			FIF_PROMISC_IN_BSS;
- 	}
- 
-+	if (SUPP(CARL9170FW_WOL))
-+		device_set_wakeup_enable(&ar->udev->dev, true);
-+
- 	ar->fw.vif_num = otus_desc->vif_num;
- 	ar->fw.cmd_bufs = otus_desc->cmd_bufs;
- 	ar->fw.address = le32_to_cpu(otus_desc->fw_address);
+This problem is 100% reproducible. I guess it would be quite easy for the original hostapd developer to fix it.
+
+
+-----Original Message-----
+From: Ben Greear [mailto:greearb@candelatech.com] 
+Sent: Friday, January 07, 2011 12:50 PM
+To: Chaoxing Lin
+Cc: 'linux-wireless@vger.kernel.org'
+Subject: Re: hostapd hangs on quit, multi-BSSID scenario
+
+On 01/07/2011 09:44 AM, Chaoxing Lin wrote:
+> Gentlemen,
+>
+>   When I run hostapd with 8+1 BSSID over one radio (ath9160), it runs well. All 9 BSS accepts clients.
+> But when I "Ctrl + C" or "killall hostapd", hostapd daemon can NOT gracefully shut down. It hangs forever. I have to "Ctrl + C" again. Then it quits and print message like "
+>
+> I am running latest (as of 01/06/2011) hostapd, latest stable kernel (2.6.37) with one number change in ath9k to allow more than 12 virtual BSS over one radio.
+>
+> Below is my hostapd-conf and console screenshot. If someone can fix this bug, please help.
+
+Maybe attach gdb to hostapd and see where it hangs?
+
+Also, what change did you make to ath9k?
+
+Thanks,
+Ben
+
 -- 
-1.7.2.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
