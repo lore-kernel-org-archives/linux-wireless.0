@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:48623 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755573Ab1AaLjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:39:24 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:39:04 -0800
-Date: Mon, 31 Jan 2011 17:08:35 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: deauthenticate STAs before suspend
-Message-ID: <20110131113835.GA14176@vmraj-lnx.users.atheros.com>
-References: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
- <1296473261.3812.12.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1296473261.3812.12.camel@jlt3.sipsolutions.net>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63027 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675Ab1AGAEx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jan 2011 19:04:53 -0500
+Received: by wyb28 with SMTP id 28so16922643wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:04:52 -0800 (PST)
+Subject: Re: [ath9k] skbuff alloc of size 3872 failed
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Matt Turner <mattst88@gmail.com>, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net, Michael Guntsche <mike@it-loops.com>
+In-Reply-To: <4D2655E6.3020304@candelatech.com>
+References: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
+	 <4D2655E6.3020304@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Jan 2011 01:04:48 +0100
+Message-ID: <1294358688.2704.15.camel@edumazet-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 31, 2011 at 04:57:41PM +0530, Johannes Berg wrote:
-> On Mon, 2011-01-31 at 15:36 +0530, Rajkumar Manoharan wrote:
-> > The STA is not deauthenticated before the system goes to sleep,
-> > when the vif was configured by iw/iwconfig. This holds the AP
-> > resources unnecessarily, till the STA entry got expired in AP.
+Le jeudi 06 janvier 2011 à 15:53 -0800, Ben Greear a écrit :
+> On 12/22/2010 11:22 AM, Matt Turner wrote:
+> > With the ath9k driver, I get "skbuff alloc of size 3872 failed"
+> >
+> > I hit this again today after not using wireless for quite sometime. It
+> > looks like it was originally reported against 2.6.35-rc1. Eric Dumazet
+> > provided a patch which fixed the issue, but apparently it's still not
+> > upstream. Why is this?
+> >
+> > If it is suitable for upstream inclusion, please take my Tested-by:
+> > Matt Turner<mattst88@gmail.com>
+> >
+> > https://patchwork.kernel.org/patch/104271/
 > 
-> Is that a big problem? We actually had this intentionally, and we go to
-> PS before going to sleep, so if the sleep is very short then we will not
-> be disconnected. Also, it's much easier this way to implement WoWLAN.
-I looked it as a problem ;) And if we use NM/supplicant, obviously the STA
-got disconnected. So just to align with that I sent the RFC.
-
-> > So before going to sleep ensure that all stations
-> > got deauthenticated.
+> I applied this patch and it seems to work fine, but there
+> were some questions by Eric in the patchwork thread that should probably
+> be answered by ath9k folks.
 > 
-> Also your text and subject and code is really confusing -- I thought you
-> wanted to deauthenticate stations that are associated to mac80211 acting
-> as an AP.
-I meant that the stations associated in all vifs.
+> For instance:
+> 
+> IEEE80211_MAX_MPDU_LEN being 3840 + somebits is suspect, since it doesnt
+> match 802.11 specs.
+> 
+> It should be more close of 2304 + MAC header (32bytes) + FCS (4 bytes) ?
+> 
+> 
+> Eric:  If the patch is fine as is, and if you are too busy to
+> submit it, I can do so with your Signed-off-by if you want.
+> 
 
---
-Rajkumar
+Well, problem is I dont have this hardware and various reports were very
+confusing.
+
+Certainly a word from authors/maintainers of this driver is wanted ;)
+
+Thanks !
+
+
+
