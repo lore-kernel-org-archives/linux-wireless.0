@@ -1,67 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58503 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270Ab1AJHMm (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48365 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587Ab1AGUmF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 02:12:42 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH RESEND 08/11] ath9k:  More xmit queue debugfs information.
-Date: Sun,  9 Jan 2011 23:11:50 -0800
-Message-Id: <1294643513-18820-9-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
-References: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
+	Fri, 7 Jan 2011 15:42:05 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so17293495fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:42:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimsTn7SFPXvUM7Puc7N+30O=c5LC+AiN4b=8wmy@mail.gmail.com>
+References: <4CDD8BDD.7050903@openwrt.org>
+	<AANLkTimsTn7SFPXvUM7Puc7N+30O=c5LC+AiN4b=8wmy@mail.gmail.com>
+Date: Fri, 7 Jan 2011 15:42:05 -0500
+Message-ID: <AANLkTiksqbUnvNV=yQJxC=kGJzBpRk2FrwftKWv5A18G@mail.gmail.com>
+Subject: Re: [PATCH] compat: fix a typo in pm_qos_update_request for 2.6.35
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, Nov 12, 2010 at 2:16 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Nov 12, 2010 at 10:47 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>
+> Applied and pushed, thanks!
+>
+>  Luis
 
-To try to figure out why xmit logic hangs.
+This patch is to compile compat-wireless-2.6.37-2-sn.tar.bz2 on Ubuntu
+10.10 2.6.35-24-generic.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 650f00f... 9e009cc... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 650f00f..9e009cc 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -679,6 +679,32 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 		PRQLE(tmp, txq_fifo[i]);
- 	}
- 
-+	/* Print out more detailed queue-info */
-+	for (i = 0; i <= WME_AC_BK; i++) {
-+		struct ath_txq *txq = &(sc->tx.txq[i]);
-+		struct ath_atx_ac *ac;
-+		struct ath_atx_tid *tid;
-+		if (len >= size)
-+			goto done;
-+		spin_lock_bh(&txq->axq_lock);
-+		if (!list_empty(&txq->axq_acq)) {
-+			ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac,
-+					      list);
-+			len += snprintf(buf + len, size - len,
-+					"txq[%i] first-ac: %p sched: %i\n",
-+					i, ac, ac->sched);
-+			if (list_empty(&ac->tid_q) || (len >= size))
-+				goto done_for;
-+			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
-+					       list);
-+			len += snprintf(buf + len, size - len,
-+					" first-tid: %p sched: %i paused: %i\n",
-+					tid, tid->sched, tid->paused);
-+		}
-+	done_for:
-+		spin_unlock_bh(&txq->axq_lock);
-+	}
-+
- done:
- 	if (len > size)
- 		len = size;
--- 
-1.7.2.3
-
+Jason
