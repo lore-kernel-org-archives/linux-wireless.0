@@ -1,85 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sinikuusama.dnainternet.net ([83.102.40.134]:41922 "EHLO
-	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755849Ab1AaSsw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55045 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754989Ab1AGWrB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:48:52 -0500
-Subject: [PATCH 11/22] mac80211: fix race between next beacon dtim and
-	ieee80211_get_buffered_bc
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Mon, 31 Jan 2011 20:48:44 +0200
-Message-ID: <20110131184844.10044.33884.stgit@fate.lan>
-In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
-References: <20110131184657.10044.98610.stgit@fate.lan>
+	Fri, 7 Jan 2011 17:47:01 -0500
+Message-ID: <4D2797D2.6000002@candelatech.com>
+Date: Fri, 07 Jan 2011 14:46:42 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
+ one page.
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>	 <1294397880.3467.1.camel@jlt3.sipsolutions.net>	 <4D275CCC.90905@candelatech.com>  <20110107200913.GF21588@tux>	 <1294432018.2709.2.camel@edumazet-laptop>	 <4D2791BD.7050502@candelatech.com> <1294439171.2709.6.camel@edumazet-laptop>
+In-Reply-To: <1294439171.2709.6.camel@edumazet-laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Christian Lamparter <chunkeey@googlemail.com>
+On 01/07/2011 02:26 PM, Eric Dumazet wrote:
+> Le vendredi 07 janvier 2011 à 14:20 -0800, Ben Greear a écrit :
+>> On 0
+>>> Using skb_copy() is wrong then, since it makes a copy (order-1
+>>> allocations)
+>>>
+>>> It should use :
+>>>    skb_alloc( actual_size_of_frame  not the 3840 thing ...)
+>>>    copy(data)
+>>
+>> We need the extra stuff copied too I think (like skb->cb).
+>>
+>> If you could provide a bit more complete example code, I'll be happy
+>> to test it...
+>
+> take a random drivers/net using copybreak ... say ... tg3.c
+>
+> lines 4785
+>
+> len = length_of_the_current_frame
+> copy_skb = netdev_alloc_skb(...,  len);
+> // allocates exact required size not a byte more....
+> ...
+> skb_copy_from_linear_data(skb, copy_skb->data, len);
+> ...
+> skb_put(skb, len);
+> ...
 
-On review of 'zd1211rw: implement beacon fetching and handling
-ieee80211_get_buffered_bc()', Christian Lamparter noted that [1]:
+That seems fine for drivers, but I'm guessing something different
+would be needed in the mac80211/rx.c code:
 
-   Since zd_beacon_done also uploads the next beacon so long in advance,
-   there could be an equally long race between the outdated state of the
-   next beacon's DTIM broadcast traffic indicator (802.11-2007 7.3.2.6)
-   which -in your case- was uploaded almost a beacon interval ago and
-   the xmit of ieee80211_get_buffered_bc *now*.
+I figure doing the fix here might be a nice quick fix,
+and would help with all funky drivers.  Later, can fix the
+ath9k to do the skb copying as soon as DMA is done?
 
-   The dtim bc/mc bit might be not set, when a mc/bc arrived after the
-   beacon was uploaded, but before the "beacon done event" from the
-   hardware. So, dozing stations don't expect the broadcast traffic
-   and of course, they might miss it completely.
+/*
+  * This function returns whether or not the SKB
+  * was destined for RX processing or not, which,
+  * if consume is true, is equivalent to whether
+  * or not the skb was consumed.
+  */
+static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
+					    struct sk_buff *skb, bool consume)
+{
+	struct ieee80211_local *local = rx->local;
+	struct ieee80211_sub_if_data *sdata = rx->sdata;
+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+	struct ieee80211_hdr *hdr = (void *)skb->data;
+	int prepares;
 
-   It's probably better to fix this in mac80211 (see the attached hack).
+	rx->skb = skb;
+	status->rx_flags |= IEEE80211_RX_RA_MATCH;
+	prepares = prepare_for_handlers(rx, hdr);
 
-[1] http://marc.info/?l=linux-wireless&m=129435041117256&w=2
+	if (!prepares)
+		return false;
 
-CC: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/tx.c          |    4 +++-
- 2 files changed, 4 insertions(+), 1 deletions(-)
+	if (status->flag & RX_FLAG_MMIC_ERROR) {
+		if (status->rx_flags & IEEE80211_RX_RA_MATCH)
+			ieee80211_rx_michael_mic_report(hdr, rx);
+		return false;
+	}
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c47d7c0..f71ed31 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -225,6 +225,7 @@ struct ieee80211_if_ap {
- 	struct sk_buff_head ps_bc_buf;
- 	atomic_t num_sta_ps; /* number of stations in PS mode */
- 	int dtim_count;
-+	bool dtim_bc_mc;
- };
- 
- struct ieee80211_if_wds {
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ffc6749..1c8cf41 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2178,6 +2178,8 @@ static void ieee80211_beacon_add_tim(struct ieee80211_if_ap *bss,
- 	if (bss->dtim_count == 0 && !skb_queue_empty(&bss->ps_bc_buf))
- 		aid0 = 1;
- 
-+	bss->dtim_bc_mc = aid0 == 1;
-+
- 	if (have_bits) {
- 		/* Find largest even number N1 so that bits numbered 1 through
- 		 * (N1 x 8) - 1 in the bitmap are 0 and number N2 so that bits
-@@ -2548,7 +2550,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 	if (sdata->vif.type != NL80211_IFTYPE_AP || !beacon || !beacon->head)
- 		goto out;
- 
--	if (bss->dtim_count != 0)
-+	if (bss->dtim_count != 0 || !bss->dtim_bc_mc)
- 		goto out; /* send buffered bc/mc only after DTIM beacon */
- 
- 	while (1) {
+	if (!consume) {
+		skb = skb_copy(skb, GFP_ATOMIC);
+		if (!skb) {
+			if (net_ratelimit()) {
+				printk("failed skb_copy, skb->len: %i\n", skb->len);
+				wiphy_debug(local->hw.wiphy,
+					"failed to copy skb for %s\n",
+					sdata->name);
+			}
+			return true;
+		}
+
+		rx->skb = skb;
+	}
+
+	ieee80211_invoke_rx_handlers(rx);
+	return true;
+}
+
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
