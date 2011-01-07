@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38399 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754700Ab1A2BFs (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:15653 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751808Ab1AGF72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 20:05:48 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/3] ath9k:  Show channel type in debugfs.
-Date: Fri, 28 Jan 2011 17:05:41 -0800
-Message-Id: <1296263143-12404-1-git-send-email-greearb@candelatech.com>
+	Fri, 7 Jan 2011 00:59:28 -0500
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0436099966
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Jan 2011 14:59:27 +0900 (JST)
+Subject: [PATCH 1/4] iw: survey: Mark frequency in use
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+Date: Fri, 07 Jan 2011 15:00:25 +0900
+Message-ID: <20110107060025.21507.11061.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Survey: Mark frequency in use according to NL80211_SURVEY_INFO_IN_USE.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+This patch comes from OpenWRT. Original author: Felix Fietkau
+
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
-:100644 100644 25ea746... c3f495b... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |   23 +++++++++++++++++++++--
- 1 files changed, 21 insertions(+), 2 deletions(-)
+ survey.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 25ea746..c3f495b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -398,12 +398,30 @@ static const char * ath_wiphy_state_str(enum ath_wiphy_state state)
- 	return "?";
- }
+diff --git a/survey.c b/survey.c
+index f9f2508..83c54b3 100644
+--- a/survey.c
++++ b/survey.c
+@@ -44,8 +44,9 @@ static int print_survey_handler(struct nl_msg *msg, void *arg)
+ 	}
  
-+static const char *channel_type_str(enum nl80211_channel_type t)
-+{
-+	switch (t) {
-+	case NL80211_CHAN_NO_HT:
-+		return "no ht";
-+	case NL80211_CHAN_HT20:
-+		return "ht20";
-+	case NL80211_CHAN_HT40MINUS:
-+		return "ht40-";
-+	case NL80211_CHAN_HT40PLUS:
-+		return "ht40+";
-+	default:
-+		return "???";
-+	}
-+}
-+
- static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 			       size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
- 	struct ath_wiphy *aphy = sc->pri_wiphy;
- 	struct ieee80211_channel *chan = aphy->hw->conf.channel;
-+	struct ieee80211_conf *conf = &(aphy->hw->conf);
-+
- 	char buf[512];
- 	unsigned int len = 0;
- 	int i;
-@@ -411,11 +429,12 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 	u32 tmp;
- 
- 	len += snprintf(buf + len, sizeof(buf) - len,
--			"primary: %s (%s chan=%d ht=%d)\n",
-+			"primary: %s (%s chan=%d  channel-type: %d (%s))\n",
- 			wiphy_name(sc->pri_wiphy->hw->wiphy),
- 			ath_wiphy_state_str(sc->pri_wiphy->state),
- 			ieee80211_frequency_to_channel(chan->center_freq),
--			aphy->chan_is_ht);
-+			conf->channel_type,
-+			channel_type_str(conf->channel_type));
- 
- 	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
- 	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
--- 
-1.7.2.3
+ 	if (sinfo[NL80211_SURVEY_INFO_FREQUENCY])
+-		printf("\tfrequency:\t%u MHz\n",
+-			nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]));
++		printf("\tfrequency:\t%u MHz%s\n",
++			nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]),
++			sinfo[NL80211_SURVEY_INFO_IN_USE] ? " [in use]" : "");
+ 	if (sinfo[NL80211_SURVEY_INFO_NOISE])
+ 		printf("\tnoise:\t\t%d dBm\n",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]));
 
