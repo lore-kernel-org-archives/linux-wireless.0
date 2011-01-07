@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:43581 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab1AUDDY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:03:24 -0500
-Received: by pva4 with SMTP id 4so217568pva.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:03:23 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:64321 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753388Ab1AGUMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 15:12:07 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:11:49 -0800
+Date: Fri, 7 Jan 2011 12:12:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "greearb@candelatech.com" <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [PATCH v2 3/3] ath9k: Keep track of stations for
+ debugfs.
+Message-ID: <20110107201204.GG21588@tux>
+References: <1294375752-3946-1-git-send-email-greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63310.121728.324735@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:32:38 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 23/33] ath9k_htc: Enable AP mode
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1294375752-3946-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Thu, Jan 06, 2011 at 08:49:12PM -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> The stations hold the ath_node, which holds the tid
+> and other xmit logic structures.  In order to debug
+> stuck xmit logic, we need a way to print out the tid
+> state for the stations.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> 
+> v1 -> v2:  Use linked list instead of array.  Protect with spinlock.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Again, see my comments about the # STAs limit. I think this can go in
+as a cfg80211 driver limitation which can be exposed. If you want to go
+over the supported number (known to work, safe, call it what you want)
+then a kconfig option can be used.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index dc96c06..b4ae719 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -753,7 +753,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) |
-+		BIT(NL80211_IFTYPE_AP);
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
--- 
-1.7.3.5
-
+  Luis
