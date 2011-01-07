@@ -1,124 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1778 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829Ab1AYKv5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 05:51:57 -0500
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] staging: brcm80211: bugfix for softmac crash on multi
- cpu configurations
-Date: Tue, 25 Jan 2011 11:51:56 +0100
-Message-ID: <1295952716-16161-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50357 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893Ab1AGQT2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 11:19:28 -0500
+Received: by fxm20 with SMTP id 20so17062346fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 08:19:27 -0800 (PST)
+Message-ID: <4D273D16.7080008@lwfinger.net>
+Date: Fri, 07 Jan 2011 10:19:34 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Damian Minkov <damencho@sip-communicator.org>
+CC: sedat.dilek@gmail.com, linux-wireless@vger.kernel.org,
+	chaoming_li <chaoming_li@realsil.com.cn>,
+	'georgia' <georgia@realtek.com>
+Subject: Re: Question about ep-n8508
+References: <AANLkTimekYjYh7uZ3enOQ+zX2_dpA25Zy0aATCDzw521@mail.gmail.com> <AANLkTimYBb-hqWWtPpQVnVQ2ifemQbAvOBnKSUxM_jsJ@mail.gmail.com> <AANLkTik8nfAFF=OhG1EqzJYkYMh+ds1igRgngLArVswC@mail.gmail.com>
+In-Reply-To: <AANLkTik8nfAFF=OhG1EqzJYkYMh+ds1igRgngLArVswC@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Solved a locking issue that resulted in driver crashes with the 43224 and 43225
-chips. The problem has been reported on several fora. Root cause was two fold:
-hardware was being manipulated by two unsynchronized threads, and a scan
-operation could interfere with an ongoing dynamic calibration process. Fix was
-to invoke a lock on wl_ops_config() operation and to set internal flags when a
-scan operation is started and stopped.
+On 01/07/2011 04:32 AM, Damian Minkov wrote:
+> Hi,
+> 
+> On Fri, Jan 7, 2011 at 11:11 AM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+>> On Fri, Jan 7, 2011 at 9:06 AM, Damian Minkov
+>> <damencho@sip-communicator.org> wrote:
+>>> Hi,
+>>>
+>>> I recently bought the device EDUP ep-n8508 but I have problems running
+>>> it under Ubuntu 10.10, kernel: 2.6.35-24-generic x86_64.
+>>> I tried with the drivers provided on the CD coming with the device
+>>> (rtl8192CU_linux_v2.0.939.20100726) have no problem compiling and
+>>> installing. But after loading the module no network device appears and
+>>> a lot of "usb write TimeOut!" in the messages.
+>>> Then I tried with latest driver edition from realtek website -
+>>> rtl8192CU_linux_v2.0.1212.20101208. Again with same result.
+>>> Here is all the output: http://pastebin.com/7xhkzYNC.
+>>> I saw there is a similar thread, with similar problems "Question about
+>>> Edimax 7811Un", but as I'm new to the list didn't manage to continue
+>>> that thread.
+>>>
+>>> Seems a problem with amd64 systems. Is there any workaround? Anything
+>>> I can further test to help figuring this out?
+>>>
+>>> Thanks in advance
+>>> damencho
+>>
+>> First of all, please do not refer to pastebin-URLs as they have a
+>> limited life-cycle.
+>> A full dmesg and an output of lspci is much more appreciated, so
+>> interested people can look at it.
+>>
+>> - Sedat -
+>>
+> 
+> sorry for the pastebin, here are lspci and dmesg prints:
+> 
+> # lspci
+> 00:00.0 Host bridge: Intel Corporation Mobile PM965/GM965/GL960 Memory
+> Controller Hub (rev 03)
 
-Please add this to the staging-linus branch.
+The output of lspci is useless for a USB device. Use lsusb instead.
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/sys/wl_mac80211.c  |   12 ++++++++++--
- drivers/staging/brcm80211/sys/wlc_mac80211.c |   13 +++++++++++++
- drivers/staging/brcm80211/sys/wlc_pub.h      |    2 ++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+> [27549.583825] 8192cu: USB_SPEED_HIGH
+> [27549.584814] Chip Version ID: VERSION_NORMAL_TSMC_CHIP_88C.
+> [27549.585468] EEPROM type is E-FUSE
+> [27549.585473] ====> ReadAdapterInfo8192C
+> [27549.585573] Boot from EFUSE, Autoload Success !
+> [27549.592954] rtw_efuse_get_max_phy_size...eeprompriv.efuse_phy_max_size(504)
+> [27550.006456] EEPROMVID = 0x0bda
+> [27550.006463] EEPROMPID = 0x8176
 
-diff --git a/drivers/staging/brcm80211/sys/wl_mac80211.c b/drivers/staging/brcm80211/sys/wl_mac80211.c
-index f123588..cd8392b 100644
---- a/drivers/staging/brcm80211/sys/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wl_mac80211.c
-@@ -263,9 +263,7 @@ ieee_set_channel(struct ieee80211_hw *hw, struct ieee80211_channel *chan,
- 	switch (type) {
- 	case NL80211_CHAN_HT20:
- 	case NL80211_CHAN_NO_HT:
--		WL_LOCK(wl);
- 		err = wlc_set(wl->wlc, WLC_SET_CHANNEL, chan->hw_value);
--		WL_UNLOCK(wl);
- 		break;
- 	case NL80211_CHAN_HT40MINUS:
- 	case NL80211_CHAN_HT40PLUS:
-@@ -285,6 +283,7 @@ static int wl_ops_config(struct ieee80211_hw *hw, u32 changed)
- 	int err = 0;
- 	int new_int;
- 
-+	WL_LOCK(wl);
- 	if (changed & IEEE80211_CONF_CHANGE_LISTEN_INTERVAL) {
- 		WL_NONE("%s: Setting listen interval to %d\n",
- 			__func__, conf->listen_interval);
-@@ -341,6 +340,7 @@ static int wl_ops_config(struct ieee80211_hw *hw, u32 changed)
- 	}
- 
-  config_out:
-+	WL_UNLOCK(wl);
- 	return err;
- }
- 
-@@ -459,13 +459,21 @@ wl_ops_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta, bool set)
- 
- static void wl_ops_sw_scan_start(struct ieee80211_hw *hw)
- {
-+	struct wl_info *wl = hw->priv;
- 	WL_NONE("Scan Start\n");
-+	WL_LOCK(wl);
-+	wlc_scan_start(wl->wlc);
-+	WL_UNLOCK(wl);
- 	return;
- }
- 
- static void wl_ops_sw_scan_complete(struct ieee80211_hw *hw)
- {
-+	struct wl_info *wl = hw->priv;
- 	WL_NONE("Scan Complete\n");
-+	WL_LOCK(wl);
-+	wlc_scan_stop(wl->wlc);
-+	WL_UNLOCK(wl);
- 	return;
- }
- 
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index a130386..e37e805 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -8461,3 +8461,16 @@ static void wlc_txq_free(struct wlc_info *wlc, struct osl_info *osh,
- 
- 	kfree(qi);
- }
-+
-+/*
-+ * Flag 'scan in progress' to withold dynamic phy calibration
-+ */
-+void wlc_scan_start(struct wlc_info *wlc)
-+{
-+	wlc_phy_hold_upd(wlc->band->pi, PHY_HOLD_FOR_SCAN, true);
-+}
-+
-+void wlc_scan_stop(struct wlc_info *wlc)
-+{
-+	wlc_phy_hold_upd(wlc->band->pi, PHY_HOLD_FOR_SCAN, false);
-+}
-diff --git a/drivers/staging/brcm80211/sys/wlc_pub.h b/drivers/staging/brcm80211/sys/wlc_pub.h
-index 146a690..aff4130 100644
---- a/drivers/staging/brcm80211/sys/wlc_pub.h
-+++ b/drivers/staging/brcm80211/sys/wlc_pub.h
-@@ -570,6 +570,8 @@ extern void wlc_enable_mac(struct wlc_info *wlc);
- extern u16 wlc_rate_shm_offset(struct wlc_info *wlc, u8 rate);
- extern u32 wlc_get_rspec_history(struct wlc_bsscfg *cfg);
- extern u32 wlc_get_current_highest_rate(struct wlc_bsscfg *cfg);
-+extern void wlc_scan_start(struct wlc_info *wlc);
-+extern void wlc_scan_stop(struct wlc_info *wlc);
- 
- static inline int wlc_iovar_getuint(struct wlc_info *wlc, const char *name,
- 				    uint *arg)
--- 
-1.7.1
+As you found, the 64-bit version of the driver for the device with USB ID
+0bda:8176 does not work. The 32-bit one is fine. I did some work on it and found
+many of the problems; however, the driver still did not work. When I contacted
+Realtek about the issue, I was told that they were working on a mac80211-based
+driver that should be available soon. On that news, I stopped work on the old
+driver. That was a few months ago, but so far I have not seen any new code. When
+they are ready to release it, at least to me, I have an Edimax 7811Un ready for
+testing.
 
-
+Larry
