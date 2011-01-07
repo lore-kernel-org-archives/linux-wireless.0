@@ -1,66 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:36566 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276Ab1AYM0H convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37683 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209Ab1AGWU4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 07:26:07 -0500
-Received: by pva4 with SMTP id 4so851630pva.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 04:26:06 -0800 (PST)
+	Fri, 7 Jan 2011 17:20:56 -0500
+Message-ID: <4D2791BD.7050502@candelatech.com>
+Date: Fri, 07 Jan 2011 14:20:45 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1295929904-11806-2-git-send-email-me@bobcopeland.com>
-References: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
-	<1295929904-11806-2-git-send-email-me@bobcopeland.com>
-Date: Tue, 25 Jan 2011 14:26:06 +0200
-Message-ID: <AANLkTin5=Ngpf8LvKHO3OeYDyEC6V+Bi0Ptdey62LMur@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath5k: correct endianness of frame duration
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Bruno Randolf <br1@einfach.org>, jirislaby@gmail.com,
-	lrodriguez@atheros.com
-Content-Type: text/plain; charset=UTF-8
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
+ one page.
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>	 <1294397880.3467.1.camel@jlt3.sipsolutions.net>	 <4D275CCC.90905@candelatech.com>  <20110107200913.GF21588@tux> <1294432018.2709.2.camel@edumazet-laptop>
+In-Reply-To: <1294432018.2709.2.camel@edumazet-laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/25 Bob Copeland <me@bobcopeland.com>:
-> The ath5k version of ieee80211_generic_frame_duration() returns
-> an __le16 for standard modes but a cpu-endian int for turbo/half/
-> quarter rates.  Make it always return cpu-endian values.
+On 01/07/2011 12:26 PM, Eric Dumazet wrote:
+> Le vendredi 07 janvier 2011 à 12:09 -0800, Luis R. Rodriguez a écrit :
+>> On Fri, Jan 07, 2011 at 10:34:52AM -0800, Ben Greear wrote:
+>>> On 01/07/2011 02:58 AM, Johannes Berg wrote:
+>>>> On Thu, 2011-01-06 at 16:46 -0800, greearb@candelatech.com wrote:
+>>>>> From: Ben Greear<greearb@candelatech.com>
+>>>>>
+>>>>> Patch is from Eric Dumazet, as described here:
+>>>>> https://patchwork.kernel.org/patch/104271/
+>>>>>
+>>>>> Reported-by: Michael Guntsche<mike@it-loops.com>
+>>>>> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
+>>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>>>>> ---
+>>>>>
+>>>>> NOTE:  This needs review by ath9k and/or other informed
+>>>>> people.
+>>>>
+>>>> This doesn't make sense. It might help, but it'll probably lead to not
+>>>> being able to receive all frames off the air.
+>>>>
+>>>> If this is an issue, ath9k should do paged RX like iwlwifi.
+>>>
+>>> Ok, I backed this out..but now I'm back to getting buffer allocation
+>>> failures (and this is on a system with 2GB RAM).
+>>>
+>>> Seems it's coming from mac80211 instead of ath9k, at least most of
+>>> the time (I'm using 60 stations, so it probably needs to make lots of
+>>> copies in the rx path).  The traffic I'm generating/receiving is 1024 byte UDP
+>>> payloads.
+>>>
+>>> Does this mean I really received a packet that was 3872 bytes long,
+>>> or is the skb_copy allocating/copying empty data?
+>>
+>> Good question. The buffer we setup for DMA should be large since we
+>> need to support AMSDU RX up to a certain bytes of RX data for the frame.
+>> Harwdware should tell us the right size for the RX'd data and the skb
+>> should be set with that size, respectively. Following this logic,
+>> skb_copy() should only allocate on the order of the required skb->len.
+>>
+>> Remember that trick we did to force the older memory leak issues by
+>> forcing an skb_copy() on every RX'd frame and then just discarding that
+>> buffer immediately? You can try to do the same and print the skb->len
+>> there, just to check what's going on.
 >
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/pcu.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
 >
-> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-> index e5f2b96..a702817 100644
-> --- a/drivers/net/wireless/ath/ath5k/pcu.c
-> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
-> @@ -86,7 +86,7 @@ int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
->        if (!ah->ah_bwmode) {
->                dur = ieee80211_generic_frame_duration(sc->hw,
->                                                NULL, len, rate);
-> -               return dur;
-> +               return le16_to_cpu(dur);
->        }
+> Using skb_copy() is wrong then, since it makes a copy (order-1
+> allocations)
 >
->        bitrate = rate->bitrate;
-> @@ -265,8 +265,6 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah)
->                 * what rate we should choose to TX ACKs. */
->                tx_time = ath5k_hw_get_frame_duration(ah, 10, rate);
->
-> -               tx_time = le16_to_cpu(tx_time);
-> -
->                ath5k_hw_reg_write(ah, tx_time, reg);
->
->                if (!(rate->flags & IEEE80211_RATE_SHORT_PREAMBLE))
-> --
-> 1.7.1.1
+> It should use :
+>   skb_alloc( actual_size_of_frame  not the 3840 thing ...)
+>   copy(data)
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+We need the extra stuff copied too I think (like skb->cb).
+
+If you could provide a bit more complete example code, I'll be happy
+to test it...
+
+Thanks,
+Ben
+
+>
+>
 
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
