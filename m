@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.3eti.com ([65.220.88.141]:15803 "EHLO webmail.3eti.com"
+Received: from mail.atheros.com ([12.19.149.2]:31880 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098Ab1AJOu7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 09:50:59 -0500
-From: Chaoxing Lin <CLin@3eti.com>
-To: 'Jouni Malinen' <j@w1.fi>
-CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: RE: hostapd hangs on quit, multi-BSSID scenario
-Date: Mon, 10 Jan 2011 14:51:09 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D05716091@RockMX01.rock.corp>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
- <20110109172629.GA12229@jm.kir.nu>
-In-Reply-To: <20110109172629.GA12229@jm.kir.nu>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751231Ab1AGXIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 18:08:39 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 15:08:21 -0800
+Subject: Re: [ath9k-devel] ath9k tx lockup, ath: received PCI FATAL
+ interrupt
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Peter Stuge <peter@stuge.se>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110107215549.4053.qmail@stuge.se>
+References: <20110107215549.4053.qmail@stuge.se>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 8 Jan 2011 01:08:34 +0200
+Message-ID: <1294441714.12213.75.camel@jm-desktop>
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks very much.
+On Fri, 2011-01-07 at 13:55 -0800, Peter Stuge wrote:
+> I normally never use wpa_supplicant. I don't accept that it would be
+> required for a working connection and so far noone has really
+> explained why that would be the case. Only ath9k (ie. neither ipw2200
+> nor ath5k) has ever made a difference between wpa_supplicant running
+> or not.
 
-It works very well now.
+You won't need wpa_supplicant for an open network that has only a single
+AP and if you never get disconnected (which could happen, e.g., if you
+leave the range for a moment). mac80211 will not be reconnecting to the
+network on its own automatically, so you need something like
+wpa_supplicant to do it for you.
 
------Original Message-----
-From: Jouni Malinen [mailto:j@w1.fi] 
-Sent: Sunday, January 09, 2011 12:26 PM
-To: Chaoxing Lin
-Cc: 'linux-wireless@vger.kernel.org'
-Subject: Re: hostapd hangs on quit, multi-BSSID scenario
+> The above identifies at least two issues:
+> 
+> 1. ath: received PCI FATAL interrupt
+> 
+> How can I find out more about the reason for this?
 
-On Fri, Jan 07, 2011 at 05:44:30PM +0000, Chaoxing Lin wrote:
->  When I run hostapd with 8+1 BSSID over one radio (ath9160), it runs well. All 9 BSS accepts clients.
-> But when I "Ctrl + C" or "killall hostapd", hostapd daemon can NOT gracefully shut down. It hangs forever. I have to "Ctrl + C" again. Then it quits and print message like "
+Have you looked at enabling debugging in ath9k? This is described at
+http://wireless.kernel.org/en/users/Drivers/ath9k/debug
+For the PCI fatal interrupt, it would be useful to have at least
+interrupt and fatal levels included. If the output is still readable
+(i.e., you can still find the PCI fatal message), enabling more of these
+could end up providing more details, too.
 
-> ^Celoop: could not process SIGINT or SIGTERM in two seconds. Looks like there
-> is a bug that ends up in a busy loop that prevents clean shutdown.
-> Killing program forcefully.
+Have you happened to test that WLAN card in any other system or with any
+other driver? It could be useful to make sure it is known to be working
+reliably before spending huge amount of work trying to figure out why it
+doesn't work properly with ath9k..
 
-Fixed here:
-http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=8546ea19301f31e5faf58a0f154773c3123e6474
+> 2. Unworking association without wpa_supplicant after power cycle
+> 
+> How can I find out more about the reason for this?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+The part where the dmesg output had "direct probe to <BSSID> timed out"
+could potentially be caused by card RX not working properly. I've seen
+that happen in some cases (with rmmod + modprobe ath9k being one way of
+recovering from that state). Looking at the RX interrupt counters in
+ath9k debugfs and checking whether they increment could be of use here.
+In general, verifying RX registers (filter, descriptors) would likely
+follow in getting more details.
+
+- Jouni
+
 
