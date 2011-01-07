@@ -1,477 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45948 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722Ab1ALSpG (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39901 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581Ab1AGG7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 13:45:06 -0500
-Date: Wed, 12 Jan 2011 13:37:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2011-01-12
-Message-ID: <20110112183754.GC8674@tuxdriver.com>
+	Fri, 7 Jan 2011 01:59:47 -0500
+Received: from [71.112.48.101] (pool-71-112-48-101.sttlwa.dsl-w.verizon.net [71.112.48.101])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p076xkrS019895
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 6 Jan 2011 22:59:46 -0800
+Message-ID: <4D26B9E2.8040705@candelatech.com>
+Date: Thu, 06 Jan 2011 22:59:46 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Kernel crash on ath9k module unload, wireless-testing-2.6.37
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+I had 60 station interfaces configured on ath9k, and unloaded
+the modules.  I got this crash.  It may be of interest that 00100100
+is the list poison.  This seems to be a rare bug, as I've unloaded modules
+around 20 times in the last few days and this is the first time I saw it.
 
-This is an initial batch of wireless fixes intended for 2.6.38-rc1.
-Highlights include a number of small ath9k fixes, some documentation
-fixes from Johannes, and an ssb fix that stops loading b44 inadvertently
-when certain b43 devices are present.
+I have seen this in the past (around first of December I think) as well,
+so it's not a new bug.
 
-Please let me know if there are problems!
+The gdb output for the crash site doesn't give me much in
+the way of ideas, but maybe the skb is stale memory and something
+else has acquired it and started using it?
 
-Thanks,
+(gdb) l *(ieee80211_rx+0xf7)
+0x14a40 is in ieee80211_rx (/home/greearb/git/linux.wireless-testing/net/mac80211/rx.c:2887).
+2882					goto drop;
+2883				rate = &sband->bitrates[status->rate_idx];
+2884			}
+2885		}
+2886	
+2887		status->rx_flags = 0;
+2888	
+2889		/*
+2890		 * key references and virtual interfaces are protected using RCU
+2891		 * and this requires that we are in a read-side RCU section during
+(gdb) l *(ieee80211_rx+0x7ac)
+0x150f5 is in ieee80211_rx (/home/greearb/git/linux.wireless-testing/arch/x86/include/asm/processor.h:837).
+832	 * It's not worth to care about 3dnow prefetches for the K6
+833	 * because they are microcoded there and very slow.
+834	 */
+835	static inline void prefetch(const void *x)
+836	{
+837		alternative_input(BASE_PREFETCH,
+838				  "prefetchnta (%1)",
+839				  X86_FEATURE_XMM,
+840				  "r" (x));
+841	}
+(gdb) l *(ieee80211_rx+0x853)
+0x1519c is in ieee80211_process_measurement_req (/home/greearb/git/linux.wireless-testing/net/mac80211/spectmgmt.c:74).
+69	}
+70	
+71	void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+72					       struct ieee80211_mgmt *mgmt,
+73					       size_t len)
+74	{
+75		/*
+76		 * Ignoring measurement request is spec violation.
+77		 * Mandatory measurements must be reported optional
+78		 * measurements might be refused or reported incapable
 
-John
 
----
+BUG: unable to handle kernel paging request at 00100100
+IP: [<f952b0d1>] ieee80211_rx+0x7ac/0x853 [mac80211]
+*pde = 00000000
+Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+last sysfs file: /sys/devices/pci0000:00/0000:00:1f.2/host0/target0:0:1/0:0:1:0/block/sda/sda1/stat
+Modules linked in: michael_mic ath5k arc4 ath9k(-) mac80211 ath9k_common ath9k_hw ath cfg80211 8021q g]
 
-The following changes since commit 5b919f833d9d60588d026ad82d17f17e8872c7a9:
+Pid: 25780, comm: ip Tainted: G        W   2.6.37-wl+ #62 To be filled by O.E.M./To Be Filled By O.E.M.
+EIP: 0060:[<f952b0d1>] EFLAGS: 00010246 CPU: 1
+EIP is at ieee80211_rx+0x7ac/0x853 [mac80211]
+EAX: 00000001 EBX: de5b35a0 ECX: 00000001 EDX: 78960218
+ESI: 00100100 EDI: f58c7e5c EBP: f58c7e6c ESP: f58c7e00
+  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+Process ip (pid: 25780, ti=f58c6000 task=a40314e0 task.ti=cfaf6000)
+Stack:
+  00000002 00000001 00000000 f952aa1c 00000020 f58c7e24 7845a85c f5802a80
+  f58c7e44 f95623c0 e13d8c64 b97b40a0 dfa78d00 b97b40aa e00d4f00 e13d8460
+  cfebd600 00000000 00000000 00000000 00000010 00000000 00000000 00100100
+Call Trace:
+  [<f952aa1c>] ? ieee80211_rx+0xf7/0x853 [mac80211]
+  [<7845a85c>] ? trace_hardirqs_on_caller+0xeb/0x125
+  [<f9553366>] ? ath_rx_send_to_mac80211+0x5a/0x60 [ath9k]
+  [<f9554ce7>] ? ath_rx_tasklet+0x1318/0x13af [ath9k]
+  [<7845a405>] ? mark_lock+0x1e/0x1eb
+  [<7845a619>] ? mark_held_locks+0x47/0x5f
+  [<7878ebcb>] ? _raw_spin_unlock_irqrestore+0x3c/0x48
+  [<7845a85c>] ? trace_hardirqs_on_caller+0xeb/0x125
+  [<7845a8a1>] ? trace_hardirqs_on+0xb/0xd
+  [<f9552ce1>] ? ath9k_tasklet+0x98/0x12d [ath9k]
+  [<7845a85c>] ? trace_hardirqs_on_caller+0xeb/0x125
+  [<7843be09>] ? tasklet_action+0x88/0xe3
+  [<7843c385>] ? __do_softirq+0x85/0x142
+  [<7843c300>] ? __do_softirq+0x0/0x142
+  [<7843c300>] ? __do_softirq+0x0/0x142
+  <IRQ>
+  [<7843c1a7>] ? irq_exit+0x35/0x69
+  [<78404245>] ? do_IRQ+0x8e/0xa2
+  [<784036ae>] ? common_interrupt+0x2e/0x40
+  [<7845007b>] ? pm_qos_update_request+0x4b/0x57
+  [<784b6f41>] ? kmem_cache_alloc+0x81/0xa1
+  [<784c9aaf>] ? getname+0x1b/0xb8
+  [<784c9aaf>] ? getname+0x1b/0xb8
+  [<784b586b>] ? slab_pad_check+0x1e/0xf6
+  [<784cab08>] ? user_path_at+0x15/0x60
+  [<784b53f3>] ? check_valid_pointer+0x1c/0x48
+  [<784b5c34>] ? check_object+0x154/0x185
+  [<784b6663>] ? free_debug_processing+0x136/0x15b
+  [<7845a9b8>] ? debug_check_no_locks_freed+0x115/0x12d
+  [<784c4345>] ? vfs_fstatat+0x2f/0x55
+  [<7845a8a1>] ? trace_hardirqs_on+0xb/0xd
+  [<784c444c>] ? vfs_stat+0x1b/0x1d
+  [<784c4462>] ? sys_stat64+0x14/0x28
+  [<78478b22>] ? audit_syscall_entry+0x113/0x135
+  [<7840a3c3>] ? syscall_trace_enter+0xbb/0xcc
+  [<7878ee55>] ? syscall_call+0x7/0xb
+Code: ff 8b 55 c4 31 c9 89 5d d4 89 45 d8 8d 45 cc e8 6a ef ff ff 89 f3 8b 06 89 45 f0 8b 37 e8 38 e5
+EIP: [<f952b0d1>] ieee80211_rx+0x7ac/0x853 [mac80211] SS:ESP 0068:f58c7e00
+CR2: 0000000000100100
 
-  net: ax25: fix information leak to userland harder (2011-01-12 00:34:49 -0800)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Christian Lamparter (1):
-      p54: fix sequence no. accounting off-by-one error
-
-Indan Zupancic (1):
-      ipw2200: Check for -1 INTA in tasklet too.
-
-Johannes Berg (5):
-      mac80211: add remain-on-channel docs
-      mac80211: add missing docs for off-chan TX flag
-      cfg80211: add mesh join/leave callback docs
-      nl80211: add/fix mesh docs
-      mac80211: add doc short section on LED triggers
-
-Michael Buesch (1):
-      ssb: Ignore dangling ethernet cores on wireless devices
-
-Stanislaw Gruszka (1):
-      hostap_cs: fix sleeping function called from invalid context
-
-Sujith Manoharan (5):
-      ath9k_hw: Fix chip test
-      ath9k_hw: Fix calibration for AR9287 devices
-      ath9k_hw: Fix thermal issue with UB94
-      ath9k_hw: Fix RX handling for USB devices
-      ath9k_htc: Really fix packet injection
-
- Documentation/DocBook/80211.tmpl              |   21 +++++++++++---
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    3 ++
- drivers/net/wireless/ath/ath9k/eeprom_def.c   |    4 +++
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   37 +++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/hw.c           |    5 ++-
- drivers/net/wireless/hostap/hostap_cs.c       |   15 ++++------
- drivers/net/wireless/ipw2x00/ipw2200.c        |    7 +++++
- drivers/net/wireless/p54/txrx.c               |    2 +-
- drivers/ssb/scan.c                            |   10 +++++++
- include/linux/nl80211.h                       |   20 ++++++++++---
- include/net/cfg80211.h                        |    2 +
- include/net/mac80211.h                        |   14 +++++++++
- 13 files changed, 109 insertions(+), 32 deletions(-)
-
-diff --git a/Documentation/DocBook/80211.tmpl b/Documentation/DocBook/80211.tmpl
-index 03641a0..8906648 100644
---- a/Documentation/DocBook/80211.tmpl
-+++ b/Documentation/DocBook/80211.tmpl
-@@ -268,10 +268,6 @@
- !Finclude/net/mac80211.h ieee80211_ops
- !Finclude/net/mac80211.h ieee80211_alloc_hw
- !Finclude/net/mac80211.h ieee80211_register_hw
--!Finclude/net/mac80211.h ieee80211_get_tx_led_name
--!Finclude/net/mac80211.h ieee80211_get_rx_led_name
--!Finclude/net/mac80211.h ieee80211_get_assoc_led_name
--!Finclude/net/mac80211.h ieee80211_get_radio_led_name
- !Finclude/net/mac80211.h ieee80211_unregister_hw
- !Finclude/net/mac80211.h ieee80211_free_hw
-       </chapter>
-@@ -382,6 +378,23 @@
-         </para>
-       </partintro>
- 
-+      <chapter id="led-support">
-+        <title>LED support</title>
-+        <para>
-+         Mac80211 supports various ways of blinking LEDs. Wherever possible,
-+         device LEDs should be exposed as LED class devices and hooked up to
-+         the appropriate trigger, which will then be triggered appropriately
-+         by mac80211.
-+        </para>
-+!Finclude/net/mac80211.h ieee80211_get_tx_led_name
-+!Finclude/net/mac80211.h ieee80211_get_rx_led_name
-+!Finclude/net/mac80211.h ieee80211_get_assoc_led_name
-+!Finclude/net/mac80211.h ieee80211_get_radio_led_name
-+!Finclude/net/mac80211.h ieee80211_tpt_blink
-+!Finclude/net/mac80211.h ieee80211_tpt_led_trigger_flags
-+!Finclude/net/mac80211.h ieee80211_create_tpt_led_trigger
-+      </chapter>
-+
-       <chapter id="hardware-crypto-offload">
-         <title>Hardware crypto acceleration</title>
- !Pinclude/net/mac80211.h Hardware crypto acceleration
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 01880aa..ea2e7d7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -954,6 +954,9 @@ static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
- 				&adc_dc_cal_multi_sample;
- 		}
- 		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
-+
-+		if (AR_SREV_9287(ah))
-+			ah->supp_cals &= ~ADC_GAIN_CAL;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 088f141..749a936 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -226,6 +226,10 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
- 	    eep->baseEepHeader.pwdclkind == 0)
- 		ah->need_an_top2_fixup = 1;
- 
-+	if ((common->bus_ops->ath_bus_type == ATH_USB) &&
-+	    (AR_SREV_9280(ah)))
-+		eep->modalHeader[0].xpaBiasLvl = 0;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index a099b3e..1ce506f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -433,6 +433,7 @@ void ath9k_htc_txep(void *priv, struct sk_buff *skb, enum htc_endpoint_id ep_id,
- void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
- 			enum htc_endpoint_id ep_id, bool txok);
- 
-+int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv);
- void ath9k_htc_station_work(struct work_struct *work);
- void ath9k_htc_aggr_work(struct work_struct *work);
- void ath9k_ani_work(struct work_struct *work);;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 845b4c9..f4d576b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -301,6 +301,16 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
- 
- 	priv->nstations++;
- 
-+	/*
-+	 * Set chainmask etc. on the target.
-+	 */
-+	ret = ath9k_htc_update_cap_target(priv);
-+	if (ret)
-+		ath_dbg(common, ATH_DBG_CONFIG,
-+			"Failed to update capability in target\n");
-+
-+	priv->ah->is_monitoring = true;
-+
- 	return 0;
- 
- err_vif:
-@@ -328,6 +338,7 @@ static int ath9k_htc_remove_monitor_interface(struct ath9k_htc_priv *priv)
- 	}
- 
- 	priv->nstations--;
-+	priv->ah->is_monitoring = false;
- 
- 	return 0;
- }
-@@ -419,7 +430,7 @@ static int ath9k_htc_remove_station(struct ath9k_htc_priv *priv,
- 	return 0;
- }
- 
--static int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
-+int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
- {
- 	struct ath9k_htc_cap_target tcap;
- 	int ret;
-@@ -1186,6 +1197,20 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
- 
-+	/*
-+	 * Monitor interface should be added before
-+	 * IEEE80211_CONF_CHANGE_CHANNEL is handled.
-+	 */
-+	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-+		if (conf->flags & IEEE80211_CONF_MONITOR) {
-+			if (ath9k_htc_add_monitor_interface(priv))
-+				ath_err(common, "Failed to set monitor mode\n");
-+			else
-+				ath_dbg(common, ATH_DBG_CONFIG,
-+					"HW opmode set to Monitor mode\n");
-+		}
-+	}
-+
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
- 		struct ieee80211_channel *curchan = hw->conf.channel;
- 		int pos = curchan->hw_value;
-@@ -1221,16 +1246,6 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		ath_update_txpow(priv);
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
--		if (conf->flags & IEEE80211_CONF_MONITOR) {
--			if (ath9k_htc_add_monitor_interface(priv))
--				ath_err(common, "Failed to set monitor mode\n");
--			else
--				ath_dbg(common, ATH_DBG_CONFIG,
--					"HW opmode set to Monitor mode\n");
--		}
--	}
--
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
- 		mutex_lock(&priv->htc_pm_lock);
- 		if (!priv->ps_idle) {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index fde9786..1afb8bb 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -436,9 +436,10 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
- 
- static int ath9k_hw_post_init(struct ath_hw *ah)
- {
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int ecode;
- 
--	if (!AR_SREV_9271(ah)) {
-+	if (common->bus_ops->ath_bus_type != ATH_USB) {
- 		if (!ath9k_hw_chip_test(ah))
- 			return -ENODEV;
- 	}
-@@ -1213,7 +1214,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ah->txchainmask = common->tx_chainmask;
- 	ah->rxchainmask = common->rx_chainmask;
- 
--	if (!ah->chip_fullsleep) {
-+	if ((common->bus_ops->ath_bus_type != ATH_USB) && !ah->chip_fullsleep) {
- 		ath9k_hw_abortpcurecv(ah);
- 		if (!ath9k_hw_stopdmarecv(ah)) {
- 			ath_dbg(common, ATH_DBG_XMIT,
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index bd8a413..2176ede 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -518,22 +518,21 @@ static int prism2_config(struct pcmcia_device *link)
- 	hw_priv->link = link;
- 
- 	/*
--	 * Make sure the IRQ handler cannot proceed until at least
--	 * dev->base_addr is initialized.
-+	 * We enable IRQ here, but IRQ handler will not proceed
-+	 * until dev->base_addr is set below. This protect us from
-+	 * receive interrupts when driver is not initialized.
- 	 */
--	spin_lock_irqsave(&local->irq_init_lock, flags);
--
- 	ret = pcmcia_request_irq(link, prism2_interrupt);
- 	if (ret)
--		goto failed_unlock;
-+		goto failed;
- 
- 	ret = pcmcia_enable_device(link);
- 	if (ret)
--		goto failed_unlock;
-+		goto failed;
- 
-+	spin_lock_irqsave(&local->irq_init_lock, flags);
- 	dev->irq = link->irq;
- 	dev->base_addr = link->resource[0]->start;
--
- 	spin_unlock_irqrestore(&local->irq_init_lock, flags);
- 
- 	local->shutdown = 0;
-@@ -546,8 +545,6 @@ static int prism2_config(struct pcmcia_device *link)
- 
- 	return ret;
- 
-- failed_unlock:
--	spin_unlock_irqrestore(&local->irq_init_lock, flags);
-  failed:
- 	kfree(hw_priv);
- 	prism2_release((u_long)link);
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 8d6ed5f..ae438ed 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -1973,6 +1973,13 @@ static void ipw_irq_tasklet(struct ipw_priv *priv)
- 
- 	inta = ipw_read32(priv, IPW_INTA_RW);
- 	inta_mask = ipw_read32(priv, IPW_INTA_MASK_R);
-+
-+	if (inta == 0xFFFFFFFF) {
-+		/* Hardware disappeared */
-+		IPW_WARNING("TASKLET INTA == 0xFFFFFFFF\n");
-+		/* Only handle the cached INTA values */
-+		inta = 0;
-+	}
- 	inta &= (IPW_INTA_MASK_ALL & inta_mask);
- 
- 	/* Add any cached INTA values that need to be handled */
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 76b2318..f618b96 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -618,7 +618,7 @@ static void p54_tx_80211_header(struct p54_common *priv, struct sk_buff *skb,
- 	else
- 		*burst_possible = false;
- 
--	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
-+	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
- 		*flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
- 
- 	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
-diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-index 5a0985d..29884c0 100644
---- a/drivers/ssb/scan.c
-+++ b/drivers/ssb/scan.c
-@@ -420,6 +420,16 @@ int ssb_bus_scan(struct ssb_bus *bus,
- 			bus->pcicore.dev = dev;
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- 			break;
-+		case SSB_DEV_ETHERNET:
-+			if (bus->bustype == SSB_BUSTYPE_PCI) {
-+				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
-+				    (bus->host_pci->device & 0xFF00) == 0x4300) {
-+					/* This is a dangling ethernet core on a
-+					 * wireless device. Ignore it. */
-+					continue;
-+				}
-+			}
-+			break;
- 		default:
- 			break;
- 		}
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2b89b71..821ffb9 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -148,6 +148,10 @@
-  * @NL80211_CMD_SET_MPATH:  Set mesh path attributes for mesh path to
-  * 	destination %NL80211_ATTR_MAC on the interface identified by
-  * 	%NL80211_ATTR_IFINDEX.
-+ * @NL80211_CMD_NEW_MPATH: Create a new mesh path for the destination given by
-+ *	%NL80211_ATTR_MAC via %NL80211_ATTR_MPATH_NEXT_HOP.
-+ * @NL80211_CMD_DEL_MPATH: Delete a mesh path to the destination given by
-+ *	%NL80211_ATTR_MAC.
-  * @NL80211_CMD_NEW_PATH: Add a mesh path with given attributes to the
-  *	the interface identified by %NL80211_ATTR_IFINDEX.
-  * @NL80211_CMD_DEL_PATH: Remove a mesh path identified by %NL80211_ATTR_MAC
-@@ -612,7 +616,7 @@ enum nl80211_commands {
-  *	consisting of a nested array.
-  *
-  * @NL80211_ATTR_MESH_ID: mesh id (1-32 bytes).
-- * @NL80211_ATTR_PLINK_ACTION: action to perform on the mesh peer link.
-+ * @NL80211_ATTR_STA_PLINK_ACTION: action to perform on the mesh peer link.
-  * @NL80211_ATTR_MPATH_NEXT_HOP: MAC address of the next hop for a mesh path.
-  * @NL80211_ATTR_MPATH_INFO: information about a mesh_path, part of mesh path
-  * 	info given for %NL80211_CMD_GET_MPATH, nested attribute described at
-@@ -879,7 +883,9 @@ enum nl80211_commands {
-  *	See &enum nl80211_key_default_types.
-  *
-  * @NL80211_ATTR_MESH_SETUP: Optional mesh setup parameters.  These cannot be
-- * changed once the mesh is active.
-+ *	changed once the mesh is active.
-+ * @NL80211_ATTR_MESH_CONFIG: Mesh configuration parameters, a nested attribute
-+ *	containing attributes from &enum nl80211_meshconf_params.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1225,8 +1231,6 @@ enum nl80211_rate_info {
-  * @NL80211_STA_INFO_INACTIVE_TIME: time since last activity (u32, msecs)
-  * @NL80211_STA_INFO_RX_BYTES: total received bytes (u32, from this station)
-  * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to this station)
-- * @__NL80211_STA_INFO_AFTER_LAST: internal
-- * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
-  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
-  * 	containing info as possible, see &enum nl80211_sta_info_txrate.
-@@ -1236,6 +1240,11 @@ enum nl80211_rate_info {
-  * @NL80211_STA_INFO_TX_RETRIES: total retries (u32, to this station)
-  * @NL80211_STA_INFO_TX_FAILED: total failed packets (u32, to this station)
-  * @NL80211_STA_INFO_SIGNAL_AVG: signal strength average (u8, dBm)
-+ * @NL80211_STA_INFO_LLID: the station's mesh LLID
-+ * @NL80211_STA_INFO_PLID: the station's mesh PLID
-+ * @NL80211_STA_INFO_PLINK_STATE: peer link state for the station
-+ * @__NL80211_STA_INFO_AFTER_LAST: internal
-+ * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
- enum nl80211_sta_info {
- 	__NL80211_STA_INFO_INVALID,
-@@ -1626,7 +1635,7 @@ enum nl80211_mntr_flags {
-  * @NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME: The interval of time (in TUs)
-  * that it takes for an HWMP information element to propagate across the mesh
-  *
-- * @NL80211_MESHCONF_ROOTMODE: whether root mode is enabled or not
-+ * @NL80211_MESHCONF_HWMP_ROOTMODE: whether root mode is enabled or not
-  *
-  * @NL80211_MESHCONF_ELEMENT_TTL: specifies the value of TTL field set at a
-  * source mesh point for path selection elements.
-@@ -1678,6 +1687,7 @@ enum nl80211_meshconf_params {
-  * element that vendors will use to identify the path selection methods and
-  * metrics in use.
-  *
-+ * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-  */
- enum nl80211_mesh_setup_params {
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index bcc9f44..1322695 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1103,6 +1103,8 @@ struct cfg80211_pmksa {
-  * @change_mpath: change a given mesh path
-  * @get_mpath: get a mesh path for the given parameters
-  * @dump_mpath: dump mesh path callback -- resume dump at index @idx
-+ * @join_mesh: join the mesh network with the specified parameters
-+ * @leave_mesh: leave the current mesh network
-  *
-  * @get_mesh_config: Get the current mesh configuration
-  *
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5b3fd5a..62c0ce2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -337,6 +337,10 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_LDPC: tells the driver to use LDPC for this frame
-  * @IEEE80211_TX_CTL_STBC: Enables Space-Time Block Coding (STBC) for this
-  *	frame and selects the maximum number of streams that it can use.
-+ * @IEEE80211_TX_CTL_TX_OFFCHAN: Marks this packet to be transmitted on
-+ *	the off-channel channel when a remain-on-channel offload is done
-+ *	in hardware -- normal packets still flow and are expected to be
-+ *	handled properly by the device.
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -1753,6 +1757,16 @@ enum ieee80211_ampdu_mlme_action {
-  *	(also see nl80211.h @NL80211_ATTR_WIPHY_ANTENNA_TX).
-  *
-  * @get_antenna: Get current antenna configuration from device (tx_ant, rx_ant).
-+ *
-+ * @remain_on_channel: Starts an off-channel period on the given channel, must
-+ *	call back to ieee80211_ready_on_channel() when on that channel. Note
-+ *	that normal channel traffic is not stopped as this is intended for hw
-+ *	offload. Frames to transmit on the off-channel channel are transmitted
-+ *	normally except for the %IEEE80211_TX_CTL_TX_OFFCHAN flag. When the
-+ *	duration (which will always be non-zero) expires, the driver must call
-+ *	ieee80211_remain_on_channel_expired(). This callback may sleep.
-+ * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
-+ *	aborted before it expires. This callback may sleep.
-  */
- struct ieee80211_ops {
- 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
