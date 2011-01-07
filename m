@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:17058 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab1AJXrq (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58189 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753Ab1AGA5c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 18:47:46 -0500
-Date: Tue, 11 Jan 2011 00:47:44 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-wireless@vger.kernel.org
-cc: users@rt2x00.serialmonkey.com, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH] rt2x00: Don't leak mem in error path of
- rt2x00lib_request_firmware()
-Message-ID: <alpine.LNX.2.00.1101110044580.32164@swampdragon.chaosbits.net>
+	Thu, 6 Jan 2011 19:57:32 -0500
+Received: by iyi12 with SMTP id 12so15372119iyi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:57:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 6 Jan 2011 16:57:11 -0800
+Message-ID: <AANLkTin2YS4akjJpAhagqesoNO-5D=ngbMJLOqS8-yQu@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
+ one page.
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to release_firmware() in order not to leak memory.
+On Thu, Jan 6, 2011 at 4:46 PM,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> Patch is from Eric Dumazet, as described here:
+> https://patchwork.kernel.org/patch/104271/
+>
+> Reported-by: Michael Guntsche <mike@it-loops.com>
+> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- rt2x00firmware.c |    1 +
- 1 file changed, 1 insertion(+)
+Did he SOB it?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-index f0e1eb7..be0ff78 100644
---- a/drivers/net/wireless/rt2x00/rt2x00firmware.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-@@ -58,6 +58,7 @@ static int rt2x00lib_request_firmware(struct rt2x00_dev *rt2x00dev)
- 
- 	if (!fw || !fw->size || !fw->data) {
- 		ERROR(rt2x00dev, "Failed to read Firmware.\n");
-+		release_firmware(fw);
- 		return -ENOENT;
- 	}
- 
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
-
+  Luis
