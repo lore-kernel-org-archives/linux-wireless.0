@@ -1,34 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab1ARPYA (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49557 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755066Ab1AGSBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 10:24:00 -0500
-Subject: Re: intermittent eap authentication failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chuck Crisler <ccrisler@vgocom.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <48A27D1459A9493C8A16D0D6308A5FB1@ChuckPC>
-References: <D323CFEF4DEC4E18AFF56742F78C16B6@ChuckPC>
-	 <1295347932.3563.13.camel@jlt3.sipsolutions.net>
-	 <BB274B92115347F9A8E250DEF0C2B732@ChuckPC>
-	 <1F9D19D1999A4D7885D0A4DD7BEBCEE8@ChuckPC>
-	 <1295362622.3563.23.camel@jlt3.sipsolutions.net>
-	 <48A27D1459A9493C8A16D0D6308A5FB1@ChuckPC>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Jan 2011 16:23:58 +0100
-Message-ID: <1295364238.3563.24.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 7 Jan 2011 13:01:24 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] ath9k:  Fix incorrect tx-hang detection logic.
+Date: Fri,  7 Jan 2011 10:00:59 -0800
+Message-Id: <1294423259-8163-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294423259-8163-1-git-send-email-greearb@candelatech.com>
+References: <1294423259-8163-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-18 at 10:21 -0500, Chuck Crisler wrote:
-> What is the reason that the design calls for a scan in response to a session 
-> timeout? A session timeout doesn't happen because of a roam, so the original 
-> AP is probably still good. Why scan?
+From: Ben Greear <greearb@candelatech.com>
 
-I don't think there's any design here, and in any case that's
-wpa_supplicant's doing. :)
+It is not guaranteed that the ath_tx_complete_poll_work runs
+after some fixed duration because the channel-reset logic
+removes the work and then re-adds it to run immediately.
+Two channel-changes 1ms apart, with a transmit was being
+attempted, could thus incorrectly trigger a reset by
+the ath_tx_complete_poll_work method.
 
-johannes
+Add a jiffies timestamp to ensure that at least 1 second
+has elapsed before triggering the reset.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 3f5c513... 93209d6... M	drivers/net/wireless/ath/ath9k/ath9k.h
+:100644 100644 3aae523... e63de71... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |   15 ++++++++++-----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 3f5c513..93209d6 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -190,6 +190,7 @@ struct ath_txq {
+ 	spinlock_t axq_lock;
+ 	u32 axq_depth;
+ 	u32 axq_ampdu_depth;
++	unsigned long start_tx_timer; /* jiffies */
+ 	bool stopped;
+ 	bool axq_tx_inprogress;
+ 	struct list_head axq_acq;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3aae523..e63de71 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2097,6 +2097,7 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 	struct ath_txq *txq;
+ 	int i;
+ 	bool needreset = false;
++	unsigned long timeout = msecs_to_jiffies(ATH_TX_COMPLETE_POLL_INT);
+ 
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
+ 		if (ATH_TXQ_SETUP(sc, i)) {
+@@ -2104,11 +2105,16 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 			spin_lock_bh(&txq->axq_lock);
+ 			if (txq->axq_depth) {
+ 				if (txq->axq_tx_inprogress) {
+-					needreset = true;
+-					spin_unlock_bh(&txq->axq_lock);
+-					break;
++					if (time_after_eq(jiffies,
++							  txq->start_tx_timer +
++							  timeout)) {
++						needreset = true;
++						spin_unlock_bh(&txq->axq_lock);
++						break;
++					}
+ 				} else {
+ 					txq->axq_tx_inprogress = true;
++					txq->start_tx_timer = jiffies;
+ 				}
+ 			}
+ 			spin_unlock_bh(&txq->axq_lock);
+@@ -2122,8 +2128,7 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 		ath9k_ps_restore(sc);
+ 	}
+ 
+-	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+-			msecs_to_jiffies(ATH_TX_COMPLETE_POLL_INT));
++	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, timeout);
+ }
+ 
+ 
+-- 
+1.7.2.3
 
