@@ -1,139 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:60324 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754036Ab1A3TLP (ORCPT
+Received: from mail-iw0-f194.google.com ([209.85.214.194]:54158 "EHLO
+	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757252Ab1AGCNp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:11:15 -0500
-Message-ID: <4D45B7C6.4030709@davizone.at>
-Date: Sun, 30 Jan 2011 20:11:02 +0100
-From: David Gnedt <david.gnedt@davizone.at>
+	Thu, 6 Jan 2011 21:13:45 -0500
+Received: by iwb12 with SMTP id 12so191061iwb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:13:44 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 08/18] wl1251: implement hardware ARP filtering
-References: <4D45A5C7.8000000@davizone.at>
-In-Reply-To: <4D45A5C7.8000000@davizone.at>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1294366072.2704.32.camel@edumazet-laptop>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+ <201101070205.00886.chunkeey@googlemail.com> <1294363427.2704.23.camel@edumazet-laptop>
+ <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com> <1294366072.2704.32.camel@edumazet-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 6 Jan 2011 18:13:23 -0800
+Message-ID: <AANLkTi=+F_O1_2c07zLEGVDSAkuA2_MwghwRQK9pHMN7@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	greearb@candelatech.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update hardware ARP filter configuration on BSS_CHANGED_ARP_FILTER
-notification from mac80211.
-Ported from wl1271 driver.
+On Thu, Jan 6, 2011 at 6:07 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> Le jeudi 06 janvier 2011 à 17:57 -0800, Luis R. Rodriguez a écrit :
+>> On Thu, Jan 6, 2011 at 5:23 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+>> > Le vendredi 07 janvier 2011 à 02:04 +0100, Christian Lamparter a écrit :
+>> >> On Friday 07 January 2011 01:46:03 greearb@candelatech.com wrote:
+>> >> > From: Ben Greear <greearb@candelatech.com>
+>> >> >
+>> >> > Patch is from Eric Dumazet, as described here:
+>> >> > https://patchwork.kernel.org/patch/104271/
+>> >> >
+>> >> > Reported-by: Michael Guntsche <mike@it-loops.com>
+>> >> > Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+>> >> > Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> >> > ---
+>> >> >
+>> >> > NOTE:  This needs review by ath9k and/or other informed
+>> >> > people.
+>> >>
+>> >> Does the hardware support vector-i/o for rx (like for instance iwlagn)?
+>> >> Else, this change would break A-MSDU rx - which is a mandatory feature
+>> >> (although, not very popular) of 802.11n -
+>> >>
+>> >> See for example 802.11n-2009 9.7c:
+>> >>
+>> >> "Support for the reception of an A-MSDU, where [...], is mandatory for
+>> >> an HT STA"
+>> >>
+>> >> And 7.1.2 "The maximum frame body size is determined by the maximum
+>> >> MSDU size (2304 octets) OR the maximum A-MSDU (3839 or 7935 octets,
+>> >> depending upon the STA's capability), plus any overhead from security
+>> >> encapsulation.
+>> >
+>> > Then, only solution is to mark this broken, and perform a copy of each
+>> > received frame, to keep a order-1 buffer(s) allocated for hardware.
+>>
+>> -ENOTPOSSIBLE -- its an WFA requirement to RX AMSDU.
+>>
+>> > Its too easy to have memory allocation failures for high order pages and
+>> > freeze the card.
+>>
+>> Can't we us paged RX skbs, which mac80211 supports now?
+>>
+>> See 2f301227a1ede57504694e1f64839839f5737cac and friends.
+>>
+>
+> Maybe you dont understand the point. A fix is needed for stable kernels.
+> paged RX skbs is probably a bit complex, even if copy/pasted from other
+> drivers.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
-Sorry for the partly broken patches, I thought I configured my client the
-right way. I tried to stop the mails at my mailserver, but it was mostly
-already too late.
----
- drivers/net/wireless/wl1251/acx.c  |   31 +++++++++++++++++++++++++++++++
- drivers/net/wireless/wl1251/acx.h  |   15 +++++++++++++++
- drivers/net/wireless/wl1251/main.c |   13 +++++++++++++
- 3 files changed, 59 insertions(+), 0 deletions(-)
+The only way to accept your patch is to use a debugfs option to
+disable it, we need AMSDU support enabled by default.
 
-diff --git a/drivers/net/wireless/wl1251/acx.c b/drivers/net/wireless/wl1251/acx.c
-index d43695a..0a1c22a 100644
---- a/drivers/net/wireless/wl1251/acx.c
-+++ b/drivers/net/wireless/wl1251/acx.c
-@@ -1066,6 +1066,37 @@ out:
- 	return ret;
- }
- 
-+int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address)
-+{
-+	struct wl1251_acx_arp_filter *acx;
-+	int ret;
-+
-+	wl1251_debug(DEBUG_ACX, "acx arp ip filter, enable: %d", enable);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->version = ACX_IPV4_VERSION;
-+	acx->enable = enable;
-+
-+	if (enable == true)
-+		memcpy(acx->address, &address, ACX_IPV4_ADDR_SIZE);
-+
-+	ret = wl1251_cmd_configure(wl, ACX_ARP_IP_FILTER,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1251_warning("failed to set arp ip filter: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
- int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
- 		      u8 aifs, u16 txop)
- {
-diff --git a/drivers/net/wireless/wl1251/acx.h b/drivers/net/wireless/wl1251/acx.h
-index 99ea80e..9958676 100644
---- a/drivers/net/wireless/wl1251/acx.h
-+++ b/drivers/net/wireless/wl1251/acx.h
-@@ -1233,6 +1233,20 @@ struct wl1251_acx_bet_enable {
- 	u8 padding[2];
- } __packed;
- 
-+#define ACX_IPV4_VERSION 4
-+#define ACX_IPV6_VERSION 6
-+#define ACX_IPV4_ADDR_SIZE 4
-+struct wl1251_acx_arp_filter {
-+	struct acx_header header;
-+	u8 version;	/* The IP version: 4 - IPv4, 6 - IPv6.*/
-+	u8 enable;	/* 1 - ARP filtering is enabled, 0 - disabled */
-+	u8 padding[2];
-+	u8 address[16];	/* The IP address used to filter ARP packets.
-+			   ARP packets that do not match this address are
-+			   dropped. When the IP Version is 4, the last 12
-+			   bytes of the the address are ignored. */
-+} __packed;
-+
- struct wl1251_acx_ac_cfg {
- 	struct acx_header header;
- 
-@@ -1475,6 +1489,7 @@ int wl1251_acx_mem_cfg(struct wl1251 *wl);
- int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim);
- int wl1251_acx_bet_enable(struct wl1251 *wl, enum wl1251_acx_bet_mode mode,
- 			  u8 max_consecutive);
-+int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address);
- int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
- 		      u8 aifs, u16 txop);
- int wl1251_acx_tid_cfg(struct wl1251 *wl, u8 queue,
-diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
-index c0a7fd5..387878f 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -1051,6 +1051,19 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if (changed & BSS_CHANGED_ARP_FILTER) {
-+		__be32 addr = bss_conf->arp_addr_list[0];
-+		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
-+
-+		if (bss_conf->arp_addr_cnt == 1 && bss_conf->arp_filter_enabled)
-+			ret = wl1251_acx_arp_ip_filter(wl, true, addr);
-+		else
-+			ret = wl1251_acx_arp_ip_filter(wl, false, addr);
-+
-+		if (ret < 0)
-+			goto out_sleep;
-+	}
-+
- 	if (changed & BSS_CHANGED_BEACON) {
- 		beacon = ieee80211_beacon_get(hw, vif);
- 		ret = wl1251_cmd_template_set(wl, CMD_BEACON, beacon->data,
--- 
-1.7.0.4
+> If the hardware needs 8192 bytes (or 16384) buffers to perform its
+> operation, it should not give them back to linux, because there is no
+> guarantee it can allocate fresh ones for the next frames.
 
+Last I looked at this the issue was not the upper used by the driver
+but an issue of a roundoff by the kernel that ended up on *some*
+machines going a higher order. Not all machines use the higher order.
+I wondered at one point if using ksize() might help here too but
+again, this is a new API. Not sure how to fix it for older kernels.
 
+  Luis
