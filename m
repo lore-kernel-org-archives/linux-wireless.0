@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:40647 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754943Ab1AaHlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 02:41:55 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0V7fsn6004487
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 01:41:54 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0V7fsHV006602
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 01:41:54 -0600 (CST)
-Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0V7fs3K006659
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 01:41:54 -0600 (CST)
-Received: from pimenta.tieu.ti.com (h64-3.vpn.ti.com [172.24.64.3])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0V7fqZ6006465	for
- <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 01:41:53 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: fix warning due to missing arg in ampdu_action
-Date: Mon, 31 Jan 2011 09:41:52 +0200
-Message-ID: <1296459712-1056-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dakia2.marvell.com ([65.219.4.35]:36079 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298Ab1AGE6c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jan 2011 23:58:32 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: remove struct ieee_types_erp_info
+Date: Thu,  6 Jan 2011 20:59:14 -0800
+Message-Id: <1294376354-13438-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 0b01f030d38e00650e2db42da083d8647aad40a5 added a new argument
-to the ampdu_action operation.  The ampdu_action operation in the
-wl12xx driver currently doesn't have that argument and this generates
-a warning.  This happened during merging of the latest mac80211
-patches with the wl12xx BA patches.
+This structure is not necessary.
 
-  CC [M]  drivers/net/wireless/wl12xx/main.o
-drivers/net/wireless/wl12xx/main.c:3035: warning: initialization from incompatible pointer type
-
-The wl12xx driver doesn't need to do anything about the buf_size
-argument since the AMPDU TX is fully handled by the firmware.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/ieee.h |    6 ------
+ drivers/net/wireless/mwifiex/scan.c |    5 +----
+ 2 files changed, 1 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dfab21e..254b7da 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2724,8 +2724,9 @@ out:
- }
+diff --git a/drivers/net/wireless/mwifiex/ieee.h b/drivers/net/wireless/mwifiex/ieee.h
+index 70af50c..2282c0c 100644
+--- a/drivers/net/wireless/mwifiex/ieee.h
++++ b/drivers/net/wireless/mwifiex/ieee.h
+@@ -93,12 +93,6 @@ union ieee_types_phy_param_set {
+ 	struct ieee_types_ds_param_set ds_param_set;
+ } __packed;
  
- int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			   enum ieee80211_ampdu_mlme_action action,
-+			   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			   u8 buf_size)
- {
- 	struct wl1271 *wl = hw->priv;
- 	int ret;
+-struct ieee_types_erp_info {
+-	u8 element_id;
+-	u8 len;
+-	u8 erp_flags;
+-} __packed;
+-
+ struct ieee_types_assoc_rsp {
+ 	__le16 cap_info_bitmap;
+ 	__le16 status_code;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 104589e..83e466e 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1348,8 +1348,6 @@ mwifiex_interpret_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 	u16 beacon_size;
+ 	u8 found_data_rate_ie;
+ 	u32 bytes_left_for_current_beacon;
+-	struct ieee_types_erp_info *erp_info;
+-
+ 	struct ieee_types_vendor_specific *vendor_ie;
+ 	const u8 wpa_oui[4] = { 0x00, 0x50, 0xf2, 0x01 };
+ 	const u8 wmm_oui[4] = { 0x00, 0x50, 0xf2, 0x02 };
+@@ -1532,8 +1530,7 @@ mwifiex_interpret_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+ 			break;
+ 
+ 		case WLAN_EID_ERP_INFO:
+-			erp_info = (struct ieee_types_erp_info *) current_ptr;
+-			bss_entry->erp_flags = erp_info->erp_flags;
++			bss_entry->erp_flags = *(current_ptr + 2);
+ 			break;
+ 
+ 		case WLAN_EID_EXT_SUPP_RATES:
 -- 
-1.7.1
+1.7.0.2
 
