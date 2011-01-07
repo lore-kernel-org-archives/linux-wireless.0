@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab1AaN4Z (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39441 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657Ab1AGBD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 08:56:25 -0500
-Subject: Re: [RFC v3] mac80211:  Optimize scans on current operating
- channel.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D431778.1000604@candelatech.com>
-References: <1296074238-4012-1-git-send-email-greearb@candelatech.com>
-	 <1296136347.3622.55.camel@jlt3.sipsolutions.net>
-	 <4D41BA91.30608@candelatech.com>
-	 <1296220846.5118.1.camel@jlt3.sipsolutions.net>
-	 <4D431778.1000604@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 14:56:23 +0100
-Message-ID: <1296482183.3812.29.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 Jan 2011 20:03:58 -0500
+Message-ID: <4D266679.50504@candelatech.com>
+Date: Thu, 06 Jan 2011 17:03:53 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
+ one page.
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com> <AANLkTin2YS4akjJpAhagqesoNO-5D=ngbMJLOqS8-yQu@mail.gmail.com>
+In-Reply-To: <AANLkTin2YS4akjJpAhagqesoNO-5D=ngbMJLOqS8-yQu@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/06/2011 04:57 PM, Luis R. Rodriguez wrote:
+> On Thu, Jan 6, 2011 at 4:46 PM,<greearb@candelatech.com>  wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Patch is from Eric Dumazet, as described here:
+>> https://patchwork.kernel.org/patch/104271/
+>>
+>> Reported-by: Michael Guntsche<mike@it-loops.com>
+>> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
+>
+> Did he SOB it?
 
-> > However -- I was thinking of something else, not data packets. While
-> > scanning, all received beacons will be handed to the scan code. But if
-> > the mlme code isn't told to stop looking for them, it'll still expect to
-> > see the beacons.
-> 
-> Currently, it seems mlme timers are stopped when we start scanning,
-> and then started when scanning is complete.
+I guess not explicitly.  But, it's a small little patch that has been
+languishing for 6 months.  Please put the fix in one way or another.
+I don't care that I get any credit what-so-ever.
 
-Ok, I wasn't quite sure about that part -- whether it happened when
-going off-channel or when starting scan. If it happened while going
-off-channel this would've been problematic here.
+Thanks,
+Ben
 
-> However, I don't see any similar effort in the work_work() method
-> when it goes off-channel.
-> 
-> Should we move the timer pause & restart logic into the offchannel_stop_vifs
-> and offchannel_return methods?
-
-Well, sort of no, and sort of yes -- both will disrupt that code in a
-sense, but even scanning on the same channel will disrupt it due to the
-beacon diversion, unless we copy the beacons and give them to both sides
-(scan and mlme)?
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
