@@ -1,96 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:65092 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753995Ab1APVxq convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:42849 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753345Ab1AGA4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 16:53:46 -0500
-Received: by gyb11 with SMTP id 11so1720637gyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Jan 2011 13:53:45 -0800 (PST)
+	Thu, 6 Jan 2011 19:56:49 -0500
+Received: by iyi12 with SMTP id 12so15371697iyi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:56:48 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik=WDsehr0EgW7QemfdmokvaLzg1ugASwiuCOXt@mail.gmail.com>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
- <1295156534-4178-7-git-send-email-arik@wizery.com> <1295167829.3574.10.camel@jlt3.sipsolutions.net>
- <AANLkTik=WDsehr0EgW7QemfdmokvaLzg1ugASwiuCOXt@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 16 Jan 2011 23:53:30 +0200
-Message-ID: <AANLkTi=FRAjCxOBAtXFdzwSqG6DQ+oneoe-THQjsd_Wx@mail.gmail.com>
-Subject: Fwd: [PATCH 06/10] mac80211: add HW flag for disabling auto link-PS
- in AP mode
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <19750.24410.495583.789895@gargle.gargle.HOWL>
+References: <19749.32067.311517.479374@gargle.gargle.HOWL> <19749.37051.292861.996698@gargle.gargle.HOWL>
+ <19750.24410.495583.789895@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 6 Jan 2011 16:56:28 -0800
+Message-ID: <AANLkTintPXzmiGnjEQvXUO3hVCW9J4tGn=MookTx1qBM@mail.gmail.com>
+Subject: Re: [RFC v2] cfg80211: Add HT BSS attributes
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ resending - html mail rejected ]
-
-On Sun, Jan 16, 2011 at 10:50, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Thu, Jan 6, 2011 at 4:33 PM, Sujith <m.sujith@gmail.com> wrote:
+> (Resend to list).
 >
-> > +/**
-> > + * ieee80211_start_ps - start PS for connected sta
-> > + *
-> > + * When operating in AP mode, use this function to inform mac80211
-> > + * about a station entering PS mode.
-> > + * Note that by default mac80211 will automatically call the internal
-> > + * equivalent of this function according to the PM bit of incoming frames.
-> > + * Use the IEEE80211_HW_AP_LINK_PS flag to change this.
->
-> I think that explanation should be clearer and say that you must call
-> this only when the flag is set and vice versa. Also, there should be a
->
-> WARN_ON(hw->flags & HW_AP_LINK_PS)
->
-> in the functions.
+> Sujith wrote:
+>> Sujith wrote:
+>> > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+>> >
+>> > Add two new per-BSS attributes to allow configuration of
+>> > HT capabilites and operational parameters by hostapd.
+>>
+>> Ok, looks like this is not needed after all.
+>> When operating in AP mode, an associated station's HT caps is
+>> notified to the driver through sta_add() anyway.
+>>
+>> The main motive for this patch was that ath9k_htc required the
+>> HT params of the current BSS and it turns out that the firmware
+>> doesn't do anything with the information. :)
 
-will fix in v2.
+Ah, I thought the purpose was to allow dynamic configuration of HT
+capa/params used.
 
->
-> Also, maybe just a single function with a bool argument would be more
-> appropriate? Call it "ieee80211_sta_ps_transition()" or something like
-> that. You should also remove the text about calling the internal
-> equivalent -- the internal details might change at any time but the API
-> should be documented in a way that makes sense without the internal
-> details for the benefit of both sides -- people implementing a driver
-> don't need to know about the internal details, and people changing the
-> internal details know what semantics to keep.
-
-a single function sounds good. v2.
-
->
-> > + * This function may not be called in IRQ context or process context.
->
-> This can't be true -- the latter part you must mean "or with softirqs
-> enabled".
-
-Yes you're right.
-(While looking at this I discovered that I forgot to disable softirqs
-myself. These functions are called from a workqueue in wl12xx - will
-be fixed in v2)
-
->
-> Also, I'm worried about races between this and RX. All of the RX path
-> assumes that it is running at the same time. The ap_sta_ps_{start,end}
-> functions won't be called from the RX path when the flag is set, and
-> this is dependent on setting the flag, but is there really nothing in
-> them that could race?
-
-They might race if the user is not careful. On a SMP machine a user
-can call ieee80211_rx() and ap_sta_ps_start() from two different
-workqueues for example.
-I can add an explicit mutex, but a documentation warning will suffice here no?
-
->
-> Finally, I'm worried about this calling back into the driver's
-> sta_notify callback. If that is to remain that way, it needs to be
-> *very* clearly documented, I'd *much* prefer it not doing that but
-> handing off to a work struct or so internally.
->
-
-sta_notify is pretty useless when the low level driver calls toggles
-the PS-mode by itself. How about I simply remove the call to
-sta_notify in case IEEE80211_HW_AP_LINK_PS is set?
-If a low level driver needs to do some deferred processing after a
-PS-mode transition, it can queue a work on its own..
-
-Regards,
-Arik
+  Luis
