@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:60443 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753908Ab1ASLOm convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47300 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753558Ab1AGAqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 06:14:42 -0500
-Received: by qwa26 with SMTP id 26so702234qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 03:14:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110119092057.19628.9296.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092057.19628.9296.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 06:14:41 -0500
-Message-ID: <AANLkTi=2crGZhucAhNHU-iaOkRamg33tQo_-K5h9d64v@mail.gmail.com>
-Subject: Re: [PATCH 5/8] ath5k: Add 802.11j 4.9GHz channels to allowed channels
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 Jan 2011 19:46:13 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Subject: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
+Date: Thu,  6 Jan 2011 16:46:03 -0800
+Message-Id: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 4:20 AM, Bruno Randolf <br1@einfach.org> wrote:
-> Add the 802.11j (20MHz channel width) channels to the allowed channels. This
-> still does not enable 802.11j in ath5k since these frequencies are out of the
-> configured range. A later patch will deal with that.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
+From: Ben Greear <greearb@candelatech.com>
 
-> -static bool ath5k_is_standard_channel(short chan)
-> +static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
->  {
-> -       return ((chan <= 14) ||
-> -               /* UNII 1,2 */
-> -               ((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
-> +       if (band == IEEE80211_BAND_2GHZ && chan <= 14)
-> +               return true;
+Patch is from Eric Dumazet, as described here:
+https://patchwork.kernel.org/patch/104271/
 
-This routine is only used to post-filter the channels so I don't
-think we need to check the band.  It's mostly just to weed out all
-of the 10 mhz-spaced 5 ghz channels we used to export.
+Reported-by: Michael Guntsche <mike@it-loops.com>
+Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-> -               ((chan & 3) == 1 && chan >= 149 && chan <= 165));
-> +               ((chan & 3) == 1 && chan >= 149 && chan <= 165) ||
-> +               /* 802.11j 5.030-5.080 GHz (20MHz) */
-> +               (chan == 8 || chan == 12 || chan == 16) ||
+NOTE:  This needs review by ath9k and/or other informed
+people.
 
-Ok I was also going to complain that some channel numbers < 14 were
-valid in the 5 ghz band but you know that :)
+:100644 100644 b2497b8... 270661d... M	drivers/net/wireless/ath/ath9k/recv.c
+ drivers/net/wireless/ath/ath9k/recv.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index b2497b8..270661d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -230,11 +230,11 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
+ 	int error = 0, i;
+ 	u32 size;
+ 
+-
+-	common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN +
+-				     ah->caps.rx_status_len,
+-				     min(common->cachelsz, (u16)64));
+-
++	size = roundup(IEEE80211_MAX_MPDU_LEN + ah->caps.rx_status_len,
++		       min(common->cachelsz, (u16)64));
++	common->rx_bufsize = max_t(u32, size,
++				   SKB_MAX_ORDER(NET_SKB_PAD
++						 + common->cachelsz, 0));
+ 	ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
+ 				    ah->caps.rx_status_len);
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.2.3
+
