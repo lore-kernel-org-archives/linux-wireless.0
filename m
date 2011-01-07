@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59766 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab1ACSm1 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41226 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753159Ab1AGWyL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 13:42:27 -0500
-Subject: [PATCH 2.6.37] mac80211: add missing synchronize_rcu
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 03 Jan 2011 19:42:24 +0100
-Message-ID: <1294080144.3436.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 7 Jan 2011 17:54:11 -0500
+Received: by wyb28 with SMTP id 28so17864369wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 14:54:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110107202224.GI21588@tux>
+References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
+	<AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
+	<20110107024432.GC20431@tux>
+	<201101071111.17423.helmut.schaa@googlemail.com>
+	<AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
+	<20110107202224.GI21588@tux>
+Date: Fri, 7 Jan 2011 14:54:10 -0800
+Message-ID: <AANLkTi=m4BzXBR4vohkxT9zKpXxmZSO347qG8=p-FTO1@mail.gmail.com>
+Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
+From: Aleksandar Milivojevic <alex@milivojevic.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Wolfgang Kufner <wolfgang.kufner@gmail.com>,
+	Luis Correia <buga@loide.net>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jan 7, 2011 at 12:22 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> You may want to try checing the 'iw event -t' output while the issue happens.
+> Maybe it is due to a roaming issue, if you are using a large BSS and roam
+> in between you may want to try using wpa_supplicant with nl80211 and use
+> the new bgscan module from wpa_supplicant to trigger you to only switch
+> based on triggered events from nl80211 like signal rssi changes.
+>
+> Here is an example supplicant conf that uses the bgscan module:
+>
+> # WPA-PSK/TKIP
+>
+> ctrl_interface=/var/run/wpa_supplicant
+>
+> network={
+>        ssid="my-corp-cool-bss"
+>        bgscan="simple:30:-45:300"
+>        key_mgmt=WPA-PSK
+>        proto=RSN
+>        pairwise=CCMP
+>        group=CCMP
+>        psk="foobar_is_great"
+> }
+>
+> No Linux distributions today uses this other than ChromeOS, but they should
+> all change to use it.
 
-commit ad0e2b5a00dbec303e4682b403bb6703d11dcdb2
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Tue Jun 1 10:19:19 2010 +0200
+I doubt it would help in this case, since things are very static.
+There's only single AP (typical home network environment).  The
+wireless card is plugged into (and sits directly on top of) an
+desktop, so its position in space is rather static (if I wanted to
+make a bad attempt at being funny, I'd add "relative to the AP").
 
-    mac80211: simplify key locking
-
-removed the synchronization against RCU and thus
-opened a race window where we can use a key for
-TX while it is already freed. Put a synchronisation
-into the right place to close that window.
-
-Reported-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: stable@kernel.org [2.6.36+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/key.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
---- wireless-testing.orig/net/mac80211/key.c	2011-01-03 19:04:10.000000000 +0100
-+++ wireless-testing/net/mac80211/key.c	2011-01-03 19:04:20.000000000 +0100
-@@ -379,6 +379,12 @@ static void __ieee80211_key_destroy(stru
- 	if (!key)
- 		return;
- 
-+	/*
-+	 * Synchronize so the TX path can no longer be using
-+	 * this key before we free/remove it.
-+	 */
-+	synchronize_rcu();
-+
- 	if (key->local)
- 		ieee80211_key_disable_hw_accel(key);
- 
-
-
+I'll check out what "iw event -t" has to say over the weekend.
