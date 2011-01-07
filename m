@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:43657 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1AUDBV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:01:21 -0500
-Received: by pxi15 with SMTP id 15so217636pxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:21 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63187.572339.174364@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:30:35 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 10/33] ath9k_htc: Protect ampdu_action with a mutex
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:60002 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754037Ab1AGSsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 13:48:16 -0500
+Subject: [PATCH] ssb: Ignore dangling ethernet cores on wireless devices
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Jan 2011 19:48:05 +0100
+Message-ID: <1294426085.18385.8.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Some Broadcom based wireless devices contain dangling ethernet cores.
+This triggers the ssb probing mechanism and tries to load the b44 driver
+on this core.
+Ignore the dangling core in the ssb core scanning code to avoid
+access to the core and failure of b44 probing.
 
-This is required when issuing commands to the firmware.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 6bd7e25..b6c8363 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1636,6 +1636,8 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 	struct ath9k_htc_sta *ista;
- 	int ret = 0;
- 
-+	mutex_lock(&priv->mutex);
-+
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		break;
-@@ -1660,6 +1662,8 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 		ath_err(ath9k_hw_common(priv->ah), "Unknown AMPDU action\n");
- 	}
- 
-+	mutex_unlock(&priv->mutex);
-+
- 	return ret;
- }
- 
+Does not need to go into stable, because probing of that core
+doesn't hurt except for failure messages in the logs.
+
+Index: linux-2.6.37/drivers/ssb/scan.c
+===================================================================
+--- linux-2.6.37.orig/drivers/ssb/scan.c	2011-01-07 15:35:10.518000002 +0100
++++ linux-2.6.37/drivers/ssb/scan.c	2011-01-07 15:45:54.231998930 +0100
+@@ -420,6 +420,16 @@
+ 			bus->pcicore.dev = dev;
+ #endif /* CONFIG_SSB_DRIVER_PCICORE */
+ 			break;
++		case SSB_DEV_ETHERNET:
++			if (bus->bustype == SSB_BUSTYPE_PCI) {
++				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
++				    (bus->host_pci->device & 0xFF00) == 0x4300) {
++					/* This is a dangling ethernet core on a
++					 * wireless device. Ignore it. */
++					continue;
++				}
++			}
++			break;
+ 		default:
+ 			break;
+ 		}
+
 -- 
-1.7.3.5
+Greetings Michael.
 
