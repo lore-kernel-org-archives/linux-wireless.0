@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:48218 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754022Ab1A3MYy (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:48615 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694Ab1AGCYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:54 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so2118506ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:53 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 18/21] rt2x00: Copy the MAC address to the WCID entry properly.
-Date: Sun, 30 Jan 2011 13:23:03 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201101301316.04044.IvDoorn@gmail.com> <201101301322.23247.IvDoorn@gmail.com> <201101301322.42545.IvDoorn@gmail.com>
-In-Reply-To: <201101301322.42545.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101301323.04342.IvDoorn@gmail.com>
+	Thu, 6 Jan 2011 21:24:52 -0500
+Received: by wwi17 with SMTP id 17so41975wwi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:24:51 -0800 (PST)
+Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	greearb@candelatech.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net
+In-Reply-To: <AANLkTi=+F_O1_2c07zLEGVDSAkuA2_MwghwRQK9pHMN7@mail.gmail.com>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+	 <201101070205.00886.chunkeey@googlemail.com>
+	 <1294363427.2704.23.camel@edumazet-laptop>
+	 <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com>
+	 <1294366072.2704.32.camel@edumazet-laptop>
+	 <AANLkTi=+F_O1_2c07zLEGVDSAkuA2_MwghwRQK9pHMN7@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Jan 2011 03:24:40 +0100
+Message-ID: <1294367080.2704.46.camel@edumazet-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Le jeudi 06 janvier 2011 à 18:13 -0800, Luis R. Rodriguez a écrit :
+> On Thu, Jan 6, 2011 at 6:07 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
 
-Use the specific mac field of the wcid_entry structure to copy the MAC
-address to, instead of just overwriting the structure.
-Previous code resulted in the same, but this form is cleaner.
+> The only way to accept your patch is to use a debugfs option to
+> disable it, we need AMSDU support enabled by default.
+> 
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I dont care of my patch ;)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 4c34fce..c9bf074 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1030,7 +1030,7 @@ static void rt2800_config_wcid_attr(struct rt2x00_dev *rt2x00dev,
- 
- 	memset(&wcid_entry, 0, sizeof(wcid_entry));
- 	if (crypto->cmd == SET_KEY)
--		memcpy(&wcid_entry, crypto->address, ETH_ALEN);
-+		memcpy(wcid_entry.mac, crypto->address, ETH_ALEN);
- 	rt2800_register_multiwrite(rt2x00dev, offset,
- 				      &wcid_entry, sizeof(wcid_entry));
- }
--- 
-1.7.2.3
+There is a reason I felt it was not appropriate.
+
+> > If the hardware needs 8192 bytes (or 16384) buffers to perform its
+> > operation, it should not give them back to linux, because there is no
+> > guarantee it can allocate fresh ones for the next frames.
+> 
+> Last I looked at this the issue was not the upper used by the driver
+> but an issue of a roundoff by the kernel that ended up on *some*
+> machines going a higher order. Not all machines use the higher order.
+> I wondered at one point if using ksize() might help here too but
+> again, this is a new API. Not sure how to fix it for older kernels.
+
+common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN +
+                              ah->caps.rx_status_len,
+                              min(common->cachelsz, (u16)64));
+
+Given IEEE80211_MAX_MPDU_LEN is more than 3840, and skb shinfo adds more
+than 256 bytes, I can assert rx_bufsize is greater than 4096 : order-1
+allocations at minimum.
+ksize() wont help you.
+
+Many net drivers perform a copy (r8169.c comes to mind, because of a
+hardware flaw).
+
+
 
