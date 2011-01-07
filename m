@@ -1,109 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:52689 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab1ADXtc (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36242 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924Ab1AGCpi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:49:32 -0500
-Subject: [RFC PATCH 12/17] zd1211rw: batch beacon config commands together
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:49:27 +0200
-Message-ID: <20110104234927.25309.77884.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
+	Thu, 6 Jan 2011 21:45:38 -0500
+Message-ID: <4D267E4D.7000608@candelatech.com>
+Date: Thu, 06 Jan 2011 18:45:33 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [ath9k-devel] [PATCH 3/3] ath9k: Keep track of stations for debugfs.
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com> <1294361165-15308-3-git-send-email-greearb@candelatech.com> <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com>
+In-Reply-To: <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacon config function writes beacon to hw one write per byte. This is very
-slow (usually taking more than 100ms to finish) and causes high CPU usage
-when in AP-mode (kworker at ~50% on Intel Atom N270). By batching commands
-together zd_mac_config_beacon() runtime can be lowered to 1/5th and lower
-CPU usage to saner levels (<10% on Atom).
+On 01/06/2011 06:30 PM, Luis R. Rodriguez wrote:
+> On Thu, Jan 6, 2011 at 4:46 PM,<greearb@candelatech.com>  wrote:
+>> +#define ATH9K_MAX_STATIONS 1024
+>
+> How about making this a Kconfig with a default to a value of the known
+> (by you) max workable number of STAs that one can use on ath9k, which
+> is modifiable to other values by power of two up to 1024. Advise in
+> the kconfig that if more STAs are used then some issue may arise but
+> should be reported (so the issue can be fixed). This way by default
+> normal users (you're not normal) won't enable>  max known workable
+> stable number of STAs on ath9k.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |   40 ++++++++++++++++++++------------
- 1 files changed, 25 insertions(+), 15 deletions(-)
+This is just for debugging at this point.  It wastes a bit of memory
+when debugfs is enabled, but otherwise doesn't affect anything.  It's
+not even really a problem if there are more stations than fit in
+the array.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index d4b4036..bee3e21 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -602,11 +602,18 @@ static void cs_set_control(struct zd_mac *mac, struct zd_ctrlset *cs,
- static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
- {
- 	struct zd_mac *mac = zd_hw_mac(hw);
--	int r, ret;
-+	int r, ret, num_cmds, req_pos = 0;
- 	u32 tmp, j = 0;
- 	/* 4 more bytes for tail CRC */
- 	u32 full_len = beacon->len + 4;
- 	unsigned long end_jiffies, message_jiffies;
-+	struct zd_ioreq32 *ioreqs;
-+
-+	/* Alloc memory for full beacon write at once. */
-+	num_cmds = 1 + zd_chip_is_zd1211b(&mac->chip) + full_len;
-+	ioreqs = kmalloc(num_cmds * sizeof(struct zd_ioreq32), GFP_KERNEL);
-+	if (!ioreqs)
-+		return -ENOMEM;
- 
- 	mutex_lock(&mac->chip.mutex);
- 
-@@ -637,29 +644,31 @@ static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
- 		msleep(20);
- 	}
- 
--	r = zd_iowrite32_locked(&mac->chip, full_len - 1, CR_BCN_FIFO);
--	if (r < 0)
--		goto release_sema;
-+	ioreqs[req_pos].addr = CR_BCN_FIFO;
-+	ioreqs[req_pos].value = full_len - 1;
-+	req_pos++;
- 	if (zd_chip_is_zd1211b(&mac->chip)) {
--		r = zd_iowrite32_locked(&mac->chip, full_len - 1,
--					CR_BCN_LENGTH);
--		if (r < 0)
--			goto release_sema;
-+		ioreqs[req_pos].addr = CR_BCN_LENGTH;
-+		ioreqs[req_pos].value = full_len - 1;
-+		req_pos++;
- 	}
- 
- 	for (j = 0 ; j < beacon->len; j++) {
--		r = zd_iowrite32_locked(&mac->chip, *((u8 *)(beacon->data + j)),
--					CR_BCN_FIFO);
--		if (r < 0)
--			goto release_sema;
-+		ioreqs[req_pos].addr = CR_BCN_FIFO;
-+		ioreqs[req_pos].value = *((u8 *)(beacon->data + j));
-+		req_pos++;
- 	}
- 
- 	for (j = 0; j < 4; j++) {
--		r = zd_iowrite32_locked(&mac->chip, 0x0, CR_BCN_FIFO);
--		if (r < 0)
--			goto release_sema;
-+		ioreqs[req_pos].addr = CR_BCN_FIFO;
-+		ioreqs[req_pos].value = 0x0;
-+		req_pos++;
- 	}
- 
-+	BUG_ON(req_pos != num_cmds);
-+
-+	r = zd_iowrite32a_locked(&mac->chip, ioreqs, num_cmds);
-+
- release_sema:
- 	/*
- 	 * Try very hard to release device beacon semaphore, as otherwise
-@@ -694,6 +703,7 @@ release_sema:
- 				CR_BCN_PLCP_CFG);
- out:
- 	mutex_unlock(&mac->chip.mutex);
-+	kfree(ioreqs);
- 	return r;
- }
- 
+I can reproduce all my problems with < 128, so if you'd prefer
+the number be smaller, that's fine with me.  I don't think it's
+worth a configurable value, however.
 
+Thanks,
+Ben
+
+>
+>    Luis
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
