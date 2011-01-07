@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40156 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:61679 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab1A0Qsj convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752022Ab1AGIGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 11:48:39 -0500
-Received: by vws16 with SMTP id 16so835983vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 08:48:38 -0800 (PST)
+	Fri, 7 Jan 2011 03:06:46 -0500
+Received: by vws16 with SMTP id 16so7106554vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 00:06:45 -0800 (PST)
+Received: by qwa26 with SMTP id 26so17549885qwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 00:06:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
-References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
-Date: Thu, 27 Jan 2011 11:48:38 -0500
-Message-ID: <AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
-Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+From: Damian Minkov <damencho@sip-communicator.org>
+Date: Fri, 7 Jan 2011 10:06:23 +0200
+Message-ID: <AANLkTimekYjYh7uZ3enOQ+zX2_dpA25Zy0aATCDzw521@mail.gmail.com>
+Subject: Question about ep-n8508
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/27 Rafał Miłecki <zajec5@gmail.com>:
-> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
-> inserted into PC.  Unfortunately after inserting my Broadcom card to
-> it, it is not detected in "lspci" at all.
->
-> My WiFi card used to work in "native" slot inside notebook. So if
-> anything is broken, that would be PCIe x1 slot on motherboard or
-> adapter itself. I've tested V and GND pins in my PCIe x1 slot, all
-> work fine. I'll try get some other WiFi cards, to test my adapter
-> tomorrow.
->
-> However, maybe you have heard about some problems with such a
-> adapters? Can there be sth preventing my card from being detected,
-> visible?
->
-> --
-> Rafał
+Hi,
 
-I haven't tested that sort of thing with PCI-Express, but I had bad
-results with Atheros AR5414-based modules in Mini-PCI to PCI adapters
-like this:
+I recently bought the device EDUP ep-n8508 but I have problems running
+it under Ubuntu 10.10, kernel: 2.6.35-24-generic x86_64.
+I tried with the drivers provided on the CD coming with the device
+(rtl8192CU_linux_v2.0.939.20100726) have no problem compiling and
+installing. But after loading the module no network device appears and
+a lot of "usb write TimeOut!" in the messages.
+Then I tried with latest driver edition from realtek website -
+rtl8192CU_linux_v2.0.1212.20101208. Again with same result.
+Here is all the output: http://pastebin.com/7xhkzYNC.
+I saw there is a similar thread, with similar problems "Question about
+Edimax 7811Un", but as I'm new to the list didn't manage to continue
+that thread.
 
-http://www.dealextreme.com/p/mini-pci-to-pci-adapter-with-antenna-9307
+Seems a problem with amd64 systems. Is there any workaround? Anything
+I can further test to help figuring this out?
 
-The system either wouldn't boot, or it would boot and the wireless
-card wouldn't show up in lspci, so I gave up on it.
-
--Brian
+Thanks in advance
+damencho
