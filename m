@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40881 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329Ab1AWKCg (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49454 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753981Ab1AGJLi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 05:02:36 -0500
-Received: by iyj18 with SMTP id 18so3065156iyj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 02:02:36 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 7 Jan 2011 04:11:38 -0500
+Received: by qwa26 with SMTP id 26so17588966qwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 01:11:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19771.64642.436528.605150@gargle.gargle.HOWL>
-Date: Sun, 23 Jan 2011 15:31:38 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC/WIP 00/33] ath9k_htc AP mode
-In-Reply-To: <1295773884.3639.9.camel@jlt3.sipsolutions.net>
-References: <19768.62903.947245.576431@gargle.gargle.HOWL>
-	<201101212226.40435.chunkeey@googlemail.com>
-	<19770.18241.787715.680555@gargle.gargle.HOWL>
-	<19770.18332.859418.283909@gargle.gargle.HOWL>
-	<19770.20402.711305.279934@gargle.gargle.HOWL>
-	<1295773884.3639.9.camel@jlt3.sipsolutions.net>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <AANLkTimekYjYh7uZ3enOQ+zX2_dpA25Zy0aATCDzw521@mail.gmail.com>
+References: <AANLkTimekYjYh7uZ3enOQ+zX2_dpA25Zy0aATCDzw521@mail.gmail.com>
+Date: Fri, 7 Jan 2011 10:11:37 +0100
+Message-ID: <AANLkTimYBb-hqWWtPpQVnVQ2ifemQbAvOBnKSUxM_jsJ@mail.gmail.com>
+Subject: Re: Question about ep-n8508
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Damian Minkov <damencho@sip-communicator.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sat, 2011-01-22 at 09:02 +0530, Sujith wrote:
-> 
-> > It does make it a bit neat to have such a mechanism. And for AP mode, I would think
-> > that it's kinda essential unless someone comes with an ingenious way of solving
-> > the PS race for drivers that don't set IEEE80211_HW_REPORTS_TX_ACK_STATUS. :-)
-> 
-> Well, you can handle the PS stuff in the device completely -- or do it
-> like iwlwifi does, where it doesn't rely on the ACK to detect the race,
-> but the firmware will reject TX frames to sleeping stations until the
-> driver tells it the station woke up.
-> 
-> How it works is like this:
-> 
-> STA AWAKE -> ASLEEP transition:
->   - firmware marks station as asleep
->   - firmware rejects TX frames for this station that are in queue
->   - driver keeps track of # of such frames, and uses
->     ieee80211_sta_block_awake() to block this station while it has
->     frames in the queue
->   - rejected frames are rejected to mac80211 and queued up
-> 
-> ASLEEP -> AWAKE:
->   - due to ieee80211_sta_block_awake() wakeup is blocked until the
->     queue has drained as well (if station very quick wakes up), then
->     when both conditions are met,
->   - driver tells device that this station woke up
->   - mac80211 re-transmits all those frames
->   - driver queues up all those frames
+On Fri, Jan 7, 2011 at 9:06 AM, Damian Minkov
+<damencho@sip-communicator.org> wrote:
+> Hi,
+>
+> I recently bought the device EDUP ep-n8508 but I have problems running
+> it under Ubuntu 10.10, kernel: 2.6.35-24-generic x86_64.
+> I tried with the drivers provided on the CD coming with the device
+> (rtl8192CU_linux_v2.0.939.20100726) have no problem compiling and
+> installing. But after loading the module no network device appears and
+> a lot of "usb write TimeOut!" in the messages.
+> Then I tried with latest driver edition from realtek website -
+> rtl8192CU_linux_v2.0.1212.20101208. Again with same result.
+> Here is all the output: http://pastebin.com/7xhkzYNC.
+> I saw there is a similar thread, with similar problems "Question about
+> Edimax 7811Un", but as I'm new to the list didn't manage to continue
+> that thread.
+>
+> Seems a problem with amd64 systems. Is there any workaround? Anything
+> I can further test to help figuring this out?
+>
+> Thanks in advance
+> damencho
 
-Thanks for the explanation, but ath9k_htc has deeper problems in AP mode. :)
+First of all, please do not refer to pastebin-URLs as they have a
+limited life-cycle.
+A full dmesg and an output of lspci is much more appreciated, so
+interested people can look at it.
 
-* The FW doesn't mark stations or add them to a filter list on receiving a
-  PS-enable frame from a station.
-
-* The host driver has no way of knowing if the FW failed to send out a frame,
-  so keeping track of pending frames is impossible. Am not sure if ATH9K_TXERR_FILT
-  is similar to TX_STATUS_FAIL_DEST_PS in iwlagn (I think not), so that can't be used
-  either.
-  
-Sujith
+- Sedat -
