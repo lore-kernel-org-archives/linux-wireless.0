@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2495 "EHLO mms2.broadcom.com"
+Received: from mail.atheros.com ([12.19.149.2]:18817 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752924Ab1ATMXN convert rfc822-to-8bit (ORCPT
+	id S1751725Ab1AGVeM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 07:23:13 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: zach <conflatulence@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 20 Jan 2011 04:23:03 -0800
-Subject: RE: [PATCH] Kernel Panic on Associate with brcm80211.
-Message-ID: <400C43189542CE41BC0A5B252FC90136952F059551@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <4D334D00.4030604@mythicnet.org>
- <4D3521FD.9020001@mythicnet.org>,<loom.20110120T120235-29@post.gmane.org>
-In-Reply-To: <loom.20110120T120235-29@post.gmane.org>
+	Fri, 7 Jan 2011 16:34:12 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 13:33:55 -0800
+Date: Fri, 7 Jan 2011 13:34:11 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Jason Andryuk <jandryuk@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [PATCH] compat: fix a typo in pm_qos_update_request for 2.6.35
+Message-ID: <20110107213411.GN21588@tux>
+References: <4CDD8BDD.7050903@openwrt.org>
+ <AANLkTimsTn7SFPXvUM7Puc7N+30O=c5LC+AiN4b=8wmy@mail.gmail.com>
+ <AANLkTiksqbUnvNV=yQJxC=kGJzBpRk2FrwftKWv5A18G@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <AANLkTiksqbUnvNV=yQJxC=kGJzBpRk2FrwftKWv5A18G@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Zach, Ilya,
+On Fri, Jan 07, 2011 at 12:42:05PM -0800, Jason Andryuk wrote:
+> On Fri, Nov 12, 2010 at 2:16 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Fri, Nov 12, 2010 at 10:47 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> >
+> > Applied and pushed, thanks!
+> >
+> >  Luis
+> 
+> This patch is to compile compat-wireless-2.6.37-2-sn.tar.bz2 on Ubuntu
+> 10.10 2.6.35-24-generic.
 
-I posted an official patch (removing the assert) to the staging repository as I did run into this same issue. It will take some time before it is propagated. As this is a staging driver patches are to be sent to devel@linuxdriverproject.org (see http://driverdev.linuxdriverproject.org/pipermail/devel/).
+I just sucked these two:
 
-Gr. AvS
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of zach [conflatulence@gmail.com]
-Sent: Thursday, January 20, 2011 12:21 PM
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Kernel Panic on Associate with brcm80211.
+commit 7010ed051959df86a772dd730b8ea5921cc350d8
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Fri Nov 12 11:15:28 2010 -0800
 
-Ilya Kogan <ikogan@...> writes:
+    compat: fix a typo in pm_qos_update_request for 2.6.35
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
->
-> I'm going to admit I'm fairly new to this but after some reading, I
-> couldn't quite understand why there is an assertion ensuring that the
-> sk_buff being sent is not cloned. I was going to see what exploded if I
-> removed it and to my surprise...nothing did. In fact, except for a few
->
-> [12014.013409] wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen
-> 382/256 dur 3562/1504
->
-> things seem to work fine. I'll be doing some more testing with this over
-> the next couple of days. What obvious thing does this break horribly?
->
+commit e8f244e7399eb4eb0ef6930bbcefe6fea74b4a73
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Fri Nov 12 11:14:44 2010 -0800
 
-Hi, I think I had the same panic on emachines em350 with BCM4313 using Fedora 14
-and kernel 2.6.38-rc1. Network manager applet shows little blue dots going round
-and then panic. Applying your change solved it. Thanks!
-Photo of panic
-http://picasaweb.google.com/lh/photo/hWEO_uFGNO-jAKjqhyJvkLevz6n8KX8fvZ44UIlA3yw?feat=directlink
+    compat: fix pm_qos_params compile error on 2.6.35
+    
+    Linux 2.6.35 pm_qos_params.h is missing a #ifndef/define/endif around
+    its header file contents, causing a compile error when its functions
+    are overwritten by macros in the compat header files.
+    Fix this by adding these to the compat version of this header file.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-config http://pastebin.com/9z8AmJ3E
+into these releases:
 
-zach
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-3.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-3-sn.tar.bz2
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please test and let me know if that fixes your woes.
 
-
+  Luis
