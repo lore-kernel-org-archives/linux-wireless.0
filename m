@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57458 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756637Ab1AaWHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:07:15 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: remove max_brightness
-Date: Mon, 31 Jan 2011 23:06:44 +0100
-Message-Id: <1296511604-16921-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
-References: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:59495 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754250Ab1AGUZC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 15:25:02 -0500
+Message-ID: <4D27769A.9060706@candelatech.com>
+Date: Fri, 07 Jan 2011 12:24:58 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [PATCH v2 3/3] ath9k: Keep track of stations for
+ debugfs.
+References: <1294375752-3946-1-git-send-email-greearb@candelatech.com> <20110107201204.GG21588@tux>
+In-Reply-To: <20110107201204.GG21588@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/07/2011 12:12 PM, Luis R. Rodriguez wrote:
+> On Thu, Jan 06, 2011 at 08:49:12PM -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> The stations hold the ath_node, which holds the tid
+>> and other xmit logic structures.  In order to debug
+>> stuck xmit logic, we need a way to print out the tid
+>> state for the stations.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>>
+>> v1 ->  v2:  Use linked list instead of array.  Protect with spinlock.
+>
+> Again, see my comments about the # STAs limit. I think this can go in
+> as a cfg80211 driver limitation which can be exposed. If you want to go
+> over the supported number (known to work, safe, call it what you want)
+> then a kconfig option can be used.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/37-led-max-brightness.patch |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
- create mode 100644 patches/37-led-max-brightness.patch
+Either way, it's a separate patch.
 
-diff --git a/patches/37-led-max-brightness.patch b/patches/37-led-max-brightness.patch
-new file mode 100644
-index 0000000..ef684b5
---- /dev/null
-+++ b/patches/37-led-max-brightness.patch
-@@ -0,0 +1,12 @@
-+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
-++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-+@@ -149,7 +149,9 @@ void iwl_leds_init(struct iwl_priv *priv
-+ 				   wiphy_name(priv->hw->wiphy));
-+ 	priv->led.brightness_set = iwl_led_brightness_set;
-+ 	priv->led.blink_set = iwl_led_blink_set;
-++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-+ 	priv->led.max_brightness = 1;
-++#endif
-+ 
-+ 	switch (mode) {
-+ 	case IWL_LED_DEFAULT:
+The last thing I want to do is to make it harder to reproduce bugs,
+so if 60 causes issues, and we made the default limit to 32,
+then it just makes it that much harder for someone to reproduce
+bugs and fix them (twiddle kconfig, re-compile kernel, etc).
+
+I surely can't stop you from putting in a similar patch, but
+I'm going to focus my own efforts on fixing problems I've already
+found.
+
+Thanks,
+Ben
+
+>
+>    Luis
+
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
