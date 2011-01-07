@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:57865 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799Ab1A0Xjb (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:52438 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab1AGPxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 18:39:31 -0500
-Received: by qwa26 with SMTP id 26so2717343qwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 15:39:31 -0800 (PST)
+	Fri, 7 Jan 2011 10:53:20 -0500
+Message-ID: <4D2736DA.5090105@candelatech.com>
+Date: Fri, 07 Jan 2011 07:52:58 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4D41FDF7.3040805@lockie.ca>
-References: <4D41DAF1.6080204@lockie.ca>
-	<4D41ED24.9010005@hauke-m.de>
-	<4D41FDF7.3040805@lockie.ca>
-Date: Thu, 27 Jan 2011 18:39:29 -0500
-Message-ID: <AANLkTimG_46nLNAurBGfDEPdZwnUmKE3GPFOMWxC0UX0@mail.gmail.com>
-Subject: Re: did compat-wireless-2011-01-27 crash dhcpcd?
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Peter Stuge <peter@stuge.se>
+CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [PATCH 3/3] ath9k: Keep track of stations for	debugfs.
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com> <1294361165-15308-3-git-send-email-greearb@candelatech.com> <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com> <4D267E4D.7000608@candelatech.com> <20110107024909.GD20431@tux> <4D2685CC.7020502@candelatech.com> <20110107153607.11061.qmail@stuge.se>
+In-Reply-To: <20110107153607.11061.qmail@stuge.se>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 27, 2011 at 6:21 PM, James <bjlockie@lockie.ca> wrote:
-> On 01/27/11 17:09, Hauke Mehrtens wrote:
->> On 01/27/2011 09:52 PM, James wrote:
->>> cfg80211: Calling CRDA to update world regulatory domain
->>> Compat-wireless backport release: compat-wireless-2011-01-06-3-g8db1608
->>> Backport based on linux-next.git next-20110121
->>> ath9k 0000:02:09.0: PCI INT A -> Link[LNKB] -> GSI 17 (level, low) -> IRQ 17
->>> ath: EEPROM regdomain: 0x10
->>> ath: EEPROM indicates we should expect a direct regpair map
->>> ath: Country alpha2 being used: CO
->>> ath: Regpair used: 0x10
->>> ieee80211 phy0: Selected rate control algorithm 'ath9k_rate_control'
+On 01/07/2011 07:36 AM, Peter Stuge wrote:
+> Ben Greear wrote:
+>>> but at least other clueless users would not go over stable limit
+>>> you have found.
 >>
->>> cfg80211: wext will not work because kernel was compiled with
->>> CONFIG_WIRELESS_EXT=n. Tools using wext interface, like iwconfig will
->>> not work.
->> WEXT is deactivated in compat-wireless because CONFIG_WIRELESS_EXT=y was
->> not set in your kernel config and iwconfig does not work without wext.
->>
->> See: http://www.spinics.net/lists/linux-wireless/msg63449.html
->>
->> Hauke
->> --
+>> I think it's very likely that the problems I find are general
+>> issues that are just much easier to hit with lots of stations.
 >
-> I'm not using any tools.
-> The call trace happens after I do a modprobe.
-> I'm guessing it doesn't like dhcpcd.
->
-> Do I really need CONFIG_WIRELESS_EXT?
-> --
+> I strongly support this. I recognize several of your problems from my
+> attempts at using ath9k with only a single STA which was all but stable.
+
+Please do (re)post the info against the latest wireless-testing.  It might
+help me and others see something we're missing when trying to debug
+problems we see ourselves.
+
+Thanks,
+Ben
 
 
-Something is trying to use wext.  This is from your original message:
-
-BUG: unable to handle kernel NULL pointer dereference at 00000000000001dc
-IP: [<ffffffff8130fb9d>] wext_handle_ioctl+0xae/0x165
-
-How are you trying to bring up the interface, in order to use dhcpcd
-on it?  Anyways, I would say that, yes, you do need
-CONFIG_WIRELESS_EXT.
-
--Brian
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
