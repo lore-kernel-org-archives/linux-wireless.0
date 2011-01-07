@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14670 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752299Ab1AaSSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:18:38 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 10:18:19 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 2/5] ath9k: use common get current channel function
-Date: Mon, 31 Jan 2011 23:47:43 +0530
-Message-ID: <1296497866-3189-2-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1296497866-3189-1-git-send-email-rmanoharan@atheros.com>
-References: <1296497866-3189-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:41011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728Ab1AGK6F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 05:58:05 -0500
+Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Eric Dumazet <eric.dumazet@gmail.com>
+In-Reply-To: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Jan 2011 11:58:00 +0100
+Message-ID: <1294397880.3467.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   19 +++----------------
- 1 files changed, 3 insertions(+), 16 deletions(-)
+On Thu, 2011-01-06 at 16:46 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Patch is from Eric Dumazet, as described here:
+> https://patchwork.kernel.org/patch/104271/
+> 
+> Reported-by: Michael Guntsche <mike@it-loops.com>
+> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> 
+> NOTE:  This needs review by ath9k and/or other informed
+> people.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 20c70ba..9e3faa6 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -64,19 +64,6 @@ static u8 parse_mpdudensity(u8 mpdudensity)
- 	}
- }
- 
--static struct ath9k_channel *ath_get_curchannel(struct ath_softc *sc,
--						struct ieee80211_hw *hw)
--{
--	struct ieee80211_channel *curchan = hw->conf.channel;
--	struct ath9k_channel *channel;
--	u8 chan_idx;
--
--	chan_idx = curchan->hw_value;
--	channel = &sc->sc_ah->channels[chan_idx];
--	ath9k_cmn_update_ichannel(channel, curchan, hw->conf.channel_type);
--	return channel;
--}
--
- bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode)
- {
- 	unsigned long flags;
-@@ -861,7 +848,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_hw_configpcipowersave(ah, 0, 0);
- 
- 	if (!ah->curchan)
--		ah->curchan = ath_get_curchannel(sc, sc->hw);
-+		ah->curchan = ath9k_cmn_get_curchannel(sc->hw, ah);
- 
- 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
- 	if (r) {
-@@ -922,7 +909,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath_flushrecv(sc);		/* flush recv queue */
- 
- 	if (!ah->curchan)
--		ah->curchan = ath_get_curchannel(sc, hw);
-+		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
- 
- 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
- 	if (r) {
-@@ -1023,7 +1010,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	/* setup initial channel */
- 	sc->chan_idx = curchan->hw_value;
- 
--	init_channel = ath_get_curchannel(sc, hw);
-+	init_channel = ath9k_cmn_get_curchannel(hw, ah);
- 
- 	/* Reset SERDES registers */
- 	ath9k_hw_configpcipowersave(ah, 0, 0);
--- 
-1.7.3.5
+This doesn't make sense. It might help, but it'll probably lead to not
+being able to receive all frames off the air.
+
+If this is an issue, ath9k should do paged RX like iwlwifi.
+
+johannes
 
