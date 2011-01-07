@@ -1,33 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:42931 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751583Ab1AZI3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 03:29:31 -0500
-From: juuso.oikarinen@nokia.com
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] wl12xx: Enable .11h 
-Date: Wed, 26 Jan 2011 10:29:23 +0200
-Message-Id: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:45167 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751160Ab1AGDe5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Jan 2011 22:34:57 -0500
+Subject: Re: Odd behavior of ssb, b43, b43legacy, and b44
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D262109.20504@lwfinger.net> (sfid-20110106_210800_770742_63AA2C67)
+References: <4D262109.20504@lwfinger.net>
+	 (sfid-20110106_210800_770742_63AA2C67)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Jan 2011 04:34:36 +0100
+Message-ID: <1294371276.15564.0.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, 2011-01-06 at 14:07 -0600, Larry Finger wrote: 
+> Michael,
+> 
+> On one of my boxes, I have installed two PCI-format BCM43xx cards for testing.
+> One is a BCM4306 Rev. 3, which uses b43. The other is a BCM4303, which uses
+> b43legacy. The output of lspci -nn for these devices is
+> 
+> 01:09.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g
+> Wireless LAN Controller [14e4:4320] (rev 03)
+> 01:0a.0 Network controller [0280]: Broadcom Corporation BCM4303 802.11b Wireless
+> LAN Controller [14e4:4301] (rev 02)
+> 
+> Upon booting, I noticed the following messages in the log:
+> 
+>  b44: b44.c:v2.0
+>  b44: Invalid MAC address found in EEPROM
+>  b44 ssb1:1: Problem fetching invariants of chip, aborting
+> 
+>  b44: probe of ssb1:1 failed with error -22
+> 
+> As this box does not have a b44 installed, I wondered why this was happening.
+> When I unloaded all the drivers and used modprobe to load ssb, I found that b43,
+> b43legacy and b44 were all loaded. The console output is
+> 
+> finger@pam:~> lsmod | grep b4             <== none loaded
+> finger@pam:~> sudo modprobe -v ssb        <== load ssb
+> insmod /lib/modules/2.6.37-wl+/kernel/drivers/ssb/ssb.ko
+> 
+> The above looks normal, but look at what is now resident!
+> 
+> finger@pam:~> lsmod | grep b4
+> b43legacy             115302  0
+> b44                    28767  0
+> b43                   174321  0
+> ssb                    38157  3 b43legacy,b44,b43
+> mac80211              266240  2 b43legacy,b43
+> cfg80211              161930  3 b43legacy,b43,mac80211
+> 
+> Any idea why loading ssb should silently load b43legacy AND b44? Any ideas on
+> where to look?
+> 
+> Thanks,
+> 
+> Larry
+> 
 
-The .11h features are mandatory along with .11a items. These patches add some
-of missing .11h stuff (major parts for DFS and TPC.)
+Does one of these wireless cards have a dangling ethernet core? I would
+not be surprised...
 
-However, some things are still to TODO after these:
- - Quieting
- - TPC Basic reporting - currently mac80211 is always responding with a 
-   'refused' status, but that is not exactly in the spirit of the .11h spec
-
-
-
-Juuso Oikarinen (2):
-  wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw flag
-  wl12xx: Add a rule for WLAN_EID_PWR_CONSTRAINT in the beacon filter
-
- drivers/net/wireless/wl12xx/main.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+-- 
+Greetings Michael.
 
