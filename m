@@ -1,29 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57445 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756623Ab1AaWHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:07:11 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/2] compat-wireless: make patches apply again.
-Date: Mon, 31 Jan 2011 23:06:42 +0100
-Message-Id: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
+Received: from mms1.broadcom.com ([216.31.210.17]:1484 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755303Ab1AGTGj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Jan 2011 14:06:39 -0500
+From: "Brett Rudley" <brudley@broadcom.com>
+To: stutiredboy <stutiredboy@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 7 Jan 2011 11:06:27 -0800
+Subject: RE: brcm80211 can not set wireless interface mode master?
+Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE13CD2B1009@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <4D26E00B.2090202@gmail.com>
+In-Reply-To: <4D26E00B.2090202@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This just makes the patches apply again and builds with some kernels.
-The patch in crap/0002-ath9k-Add-pktlog-support.patch does not apply 
-any more and I do not have the time to make it apply again. It should 
-be removed or someone else should fix it.
+ 
+> the brcm80211 still do not support master mode or anything i missed ?
+> 
 
-Hauke Mehrtens (2):
-  compat-wireless: adapt chamhes in brcm80211
-  compat-wireless: remove max_brightness
+Nope, not yet.   Its among several features in the TODO list still to be implemented.
 
- config.mk                              |    4 +-
- patches/35-fix-makefile-includes.patch |   42 ++++++++++++++++----------------
- patches/37-led-max-brightness.patch    |   12 +++++++++
- 3 files changed, 35 insertions(+), 23 deletions(-)
- create mode 100644 patches/37-led-max-brightness.patch
+Thanks
+Brett
 
