@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35186 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831Ab1AYMfl (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48365 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399Ab1AGUlg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 07:35:41 -0500
-Received: by bwz15 with SMTP id 15so79040bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 04:35:40 -0800 (PST)
-Message-ID: <4D3EC398.5040102@googlemail.com>
-Date: Tue, 25 Jan 2011 13:35:36 +0100
-From: Dennis Borgmann <dennis.borgmann@googlemail.com>
+	Fri, 7 Jan 2011 15:41:36 -0500
+Received: by fxm20 with SMTP id 20so17293495fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:41:35 -0800 (PST)
 MIME-Version: 1.0
-To: Josef Windorfer <josefwindorfer@gmx.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mini PCI express WLAN card
-References: <20110125114419.139360@gmx.com>
-In-Reply-To: <20110125114419.139360@gmx.com>
+In-Reply-To: <AANLkTinqd0soSAeTe0CtsXdnRvFHfBXa-YipNV2LWVbm@mail.gmail.com>
+References: <4CDD70FA.40402@openwrt.org>
+	<4CDD91BA.6000003@openwrt.org>
+	<AANLkTinqd0soSAeTe0CtsXdnRvFHfBXa-YipNV2LWVbm@mail.gmail.com>
+Date: Fri, 7 Jan 2011 15:41:35 -0500
+Message-ID: <AANLkTik-+T=+LWriDP+nM32Nh0yQyLcyLgHOndtjWymE@mail.gmail.com>
+Subject: Re: [PATCH v2] compat: fix pm_qos_params compile error on 2.6.35
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Josef!
-
-Do you know the chipset, which is used in your card? As far as I can
-see, it seems to be a 802.11n-card, which would mean, you need ath9k. As
-soon as you know the chipset, check this page:
-
-http://wireless.kernel.org/en/users/Drivers/ath9k#supported_chipsets
-
-If yours is within this list, the device should work.
-
-Kind regards,
-Dennis Borgmann
-
-Josef Windorfer schrieb:
-> Hi all,
+On Fri, Nov 12, 2010 at 2:16 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Nov 12, 2010 at 11:12 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Linux 2.6.35 pm_qos_params.h is missing a #ifndef/define/endif around
+>> its header file contents, causing a compile error when its functions
+>> are overwritten by macros in the compat header files.
+>> Fix this by adding these to the compat version of this header file.
+>>
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 >
-> I want to buy the mainboard ZOTAC G41-ITX with an mini PCI express WLAN card.
+> Applied and pushed, thanks!
 >
-> I have only a few information about the card (from the manufacturer).
-> It's an Atheros card with either AzureWave WiFi Modul AW NE771 or AzureWave WiFi AR5 B 91.
->
-> Is there a driver support in linux available?
-> I'm not realy successful by searching google.
->
-> Thanks!
->
-> Greets Josef
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+>  Luis
 
+This patch is to compile compat-wireless-2.6.37-2-sn.tar.bz2 on Ubuntu
+10.10 2.6.35-24-generic.
+
+Jason
