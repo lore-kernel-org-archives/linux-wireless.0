@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53167 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751635Ab1AGX1T (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47304 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753558Ab1AGAqW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 18:27:19 -0500
-Date: Sat, 8 Jan 2011 01:26:51 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Aleksandar Milivojevic <alex@milivojevic.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
-Message-ID: <20110107232651.GA32712@jm.kir.nu>
-References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
- <AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
- <20110107024432.GC20431@tux>
- <201101071111.17423.helmut.schaa@googlemail.com>
- <AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
- <20110107202224.GI21588@tux>
- <20110107221305.6484.qmail@stuge.se>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110107221305.6484.qmail@stuge.se>
+	Thu, 6 Jan 2011 19:46:22 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/3] ath9k:  Re-start xmit logic in xmit watchdog timer.
+Date: Thu,  6 Jan 2011 16:46:04 -0800
+Message-Id: <1294361165-15308-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 07, 2011 at 11:13:05PM +0100, Peter Stuge wrote:
-> Luis R. Rodriguez wrote:
-> >         bgscan="simple:30:-45:300"
-> ..
-> > No Linux distributions today uses this other than ChromeOS, but
-> > they should all change to use it.
-> 
-> Maybe wpa_supplicant should be changed to use it by default?
+From: Ben Greear <greearb@candelatech.com>
 
-It probably should at some point. I did not want to do it during early
-development part of bgscan, but it could now be a reasonable change in
-the current development branch (obviously only if the build is
-configured to include bgscan). Though, that signal level value is a bit
-hardware specific, so -45 may not be ideal for everything. In addition,
-the bgscan learn module could be better for many networks.
+We should not get to this state, but we do.  What is
+worse, many times the xmit logic still will not start,
+probably due to tids being paused when they shouldn't be.
 
-Though, there is a drawback involved with this, too. In case of a
-networks with only a single AP, this would be adding unnecessary
-background scanning every 30 or 300 seconds based on signal strength. As
-such, enabling the functionality by default is a bit problematic if
-there is no mechanism for the user to disable it.
- 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+NOTE:  This needs review.  It might be too much of a hack
+for upstream code, and at best it works around a small part
+of the problem.
+
+:100644 100644 3aae523... 547fb44... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/xmit.c |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3aae523..547fb44 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2110,6 +2110,27 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 				} else {
+ 					txq->axq_tx_inprogress = true;
+ 				}
++			} else {
++				/* If the queue has pending buffers, then it
++				 * should be doing tx work (and have axq_depth).
++				 * Shouldn't get to this state I think..but
++				 * perhaps we do.
++				 */
++				if (!list_empty(&txq->axq_acq)) {
++					ath_err(ath9k_hw_common(sc->sc_ah),
++						"txq: %p axq_qnum: %i,"
++						" axq_link: %p"
++						" pending frames: %i"
++						" axq_acq is not empty, but"
++						" axq_depth is zero.  Calling"
++						" ath_txq_schedule to restart"
++						" tx logic.\n",
++						txq, txq->axq_qnum,
++						txq->axq_link,
++						txq->pending_frames);
++					ATH_DBG_WARN_ON_ONCE(1);
++					ath_txq_schedule(sc, txq);
++				}
+ 			}
+ 			spin_unlock_bh(&txq->axq_lock);
+ 		}
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.2.3
+
