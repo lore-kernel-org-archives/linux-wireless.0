@@ -1,84 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37512 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab1ASA1B (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40496 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232Ab1AGWTG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 19:27:01 -0500
-Message-ID: <4D362FC5.3090003@candelatech.com>
-Date: Tue, 18 Jan 2011 16:26:45 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 7 Jan 2011 17:19:06 -0500
+Received: by iwn9 with SMTP id 9so17622777iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 14:19:05 -0800 (PST)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH 1/2] ath9k: try more than one tid when scheduling a new
- aggregate
-References: <1295098215-98910-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1295098215-98910-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110107221305.6484.qmail@stuge.se>
+References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
+ <AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
+ <20110107024432.GC20431@tux> <201101071111.17423.helmut.schaa@googlemail.com>
+ <AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
+ <20110107202224.GI21588@tux> <20110107221305.6484.qmail@stuge.se>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 7 Jan 2011 14:18:45 -0800
+Message-ID: <AANLkTikL0ONLAd7qncZtafRpxQh1jBG9_xs5xPjTgAxT@mail.gmail.com>
+Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Aleksandar Milivojevic <alex@milivojevic.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/2011 05:30 AM, Felix Fietkau wrote:
-> Sometimes the first TID in the first AC's list is not available for forming
-> a new aggregate (the BAW might not allow it), however other TIDs may have
-> data available for sending.
-> Prevent a slowdown of other TIDs by going through multiple entries until
-> we've either hit the last one or enough AMPDUs are pending in the hardware
-> queue.
+On Fri, Jan 7, 2011 at 2:13 PM, Peter Stuge <peter@stuge.se> wrote:
+> Luis R. Rodriguez wrote:
+>>         bgscan="simple:30:-45:300"
+> ..
+>> No Linux distributions today uses this other than ChromeOS, but
+>> they should all change to use it.
+>
+> Maybe wpa_supplicant should be changed to use it by default?
 
-I had attempted a similar patch, but I was thinking we should iterate
-through all of the txq->axq_acq entries, not just use the first one?
+The supplicant is configured by dbus, so its not up to the supplicant
+by design. What has to change is Network Manager and connman needs to
+change to use bgscan by default. ChromeOS uses a fork of connman
+called flimflam and it uses it by default now.
 
-If you agree, I can merge my patch with your patch below
-and re-post.
-
-Thanks,
-Ben
-
-
- >
- > Signed-off-by: Felix Fietkau<nbd@openwrt.org>
- > ---
- >   drivers/net/wireless/ath/ath9k/xmit.c |    9 ++++++---
- >   1 files changed, 6 insertions(+), 3 deletions(-)
- >
- > diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
- > index ab4f7b4..fffd13d 100644
- > --- a/drivers/net/wireless/ath/ath9k/xmit.c
- > +++ b/drivers/net/wireless/ath/ath9k/xmit.c
- > @@ -1224,12 +1224,14 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
- >   void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- >   {
- >   	struct ath_atx_ac *ac;
- > -	struct ath_atx_tid *tid;
- > +	struct ath_atx_tid *tid, *last;
- >
- > -	if (list_empty(&txq->axq_acq))
- > +	if (list_empty(&txq->axq_acq) ||
- > +	    txq->axq_ampdu_depth>= ATH_AGGR_MIN_QDEPTH)
- >   		return;
- >
- >   	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
- > +	last = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
- >   	list_del(&ac->list);
- >   	ac->sched = false;
- >
- > @@ -1253,7 +1255,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- >   		if (!list_empty(&tid->buf_q))
- >   			ath_tx_queue_tid(txq, tid);
- >
- > -		break;
- > +		if (tid == last || txq->axq_ampdu_depth>= ATH_AGGR_MIN_QDEPTH)
- > +			break;
- >   	} while (!list_empty(&ac->tid_q));
- >
- >   	if (!list_empty(&ac->tid_q)) {
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+  Luis
