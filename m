@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42368 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840Ab1ADKrx (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52208 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756534Ab1AGCH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 05:47:53 -0500
-Subject: Re: Hidden SSID and WLAN powersave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1294136801.4166.30.camel@wimaxnb.nmp.nokia.com>
-References: <1294136801.4166.30.camel@wimaxnb.nmp.nokia.com>
+	Thu, 6 Jan 2011 21:07:57 -0500
+Received: by wyb28 with SMTP id 28so16991004wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:07:56 -0800 (PST)
+Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	greearb@candelatech.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net
+In-Reply-To: <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+	 <201101070205.00886.chunkeey@googlemail.com>
+	 <1294363427.2704.23.camel@edumazet-laptop>
+	 <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 04 Jan 2011 11:47:51 +0100
-Message-ID: <1294138071.3511.0.camel@jlt3.sipsolutions.net>
+Date: Fri, 07 Jan 2011 03:07:52 +0100
+Message-ID: <1294366072.2704.32.camel@edumazet-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-04 at 12:26 +0200, Juuso Oikarinen wrote:
-> Hi,
+Le jeudi 06 janvier 2011 à 17:57 -0800, Luis R. Rodriguez a écrit :
+> On Thu, Jan 6, 2011 at 5:23 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> > Le vendredi 07 janvier 2011 à 02:04 +0100, Christian Lamparter a écrit :
+> >> On Friday 07 January 2011 01:46:03 greearb@candelatech.com wrote:
+> >> > From: Ben Greear <greearb@candelatech.com>
+> >> >
+> >> > Patch is from Eric Dumazet, as described here:
+> >> > https://patchwork.kernel.org/patch/104271/
+> >> >
+> >> > Reported-by: Michael Guntsche <mike@it-loops.com>
+> >> > Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+> >> > Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >> > ---
+> >> >
+> >> > NOTE:  This needs review by ath9k and/or other informed
+> >> > people.
+> >>
+> >> Does the hardware support vector-i/o for rx (like for instance iwlagn)?
+> >> Else, this change would break A-MSDU rx - which is a mandatory feature
+> >> (although, not very popular) of 802.11n -
+> >>
+> >> See for example 802.11n-2009 9.7c:
+> >>
+> >> "Support for the reception of an A-MSDU, where [...], is mandatory for
+> >> an HT STA"
+> >>
+> >> And 7.1.2 "The maximum frame body size is determined by the maximum
+> >> MSDU size (2304 octets) OR the maximum A-MSDU (3839 or 7935 octets,
+> >> depending upon the STA's capability), plus any overhead from security
+> >> encapsulation.
+> >
+> > Then, only solution is to mark this broken, and perform a copy of each
+> > received frame, to keep a order-1 buffer(s) allocated for hardware.
 > 
-> I stumbled upon a PSM issue when a hidden SSID is used. It seems that
-> mac80211 is not going to power-save mode with hidden SSID AP's at all.
+> -ENOTPOSSIBLE -- its an WFA requirement to RX AMSDU.
 > 
-> As far as I can see the following happens:
+> > Its too easy to have memory allocation failures for high order pages and
+> > freeze the card.
 > 
-> - When generally scanning, the AP is getting a bss entry with a zero
-> SSID.
-> - When associating, a probe-req is sent to the AP with the SSID, and as
-> result a probe-response is received with the hidden SSID in place -> a
-> second bss entry is created for the AP, now with the real SSID.
-> - After association, mac80211 executes ieee80211_recalc_ps(), but does
-> not go to powersave because the beacon-ies are missing.
-> - A new beacon is received for the BSSID, but it updates the bss entry
-> with the zero SSID, ieee80211_recalc_ps() gets called, but for the
-> associated bss entry the beacon-ies are still missing.
+> Can't we us paged RX skbs, which mac80211 supports now?
 > 
-> As result, the STA does not ever enter WLAN PSM.
+> See 2f301227a1ede57504694e1f64839839f5737cac and friends.
 > 
-> Anyone stumbled on this issue?
 
-I haven't come across it, but we don't test hidden SSIDs much ...
-sounds perfectly logical.
+Maybe you dont understand the point. A fix is needed for stable kernels.
+paged RX skbs is probably a bit complex, even if copy/pasted from other
+drivers.
 
-johannes
+If the hardware needs 8192 bytes (or 16384) buffers to perform its
+operation, it should not give them back to linux, because there is no
+guarantee it can allocate fresh ones for the next frames.
+
+
 
