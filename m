@@ -1,95 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:55477 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033Ab1AaUcp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 15:32:45 -0500
-Received: by wyb28 with SMTP id 28so5919962wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 12:32:44 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/8] wl12xx: fix potential race condition with TX queue watermark
-Date: Mon, 31 Jan 2011 22:32:24 +0200
-Message-Id: <1296505951-29644-2-git-send-email-arik@wizery.com>
-In-Reply-To: <1296505951-29644-1-git-send-email-arik@wizery.com>
-References: <1296505951-29644-1-git-send-email-arik@wizery.com>
+Received: from mailout-de.gmx.net ([213.165.64.22]:40980 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751697Ab1AHMif (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Jan 2011 07:38:35 -0500
+Message-ID: <4D2850B8.7080107@gmx.net>
+Date: Sat, 08 Jan 2011 12:55:36 +0100
+From: Andre Kuehne <andre.kuehne@gmx.net>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: hwcrypt issue with rt73usb
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the conditions for the high/low TX queue watermarks when the
-spin-lock is taken. This prevents race conditions as tx_queue_count and
-the flag checked are only modified when the spin-lock is taken.
+Hi
 
-The following race was in mind:
-- Queues are almost full and wl1271_op_tx() will stop the queues, but it
-  doesn't get the spin-lock yet.
-- (on another CPU) tx_work_locked() dequeues 15 skbs from this queue and
-  tx_queue_count is updated to reflect this
-- wl1271_op_tx() does not check tx_queue_count after taking the
-  spin-lock and incorrectly stops the queue.
+I use a USB WLAN Stick (model: TP-LINK TL-WN321G) with hostapd.
+With kernel26-2.6.36 this setup is not working anymore.
+The interface is up and if I try to connect with another client
+WPA handshake also seems to work, but the IP configuration via DHCP fails.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   24 +++++++++++-------------
- drivers/net/wireless/wl12xx/tx.c   |    2 +-
- 2 files changed, 12 insertions(+), 14 deletions(-)
+After downgrading to kernel26-2.6.35 the connection works fine again.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dfab21e..cf11bda 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -995,6 +995,17 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- #endif
- 	wl->tx_queue_count++;
-+
-+	/*
-+	 * The workqueue is slow to process the tx_queue and we need stop
-+	 * the queue here, otherwise the queue will get too long.
-+	 */
-+	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
-+		ieee80211_stop_queues(wl->hw);
-+		__set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+	}
-+
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	/* queue the packet */
-@@ -1009,19 +1020,6 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags))
- 		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
--	/*
--	 * The workqueue is slow to process the tx_queue and we need stop
--	 * the queue here, otherwise the queue will get too long.
--	 */
--	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
--		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
--
--		spin_lock_irqsave(&wl->wl_lock, flags);
--		ieee80211_stop_queues(wl->hw);
--		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
--		spin_unlock_irqrestore(&wl->wl_lock, flags);
--	}
--
- 	return NETDEV_TX_OK;
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 3507c81..ce9a19b 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -288,7 +288,7 @@ static void handle_tx_low_watermark(struct wl1271 *wl)
- 		/* firmware buffer has space, restart queues */
- 		spin_lock_irqsave(&wl->wl_lock, flags);
- 		ieee80211_wake_queues(wl->hw);
--		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+		__clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
- }
--- 
-1.7.1
+On #linux-wireless it was suggested to test with nohwcrypt and indeed after
 
+     modprobe rt73usb nohwcrypt=1
+
+the connection worked fine again under kernel26-2.6.36.
+
+ > lsusb
+...
+Bus 001 Device 003: ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
+...
+
+ > lsmod
+...
+rt73usb 21779 0
+rt2500usb 17334 0
+rt2x00usb 7597 2 rt73usb,rt2500usb
+rt2x00lib 25013 3 rt73usb,rt2500usb,rt2x00usb
+mac80211 189270 2 rt2x00usb,rt2x00lib
+cfg80211 144231 2 rt2x00lib,mac80211
+...
+
+ > cat /etc/hostapd/hostapd.conf
+...
+interface=wlan0
+bridge=br0
+driver=nl80211
+country_code=DE
+ieee80211d=1
+hw_mode=g
+beacon_int=100
+dtim_period=2
+max_num_sta=255
+rts_threshold=2347
+fragm_threshold=2346
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+...
+
+ > grep hostap /var/log/messages.log
+... authenticated
+... associated (aid 1)
+... RADIUS: starting accounting session 4CFD0763-000001A0
+... WPA: pairwise key handshake completed (RSN)
+...
+
+Please let me know if you are interested in more details or if I could otherwise help in testing etc.
+
+Best regards
+Andre
