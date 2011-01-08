@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46328 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932364Ab1ALBT6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 20:19:58 -0500
-Message-ID: <4D2D01B2.1050201@openwrt.org>
-Date: Tue, 11 Jan 2011 18:19:46 -0700
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from smarthost1.greenhost.nl ([195.190.28.78]:46382 "EHLO
+	smarthost1.greenhost.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab1AHLgg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Jan 2011 06:36:36 -0500
+Message-ID: <50516d36d926af475ea7fdc9d3a7c6d2.squirrel@webmail.greenhost.nl>
+Date: Sat, 8 Jan 2011 12:17:27 +0100 (CET)
+Subject: [PATCH] ipw2200: Check for -1 INTA in tasklet too.
+From: "Indan Zupancic" <indan@nul.nu>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Bernhard Walle <walle@corscience.de>
-CC: lrodriguez@atheros.com, jmalinen@atheros.com, vasanth@atheros.com,
-	senthilkumar@atheros.com, linville@tuxdriver.com,
-	netdev@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [ath9k-devel] [PATCH] [RFC] ath9k: Fix reporting of RX STBC streams
- to userspace
-References: <1294765194-30542-1-git-send-email-walle@corscience.de>
-In-Reply-To: <1294765194-30542-1-git-send-email-walle@corscience.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-11 9:59 AM, Bernhard Walle wrote:
-> While the driver reports
->
->          ath: TX streams 2, RX streams: 2
->
-> in the kernel log (with ATH_DBG_CONFIG set in the debug module
-> parameter), "iw list" only reported
->
-> [...]
->          Capabilities: 0x12ce
->                  HT20/HT40
->                  SM Power Save disabled
->                  RX HT40 SGI
->                  TX STBC
->                  RX STBC 1-streams
-> [...]
->
-> The driver seems to set the value as flag while the iw tool interprets
-> it as number. This patch fixes that.
->
-> Signed-off-by: Bernhard Walle<walle@corscience.de>
-> ---
->   drivers/net/wireless/ath/ath9k/init.c |   12 ++++++------
->   1 files changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 639dc93..935b6c3 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -215,17 +215,17 @@ static void setup_ht_cap(struct ath_softc *sc,
->   	else
->   		max_streams = 2;
->
-> -	if (AR_SREV_9280_20_OR_LATER(ah)) {
-> -		if (max_streams>= 2)
-> -			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-> -		ht_info->cap |= (1<<  IEEE80211_HT_CAP_RX_STBC_SHIFT);
-> -	}
-> -
->   	/* set up supported mcs set */
->   	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
->   	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, max_streams);
->   	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, max_streams);
->
-> +	if (AR_SREV_9280_20_OR_LATER(ah)) {
-> +		if (max_streams>= 2)
-> +			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-> +		ht_info->cap |= (rx_streams<<  IEEE80211_HT_CAP_RX_STBC_SHIFT);
-> +	}
-> +
-Are you sure the card can actually receive multiple streams via STBC? As 
-far as I know, only one stream can be received properly via STBC, more 
-streams have to be sent without it.
+This is an attempt to fix a long standing open bug:
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1334
 
-- Felix
+The interrupt handler checks for INTA being -1, apparently that means that the
+hardware is gone. But the interrupt handler defers actual interrupt processing
+to a tasklet. By the time the tasklet is run and checks INTA again, the
+hardware might be gone and INTA be -1, which confuses the driver because all
+event bits are set.
+
+The patch applies to 2.6.37.
+
+Signed-off-by: Indan Zupancic <indan@nul.nu>
+
+---
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c
+b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 8d6ed5f..ae438ed 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -1973,6 +1973,13 @@ static void ipw_irq_tasklet(struct ipw_priv *priv)
+
+ 	inta = ipw_read32(priv, IPW_INTA_RW);
+ 	inta_mask = ipw_read32(priv, IPW_INTA_MASK_R);
++
++	if (inta == 0xFFFFFFFF) {
++		/* Hardware disappeared */
++		IPW_WARNING("TASKLET INTA == 0xFFFFFFFF\n");
++		/* Only handle the cached INTA values */
++		inta = 0;
++	}
+ 	inta &= (IPW_INTA_MASK_ALL & inta_mask);
+
+ 	/* Add any cached INTA values that need to be handled */
+
+
