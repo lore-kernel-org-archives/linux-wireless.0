@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33542 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932081Ab1ACPE5 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41600 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159Ab1AHTV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 10:04:57 -0500
-Received: by eye27 with SMTP id 27so5938920eye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jan 2011 07:04:56 -0800 (PST)
+	Sat, 8 Jan 2011 14:21:29 -0500
+Received: by fxm20 with SMTP id 20so17824458fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Jan 2011 11:21:28 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <651997.51284.qm@web31502.mail.mud.yahoo.com>
-References: <651997.51284.qm@web31502.mail.mud.yahoo.com>
-Date: Mon, 3 Jan 2011 23:04:56 +0800
-Message-ID: <AANLkTimk8pnx3F+pwVTZ6sA+=-_h+4u+i=YTzp05Qf=A@mail.gmail.com>
-Subject: Re: Tp-link wn7200nd - cannot associate
-From: Chin Shi Hong <cshong87@gmail.com>
-To: Ming-Ching Tiew <mctiew@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Sat, 8 Jan 2011 14:21:27 -0500
+Message-ID: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
+Subject: 5GHz 802.11n USB Adapter
+From: Jason Andryuk <jandryuk@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 3, 2011 at 10:38 AM, Ming-Ching Tiew <mctiew@yahoo.com> wrote:
->
-> I have a TP-LINK WN7200ND, I am tested it with Kernel 2.6.36.1 and 2.6.35.10, basically after inserting the USB, the interface is up and it can never associate with any access point.
->
-> #lsmod |grep rt2
->
-> rt2800usb               7632  0
-> rt2800lib              20328  1 rt2800usb
-> rt2x00usb               4628  2 rt2800usb,rt2800lib
-> rt2x00lib              15408  2 rt2800lib,rt2x00usb
-> mac80211              122068  2 rt2x00usb,rt2x00lib
-> cfg80211               92252  2 rt2x00lib,mac80211
->
-> There are a lot of similar complaints on the net, this is one example :-
->
-> http://ubuntuforums.org/showthread.php?t=1530095
->
-> There don't seem to be any issue with 'iwlist wlanX scan'. But just can't associate.
->
-> Any recommendation ? Any debug information I should provide ?
->
-> Regards
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I am looking for a linux-supported dual band 802.11n USB Adapter that
+can operate at both 2.4GHz and 5GHz.
 
-Good luck with you. My rt3090 also not work on 64 bit ubuntu but work
-on 32 bit ubuntu.
+According to wireless.kernel.org, it seems like the possibilities are:
+carl9170/ar9170, rt2800usb and maybe ath9k_htc.
 
-You use Ubuntu is it? Which version? 32-bit or 64-bit version?
+Atheros involvement with linux development is appealing, so I would
+prefer an adapter based on their chips.  I also have the feeling their
+drivers are more mature than the Ralink ones.
 
-And, can you access internet through wired connection?
+The carl9170 wiki page mentions "It's worth mentioning that the chip
+was designed, produced and sold in the early 802.11n-draft period.
+Compatibility will always be an issue."  So a product based on the
+finalized 802.11n standard is more desirable.
 
-Regards,
+For ath9k_htc, ar7010 devices with the ar9280 radio should support
+dual bands.  However, the wiki does not list any devices with that
+chip aside from the generic Atheros VID/PID.  Are dual band ar7010 USB
+devices commercially available in the US?
+
+Are there any limitations for rt2800usb devices?  The wiki is short on
+information as is rt2x00.serialmonkey.com.  Does rt2800usb support AP
+mode like rt2800pci?
+
+Are their any other drivers/devices I have overlooked and should consider?
+
+Recommendations of specific devices are appreciated.
+
+Thanks,
+
+Jason
