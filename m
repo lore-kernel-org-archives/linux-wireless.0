@@ -1,87 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38103 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151Ab1AJEjV (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62725 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab1AHSZu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 23:39:21 -0500
-Message-ID: <4D2A8D74.80304@candelatech.com>
-Date: Sun, 09 Jan 2011 20:39:16 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 8 Jan 2011 13:25:50 -0500
+Received: by fxm20 with SMTP id 20so17804017fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Jan 2011 10:25:45 -0800 (PST)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k:  Restart xmit logic in xmit watchdog.
-References: <1294559160-29298-1-git-send-email-greearb@candelatech.com> <4D29FC3F.2030103@openwrt.org>
-In-Reply-To: <4D29FC3F.2030103@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110107213411.GN21588@tux>
+References: <4CDD8BDD.7050903@openwrt.org>
+	<AANLkTimsTn7SFPXvUM7Puc7N+30O=c5LC+AiN4b=8wmy@mail.gmail.com>
+	<AANLkTiksqbUnvNV=yQJxC=kGJzBpRk2FrwftKWv5A18G@mail.gmail.com>
+	<20110107213411.GN21588@tux>
+Date: Sat, 8 Jan 2011 13:25:44 -0500
+Message-ID: <AANLkTimzKEXdUmV7+wx6QWD_xTqA_9awoSLODj6CYXEb@mail.gmail.com>
+Subject: Re: [PATCH] compat: fix a typo in pm_qos_update_request for 2.6.35
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2011 10:19 AM, Felix Fietkau wrote:
-> On 2011-01-09 12:46 AM, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
+On Fri, Jan 7, 2011 at 4:34 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Jan 07, 2011 at 12:42:05PM -0800, Jason Andryuk wrote:
+>> On Fri, Nov 12, 2010 at 2:16 PM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>> > On Fri, Nov 12, 2010 at 10:47 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> >
+>> > Applied and pushed, thanks!
+>> >
+>> >  Luis
 >>
->> The system can get into a state where the xmit queue
->> is stopped, but there are no packets pending, so
->> the queue will not be restarted.
->>
->> Add logic to the xmit watchdog to attempt to restart
->> the xmit logic if this situation is detected.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->>
->> NOTE: This is basically the same as a patch I posted
->> a day or two ago. It doesn't address the concern of the
->> reviewer who NACK'd it, but my system will not properly
->> transmit packets without this patch applied. I realize
->> this is a bit of a hack, but until we find and fix all
->> of the other bugs, I think this patch or something similar
->> should be applied.
->>
->> Still, this patch should not be applied unless given positive
->> ACK by the ath9k developers.
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
->> index d9a4144..1b3a62c 100644
->> --- a/drivers/net/wireless/ath/ath9k/xmit.c
->> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->> @@ -1988,19 +1988,30 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
->> tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
->> }
->>
->> -static void ath_wake_mac80211_queue(struct ath_softc *sc, int qnum)
->> +/* Has no locking. */
->> +static void __ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
->> {
->> - struct ath_txq *txq;
->> -
->> - txq = sc->tx.txq_map[qnum];
->> - spin_lock_bh(&txq->axq_lock);
->> if (txq->stopped&& txq->pending_frames< ATH_MAX_QDEPTH) {
->> - if (ath_mac80211_start_queue(sc, qnum))
->> + if (ath_mac80211_start_queue(sc, txq->axq_qnum))
->> txq->stopped = 0;
->> }
->> +}
-> This part is quite broken, I think you got confused with various types of queue numbers. txq->axq_qnum refers to the atheros hw queue index, whereas the qnum
-> argument to this function refers to the mac80211 queue index (which is also the correct index for sc->tx.txq_map - not to be confused with the sc->tx.txq array).
+>> This patch is to compile compat-wireless-2.6.37-2-sn.tar.bz2 on Ubuntu
+>> 10.10 2.6.35-24-generic.
+>
+> I just sucked these two:
+>
+> commit 7010ed051959df86a772dd730b8ea5921cc350d8
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Fri Nov 12 11:15:28 2010 -0800
+>
+>    compat: fix a typo in pm_qos_update_request for 2.6.35
+>
+>    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>
+> commit e8f244e7399eb4eb0ef6930bbcefe6fea74b4a73
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Fri Nov 12 11:14:44 2010 -0800
+>
+>    compat: fix pm_qos_params compile error on 2.6.35
+>
+>    Linux 2.6.35 pm_qos_params.h is missing a #ifndef/define/endif around
+>    its header file contents, causing a compile error when its functions
+>    are overwritten by macros in the compat header files.
+>    Fix this by adding these to the compat version of this header file.
+>
+>    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>
+> into these releases:
+>
+> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-3.tar.bz2
+> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-3-sn.tar.bz2
+>
+> Please test and let me know if that fixes your woes.
+>
+>  Luis
 
-Yeah, I am confused on all of this.  Looks like I should add a member to the txq struct to
-record it's mac80211 index and use that instead?
-
-In the upstream code, is this correct?  It seems to me that it should always
-be waking 'txq' since it just completed a packet.  Why the check
-against txq_map?
-
-		if (txq == sc->tx.txq_map[qnum])
-			ath_wake_mac80211_queue(sc, qnum);
-
-> Pushing the locking out to the caller side (with a wrapper) does sound like a good idea though.
+compat-wireless-2.6.37-3-sn.tar.bz2 successfully compiled and installed for me.
 
 Thanks,
-Ben
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Jason
