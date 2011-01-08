@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61679 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022Ab1AGIGq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 03:06:46 -0500
-Received: by vws16 with SMTP id 16so7106554vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 00:06:45 -0800 (PST)
-Received: by qwa26 with SMTP id 26so17549885qwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 00:06:43 -0800 (PST)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58344 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342Ab1AHWqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Jan 2011 17:46:46 -0500
+Message-ID: <4D28E94B.1010806@hauke-m.de>
+Date: Sat, 08 Jan 2011 23:46:35 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-From: Damian Minkov <damencho@sip-communicator.org>
-Date: Fri, 7 Jan 2011 10:06:23 +0200
-Message-ID: <AANLkTimekYjYh7uZ3enOQ+zX2_dpA25Zy0aATCDzw521@mail.gmail.com>
-Subject: Question about ep-n8508
-To: linux-wireless@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: compat-wireless-2.6.37-3-sn contains wrong files
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+plusquezero on IRC complained about compat-wireless-2.6.37-3-sn not
+compiling on his system with kernel 2.6.32 (
+http://pastebin.com/bKyZpKSr ). I tried to create such a release and had
+no problems, but the released tar balls at
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/ are
+containing some extra files. These files are available in
+compat-wireless based on linux-next but not in the version based on
+2.6.27. Something in the script creating this release went wrong.
 
-I recently bought the device EDUP ep-n8508 but I have problems running
-it under Ubuntu 10.10, kernel: 2.6.35-24-generic x86_64.
-I tried with the drivers provided on the CD coming with the device
-(rtl8192CU_linux_v2.0.939.20100726) have no problem compiling and
-installing. But after loading the module no network device appears and
-a lot of "usb write TimeOut!" in the messages.
-Then I tried with latest driver edition from realtek website -
-rtl8192CU_linux_v2.0.1212.20101208. Again with same result.
-Here is all the output: http://pastebin.com/7xhkzYNC.
-I saw there is a similar thread, with similar problems "Question about
-Edimax 7811Un", but as I'm new to the list didn't manage to continue
-that thread.
+Attached is the diffstat beetween compat-wireless-2.6.37-3-sn.tar.bz2
+and the version I generated myself with "./scripts/admin-refresh.sh -s
+-n" from the git branch remotes/origin/linux-2.6.37.y of
+compat-wireless.git and compat.git.
 
-Seems a problem with amd64 systems. Is there any workaround? Anything
-I can further test to help figuring this out?
+Hauke
 
-Thanks in advance
-damencho
+hauke@hauke:~/compat-wireless/compat-wireless-2.6.37-3-sn$ diff -Naurx
+.git -x pending-stable -x tmp.patch -x build.sh -x compiletest.sh -x
+scripts . ../compat-wireless-git |diffstat
+ code-metrics.txt             |   12
+ compat/compat-2.6.38.c       |   50 --
+ compat/kfifo.c               |  608 ------------------------------
+ compat_base_tree             |    2
+ include/linux/average.h      |    5
+ include/linux/kfifo.h        |  857
+-------------------------------------------
+ include/linux/rfkill.h       |   32 -
+ include/net/bluetooth/mgmt.h |   87 ----
+ net/bluetooth/mgmt.c         |  308 ---------------
+ net/wireless/mesh.c          |  142 -------
+ 10 files changed, 7 insertions(+), 2096 deletions(-)
