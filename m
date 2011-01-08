@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:54881 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985Ab1AEOFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 09:05:05 -0500
-Subject: Re: wl12xx maintainer's email address will change
-From: Luciano Coelho <coelho@ti.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110105135905.GB2337@tuxdriver.com>
-References: <1293782724.15791.14.camel@powerslave>
-	 <1294222323.14110.53.camel@pimenta>  <20110105135905.GB2337@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 5 Jan 2011 16:04:54 +0200
-Message-ID: <1294236295.14110.66.camel@pimenta>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43810 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751461Ab1AHJsd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Jan 2011 04:48:33 -0500
+Received: by bwz15 with SMTP id 15so17948989bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Jan 2011 01:48:32 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Aleksandar Milivojevic <alex@milivojevic.org>
+Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
+Date: Sat, 8 Jan 2011 10:47:18 +0100
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Wolfgang Kufner <wolfgang.kufner@gmail.com>,
+	Luis Correia <buga@loide.net>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com> <20110107202224.GI21588@tux> <AANLkTintU_vSt5eWoma4_d9tNCxPpOfpGZMq7XXppjpP@mail.gmail.com>
+In-Reply-To: <AANLkTintU_vSt5eWoma4_d9tNCxPpOfpGZMq7XXppjpP@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101081047.18475.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-05 at 14:59 +0100, John W. Linville wrote:
-> On Wed, Jan 05, 2011 at 12:12:03PM +0200, Luciano Coelho wrote:
-> > On Fri, 2010-12-31 at 09:05 +0100, Luciano Coelho wrote:
-> > > Hi,
-> > > 
-> > > Sorry for the spam for those who are not working with wl12xx.
-> > > 
-> > > Today is the last day when my current email address
-> > > (luciano.coelho@nokia.com) is valid.  So please send all requests or
-> > > questions that are supposed to reach me to the linux-wireless mailing
-> > > list, so I can still read them.
-> > > 
-> > > My new email address will be available by the beginning of next week.
-> > 
-> > Okay, now my new email address is available.  I'll send a patch to fix
-> > the MAINTAINERS information shortly.
-> > 
-> > The new email address is coelho@ti.com, please use that one when
-> > submitting patches from now on.
+Am Samstag, 8. Januar 2011 schrieb Aleksandar Milivojevic:
+> Running 'iw event -t' shows a lot of disassociation due to inactivity.
+>  This happens even if there is regular flow of traffic (for example, I
+> start ping to my AP and leave it running, or I leave Pandora streaming
+> music in the browser).
 > 
-> I suppose that we can safely presume that your new employer is happy
-> with your wl12xx maintainer duties... :-)
+> Below is example of output of 'iw event -t' (these lines repeat in the
+> output at irregularl intervals):
+> 
+> 1294464037.037450: wlan0 (phy #0): deauth 00:1c:10:ea:2a:cb ->
+> 00:1e:52:79:e9:ff reason 4: Disassociated due to inactivity
+> 1294464037.037538: wlan0 (phy #0): disconnected (local request)
 
-Yes, probably happier than my previous one! At least now it feels like
-I'm in the right place (for wl12xx maintainership, that is). :)
+Aha, so it's not the AP disassociating you but it's your client disconnecting
+on its own. Mind to provide the wpa_supplicant log for the same situation when
+run with "-ddt"?
 
-
-> Congrats!
-
-Thanks!
-
--- 
-Cheers,
-Luca.
+Helmut
 
