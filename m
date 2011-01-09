@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36950 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754678Ab1AGRtr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 12:49:47 -0500
-Message-ID: <4D275236.4040202@candelatech.com>
-Date: Fri, 07 Jan 2011 09:49:42 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Chaoxing Lin <CLin@3eti.com>
-CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: Re: hostapd hangs on quit, multi-BSSID scenario
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54124 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751961Ab1AIPcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 10:32:36 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: do not write git-clone
+Date: Sun,  9 Jan 2011 16:32:21 +0100
+Message-Id: <1294587141-11353-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
+References: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2011 09:44 AM, Chaoxing Lin wrote:
-> Gentlemen,
->
->   When I run hostapd with 8+1 BSSID over one radio (ath9160), it runs well. All 9 BSS accepts clients.
-> But when I "Ctrl + C" or "killall hostapd", hostapd daemon can NOT gracefully shut down. It hangs forever. I have to "Ctrl + C" again. Then it quits and print message like "
->
-> I am running latest (as of 01/06/2011) hostapd, latest stable kernel (2.6.37) with one number change in ath9k to allow more than 12 virtual BSS over one radio.
->
-> Below is my hostapd-conf and console screenshot. If someone can fix this bug, please help.
+the command git-clone was removed and git clone should be used now.
+Update error message.
 
-Maybe attach gdb to hostapd and see where it hangs?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/admin-update.sh |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Also, what change did you make to ath9k?
-
-Thanks,
-Ben
-
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index bf8e080..650c489 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -191,7 +191,7 @@ if [ -z $GIT_TREE ]; then
+ 		echo "  export GIT_TREE=/home/$USER/linux-next/"
+ 		echo
+ 		echo "If you do not have one you can clone the repository:"
+-		echo "  git-clone $GIT_URL"
++		echo "  git clone $GIT_URL"
+ 		exit 1
+ 	fi
+ else
+@@ -207,7 +207,7 @@ if [ -z $GIT_COMPAT_TREE ]; then
+ 		echo "  export GIT_COMPAT_TREE=/home/$USER/compat/"
+ 		echo
+ 		echo "If you do not have one you can clone the repository:"
+-		echo "  git-clone $GIT_COMPAT_URL"
++		echo "  git clone $GIT_COMPAT_URL"
+ 		exit 1
+ 	fi
+ else
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
+
