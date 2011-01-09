@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50699 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677Ab1AZJEX (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49990 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab1AIAgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 04:04:23 -0500
-Subject: Re: [PATCH 1/2] wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw
- flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: coelho@ti.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
-References: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1296030672.3635.13.camel@jlt3.sipsolutions.net>
-	 <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Jan 2011 10:04:19 +0100
-Message-ID: <1296032659.3635.29.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 8 Jan 2011 19:36:32 -0500
+Message-ID: <4D290307.4080807@candelatech.com>
+Date: Sat, 08 Jan 2011 16:36:23 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
+References: <1294500800-29191-1-git-send-email-greearb@candelatech.com> <4D28FF57.9040706@openwrt.org>
+In-Reply-To: <4D28FF57.9040706@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-26 at 11:02 +0200, Juuso Oikarinen wrote:
+On 01/08/2011 04:20 PM, Felix Fietkau wrote:
+> On 2011-01-08 8:33 AM, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This saves us constantly allocating large, multi-page
+>> skbs. It should fix the order-1 allocation errors reported,
+>> and in a 60-vif scenario, this significantly decreases CPU
+>> utilization, and latency, and increases bandwidth.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>> :100644 100644 b2497b8... ea2f67c... M drivers/net/wireless/ath/ath9k/recv.c
+>> drivers/net/wireless/ath/ath9k/recv.c | 92 ++++++++++++++++++++++-----------
+>> 1 files changed, 61 insertions(+), 31 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index b2497b8..ea2f67c 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -1702,42 +1704,70 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>> unlikely(tsf_lower - rs.rs_tstamp> 0x10000000))
+>> rxs->mactime += 0x100000000ULL;
+>>
+>> - /* Ensure we always have an skb to requeue once we are done
+>> - * processing the current buffer's skb */
+>> - requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
+>> -
+>> - /* If there is no memory we ignore the current RX'd frame,
+>> - * tell hardware it can give us a new frame using the old
+>> - * skb and put it at the tail of the sc->rx.rxbuf list for
+>> - * processing. */
+>> - if (!requeue_skb)
+>> - goto requeue;
+>> -
+>> - /* Unmap the frame */
+>> - dma_unmap_single(sc->dev, bf->bf_buf_addr,
+>> - common->rx_bufsize,
+>> - dma_type);
+>> + len = rs.rs_datalen + ah->caps.rx_status_len;
+>> + if (use_copybreak) {
+>> + skb = netdev_alloc_skb(NULL, len);
+>> + if (!skb) {
+>> + skb = bf->bf_mpdu;
+>> + use_copybreak = false;
+>> + goto non_copybreak;
+>> + }
+>> + } else {
+> I think this should be dependent on packet size, maybe even based on the architecture. Especially on embedded hardware, copying large frames is probably quite a
+> bit more expensive than allocating large buffers. Cache sizes are small, memory access takes several cycles, especially during concurrent DMA.
+> Once I'm back home, I could try a few packet size threshold to find a sweet spot for the typical MIPS hardware that I'm playing with. I expect a visible
+> performance regression from this patch when applied as-is.
 
-> Well I guess I'm stating the obvious here. The effects of the flag are:
-> 
-> - It causes mac80211 to add the spectrum mgmt capability bit, list of
-> supported channels and TX power capability info into the assoc-req
-> - It causes mac80211 to process channel switch actions
-> - It causes mac80211 to process and react to TPC power constraint
-> elements sent out in beacons
-> - It causes mac80211 to respond to TPC report requests by the AP, albeit
-> currently only by refusing them.
+I see a serious performance improvement with this patch.  My current test is sending 1024 byte UDP
+payloads to/from each of 60 stations at 128kbps.  Please do try it out on your system and see how
+it performs there.  I'm guessing that any time you have more than 1 VIF this will be a good
+improvement since mac80211 does skb_copy (and you would typically be copying a much smaller
+packet with this patch).
 
-Right. But all of this is generic, no? Except maybe TPC?
+If we do see performance differences on different platforms, this could perhaps be
+something we could tune at run-time.
 
-> In addition to this, I plan to implement the TPC basic reporting,
-> including mac80211 stuff if required (I still need to learn some more on
-> the subject, specifically regarding the wl12xx chipset) and also I plan
-> to implement quieting, though it's likely that wont need mac80211
-> intervention with wl12xx at least.
-> 
-> AFAIK all these items are mandatory on the 5GHz band, at least in
-> Europe.
-> 
-> So I don't see how this flag could be removed. Unless you wan't to make
-> the above default behavior - but then adding for instance the spectrum
-> mgmt bit into the capabilities assumes all chipset will be able handle
-> all of the features?
+Thanks,
+Ben
 
-Yeah, I was thinking those should be default, and the actual TPC
-reporting would of course depend on hardware features? But then again
-maybe TPC itself isn't necessarily implemented by drivers since not all
-drivers implement setting the power correctly.
+>
+> - Felix
 
-johannes
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
