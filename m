@@ -1,38 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54418 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752932Ab1AZVXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 16:23:32 -0500
-Message-ID: <4D4090CD.9090407@hauke-m.de>
-Date: Wed, 26 Jan 2011 22:23:25 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from nbd.name ([46.4.11.11]:42585 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751824Ab1AIAUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Jan 2011 19:20:54 -0500
+Message-ID: <4D28FF57.9040706@openwrt.org>
+Date: Sat, 08 Jan 2011 17:20:39 -0700
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: James <bjlockie@lockie.ca>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: no CONFIG_WIRELESS_EXT
-References: <4D40774A.608@lockie.ca>
-In-Reply-To: <4D40774A.608@lockie.ca>
-Content-Type: text/plain; charset=ISO-8859-1
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
+References: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2011 08:34 PM, James wrote:
-> I installed compat-wireless-2011-01-25 and iwlist doesn't work but iw does.
-> The warning dmesg shows is "cfg80211: wext will not work because kernel
-> was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface,
-> like iwconfig will not work." which is fine BUT my kernel is compiled with
-> CONFIG_WIRELESS=y
-> CONFIG_WIRELESS_EXT_SYSFS=y
-> and those are the only 2 'WIRELESS' anything.
-> 
-> I have kernel 2.6.36.3.
+On 2011-01-08 8:33 AM, greearb@candelatech.com wrote:
+> From: Ben Greear<greearb@candelatech.com>
+>
+> This saves us constantly allocating large, multi-page
+> skbs.  It should fix the order-1 allocation errors reported,
+> and in a 60-vif scenario, this significantly decreases CPU
+> utilization, and latency, and increases bandwidth.
+>
+> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> ---
+> :100644 100644 b2497b8... ea2f67c... M	drivers/net/wireless/ath/ath9k/recv.c
+>   drivers/net/wireless/ath/ath9k/recv.c |   92 ++++++++++++++++++++++-----------
+>   1 files changed, 61 insertions(+), 31 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index b2497b8..ea2f67c 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -1702,42 +1704,70 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>   		    unlikely(tsf_lower - rs.rs_tstamp>  0x10000000))
+>   			rxs->mactime += 0x100000000ULL;
+>
+> -		/* Ensure we always have an skb to requeue once we are done
+> -		 * processing the current buffer's skb */
+> -		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
+> -
+> -		/* If there is no memory we ignore the current RX'd frame,
+> -		 * tell hardware it can give us a new frame using the old
+> -		 * skb and put it at the tail of the sc->rx.rxbuf list for
+> -		 * processing. */
+> -		if (!requeue_skb)
+> -			goto requeue;
+> -
+> -		/* Unmap the frame */
+> -		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+> -				 common->rx_bufsize,
+> -				 dma_type);
+> +		len = rs.rs_datalen + ah->caps.rx_status_len;
+> +		if (use_copybreak) {
+> +			skb = netdev_alloc_skb(NULL, len);
+> +			if (!skb) {
+> +				skb = bf->bf_mpdu;
+> +				use_copybreak = false;
+> +				goto non_copybreak;
+> +			}
+> +		} else {
+I think this should be dependent on packet size, maybe even based on the 
+architecture. Especially on embedded hardware, copying large frames is 
+probably quite a bit more expensive than allocating large buffers. Cache 
+sizes are small, memory access takes several cycles, especially during 
+concurrent DMA.
+Once I'm back home, I could try a few packet size threshold to find a 
+sweet spot for the typical MIPS hardware that I'm playing with. I expect 
+a visible performance regression from this patch when applied as-is.
 
-Hi,
-
-you have to activate CONFIG_WIRELESS_EXT and nothing else to use the
-wext interface. You can not doe this directly in your kernel config, you
-have to modify the KConfig or build something that depends on
-CONFIG_WIRELESS_EXT like ipw2200. Just set CONFIG_IPW200=m in the kernel
-configuration and it will also activate CONFIG_WIRELESS_EXT=y
-
-Hauke
+- Felix
