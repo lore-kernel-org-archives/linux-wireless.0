@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59671 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44532 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837Ab1ARKna (ORCPT
+	with ESMTP id S1750908Ab1AIJrV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 05:43:30 -0500
-Subject: Re: [PATCH 2/5] mac80211: initialize radar params + add driver API
+	Sun, 9 Jan 2011 04:47:21 -0500
+Subject: Re: [PATCH] mwifiex: remove linked list implementation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-In-Reply-To: <20110117161133.6EEA42080@mx.techwires.net>
-References: <201101171621.29863.bernhard.schmidt@saxnet.de>
-	 <20110117161133.6EEA42080@mx.techwires.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1294449014-15078-1-git-send-email-bzhao@marvell.com>
+References: <1294449014-15078-1-git-send-email-bzhao@marvell.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Jan 2011 11:44:14 +0100
-Message-ID: <1295347454.3563.9.camel@jlt3.sipsolutions.net>
+Date: Sun, 09 Jan 2011 10:47:17 +0100
+Message-ID: <1294566437.5345.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 10:16 +0100, Bernhard Schmidt wrote:
+On Fri, 2011-01-07 at 17:10 -0800, Bing Zhao wrote:
 
-> +static struct ieee80211_radar_parameters regdomain_params[] = {
-> +	{ .cac_period = 60, .nol_period = 1800 },	/* FCC, correct? */
-> +	{ .cac_period = 60, .nol_period = 1800 },	/* ETSI */
-> +	{ .cac_period = 60, .nol_period = 1800 },	/* JP, correct? */
-> +};
+> +	tx_ba_tsr_tbl = (struct mwifiex_tx_ba_stream_tbl *)
+> +					priv->tx_ba_stream_tbl_ptr.next;
 
-These parameters really need to come from cfg80211/userspace.
+Don't do that. Always use list_first_entry() etc, because otherwise the
+struct list_head must be the first member in the struct, which is very
+non-ideomatic and everybody who is used to the kernel will get it wrong
+when modifying your driver.
+
+Treat struct list_head as completely opaque -- never look into it. There
+are macros for any kind of manipulation with it.
+
+Also, all your loops are open coded -- use list_for_each_entry() instead
+of doing that (even the code I quoted above is from an open coded loop)
 
 johannes
 
