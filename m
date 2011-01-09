@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:41739 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751180Ab1AOUE7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 15:04:59 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 7A2DD54022B
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 15:06:43 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-15 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110115200457.F276540F97@repository3.orbit-lab.org>
-Date: Sat, 15 Jan 2011 15:04:57 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34378 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748Ab1AIPGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 10:06:47 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: backport power api in atl1c
+Date: Sun,  9 Jan 2011 16:06:21 +0100
+Message-Id: <1294585581-9991-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
+References: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + e70f43d...0eb1b34 akpm-end   -> origin/akpm-end  (forced update)
-   e0e736f..6ab8219  akpm-start -> origin/akpm-start
-   2271958..bed36d7  history    -> origin/history
- + 1d506f8...e8883f8 master     -> origin/master  (forced update)
-   581548d..6ab8219  stable     -> origin/stable
- * [new tag]         next-20110115 -> next-20110115
+atl1 now uses the new PCI power management. For older kernel version
+the old API must be used.
 
-compat-wireless code metrics
+In compat-wireless upstream it is commit:
+	c7341cf985decfc1d3a570735f5509886212157f
 
-    782520 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1989 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1956 - % of crap code
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/11-dev-pm-ops.patch |   50 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 50 insertions(+), 0 deletions(-)
 
-Base tree: linux-next.git
-Base tree version: next-20110115
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
+diff --git a/patches/11-dev-pm-ops.patch b/patches/11-dev-pm-ops.patch
+index 0e4ca6a..42aaa33 100644
+--- a/patches/11-dev-pm-ops.patch
++++ b/patches/11-dev-pm-ops.patch
+@@ -7,6 +7,56 @@ calls on compat code with only slight modifications.
+ 
+ [1] http://lxr.linux.no/#linux+v2.6.29/include/linux/pm.h#L170
+ 
++--- a/drivers/net/atl1c/atl1c_main.c
+++++ b/drivers/net/atl1c/atl1c_main.c
++@@ -2881,6 +2881,34 @@
++ 	.resume = atl1c_io_resume,
++ };
++ 
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+++static int atl1c_suspend_compat(struct pci_dev *pdev, pm_message_t state)
+++{
+++	int r;
+++
+++	r = atl1c_suspend(&pdev->dev);
+++	if (r)
+++		return r;
+++
+++	pci_save_state(pdev);
+++	pci_disable_device(pdev);
+++	pci_set_power_state(pdev, PCI_D3hot);
+++	return 0;
+++}
+++
+++static int atl1c_resume_compat(struct pci_dev *pdev)
+++{
+++	int r;
+++
+++	pci_restore_state(pdev);
+++	r = pci_enable_device(pdev);
+++	if (r)
+++		return r;
+++
+++	return atl1c_resume(&pdev->dev);
+++}
+++#endif
+++
++ static SIMPLE_DEV_PM_OPS(atl1c_pm_ops, atl1c_suspend, atl1c_resume);
++ 
++ static struct pci_driver atl1c_driver = {
++@@ -2890,7 +2918,12 @@
++ 	.remove   = __devexit_p(atl1c_remove),
++ 	.shutdown = atl1c_shutdown,
++ 	.err_handler = &atl1c_err_handler,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
++ 	.driver.pm = &atl1c_pm_ops,
+++#elif defined(CONFIG_PM_SLEEP)
+++	.suspend        = atl1c_suspend_compat,
+++	.resume         = atl1c_resume_compat,
+++#endif
++ };
++ 
++ /*
+ --- a/drivers/net/wireless/ath/ath5k/base.c
+ +++ b/drivers/net/wireless/ath/ath5k/base.c
+ @@ -3717,6 +3717,34 @@ static int ath5k_pci_resume(struct devic
+-- 
+1.7.1
+
