@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:6187 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751159Ab1AZKgQ (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39470 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800Ab1AIPfl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 05:36:16 -0500
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0975108171
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 19:36:15 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH 6/6] ath: Fix WEP hardware encryption
-Date: Wed, 26 Jan 2011 19:36:02 +0900
-Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <20110125041522.6944.22566.stgit@localhost6.localdomain6> <201101261138.53169.br1@einfach.org> <20110126093700.GA11832@jm.kir.nu>
-In-Reply-To: <20110126093700.GA11832@jm.kir.nu>
+	Sun, 9 Jan 2011 10:35:41 -0500
+Received: by iwn9 with SMTP id 9so18522176iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Jan 2011 07:35:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101261936.02831.br1@einfach.org>
+In-Reply-To: <4D29C3D1.4020804@openwrt.org>
+References: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
+	<4D28FF57.9040706@openwrt.org>
+	<4D290307.4080807@candelatech.com>
+	<4D290450.8070700@openwrt.org>
+	<4D290A2C.6040803@candelatech.com>
+	<AANLkTim0=1wpPGPDZZzVjO0u_jvv5knA2=v4b-dTfRFq@mail.gmail.com>
+	<4D29C3D1.4020804@openwrt.org>
+Date: Sun, 9 Jan 2011 16:35:40 +0100
+Message-ID: <AANLkTinu9zC3fdMrqmmN__WFd3tMP7Waszp26O2PAtoP@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Implement rx copy-break.
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed January 26 2011 18:37:00 Jouni Malinen wrote:
-> On Wed, Jan 26, 2011 at 11:38:53AM +0900, Bruno Randolf wrote:
-> > Even without my patch, WEP does not work with multiple vifs.
-> 
-> Are you sure about that? 
+2011/1/9 Felix Fietkau <nbd@openwrt.org>:
+> On 2011-01-09 7:15 AM, Björn Smedman wrote:
+>>
+>> I think we should also consider the added stability/saneness with this
+>> patch. I for one would be willing to live with some extra cpu load if
+>> that means the unstoppable rx dma problem can be contained (all the
+>> time).
+>
+> I don't think this patch has anything to do with the rx dma stop issue.
 
-Yes, I'm sure. Please test it yourself, if you don't believe me. :)
-I'm using ath5k, not ath9k, BTW.
+Ok, so if you have a machine gun that can go off at any time and is
+impossible to stop you don't think it makes a difference where it's
+pointed? ;) Just kidding, and call me superstitious, but I would feel
+much better knowing ath9k is pointing that half-broken dma engine at
+it's own data only, at least until it's 100% stable.
 
-> Why would there be any issues in using software
-> crypto for decrypting WEP frames while everything else is done in
-> hardware? 
-
-I don't know why it doesn't work at this point, but it doesn't and this looks 
-suspicious:
-
-root@RMR1:~# cat /sys/kernel/debug/ieee80211/phy0/keys/0/hw_key_idx 
-4
-root@RMR1:~# cat /sys/kernel/debug/ieee80211/phy0/keys/0/keyidx 
-0
-root@RMR1:~# cat /sys/kernel/debug/ieee80211/phy0/keys/1/hw_key_idx 
-68
-root@RMR1:~# cat /sys/kernel/debug/ieee80211/phy0/keys/1/keyidx 
-0
-
-> > My patch just adds a special case for WEP, so it does not break anything
-> > for the other use cases. It improves the performance for the one vif
-> > case where WEP works right now.
-> 
-> As far as I can tell, it will break all multi-vif cases where at least
-> one of the vifs is using WEP (which would be one of the only acceptable
-> uses of WEP as a temporary upgrade path while providing more reasonable
-> security on other vifs). As such, I would have to NAK this patch in its
-> current form.
-
-Why do you believe it would break something? It just uses key indices 0-3, 
-which are not used for anything else.
-
-I tested it with 1 WEP vif and 3 WPA vifs and it works.
-
-> To make this acceptable, the patch would need to handle a case where
-> multiple vifs are added (which may happen either before or after the WEP
-> keys would be set to default key indexes) and prevent the use of those
-> key indexes (which would include removing the already configured keys in
-> case of vif added after the WEP configuration on another vif).
-
-Given the fact that it works i think this is not necessary.
-
-bruno
+/Björn
