@@ -1,38 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:41415 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932179Ab1AKOqz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 09:46:55 -0500
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Jason Andryuk <jandryuk@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: 5GHz 802.11n USB Adapter
-References: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
-	<201101082132.22947.helmut.schaa@googlemail.com>
-	<87mxn9fl6m.fsf@purkki.adurom.net>
-	<201101101703.45802.helmut.schaa@googlemail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 11 Jan 2011 16:46:54 +0200
-In-Reply-To: <201101101703.45802.helmut.schaa@googlemail.com> (Helmut Schaa's message of "Mon\, 10 Jan 2011 17\:03\:45 +0100")
-Message-ID: <87ipxvfqg1.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44554 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751793Ab1AIPBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 10:01:00 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: backport pci_wake_from_d3
+Date: Sun,  9 Jan 2011 16:00:34 +0100
+Message-Id: <1294585234-9806-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1294585234-9806-1-git-send-email-hauke@hauke-m.de>
+References: <1294585234-9806-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
+This is needed by atl1c.
 
->> If some hardware models don't support broadcast/multicast buffering in
->> that case the driver shouldn't allow AP mode, at least not in mainline
->> kernels. We shouldn't break the standarnd knowingly.
->> 
->> From a quick grep it looks like rt2800usb enables AP mode. Is that the
->> case or did I misunderstood something?
->
-> You're right, rt2800usb enables AP mode despite the lack of proper
-> mc- and bc buffering.
+This is compat-wireless upstream commit:
+	454fb1a4a698bd2935af76800bc17e14b086476a
 
-Ok, thanks. I'll try to come up with a patch which disables AP mode
-for rt2800usb.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.28.c        |   22 ++++++++++++++++++++++
+ include/linux/compat-2.6.28.h |    2 ++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
+diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
+index 7a834d2..72c9e09 100644
+--- a/compat/compat-2.6.28.c
++++ b/compat/compat-2.6.28.c
+@@ -439,3 +439,25 @@ int n_tty_ioctl_helper(struct tty_struct *tty, struct file *file,
+ }
+ EXPORT_SYMBOL(n_tty_ioctl_helper);
+ 
++/**
++ * pci_wake_from_d3 - enable/disable device to wake up from D3_hot or D3_cold
++ * @dev: PCI device to prepare
++ * @enable: True to enable wake-up event generation; false to disable
++ *
++ * Many drivers want the device to wake up the system from D3_hot or D3_cold
++ * and this function allows them to set that up cleanly - pci_enable_wake()
++ * should not be called twice in a row to enable wake-up due to PCI PM vs ACPI
++ * ordering constraints.
++ *
++ * This function only returns error code if the device is not capable of
++ * generating PME# from both D3_hot and D3_cold, and the platform is unable to
++ * enable wake-up power for it.
++ */
++int pci_wake_from_d3(struct pci_dev *dev, bool enable)
++{
++	return pci_pme_capable(dev, PCI_D3cold) ?
++			pci_enable_wake(dev, PCI_D3cold, enable) :
++			pci_enable_wake(dev, PCI_D3hot, enable);
++}
++EXPORT_SYMBOL(pci_wake_from_d3);
++
+diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
+index 1de39ad..b9024d6 100644
+--- a/include/linux/compat-2.6.28.h
++++ b/include/linux/compat-2.6.28.h
+@@ -234,6 +234,8 @@ extern void skb_add_rx_frag(struct sk_buff *skb, int i, struct page *page,
+ extern int n_tty_ioctl_helper(struct tty_struct *tty, struct file *file,
+ 		       unsigned int cmd, unsigned long arg);
+ 
++int pci_wake_from_d3(struct pci_dev *dev, bool enable);
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
+ 
+ #endif /* LINUX_26_28_COMPAT_H */
 -- 
-Kalle Valo
+1.7.1
+
