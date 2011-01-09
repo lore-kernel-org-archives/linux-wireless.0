@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34642 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752278Ab1AONaW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 08:30:22 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 1/2] ath9k: try more than one tid when scheduling a new aggregate
-Date: Sat, 15 Jan 2011 14:30:14 +0100
-Message-Id: <1295098215-98910-1-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:44368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab1AIJeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 04:34:04 -0500
+Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
+ one page.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D2797D2.6000002@candelatech.com>
+References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+	 <1294397880.3467.1.camel@jlt3.sipsolutions.net>
+	 <4D275CCC.90905@candelatech.com>  <20110107200913.GF21588@tux>
+	 <1294432018.2709.2.camel@edumazet-laptop>
+	 <4D2791BD.7050502@candelatech.com>
+	 <1294439171.2709.6.camel@edumazet-laptop>
+	 <4D2797D2.6000002@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 09 Jan 2011 10:34:00 +0100
+Message-ID: <1294565640.3469.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes the first TID in the first AC's list is not available for forming
-a new aggregate (the BAW might not allow it), however other TIDs may have
-data available for sending.
-Prevent a slowdown of other TIDs by going through multiple entries until
-we've either hit the last one or enough AMPDUs are pending in the hardware
-queue.
+On Fri, 2011-01-07 at 14:46 -0800, Ben Greear wrote:
+> On 01/07/2011 02:26 PM, Eric Dumazet wrote:
+> > Le vendredi 07 janvier 2011 à 14:20 -0800, Ben Greear a écrit :
+> >> On 0
+> >>> Using skb_copy() is wrong then, since it makes a copy (order-1
+> >>> allocations)
+> >>>
+> >>> It should use :
+> >>>    skb_alloc( actual_size_of_frame  not the 3840 thing ...)
+> >>>    copy(data)
+> >>
+> >> We need the extra stuff copied too I think (like skb->cb).
+> >>
+> >> If you could provide a bit more complete example code, I'll be happy
+> >> to test it...
+> >
+> > take a random drivers/net using copybreak ... say ... tg3.c
+> >
+> > lines 4785
+> >
+> > len = length_of_the_current_frame
+> > copy_skb = netdev_alloc_skb(...,  len);
+> > // allocates exact required size not a byte more....
+> > ...
+> > skb_copy_from_linear_data(skb, copy_skb->data, len);
+> > ...
+> > skb_put(skb, len);
+> > ...
+> 
+> That seems fine for drivers, but I'm guessing something different
+> would be needed in the mac80211/rx.c code:
+> 
+> I figure doing the fix here might be a nice quick fix,
+> and would help with all funky drivers.  Later, can fix the
+> ath9k to do the skb copying as soon as DMA is done?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+This code in mac80211 that you point out will nearly never do a copy
+unless you have a lot of multicast traffic. I really don't think it
+makes sense to think about changing that now.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index ab4f7b4..fffd13d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1224,12 +1224,14 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
- void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- {
- 	struct ath_atx_ac *ac;
--	struct ath_atx_tid *tid;
-+	struct ath_atx_tid *tid, *last;
- 
--	if (list_empty(&txq->axq_acq))
-+	if (list_empty(&txq->axq_acq) ||
-+	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
- 		return;
- 
- 	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
-+	last = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
- 	list_del(&ac->list);
- 	ac->sched = false;
- 
-@@ -1253,7 +1255,8 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 		if (!list_empty(&tid->buf_q))
- 			ath_tx_queue_tid(txq, tid);
- 
--		break;
-+		if (tid == last || txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
-+			break;
- 	} while (!list_empty(&ac->tid_q));
- 
- 	if (!list_empty(&ac->tid_q)) {
--- 
-1.7.3.2
+johannes
 
