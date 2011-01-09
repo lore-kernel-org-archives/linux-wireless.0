@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54465 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755128Ab1AGSHO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 13:07:14 -0500
-Message-ID: <4D27564E.1030008@candelatech.com>
-Date: Fri, 07 Jan 2011 10:07:10 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:43100 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751848Ab1AIQw2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 11:52:28 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 09 Jan 2011 08:52:11 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	<stable@kernel.org>, Jouni Malinen <Jouni.Malinen@Atheros.com>
+Subject: [PATCH] ath9k: set hw opmode while changing interface type
+Date: Sun, 9 Jan 2011 22:21:28 +0530
+Message-ID: <1294591888-16625-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-To: Chaoxing Lin <CLin@3eti.com>
-CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: Re: hostapd hangs on quit, multi-BSSID scenario
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp> <4D275236.4040202@candelatech.com> <BD54DDEB2546894FAB0731EA7B0EDF8D05715D9E@RockMX01.rock.corp>
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D9E@RockMX01.rock.corp>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2011 09:58 AM, Chaoxing Lin wrote:
-> 1. I don't know how to use GDB. Consider me entry level developer.
+The commit "ath9k: Add change_interface callback" is
+failed to set hw opmode while changing interface type
+on runtime. Not setting opmode fails to generate
+beacons on changing to AP mode.
 
-You need to learn how to use gdb..it will be well worth your time
-if you plan to ever move beyond entry-level-developer.
+Cc: stable@kernel.org
+Cc: Jouni Malinen <Jouni.Malinen@Atheros.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    1 +
+ drivers/net/wireless/ath/ath9k/main.c   |    4 ++++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-Something as simple as:
-
-gdb [hostapd-binary] [pid-of-hostapd-process]
-
-Then inside of gdb:
-
-bt
-
-You might also try 'strace'.
-
-> 2. It should not be related the change I made on ath9k. The reasons are
-> 	a. My change is simple, linux/drivers/net/wireless/ath/ath9k/ath9k.h: change ATH_BCBUF from 4 to 12
-> 	b. Without my change, driver accepts up to 3 extra BSSID. But hostapd still hangs on quit. Hostapd quits well if there only one extra BSSID.
->
-> This problem is 100% reproducible. I guess it would be quite easy for the original hostapd developer to fix it.
-
-Heh, maybe so..but if you want it fixed fast, you might need to put in some
-extra debugging effort.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 385ba03..efa573b 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -338,6 +338,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
+ 			sc->beacon.bslot[avp->av_bslot] = NULL;
+ 			sc->beacon.bslot_aphy[avp->av_bslot] = NULL;
+ 			sc->nbcnvifs--;
++			avp->av_bslot = -1;
+ 		}
+ 
+ 		bf = avp->av_bcbuf;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f90a6ca..648a761 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1456,6 +1456,8 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ {
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_vif *avp = (void *)vif->drv_priv;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	int ret = 0;
+ 
+@@ -1470,6 +1472,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 			ret = -ENOBUFS;
+ 			goto out;
+ 		}
++		sc->sc_flags |= SC_OP_TSF_RESET;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		/* Stop ANI */
+@@ -1488,6 +1491,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
+ 	vif->type = new_type;
+ 	vif->p2p = p2p;
+ 
++	ah->opmode = avp->av_opmode = new_type;
+ out:
+ 	mutex_unlock(&sc->mutex);
+ 	return ret;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.3.5
+
