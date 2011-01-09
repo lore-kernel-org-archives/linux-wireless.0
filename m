@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55424 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644Ab1ASJv1 (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:55433 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020Ab1AIIHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 04:51:27 -0500
-Subject: Re: [2.6.38-rc1] iwlagn lock misuse...
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel J Blueman <daniel.blueman@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <AANLkTi=DLpfpLYAftktUKa5grNyTeT0-reyjEsrr-NwR@mail.gmail.com>
-References: <AANLkTi=DLpfpLYAftktUKa5grNyTeT0-reyjEsrr-NwR@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 19 Jan 2011 10:51:22 +0100
-Message-ID: <1295430682.4685.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 9 Jan 2011 03:07:01 -0500
+Message-ID: <4D296B12.8000801@openwrt.org>
+Date: Sun, 09 Jan 2011 09:00:18 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
+References: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-19 at 16:44 +0700, Daniel J Blueman wrote:
-> Booting an instrumented 2.6.38-rc1 kernel with an Intel WiFi Link 5300
-> card and associating with an access point, I see a lockdep warning
-> [attached].
+Hi Ben,
+
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> This is essentially (struct iwl_priv)->lock being taken with
-> interrupts disabled in iwl-agn-ict.c:152 [1] and the same lock taken
-> with interrupts enabled in rx.c:2476 [2] (confirmed via disassembly).
+> This saves us constantly allocating large, multi-page
+> skbs.  It should fix the order-1 allocation errors reported,
+> and in a 60-vif scenario, this significantly decreases CPU
+> utilization, and latency, and increases bandwidth.
 > 
-> It feels like this would have been introduced in this commit:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6e8cc38d5b05bb812f89a35bd9bf52405e67d0df
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 b2497b8... ea2f67c... M	drivers/net/wireless/ath/ath9k/recv.c
+>  drivers/net/wireless/ath/ath9k/recv.c |   92 ++++++++++++++++++++++-----------
+>  1 files changed, 61 insertions(+), 31 deletions(-)
 
-I think you're running into a lockdep false positive, it's not actually
-the same lock and lockdep confuses a few skb queue locks. Please apply
-this patch
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=53c16b8e752e8e58f4313f1155f3afadf78311bb
-and see if the problem persists.
+<...>
 
-johannes
+> +		if (use_copybreak) {
+> +			struct pci_dev *pdev = to_pci_dev(sc->dev);
 
+This would cause undefined behaviour with ath9k devices sitting on an AHB bus.
+
+> +			pci_dma_sync_single_for_cpu(pdev, bf->bf_buf_addr,
+> +						    len, PCI_DMA_FROMDEVICE);
+> +			skb_copy_from_linear_data(bf->bf_mpdu, skb->data, len);
+> +			pci_dma_sync_single_for_device(pdev, bf->bf_buf_addr,
+> +						       len, PCI_DMA_FROMDEVICE);
+
+Please use the bus agnostic equivalents of these DMA functions.
+
+- Gabor
