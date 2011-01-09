@@ -1,31 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64213 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861Ab1AXNIx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 08:08:53 -0500
-Received: by iyj18 with SMTP id 18so3935923iyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 05:08:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinwPrar6ZBhSALBif8__4mHHsKuDYKsgr4FDqtu@mail.gmail.com>
-References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
- <4D3B0390.5070108@broadcom.com> <AANLkTinwPrar6ZBhSALBif8__4mHHsKuDYKsgr4FDqtu@mail.gmail.com>
-From: Jamie Kitson <jamie@kitten-x.com>
-Date: Mon, 24 Jan 2011 13:08:32 +0000
-Message-ID: <AANLkTimhBepRreUTfuzN2M=eVc3Bka0YWGk-ZbtX4DLt@mail.gmail.com>
-Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34355 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751979Ab1AIPGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 10:06:37 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: remove 28-pm-qos-params.patch
+Date: Sun,  9 Jan 2011 16:06:20 +0100
+Message-Id: <1294585581-9991-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
+References: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> This may not be supported by this driver.
->
-> Ok, how would I find out for sure?
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-I got this from the irc channel:
+This is no longer required as Felix backported this
+properly through compat.git now :)
 
-[12:55] <johill> JamieKitson: it doesn't, at least arend said that a
-couple of days ago
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/28-pm-qos-params.patch |  118 ----------------------------------------
+ 1 files changed, 0 insertions(+), 118 deletions(-)
+ delete mode 100644 patches/28-pm-qos-params.patch
+
+diff --git a/patches/28-pm-qos-params.patch b/patches/28-pm-qos-params.patch
+deleted file mode 100644
+index 7c9dd9e..0000000
+--- a/patches/28-pm-qos-params.patch
++++ /dev/null
+@@ -1,118 +0,0 @@
+-
+-This patch is required because now pm-qos has 3 different flavors:
+-
+-On kernels >= 2.6.36 the pm qos req is kzalloc()'d by pm-qos itself
+-On kernel   = 2.6.35 the pm qos req uses the stack
+-On kernels <  2.6.35 the pm qos req is pegged to a unique name
+-
+-On newer kernels we don't use a name to tag a pm-qos requirement, and on
+-older kernels we do. Although we can port over the struct pm_qos_request_list
+-to older kernels it provides no variable with any unique name we can use
+-for older kernels. Perhaps there's a way.. right now I just don't see it.
+-
+-We also should probably not bother updating pm-qos to newer versions unless 
+-we are willing to treat the oldest kernels as newer ones and that'd be a
+-little wierd.
+-
+---- a/drivers/net/wireless/ipw2x00/ipw2100.c
+-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+-@@ -174,7 +174,11 @@ that only one external action is invoked
+- #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2100 Network Driver"
+- #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
+- 
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- static struct pm_qos_request_list ipw2100_pm_qos_req;
+-+#else
+-+static struct pm_qos_request_list *ipw2100_pm_qos_req;
+-+#endif
+- 
+- /* Debugging stuff */
+- #ifdef CONFIG_IPW2100_DEBUG
+-@@ -1741,7 +1745,13 @@ static int ipw2100_up(struct ipw2100_pri
+- 	/* the ipw2100 hardware really doesn't want power management delays
+- 	 * longer than 175usec
+- 	 */
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 	pm_qos_update_request(&ipw2100_pm_qos_req, 175);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+-+	pm_qos_update_request(ipw2100_pm_qos_req, 175);
+-+#else
+-+	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100", 175);
+-+#endif
+- 
+- 	/* If the interrupt is enabled, turn it off... */
+- 	spin_lock_irqsave(&priv->low_lock, flags);
+-@@ -1889,7 +1899,14 @@ static void ipw2100_down(struct ipw2100_
+- 	ipw2100_disable_interrupts(priv);
+- 	spin_unlock_irqrestore(&priv->low_lock, flags);
+- 
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 	pm_qos_update_request(&ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+-+	pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
+-+#else
+-+	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
+-+				  PM_QOS_DEFAULT_VALUE);
+-+#endif
+- 
+- 	/* We have to signal any supplicant if we are disassociating */
+- 	if (associated)
+-@@ -6661,8 +6678,16 @@ static int __init ipw2100_init(void)
+- 	printk(KERN_INFO DRV_NAME ": %s, %s\n", DRV_DESCRIPTION, DRV_VERSION);
+- 	printk(KERN_INFO DRV_NAME ": %s\n", DRV_COPYRIGHT);
+- 
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 	pm_qos_add_request(&ipw2100_pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+- 			   PM_QOS_DEFAULT_VALUE);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+-+	ipw2100_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
+-+						PM_QOS_DEFAULT_VALUE);
+-+#else
+-+	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
+-+			       PM_QOS_DEFAULT_VALUE);
+-+#endif
+- 
+- 	ret = pci_register_driver(&ipw2100_pci_driver);
+- 	if (ret)
+-@@ -6689,7 +6714,13 @@ static void __exit ipw2100_exit(void)
+- 			   &driver_attr_debug_level);
+- #endif
+- 	pci_unregister_driver(&ipw2100_pci_driver);
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 	pm_qos_remove_request(&ipw2100_pm_qos_req);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+-+	pm_qos_remove_request(ipw2100_pm_qos_req);
+-+#else
+-+	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
+-+#endif
+- }
+- 
+- module_init(ipw2100_init);
+---- a/net/mac80211/mlme.c
+-+++ b/net/mac80211/mlme.c
+-@@ -609,7 +609,11 @@ void ieee80211_recalc_ps(struct ieee8021
+- 		s32 beaconint_us;
+- 
+- 		if (latency < 0)
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 			latency = pm_qos_request(PM_QOS_NETWORK_LATENCY);
+-+#else
+-+			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
+-+#endif
+- 
+- 		beaconint_us = ieee80211_tu_to_usec(
+- 					found->vif.bss_conf.beacon_int);
+---- a/net/mac80211/scan.c
+-+++ b/net/mac80211/scan.c
+-@@ -507,7 +507,11 @@ static void ieee80211_scan_state_decisio
+- 		bad_latency = time_after(jiffies +
+- 				ieee80211_scan_get_channel_time(next_chan),
+- 				local->leave_oper_channel_time +
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
+- 				usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
+-+#else
+-+				usecs_to_jiffies(pm_qos_requirement(PM_QOS_NETWORK_LATENCY)));
+-+#endif
+- 
+- 		listen_int_exceeded = time_after(jiffies +
+- 				ieee80211_scan_get_channel_time(next_chan),
+-- 
+1.7.1
+
