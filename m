@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:38772 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab1AFVx7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 16:53:59 -0500
-Message-ID: <20110106235351.13153spun8nuf6qs@hayate.sektori.org>
-Date: Thu, 06 Jan 2011 23:53:51 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: [RFC PATCH 13/17] zd1211rw: use stack for small cmd-buffers
-References: <20110104234745.25309.72030.stgit@fate.lan>
- <20110104234935.25309.7558.stgit@fate.lan>
- <1294219627.3590.0.camel@jlt3.sipsolutions.net>
- <1294340139.5021.8.camel@dcbw.foobar.com>
-In-Reply-To: <1294340139.5021.8.camel@dcbw.foobar.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54109 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751961Ab1AIPcb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 10:32:31 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat-wireless: make NEXT_TREE configurable.
+Date: Sun,  9 Jan 2011 16:32:19 +0100
+Message-Id: <1294587141-11353-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
+References: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Dan Williams <dcbw@redhat.com>:
+It was assumed that the linux next tree is at ~/linux-next . Now the
+directory can be set with NEXT_TREE like the other variables.
 
-> On Wed, 2011-01-05 at 10:27 +0100, Johannes Berg wrote:
->> On Wed, 2011-01-05 at 01:49 +0200, Jussi Kivilinna wrote:
->> > Use stack for allocing small < 64 byte arrays.
->>
->> I don't think this is valid -- DMA memory can't be from the stack.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
 
-Oh, my reply to Johannes didn't go to list.
+This should also go into stable.
 
->
-> It's almost certainly not valid.  You'll get BUGs from the kernel in
-> this case, though it'll still probably work.
+ scripts/admin-update.sh |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
 
-Ok, will not use stack for urb transfer_buffers.
-
--Jussi
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index f23c33c..bf8e080 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -426,6 +426,23 @@ export WSTABLE="
+ 
+ # Stable pending, if -n was passed
+ if [[ "$GET_STABLE_PENDING" = y ]]; then
++
++	if [ -z $NEXT_TREE ]; then
++		NEXT_TREE="/home/$USER/linux-next/"
++		if [ ! -d $NEXT_TREE ]; then
++			echo "Please tell me where your linux-next git tree is."
++			echo "You can do this by exporting its location as follows:"
++			echo
++			echo "  export NEXT_TREE=/home/$USER/linux-next/"
++			echo
++			echo "If you do not have one you can clone the repository:"
++			echo "  git clone git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
++			exit 1
++		fi
++	else
++		echo "You said to use git tree at: $NEXT_TREE for linux-next"
++	fi
++
+ 	LAST_DIR=$PWD
+ 	cd $GIT_TREE
+ 	if [ -f localversion* ]; then
+@@ -436,11 +453,6 @@ if [[ "$GET_STABLE_PENDING" = y ]]; then
+ 	# we now assume you are using a stable tree
+ 	cd $GIT_TREE
+ 	LAST_STABLE_UPDATE=$(git describe --abbrev=0)
+-	NEXT_TREE="/home/$USER/linux-next/"
+-	if [ ! -d $NEXT_TREE ]; then
+-		echo -e "You are expected to have $NEXT_TREE directory when using -s"
+-		exit 1
+-	fi
+ 	cd $NEXT_TREE
+ 	PENDING_STABLE_DIR="pending-stable/"
+ 
+-- 
+1.7.1
 
