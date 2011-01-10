@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:48156 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab1AYRAW convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38110
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751552Ab1AJIHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 12:00:22 -0500
-Received: by yib18 with SMTP id 18so1782968yib.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 09:00:21 -0800 (PST)
-Date: Tue, 25 Jan 2011 15:00:53 -0200
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	"vossen@broadcom.com" <vossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcm80211: fix error report string
-Message-ID: <20110125170052.GA2205@joana>
-References: <1295894723-28346-1-git-send-email-padovan@profusion.mobi>
- <AANLkTi=GqWNd6yu0CeWAzt9ZRgCDkFRgwMExZiqEUr3Z@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE13CD6E8FB6@SJEXCHCCR01.corp.ad.broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE13CD6E8FB6@SJEXCHCCR01.corp.ad.broadcom.com>
+	Mon, 10 Jan 2011 03:07:41 -0500
+Date: Mon, 10 Jan 2011 00:08:13 -0800 (PST)
+Message-Id: <20110110.000813.173856001.davem@davemloft.net>
+To: rjw@sisk.pl
+Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com,
+	florian@mickler.org, akpm@linux-foundation.org,
+	torvalds@linux-foundation.org, kernel-testers@vger.kernel.org,
+	netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
+Subject: Re: 2.6.37-rc8: Reported regressions from 2.6.36
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <96DQe4a_2tH.A.cFB.l27GNB@chimera>
+References: <96DQe4a_2tH.A.cFB.l27GNB@chimera>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brett,
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
 
-* Brett Rudley <brudley@broadcom.com> [2011-01-24 13:57:46 -0800]:
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
+> Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
+> Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
+> Date		: 2010-12-08 21:09 (22 days old)
+> Message-ID	: <4CFFF3F3.90100@goop.org>
+> References	: http://marc.info/?l=linux-kernel&m=129184256629712&w=2
 
-> > -----Original Message-----
-> > From: Rafał Miłecki [mailto:zajec5@gmail.com]
-> > Sent: Monday, January 24, 2011 1:17 PM
-> > To: Gustavo F. Padovan
-> > Cc: Brett Rudley; Henry Ptasinski; Dowan Kim; vossen@broadcom.com; Arend
-> > Van Spriel; linux-wireless@vger.kernel.org
-> > Subject: Re: [PATCH] brcm80211: fix error report string
-> > 
-> > 2011/1/24 Gustavo F. Padovan <padovan@profusion.mobi>:
-> > > Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
-> > > ---
-> > >  drivers/staging/brcm80211/sys/wlc_mac80211.c |    2 +-
-> > >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > >
-> > > diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> > b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> > > index 5eb41d6..ee1bcc5 100644
-> > > --- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> > > +++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-> > > @@ -6910,7 +6910,7 @@ prep_mac80211_status(struct wlc_info *wlc,
-> > d11rxhdr_t *rxh, struct sk_buff *p,
-> > >                preamble = 0;
-> > >                if (IS_CCK(rspec)) {
-> > >                        if (rxh->PhyRxStatus_0 & PRXS0_SHORTH)
-> > > -                               WL_ERROR("Short CCK\n");
-> > > +                               WL_ERROR("%s: Short CCK\n, __func__");
-> > 
-> > I have no idea how WL_ERROR works, but are you sure of that?
-> > 
-> > You wrote:
-> > "%s: Short CCK\n, __func__"
-> > 
-> > Didn't you mean:
-> > "%s: Short CCK\n", __func__
-> > ?
-> > 
-> 
-> Rafal's suggestion is correct, the patch was incorrect.
-> (Good eyes, Rafal)
+This bug is intended to be fixed by:
 
-I just sent a corrected one yesterday in this thread.
+commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
+Author: David S. Miller <davem@davemloft.net>
+Date:   Wed Jan 5 15:38:53 2011 -0800
 
--- 
-Gustavo F. Padovan
-http://profusion.mobi
+    af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
+    
+    unix_release() can asynchornously set socket->sk to NULL, and
+    it does so without holding the unix_state_lock() on "other"
+    during stream connects.
+    
+    However, the reverse mapping, sk->sk_socket, is only transitioned
+    to NULL under the unix_state_lock().
+    
+    Therefore make the security hooks follow the reverse mapping instead
+    of the forward mapping.
+    
+    Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
+    Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
