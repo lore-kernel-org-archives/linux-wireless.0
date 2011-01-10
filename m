@@ -1,105 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:60335 "HELO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752912Ab1ARTcc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 14:32:32 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 18 Jan 2011 11:32:18 -0800
-Subject: RE: [PATCH] mwifiex: remove duplicated NULL checks
-Message-ID: <477F20668A386D41ADCC57781B1F704307F4E1BB91@SC-VEXCH1.marvell.com>
-References: <1295033760-31108-1-git-send-email-bzhao@marvell.com>
- <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
- <AANLkTi=UfKkYcX6CF9bQ84+anr74DKS-tXuH61NASObf@mail.gmail.com>
-In-Reply-To: <AANLkTi=UfKkYcX6CF9bQ84+anr74DKS-tXuH61NASObf@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.candelatech.com ([208.74.158.172]:38103 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151Ab1AJEjV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Jan 2011 23:39:21 -0500
+Message-ID: <4D2A8D74.80304@candelatech.com>
+Date: Sun, 09 Jan 2011 20:39:16 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Restart xmit logic in xmit watchdog.
+References: <1294559160-29298-1-git-send-email-greearb@candelatech.com> <4D29FC3F.2030103@openwrt.org>
+In-Reply-To: <4D29FC3F.2030103@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+On 01/09/2011 10:19 AM, Felix Fietkau wrote:
+> On 2011-01-09 12:46 AM, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> The system can get into a state where the xmit queue
+>> is stopped, but there are no packets pending, so
+>> the queue will not be restarted.
+>>
+>> Add logic to the xmit watchdog to attempt to restart
+>> the xmit logic if this situation is detected.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>>
+>> NOTE: This is basically the same as a patch I posted
+>> a day or two ago. It doesn't address the concern of the
+>> reviewer who NACK'd it, but my system will not properly
+>> transmit packets without this patch applied. I realize
+>> this is a bit of a hack, but until we find and fix all
+>> of the other bugs, I think this patch or something similar
+>> should be applied.
+>>
+>> Still, this patch should not be applied unless given positive
+>> ACK by the ath9k developers.
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index d9a4144..1b3a62c 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -1988,19 +1988,30 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+>> tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
+>> }
+>>
+>> -static void ath_wake_mac80211_queue(struct ath_softc *sc, int qnum)
+>> +/* Has no locking. */
+>> +static void __ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
+>> {
+>> - struct ath_txq *txq;
+>> -
+>> - txq = sc->tx.txq_map[qnum];
+>> - spin_lock_bh(&txq->axq_lock);
+>> if (txq->stopped&& txq->pending_frames< ATH_MAX_QDEPTH) {
+>> - if (ath_mac80211_start_queue(sc, qnum))
+>> + if (ath_mac80211_start_queue(sc, txq->axq_qnum))
+>> txq->stopped = 0;
+>> }
+>> +}
+> This part is quite broken, I think you got confused with various types of queue numbers. txq->axq_qnum refers to the atheros hw queue index, whereas the qnum
+> argument to this function refers to the mac80211 queue index (which is also the correct index for sc->tx.txq_map - not to be confused with the sc->tx.txq array).
 
-> -----Original Message-----
-> From: Julian Calaby [mailto:julian.calaby@gmail.com]
-> Sent: Monday, January 17, 2011 7:26 PM
-> To: Bing Zhao
-> Cc: linux-wireless@vger.kernel.org; John W. Linville; Johannes Berg; Amitkumar Karwar; Kiran Divekar;
-> Frank Huang
-> Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
-> 
-> On Tue, Jan 18, 2011 at 14:07, Bing Zhao <bzhao@marvell.com> wrote:
-> > Hi Julian,
-> >
-> >> -----Original Message-----
-> >> From: Julian Calaby [mailto:julian.calaby@gmail.com]
-> >> Sent: Friday, January 14, 2011 6:59 PM
-> >> To: Bing Zhao
-> >> Cc: linux-wireless@vger.kernel.org; John W. Linville; Johannes Berg; Amitkumar Karwar; Kiran
-> Divekar;
-> >> Frank Huang
-> >> Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
-> >>
-> >> On Sat, Jan 15, 2011 at 06:36, Bing Zhao <bzhao@marvell.com> wrote:
-> >> > From: Amitkumar Karwar <akarwar@marvell.com>
-> >> >
-> >> > Some functions have unnecessory NULL check for an input parameter
-> >> > because the caller to those functions is already checking the parameter
-> >> > for NULL before calling them.
-> >>
-> >> It may be more readable and efficient to eliminate the NULL checks in
-> >> the callers - and adjust the code to inform the callers of the case
-> >> where the pointer passed is null and make the callers to properly
-> >> handle this case.
-> >
-> > Thank you very much for your comments.
-> >
-> > There are still some cases that the NULL check needs to be done at the first place. For example,
-> >
-> [snip]
-> 
-> In this case, dropping the null check is the right thing to do, given
-> that you can guarantee that all callers of mwiflex_init_cmd_node()
-> will check that the pointer isn't null before calling it.
-> 
-> >> This should also make the driver more robust as failures can be passed
-> >> up the stack to places that can deal with them more effectively than
-> >> just printing a message.
-> >
-> > I could have misunderstood your point, however. If so, could you please explain a little bit more
-> on how you would make the changes based on above example?
-> 
-> I was referring more to that fact that functions that appear to do
-> things, e.g. mwifiex_init_cmd_node(), don't return anything - hence if
-> something fails within them, e.g. being passed a null pointer, they
-> can't notify their caller, e.g. mwifiex_prepare_cmd() that something
-> has gone wrong.
-> 
-> That said, I haven't looked at the code except through your patches,
-> so I can't say if this is a scenario that actually could happen, and
-> whether this added functionality is worthwhile.
+Yeah, I am confused on all of this.  Looks like I should add a member to the txq struct to
+record it's mac80211 index and use that instead?
 
-Thanks for your comments.
+In the upstream code, is this correct?  It seems to me that it should always
+be waking 'txq' since it just completed a packet.  Why the check
+against txq_map?
 
-mwifiex_init_cmd_node() just initializes the cmd_node structure with variables that have been validated before. But what you said makes sense in general. The function should return something to the caller if anything can go wrong.
+		if (txq == sc->tx.txq_map[qnum])
+			ath_wake_mac80211_queue(sc, qnum);
 
-Best regards,
+> Pushing the locking out to the caller side (with a wrapper) does sound like a good idea though.
 
-Bing
+Thanks,
+Ben
 
-> 
-> Thanks,
-> 
-> --
-> Julian Calaby
-> 
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
