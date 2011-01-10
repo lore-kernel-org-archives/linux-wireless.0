@@ -1,63 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:48615 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694Ab1AGCYw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33948 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710Ab1AJHNo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 21:24:52 -0500
-Received: by wwi17 with SMTP id 17so41975wwi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:24:51 -0800 (PST)
-Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	greearb@candelatech.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net
-In-Reply-To: <AANLkTi=+F_O1_2c07zLEGVDSAkuA2_MwghwRQK9pHMN7@mail.gmail.com>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-	 <201101070205.00886.chunkeey@googlemail.com>
-	 <1294363427.2704.23.camel@edumazet-laptop>
-	 <AANLkTinQ42y9Tu=Ugb92-R+56BP4U+cDBzd4tQQCES1W@mail.gmail.com>
-	 <1294366072.2704.32.camel@edumazet-laptop>
-	 <AANLkTi=+F_O1_2c07zLEGVDSAkuA2_MwghwRQK9pHMN7@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 03:24:40 +0100
-Message-ID: <1294367080.2704.46.camel@edumazet-laptop>
-Mime-Version: 1.0
+	Mon, 10 Jan 2011 02:13:44 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH RESEND 06/11] ath9k:  Add counters to distinquish AMPDU enqueues.
+Date: Sun,  9 Jan 2011 23:11:48 -0800
+Message-Id: <1294643513-18820-7-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
+References: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le jeudi 06 janvier 2011 à 18:13 -0800, Luis R. Rodriguez a écrit :
-> On Thu, Jan 6, 2011 at 6:07 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> The only way to accept your patch is to use a debugfs option to
-> disable it, we need AMSDU support enabled by default.
-> 
+Show counters for pkts sent directly to hardware and
+those queued in software.
 
-I dont care of my patch ;)
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 577bc5a... faf84e4... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 cd2db3f... 980c9fa... M	drivers/net/wireless/ath/ath9k/debug.h
+:100644 100644 2248e47... 3aae523... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/debug.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/debug.h |    6 ++++--
+ drivers/net/wireless/ath/ath9k/xmit.c  |    3 ++-
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-There is a reason I felt it was not appropriate.
-
-> > If the hardware needs 8192 bytes (or 16384) buffers to perform its
-> > operation, it should not give them back to linux, because there is no
-> > guarantee it can allocate fresh ones for the next frames.
-> 
-> Last I looked at this the issue was not the upper used by the driver
-> but an issue of a roundoff by the kernel that ended up on *some*
-> machines going a higher order. Not all machines use the higher order.
-> I wondered at one point if using ksize() might help here too but
-> again, this is a new API. Not sure how to fix it for older kernels.
-
-common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN +
-                              ah->caps.rx_status_len,
-                              min(common->cachelsz, (u16)64));
-
-Given IEEE80211_MAX_MPDU_LEN is more than 3840, and skb shinfo adds more
-than 256 bytes, I can assert rx_bufsize is greater than 4096 : order-1
-allocations at minimum.
-ksize() wont help you.
-
-Many net drivers perform a copy (r8169.c comes to mind, because of a
-hardware flaw).
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 577bc5a..faf84e4 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -628,7 +628,8 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("MPDUs Queued:    ", queued);
+ 	PR("MPDUs Completed: ", completed);
+ 	PR("Aggregates:      ", a_aggr);
+-	PR("AMPDUs Queued:   ", a_queued);
++	PR("AMPDUs Queued HW:", a_queued_hw);
++	PR("AMPDUs Queued SW:", a_queued_sw);
+ 	PR("AMPDUs Completed:", a_completed);
+ 	PR("AMPDUs Retried:  ", a_retries);
+ 	PR("AMPDUs XRetried: ", a_xretries);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index cd2db3f..980c9fa 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -89,7 +89,8 @@ struct ath_interrupt_stats {
+  * @queued: Total MPDUs (non-aggr) queued
+  * @completed: Total MPDUs (non-aggr) completed
+  * @a_aggr: Total no. of aggregates queued
+- * @a_queued: Total AMPDUs queued
++ * @a_queued_hw: Total AMPDUs queued to hardware
++ * @a_queued_sw: Total AMPDUs queued to software queues
+  * @a_completed: Total AMPDUs completed
+  * @a_retries: No. of AMPDUs retried (SW)
+  * @a_xretries: No. of AMPDUs dropped due to xretries
+@@ -112,7 +113,8 @@ struct ath_tx_stats {
+ 	u32 queued;
+ 	u32 completed;
+ 	u32 a_aggr;
+-	u32 a_queued;
++	u32 a_queued_hw;
++	u32 a_queued_sw;
+ 	u32 a_completed;
+ 	u32 a_retries;
+ 	u32 a_xretries;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 2248e47..3aae523 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1335,7 +1335,6 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	struct list_head bf_head;
+ 
+ 	bf->bf_state.bf_type |= BUF_AMPDU;
+-	TX_STAT_INC(txctl->txq->axq_qnum, a_queued);
+ 
+ 	/*
+ 	 * Do not queue to h/w when any of the following conditions is true:
+@@ -1351,6 +1350,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		 * Add this frame to software queue for scheduling later
+ 		 * for aggregation.
+ 		 */
++		TX_STAT_INC(txctl->txq->axq_qnum, a_queued_sw);
+ 		list_add_tail(&bf->list, &tid->buf_q);
+ 		ath_tx_queue_tid(txctl->txq, tid);
+ 		return;
+@@ -1364,6 +1364,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		ath_tx_addto_baw(sc, tid, fi->seqno);
+ 
+ 	/* Queue to h/w without aggregation */
++	TX_STAT_INC(txctl->txq->axq_qnum, a_queued_hw);
+ 	bf->bf_lastbf = bf;
+ 	ath_buf_set_rate(sc, bf, fi->framelen);
+ 	ath_tx_txqaddbuf(sc, txctl->txq, &bf_head);
+-- 
+1.7.2.3
 
