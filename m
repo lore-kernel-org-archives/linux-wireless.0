@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63964 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751910Ab1AGUJO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 15:09:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:08:57 -0800
-Date: Fri, 7 Jan 2011 12:09:13 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
- one page.
-Message-ID: <20110107200913.GF21588@tux>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
- <1294397880.3467.1.camel@jlt3.sipsolutions.net>
- <4D275CCC.90905@candelatech.com>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:37454 "HELO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751565Ab1AJTvt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 14:51:49 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 10 Jan 2011 11:51:11 -0800
+Subject: RE: [PATCH] mwifiex: remove linked list implementation
+Message-ID: <477F20668A386D41ADCC57781B1F704307F4D90EC5@SC-VEXCH1.marvell.com>
+References: <1294449014-15078-1-git-send-email-bzhao@marvell.com>
+ <1294566437.5345.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1294566437.5345.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D275CCC.90905@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 07, 2011 at 10:34:52AM -0800, Ben Greear wrote:
-> On 01/07/2011 02:58 AM, Johannes Berg wrote:
-> > On Thu, 2011-01-06 at 16:46 -0800, greearb@candelatech.com wrote:
-> >> From: Ben Greear<greearb@candelatech.com>
-> >>
-> >> Patch is from Eric Dumazet, as described here:
-> >> https://patchwork.kernel.org/patch/104271/
-> >>
-> >> Reported-by: Michael Guntsche<mike@it-loops.com>
-> >> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
-> >> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> >> ---
-> >>
-> >> NOTE:  This needs review by ath9k and/or other informed
-> >> people.
-> >
-> > This doesn't make sense. It might help, but it'll probably lead to not
-> > being able to receive all frames off the air.
-> >
-> > If this is an issue, ath9k should do paged RX like iwlwifi.
-> 
-> Ok, I backed this out..but now I'm back to getting buffer allocation
-> failures (and this is on a system with 2GB RAM).
-> 
-> Seems it's coming from mac80211 instead of ath9k, at least most of
-> the time (I'm using 60 stations, so it probably needs to make lots of
-> copies in the rx path).  The traffic I'm generating/receiving is 1024 byte UDP
-> payloads.
-> 
-> Does this mean I really received a packet that was 3872 bytes long,
-> or is the skb_copy allocating/copying empty data?
-
-Good question. The buffer we setup for DMA should be large since we
-need to support AMSDU RX up to a certain bytes of RX data for the frame.
-Harwdware should tell us the right size for the RX'd data and the skb
-should be set with that size, respectively. Following this logic,
-skb_copy() should only allocate on the order of the required skb->len.
-
-Remember that trick we did to force the older memory leak issues by
-forcing an skb_copy() on every RX'd frame and then just discarding that
-buffer immediately? You can try to do the same and print the skb->len
-there, just to check what's going on.
-
-  Luis
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
+ZW50OiBTdW5kYXksIEphbnVhcnkgMDksIDIwMTEgMTo0NyBBTQ0KPiBUbzogQmluZyBaaGFvDQo+
+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEpvaG4gVy4gTGludmlsbGU7IEFt
+aXRrdW1hciBLYXJ3YXI7IEtpcmFuIERpdmVrYXI7IEZyYW5rIEh1YW5nDQo+IFN1YmplY3Q6IFJl
+OiBbUEFUQ0hdIG13aWZpZXg6IHJlbW92ZSBsaW5rZWQgbGlzdCBpbXBsZW1lbnRhdGlvbg0KPiAN
+Cj4gT24gRnJpLCAyMDExLTAxLTA3IGF0IDE3OjEwIC0wODAwLCBCaW5nIFpoYW8gd3JvdGU6DQo+
+IA0KPiA+ICsJdHhfYmFfdHNyX3RibCA9IChzdHJ1Y3QgbXdpZmlleF90eF9iYV9zdHJlYW1fdGJs
+ICopDQo+ID4gKwkJCQkJcHJpdi0+dHhfYmFfc3RyZWFtX3RibF9wdHIubmV4dDsNCj4gDQo+IERv
+bid0IGRvIHRoYXQuIEFsd2F5cyB1c2UgbGlzdF9maXJzdF9lbnRyeSgpIGV0YywgYmVjYXVzZSBv
+dGhlcndpc2UgdGhlDQo+IHN0cnVjdCBsaXN0X2hlYWQgbXVzdCBiZSB0aGUgZmlyc3QgbWVtYmVy
+IGluIHRoZSBzdHJ1Y3QsIHdoaWNoIGlzIHZlcnkNCj4gbm9uLWlkZW9tYXRpYyBhbmQgZXZlcnli
+b2R5IHdobyBpcyB1c2VkIHRvIHRoZSBrZXJuZWwgd2lsbCBnZXQgaXQgd3JvbmcNCj4gd2hlbiBt
+b2RpZnlpbmcgeW91ciBkcml2ZXIuDQo+IA0KPiBUcmVhdCBzdHJ1Y3QgbGlzdF9oZWFkIGFzIGNv
+bXBsZXRlbHkgb3BhcXVlIC0tIG5ldmVyIGxvb2sgaW50byBpdC4gVGhlcmUNCj4gYXJlIG1hY3Jv
+cyBmb3IgYW55IGtpbmQgb2YgbWFuaXB1bGF0aW9uIHdpdGggaXQuDQo+IA0KPiBBbHNvLCBhbGwg
+eW91ciBsb29wcyBhcmUgb3BlbiBjb2RlZCAtLSB1c2UgbGlzdF9mb3JfZWFjaF9lbnRyeSgpIGlu
+c3RlYWQNCj4gb2YgZG9pbmcgdGhhdCAoZXZlbiB0aGUgY29kZSBJIHF1b3RlZCBhYm92ZSBpcyBm
+cm9tIGFuIG9wZW4gY29kZWQgbG9vcCkNCg0KVGhhbmtzIGZvciB5b3VyIGNvbW1lbnRzLiBXZSB3
+aWxsIG1ha2UgY2hhbmdlcyBhbmQgcmVzZW5kIHRoZSBwYXRjaC4NCg0KUmVnYXJkcywNCg0KQmlu
+Zw0KDQo+IA0KPiBqb2hhbm5lcw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
+IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVsZXNzIiBpbg0KPiB0
+aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3Jl
+IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
+Lmh0bWwNCg==
