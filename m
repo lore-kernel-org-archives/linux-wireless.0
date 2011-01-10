@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da02.ext.nokia.com ([147.243.128.26]:47632 "EHLO
-	mgw-da02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761Ab1AQG0n (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64427 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268Ab1AJTLV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 01:26:43 -0500
-Subject: Re: [PATCH] wl12xx: Cleanup PLT mode when module is removed
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Luciano Coelho <coelho@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1295244269.18570.106.camel@wimaxnb.nmp.nokia.com>
-References: <1295005726-10323-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1295011013.1960.269.camel@pimenta>
-	 <1295244269.18570.106.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 17 Jan 2011 08:26:34 +0200
-Message-ID: <1295245594.18570.119.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Mon, 10 Jan 2011 14:11:21 -0500
+Received: by fxm20 with SMTP id 20so19160522fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 11:11:20 -0800 (PST)
+Message-ID: <4D2B59EA.4000200@lwfinger.net>
+Date: Mon, 10 Jan 2011 13:11:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Locking problem reported for mainline
+References: <4D2A9309.7000500@lwfinger.net> <201101101913.17311.chunkeey@googlemail.com>
+In-Reply-To: <201101101913.17311.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 08:04 +0200, ext Juuso Oikarinen wrote:
-> On Fri, 2011-01-14 at 15:16 +0200, ext Luciano Coelho wrote:
-> > Hi Juuso,
-> > 
-> > On Fri, 2011-01-14 at 12:48 +0100, juuso.oikarinen@nokia.com wrote:
-> > > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > > index 9076555..863e660 100644
-> > > --- a/drivers/net/wireless/wl12xx/main.c
-> > > +++ b/drivers/net/wireless/wl12xx/main.c
-> > > @@ -917,12 +917,10 @@ out:
-> > >  	return ret;
-> > >  }
-
-
-> > 
-> > Again we have this kind of unlock-lock case.  Wouldn't it be better to
-> > move the cancel_work calls outside this function and call them after
-> > __wl1271_plt_stop() has returned? Yeah, there will be duplicate code if
-> > we do this, but I think it's a bit safer, isn't it?
-> > 
+On 01/10/2011 12:13 PM, Christian Lamparter wrote:
+> Does this patch help?
 > 
-> Heh, I did consider this too. But I did come to the conclusion that in
-> this case it is safer to unlock/lock than to duplicate the code -
-> duplicating this type of code has its risks too, and in this case
-> nothing is actually performed after the last mutex-lock - except for
-> unlocking in again.
-> 
-> I'll change this to benefit both PoVs: I'll create a separate function
-> to cancel the works, and just call that function from two places. That
-> way, the to-be cancelled work items are in a single place.
-> 
+> ---
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index a6701ed..8f13a83 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -549,7 +549,9 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+>  	tid_agg_rx->reorder_buf[index] = NULL;
+>  	status = IEEE80211_SKB_RXCB(skb);
+>  	status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
+> -	skb_queue_tail(&local->rx_skb_queue, skb);
+> +	spin_lock(&rx->local->rx_skb_queue.lock);
+> +	__skb_queue_tail(&local->rx_skb_queue, skb);
+> +	spin_unlock(&rx->local->rx_skb_queue.lock);
+>  
+>  no_frame:
+>  	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
+> @@ -780,7 +782,9 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+>  		return;
+>  
+>   dont_reorder:spin_lock(&rx->local->rx_skb_queue.lock);
+> -	skb_queue_tail(&local->rx_skb_queue, skb);
+> +	spin_lock(&rx->local->rx_skb_queue.lock);
+> +	__skb_queue_tail(&local->rx_skb_queue, skb);
+> +	spin_unlock(&rx->local->rx_skb_queue.lock);
+>  }
+>  
+>  static ieee80211_rx_result debug_noinline
 
-And then I realise we can't easily do that. In the typical case (user
-space stops plt mode) there is no work after the last mutex lock, but in
-this module-removal scenario there is.
+Did not compile. In ieee80211_release_reorder_frame at lines 552 and 554, rx is
+not defined.
 
-To solve that, we'd have to extend the knowledge about the plt mode onto
-the bus specific modules (sdio/spi) because they call the wl12xx
-unregister_hw function with the mutex already held.
-
-So in essence, I would like to keep the current patch :o
-
--Juuso
-
+Larry
