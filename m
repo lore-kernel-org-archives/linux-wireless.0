@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:28696 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753636Ab1ASLw1 (ORCPT
+Received: from nm27-vm1.bullet.mail.ne1.yahoo.com ([98.138.90.59]:21260 "HELO
+	nm27-vm1.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754554Ab1AJXgf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 06:52:27 -0500
-Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0706147946
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 20:52:26 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 5/8] ath5k: Add 802.11j 4.9GHz channels to allowed channels
-Date: Wed, 19 Jan 2011 20:52:53 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6> <20110119092057.19628.9296.stgit@localhost6.localdomain6> <AANLkTi=2crGZhucAhNHU-iaOkRamg33tQo_-K5h9d64v@mail.gmail.com>
-In-Reply-To: <AANLkTi=2crGZhucAhNHU-iaOkRamg33tQo_-K5h9d64v@mail.gmail.com>
+	Mon, 10 Jan 2011 18:36:35 -0500
+Message-ID: <20383.38500.qm@web120217.mail.ne1.yahoo.com>
+References: <20101201211128.GC16125@vigoh> <907295.15255.qm@web120203.mail.ne1.yahoo.com> <201101102339.39965.chunkeey@googlemail.com>
+Date: Mon, 10 Jan 2011 15:36:33 -0800 (PST)
+From: Chris Pechard <chrispechard@yahoo.com>
+Subject: Re: carl9170: RX and TX interrupt callback ?
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201101102339.39965.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101192052.53702.br1@einfach.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed January 19 2011 20:14:41 Bob Copeland wrote:
-> On Wed, Jan 19, 2011 at 4:20 AM, Bruno Randolf <br1@einfach.org> wrote:
-> > Add the 802.11j (20MHz channel width) channels to the allowed channels.
-> > This still does not enable 802.11j in ath5k since these frequencies are
-> > out of the configured range. A later patch will deal with that.
-> > 
-> > Signed-off-by: Bruno Randolf <br1@einfach.org>
-> > ---
-> > 
-> > -static bool ath5k_is_standard_channel(short chan)
-> > +static bool ath5k_is_standard_channel(short chan, enum ieee80211_band
-> > band) {
-> > -       return ((chan <= 14) ||
-> > -               /* UNII 1,2 */
-> > -               ((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
-> > +       if (band == IEEE80211_BAND_2GHZ && chan <= 14)
-> > +               return true;
-> 
-> This routine is only used to post-filter the channels so I don't
-> think we need to check the band.  It's mostly just to weed out all
-> of the 10 mhz-spaced 5 ghz channels we used to export.
-> 
-> > -               ((chan & 3) == 1 && chan >= 149 && chan <= 165));
-> > +               ((chan & 3) == 1 && chan >= 149 && chan <= 165) ||
-> > +               /* 802.11j 5.030-5.080 GHz (20MHz) */
-> > +               (chan == 8 || chan == 12 || chan == 16) ||
-> 
-> Ok I was also going to complain that some channel numbers < 14 were
-> valid in the 5 ghz band but you know that :)
+Thanks for the pointers, I will definitively contact the people you listed.
 
-That's also the reason why we need to know the band:
+Chris.
 
-in 2GHz all channels < 14 are allowed.
-in 5GHz only a few.
 
-Thanks for your review!
 
-bruno
+----- Original Message ----
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Chris Pechard <chrispechard@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Sent: Mon, January 10, 2011 2:39:39 PM
+Subject: Re: carl9170: RX and TX interrupt callback ?
+
+On Monday 10 January 2011 22:24:18 Chris Pechard wrote:
+> I am trying to do time measurement using carl9170 firmware side. There was some 
+>
+> interesting previous thread about clock to be used and location of the probe in 
+>
+> the code. My goal is to get a precise time from the moment a packet has been 
+> transmitted (timestamp when the packet has been transmitted) and the arrival of 
+>
+> the next received packet (time when a packet has been fully received). Looking 
+
+> though the code, there is a loop in src/main.c handling the TX/RX interrupt by 
+
+> reading the AR9170_MAC_REG_INT_CTRL register and checking the 
+> AR9170_MAC_INT_TXC/RXC bits. Pending on task to be performed in the loop, it 
+> could take tens of microseconds to go through one iteration which affects the 
+> measurement and resulting in having RXC timestamp smaller than TXC timestamp 
+> which is clearly an issue!
+are you sure, you put the right code in the right place :-D .
+I've posted code for the same idea a while ago [on this mailing-list] and I
+can't remember anything that weird.
+[CP]: :-) I am measuring the delta between when a packet has left the wireless 
+interface and the time the next packet is received on the interface. This timing 
+is much less forgiving than measuring the time when a packet is sent to the TX 
+queue and TXC or RXC has occurred ( the time difference could be more than 
+double due to firmware latency, 802.11 medium access and packet transmit time). 
+That's the reason I am interested in fast TXC notification which would 
+eliminates some of the random delays.
+
+> My current workaround is to add many check to AR9170_MAC_REG_INT_CTRL in the 
+> main loop to reduce the detection latency which at least gave me better results 
+>
+> (TXC time < RXC time ) but somehow it does not seem AR9170_MAC_REG_INT_CTRL 
+> register is refreshed right away when a packet is received or transmitted. I 
+> would like to know if there is any way to attach a callback function  to the 
+>RXC 
+>
+> or TXC interrupt so that we get immediate notification  instead of depending on 
+>
+> a polling method.
+Oh it is, or it should be easy to get an interrupt event from the MAC processor.
+You just have to look through the SH2 platform docs [which are freely available
+from Reneas] and setup the interrupt controller accordingly.
+
+If you're stuck and need advice on the f/irq topic, you should definitely ask
+Stephen Chen <Stephen.Chen@atheros.com> for assistance. As he's one of the
+few persons who know how it works. I certainly can't...
+
+Good Luck!
+> If not, is there any way to minimize delays between the time 
+> a packet is sent/received and the TXC/RXC bit flag raised in the register?
+Don't forget the 802.11 is working against you.
+CSMA/CA with R/S/D/P/E/IFS, [random] backoff, dynamic ACK delays and 
+so much more can really spoil the day, if you are not aware that it's
+there. 
+
+Furthermore, have you tried to contact the people behind similar projects?
+    Ignacy Gawedzki <i@lri.fr>
+    David H. Lynch Jr. <dhlii@dlasys.net>
+
+Especially David, since it seems that he's done with it.
+
+Best Regards,
+    Chr
+
+PS.: you could also go a different route with OpenFWWF.
+
+
+
+      
