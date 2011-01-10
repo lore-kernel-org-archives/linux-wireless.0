@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa01-07.prod.phx3.secureserver.net ([72.167.82.87]:37832
-	"HELO p3plsmtpa01-07.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758099Ab1ANS6A (ORCPT
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:1841 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753751Ab1AJVIe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 13:58:00 -0500
-Message-ID: <D323CFEF4DEC4E18AFF56742F78C16B6@ChuckPC>
-From: "Chuck Crisler" <ccrisler@vgocom.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: intermittent eap authentication failure
-Date: Fri, 14 Jan 2011 13:51:08 -0500
+	Mon, 10 Jan 2011 16:08:34 -0500
+Message-ID: <4D2B7550.5000008@gmail.com>
+Date: Mon, 10 Jan 2011 22:08:32 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+To: David Miller <davem@davemloft.net>
+CC: eric.dumazet@gmail.com, torvalds@linux-foundation.org,
+	alex.arnautu96@gmail.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Kernel 2.6.37-rc5 rc7 Oops
+References: <AANLkTinCD5Jf-dEUpv7hu4YKrxS0DGqqqBU94iCJ8602@mail.gmail.com>	<AANLkTinJAEW-xAiEKnfxo1+3FiGwFXFii5Rh6d8tAtB-@mail.gmail.com>	<1293652965.7150.13.camel@edumazet-laptop> <20110110.000650.124002380.davem@davemloft.net>
+In-Reply-To: <20110110.000650.124002380.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am running wpa_supplicant v. 0.6.10. I am having a problem remaining on a 
-network with PEEP authentication. I can initially get on the network but 
-then fail with the first session timeout sent by the AP. Sometimes if the 
-ESS is hidden I will have a subsequent probe request fail, causing me to 
-re-start the entire process, which will then succeed, only to fail with the 
-next session timeout.
+On 01/10/11 09:06, David Miller wrote:
+> From: Eric Dumazet <eric.dumazet@gmail.com>
+> Date: Wed, 29 Dec 2010 21:02:45 +0100
+> 
+>> Le mercredi 29 décembre 2010 à 11:23 -0800, Linus Torvalds a écrit :
+>>> On Wed, Dec 29, 2010 at 4:26 AM, Alex Arnautu <alex.arnautu96@gmail.com> wrote:
+>>>>
+>>>> I get an oops with 2.6.37-rc5 and 2.6.37-rc7-git1.
+>>>> http://www.fotoshack.us/fotos/19044P271210_15.14_[01].jpg
+>>>
+>>> Hmm. Davem added to the list of people involved. This _may_ be fixed
+>>> by the "always clone skbs" commit in -rc8 (commit 173021072), but
+>>> David can make a better judgment call.
+>>>
+>>
+>> Very unlikely, as commit 173021072 only fix a bug in case mirred is
+>> used.
+> 
+> This should be taken to the wireless list (now CC:'d) as the rt2xxx
+> driver and the wireless stack are both in that backtrace.
 
-Sometime ago I found a conflict between the supplicant and the MAC80211 code 
-dealing with Cisco session timeouts. When we were 'deauthenticated', the MAC 
-code notified the supplicant AND re-associated with the AP. When the driver 
-got the association response, it then notified the supplicant, which was in 
-the process of running a scan, which had often already been sent to the 
-driver, causing a mess. We modified the driver so that if it received a 
-de-auth with reason code 1 (undefined?), it would *NOT* notify the 
-supplicant but would re-associate, then notify the supplicant of the new 
-association. We modified the supplicant so that when it was in the completed 
-state and received an association event, it went through the disassociation 
-sequence of calls, then proceeded with whatever was remaining for the 
-authentication. Later we determined that we could receive the deauth with a 
-reason code = 4 also, so that was added.
-Specifically, this is what we do with a COMPLETED->ASSOCIATED transition in 
-wpa_supplicant_event_assoc in events.c:
+Hmmm, the jpg images of the oops don't seem to be available anymore
+(a 404 not found is returned on the URL.
+Does anybody still have the backtrace? Otherwise it will be very hard to look
+into this.
 
-wpa_clear_keys(wpa_s, wpa_s->bssid);
-eapol_sm_notify_portEnabled(wpa_s->eapol, FALSE);
-eapol_sm_notify_portValid(wpa_s->eapol, FALSE);
-if (wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt))
-    eapol_sm_notify_eap_success(wpa_s->eapol, FALSE);
-wpa_sm_set_config(wpa_s->eapol, NULL, NULL);
-wpa_s->new_connection = 1;
-
-This works fine with WPA/WPA2, but seems to fail with PEEP and (I guess) the 
-other EAP methods. I don't know EAP well enough yet to understand why this 
-is failing or what I need to do to make WPA/WPA2 and EAP all work. Would 
-someone please shed some light on this for me?
-
-Thank you,
-Chuck Crisler 
-
+---
+Gertjan.
