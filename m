@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49550 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755029Ab1AGSBG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 13:01:06 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath9k:  More xmit queue debugfs information.
-Date: Fri,  7 Jan 2011 10:00:58 -0800
-Message-Id: <1294423259-8163-1-git-send-email-greearb@candelatech.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:48564 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751311Ab1AJQCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 11:02:03 -0500
+Received: from dlep33.itg.ti.com ([157.170.170.112])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0AG21at032577
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:02:01 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0AG216Q020238
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:02:01 -0600 (CST)
+Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
+	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0AG218J009095
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:02:01 -0600 (CST)
+Received: from pimenta.emea.dhcp.ti.com (pimenta.emea.dhcp.ti.com
+ [137.167.41.166])	by dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id
+ p0AG1xSm026900	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011
+ 10:02:00 -0600
+From: <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] MAINTAINERS: update information for the wl12xx driver
+Date: Mon, 10 Jan 2011 18:02:10 +0200
+Message-ID: <1294675330-11691-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Luciano Coelho <coelho@ti.com>
 
-To try to figure out why xmit logic hangs.
+Update maintainer's email address, webpage and align with renaming of
+files.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
-:100644 100644 650f00f... 9e009cc... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+), 0 deletions(-)
+ MAINTAINERS |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 650f00f..9e009cc 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -679,6 +679,32 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 		PRQLE(tmp, txq_fifo[i]);
- 	}
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ff19c30..92394cf 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6540,12 +6540,12 @@ S:	Maintained
+ F:	drivers/net/wireless/wl1251/*
  
-+	/* Print out more detailed queue-info */
-+	for (i = 0; i <= WME_AC_BK; i++) {
-+		struct ath_txq *txq = &(sc->tx.txq[i]);
-+		struct ath_atx_ac *ac;
-+		struct ath_atx_tid *tid;
-+		if (len >= size)
-+			goto done;
-+		spin_lock_bh(&txq->axq_lock);
-+		if (!list_empty(&txq->axq_acq)) {
-+			ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac,
-+					      list);
-+			len += snprintf(buf + len, size - len,
-+					"txq[%i] first-ac: %p sched: %i\n",
-+					i, ac, ac->sched);
-+			if (list_empty(&ac->tid_q) || (len >= size))
-+				goto done_for;
-+			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
-+					       list);
-+			len += snprintf(buf + len, size - len,
-+					" first-tid: %p sched: %i paused: %i\n",
-+					tid, tid->sched, tid->paused);
-+		}
-+	done_for:
-+		spin_unlock_bh(&txq->axq_lock);
-+	}
-+
- done:
- 	if (len > size)
- 		len = size;
+ WL1271 WIRELESS DRIVER
+-M:	Luciano Coelho <luciano.coelho@nokia.com>
++M:	Luciano Coelho <coelho@ti.com>
+ L:	linux-wireless@vger.kernel.org
+-W:	http://wireless.kernel.org
++W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+ S:	Maintained
+-F:	drivers/net/wireless/wl12xx/wl1271*
++F:	drivers/net/wireless/wl12xx/
+ F:	include/linux/wl12xx.h
+ 
+ WL3501 WIRELESS PCMCIA CARD DRIVER
 -- 
-1.7.2.3
+1.7.1
 
