@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2713 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021Ab1AYEcE (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60298 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754113Ab1AJVE5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 23:32:04 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	Bruno Randolf <br1@einfach.org>, jirislaby@gmail.com,
-	lrodriguez@atheros.com, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/2] ath5k: correct endianness of frame duration
-Date: Mon, 24 Jan 2011 23:31:44 -0500
-Message-Id: <1295929904-11806-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
-References: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
+	Mon, 10 Jan 2011 16:04:57 -0500
+Received: by wwa36 with SMTP id 36so1049916wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 13:04:54 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] wl12xx: reset 5ghz num channels on hw init
+Date: Mon, 10 Jan 2011 23:04:04 +0200
+Message-Id: <1294693444-30807-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath5k version of ieee80211_generic_frame_duration() returns
-an __le16 for standard modes but a cpu-endian int for turbo/half/
-quarter rates.  Make it always return cpu-endian values.
+The number of 5ghz channels is set to 0 when 11a is not supported in the
+NVS file. When a single rmmod/insmod of wl12xx_sdio this leads to a
+supported band (5ghz) with 0 supported channels, which mac80211
+considers illegal.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Fix this by always resetting the number of supported 5ghz channels
+before the HW is registered.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath5k/pcu.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index e5f2b96..a702817 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -86,7 +86,7 @@ int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
- 	if (!ah->ah_bwmode) {
- 		dur = ieee80211_generic_frame_duration(sc->hw,
- 						NULL, len, rate);
--		return dur;
-+		return le16_to_cpu(dur);
- 	}
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 062247e..44cdefd 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2679,6 +2679,10 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
  
- 	bitrate = rate->bitrate;
-@@ -265,8 +265,6 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah)
- 		 * what rate we should choose to TX ACKs. */
- 		tx_time = ath5k_hw_get_frame_duration(ah, 10, rate);
++	/* reset the number of channels as this can be changed at runtime */
++	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ]->n_channels =
++					ARRAY_SIZE(wl1271_channels_5ghz);
++
+ 	wl->hw->queues = 4;
+ 	wl->hw->max_rates = 1;
  
--		tx_time = le16_to_cpu(tx_time);
--
- 		ath5k_hw_reg_write(ah, tx_time, reg);
- 
- 		if (!(rate->flags & IEEE80211_RATE_SHORT_PREAMBLE))
 -- 
-1.7.1.1
-
+1.7.1
 
