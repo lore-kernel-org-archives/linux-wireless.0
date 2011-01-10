@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:59070 "EHLO mga09.intel.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:45436 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751574Ab1AEAbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 19:31:52 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 5/5] iwlwifi: fix 4965 notification wait setup
-Date: Tue,  4 Jan 2011 16:22:03 -0800
-Message-Id: <1294186923-4582-6-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1294186923-4582-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753897Ab1AJQ4F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 11:56:05 -0500
+Received: from dlep33.itg.ti.com ([157.170.170.112])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0AGu42A003608
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:56:04 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0AGu4bN013903
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:56:04 -0600 (CST)
+Received: from dlee73.ent.ti.com (localhost [127.0.0.1])
+	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0AGu42V012294
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:56:04 -0600 (CST)
+Received: from [137.167.41.166] (pimenta.emea.dhcp.ti.com [137.167.41.166])	by
+ dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0AGu2WM030077	for
+ <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:56:03 -0600
+Subject: wl12xx tree has been rebased
+From: Luciano Coelho <coelho@ti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Jan 2011 18:56:11 +0200
+Message-ID: <1294678571.1992.152.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-The notification wait support code is shared
-between 4965 and other AGN devices, so 4965
-also has to initialize the data structures
-for it, otherwise it crashes.
+I have rebased the wl12xx-next branch on the latest wireless-next tree
+and the master branch on the latest wireless-testing tree.  I did this
+to avoid having to do too much manual merging.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Please update your relevant trees.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 3f1e5f1..d9a7d93 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2316,6 +2316,11 @@ static void iwl4965_rx_handler_setup(struct iwl_priv *priv)
- 	priv->rx_handlers[REPLY_RX] = iwlagn_rx_reply_rx;
- 	/* Tx response */
- 	priv->rx_handlers[REPLY_TX] = iwl4965_rx_reply_tx;
-+
-+	/* set up notification wait support */
-+	spin_lock_init(&priv->_agn.notif_wait_lock);
-+	INIT_LIST_HEAD(&priv->_agn.notif_waits);
-+	init_waitqueue_head(&priv->_agn.notif_waitq);
- }
- 
- static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
