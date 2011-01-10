@@ -1,78 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49930 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097Ab1AZJWq (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58495 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233Ab1AJHMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 04:22:46 -0500
-Subject: Re: [PATCH 1/2] wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw
- flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: coelho@ti.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1296033436.18570.391.camel@wimaxnb.nmp.nokia.com>
-References: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1296030672.3635.13.camel@jlt3.sipsolutions.net>
-	 <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
-	 <1296032659.3635.29.camel@jlt3.sipsolutions.net>
-	 <1296033436.18570.391.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Jan 2011 10:22:36 +0100
-Message-ID: <1296033756.3635.30.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 10 Jan 2011 02:12:33 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH RESEND 03/11] ath9k:  Add more information to debugfs xmit file.
+Date: Sun,  9 Jan 2011 23:11:45 -0800
+Message-Id: <1294643513-18820-4-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
+References: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-26 at 11:17 +0200, Juuso Oikarinen wrote:
-> On Wed, 2011-01-26 at 10:04 +0100, ext Johannes Berg wrote:
-> > On Wed, 2011-01-26 at 11:02 +0200, Juuso Oikarinen wrote:
-> > 
-> > > Well I guess I'm stating the obvious here. The effects of the flag are:
-> > > 
-> > > - It causes mac80211 to add the spectrum mgmt capability bit, list of
-> > > supported channels and TX power capability info into the assoc-req
-> > > - It causes mac80211 to process channel switch actions
-> > > - It causes mac80211 to process and react to TPC power constraint
-> > > elements sent out in beacons
-> > > - It causes mac80211 to respond to TPC report requests by the AP, albeit
-> > > currently only by refusing them.
-> > 
-> > Right. But all of this is generic, no? Except maybe TPC?
-> > 
-> > > In addition to this, I plan to implement the TPC basic reporting,
-> > > including mac80211 stuff if required (I still need to learn some more on
-> > > the subject, specifically regarding the wl12xx chipset) and also I plan
-> > > to implement quieting, though it's likely that wont need mac80211
-> > > intervention with wl12xx at least.
-> > > 
-> > > AFAIK all these items are mandatory on the 5GHz band, at least in
-> > > Europe.
-> > > 
-> > > So I don't see how this flag could be removed. Unless you wan't to make
-> > > the above default behavior - but then adding for instance the spectrum
-> > > mgmt bit into the capabilities assumes all chipset will be able handle
-> > > all of the features?
-> > 
-> > Yeah, I was thinking those should be default, and the actual TPC
-> > reporting would of course depend on hardware features? But then again
-> > maybe TPC itself isn't necessarily implemented by drivers since not all
-> > drivers implement setting the power correctly.
-> 
-> This *is* mandatory stuff, so in that perspective I guess it would make
-> sense to remove the flag and make all of this default behavior. Indeed
-> the mac80211 could be made to refuse the TCP basic reports unless the
-> driver provides a call-back for that or sth like that.
-> 
-> Also, I guess it would be a valid assumption all drivers supporting the
-> 5GHz band would also support setting the TX power - otherwise they will
-> possibly violate regulations anyway - whether they say they state or not
-> they have the specturm mgmt capability makes little difference.
-> 
-> As I mentioned, I plan to implement basic reporting once I find out how
-> to do that - so I will be reviewing this functionality some more later.
-> Maybe, if you like, I can consider removing the flag at that point?
+From: Ben Greear <greearb@candelatech.com>
 
-Sure, makes sense, thanks for looking.
+Should help debug strange tx lockup type issues.
 
-johannes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 5075faa... 577bc5a... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 1e5078b... cd2db3f... M	drivers/net/wireless/ath/ath9k/debug.h
+:100644 100644 180170d... 99ce6f1... M	drivers/net/wireless/ath/ath9k/mac.c
+:100644 100644 332d1fe... c769037... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/debug.c |   29 +++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/debug.h |    6 ++++++
+ drivers/net/wireless/ath/ath9k/mac.c   |    8 ++++++++
+ drivers/net/wireless/ath/ath9k/xmit.c  |    1 +
+ 4 files changed, 42 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 5075faa..577bc5a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -599,13 +599,25 @@ do {									\
+ 			(unsigned int)(sc->tx.txq[WME_AC_VO].elem));	\
+ } while(0)
+ 
++#define PRQLE(str, elem)						\
++do {									\
++	len += snprintf(buf + len, size - len,				\
++			"%s%13i%11i%10i%10i\n", str,			\
++			list_empty(&sc->tx.txq[WME_AC_BE].elem),	\
++			list_empty(&sc->tx.txq[WME_AC_BK].elem),	\
++			list_empty(&sc->tx.txq[WME_AC_VI].elem),	\
++			list_empty(&sc->tx.txq[WME_AC_VO].elem));	\
++} while (0)
++
+ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 	char *buf;
+-	unsigned int len = 0, size = 2048;
++	unsigned int len = 0, size = 4000;
++	int i;
+ 	ssize_t retval = 0;
++	char tmp[32];
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+ 	if (buf == NULL)
+@@ -628,13 +640,26 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("DELIM Underrun:  ", delim_underrun);
+ 	PR("TX-Pkts-All:     ", tx_pkts_all);
+ 	PR("TX-Bytes-All:    ", tx_bytes_all);
++	PR("hw-put-tx-buf:   ", puttxbuf);
++	PR("hw-tx-start:     ", txstart);
++	PR("hw-tx-proc-desc: ", txprocdesc);
+ 
+ 	PRX("axq-qnum:        ", axq_qnum);
+ 	PRX("axq-depth:       ", axq_depth);
++	PRX("axq-ampdu_depth: ", axq_ampdu_depth);
+ 	PRX("axq-stopped      ", stopped);
+ 	PRX("tx-in-progress   ", axq_tx_inprogress);
+ 	PRX("pending-frames   ", pending_frames);
+-
++	PRX("txq_headidx:     ", txq_headidx);
++	PRX("txq_tailidx:     ", txq_headidx);
++
++	PRQLE("axq_q empty:       ", axq_q);
++	PRQLE("axq_acq empty:     ", axq_acq);
++	PRQLE("txq_fifo_pending:  ", txq_fifo_pending);
++	for (i = 0; i < ATH_TXFIFO_DEPTH; i++) {
++		snprintf(tmp, sizeof(tmp) - 1, "txq_fifo[%i] empty: ", i);
++		PRQLE(tmp, txq_fifo[i]);
++	}
+ 	if (len > size)
+ 		len = size;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 1e5078b..cd2db3f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -102,6 +102,9 @@ struct ath_interrupt_stats {
+  * @desc_cfg_err: Descriptor configuration errors
+  * @data_urn: TX data underrun errors
+  * @delim_urn: TX delimiter underrun errors
++ * @puttxbuf: Number of times hardware was given txbuf to write.
++ * @txstart:  Number of times hardware was told to start tx.
++ * @txprocdesc:  Number of times tx descriptor was processed
+  */
+ struct ath_tx_stats {
+ 	u32 tx_pkts_all;
+@@ -119,6 +122,9 @@ struct ath_tx_stats {
+ 	u32 desc_cfg_err;
+ 	u32 data_underrun;
+ 	u32 delim_underrun;
++	u32 puttxbuf;
++	u32 txstart;
++	u32 txprocdesc;
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 180170d..99ce6f1 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -16,6 +16,8 @@
+ 
+ #include "hw.h"
+ #include "hw-ops.h"
++#include "debug.h"
++#include "ath9k.h"
+ 
+ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 					struct ath9k_tx_queue_info *qi)
+@@ -50,12 +52,18 @@ EXPORT_SYMBOL(ath9k_hw_gettxbuf);
+ 
+ void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp)
+ {
++	struct ath_wiphy *aphy = ah->hw->priv;
++	struct ath_softc *sc = aphy->sc;
++	TX_STAT_INC(q, puttxbuf);
+ 	REG_WRITE(ah, AR_QTXDP(q), txdp);
+ }
+ EXPORT_SYMBOL(ath9k_hw_puttxbuf);
+ 
+ void ath9k_hw_txstart(struct ath_hw *ah, u32 q)
+ {
++	struct ath_wiphy *aphy = ah->hw->priv;
++	struct ath_softc *sc = aphy->sc;
++	TX_STAT_INC(q, txstart);
+ 	ath_dbg(ath9k_hw_common(ah), ATH_DBG_QUEUE,
+ 		"Enable TXE on queue: %u\n", q);
+ 	REG_WRITE(ah, AR_Q_TXE, 1 << q);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 332d1fe..c769037 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2033,6 +2033,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 			spin_unlock_bh(&txq->axq_lock);
+ 			break;
+ 		}
++		TX_STAT_INC(txq->axq_qnum, txprocdesc);
+ 
+ 		/*
+ 		 * Remove ath_buf's of the same transmit unit from txq,
+-- 
+1.7.2.3
 
