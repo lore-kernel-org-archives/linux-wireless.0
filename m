@@ -1,36 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:44110 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932072Ab1AKM5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 07:57:42 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PcdnB-0001vK-2v
-	for linux-wireless@vger.kernel.org; Tue, 11 Jan 2011 13:57:41 +0100
-Received: from proxyext.iabg.de ([proxyext.iabg.de])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 13:57:41 +0100
-Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 13:57:41 +0100
-To: linux-wireless@vger.kernel.org
-From: jpo234 <pommnitz@yahoo.com>
-Subject: Re: [PATCH v2 2/4] iw: Add channel busy time to survey
-Date: Tue, 11 Jan 2011 12:57:27 +0000 (UTC)
-Message-ID: <loom.20110111T135315-64@post.gmane.org>
-References: <20110111005107.10231.81618.stgit@localhost6.localdomain6>  <20110111005112.10231.46375.stgit@localhost6.localdomain6> <1294734744.3611.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.candelatech.com ([208.74.158.172]:48690 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891Ab1AJFI1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 00:08:27 -0500
+Message-ID: <4D2A9445.6020307@candelatech.com>
+Date: Sun, 09 Jan 2011 21:08:21 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Restart xmit logic in xmit watchdog.
+References: <1294559160-29298-1-git-send-email-greearb@candelatech.com> <4D29FC3F.2030103@openwrt.org> <4D2A8D74.80304@candelatech.com> <4D2A92E3.6010403@openwrt.org>
+In-Reply-To: <4D2A92E3.6010403@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@...> writes:
-> because uint64_t isn't guaranteed to be unsigned long long (in fact, it
-> is unsigned long on many machines). Please look at the commit and check.
+On 01/09/2011 09:02 PM, Felix Fietkau wrote:
+> On 2011-01-09 9:39 PM, Ben Greear wrote:
+>> On 01/09/2011 10:19 AM, Felix Fietkau wrote:
+>>> On 2011-01-09 12:46 AM, greearb@candelatech.com wrote:
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>>>> index d9a4144..1b3a62c 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>>> @@ -1988,19 +1988,30 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+>>>> tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
+>>>> }
+>>>>
+>>>> -static void ath_wake_mac80211_queue(struct ath_softc *sc, int qnum)
+>>>> +/* Has no locking. */
+>>>> +static void __ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
+>>>> {
+>>>> - struct ath_txq *txq;
+>>>> -
+>>>> - txq = sc->tx.txq_map[qnum];
+>>>> - spin_lock_bh(&txq->axq_lock);
+>>>> if (txq->stopped&& txq->pending_frames< ATH_MAX_QDEPTH) {
+>>>> - if (ath_mac80211_start_queue(sc, qnum))
+>>>> + if (ath_mac80211_start_queue(sc, txq->axq_qnum))
+>>>> txq->stopped = 0;
+>>>> }
+>>>> +}
+>>> This part is quite broken, I think you got confused with various types of queue numbers. txq->axq_qnum refers to the atheros hw queue index, whereas the qnum
+>>> argument to this function refers to the mac80211 queue index (which is also the correct index for sc->tx.txq_map - not to be confused with the sc->tx.txq
+>>> array).
+>>
+>> Yeah, I am confused on all of this. Looks like I should add a member to the txq struct to
+>> record it's mac80211 index and use that instead?
+> How about just passing the proper qnum? You can get it from the skb queue mapping anyway.
 
-In the commit you did a cast to unsigned long long. While this works, it's
-depends on gcc-ism, e.g. long long support. The C99 way would be to use the 
-PRIu64 macro (see stdint.h).
-see http://www.dinkumware.com/manuals/?manual=compleat&page=inttypes.html#PRIu64
+That seems too indirect to me, though that's probably
+just paranoia at this point.
 
+>> In the upstream code, is this correct? It seems to me that it should always
+>> be waking 'txq' since it just completed a packet. Why the check
+>> against txq_map?
+>>
+>> if (txq == sc->tx.txq_map[qnum])
+>> ath_wake_mac80211_queue(sc, qnum);
+> Things like CAB (or maybe UAPSD at some point), where a frame might go out through a queue other than the 4 WMM data queues.
+
+Ok, but that code is very subtle and difficult to understand in
+my opinion.
+
+I'll re-post my patch with the qnums a bit more explicit..but if you
+still think it should be more like it is upstream, I'll re-do the patch.
+
+Thanks,
+Ben
+
+>
+> - Felix
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
