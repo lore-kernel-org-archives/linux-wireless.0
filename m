@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pdtms1.pdt.com ([207.18.22.4]:57324 "EHLO mail.pdt.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751823Ab1ACRDh convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f66.google.com ([209.85.161.66]:62918 "EHLO
+	mail-fx0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754893Ab1AJWj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 12:03:37 -0500
-From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: wl1271 status/update
-Date: Mon, 3 Jan 2011 17:00:24 +0000
-Message-ID: <0826983CC0CB074798C42E77D8ACD07F063277@pdtms1.pdt.com>
-References: <0826983CC0CB074798C42E77D8ACD07F0616CB@pdtms1.pdt.com>,<AANLkTimH1aFuBfgD8g50YJjto9Mx3jRaPJMa5veG1o+z@mail.gmail.com>
-In-Reply-To: <AANLkTimH1aFuBfgD8g50YJjto9Mx3jRaPJMa5veG1o+z@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 10 Jan 2011 17:39:58 -0500
+Received: by fxm14 with SMTP id 14so5890960fxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 14:39:57 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Chris Pechard <chrispechard@yahoo.com>
+Subject: Re: carl9170: RX and TX interrupt callback ?
+Date: Mon, 10 Jan 2011 23:39:39 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20101201211128.GC16125@vigoh> <907295.15255.qm@web120203.mail.ne1.yahoo.com>
+In-Reply-To: <907295.15255.qm@web120203.mail.ne1.yahoo.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101102339.39965.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you Ohad!
+On Monday 10 January 2011 22:24:18 Chris Pechard wrote:
+> I am trying to do time measurement using carl9170 firmware side. There was some 
+> interesting previous thread about clock to be used and location of the probe in 
+> the code. My goal is to get a precise time from the moment a packet has been 
+> transmitted (timestamp when the packet has been transmitted) and the arrival of 
+> the next received packet (time when a packet has been fully received). Looking 
+> though the code, there is a loop in src/main.c handling the TX/RX interrupt by 
+> reading the AR9170_MAC_REG_INT_CTRL register and checking the 
+> AR9170_MAC_INT_TXC/RXC bits. Pending on task to be performed in the loop, it 
+> could take tens of microseconds to go through one iteration which affects the 
+> measurement and resulting in having RXC timestamp smaller than TXC timestamp 
+> which is clearly an issue!
+are you sure, you put the right code in the right place :-D .
+I've posted code for the same idea a while ago [on this mailing-list] and I
+can't remember anything that weird.
+ 
+> My current workaround is to add many check to AR9170_MAC_REG_INT_CTRL in the 
+> main loop to reduce the detection latency which at least gave me better results 
+> (TXC time < RXC time ) but somehow it does not seem AR9170_MAC_REG_INT_CTRL 
+> register is refreshed right away when a packet is received or transmitted. I 
+> would like to know if there is any way to attach a callback function  to the RXC 
+> or TXC interrupt so that we get immediate notification  instead of depending on 
+> a polling method.
+Oh it is, or it should be easy to get an interrupt event from the MAC processor.
+You just have to look through the SH2 platform docs [which are freely available
+from Reneas] and setup the interrupt controller accordingly.
 
-I have been looking at this wiki and am confused as to what i exactly
-need...
+If you're stuck and need advice on the f/irq topic, you should definitely ask
+Stephen Chen <Stephen.Chen@atheros.com> for assistance. As he's one of the
+few persons who know how it works. I certainly can't...
 
-I see things about compat-wireless, mac80211, sdio runtime pm support,
-lenient generic runtime pm callbacks,
-etc..
+Good Luck!
+> If not, is there any way to minimize delays between the time 
+> a packet is sent/received and the TXC/RXC bit flag raised in the register?
+Don't forget the 802.11 is working against you.
+CSMA/CA with R/S/D/P/E/IFS, [random] backoff, dynamic ACK delays and 
+so much more can really spoil the day, if you are not aware that it's
+there. 
 
-I don't really understand.. do i need all of this for wl1271...
-is there any high level documentation as to how wl1271 fits into linux/android?
+Furthermore, have you tried to contact the people behind similar projects?
+	Ignacy Gawedzki <i@lri.fr>
+	David H. Lynch Jr. <dhlii@dlasys.net>
 
-i understand that wl1271 is a chip from TI that supports WLAN, FM, and BT,
-but how that equates to what needs to go into linux/android, I'm not understanding...
+Especially David, since it seems that he's done with it.
 
-:-)
-Karen
-________________________________________
-From: Ohad Ben-Cohen [ohad@wizery.com]
-Sent: Monday, January 03, 2011 10:49 AM
-To: Brzezowski, Karen
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wl1271 status/update
+Best Regards,
+	Chr
 
-Hi Karen,
-
-On Mon, Jan 3, 2011 at 6:02 PM, Brzezowski, Karen
-<Karen.Brzezowski@pdt.com> wrote:
-> I'm quite confused as to the status of it...
-...
-> And I appreciate ANY help/information to get me going......
-
-Check out our wiki - it has lots of status and porting information for
-the wl12xx driver:
-
-http://wireless.kernel.org/en/users/Drivers/wl12xx
-
-Regards,
-Ohad.
-
-> Thanks!
-> Karen
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-Email secured by Check Point
+PS.: you could also go a different route with OpenFWWF.
