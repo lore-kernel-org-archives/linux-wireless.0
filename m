@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47257 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750853Ab1ABIxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jan 2011 03:53:12 -0500
-Date: Sun, 2 Jan 2011 10:53:00 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com, Jouni Malinen <Jouni.Malinen@atheros.com>
-Subject: Re: [PATCH] Revert "ath9k: Parse DTIM period from mac80211"
-Message-ID: <20110102085300.GA14217@jm.kir.nu>
-References: <1293691681-3574-1-git-send-email-mshajakhan@atheros.com>
- <871v4xgdfp.fsf@purkki.adurom.net>
+Received: from comal.ext.ti.com ([198.47.26.152]:41254 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868Ab1AJQCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 11:02:46 -0500
+Subject: Re: [PATCH] wl12xx: fix some sparse warnings
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1293017932-9806-1-git-send-email-eliad@wizery.com>
+References: <1293017932-9806-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Jan 2011 18:02:50 +0200
+Message-ID: <1294675370.1992.142.camel@pimenta>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871v4xgdfp.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 01, 2011 at 11:50:50AM +0200, Kalle Valo wrote:
-> Mohammed Shafi Shajakhan <mshajakhan@atheros.com> writes:
-> > * Preventing association with broken AP's
+On Wed, 2010-12-22 at 12:38 +0100, Eliad Peller wrote:
+> Note that wl1271_write32() calls cpu_to_le32() by itself, so calling
+> wl1271_write32(addr, cpu_to_le32(val)) is in fact a bug on BE systems.
 > 
-> How can different dtim value cause problems with association? Power
-> save should not be even enabled during association. Or do you mean
-> there are problems after association, for example during eap
-> negotation?
-
-It is not the DTIM value, it is the part of having to receive a Beacon
-frame before even trying to associate. This is very much a corner case,
-but well, that behavior did change with the commit.
-
-> > * Adds latency in roaming
+> Fix the following sparse warnings:
 > 
-> We should try to solve this problem differently than hardcoding dtim.
-> There are other ways to trigger roaming than just following beacons.
-> And if there's no data, there's no need to roam either. 
-
-This is about the part of waiting for Beacon frame before trying to
-associate, not about hardcoding DTIM for any other purpose.
-
-> > So its better to always use the safe value of '1' for dtim period
+> drivers/net/wireless/wl12xx/cmd.c:662:16: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/wl12xx/cmd.c:662:16:    expected unsigned short [unsigned] [addressable] [usertype] llc_type
+> drivers/net/wireless/wl12xx/cmd.c:662:16:    got restricted __be16 [usertype] <noident>
+> drivers/net/wireless/wl12xx/cmd.c:674:17: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/wl12xx/cmd.c:674:17:    expected unsigned int [unsigned] [addressable] [usertype] sender_ip
+> drivers/net/wireless/wl12xx/cmd.c:674:17:    got restricted __be32 [usertype] ip_addr
+> drivers/net/wireless/wl12xx/rx.c:202:4: warning: incorrect type in argument 3 (different base types)
+> drivers/net/wireless/wl12xx/rx.c:202:4:    expected unsigned int [unsigned] [usertype] val
+> drivers/net/wireless/wl12xx/rx.c:202:4:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/wl12xx/acx.c:1247:23: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/wl12xx/acx.c:1247:23:    expected restricted __le32 [usertype] ht_capabilites
+> drivers/net/wireless/wl12xx/acx.c:1247:23:    got unsigned long
+> drivers/net/wireless/wl12xx/acx.c:1250:24: warning: invalid assignment: |=
+> drivers/net/wireless/wl12xx/acx.c:1250:24:    left side has type restricted __le32
+> drivers/net/wireless/wl12xx/acx.c:1250:24:    right side has type unsigned long
+> drivers/net/wireless/wl12xx/acx.c:1253:24: warning: invalid assignment: |=
+> drivers/net/wireless/wl12xx/acx.c:1253:24:    left side has type restricted __le32
+> drivers/net/wireless/wl12xx/acx.c:1253:24:    right side has type unsigned long
+> drivers/net/wireless/wl12xx/acx.c:1256:24: warning: invalid assignment: |=
+> drivers/net/wireless/wl12xx/acx.c:1256:24:    left side has type restricted __le32
+> drivers/net/wireless/wl12xx/acx.c:1256:24:    right side has type unsigned long
 > 
-> By hardcoding dtim you increase the power consumption in the case when
-> there is no data traffic, so it's not definitely better in all cases.
-> 
-> I would prefer to fix the real issues instead of hardcoding dtim. And
-> if it's really essential to hardcode it now, please add a big fat
-> warning indicating that this is a temporary solution and should be
-> fixed properly without hardcoding anything.
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-The real issue (as far as I can tell) was that ath9k was changed to
-require mac80211 to get it DTIM period before association. I'm not aware
-of any need for that with ath9k. It should have no problems updating PS
-parameters after association and as such, should not require mac80211 to
-figure DTIM period out before being able to associate. This change is
-not about hardcoding DTIM period; it is about removing unneeded change
-that added extra latency without any real gain.
+Applied, thank you!
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Cheers,
+Luca.
+
