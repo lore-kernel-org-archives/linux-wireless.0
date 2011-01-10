@@ -1,381 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331Ab1ALMOK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 07:14:10 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Pczaa-0001RT-Bi
-	for linux-wireless@vger.kernel.org; Wed, 12 Jan 2011 13:14:08 +0100
-Message-Id: <20110112121417.852157387@sipsolutions.net>
-Date: Wed, 12 Jan 2011 13:13:23 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] mac80211: track receivers aggregation reorder buffer size
-References: <20110112121322.702618109@sipsolutions.net>
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:39926 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751148Ab1AJPoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 10:44:08 -0500
+Received: from dlep33.itg.ti.com ([157.170.170.112])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0AFi8HF024070
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 09:44:08 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0AFi79Y012636
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 09:44:07 -0600 (CST)
+Subject: Re: [PATCH v3 2/2] wl12xx: BA receiver support
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1294062164-3459-3-git-send-email-shahar_levi@ti.com>
+References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+	 <1294062164-3459-3-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Jan 2011 17:44:16 +0200
+Message-ID: <1294674256.1992.141.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2011-01-03 at 14:42 +0100, Shahar Levi wrote:
+> Add new ampdu_action ops to support receiver BA.
+> The BA initiator session management in FW independently.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-The aggregation code currently doesn't implement the
-buffer size negotiation. It will always request a max
-buffer size (which is fine, if a little pointless, as
-the mac80211 code doesn't know and might just use 0
-instead), but if the peer requests a smaller size it
-isn't possible to honour this request.
+Some comments.
 
-In order to fix this, look at the buffer size in the
-addBA response frame, keep track of it and pass it to
-the driver in the ampdu_action callback when called
-with the IEEE80211_AMPDU_TX_OPERATIONAL action. That
-way the driver can limit the number of subframes in
-aggregates appropriately.
 
-Note that this doesn't fix any drivers apart from the
-addition of the new argument -- they all need to be
-updated separately to use this variable!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ar9170/main.c        |    3 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    2 +-
- drivers/net/wireless/ath/ath9k/main.c         |    2 +-
- drivers/net/wireless/ath/carl9170/main.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c        |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-agn.h        |    3 ++-
- drivers/net/wireless/mac80211_hwsim.c         |    3 ++-
- drivers/net/wireless/mwl8k.c                  |    3 ++-
- drivers/net/wireless/rt2x00/rt2800lib.c       |    3 ++-
- drivers/net/wireless/rt2x00/rt2800lib.h       |    3 ++-
- drivers/net/wireless/rtlwifi/core.c           |    3 ++-
- include/net/mac80211.h                        |    7 ++++++-
- net/mac80211/agg-rx.c                         |    4 ++--
- net/mac80211/agg-tx.c                         |   20 +++++++++++++++++---
- net/mac80211/driver-ops.h                     |    6 +++---
- net/mac80211/driver-trace.h                   |   11 +++++++----
- net/mac80211/sta_info.h                       |    2 ++
- 17 files changed, 56 insertions(+), 24 deletions(-)
+> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+> index 54fd68d..f33ab50 100644
+> --- a/drivers/net/wireless/wl12xx/acx.c
+> +++ b/drivers/net/wireless/wl12xx/acx.c
+> @@ -1359,6 +1359,42 @@ out:
+>  	return ret;
+>  }
+>  
+> +/* setup BA session receiver setting in the FW. */
+> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+> +				       u16 *ssn, u8 policy)
 
---- wireless-testing.orig/include/net/mac80211.h	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2011-01-12 13:02:36.000000000 +0100
-@@ -1723,6 +1723,10 @@ enum ieee80211_ampdu_mlme_action {
-  * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
-  * 	is the first frame we expect to perform the action on. Notice
-  * 	that TX/RX_STOP can pass NULL for this parameter.
-+ *	The @buf_size parameter is only valid when the action is set to
-+ *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's reorder
-+ *	buffer size (number of subframes) for this session -- aggregates
-+ *	containing more subframes than this may not be transmitted to the peer.
-  *	Returns a negative error code on failure.
-  *	The callback can sleep.
-  *
-@@ -1825,7 +1829,8 @@ struct ieee80211_ops {
- 	int (*ampdu_action)(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
-+			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			    u8 buf_size);
- 	int (*get_survey)(struct ieee80211_hw *hw, int idx,
- 		struct survey_info *survey);
- 	void (*rfkill_poll)(struct ieee80211_hw *hw);
---- wireless-testing.orig/net/mac80211/agg-tx.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2011-01-12 13:02:36.000000000 +0100
-@@ -190,7 +190,7 @@ int ___ieee80211_stop_tx_ba_session(stru
- 
- 	ret = drv_ampdu_action(local, sta->sdata,
- 			       IEEE80211_AMPDU_TX_STOP,
--			       &sta->sta, tid, NULL);
-+			       &sta->sta, tid, NULL, 0);
- 
- 	/* HW shall not deny going back to legacy */
- 	if (WARN_ON(ret)) {
-@@ -311,7 +311,7 @@ void ieee80211_tx_ba_session_handle_star
- 	start_seq_num = sta->tid_seq[tid] >> 4;
- 
- 	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
--			       &sta->sta, tid, &start_seq_num);
-+			       &sta->sta, tid, &start_seq_num, 0);
- 	if (ret) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "BA request denied - HW unavailable for"
-@@ -487,7 +487,8 @@ static void ieee80211_agg_tx_operational
- 
- 	drv_ampdu_action(local, sta->sdata,
- 			 IEEE80211_AMPDU_TX_OPERATIONAL,
--			 &sta->sta, tid, NULL);
-+			 &sta->sta, tid, NULL,
-+			 sta->ampdu_mlme.tid_tx[tid]->buf_size);
- 
- 	/*
- 	 * synchronize with TX path, while splicing the TX path
-@@ -742,9 +743,11 @@ void ieee80211_process_addba_resp(struct
- {
- 	struct tid_ampdu_tx *tid_tx;
- 	u16 capab, tid;
-+	u8 buf_size;
- 
- 	capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
- 	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
-+	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
- 
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 
-@@ -767,12 +770,23 @@ void ieee80211_process_addba_resp(struct
- 
- 	if (le16_to_cpu(mgmt->u.action.u.addba_resp.status)
- 			== WLAN_STATUS_SUCCESS) {
-+		/*
-+		 * IEEE 802.11-2007 7.3.1.14:
-+		 * In an ADDBA Response frame, when the Status Code field
-+		 * is set to 0, the Buffer Size subfield is set to a value
-+		 * of at least 1.
-+		 */
-+		if (!buf_size)
-+			goto out;
-+
- 		if (test_and_set_bit(HT_AGG_STATE_RESPONSE_RECEIVED,
- 				     &tid_tx->state)) {
- 			/* ignore duplicate response */
- 			goto out;
- 		}
- 
-+		tid_tx->buf_size = buf_size;
-+
- 		if (test_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state))
- 			ieee80211_agg_tx_operational(local, sta, tid);
- 
---- wireless-testing.orig/net/mac80211/sta_info.h	2011-01-12 13:02:28.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.h	2011-01-12 13:02:36.000000000 +0100
-@@ -82,6 +82,7 @@ enum ieee80211_sta_info_flags {
-  * @state: session state (see above)
-  * @stop_initiator: initiator of a session stop
-  * @tx_stop: TX DelBA frame when stopping
-+ * @buf_size: reorder buffer size at receiver
-  *
-  * This structure's lifetime is managed by RCU, assignments to
-  * the array holding it must hold the aggregation mutex.
-@@ -101,6 +102,7 @@ struct tid_ampdu_tx {
- 	u8 dialog_token;
- 	u8 stop_initiator;
- 	bool tx_stop;
-+	u8 buf_size;
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/agg-rx.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-rx.c	2011-01-12 13:02:36.000000000 +0100
-@@ -76,7 +76,7 @@ void ___ieee80211_stop_rx_ba_session(str
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
- 	if (drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_STOP,
--			     &sta->sta, tid, NULL))
-+			     &sta->sta, tid, NULL, 0))
- 		printk(KERN_DEBUG "HW problem - can not stop rx "
- 				"aggregation for tid %d\n", tid);
- 
-@@ -294,7 +294,7 @@ void ieee80211_process_addba_request(str
- 	}
- 
- 	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
--			       &sta->sta, tid, &start_seq_num);
-+			       &sta->sta, tid, &start_seq_num, 0);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "Rx A-MPDU request on tid %d result %d\n", tid, ret);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
---- wireless-testing.orig/net/mac80211/driver-ops.h	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-ops.h	2011-01-12 13:02:36.000000000 +0100
-@@ -382,17 +382,17 @@ static inline int drv_ampdu_action(struc
- 				   struct ieee80211_sub_if_data *sdata,
- 				   enum ieee80211_ampdu_mlme_action action,
- 				   struct ieee80211_sta *sta, u16 tid,
--				   u16 *ssn)
-+				   u16 *ssn, u8 buf_size)
- {
- 	int ret = -EOPNOTSUPP;
- 
- 	might_sleep();
- 
--	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn);
-+	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, buf_size);
- 
- 	if (local->ops->ampdu_action)
- 		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
--					       sta, tid, ssn);
-+					       sta, tid, ssn, buf_size);
- 
- 	trace_drv_return_int(local, ret);
- 
---- wireless-testing.orig/net/mac80211/driver-trace.h	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/net/mac80211/driver-trace.h	2011-01-12 13:02:36.000000000 +0100
-@@ -784,9 +784,9 @@ TRACE_EVENT(drv_ampdu_action,
- 		 struct ieee80211_sub_if_data *sdata,
- 		 enum ieee80211_ampdu_mlme_action action,
- 		 struct ieee80211_sta *sta, u16 tid,
--		 u16 *ssn),
-+		 u16 *ssn, u8 buf_size),
- 
--	TP_ARGS(local, sdata, action, sta, tid, ssn),
-+	TP_ARGS(local, sdata, action, sta, tid, ssn, buf_size),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
-@@ -794,6 +794,7 @@ TRACE_EVENT(drv_ampdu_action,
- 		__field(u32, action)
- 		__field(u16, tid)
- 		__field(u16, ssn)
-+		__field(u8, buf_size)
- 		VIF_ENTRY
- 	),
- 
-@@ -804,11 +805,13 @@ TRACE_EVENT(drv_ampdu_action,
- 		__entry->action = action;
- 		__entry->tid = tid;
- 		__entry->ssn = ssn ? *ssn : 0;
-+		__entry->buf_size = buf_size;
- 	),
- 
- 	TP_printk(
--		LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT " action:%d tid:%d",
--		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->action, __entry->tid
-+		LOCAL_PR_FMT VIF_PR_FMT STA_PR_FMT " action:%d tid:%d buf:%d",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->action,
-+		__entry->tid, __entry->buf_size
- 	)
- );
- 
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2011-01-12 13:02:36.000000000 +0100
-@@ -1945,7 +1945,8 @@ static int ar9170_conf_tx(struct ieee802
- static int ar9170_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       enum ieee80211_ampdu_mlme_action action,
--			       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			       u8 buf_size)
- {
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2011-01-12 13:02:36.000000000 +0100
-@@ -1548,7 +1548,7 @@ static int ath9k_htc_ampdu_action(struct
- 				  struct ieee80211_vif *vif,
- 				  enum ieee80211_ampdu_mlme_action action,
- 				  struct ieee80211_sta *sta,
--				  u16 tid, u16 *ssn)
-+				  u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 	struct ath9k_htc_sta *ista;
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2011-01-12 13:02:36.000000000 +0100
-@@ -2018,7 +2018,7 @@ static int ath9k_ampdu_action(struct iee
- 			      struct ieee80211_vif *vif,
- 			      enum ieee80211_ampdu_mlme_action action,
- 			      struct ieee80211_sta *sta,
--			      u16 tid, u16 *ssn)
-+			      u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
---- wireless-testing.orig/drivers/net/wireless/ath/carl9170/main.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/carl9170/main.c	2011-01-12 13:02:36.000000000 +0100
-@@ -1279,7 +1279,7 @@ static int carl9170_op_ampdu_action(stru
- 				    struct ieee80211_vif *vif,
- 				    enum ieee80211_ampdu_mlme_action action,
- 				    struct ieee80211_sta *sta,
--				    u16 tid, u16 *ssn)
-+				    u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ar9170 *ar = hw->priv;
- 	struct carl9170_sta_info *sta_info = (void *) sta->drv_priv;
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-01-12 13:02:35.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-01-12 13:02:36.000000000 +0100
-@@ -3416,7 +3416,8 @@ int iwlagn_mac_set_key(struct ieee80211_
- int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			    u8 buf_size)
- {
- 	struct iwl_priv *priv = hw->priv;
- 	int ret = -EINVAL;
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.h	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.h	2011-01-12 13:02:36.000000000 +0100
-@@ -363,7 +363,8 @@ void iwlagn_mac_update_tkip_key(struct i
- int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
--			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
-+			    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			    u8 buf_size);
- int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta);
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2011-01-12 13:02:36.000000000 +0100
-@@ -943,7 +943,8 @@ static int mac80211_hwsim_testmode_cmd(s
- static int mac80211_hwsim_ampdu_action(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif,
- 				       enum ieee80211_ampdu_mlme_action action,
--				       struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+				       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+				       u8 buf_size)
- {
- 	switch (action) {
- 	case IEEE80211_AMPDU_TX_START:
---- wireless-testing.orig/drivers/net/wireless/mwl8k.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/mwl8k.c	2011-01-12 13:02:36.000000000 +0100
-@@ -3932,7 +3932,8 @@ static int mwl8k_get_survey(struct ieee8
- static int
- mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		   enum ieee80211_ampdu_mlme_action action,
--		   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+		   struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+		   u8 buf_size)
- {
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.c	2011-01-12 13:02:36.000000000 +0100
-@@ -3530,7 +3530,8 @@ EXPORT_SYMBOL_GPL(rt2800_get_tsf);
- 
- int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum ieee80211_ampdu_mlme_action action,
--			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			u8 buf_size)
- {
- 	int ret = 0;
- 
---- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2800lib.h	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rt2x00/rt2800lib.h	2011-01-12 13:02:36.000000000 +0100
-@@ -198,7 +198,8 @@ int rt2800_conf_tx(struct ieee80211_hw *
- u64 rt2800_get_tsf(struct ieee80211_hw *hw);
- int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum ieee80211_ampdu_mlme_action action,
--			struct ieee80211_sta *sta, u16 tid, u16 *ssn);
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			u8 buf_size);
- int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
- 		      struct survey_info *survey);
- 
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/core.c	2011-01-12 13:02:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/rtlwifi/core.c	2011-01-12 13:02:36.000000000 +0100
-@@ -748,7 +748,8 @@ static void rtl_op_sta_notify(struct iee
- static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       enum ieee80211_ampdu_mlme_action action,
--			       struct ieee80211_sta *sta, u16 tid, u16 * ssn)
-+			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
-+			       u8 buf_size)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+You don't modify ssn here, so why pass it as a pointer? Use u16 directly
+here instead.
+
+Actually it's even worse.  As stated in mac80211.h, ssn can be NULL
+here, so you would be accessing a NULL pointer in that case.
+
+I see that you check "policy", which indicates whether ssn is valid or
+not, but why not make it cleaner by checking if ssn is NULL and setting
+it to zero before passing instead?
+
+
+> +       acx->enable = policy;
+
+Also, because of this, it would make more sense if policy was a boolean
+and was called "enable" instead.
+
+
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index c44462d..04b69ab 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -2251,6 +2251,64 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
+>  	return 0;
+>  }
+>  
+> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+> +			   enum ieee80211_ampdu_mlme_action action,
+> +			   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
+> +{
+> +	struct wl1271 *wl = hw->priv;
+> +	int ret;
+> +
+> +	mutex_lock(&wl->mutex);
+> +
+> +	if (unlikely(wl->state == WL1271_STATE_OFF)) {
+> +		ret = -EAGAIN;
+> +		goto out;
+> +	}
+> +
+> +	ret = wl1271_ps_elp_wakeup(wl, false);
+> +	if (ret < 0)
+> +		goto out;
+> +
+> +	switch (action) {
+> +	case IEEE80211_AMPDU_RX_START:
+> +		if ((wl->ba_allowed) && (wl->ba_support)) {
+
+I'm a bit confused.  What is ba_allowed, actually? In the previous patch
+you always call wl1271_set_ba_policies() which always sets it to true.
+So it seems quite useless.
+
+
+> +			ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
+> +								 true);
+> +			if (!ret)
+> +				wl->ba_rx_bitmap |= BIT(tid);
+> +		} else
+> +			ret = -EPERM;
+
+The indentation is wrong here.  And -EPERM is definitely not the right
+return code for this.  It should probably -ENOTSUPP or something like
+that.
+
+> +	/*
+> +	 * The BA initiator session management in FW independently.
+> +	 * Falling break here on purpose for all TX APDU commands.
+> +	 */
+> +	case IEEE80211_AMPDU_TX_START:
+> +	case IEEE80211_AMPDU_TX_STOP:
+> +	case IEEE80211_AMPDU_TX_OPERATIONAL:
+> +		ret = -EINVAL;
+> +		break;
+
+-EINVAL? Actually, should mac80211 even call us with these actions? I
+don't remember now, did you implement the way to prevent mac80211 from
+trying to to AMPDU_TX by itself?
+
+
+> +
+> +	default:
+> +		wl1271_error("Incorrect ampdu action id=%x\n", action);
+> +		ret = -ENODEV;
+
+-ENODEV? All these error codes look quite random to me.  Can you explain
+your choices?
  
 
+-- 
+Cheers,
+Luca.
 
