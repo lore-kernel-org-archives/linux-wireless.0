@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41822 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754762Ab1A1SU7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 13:20:59 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] mac80211: Be more careful when changing channels.
-Date: Fri, 28 Jan 2011 10:20:47 -0800
-Message-Id: <1296238847-8301-1-git-send-email-greearb@candelatech.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:47830 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754034Ab1AJUKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 15:10:11 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: David Miller <davem@davemloft.net>
+Subject: [Bug 24592] Re: 2.6.37-rc8: Reported regressions from 2.6.36
+Date: Mon, 10 Jan 2011 21:09:31 +0100
+Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com,
+	florian@mickler.org, akpm@linux-foundation.org,
+	torvalds@linux-foundation.org, kernel-testers@vger.kernel.org,
+	netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
+References: <96DQe4a_2tH.A.cFB.l27GNB@chimera> <20110110.000813.173856001.davem@davemloft.net>
+In-Reply-To: <20110110.000813.173856001.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101102109.32177.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-If we cannot set the channel type, set the channel back to the
-original.
-
-Don't update the driver hardware if nothing actually changed.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v2:  Fix == typo, simplify logic slightly by testing
-   oper-channel-type set first.
-
-:100644 100644 9bf2193... 70fc329... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   21 +++++++++++++++++----
- 1 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9bf2193..70fc329 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1223,6 +1223,9 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata = NULL;
-+	struct ieee80211_channel *old_oper;
-+	enum nl80211_channel_type old_oper_type;
-+	enum nl80211_channel_type old_vif_oper_type= NL80211_CHAN_NO_HT;
- 
- 	if (netdev)
- 		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
-@@ -1240,13 +1243,23 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
- 		break;
- 	}
- 
--	local->oper_channel = chan;
--
-+	if (sdata)
-+		old_vif_oper_type = sdata->vif.bss_conf.channel_type;
-+	old_oper_type = local->_oper_channel_type;
-+	
- 	if (!ieee80211_set_channel_type(local, sdata, channel_type))
- 		return -EBUSY;
- 
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
--	if (sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+	old_oper = local->oper_channel;
-+	local->oper_channel = chan;
-+
-+	/* Update driver if changes were actually made. */
-+	if ((old_oper != local->oper_channel) ||
-+	    (old_oper_type != local->_oper_channel_type))
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+
-+	if ((sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR) &&
-+	    old_vif_oper_type != sdata->vif.bss_conf.channel_type)
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
- 
- 	return 0;
--- 
-1.7.2.3
-
+On Monday, January 10, 2011, David Miller wrote:
+> From: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
+> > Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
+> > Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
+> > Date		: 2010-12-08 21:09 (22 days old)
+> 
+> This bug is intended to be fixed by:
+> 
+> commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
+> Author: David S. Miller <davem@davemloft.net>
+> Date:   Wed Jan 5 15:38:53 2011 -0800
+> 
+>     af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
+>     
+>     unix_release() can asynchornously set socket->sk to NULL, and
+>     it does so without holding the unix_state_lock() on "other"
+>     during stream connects.
+>     
+>     However, the reverse mapping, sk->sk_socket, is only transitioned
+>     to NULL under the unix_state_lock().
+>     
+>     Therefore make the security hooks follow the reverse mapping instead
+>     of the forward mapping.
+>     
+>     Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
+>     Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+>     Signed-off-by: David S. Miller <davem@davemloft.net>
