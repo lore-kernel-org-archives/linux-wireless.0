@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:18976 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753897Ab1ASJU1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 04:20:27 -0500
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0961838826
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:20:26 +0900 (JST)
-Subject: [PATCH 4/8] ath5k: ath5k_setup_channels cleanup and whitespace
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Jan 2011 18:20:52 +0900
-Message-ID: <20110119092052.19628.61933.stgit@localhost6.localdomain6>
-In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+Received: from ogre.sisk.pl ([217.79.144.158]:47850 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418Ab1AJUL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 15:11:26 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: David Miller <davem@davemloft.net>
+Subject: Re: 2.6.37-rc8: Reported regressions from 2.6.36
+Date: Mon, 10 Jan 2011 21:11:06 +0100
+Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com,
+	florian@mickler.org, akpm@linux-foundation.org,
+	torvalds@linux-foundation.org, kernel-testers@vger.kernel.org,
+	netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
+References: <96DQe4a_2tH.A.cFB.l27GNB@chimera> <20110110.000813.173856001.davem@davemloft.net>
+In-Reply-To: <20110110.000813.173856001.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101102111.07266.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove useless test_bit - it's not going to happen because of the way this
-function is called only when that bit is set.
+On Monday, January 10, 2011, David Miller wrote:
+> From: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
+> > Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
+> > Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
+> > Date		: 2010-12-08 21:09 (22 days old)
+> > Message-ID	: <4CFFF3F3.90100@goop.org>
+> > References	: http://marc.info/?l=linux-kernel&m=129184256629712&w=2
+> 
+> This bug is intended to be fixed by:
+> 
+> commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
+> Author: David S. Miller <davem@davemloft.net>
+> Date:   Wed Jan 5 15:38:53 2011 -0800
+> 
+>     af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
+>     
+>     unix_release() can asynchornously set socket->sk to NULL, and
+>     it does so without holding the unix_state_lock() on "other"
+>     during stream connects.
+>     
+>     However, the reverse mapping, sk->sk_socket, is only transitioned
+>     to NULL under the unix_state_lock().
+>     
+>     Therefore make the security hooks follow the reverse mapping instead
+>     of the forward mapping.
+>     
+>     Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
+>     Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+>     Signed-off-by: David S. Miller <davem@davemloft.net>
+> 
 
-And fix some whitespace.
+OK, thanks for the info, closing.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9e8b1f4..a28ad58 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -256,21 +256,16 @@ static bool ath5k_is_standard_channel(short chan)
- }
- 
- static unsigned int
--ath5k_setup_channels(struct ath5k_hw *ah,
--		struct ieee80211_channel *channels,
--		unsigned int mode,
--		unsigned int max)
-+ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
-+		unsigned int mode, unsigned int max)
- {
- 	unsigned int count, size, chfreq, freq, ch;
- 	enum ieee80211_band band;
- 
--	if (!test_bit(mode, ah->ah_modes))
--		return 0;
--
- 	switch (mode) {
- 	case AR5K_MODE_11A:
- 		/* 1..220, but 2GHz frequencies are filtered by check_channel */
--		size = 220 ;
-+		size = 220;
- 		chfreq = CHANNEL_5GHZ;
- 		band = IEEE80211_BAND_5GHZ;
- 		break;
-
+Rafael
