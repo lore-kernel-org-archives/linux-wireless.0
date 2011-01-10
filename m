@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:41027 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752993Ab1ATUSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 15:18:12 -0500
-Date: Thu, 20 Jan 2011 12:17:53 -0800
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: brcm80211: fix suspend/resume issue in
- brcmsmac
-Message-ID: <20110120201753.GA18529@kroah.com>
-References: <1294855167-3718-1-git-send-email-arend@broadcom.com>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:36368 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab1AJHOH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 02:14:07 -0500
+Message-ID: <4D2AB1BA.4010205@openwrt.org>
+Date: Mon, 10 Jan 2011 08:14:02 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1294855167-3718-1-git-send-email-arend@broadcom.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
+References: <1294500800-29191-1-git-send-email-greearb@candelatech.com> <4D296B12.8000801@openwrt.org> <4D29F512.3050707@candelatech.com>
+In-Reply-To: <4D29F512.3050707@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 12, 2011 at 06:59:27PM +0100, Arend van Spriel wrote:
-> PCI PM suspend callback took down the interface and resume brought
-> it back up. In the mac80211 context this is done in subsequent calls.
-> Rework implementation so that suspend only stores config, and sets
-> PCI power state. The resume return to full power state (D0), restores
-> the config, and brings hardware back up. Full bringup is done by
-> subsequent mac80211 calls.
+2011.01.09. 18:49 keltezéssel, Ben Greear írta:
+> On 01/09/2011 12:00 AM, Gabor Juhos wrote:
+>> Hi Ben,
+>>
+>>> From: Ben Greear<greearb@candelatech.com>
+>>>
+>>> This saves us constantly allocating large, multi-page
+>>> skbs.  It should fix the order-1 allocation errors reported,
+>>> and in a 60-vif scenario, this significantly decreases CPU
+>>> utilization, and latency, and increases bandwidth.
+>>>
+>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>>> ---
+>>> :100644 100644 b2497b8... ea2f67c... M    drivers/net/wireless/ath/ath9k/recv.c
+>>>   drivers/net/wireless/ath/ath9k/recv.c |   92 ++++++++++++++++++++++-----------
+>>>   1 files changed, 61 insertions(+), 31 deletions(-)
+>>
+>> <...>
+>>
+>>> +        if (use_copybreak) {
+>>> +            struct pci_dev *pdev = to_pci_dev(sc->dev);
+>>
+>> This would cause undefined behaviour with ath9k devices sitting on an AHB bus.
+>>
+>>> +            pci_dma_sync_single_for_cpu(pdev, bf->bf_buf_addr,
+>>> +                            len, PCI_DMA_FROMDEVICE);
+>>> +            skb_copy_from_linear_data(bf->bf_mpdu, skb->data, len);
+>>> +            pci_dma_sync_single_for_device(pdev, bf->bf_buf_addr,
+>>> +                               len, PCI_DMA_FROMDEVICE);
+>>
+>> Please use the bus agnostic equivalents of these DMA functions.
 > 
-> Reviewed-by: Brett Rudley <brudley@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   28 ++++++++++++---------
->  drivers/staging/brcm80211/brcmsmac/wl_mac80211.h |    4 +--
->  2 files changed, 17 insertions(+), 15 deletions(-)
+> Any idea what that might be?
 
-This patch doesn't apply to Linus's tree, which is where it needs to go
-right now.  Can you please redo it so that I can apply it?
+Invalid/null pointer dereference probably. The problem is that sc->dev is
+pointing to a device structure inside a platform_device structure when it is not
+PCI device. Converting sc->dev to 'struct *pci_dev' and using the result as a
+parameter for a PCI specific function is not correct in this case.
 
-thanks,
+> Should we just disable copybreak for things on AHB bus?
 
-greg k-h
+We should not disable it, order-1 allocation failures are present there as well.
+
+-Gabor
