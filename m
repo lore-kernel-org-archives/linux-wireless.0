@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.techwires.net ([79.140.39.242]:46075 "EHLO mx.techwires.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753226Ab1AQQVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 11:21:33 -0500
-In-Reply-To: <201101171621.29863.bernhard.schmidt@saxnet.de>
-References: <201101171621.29863.bernhard.schmidt@saxnet.de>
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 17 Jan 2011 14:27:29 +0100
-Subject: [PATCH 8/8] hostap: do not disable radar channels
-Cc: <lrodriguez@atheros.com>, <nbd@openwrt.org>, <dubowoj@neratec.com>,
-	<zefir.kurtisi@neratec.com>, <simon.wunderlich@saxnet.de>
-Message-Id: <20110117161327.A8B3D209B@mx.techwires.net>
+Received: from devils.ext.ti.com ([198.47.26.153]:43559 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463Ab1AJQD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 11:03:29 -0500
+Subject: Re: [PATCH v4 00/18] AP mode support for wl12xx
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
+References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Jan 2011 18:03:32 +0200
+Message-ID: <1294675412.1992.143.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- src/ap/hw_features.c |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
+On Thu, 2010-12-30 at 00:31 +0100, Arik Nemtsov wrote:
+> These patches add access point mode support to the wl12xx driver.
+> This mode uses a separate firmware and has a different initialization
+> sequence.
+> 
+> In all instances, the flow has been split according to the operating
+> mode of the driver (AP/STA), so as not to affect STA mode functionality.
+> 
+> v1->2: rebased on latest wl12xx tree
+> v2->3: refactoring
+> v3->4: cross-patch fix
 
-diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
-index a7f4eda..81caf63 100644
---- a/src/ap/hw_features.c
-+++ b/src/ap/hw_features.c
-@@ -126,19 +126,6 @@ int hostapd_get_hw_features(struct hostapd_iface *iface)
- 		/* set flag for channels we can use in current regulatory
- 		 * domain */
- 		for (j = 0; j < feature->num_channels; j++) {
--			/*
--			 * Disable all channels that are marked not to allow
--			 * IBSS operation or active scanning. In addition,
--			 * disable all channels that require radar detection,
--			 * since that (in addition to full DFS) is not yet
--			 * supported.
--			 */
--			if (feature->channels[j].flag &
--			    (HOSTAPD_CHAN_NO_IBSS |
--			     HOSTAPD_CHAN_PASSIVE_SCAN |
--			     HOSTAPD_CHAN_RADAR))
--				feature->channels[j].flag |=
--					HOSTAPD_CHAN_DISABLED;
- 			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED)
- 				continue;
- 			wpa_printf(MSG_MSGDUMP, "Allowed channel: mode=%d "
+Applied the series, thanks Arik!
+
 -- 
-1.5.6.5
+Cheers,
+Luca.
 
