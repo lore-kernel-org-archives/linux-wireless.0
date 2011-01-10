@@ -1,23 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:46839 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677Ab1AUUrS (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58472 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552Ab1AJHMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 15:47:18 -0500
-Received: by ewy5 with SMTP id 5so1170225ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 12:47:17 -0800 (PST)
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Colin McCabe <colin@cozybit.com>,
-	Marek Vasut <marek.vasut@gmail.com>, anarsoul@gmail.com
-Subject: [PATCH 0/3] libertas_spi fixes
-Date: Fri, 21 Jan 2011 22:44:47 +0200
-Message-Id: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
+	Mon, 10 Jan 2011 02:12:03 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH RESEND 01/11] ath9k: Show some live tx-queue values in debugfs.
+Date: Sun,  9 Jan 2011 23:11:43 -0800
+Message-Id: <1294643513-18820-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
+References: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series attempts to fix libertas_spi bug (it calls functions that
-may sleep from atomic context) and add pm support to libertas_spi.
-Tested on Zipit Z2 device.
+From: Ben Greear <greearb@candelatech.com>
+
+I thought this might help track down stuck queues, etc.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 3586c43... 5075faa... M	drivers/net/wireless/ath/ath9k/debug.c
+ drivers/net/wireless/ath/ath9k/debug.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 3586c43..5075faa 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -589,6 +589,16 @@ static const struct file_operations fops_wiphy = {
+ 		sc->debug.stats.txstats[WME_AC_VO].elem); \
+ } while(0)
+ 
++#define PRX(str, elem)							\
++do {									\
++	len += snprintf(buf + len, size - len,				\
++			"%s%13u%11u%10u%10u\n", str,			\
++			(unsigned int)(sc->tx.txq[WME_AC_BE].elem),	\
++			(unsigned int)(sc->tx.txq[WME_AC_BK].elem),	\
++			(unsigned int)(sc->tx.txq[WME_AC_VI].elem),	\
++			(unsigned int)(sc->tx.txq[WME_AC_VO].elem));	\
++} while(0)
++
+ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -619,6 +629,12 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("TX-Pkts-All:     ", tx_pkts_all);
+ 	PR("TX-Bytes-All:    ", tx_bytes_all);
+ 
++	PRX("axq-qnum:        ", axq_qnum);
++	PRX("axq-depth:       ", axq_depth);
++	PRX("axq-stopped      ", stopped);
++	PRX("tx-in-progress   ", axq_tx_inprogress);
++	PRX("pending-frames   ", pending_frames);
++
+ 	if (len > size)
+ 		len = size;
+ 
+-- 
+1.7.2.3
 
