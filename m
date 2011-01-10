@@ -1,41 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:48529 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751711Ab1AEQXZ (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39171 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754745Ab1AJVfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 11:23:25 -0500
-Received: by pxi15 with SMTP id 15so2776921pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 08:23:24 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 10 Jan 2011 16:35:44 -0500
+Received: by iwn9 with SMTP id 9so19580145iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 13:35:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19748.39650.518747.315217@gargle.gargle.HOWL>
-Date: Wed, 5 Jan 2011 21:52:58 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sujith <m.sujith@gmail.com>, Jouni.Malinen@atheros.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211: Add HT BSS attributes
-In-Reply-To: <1294243398.3590.12.camel@jlt3.sipsolutions.net>
-References: <19748.37551.23627.698571@gargle.gargle.HOWL>
-	<1294243398.3590.12.camel@jlt3.sipsolutions.net>
+In-Reply-To: <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
+References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE13CD2B113F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <AANLkTimkgrc19QCdeOhc+huTsrGCD_Y8cqHnz_dQjc5y@mail.gmail.com> <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
+From: Jamie Kitson <jamie@kitten-x.com>
+Date: Mon, 10 Jan 2011 21:35:23 +0000
+Message-ID: <AANLkTingheCkPNvc+8qM5oQh8NHPAX2h4Z6C1YZEFRBc@mail.gmail.com>
+Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
+To: Brett Rudley <brudley@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2011-01-05 at 21:17 +0530, Sujith wrote:
-> 
-> > @@ -227,6 +227,8 @@ enum ieee80211_bss_change {
-> >   *	example.
-> >   * @ht_operation_mode: HT operation mode (like in &struct ieee80211_ht_info).
-> >   *	This field is only valid when the channel type is one of the HT types.
-> > + * @ht_capab: HT capabilities (as in &struct ieee80211_ht_cap).
-> > + * @ht_param: Operational HT parameters (as in &struct ieee80211_ht_info).
-> >   * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
-> >   *	implies disabled
-> >   * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
-> 
-> Err, also, how are these expected to have any effect?
+I don't know if it makes any difference but I tried again, this time
+with a 2.6.37 kernel and got a slightly different error (almost
+immediately x started, I guess when wireless was coming up):
 
-Will send a v2 ...
-
-Sujith
+http://farm6.static.flickr.com/5246/5343639268_88ee4da55e_b.jpg
