@@ -1,29 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59459 "EHLO mail.atheros.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:39255 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751312Ab1AEXUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 18:20:37 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 15:20:20 -0800
-Date: Wed, 5 Jan 2011 15:20:35 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH 1/3] compat: backport pci_wake_from_d3
-Message-ID: <20110105232035.GF10391@tux>
-References: <1293891815-22087-1-git-send-email-hauke@hauke-m.de>
+	id S1751542Ab1AKIyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 03:54:07 -0500
+Subject: Re: [PATCH] wl12xx: reset 5ghz num channels on hw init
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1294735015.3611.5.camel@jlt3.sipsolutions.net>
+References: <1294693444-30807-1-git-send-email-arik@wizery.com>
+	 <1294734327.3611.1.camel@jlt3.sipsolutions.net>
+	 <1294734738.12992.45.camel@pimenta>
+	 <1294735015.3611.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Jan 2011 10:53:42 +0200
+Message-ID: <1294736022.12992.52.camel@pimenta>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1293891815-22087-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 01, 2011 at 06:23:33AM -0800, Hauke Mehrtens wrote:
-> This is needed by atl1c.
+On Tue, 2011-01-11 at 09:36 +0100, Johannes Berg wrote:
+> On Tue, 2011-01-11 at 10:32 +0200, Luciano Coelho wrote:
+> > Hi Johannes,
+> > 
+> > On Tue, 2011-01-11 at 09:25 +0100, Johannes Berg wrote:
+> > > On Mon, 2011-01-10 at 23:04 +0200, Arik Nemtsov wrote:
+> > > > The number of 5ghz channels is set to 0 when 11a is not supported in the
+> > > > NVS file. When a single rmmod/insmod of wl12xx_sdio this leads to a
+> > > > supported band (5ghz) with 0 supported channels, which mac80211
+> > > > considers illegal.
+> > > 
+> > > The setting to 0 shouldn't be happening in a global structure anyway
+> > > since that way you can't support two different devices in the same
+> > > system!!
+> > 
+> > This is that hack we discussed some time ago on how to disable the 11a
+> > channels. [snip explanation]
+> 
+> You misunderstood: I do remember discussing the hack, and it's still a
+> hack but it works and I'm OK with it. However, you shouldn't be
+> modifying a _global_ struct. You should at least copy the sband struct
+> itself (array actually then), which can still refer to the global
+> channel array, but then you don't modify global shared data for
+> device-dependent properties like this.
 
-Applied and pushed, thanks!
+Right! Now I got it.  Yeah, obviously the global shouldn't be modified,
+otherwise all the registered hardwares will get their values modified at
+the same time, which doesn't make sense.  Well, apparently that was not
+so obvious to me when I looked it at first. ;)
 
-  Luis
+Thanks for your comment, I'll fix that.
+
+-- 
+Cheers,
+Luca.
+
