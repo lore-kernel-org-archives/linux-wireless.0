@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:10258 "EHLO mail.atheros.com"
+Received: from purkki.adurom.net ([80.68.90.206]:41415 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753802Ab1A0JPr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 04:15:47 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 01:15:28 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <vnatarajan@atheros.com>
-Subject: [PATCH 4/5] ath9k: Fix a locking related issue.
-Date: Thu, 27 Jan 2011 14:45:10 +0530
-Message-ID: <1296119711-4024-4-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1296119711-4024-3-git-send-email-vnatarajan@atheros.com>
-References: <1296119711-4024-1-git-send-email-vnatarajan@atheros.com>
- <1296119711-4024-2-git-send-email-vnatarajan@atheros.com>
- <1296119711-4024-3-git-send-email-vnatarajan@atheros.com>
+	id S932179Ab1AKOqz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 09:46:55 -0500
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Jason Andryuk <jandryuk@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: 5GHz 802.11n USB Adapter
+References: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
+	<201101082132.22947.helmut.schaa@googlemail.com>
+	<87mxn9fl6m.fsf@purkki.adurom.net>
+	<201101101703.45802.helmut.schaa@googlemail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 11 Jan 2011 16:46:54 +0200
+In-Reply-To: <201101101703.45802.helmut.schaa@googlemail.com> (Helmut Schaa's message of "Mon\, 10 Jan 2011 17\:03\:45 +0100")
+Message-ID: <87ipxvfqg1.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Spin_lock has been tried to be acquired twice from ath9k_tasklet
-to ath_reset which resulted in a machine freeze.
+Helmut Schaa <helmut.schaa@googlemail.com> writes:
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+>> If some hardware models don't support broadcast/multicast buffering in
+>> that case the driver shouldn't allow AP mode, at least not in mainline
+>> kernels. We shouldn't break the standarnd knowingly.
+>> 
+>> From a quick grep it looks like rt2800usb enables AP mode. Is that the
+>> case or did I misunderstood something?
+>
+> You're right, rt2800usb enables AP mode despite the lack of proper
+> mc- and bc buffering.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index c73452d..84673fb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -564,8 +564,11 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	rcu_read_unlock();
- 
--	if (needreset)
-+	if (needreset) {
-+		spin_unlock_bh(&sc->sc_pcu_lock);
- 		ath_reset(sc, false);
-+		spin_lock_bh(&sc->sc_pcu_lock);
-+	}
- }
- 
- static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+Ok, thanks. I'll try to come up with a patch which disables AP mode
+for rt2800usb.
+
 -- 
-1.6.3.3
-
+Kalle Valo
