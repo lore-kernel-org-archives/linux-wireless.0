@@ -1,113 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56345 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696Ab1ADHrj (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:19788 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754841Ab1AKAuZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 02:47:39 -0500
-Received: by iyi12 with SMTP id 12so12755573iyi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jan 2011 23:47:39 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 10 Jan 2011 19:50:25 -0500
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0434697023
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 09:50:23 +0900 (JST)
+Subject: [PATCH v2 4/4] iw: Add signal average to station dump information
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+Date: Tue, 11 Jan 2011 09:51:23 +0900
+Message-ID: <20110111005123.10231.19628.stgit@localhost6.localdomain6>
+In-Reply-To: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
+References: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19746.53382.420251.297060@gargle.gargle.HOWL>
-Date: Tue, 4 Jan 2011 13:17:18 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 4/5] ath9k_htc: Add multiple register read API
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Print station signal average in station dump.
 
-This would decrease latency in reading bulk registers.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath.h                |    2 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   29 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h           |    3 ++
- 3 files changed, 34 insertions(+), 0 deletions(-)
+ station.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index e43210c..a6c6a46 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -108,12 +108,14 @@ enum ath_cipher {
-  * struct ath_ops - Register read/write operations
-  *
-  * @read: Register read
-+ * @multi_read: Multiple register read
-  * @write: Register write
-  * @enable_write_buffer: Enable multiple register writes
-  * @write_flush: flush buffered register writes and disable buffering
-  */
- struct ath_ops {
- 	unsigned int (*read)(void *, u32 reg_offset);
-+	void (*multi_read)(void *, u32 *addr, u32 *val, u16 count);
- 	void (*write)(void *, u32 val, u32 reg_offset);
- 	void (*enable_write_buffer)(void *);
- 	void (*write_flush) (void *);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 9150ca6..f1c628e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -297,6 +297,34 @@ static unsigned int ath9k_regread(void *hw_priv, u32 reg_offset)
- 	return be32_to_cpu(val);
- }
+diff --git a/station.c b/station.c
+index be2301f..6581d50 100644
+--- a/station.c
++++ b/station.c
+@@ -107,6 +107,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 	if (sinfo[NL80211_STA_INFO_SIGNAL])
+ 		printf("\n\tsignal:  \t%d dBm",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
++	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
++		printf("\n\tsignal avg:\t%d dBm",
++			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
  
-+static void ath9k_multi_regread(void *hw_priv, u32 *addr,
-+				u32 *val, u16 count)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
-+	__be32 tmpaddr[8];
-+	__be32 tmpval[8];
-+	int i, ret;
-+
-+       for (i = 0; i < count; i++) {
-+	       tmpaddr[i] = cpu_to_be32(addr[i]);
-+       }
-+
-+       ret = ath9k_wmi_cmd(priv->wmi, WMI_REG_READ_CMDID,
-+			   (u8 *)tmpaddr , sizeof(u32) * count,
-+			   (u8 *)tmpval, sizeof(u32) * count,
-+			   100);
-+	if (unlikely(ret)) {
-+		ath_dbg(common, ATH_DBG_WMI,
-+			"Multiple REGISTER READ FAILED (count: %d)\n", count);
-+	}
-+
-+       for (i = 0; i < count; i++) {
-+	       val[i] = be32_to_cpu(tmpval[i]);
-+       }
-+}
-+
- static void ath9k_regwrite_single(void *hw_priv, u32 val, u32 reg_offset)
- {
- 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-@@ -407,6 +435,7 @@ static void ath9k_regwrite_flush(void *hw_priv)
- 
- static const struct ath_ops ath9k_common_ops = {
- 	.read = ath9k_regread,
-+	.multi_read = ath9k_multi_regread,
- 	.write = ath9k_regwrite,
- 	.enable_write_buffer = ath9k_enable_regwrite_buffer,
- 	.write_flush = ath9k_regwrite_flush,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5a3dfec..c2b3515 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -70,6 +70,9 @@
- #define REG_READ(_ah, _reg) \
- 	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
- 
-+#define REG_READ_MULTI(_ah, _addr, _val, _cnt)		\
-+	ath9k_hw_common(_ah)->ops->multi_read((_ah), (_addr), (_val), (_cnt))
-+
- #define ENABLE_REGWRITE_BUFFER(_ah)					\
- 	do {								\
- 		if (ath9k_hw_common(_ah)->ops->enable_write_buffer)	\
--- 
-1.7.3.4
+ 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
+ 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
 
