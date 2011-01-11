@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35597 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751618Ab1AFUGU (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:42031 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368Ab1AKRhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 15:06:20 -0500
-Message-ID: <4D2620BA.8000804@candelatech.com>
-Date: Thu, 06 Jan 2011 12:06:18 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 11 Jan 2011 12:37:36 -0500
+Subject: Re: [PATCH] wl12xx: reset 5ghz num channels on hw init
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1294693444-30807-1-git-send-email-arik@wizery.com>
+References: <1294693444-30807-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Jan 2011 19:37:46 +0200
+Message-ID: <1294767466.1981.6.camel@pimenta>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: ath9k ath_tx_complete_poll_work doesn't always run.
-References: <4D261E22.1090300@candelatech.com>
-In-Reply-To: <4D261E22.1090300@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2011 11:55 AM, Ben Greear wrote:
-> It seems that the ath_tx_complete_poll_work method is supposed to
-> run every 1 second to check for stale xmit buffers.
->
-> However, I noticed that sometimes it is stopped, perhaps
-> because the mac80211 workqueue is flushed and ath9k
-> doesn't know to re-setup the work.
->
-> I am curious if anyone knows how this is *supposed* to
-> function?
+On Mon, 2011-01-10 at 22:04 +0100, Arik Nemtsov wrote:
+> The number of 5ghz channels is set to 0 when 11a is not supported in the
+> NVS file. When a single rmmod/insmod of wl12xx_sdio this leads to a
+> supported band (5ghz) with 0 supported channels, which mac80211
+> considers illegal.
+> 
+> Fix this by always resetting the number of supported 5ghz channels
+> before the HW is registered.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Hrm, this may be my fault..a bug in my attempt to
-not do so much channel-change code when the channel
-has not in fact changed...
-
-I'll look some more..
-
-Ben
-
->
-> Thanks,
-> Ben
->
+Just for the record, this patch is not necessary anymore, once my new
+patch that avoids changing the global structs (as suggested by Johannes)
+gets in.
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Luca.
 
