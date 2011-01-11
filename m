@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46868 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046Ab1ATRw3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45401 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754318Ab1AKIZ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 12:52:29 -0500
-Message-ID: <4D387658.8040002@candelatech.com>
-Date: Thu, 20 Jan 2011 09:52:24 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/3] mac80211: Support sw_scan_start_cur
-References: <1295544750-6704-1-git-send-email-greearb@candelatech.com> <1295545044.3693.43.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295545044.3693.43.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 11 Jan 2011 03:25:29 -0500
+Subject: Re: [PATCH] wl12xx: reset 5ghz num channels on hw init
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <1294693444-30807-1-git-send-email-arik@wizery.com>
+References: <1294693444-30807-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Jan 2011 09:25:27 +0100
+Message-ID: <1294734327.3611.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2011 09:37 AM, Johannes Berg wrote:
-> On Thu, 2011-01-20 at 09:32 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> This method is called when driver can support
->> scanning the currect active channel without otherwise
->> impeding traffic on that channel.  The mac80211 scan
->> logic may call this when we are only scanning on the
->> active channel and thus do not need to go off channel.
->
-> I frankly don't see any point telling the driver about this. Looking at
-> the ath9k patch you sent, it seems to avoid some things like flushing --
-> but the flushing should be controlled by mac80211 already (or converted
-> to be) so that it's not necessary to have this.
+On Mon, 2011-01-10 at 23:04 +0200, Arik Nemtsov wrote:
+> The number of 5ghz channels is set to 0 when 11a is not supported in the
+> NVS file. When a single rmmod/insmod of wl12xx_sdio this leads to a
+> supported band (5ghz) with 0 supported channels, which mac80211
+> considers illegal.
 
-mac80211 + ath9k is a house of cards, and this seemed the least
-invasive approach.  It also lets us not change behaviour for
-the rest of the drivers until they are audited and potentially
-updated.  At best I can test/hack on ath5k and ath9k.  These are
-touchy enough, and other drivers may be even more twitchy...
+The setting to 0 shouldn't be happening in a global structure anyway
+since that way you can't support two different devices in the same
+system!!
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
