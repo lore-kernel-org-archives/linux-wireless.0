@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50645 "EHLO nbd.name"
+Received: from bear.ext.ti.com ([192.94.94.41]:45114 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752961Ab1AXS2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 13:28:52 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix a crash in ieee80211_beacon_get_tim on change_interface
-Date: Mon, 24 Jan 2011 19:28:49 +0100
-Message-Id: <1295893729-5700-1-git-send-email-nbd@openwrt.org>
+	id S1751044Ab1AKIcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 03:32:21 -0500
+Subject: Re: [PATCH] wl12xx: reset 5ghz num channels on hw init
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1294734327.3611.1.camel@jlt3.sipsolutions.net>
+References: <1294693444-30807-1-git-send-email-arik@wizery.com>
+	 <1294734327.3611.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Jan 2011 10:32:18 +0200
+Message-ID: <1294734738.12992.45.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (e.g. ath9k) do not always disable beacons when they're
-supposed to. When an interface is changed using the change_interface op,
-the mode specific sdata part is in an undefined state and trying to
-get a beacon at this point can produce weird crashes.
+Hi Johannes,
 
-To fix this, add a check for ieee80211_sdata_running before using
-anything from the sdata.
+On Tue, 2011-01-11 at 09:25 +0100, Johannes Berg wrote:
+> On Mon, 2011-01-10 at 23:04 +0200, Arik Nemtsov wrote:
+> > The number of 5ghz channels is set to 0 when 11a is not supported in the
+> > NVS file. When a single rmmod/insmod of wl12xx_sdio this leads to a
+> > supported band (5ghz) with 0 supported channels, which mac80211
+> > considers illegal.
+> 
+> The setting to 0 shouldn't be happening in a global structure anyway
+> since that way you can't support two different devices in the same
+> system!!
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- net/mac80211/tx.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+This is that hack we discussed some time ago on how to disable the 11a
+channels.  We only know that they're not supported after the driver is
+loaded and the supported channels are already registered.  We get the
+info that the 11a are not supported in the calibration data that we
+receive later.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e46c801..ffc6749 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2230,6 +2230,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 
- 	sdata = vif_to_sdata(vif);
- 
-+	if (!ieee80211_sdata_running(sdata))
-+		goto out;
-+
- 	if (tim_offset)
- 		*tim_offset = 0;
- 	if (tim_length)
+See commit fb6a6819fad0d71b47577a51709440a9f8441f0a.
+
+Earlier I was disabling the channels by setting the DISABLED flag, but
+that was bad, because I was touching regulatory stuff and it was causing
+other problems.
+
 -- 
-1.7.3.2
+Cheers,
+Luca.
 
