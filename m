@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:59577 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154Ab1AOPtN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 10:49:13 -0500
-Received: by ywl5 with SMTP id 5so1219390ywl.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 07:49:12 -0800 (PST)
-Message-ID: <4D31C1F5.7080306@whoplays.asia>
-Date: Sun, 16 Jan 2011 00:49:09 +0900
-From: "u2@whoplays.asia" <u2@whoplays.asia>
+Received: from purkki.adurom.net ([80.68.90.206]:57497 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754488Ab1AKWKS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 17:10:18 -0500
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Jason Andryuk <jandryuk@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Johannes Stezenbach <js@sig21.net>
+Subject: Re: 5GHz 802.11n USB Adapter
+References: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
+	<201101101703.45802.helmut.schaa@googlemail.com>
+	<87ipxvfqg1.fsf@purkki.adurom.net>
+	<201101111557.46845.helmut.schaa@googlemail.com>
+	<87ei8jfnq2.fsf@purkki.adurom.net>
+	<AANLkTi=n49bXON7i9ec_UGLwMpr2+963CGOudkMphnMt@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 12 Jan 2011 00:10:16 +0200
+In-Reply-To: <AANLkTi=n49bXON7i9ec_UGLwMpr2+963CGOudkMphnMt@mail.gmail.com> (Ivo Van Doorn's message of "Tue\, 11 Jan 2011 17\:39\:48 +0100")
+Message-ID: <87aaj7f5x3.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [Driver] NEC WL300NU-G
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Ivo Van Doorn <ivdoorn@gmail.com> writes:
 
-According to the list linuxwireless.org/en/users/Devices/USB, Wireless 
-USB adapter NEC WL300NU-G[0x409:0x093f] is supported by ar9170usb.
+>> That would be the best option, but in the mean time we should disable
+>> AP mode.
+>
+> Ok, but please don't restrict only to rt2800usb then. Basically
+> _all_ rt2x00 USB drivers are not functioning. Also I assume it means
+> that also Mesh mode, Secondary, and Ad-hoc should also be disabled?
 
-But the one I bought via 
-www.amazon.co.jp/NEC-Aterm-WL300NU-G-PA-WL300NU-G is [0x409:0x0249] and 
-not detected by any drivers...
+AFAIK Mesh and Ad-Hoc don't use power save mode so not not being able
+to buffer bc/mc shouldn't be a problem.
 
-$ lsusb
-Bus 007 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 006 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 004 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 002 Device 006: ID 0a5c:2101 Broadcom Corp. Bluetooth Controller
-Bus 002 Device 005: ID 0853:0100 Topre Corporation HHKB Professional
-Bus 002 Device 004: ID 0409:005a NEC Corp. HighSpeed Hub
-Bus 002 Device 003: ID 0409:0249 NEC Corp.
-Bus 002 Device 002: ID 2019:ab50 PLANEX GW-US54Mini2
-Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-$ uname -a
-Linux localhost 2.6.32-5-amd64 #1 SMP Wed Jan 12 03:40:32 UTC 2011 
-x86_64 GNU/Linux
-
-Plz anyone describe me why this one has another vendor-productID, and 
-will this one supported?
-
-Regards,
-Miyagi
+-- 
+Kalle Valo
