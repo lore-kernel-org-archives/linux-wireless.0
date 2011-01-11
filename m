@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:33440 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831Ab1ADHJt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 02:09:49 -0500
-Received: by gyb11 with SMTP id 11so5432653gyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Jan 2011 23:09:49 -0800 (PST)
+Received: from mail.neratec.ch ([80.75.119.105]:34946 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755817Ab1AKOlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 09:41:00 -0500
+Date: Tue, 11 Jan 2011 15:40:56 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: lrodriguez <lrodriguez@atheros.com>, nbd <nbd@openwrt.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Message-ID: <15461044.40.1294756856032.JavaMail.wlan@CHBU500181>
+In-Reply-To: <5840411.32.1294754666078.JavaMail.wlan@CHBU500181>
+Subject: [RFC] mac80211: Wait with enabling beacons on DFS channels
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinM9oPV=CJ3iUP2=fEH=+fRP5JPMO4tHLOZzHrS@mail.gmail.com>
-References: <AANLkTinM9oPV=CJ3iUP2=fEH=+fRP5JPMO4tHLOZzHrS@mail.gmail.com>
-Date: Tue, 4 Jan 2011 01:09:48 -0600
-Message-ID: <AANLkTimPmCZ3O0WKe4OH1z4+rmtUtAr2wqsrFOUCJg_Q@mail.gmail.com>
-Subject: Re: (rt61pci/hostapd) no packet activity when encryption is enabled
- and interface is bridged
-From: C Anthony Risinger <anthony@extof.me>
-To: linux-wireless@vger.kernel.org
-Cc: C Anthony Risinger <anthony@extof.me>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 3, 2011 at 10:30 PM, C Anthony Risinger <anthony@extof.me> wrote:
->
-> problem summary: an rt61pci driven card does not seem to allow any
-> packets to enter/exit it's bridge ONLY WHEN ENCRYPTION is enabled;
-> without it, everything works perfectly.
+Hello,
+  Basic DFS functionality requires that when we change to radar
+enabled channels we need to wait and listen before we can send
+beacons/frames -> Channel Availability Check (CAC).
+There is a case when we can switch to it immediately if we have
+been monitoring it off_channel for specific time. This is bit
+more complicated and doesn't need to be implemented in the first 
+place because it's sort of functional optimization.
 
-hmmmmm....
+Anyway there is a need for mechanism to control when to enable
+beacons if we switch to radar channel.
 
-it would seem:
+Pseudo-code-diff bellow is an example for ath9k where we could enable
+beacons at once or fire a worker to re-enable it after CAC expires
+if radar hasn't been detected. In theory we need only to disable
+beacons because we shouldn't get any directed frames we could reply
+to and stations anyway can't probe directly. In practice to be 
+sure it couldn't be probably done with making rx filters more 
+restrictive during CAC period. Maybe there are other ways as well.
 
-options rt61pci nohwcrypt=1
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c 
+@@ -285,8 +285,14 @@
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 
+ 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
+-		if (sc->sc_flags & SC_OP_BEACONS)
+-			ath_beacon_config(sc, NULL);
++
++		if (sc->sc_flags & SC_OP_BEACONS) {
++			if (channel->flags & IEEE80211_CHAN_RADAR 
++                            && !(channel->flags & IEEE80211_CHAN_NOL_FREE))
++				ieee80211_queue_delayed_work
++                                      (sc->hw, &sc->dfs_wait_cac_work, 0);
++			else
++				ath_beacon_config(sc, NULL);
++		}
++
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 		ath_start_ani(common);
+ 	}
 
-solves the problem.  what does this mean?  do i have a bad chip?
-trying to determine if i need to exchange it; bought locally as a temp
-card while i wait for my atheros USB b/g/n stick to have AP support
-[ath9k_htc].
 
-thanks,
 
-C Anthony
+Problem with this solution is that every driver would need to do
+their own timers and state machines to get this functionality which
+is shared by all.
+I don't know about other driver's structures but maybe a better way
+would be to implement mac80211 command to disable/enable beacons and
+set rx filters which every driver supporting DFS would have to implement.
+Mac80211 would have then timer which would control when to enable
+beacons. I guess Non Occupancy List (NOL) would be handled there as
+well so all the DFS timers could be in the same place.
+
+Any comments?
+
+
+Br,
+Wojtek
