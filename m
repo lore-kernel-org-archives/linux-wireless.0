@@ -1,89 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47575 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523Ab1AET1C (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.187]:56220 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932276Ab1AKQ7y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 14:27:02 -0500
-Date: Wed, 5 Jan 2011 14:23:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: qualify global modparam_nohwcrypt variable
-Message-ID: <20110105192353.GA14497@tuxdriver.com>
-References: <1294238357-4624-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1294238357-4624-1-git-send-email-linville@tuxdriver.com>
+	Tue, 11 Jan 2011 11:59:54 -0500
+From: Bernhard Walle <walle@corscience.de>
+To: lrodriguez@atheros.com, jmalinen@atheros.com, vasanth@atheros.com,
+	senthilkumar@atheros.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] [RFC] ath9k: Fix reporting of RX STBC streams to userspace
+Date: Tue, 11 Jan 2011 17:59:54 +0100
+Message-Id: <1294765194-30542-1-git-send-email-walle@corscience.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I believe I would prefer the version I just sent, that moves nohwcrypt to ath_common...
+While the driver reports
 
-John
+        ath: TX streams 2, RX streams: 2
 
-On Wed, Jan 05, 2011 at 09:39:17AM -0500, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
->  drivers/net/wireless/ath/ath9k/init.c  |    6 +++---
->  drivers/net/wireless/ath/ath9k/main.c  |    2 +-
->  3 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index fcc087c..3681caf5 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -664,7 +664,7 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
->  }
->  
->  extern struct ieee80211_ops ath9k_ops;
-> -extern int modparam_nohwcrypt;
-> +extern int ath9k_modparam_nohwcrypt;
->  extern int led_blink;
->  extern int ath9k_pm_qos_value;
->  extern bool is_ath9k_unloaded;
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index b6643b5..767d8b8 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -29,8 +29,8 @@ static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
->  module_param_named(debug, ath9k_debug, uint, 0);
->  MODULE_PARM_DESC(debug, "Debugging mask");
->  
-> -int modparam_nohwcrypt;
-> -module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
-> +int ath9k_modparam_nohwcrypt;
-> +module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
->  MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
->  
->  int led_blink;
-> @@ -653,7 +653,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
->  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
->  		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
->  
-> -	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || modparam_nohwcrypt)
-> +	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || ath9k_modparam_nohwcrypt)
->  		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
->  
->  	hw->wiphy->interface_modes =
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index a818e4f..f90a6ca 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1829,7 +1829,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
->  	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
->  	int ret = 0;
->  
-> -	if (modparam_nohwcrypt)
-> +	if (ath9k_modparam_nohwcrypt)
->  		return -ENOSPC;
->  
->  	mutex_lock(&sc->mutex);
-> -- 
-> 1.7.3.4
-> 
-> 
+in the kernel log (with ATH_DBG_CONFIG set in the debug module
+parameter), "iw list" only reported
 
+[...]
+        Capabilities: 0x12ce
+                HT20/HT40
+                SM Power Save disabled
+                RX HT40 SGI
+                TX STBC
+                RX STBC 1-streams
+[...]
+
+The driver seems to set the value as flag while the iw tool interprets
+it as number. This patch fixes that.
+
+Signed-off-by: Bernhard Walle <walle@corscience.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 639dc93..935b6c3 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -215,17 +215,17 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 	else
+ 		max_streams = 2;
+ 
+-	if (AR_SREV_9280_20_OR_LATER(ah)) {
+-		if (max_streams >= 2)
+-			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
+-		ht_info->cap |= (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
+-	}
+-
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+ 	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, max_streams);
+ 	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, max_streams);
+ 
++	if (AR_SREV_9280_20_OR_LATER(ah)) {
++		if (max_streams >= 2)
++			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
++		ht_info->cap |= (rx_streams << IEEE80211_HT_CAP_RX_STBC_SHIFT);
++	}
++
+ 	ath_print(common, ATH_DBG_CONFIG,
+ 		  "TX streams %d, RX streams: %d\n",
+ 		  tx_streams, rx_streams);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1
+
