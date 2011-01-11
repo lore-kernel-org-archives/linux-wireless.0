@@ -1,50 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:36091 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab1APFme (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 00:42:34 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so4134866wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 21:42:34 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:42751 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756246Ab1AKSHJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 13:07:09 -0500
+Received: from dlep34.itg.ti.com ([157.170.170.115])
+	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0BI78cj030459
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:07:09 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep34.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0BI782e021520
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:07:08 -0600 (CST)
+Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
+	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0BI784t023603
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:07:08 -0600 (CST)
+From: <coelho@ti.com>
 To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 07/10] wl12xx: AP-mode - support HW based link PS monitoring
-Date: Sun, 16 Jan 2011 07:42:11 +0200
-Message-Id: <1295156534-4178-8-git-send-email-arik@wizery.com>
-In-Reply-To: <1295156534-4178-1-git-send-email-arik@wizery.com>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+CC: jonathanc@ti.com
+Subject: [PATCH] wl12xx: lock the RCU when accessing sta via ieee80211_find_sta()
+Date: Tue, 11 Jan 2011 20:07:21 +0200
+Message-ID: <1294769241-3118-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating in AP mode the wl1271 hardware filters our null-data
-packets as well as management packets. This makes it impossible for
-mac80211 to monitor the PS mode by using the PM bit of incoming frames.
+From: Luciano Coelho <coelho@ti.com>
 
-Disable mac80211 automatic link PS-mode handling by supporting
-IEEE80211_HW_AP_LINK_PS in HW flags.
+We were calling ieee80211_find_sta() and the sta returned by it
+without locking the RCU, which is required by mac80211.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Fix this and reorganize slightly the area of the code where the sta is
+used.
+
+Reported-by: Jonathan DE CESCO <jonathanc@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   60 +++++++++++++++++++----------------
+ 1 files changed, 33 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 6318224..77c8974 100644
+index 862ec9c..67732ea 100644
 --- a/drivers/net/wireless/wl12xx/main.c
 +++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3147,7 +3147,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_SUPPORTS_UAPSD |
- 		IEEE80211_HW_HAS_RATE_CONTROL |
- 		IEEE80211_HW_CONNECTION_MONITOR |
--		IEEE80211_HW_SUPPORTS_CQM_RSSI;
-+		IEEE80211_HW_SUPPORTS_CQM_RSSI |
-+		IEEE80211_HW_AP_LINK_PS;
+@@ -2219,7 +2219,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 	bool do_join = false, set_assoc = false;
+ 	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
+ 	int ret;
+-	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
++	struct ieee80211_sta *sta;
  
- 	wl->hw->wiphy->cipher_suites = cipher_suites;
- 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 	if (is_ibss) {
+ 		ret = wl1271_bss_beacon_info_changed(wl, vif, bss_conf,
+@@ -2376,36 +2376,42 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	/*
+-	 * Takes care of: New association with HT enable,
+-	 *                HT information change in beacon.
+-	 */
+-	if (sta &&
+-	    (changed & BSS_CHANGED_HT) &&
+-	    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
+-		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true);
+-		if (ret < 0) {
+-			wl1271_warning("Set ht cap true failed %d", ret);
+-			goto out;
+-		}
++	rcu_read_lock();
++	sta = ieee80211_find_sta(vif, bss_conf->bssid);
++	if (sta)  {
++		/* handle new association with HT and HT information change */
++		if ((changed & BSS_CHANGED_HT) &&
++		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
++			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
++							     true);
++			if (ret < 0) {
++				wl1271_warning("Set ht cap true failed %d",
++					       ret);
++				rcu_read_unlock();
++				goto out;
++			}
+ 			ret = wl1271_acx_set_ht_information(wl,
+-				bss_conf->ht_operation_mode);
+-		if (ret < 0) {
+-			wl1271_warning("Set ht information failed %d", ret);
+-			goto out;
++						bss_conf->ht_operation_mode);
++			if (ret < 0) {
++				wl1271_warning("Set ht information failed %d",
++					       ret);
++				rcu_read_unlock();
++				goto out;
++			}
+ 		}
+-	}
+-	/*
+-	 * Takes care of: New association without HT,
+-	 *                Disassociation.
+-	 */
+-	else if (sta && (changed & BSS_CHANGED_ASSOC)) {
+-		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, false);
+-		if (ret < 0) {
+-			wl1271_warning("Set ht cap false failed %d", ret);
+-			goto out;
++		/* handle new association without HT and disassociation */
++		else if (changed & BSS_CHANGED_ASSOC) {
++			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
++							     false);
++			if (ret < 0) {
++				wl1271_warning("Set ht cap false failed %d",
++					       ret);
++				rcu_read_unlock();
++				goto out;
++			}
+ 		}
+ 	}
++	rcu_read_unlock();
+ 
+ 	if (changed & BSS_CHANGED_ARP_FILTER) {
+ 		__be32 addr = bss_conf->arp_addr_list[0];
 -- 
 1.7.1
 
