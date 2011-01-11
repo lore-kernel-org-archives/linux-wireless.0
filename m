@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:49408 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753554Ab1ALLJ2 (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:30489 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755155Ab1AKAuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 06:09:28 -0500
-Received: by yxt3 with SMTP id 3so165284yxt.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 03:09:27 -0800 (PST)
-Subject: Re: Mesh join/leave
-From: Steve Brown <sbrown@cortland.com>
-Reply-To: sbrown@cortland.com
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294829180.3639.19.camel@jlt3.sipsolutions.net>
-References: <1294780828.2383.0.camel@mythtv.ewol.com>
-	 <1294823034.3639.15.camel@jlt3.sipsolutions.net>
-	 <1294828087.16447.2.camel@mythtv.ewol.com>
-	 <1294829180.3639.19.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 06:09:20 -0500
-Message-ID: <1294830560.2333.2.camel@mythtv.ewol.com>
-Mime-Version: 1.0
+	Mon, 10 Jan 2011 19:50:20 -0500
+Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0434147018
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 09:50:19 +0900 (JST)
+Subject: [PATCH v2 3/4] iw: add multicast rates to IBSS join
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+Date: Tue, 11 Jan 2011 09:51:18 +0900
+Message-ID: <20110111005118.10231.71706.stgit@localhost6.localdomain6>
+In-Reply-To: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
+References: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 11:46 +0100, Johannes Berg wrote:
-> On Wed, 2011-01-12 at 05:28 -0500, Steve Brown wrote:
-> > On Wed, 2011-01-12 at 10:03 +0100, Johannes Berg wrote:
-> > > On Tue, 2011-01-11 at 16:20 -0500, Steve Brown wrote:
-> > > > In testing this, the command "iw mesh0 mesh leave" doesn't stop
-> > > > beaconing. Beaconing continues with a null mesh id.
-> > > > 
-> > > > Is this the intended behavior?
-> > > 
-> > > No, it's not -- what driver are you using?
-> 
-> Of course maybe mac80211 should be doings omething like this too:
-> 
-> johannes
-> 
-> --- wireless-testing.orig/net/mac80211/tx.c	2011-01-12 11:44:52.000000000 +0100
-> +++ wireless-testing/net/mac80211/tx.c	2011-01-12 11:45:52.000000000 +0100
-> @@ -2299,6 +2299,11 @@ struct sk_buff *ieee80211_beacon_get_tim
->  		struct ieee80211_mgmt *mgmt;
->  		u8 *pos;
->  
-> +#ifdef CONFIG_MAC80211_MESH
-> +		if (!sdata->u.mesh.mesh_id_len)
-> +			goto out;
-> +#endif
-> +
->  		/* headroom, head length, tail length and maximum TIM length */
->  		skb = dev_alloc_skb(local->tx_headroom + 400 +
->  				sdata->u.mesh.vendor_ie_len);
-> 
-> 
-With the patch, leave/join stop and restart beaconing.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Thanks,
-Steve
+Add multicast rates to IBSS join command.
 
+This patch comes from OpenWRT. Original author: Felix Fietkau.
+
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ ibss.c |   21 ++++++++++++++++++---
+ 1 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/ibss.c b/ibss.c
+index 84ea7f2..ca8a4ec 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -95,6 +95,20 @@ static int join_ibss(struct nl80211_state *state,
+ 		argc--;
+ 	}
+ 
++	/* multicast rate */
++	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
++		argv++;
++		argc--;
++
++		rate = strtod(argv[0], &end);
++		if (*end != '\0')
++			return 1;
++
++		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int) rate * 10);
++		argv++;
++		argc--;
++	}
++
+ 	if (!argc)
+ 		return 0;
+ 
+@@ -120,12 +134,13 @@ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+ COMMAND(ibss, join,
+-	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval "
+-	"<TU>] [basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
++	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
++	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
++	"[key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+ 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
+ 	"it on the given frequency. When fixed frequency is requested, don't\n"
+ 	"join/create a cell on a different frequency. When a fixed BSSID is\n"
+ 	"requested use that BSSID and do not adopt another cell's BSSID even\n"
+ 	"if it has higher TSF and the same SSID. If an IBSS is created, create\n"
+-	"it with the specified basic-rates and beacon-interval (in TU).");
++	"it with the specified basic-rates, multicast-rate and beacon-interval.");
 
