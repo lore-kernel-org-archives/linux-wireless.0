@@ -1,57 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59029 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753475Ab1A1QM1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 11:12:27 -0500
-Received: by qwa26 with SMTP id 26so3457269qwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Jan 2011 08:12:26 -0800 (PST)
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:40959 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754680Ab1AKASe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 19:18:34 -0500
+Received: by eyd10 with SMTP id 10so8946750eyd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 16:18:32 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4D41FDF7.3040805@lockie.ca>
-References: <4D41DAF1.6080204@lockie.ca>
-	<4D41ED24.9010005@hauke-m.de>
-	<4D41FDF7.3040805@lockie.ca>
-Date: Fri, 28 Jan 2011 11:12:26 -0500
-Message-ID: <AANLkTi=4rvKYSDiHNoM0YHMAd=nSmi=DELOp+9nxCwAM@mail.gmail.com>
-Subject: Re: did compat-wireless-2011-01-27 crash dhcpcd?
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTi=KnSjVVCN=9=PaL9_GYpDOpJFvD-LGxFXEevhw@mail.gmail.com>
+References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+	<1294062164-3459-2-git-send-email-shahar_levi@ti.com>
+	<1294671655.1992.103.camel@pimenta>
+	<AANLkTi=KnSjVVCN=9=PaL9_GYpDOpJFvD-LGxFXEevhw@mail.gmail.com>
+Date: Tue, 11 Jan 2011 02:18:31 +0200
+Message-ID: <AANLkTimpDo=0AcL5OdEjnpB8-_o7XBJ5QT-mE-FmfZo6@mail.gmail.com>
+Subject: Re: [PATCH v5 1/2] wl12xx: BA initiator support
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 27, 2011 at 6:21 PM, James <bjlockie@lockie.ca> wrote:
-> On 01/27/11 17:09, Hauke Mehrtens wrote:
->> On 01/27/2011 09:52 PM, James wrote:
->>> cfg80211: Calling CRDA to update world regulatory domain
->>> Compat-wireless backport release: compat-wireless-2011-01-06-3-g8db1608
->>> Backport based on linux-next.git next-20110121
->>> ath9k 0000:02:09.0: PCI INT A -> Link[LNKB] -> GSI 17 (level, low) -> IRQ 17
->>> ath: EEPROM regdomain: 0x10
->>> ath: EEPROM indicates we should expect a direct regpair map
->>> ath: Country alpha2 being used: CO
->>> ath: Regpair used: 0x10
->>> ieee80211 phy0: Selected rate control algorithm 'ath9k_rate_control'
+On Tue, Jan 11, 2011 at 2:13 AM, Levi, Shahar <shahar_levi@ti.com> wrote:
+>
+> On Mon, Jan 10, 2011 at 5:00 PM, Luciano Coelho <coelho@ti.com> wrote:
 >>
->>> cfg80211: wext will not work because kernel was compiled with
->>> CONFIG_WIRELESS_EXT=n. Tools using wext interface, like iwconfig will
->>> not work.
->> WEXT is deactivated in compat-wireless because CONFIG_WIRELESS_EXT=y was
->> not set in your kernel config and iwconfig does not work without wext.
+>> On Mon, 2011-01-03 at 14:42 +0100, Shahar Levi wrote:
+>> > Add 80211n BA initiator session support wl1271 driver.
+>> > Include BA supported FW version auto detection mechanism.
+>> > BA initiator session management included in FW independently.
+>> >
+>> > Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> > ---
 >>
->> See: http://www.spinics.net/lists/linux-wireless/msg63449.html
+>> Some comments...
+>
+thanks for your review.
+
 >>
->> Hauke
+>>
+>> > diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+>> > index cc4068d..54fd68d 100644
+>> > --- a/drivers/net/wireless/wl12xx/acx.c
+>> > +++ b/drivers/net/wireless/wl12xx/acx.c
+>> > @@ -1309,6 +1309,56 @@ out:
+>> >         return ret;
+>> >  }
+>> >
+>> > +/* Configure BA session initiator\receiver parameters setting in the FW. */
+>>
+>> Please use forward slash here instead of backslash, ie. use
+>> "initiator/receiver".
+>
+np, will be fix.
+
+>>
+>>
+>> > diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+>> > index 9cbc3f4..df48468 100644
+>> > --- a/drivers/net/wireless/wl12xx/acx.h
+>> > +++ b/drivers/net/wireless/wl12xx/acx.h
+>> > @@ -1051,6 +1051,40 @@ struct wl1271_acx_ht_information {
+>> >         u8 padding[3];
+>> >  } __packed;
+>> >
+>> > +#define BA_WIN_SIZE 8
+>>
+>> Should this be DEFAULT_BA_WIN_SIZE?
+>
+No, the FW support win size of 8. it is not configurable.
+
+>>
+>>
+>> > diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+>> > index 4a9f929..cd42e12 100644
+>> > --- a/drivers/net/wireless/wl12xx/boot.c
+>> > +++ b/drivers/net/wireless/wl12xx/boot.c
+>> > @@ -101,6 +101,39 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
+>> >         wl1271_write32(wl, ACX_REG_ECPU_CONTROL, cpu_ctrl);
+>> >  }
+>> >
+>> > +static void wl1271_save_fw_ver(struct wl1271 *wl)
+>>
+>> This function name is not very informative.  Why not call it
+>> wl1271_parse_fw_ver() instead?
+>
+np, will be fix
+
+>>
+>>
+>> > +{
+>> > +       char fw_ver_str[ETHTOOL_BUSINFO_LEN];
+>>
+>> This is weird, but it seem to be what is used in cfg80211 (as Shahar
+>> pointed out on IRC).  IMHO it should be ETHTOOL_FWVERS_LEN instead, both
+>> here and in cfg80211.
+>>
+>> In any case, this is a bit confusing here, because we don't use the
+>> fw_version in the wiphy struct (we probably should).  Let's keep it like
+>> this for now and maybe later we can change.
+>>
+>> Also, I don't see why you need a local copy here.
+>
+i use local copy in order to remove '.' (*fw_ver_point = '\0') without
+destroyed wl->chip.fw_ver_str.
+
+>>
+>> > +       char *fw_ver_point;
+>> > +       int ret, i;
+>> > +
+>> > +       /* copy the fw version to temp str */
+>> > +       strncpy(fw_ver_str, wl->chip.fw_ver_str, sizeof(fw_ver_str));
+>> > +
+>> > +       for (i = (WL12XX_NUM_FW_VER - 1); i > 0; --i) {
+>> > +               /* find the last '.' */
+>> > +               fw_ver_point = strrchr(fw_ver_str, '.');
+>> > +
+>> > +               /* read version number */
+>> > +               ret = strict_strtoul(fw_ver_point+1, 10, &(wl->chip.fw_ver[i]));
+>> > +               if (ret < 0) {
+>> > +                       wl1271_warning("fw version incorrect value");
+>> > +                       memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
+>> > +                       return;
+>> > +               }
+>> > +
+>> > +               /* clean '.' */
+>> > +               *fw_ver_point = '\0';
+>> > +       }
+>> > +
+>> > +       ret = strict_strtoul(fw_ver_point-1, 10, &(wl->chip.fw_ver[0]));
+>> > +       if (ret < 0) {
+>> > +               wl1271_warning("fw version incorrect value");
+>> > +               memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
+>> > +               return;
+>> > +       }
+>> > +}
+>>
+>> Instead of all this manual parsing, why don't you use sscanf? I think
+>> the following could do the work very nicely:
+>>
+>>        ret = sscanf(wl->chip.fw_ver_str + WL12XX_FW_VER_OFFSET,
+>>                     "%lu.%lu.%lu.%lu.%lu", &wl->chip.fw_ver[0],
+>>                     &wl->chip.fw_ver[1], &wl->chip.fw_ver[2]
+>>                     &wl->chip.fw_ver[3], &wl->chip.fw_ver[4]);
+>>
+>> Wouldn't something like this be much simpler? (or you could use %u if
+>> you agree on using unsigned int, see below)
+>
+good point, i will try and update.
+
+>>
+>>
+>> >  static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+>> > diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+>> > index a16b361..41df771 100644
+>> > --- a/drivers/net/wireless/wl12xx/conf.h
+>> > +++ b/drivers/net/wireless/wl12xx/conf.h
+>> > @@ -1090,6 +1090,12 @@ struct conf_rf_settings {
+>> >         u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
+>> >  };
+>> >
+>> > +#define CONF_BA_INACTIVITY_TIMEOUT 10000
+>>
+>> If this is a CONFigurable value, it should be in conf.h and in the
+>> configuration parameters in main.c, shouldn't it?
+>>
+>>
+>> > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+>> > index 062247e..c44462d 100644
+>> > --- a/drivers/net/wireless/wl12xx/main.c
+>> > +++ b/drivers/net/wireless/wl12xx/main.c
+>> > @@ -233,7 +233,7 @@ static struct conf_drv_settings default_conf = {
+>> >                 .avg_weight_rssi_beacon       = 20,
+>> >                 .avg_weight_rssi_data         = 10,
+>> >                 .avg_weight_snr_beacon        = 20,
+>> > -               .avg_weight_snr_data          = 10
+>> > +               .avg_weight_snr_data          = 10,
+>> >         },
+>> >         .scan = {
+>> >                 .min_dwell_time_active        = 7500,
+>> > @@ -252,6 +252,9 @@ static struct conf_drv_settings default_conf = {
+>> >                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+>> >                 },
+>> >         },
+>> > +       .ht = {
+>> > +               .inactivity_timeout = CONF_BA_INACTIVITY_TIMEOUT,
+>> > +       },
+>>
+>> Ah, I see.  You are using that macro here, but I guess you could use the
+>> value directly, since this is all configuration stuff, so no need to use
+>> defines, unless the values mean something specific.  Here it is just a
+>> measure of time, so a number can be used directly (like in the
+>> min_dwell_time_active).
+>
+np, will be fix
+
+>>
+>>
+>> > diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+>> > index 01711fe..7b34393 100644
+>> > --- a/drivers/net/wireless/wl12xx/wl12xx.h
+>> > +++ b/drivers/net/wireless/wl12xx/wl12xx.h
+>> > @@ -38,6 +38,11 @@
+>> >  #define DRIVER_NAME "wl1271"
+>> >  #define DRIVER_PREFIX DRIVER_NAME ": "
+>> >
+>> > +#define WL12XX_BA_SUPPORT_FW_SUB_VER           339
+>> > +#define WL12XX_BA_SUPPORT_FW_COST_VER1          33
+>> > +#define WL12XX_BA_SUPPORT_FW_COST_VER2_START    50
+>> > +#define WL12XX_BA_SUPPORT_FW_COST_VER2_END      60
+>>
+>> This defines are very confusing.  Can you explain a bit?
+yes i will add comments.
+
+>>
+>> What about
+>> "COST" version 0 (like 6.0.0.0.343), will that branch never support BA?Where do the 50 to 60 come from?
+>
+no, all open source version will be tag from 50 to 60.
+
+>>
+>> And what is 33? This kind of magic
+>>
+>> should be explained.
+>>
+>>
+>> > @@ -161,10 +166,13 @@ struct wl1271_partition_set {
+>> >
+>> >  struct wl1271;
+>> >
+>> > +#define WL12XX_NUM_FW_VER 5
+>> > +
+>>
+>> WL12XX_FW_VER_OFFSET sounds better to me.
+>>
+>> And it shouldn't it be 4,
+>> which is the "Rev " prefix?
+>
+the macro represent the number of numbers in the version. it is not offset.
+
+>>
+>>
+>> >  /* FIXME: I'm not sure about this structure name */
+>> >  struct wl1271_chip {
+>> >         u32 id;
+>> > -       char fw_ver[21];
+>> > +       char fw_ver_str[ETHTOOL_BUSINFO_LEN];
+>> > +       unsigned long fw_ver[WL12XX_NUM_FW_VER];
+>>
+>> Why not unsigned int? (and then use %u.%u... as I mentioned earlier).
+>
+i will try and update.
+
+>>
 >> --
->
-> I'm not using any tools.
-> The call trace happens after I do a modprobe.
-> I'm guessing it doesn't like dhcpcd.
->
-> Do I really need CONFIG_WIRELESS_EXT?
-
-This still doesn't feel like the entire story.  Do you have
-NetworkManager running, by chance?
-
--Brian
+>> Cheers,
+>> Luca.
+>>
+Shahar
