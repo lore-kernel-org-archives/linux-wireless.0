@@ -1,139 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:46839 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766Ab1AUUr0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 15:47:26 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so1170225ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 12:47:25 -0800 (PST)
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Colin McCabe <colin@cozybit.com>,
-	Marek Vasut <marek.vasut@gmail.com>, anarsoul@gmail.com
-Subject: [PATCH 3/3] libertas_spi: Add support for suspend/resume
-Date: Fri, 21 Jan 2011 22:44:50 +0200
-Message-Id: <1295642690-16646-4-git-send-email-anarsoul@gmail.com>
-In-Reply-To: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
-References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49160 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751491Ab1AKL2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 06:28:21 -0500
+Subject: Re: wl12xx compat wireless rcu_read_lock issue
+From: Luciano Coelho <coelho@ti.com>
+To: "DE CESCO, Jonathan" <jonathanc@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arik@wizery.com>
+In-Reply-To: <13872098A06B02418CF379A158C0F146015BEB592B@dnce02.ent.ti.com>
+References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+	 <1294062164-3459-2-git-send-email-shahar_levi@ti.com>
+	 <1294671655.1992.103.camel@pimenta>
+	 <AANLkTi=KnSjVVCN=9=PaL9_GYpDOpJFvD-LGxFXEevhw@mail.gmail.com>
+	 <AANLkTimpDo=0AcL5OdEjnpB8-_o7XBJ5QT-mE-FmfZo6@mail.gmail.com>
+	 <13872098A06B02418CF379A158C0F146015BEB592B@dnce02.ent.ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 Jan 2011 13:28:20 +0200
+Message-ID: <1294745300.12992.90.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for suspend/resume in if_spi.
+On Tue, 2011-01-11 at 11:22 +0100, DE CESCO, Jonathan wrote:
+> Hi,
+> 
+> When trying to test wl12xx driver from compat-wireless-2010-12-13 (with a wl1273 device), I notice a crash when initializing the wlan interface.
+> 
+> Find below the patch that seems to solve the issue:
+> 
+> diff --git a/compat-wireless-2010-12-13/drivers/net/wireless/wl12xx/main.c b/compat-wireless-2010-12-13/drivers/net/wireless/wl12xx/main.c
+> index 1fc5a36..480f44b 100644
+> --- a/compat-wireless-2010-12-13/drivers/net/wireless/wl12xx/main.c
+> +++ b/compat-wireless-2010-12-13/drivers/net/wireless/wl12xx/main.c
+> @@ -1858,11 +1858,17 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+>  {
+>             enum wl1271_cmd_ps_mode mode;
+>             struct wl1271 *wl = hw->priv;
+> -           struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
+> +          rcu_read_lock();
+> +          struct ieee80211_sta *sta;
+>             bool do_join = false;
+>             bool set_assoc = false;
+>             int ret;
+> 
+> +          sta = ieee80211_find_sta(vif, bss_conf->bssid);
+> +          if (!sta) {
+> +                      rcu_read_unlock();
+> +                      return;
+> +          }
+> 
+>             wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed");
+> +     	rcu_read_unlock();
+>             mutex_lock(&wl->mutex);
+> 
+> --
+> 
+> Is this a known bug that has already been encountered? I am using the compat wireless flavor of the mac80211 framework and driver so I don't really know if you can come across this issue with standard kernel.
 
-Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
----
- drivers/net/wireless/libertas/if_spi.c |   55 ++++++++++++++++++++++++++++++++
- 1 files changed, 55 insertions(+), 0 deletions(-)
+I hadn't seen it before, but then again, I just integrated the AP
+patches which added this code.  The code has been tested quite well
+before, but indeed this is broken.
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index f6c2cd6..772da3a 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -57,6 +57,7 @@ struct if_spi_card {
- 	/* Handles all SPI communication (except for FW load) */
- 	struct workqueue_struct		*workqueue;
- 	struct work_struct		packet_work;
-+	struct work_struct		resume_work;
- 
- 	u8				cmd_buffer[IF_SPI_CMD_BUF_SIZE];
- 
-@@ -1057,6 +1058,24 @@ out:
- 	return err;
- }
- 
-+static void if_spi_resume_worker(struct work_struct *work)
-+{
-+	struct if_spi_card *card;
-+
-+	card = container_of(work, struct if_spi_card, resume_work);
-+
-+	if (card->pdata->setup)
-+		card->pdata->setup(card->spi);
-+
-+	/* Init card ... */
-+	if_spi_init_card(card);
-+
-+	enable_irq(card->spi->irq);
-+
-+	/* And resume it ... */
-+	lbs_resume(card->priv);
-+}
-+
- static int __devinit if_spi_probe(struct spi_device *spi)
- {
- 	struct if_spi_card *card;
-@@ -1107,6 +1126,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 		goto free_card;
- 	}
- 	card->priv = priv;
-+	priv->setup_fw_on_resume = 1;
- 	priv->card = card;
- 	priv->hw_host_to_card = if_spi_host_to_card;
- 	priv->enter_deep_sleep = NULL;
-@@ -1117,6 +1137,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 	/* Initialize interrupt handling stuff. */
- 	card->workqueue = create_workqueue("libertas_spi");
- 	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
-+	INIT_WORK(&card->resume_work, if_spi_resume_worker);
- 
- 	err = request_irq(spi->irq, if_spi_host_interrupt,
- 			IRQF_TRIGGER_FALLING, "libertas_spi", card);
-@@ -1161,6 +1182,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
- 	lbs_deb_spi("libertas_spi_remove\n");
- 	lbs_deb_enter(LBS_DEB_SPI);
- 
-+	cancel_work_sync(&card->resume_work);
-+
- 	lbs_stop_card(priv);
- 	lbs_remove_card(priv); /* will call free_netdev */
- 
-@@ -1174,6 +1197,37 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
- 	return 0;
- }
- 
-+static int if_spi_suspend(struct device *dev)
-+{
-+	struct spi_device *spi = to_spi_device(dev);
-+	struct if_spi_card *card = spi_get_drvdata(spi);
-+
-+	lbs_suspend(card->priv);
-+	flush_workqueue(card->workqueue);
-+	disable_irq(spi->irq);
-+
-+	if (card->pdata->teardown)
-+		card->pdata->teardown(spi);
-+
-+	return 0;
-+}
-+
-+static int if_spi_resume(struct device *dev)
-+{
-+	struct spi_device *spi = to_spi_device(dev);
-+	struct if_spi_card *card = spi_get_drvdata(spi);
-+
-+	/* Schedule delayed work */
-+	schedule_work(&card->resume_work);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops if_spi_pm_ops = {
-+	.suspend	= if_spi_suspend,
-+	.resume		= if_spi_resume,
-+};
-+
- static struct spi_driver libertas_spi_driver = {
- 	.probe	= if_spi_probe,
- 	.remove = __devexit_p(libertas_spi_remove),
-@@ -1181,6 +1235,7 @@ static struct spi_driver libertas_spi_driver = {
- 		.name	= "libertas_spi",
- 		.bus	= &spi_bus_type,
- 		.owner	= THIS_MODULE,
-+		.pm	= &if_spi_pm_ops,
- 	},
- };
- 
+We need to lock the RCU before calling ieee80211_find_sta() and also
+whenever we access the resulting pointer.
+
+In your patch, the if (!sta) part is wrong, because we still do lots of
+things in this function even if sta is NULL.  So that if can be removed.
+
+Also, because the RCU lock needs to be held when the returned pointer is
+accessed, we should hold it until the end of the function.
+
+>From mac80211 documentation:
+
+/**
+ * ieee80211_find_sta - find a station
+ *
+ * @vif: virtual interface to look for station on
+ * @addr: station's address
+ *
+ * This function must be called under RCU lock and the
+ * resulting pointer is only valid under RCU lock as well.
+ */
+
+Thanks for reporting this!
+
 -- 
-1.7.4.rc1
+Cheers,
+Luca.
 
