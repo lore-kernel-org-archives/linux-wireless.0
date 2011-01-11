@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49716 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323Ab1ATSV3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 13:21:29 -0500
-Message-ID: <4D387D25.7080902@candelatech.com>
-Date: Thu, 20 Jan 2011 10:21:25 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/3] mac80211: Support scanning only current active channel.
-References: <1295544750-6704-1-git-send-email-greearb@candelatech.com>	 <1295544750-6704-2-git-send-email-greearb@candelatech.com>	 <1295545143.3693.44.camel@jlt3.sipsolutions.net>	 <4D3879A6.2060909@candelatech.com> <1295547439.3693.46.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295547439.3693.46.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:63884 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756039Ab1AKPJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 10:09:28 -0500
+Subject: Re: [PATCH] cfg80211: Extend channel to frequency mapping for
+ 802.11j
+From: Dan Williams <dcbw@redhat.com>
+To: Brian Prodoehl <bprodoehl@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	libertas-dev@lists.infradead.org, Bruno Randolf <br1@einfach.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	users@rt2x00.serialmonkey.com
+Date: Tue, 11 Jan 2011 09:09:35 -0600
+In-Reply-To: <AANLkTimg_udpa78Fbq+-48rOC38_jg_afaME=PYCsChr@mail.gmail.com>
+References: <20110107052600.18730.98168.stgit@localhost6.localdomain6>
+	 <201101081243.56629.br1@einfach.org>
+	 <AANLkTimYjvJbm9DPPDWWCsD76_DnFcBG3a2Z_B8Mhpzm@mail.gmail.com>
+	 <201101111817.40309.br1@einfach.org>
+	 <1294748329.3611.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTimg_udpa78Fbq+-48rOC38_jg_afaME=PYCsChr@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1294758578.1808.1.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2011 10:17 AM, Johannes Berg wrote:
-> On Thu, 2011-01-20 at 10:06 -0800, Ben Greear wrote:
->
->>> This doesn't seem to make much sense either -- even if we do a scan over
->>> multiple channels we should be able to optimise the part on the current
->>> channel (maybe put it at the beginning or end too).
->>
->> Maybe..but user-space can specify the channels it wants to scan,
->> and I assume that means what order to scan them in.  I have no
->> idea if changing that order would confuse some application.
->
-> No, it can't actually determine the order -- we sort them in cfg80211
-> anyway to de-duplicate them.
+On Tue, 2011-01-11 at 08:16 -0500, Brian Prodoehl wrote:
+> On Tue, Jan 11, 2011 at 7:18 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Tue, 2011-01-11 at 18:17 +0900, Bruno Randolf wrote:
+> >
+> >> > compat-wireless-2011-01-07.orig/drivers/net/wireless/libertas/cfg.c 2011-0
+> >> > 1-07 15:03:59.000000000 -0500
+> >> > +++
+> >> > compat-wireless-2011-01-07/drivers/net/wireless/libertas/cfg.c      2011-01-08
+> >> > 07:51:23.947290769 -0500
+> >> > @@ -607,7 +607,8 @@
+> >> >             /* No channel, no luck */
+> >> >             if (chan_no != -1) {
+> >> >                     struct wiphy *wiphy = priv->wdev->wiphy;
+> >> > -                   int freq = ieee80211_channel_to_frequency(chan_no);
+> >> > +                   int freq = ieee80211_channel_to_frequency(chan_no,
+> >> > +                                   chan_no <= 14 ? IEEE80211_BAND_2GHZ :
+> >> IEEE80211_BAND_5GHZ);
+> >>
+> >> The whole point of having the band argument is to avoid this. We now have
+> >> overlapping channel numbers: channel 8 and 12 are defined in 5GHz as well as
+> >> in 2.4GHz (that is for 20MHz channel width, there are more for 10 and 5MHz
+> >> width, but we don't support that yet). The band has to come from the hardware
+> >> or driver configuration.
+> >
+> > I don't think libertas (or orinoco) support the frequencies that
+> > overlap, and they use the channel number in HW config, so it should be
+> > fine.
+> >
+> > johannes
+> 
+> That's what it looked like to me, as well, for libertas.  For rt2x00,
+> with it's dependence on binary firmwares from Ralink, extending the
+> channel set seems very far from trivial.  Ralink advertises compliance
+> with 802.11j (http://web.ralinktech.com/ralink/data/RT2800.pdf).  A
+> year and a half ago I asked them directly what that compliance means
+> (4.9GHz channels?  10MHz channel width?  misprint?) and didn't get a
+> response.  A way to pull the band for rt2x00 didn't pop out at me, but
+> if the maintainers have suggestions, that'll be great.  Also, if they
+> have some idea what the level of 802.11j compliance is, I'd love to
+> know!
 
-Ok, so assuming we re-work scanning across the board, maybe the first
-thing is to sort them such that the current channel is always first
-(if it's in the list at all)?
+While some libertas/fullmac devices do apparently support A, I haven't
+seen any in person or heard of them in real use.  And the current
+libertas driver certainly doesn't support 802.11a and wont, unless we
+magically find a part that does.
 
->> It seems to me that it would take quite a bit of re-work of the
->> mac80211 scanning logic to deal with scanning on the current
->> channel w/out affecting other tx/rx packets (as my patch attempts
->> to do), without setting some explicit flag before you enter
->> the scan state machine.
->
-> Yeah, so maybe it needs some re-work, but I think what you're doing is a
-> pretty strange hack.
+Dan
 
-If you have time to write some patches, I'll be happy to test them on
-our ath9k and ath5k systems.
-
-If you don't, then I can make an attempt.  Suggestions for an acceptable
-way to go about doing this would be welcome.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
