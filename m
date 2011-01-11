@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([86.59.21.14]:37137 "EHLO home.einfach.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752408Ab1AHDop (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 22:44:45 -0500
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/4] iw: survey: Mark frequency in use
-Date: Sat, 8 Jan 2011 12:44:41 +0900
-Cc: linville@tuxdriver.com, nbd@openwrt.org,
-	linux-wireless@vger.kernel.org
-References: <20110107060025.21507.11061.stgit@localhost6.localdomain6> <1294398021.3467.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1294398021.3467.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101081244.42048.br1@einfach.org>
+Received: from smtp.resortinternet.net ([65.114.208.136]:42873 "EHLO
+	smtp.resortinternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754680Ab1AKAVL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 19:21:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 2/4] ath9k: fix initial sequence number after starting an ampdu session
+Date: Mon, 10 Jan 2011 17:05:48 -0700
+Message-Id: <1294704350-50621-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1294704350-50621-1-git-send-email-nbd@openwrt.org>
+References: <1294704350-50621-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 January 2011 20:00:21 Johannes Berg wrote:
-> On Fri, 2011-01-07 at 15:00 +0900, Bruno Randolf wrote:
-> > Survey: Mark frequency in use according to NL80211_SURVEY_INFO_IN_USE.
-> > 
-> > This patch comes from OpenWRT. Original author: Felix Fietkau
-> 
-> Can you please resend with From: so I can apply them with the proper
-> author?
+txtid->seq_start may not always be up to date, when there is HT non-AMPDU
+traffic just before starting an AMPDU session. Relying on txtid->seq_next
+is better, since it is also used to generate the sequence numbers for
+all QoS data frames.
 
-Allright. Will do that next Tuesday.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-bruno
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 1adfebc..6ddba4b 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -856,7 +856,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 
+ 	txtid->state |= AGGR_ADDBA_PROGRESS;
+ 	txtid->paused = true;
+-	*ssn = txtid->seq_start;
++	*ssn = txtid->seq_start = txtid->seq_next;
+ 
+ 	return 0;
+ }
+-- 
+1.7.3.2
+
