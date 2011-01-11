@@ -1,83 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:23964 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab1ATWSX (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:53463 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932276Ab1AKROt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 17:18:23 -0500
-Date: Thu, 20 Jan 2011 23:18:42 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: [PATCH] Fix NULL dereference in rtlwifi driver
-Message-ID: <alpine.LNX.2.00.1101202309030.11854@swampdragon.chaosbits.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 11 Jan 2011 12:14:49 -0500
+Date: Tue, 11 Jan 2011 09:14:23 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>
+Subject: Re: linux-next: Tree for January 11 (build errors/warnings summary)
+Message-Id: <20110111091423.818b5a15.randy.dunlap@oracle.com>
+In-Reply-To: <20110111143357.abe434a5.sfr@canb.auug.org.au>
+References: <20110111143357.abe434a5.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In drivers/net/wireless/rtlwifi/pci.c::_rtl_pci_rx_interrupt() we call 
-dev_alloc_skb(), which may fail and return NULL, but we do not check the 
-returned value against NULL before dereferencing the returned pointer. 
-This may lead to a NULL pointer dereference which means we'll crash - not 
-good.
+On Tue, 11 Jan 2011 14:33:57 +1100 Stephen Rothwell wrote:
 
-This patch tries to solve the issue by testing for NULL and bailing out if 
-we couldn't allocate a skb. However, I don't know this code well, so I'm 
-not sure that jumping to the 'done' label here is the correct action to 
-take. Someone more knowledgable about this code than me should definately 
-review it before it is applied anywhere.
-While I was in the area I also moved an assignment in 
-_rtl_pci_init_rx_ring() a bit - if the dev_alloc_skb() call in that 
-function fails there's no reason to waste clock cycles assigning to the 
-local variable 'entry', we may as well do that after the NULL check and 
-potential bail out.
+> Hi all,
+> 
+> Reminder: do not add any v2.6.39 material to your linux-next included
+> trees until after v2.6.38-rc1 is released.
+> 
+> Changes since 20110110:
 
-Here's the proposed patch, but please don't take it as much more than a 
-bug report. If it happens to be correct, then by all means apply it, but 
-I'm not personally making any guarantees.
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+drivers/thermal/thermal_sys.c build fails when CONFIG_NET is not enabled
+Patch has been posted but not merged.
+
+
+drivers/acpi/internal.h:94: warning: no return statement in function returning non-void
+
+
+drivers/staging/ath6kl/os/linux/cfg80211.c:1378: warning: initialization from incompatible pointer type
+drivers/staging/ath6kl/os/linux/cfg80211.c:1386: warning: initialization from incompatible pointer type
+drivers/staging/ath6kl/os/linux/ioctl.c: In function 'ar6000_ioctl':
+drivers/staging/ath6kl/os/linux/ioctl.c:4673: warning: the frame size of 1852 bytes is larger than 1024 bytes
+
+
+drivers/staging/rt2860/common/mlme.c: In function 'BssTableSortByRssi':
+drivers/staging/rt2860/common/mlme.c:4200: warning: the frame size of 1568 bytes is larger than 1024 bytes
+drivers/staging/rt2860/common/cmm_aes.c: In function 'AES_GTK_KEY_WRAP':
+drivers/staging/rt2860/common/cmm_aes.c:1248: warning: the frame size of 1084 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta/sync.c: In function 'PeerBeaconAtScanAction':
+drivers/staging/rt2860/sta/sync.c:663: warning: the frame size of 1248 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta/sync.c: In function 'PeerBeacon':
+drivers/staging/rt2860/sta/sync.c:1697: warning: the frame size of 1296 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta/sync.c: In function 'PeerBeaconAtJoinAction':
+drivers/staging/rt2860/sta/sync.c:1033: warning: the frame size of 1256 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta/sync.c: In function 'MlmeStartReqAction':
+drivers/staging/rt2860/sta/sync.c:545: warning: the frame size of 1060 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta/connect.c: In function 'CntlOidScanProc':
+drivers/staging/rt2860/sta/connect.c:321: warning: the frame size of 1596 bytes is larger than 1024 bytes
+drivers/staging/rt2860/rt_linux.c: In function 'send_monitor_packets':
+drivers/staging/rt2860/rt_linux.c:903: warning: the frame size of 1080 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta_ioctl.c: In function 'rt_ioctl_iwaplist':
+drivers/staging/rt2860/sta_ioctl.c:721: warning: the frame size of 1296 bytes is larger than 1024 bytes
+drivers/staging/rt2860/sta_ioctl.c: In function 'rt_ioctl_siwmlme':
+drivers/staging/rt2860/sta_ioctl.c:1615: warning: the frame size of 1584 bytes is larger than 1024 bytes
+
+
+drivers/staging/vt6655/device_main.c: In function 'device_ioctl':
+drivers/staging/vt6655/device_main.c:3579: warning: the frame size of 1296 bytes is larger than 1024 bytes
+drivers/staging/vt6655/iwctl.c: In function 'iwctl_giwaplist':
+drivers/staging/vt6655/iwctl.c:817: warning: the frame size of 1296 bytes is larger than 1024 bytes
+
+
+drivers/media/radio/radio-aimslab.c:76: error: implicit declaration of function 'msleep'
+(reported yesterday by Geert)
+
+
+arch/x86/kernel/e820.c:734: error: implicit declaration of function 'suspend_nvs_register'
+when CONFIG_ACPI is not enabled
+
+
+fs/btrfs/ctree.h:1003: error: field 'super_kobj' has incomplete type
+fs/btrfs/ctree.h:1074: error: field 'root_kobj' has incomplete type
+needs <linux/kobject.h>
+(already reported)
+
+
+
 ---
- pci.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-  compile tested only, I don't have the hardware to test for real.
-
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 0fa36aa..5e99f89 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -619,6 +619,13 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 					struct sk_buff *uskb = NULL;
- 					u8 *pdata;
- 					uskb = dev_alloc_skb(skb->len + 128);
-+					if (!uskb) {
-+						RT_TRACE(rtlpriv,
-+							(COMP_INTR | COMP_RECV),
-+							DBG_DMESG,
-+							("can't alloc rx skb\n"));
-+						goto done;
-+					}
- 					memcpy(IEEE80211_SKB_RXCB(uskb),
- 							&rx_status,
- 							sizeof(rx_status));
-@@ -1066,9 +1073,9 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
- 			struct sk_buff *skb =
- 			    dev_alloc_skb(rtlpci->rxbuffersize);
- 			u32 bufferaddress;
--			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
- 			if (!skb)
- 				return 0;
-+			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
- 
- 			/*skb->dev = dev; */
- 
-
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
