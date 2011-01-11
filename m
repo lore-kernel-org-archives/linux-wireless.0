@@ -1,32 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47033 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751686Ab1AHUdg (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:48073 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932407Ab1AKQjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 15:33:36 -0500
-Received: by fxm20 with SMTP id 20so17850304fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Jan 2011 12:33:35 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Jason Andryuk <jandryuk@gmail.com>
-Subject: Re: 5GHz 802.11n USB Adapter
-Date: Sat, 8 Jan 2011 21:32:22 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
-In-Reply-To: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
+	Tue, 11 Jan 2011 11:39:49 -0500
+Received: by qyj19 with SMTP id 19so3094925qyj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 08:39:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101082132.22947.helmut.schaa@googlemail.com>
+In-Reply-To: <87ei8jfnq2.fsf@purkki.adurom.net>
+References: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com>
+	<201101101703.45802.helmut.schaa@googlemail.com>
+	<87ipxvfqg1.fsf@purkki.adurom.net>
+	<201101111557.46845.helmut.schaa@googlemail.com>
+	<87ei8jfnq2.fsf@purkki.adurom.net>
+Date: Tue, 11 Jan 2011 17:39:48 +0100
+Message-ID: <AANLkTi=n49bXON7i9ec_UGLwMpr2+963CGOudkMphnMt@mail.gmail.com>
+Subject: Re: 5GHz 802.11n USB Adapter
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Jason Andryuk <jandryuk@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Johannes Stezenbach <js@sig21.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 8. Januar 2011 schrieb Jason Andryuk:
-> Are there any limitations for rt2800usb devices?  The wiki is short on
-> information as is rt2x00.serialmonkey.com.  Does rt2800usb support AP
-> mode like rt2800pci?
+Hi,
 
-rt2800usb does not support bc- and mc- buffering (rt2800pci does). Hence,
-powersaving stations might experience problems when using rt2800usb in AP
-mode.
+>> Fine with me but AFAIK there are quite some users out there that use
+>> rt2800usb in AP mode.
+>
+> Yeah, but they are using a broken implementation and will have random
+> problems because of missing broadcast and multicast packets, for
+> example ARP is a likely problem area. We discussed about this last
+> year, I think.
+>
+>> In the end Ivo or Gertjan should have a chance to comment ;)
+>
+> Naturally :)
+>
+>> And furthermore Johannes Stezenbach is interested in getting rt2800usb
+>> to do the mc- and bc buffering correctly. Not sure if he already had a chance
+>> to investigate more.
+>
+> That would be the best option, but in the mean time we should disable
+> AP mode.
 
-Helmut
+Ok, but please don't restrict only to rt2800usb then. Basically _all_ rt2x00 USB
+drivers are not functioning. Also I assume it means that also Mesh
+mode, Secondary,
+and Ad-hoc should also be disabled?
+
+Ivo
