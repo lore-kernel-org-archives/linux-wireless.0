@@ -1,181 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pdtms1.pdt.com ([207.18.22.4]:56906 "EHLO mail.pdt.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933039Ab1AMQLP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jan 2011 11:11:15 -0500
-From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-To: "Krakowski, Oz" <ozk@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: What pieces are needed for wl1271..what directories, files,
- configs, etc..
-Date: Thu, 13 Jan 2011 16:11:12 +0000
-Message-ID: <0826983CC0CB074798C42E77D8ACD07F068A13@pdtms1.pdt.com>
-References: <0826983CC0CB074798C42E77D8ACD07F067DE7@pdtms1.pdt.com>
-	<AANLkTinjGLvWbSnfeNoUkoC2q4jN+uRntSYS6MAvm1vv@mail.gmail.com>
-	<0826983CC0CB074798C42E77D8ACD07F0683D3@pdtms1.pdt.com>
-	<0826983CC0CB074798C42E77D8ACD07F0683E0@pdtms1.pdt.com>,<AANLkTikgPPvQP7QP5_EvBQapZ78nbcZs51mFPDKBDRoz@mail.gmail.com>
-In-Reply-To: <AANLkTikgPPvQP7QP5_EvBQapZ78nbcZs51mFPDKBDRoz@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:32787 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753990Ab1AKAy1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 19:54:27 -0500
+Received: by mail-fx0-f48.google.com with SMTP id 2so19353147fxm.35
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 16:54:26 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1294674256.1992.141.camel@pimenta>
+References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+	<1294062164-3459-3-git-send-email-shahar_levi@ti.com>
+	<1294674256.1992.141.camel@pimenta>
+Date: Tue, 11 Jan 2011 02:54:26 +0200
+Message-ID: <AANLkTimNRzc9M0wKZsQLMh4ihSHEeycFJ-S34CA=jPAc@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] wl12xx: BA receiver support
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Oz, and Luca, and... !
-
-I'm looking at the 
-following wiki page: http://linuxwireless.org/en/users/Drivers/wl12xx
-the attempt to port your wl1271 driver to our 2.6.31 Linux kernel for 
-freescale iMX233.
-
-I downloaded the latest driver:
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
-and the firmware:
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
-
-I am now looking at the:
-Porting wl12xx:
-
-Porting the wl12xx driver to a new hardware platform requires following these steps:
-
-   1.Modify or create the board-specific configuration. An example on how this should be done can be found under arch/arm/mach-omap2/board-zoom-peripherals.c for the TI Zoom reference boards. This is where you need to set the right mmc port, assign the gpios, adjust the reference clock information, etc.
-
->>>>>>>> The first arch/arm/mach-omap2/board-zoom-peripherals.c that has any mention of wl12xx is 2.6.37... is this the correct version to look at on what to do for the wl1271 in the arm/arch/mach-mx23 in my case??  I see a couple little things with wl1271 in this file....
-not sure what it means....is there any explanation anywhere, and am I doing the right thing?
-
-THANK YOU!
-Karen
-
-
-
- 
-From: Krakowski, Oz [ozk@ti.com]
-Sent: Tuesday, January 11, 2011 8:53 PM
-To: Brzezowski, Karen
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: What pieces are needed for wl1271..what directories, files, configs, etc..
-
-On Tue, Jan 11, 2011 at 1:41 PM, Brzezowski, Karen
-<Karen.Brzezowski@pdt.com> wrote:
-> ok, so far, I found the Makefile in the wl12xx directory from git clone git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git has 2.6.37-rc6
-> in it.  so it's the 37-rc6 kernel, correct?
-Yes.
-
->
-> Can I use this "stuff" in the 2.6.31 kernel?  (I know what's said in the wiki info below..)
-
-Yes, as long as you follow the guidelines described in the wiki page
-regarding how to port the driver to older kernel versions - through
-compat-wirelss and the additional patches described there.
-Compat-wireless is described on the linuxwireless.org website in
-length. Check it out here:
-http://linuxwireless.org/en/users/Download/stable/
-
-Regards,
-Oz.
-
->
-> I just don't know what goes where, how...
->
-> :-)
-> ________________________________________
-> From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] on behalf of Brzezowski, Karen [Karen.Brzezowski@pdt.com]
-> Sent: Tuesday, January 11, 2011 1:05 PM
-> To: Krakowski, Oz
-> Cc: linux-wireless@vger.kernel.org
-> Subject: RE: What pieces are needed for wl1271..what directories, files, configs, etc..
->
-> Hi Oz,
->
-> Thank you for your response.  I have been looking at that web page:
-> http://linuxwireless.org/en/users/Drivers/wl12xx
->
-> when i get the latest driver at
-> git clone git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
->
-> Do I take everything that comes in this compressed file and replace it in a Linux kernel?
-> Which Linux kernel is this driver code for?
->
-> I'm not really sure what the compat-wireless is...we are using the Linux 2.6.31 kernel
-> Do I need to get compat-wireless somehow for the 31 kernel?
->
-> Then the notes say integrations needs to be gotten for SDIO, Lenient, and platform data pasing..
->
-> Then the notes say I need WL127x firmware...
->
-> after all that I can build the kernel?
->
-> Do you have any example code that uses the interfaces for the wl1271 chip (the APIs)?
->
-> I've never ported a driver in Linux before...
-> I assumed all it would be is to get the driver directory corresponding to the new chip, adding or replacing it
-> in the drivers directory, build it, and voila, i have a driver to test..
->
-> I think I should not have assumed that, correct?
->
-> ...this is why I'm confused........
-> :-)
-> thank you for your time!!!!!!!!!!
-> Karen
->
-> ________________________________________
-> From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] on behalf of Krakowski, Oz [ozk@ti.com]
-> Sent: Tuesday, January 11, 2011 12:13 AM
-> To: Brzezowski, Karen
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: What pieces are needed for wl1271..what directories, files, configs, etc..
->
-> Hi Karen,
->
-> On Mon, Jan 10, 2011 at 10:44 AM, Brzezowski, Karen
-> <Karen.Brzezowski@pdt.com> wrote:
+On Mon, Jan 10, 2011 at 5:44 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Mon, 2011-01-03 at 14:42 +0100, Shahar Levi wrote:
+>> Add new ampdu_action ops to support receiver BA.
+>> The BA initiator session management in FW independently.
 >>
->> Hello all wireless gurus!!
->>
->> I've been watching the linux-wireless mailings on the wl1271...........
->>
->> I've been trying to figure out how to get the wl1271 working with
->> imx233 processor...
->>
->> I think we are moving to Linux 2.6.35 and android gingerbread (2.3)...
->>
->> I"m very confused as to what files/configs/etc..need to be grabbed to get my task going.......
->>
->> I see spi, sdio...not sure where all changes are made for the wl1271...i'm assuming
->> not just in the ...net/wireless/wl1271 directory.......... i have firmware too...........(.bins..)
->>
->> I'm quite confused about the chip and how each part will work (BT, WLAN, and FM)...
->> Do you have any documentation..(for dummies, that would be me!)
->> that would help me understand about the chip..how it communicates to the processor,
->> how it does it's job with respect to BT, WLAN, and FM, etc..
->>
->> I have NO idea where to begin.......I've been googling and reading and I have downloaded
->> your wl12xx git........
+>> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> ---
 >
-> If you haven't done so already, suggest you start by going through the
-> following wiki page: http://linuxwireless.org/en/users/Drivers/wl12xx
-> This should give you an idea of where to get the latest code, how to
-> compile it to your kernel (using compat-wireless) and links to the
-> relevant patches needed.
-> This will get you started with WLAN.
+> Some comments.
+Thanks for your review.
+
 >
+>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+>> index 54fd68d..f33ab50 100644
+>> --- a/drivers/net/wireless/wl12xx/acx.c
+>> +++ b/drivers/net/wireless/wl12xx/acx.c
+>> @@ -1359,6 +1359,42 @@ out:
+>>       return ret;
+>>  }
 >>
->> If you can help me AT ALL to get me up to speed/ to start, what i need to do to connect
->> the wl1271 to the imx233....if not imx233..that whatever you have........
+>> +/* setup BA session receiver setting in the FW. */
+>> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+>> +                                    u16 *ssn, u8 policy)
 >
-> The wiki page does include some basic information needed in order to
-> port to different hardware platforms.
+> You don't modify ssn here, so why pass it as a pointer? Use u16 directly
+> here instead.
 >
-> Regards,
-> Oz.
+> Actually it's even worse.  As stated in mac80211.h, ssn can be NULL
+> here, so you would be accessing a NULL pointer in that case.
+>
+> I see that you check "policy", which indicates whether ssn is valid or
+> not, but why not make it cleaner by checking if ssn is NULL and setting
+> it to zero before passing instead?
+good chtch. it was left from previous implantation. will be fix.
+
+>
+>
+>> +       acx->enable = policy;
+>
+> Also, because of this, it would make more sense if policy was a boolean
+> and was called "enable" instead.
+np, will be fix
+
+>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+>> index c44462d..04b69ab 100644
+>> --- a/drivers/net/wireless/wl12xx/main.c
+>> +++ b/drivers/net/wireless/wl12xx/main.c
+>> @@ -2251,6 +2251,64 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
+>>       return 0;
+>>  }
+>>
+>> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>> +                        enum ieee80211_ampdu_mlme_action action,
+>> +                        struct ieee80211_sta *sta, u16 tid, u16 *ssn)
+>> +{
+>> +     struct wl1271 *wl = hw->priv;
+>> +     int ret;
+>> +
+>> +     mutex_lock(&wl->mutex);
+>> +
+>> +     if (unlikely(wl->state == WL1271_STATE_OFF)) {
+>> +             ret = -EAGAIN;
+>> +             goto out;
+>> +     }
+>> +
+>> +     ret = wl1271_ps_elp_wakeup(wl, false);
+>> +     if (ret < 0)
+>> +             goto out;
+>> +
+>> +     switch (action) {
+>> +     case IEEE80211_AMPDU_RX_START:
+>> +             if ((wl->ba_allowed) && (wl->ba_support)) {
+>
+> I'm a bit confused.  What is ba_allowed, actually? In the previous patch
+> you always call wl1271_set_ba_policies() which always sets it to true.
+> So it seems quite useless.
+ba_allowed belong to next path "Stop BA session event from device". i
+will move it.
+
+>
+>
+>> +                     ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
+>> +                                                              true);
+>> +                     if (!ret)
+>> +                             wl->ba_rx_bitmap |= BIT(tid);
+>> +             } else
+>> +                     ret = -EPERM;
+>
+> The indentation is wrong here.  And -EPERM is definitely not the right
+> return code for this.  It should probably -ENOTSUPP or something like
+> that.
+any error will be good. i go on "Operation not permitted". will be fix.
+
+>
+>> +     /*
+>> +      * The BA initiator session management in FW independently.
+>> +      * Falling break here on purpose for all TX APDU commands.
+>> +      */
+>> +     case IEEE80211_AMPDU_TX_START:
+>> +     case IEEE80211_AMPDU_TX_STOP:
+>> +     case IEEE80211_AMPDU_TX_OPERATIONAL:
+>> +             ret = -EINVAL;
+>> +             break;
+>
+> -EINVAL? Actually, should mac80211 even call us with these actions? I
+> don't remember now, did you implement the way to prevent mac80211 from
+> trying to to AMPDU_TX by itself?
+the mac souldn't call those due to the fact the rate management is in the FW.
+
+>
+>
+>> +
+>> +     default:
+>> +             wl1271_error("Incorrect ampdu action id=%x\n", action);
+>> +             ret = -ENODEV;
+>
+> -ENODEV? All these error codes look quite random to me.  Can you explain
+> your choices?
+amm, i am trying to remeber why i use that one without success. i will
+switch it to EINVAL.
+
+>
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-Email secured by Check Point
+> Cheers,
+> Luca.
+Shahar
