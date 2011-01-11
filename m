@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10832 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755301Ab1AaJqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 04:46:32 -0500
-Date: Mon, 31 Jan 2011 10:46:25 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: wwguy <wey-yi.w.guy@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 7/8] iwlagn: remove
- CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
-Message-ID: <20110131094624.GA20641@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
- <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
- <1296231817.7388.18.camel@wwguy-ubuntu>
- <20110128164136.GF2452@redhat.com>
- <1296256821.8832.1.camel@wwguy-ubuntu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1296256821.8832.1.camel@wwguy-ubuntu>
+Received: from smtp.resortinternet.net ([65.114.208.136]:42873 "EHLO
+	smtp.resortinternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754816Ab1AKAVL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Jan 2011 19:21:11 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 1/4] ath9k: fix bogus sequence number increases on aggregation tid flush
+Date: Mon, 10 Jan 2011 17:05:47 -0700
+Message-Id: <1294704350-50621-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 28, 2011 at 03:20:21PM -0800, wwguy wrote:
-> > What is easiest and less time consuming:
-> > 
-> > this:
-> > 
-> > $ mv /lib/firmware/iwlwifi-5000-exp.ucode /lib/firmware/iwlwifi-5000-exp.ucode.not_use
-> > 
-> > or this:
-> > 
-> > $ make menuconfig
-> > navigate to find option and edit it 
-> > $ make modules
-> > $ make modules_install
-> > 
-> > ?
-> > 
-> > > Also put it in Kconfig file, so it is easy for user to see they are
-> > > using experimental option. Agree?
-> > 
-> > Not really. I believe someone who download a tarball, unpack it and copy
-> > files to /lib/firmware is pretty much aware what he/she is doing.
-> > 
-> Agree whoever download the tarball know what he/she is doing, but I am
-> not fully agree the driver always use experimental uCode if it is in the
-> firmware directory
+When a tid pointer is passed to ath_tx_send_normal(), it increases the
+starting sequence number for the next AMPDU action frame, which should
+only be done if the sequence number assignment is fresh. In this case
+it is clearly not.
 
-I do not understand what for you need that, but ok, I can live with it.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-John, please skip this patch.
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 332d1fe..1adfebc 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -169,7 +169,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 			ath_tx_update_baw(sc, tid, fi->seqno);
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
+ 		} else {
+-			ath_tx_send_normal(sc, txq, tid, &bf_head);
++			ath_tx_send_normal(sc, txq, NULL, &bf_head);
+ 		}
+ 		spin_lock_bh(&txq->axq_lock);
+ 	}
+-- 
+1.7.3.2
 
-Stanislaw
