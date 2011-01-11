@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:34946 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755817Ab1AKOlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 09:41:00 -0500
-Date: Tue, 11 Jan 2011 15:40:56 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: lrodriguez <lrodriguez@atheros.com>, nbd <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Message-ID: <15461044.40.1294756856032.JavaMail.wlan@CHBU500181>
-In-Reply-To: <5840411.32.1294754666078.JavaMail.wlan@CHBU500181>
-Subject: [RFC] mac80211: Wait with enabling beacons on DFS channels
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50600 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755743Ab1AKUwm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 15:52:42 -0500
+Received: by fxm20 with SMTP id 20so20350525fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 12:52:40 -0800 (PST)
+Message-ID: <4D2CC310.5060003@lwfinger.net>
+Date: Tue, 11 Jan 2011 14:52:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Bob Copeland <me@bobcopeland.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Locking problem reported for mainline
+References: <4D2A9309.7000500@lwfinger.net>	<201101101913.17311.chunkeey@googlemail.com>	<4D2B59EA.4000200@lwfinger.net>	<201101102018.35232.chunkeey@googlemail.com>	<4D2C85FE.4030709@lwfinger.net> <AANLkTikPoEjHRXjqVkSopCjUcyp7AauvFAfaVN_8T0qG@mail.gmail.com>
+In-Reply-To: <AANLkTikPoEjHRXjqVkSopCjUcyp7AauvFAfaVN_8T0qG@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-  Basic DFS functionality requires that when we change to radar
-enabled channels we need to wait and listen before we can send
-beacons/frames -> Channel Availability Check (CAC).
-There is a case when we can switch to it immediately if we have
-been monitoring it off_channel for specific time. This is bit
-more complicated and doesn't need to be implemented in the first 
-place because it's sort of functional optimization.
+On 01/11/2011 01:45 PM, Bob Copeland wrote:
+> On Tue, Jan 11, 2011 at 11:31 AM, Larry Finger
+> <Larry.Finger@lwfinger.net> wrote:
+>> Is there a document that explains what the meaning of these semantics?
+>>
+>> inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
+>> kdostartupconfi/3502 [HC1[1]:SC0[0]:HE0:SE1] takes:
+>>  (&(&list->lock)->rlock#5){?.-...}, at: [<ffffffff812995c6>]
+>> skb_queue_tail+0x26/0x60
+>> {HARDIRQ-ON-W} state was registered at:
+> 
+> I'm not sure about all the HC1[1]:SC0[0] etc stuff, but check out
+> Documentation/lockdep-design.txt for the basics.
 
-Anyway there is a need for mechanism to control when to enable
-beacons if we switch to radar channel.
+That one I had read.
 
-Pseudo-code-diff bellow is an example for ath9k where we could enable
-beacons at once or fire a worker to re-enable it after CAC expires
-if radar hasn't been detected. In theory we need only to disable
-beacons because we shouldn't get any directed frames we could reply
-to and stations anyway can't probe directly. In practice to be 
-sure it couldn't be probably done with making rx filters more 
-restrictive during CAC period. Maybe there are other ways as well.
+> In this case, someone took a lock with interrupts enabled (HARDIRQ-ON-W)
+> while someone else took it in a hard IRQ context (IN-HARDIRQ-W) where
+> they are normally disabled.  The problem of course is:
+> 
+> cpu0:
+> spin_lock(&foo);
+> do some stuff protected by foo;
+> 
+> ----> interrupt happens here
+>    spin_lock(&foo);  /* darn, deadlock! */
+>    other stuff;
+>    spin_unlock(&foo);
+> <----
+> 
+> spin_unlock(&foo);
+> 
+> Could be a missing _irqsave() if it's not, as Stanislaw suggested, a false
+> positive.
 
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c 
-@@ -285,8 +285,14 @@
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
- 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
--		if (sc->sc_flags & SC_OP_BEACONS)
--			ath_beacon_config(sc, NULL);
-+
-+		if (sc->sc_flags & SC_OP_BEACONS) {
-+			if (channel->flags & IEEE80211_CHAN_RADAR 
-+                            && !(channel->flags & IEEE80211_CHAN_NOL_FREE))
-+				ieee80211_queue_delayed_work
-+                                      (sc->hw, &sc->dfs_wait_cac_work, 0);
-+			else
-+				ath_beacon_config(sc, NULL);
-+		}
-+
- 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
- 		ath_start_ani(common);
- 	}
+I suspected the message meant mixed interrupts disabled/enabled, but thanks for
+the confirmation.
 
+Thanks,
 
-
-Problem with this solution is that every driver would need to do
-their own timers and state machines to get this functionality which
-is shared by all.
-I don't know about other driver's structures but maybe a better way
-would be to implement mac80211 command to disable/enable beacons and
-set rx filters which every driver supporting DFS would have to implement.
-Mac80211 would have then timer which would control when to enable
-beacons. I guess Non Occupancy List (NOL) would be handled there as
-well so all the DFS timers could be in the same place.
-
-Any comments?
-
-
-Br,
-Wojtek
+Larry
