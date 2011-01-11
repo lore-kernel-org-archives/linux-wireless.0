@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49990 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab1AIAgc (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:52678 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932577Ab1AKTpF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 19:36:32 -0500
-Message-ID: <4D290307.4080807@candelatech.com>
-Date: Sat, 08 Jan 2011 16:36:23 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 11 Jan 2011 14:45:05 -0500
+Received: by qwa26 with SMTP id 26so21349088qwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 11:45:04 -0800 (PST)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
-References: <1294500800-29191-1-git-send-email-greearb@candelatech.com> <4D28FF57.9040706@openwrt.org>
-In-Reply-To: <4D28FF57.9040706@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4D2C85FE.4030709@lwfinger.net>
+References: <4D2A9309.7000500@lwfinger.net>
+	<201101101913.17311.chunkeey@googlemail.com>
+	<4D2B59EA.4000200@lwfinger.net>
+	<201101102018.35232.chunkeey@googlemail.com>
+	<4D2C85FE.4030709@lwfinger.net>
+Date: Tue, 11 Jan 2011 14:45:04 -0500
+Message-ID: <AANLkTikPoEjHRXjqVkSopCjUcyp7AauvFAfaVN_8T0qG@mail.gmail.com>
+Subject: Re: Locking problem reported for mainline
+From: Bob Copeland <me@bobcopeland.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2011 04:20 PM, Felix Fietkau wrote:
-> On 2011-01-08 8:33 AM, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> This saves us constantly allocating large, multi-page
->> skbs. It should fix the order-1 allocation errors reported,
->> and in a 60-vif scenario, this significantly decreases CPU
->> utilization, and latency, and increases bandwidth.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->> :100644 100644 b2497b8... ea2f67c... M drivers/net/wireless/ath/ath9k/recv.c
->> drivers/net/wireless/ath/ath9k/recv.c | 92 ++++++++++++++++++++++-----------
->> 1 files changed, 61 insertions(+), 31 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index b2497b8..ea2f67c 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -1702,42 +1704,70 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->> unlikely(tsf_lower - rs.rs_tstamp> 0x10000000))
->> rxs->mactime += 0x100000000ULL;
->>
->> - /* Ensure we always have an skb to requeue once we are done
->> - * processing the current buffer's skb */
->> - requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
->> -
->> - /* If there is no memory we ignore the current RX'd frame,
->> - * tell hardware it can give us a new frame using the old
->> - * skb and put it at the tail of the sc->rx.rxbuf list for
->> - * processing. */
->> - if (!requeue_skb)
->> - goto requeue;
->> -
->> - /* Unmap the frame */
->> - dma_unmap_single(sc->dev, bf->bf_buf_addr,
->> - common->rx_bufsize,
->> - dma_type);
->> + len = rs.rs_datalen + ah->caps.rx_status_len;
->> + if (use_copybreak) {
->> + skb = netdev_alloc_skb(NULL, len);
->> + if (!skb) {
->> + skb = bf->bf_mpdu;
->> + use_copybreak = false;
->> + goto non_copybreak;
->> + }
->> + } else {
-> I think this should be dependent on packet size, maybe even based on the architecture. Especially on embedded hardware, copying large frames is probably quite a
-> bit more expensive than allocating large buffers. Cache sizes are small, memory access takes several cycles, especially during concurrent DMA.
-> Once I'm back home, I could try a few packet size threshold to find a sweet spot for the typical MIPS hardware that I'm playing with. I expect a visible
-> performance regression from this patch when applied as-is.
-
-I see a serious performance improvement with this patch.  My current test is sending 1024 byte UDP
-payloads to/from each of 60 stations at 128kbps.  Please do try it out on your system and see how
-it performs there.  I'm guessing that any time you have more than 1 VIF this will be a good
-improvement since mac80211 does skb_copy (and you would typically be copying a much smaller
-packet with this patch).
-
-If we do see performance differences on different platforms, this could perhaps be
-something we could tune at run-time.
-
-Thanks,
-Ben
-
+On Tue, Jan 11, 2011 at 11:31 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> Is there a document that explains what the meaning of these semantics?
 >
-> - Felix
+> inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
+> kdostartupconfi/3502 [HC1[1]:SC0[0]:HE0:SE1] takes:
+>  (&(&list->lock)->rlock#5){?.-...}, at: [<ffffffff812995c6>]
+> skb_queue_tail+0x26/0x60
+> {HARDIRQ-ON-W} state was registered at:
 
+I'm not sure about all the HC1[1]:SC0[0] etc stuff, but check out
+Documentation/lockdep-design.txt for the basics.
+
+In this case, someone took a lock with interrupts enabled (HARDIRQ-ON-W)
+while someone else took it in a hard IRQ context (IN-HARDIRQ-W) where
+they are normally disabled.  The problem of course is:
+
+cpu0:
+spin_lock(&foo);
+do some stuff protected by foo;
+
+----> interrupt happens here
+   spin_lock(&foo);  /* darn, deadlock! */
+   other stuff;
+   spin_unlock(&foo);
+<----
+
+spin_unlock(&foo);
+
+Could be a missing _irqsave() if it's not, as Stanislaw suggested, a false
+positive.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Bob Copeland %% www.bobcopeland.com
