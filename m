@@ -1,90 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:62572 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903Ab1ATXzQ (ORCPT
+Received: from smtp.resortinternet.net ([65.114.208.136]:42873 "EHLO
+	smtp.resortinternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754841Ab1AKAVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 18:55:16 -0500
-Message-ID: <4D38CB7E.5000304@lwfinger.net>
-Date: Thu, 20 Jan 2011 17:55:42 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jesper Juhl <jj@chaosbits.net>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH] Fix NULL dereference in rtlwifi driver
-References: <alpine.LNX.2.00.1101202309030.11854@swampdragon.chaosbits.net>
-In-Reply-To: <alpine.LNX.2.00.1101202309030.11854@swampdragon.chaosbits.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 10 Jan 2011 19:21:13 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 4/4] ath9k: reduce the likelihood of baseband hang check false positives
+Date: Mon, 10 Jan 2011 17:05:50 -0700
+Message-Id: <1294704350-50621-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1294704350-50621-3-git-send-email-nbd@openwrt.org>
+References: <1294704350-50621-1-git-send-email-nbd@openwrt.org>
+ <1294704350-50621-2-git-send-email-nbd@openwrt.org>
+ <1294704350-50621-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2011 04:18 PM, Jesper Juhl wrote:
-> In drivers/net/wireless/rtlwifi/pci.c::_rtl_pci_rx_interrupt() we call 
-> dev_alloc_skb(), which may fail and return NULL, but we do not check the 
-> returned value against NULL before dereferencing the returned pointer. 
-> This may lead to a NULL pointer dereference which means we'll crash - not 
-> good.
-> 
-> This patch tries to solve the issue by testing for NULL and bailing out if 
-> we couldn't allocate a skb. However, I don't know this code well, so I'm 
-> not sure that jumping to the 'done' label here is the correct action to 
-> take. Someone more knowledgable about this code than me should definately 
-> review it before it is applied anywhere.
-> While I was in the area I also moved an assignment in 
-> _rtl_pci_init_rx_ring() a bit - if the dev_alloc_skb() call in that 
-> function fails there's no reason to waste clock cycles assigning to the 
-> local variable 'entry', we may as well do that after the NULL check and 
-> potential bail out.
-> 
-> Here's the proposed patch, but please don't take it as much more than a 
-> bug report. If it happens to be correct, then by all means apply it, but 
-> I'm not personally making any guarantees.
-> 
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> ---
->  pci.c |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
->   compile tested only, I don't have the hardware to test for real.
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index 0fa36aa..5e99f89 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -619,6 +619,13 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
->  					struct sk_buff *uskb = NULL;
->  					u8 *pdata;
->  					uskb = dev_alloc_skb(skb->len + 128);
-> +					if (!uskb) {
-> +						RT_TRACE(rtlpriv,
-> +							(COMP_INTR | COMP_RECV),
-> +							DBG_DMESG,
-> +							("can't alloc rx skb\n"));
-> +						goto done;
-> +					}
->  					memcpy(IEEE80211_SKB_RXCB(uskb),
->  							&rx_status,
->  							sizeof(rx_status));
-> @@ -1066,9 +1073,9 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
->  			struct sk_buff *skb =
->  			    dev_alloc_skb(rtlpci->rxbuffersize);
->  			u32 bufferaddress;
-> -			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
->  			if (!skb)
->  				return 0;
-> +			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
->  
->  			/*skb->dev = dev; */
->  
+Since baseband hangs are rare, but the hang check function has a high
+false positive rate in some situations, we need to add more reliable
+indicators.
 
-This patch looks mostly good to me. The only change I would make is to replace
-"DBG_DMESG" in the RT_TRACE statement with "DBG_EMERG". The standard setting of
-the debug variable does not generate output for DBG_DMESG.
+In AP mode we can use blocked beacon transmissions as an indicator,
+they should be rare enough.
 
-With that change, ACK and
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+In station mode, we can skip the hang check entirely, since a true
+hang will trigger beacon loss detection, and mac80211 will rescan,
+which leads to a hw reset that will bring the hardware back to life.
 
-Larry
+To make this more reliable, we need to skip fast channel changes
+if the hardware appears to be stuck.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f90a6ca..c753ba4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -251,6 +251,9 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (!ath_stoprecv(sc))
+ 		stopped = false;
+ 
++	if (!ath9k_hw_check_alive(ah))
++		stopped = false;
++
+ 	/* XXX: do not flush receive queue here. We don't want
+ 	 * to flush data frames already in queue because of
+ 	 * changing channel. */
+@@ -602,7 +605,15 @@ void ath9k_tasklet(unsigned long data)
+ 
+ 	spin_lock(&sc->sc_pcu_lock);
+ 
+-	if (!ath9k_hw_check_alive(ah))
++	/*
++	 * Only run the baseband hang check if beacons stop working in AP or
++	 * IBSS mode, because it has a high false positive rate. For station
++	 * mode it should not be necessary, since the upper layers will detect
++	 * this through a beacon miss automatically and the following channel
++	 * change will trigger a hardware reset anyway
++	 */
++	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0 &&
++	    !ath9k_hw_check_alive(ah))
+ 		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
+ 
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+-- 
+1.7.3.2
 
