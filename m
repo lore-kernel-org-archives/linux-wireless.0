@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54915 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982Ab1A1NRq (ORCPT
+Received: from smtp228-pc.aruba.it ([62.149.157.228]:51650 "HELO
+	smtp2-pc.aruba.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1754728Ab1ALWoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 08:17:46 -0500
-Subject: Re: Multiple vifs and HT v/s non-HT.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D41FACB.2010807@candelatech.com>
-References: <4D41FACB.2010807@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Jan 2011 14:17:43 +0100
-Message-ID: <1296220663.5118.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 12 Jan 2011 17:44:07 -0500
+From: Michele Ballabio <barra_cuda@katamail.com>
+To: linux-kernel@vger.kernel.org
+Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
+Date: Wed, 12 Jan 2011 23:34:53 +0100
+Cc: bebarino@gmail.com, htd@fancy-poultry.org,
+	linux-wireless@vger.kernel.org, IvDoorn@gmail.com,
+	users@rt2x00.serialmonkey.com
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101122334.55039.barra_cuda@katamail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-27 at 15:07 -0800, Ben Greear wrote:
-> We found something fun while playing with HT mode:
-> 
-> We had some vifs associated with an AP with HT enabled,
-> and other VIFS to an AP with HT disabled.
-> 
-> They managed to associate, but with slow rates and
-> for whatever reason, nothing is able to send traffic.
-> I would have expected one set or the other would
-> be able to send traffic.
-> 
-> The ath9k hardware ended up in HT mode according to
-> ath9k debugfs wiphy file, but that was probably
-> just luck.
-> 
-> I'm not too sure how to ensure this mixed-mode HT
-> scenario doesn't happen at this point...
+On 01.01.2011, Stephen Boyd wrote: 
+>On 01/01/11 02:28, Heinz Diehl wrote:
+>> On 31.12.2010, Stephen Boyd wrote: 
+>> 
+>>> [ 9085.714105] BUG: unable to handle kernel NULL pointer dereference at
+>>> 00000000000000a4
+>>> [ 9085.714816] IP: [<ffffffffa0025458>] rt2x00lib_txdone+0x36/0x249
+>>> [rt2x00lib]
+>>> [ 9085.715017] PGD 215fd067 PUD 292f4067 PMD 0
+>>> [ 9085.715017] Oops: 0000 [#1] SMP
+>>> [ 9085.715017] last sysfs file:
+>>> /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+>>> [ 9085.715017] CPU 1
+>>> [ 9085.715017] Modules linked in: usb_storage thermal snd_seq_oss
+>>> snd_seq_midi snd_seq_dummy snd_pcm_oss snd_mixer_oss snd_hrtimer
+>>> snd_emu10k1_synth snd_emux_synth snd_seq_virmidi snd_seq_midi_event
+>>> snd_seq_midi_emul snd_seq scsi_wait_scan powernow_k8 mperf i2c_i801 fuse
+>>> fan snd_emu10k1 snd_rawmidi snd_ac97_codec ac97_bus snd_pcm
+>>> snd_seq_device snd_timer snd_page_alloc snd_util_mem rt73usb crc_itu_t
+>>> rt2x00usb snd_hwdep snd processor r8169 via82cxxx rt2x00lib soundcore
+>>> mii button k8temp
+>>> [ 9085.715017]
+>>> [ 9085.715017] Pid: 11513, comm: kworker/1:0 Not tainted 2.6.37-rc7+ #27
+>>> MS-7094/MS-7094
+>> [....]
+>> 
+>> I'm not quite shure on this, but it reminds me on this bug here:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=24892
+>> 
+>
+>I believe I had the latest net tree merged into 2.6.37-rc7 in which case
+>the patch mentioned in that bugzilla would already be applied.
 
-So that patch you sent addressed this?
+I can confirm this bug is present in v2.6.37, and not in v2.6.36.
+It seems to trigger quite randomly, I think in less than 2-3 hours after
+the boot (sometimes in half an hour), and it leaves no trace in my log
+files.
 
-johannes
-
+As Stephen said, most of the times the screen shows later oopses triggered
+by this one, so it is not easy to identify it either.
