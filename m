@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47146 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752482Ab1BSJOz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 04:14:55 -0500
-Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110219061241.GA5881@vmraj-lnx.users.atheros.com>
-References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
-	 <1298027245.3772.3.camel@jlt3.sipsolutions.net>
-	 <20110219061241.GA5881@vmraj-lnx.users.atheros.com>
+Received: from smtp.nokia.com ([147.243.128.24]:17656 "EHLO mgw-da01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756072Ab1BCK3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 05:29:42 -0500
+Subject: Re: [PATCH] wl12xx: Add channel 14 to list of supported 2ghz
+ channels
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <1294775357-10821-1-git-send-email-arik@wizery.com>
+References: <1294775357-10821-1-git-send-email-arik@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 19 Feb 2011 10:14:50 +0100
-Message-ID: <1298106890.3725.7.camel@jlt3.sipsolutions.net>
+Date: Wed, 12 Jan 2011 08:03:05 +0200
+Message-ID: <1294812185.18570.44.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-02-19 at 11:42 +0530, Rajkumar Manoharan wrote:
+On Tue, 2011-01-11 at 21:49 +0200, ext Arik Nemtsov wrote:
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
+> drivers/net/wireless/wl12xx/main.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 062247e..a7afdca 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -2305,6 +2305,7 @@ static struct ieee80211_channel wl1271_channels[] = {
+>  	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
+>  	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
+>  	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
+> +	{ .hw_value = 14, .center_freq = 2484, .max_power = 25 },
+>  };
+>  
+>  /* mapping to indexes for wl1271_rates */
 
-> > I know we currently don't allow powersave when there's more than one
-> > interface, but we still allow it while there are monitor interfaces and
-> > a monitor interface could be sending packets, which would violate the
-> > flush() contract with the driver -- the driver may expect not to get any
-> > packets during flush.
+Do the radio-parameter structs (i.e. the INI-file) already have a field
+for channel 14? If not, does not adding this channel introduce strange
+problems?
 
-> AFIK we also are not stopping tx queue of monitor iface on offchannel.
-> Doing so could help flush().
+We used to have some 4.9GHz channels on the 11a band, which are
+theoretically supported but were lacking the respective radio-parameter
+fields, which caused some issues and they had to be removed until the
+radio-parameter interface is updated.
 
-Hrm, indeed. And we can't even stop the queues there. We can pause them
-for the flush though. In fact, why don't we just stop device queues for
-flush and bypass this problem. I also think we should flush the status
-tasklet when drv_flush() has returned so that all status processing is
-also flushed out before we return to regular processing.
-
-> > I'm not sure. Maybe we should disable powersave when there are monitor
-> > interfaces after all, even though that would rob us of a way to debug
-> > things. Thoughts?
-
-> drivers like ath9k receives all frames from any bss on FIF_PROMISC_IN_BSS,
-> since there is no specific hw filter for that. So in that case it would be
-> better to disable power save.
-
-Well, I'm not convinced yet -- it will likely also complicate the code
-quite a bit when we want to implement NoA powersave etc. Of course we're
-trying to get rid of monitor interfaces there anyway, but still ...
-
-johannes
+-Juuso
 
