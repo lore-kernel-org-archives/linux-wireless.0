@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64180 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752320Ab1A1PlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 10:41:06 -0500
-Date: Fri, 28 Jan 2011 16:41:00 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [BUG] iwlwifi need to correct channels info
-Message-ID: <20110128154100.GB2452@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from dakia2.marvell.com ([65.219.4.35]:33102 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755584Ab1ALANa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Jan 2011 19:13:30 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] ieee80211: correct IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK macro
+Date: Tue, 11 Jan 2011 16:14:24 -0800
+Message-Id: <1294791265-24020-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After commit 59eb21a6504731fc16db4cf9463065dd61093e08
-"cfg80211: Extend channel to frequency mapping for 802.11j"
-5GHz networks are not seen on scan results.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I think above commit is correct, but we have broken channel
-information on iwlwifi (freq is 0 on 5GHz channels):
+It is defined in include/linux/ieee80211.h. As per IEEE spec.
+bit6 to bit15 in block ack parameter represents buffer size.
+So the bitmask should be 0xFFC0.
 
-Channel 1 Freq=2412[2.4GHz] valid flag=0x20
-Channel 2 Freq=2417[2.4GHz] valid flag=0x20
-Channel 3 Freq=2422[2.4GHz] valid flag=0x20
-Channel 4 Freq=2427[2.4GHz] valid flag=0x20
-Channel 5 Freq=2432[2.4GHz] valid flag=0x0
-Channel 6 Freq=2437[2.4GHz] valid flag=0x0
-Channel 7 Freq=2442[2.4GHz] valid flag=0x0
-Channel 8 Freq=2447[2.4GHz] valid flag=0x10
-Channel 9 Freq=2452[2.4GHz] valid flag=0x10
-Channel 10 Freq=2457[2.4GHz] valid flag=0x10
-Channel 11 Freq=2462[2.4GHz] valid flag=0x10
-Channel 12 Freq=2467[2.4GHz] valid flag=0x36
-Channel 13 Freq=2472[2.4GHz] valid flag=0x36
-Channel 36 Freq=0[5.2GHz] valid flag=0x26
-Channel 40 Freq=0[5.2GHz] valid flag=0x16
-Channel 44 Freq=0[5.2GHz] valid flag=0x26
-Channel 48 Freq=0[5.2GHz] valid flag=0x16
-Channel 52 Freq=0[5.2GHz] valid flag=0x2E
-Channel 56 Freq=0[5.2GHz] valid flag=0x1E
-Channel 60 Freq=0[5.2GHz] valid flag=0x2E
-Channel 64 Freq=0[5.2GHz] valid flag=0x1E
-Channel 100 Freq=0[5.2GHz] valid flag=0x2E
-Channel 104 Freq=0[5.2GHz] valid flag=0x1E
-Channel 108 Freq=0[5.2GHz] valid flag=0x2E
-Channel 112 Freq=0[5.2GHz] valid flag=0x1E
-Channel 116 Freq=0[5.2GHz] valid flag=0x2E
-Channel 120 Freq=0[5.2GHz] valid flag=0x1E
-Channel 124 Freq=0[5.2GHz] valid flag=0x2E
-Channel 128 Freq=0[5.2GHz] valid flag=0x1E
-Channel 132 Freq=0[5.2GHz] valid flag=0x2E
-Channel 136 Freq=0[5.2GHz] valid flag=0x1E
-Channel 140 Freq=0[5.2GHz] valid flag=0x3E
-Channel 149 Freq=0[5.2GHz] valid flag=0x26
-Channel 153 Freq=0[5.2GHz] valid flag=0x16
-Channel 157 Freq=0[5.2GHz] valid flag=0x26
-Channel 161 Freq=0[5.2GHz] valid flag=0x16
-Channel 165 Freq=0[5.2GHz] valid flag=0x36
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ include/linux/ieee80211.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 6042228..294169e 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -959,7 +959,7 @@ struct ieee80211_ht_info {
+ /* block-ack parameters */
+ #define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
+ #define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
+-#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
++#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFC0
+ #define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
+ #define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
+ 
+-- 
+1.7.0.2
+
