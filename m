@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([86.59.21.14]:55713 "EHLO home.einfach.org"
+Received: from mms1.broadcom.com ([216.31.210.17]:1889 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752610Ab1AAOvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jan 2011 09:51:12 -0500
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [ath5k-devel] [PATCH 1/6] ath5k: Always write tx powertable on hw
-Date: Sat, 1 Jan 2011 23:51:07 +0900
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
-	nbd@openwrt.org, sedat.dilek@googlemail.com
-References: <20101203040300.GA2988@makis.mantri> <AANLkTinD+XrkXeUR2PNqj4eVVvTmrh8a9c4UEy0Nr7JE@mail.gmail.com>
-In-Reply-To: <AANLkTinD+XrkXeUR2PNqj4eVVvTmrh8a9c4UEy0Nr7JE@mail.gmail.com>
+	id S1755695Ab1ALTo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 14:44:56 -0500
+Date: Wed, 12 Jan 2011 11:44:39 -0800
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Greg KH" <gregkh@suse.de>
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH] staging: brcm80211: fix suspend/resume issue in
+ brcmsmac
+Message-ID: <20110112194438.GJ2466@broadcom.com>
+References: <1294855167-3718-1-git-send-email-arend@broadcom.com>
+ <20110112180829.GB10224@suse.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101012351.07339.br1@einfach.org>
+In-Reply-To: <20110112180829.GB10224@suse.de>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 30 December 2010 06:02:29 Bob Copeland wrote:
-> On Thu, Dec 2, 2010 at 11:03 PM, Nick Kossifidis <mickflemm@gmail.com> 
-wrote:
-> >  * By skipping tx power table calibration we also skip setting
-> >  tx power table on hw. Make sure we always write tx power table
-> >  on hw since it gets cleared on reset.
-> > 
-> >  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+On Wed, Jan 12, 2011 at 10:08:29AM -0800, Greg KH wrote:
+> On Wed, Jan 12, 2011 at 06:59:27PM +0100, Arend van Spriel wrote:
+> > PCI PM suspend callback took down the interface and resume brought
+> > it back up. In the mac80211 context this is done in subsequent calls.
+> > Rework implementation so that suspend only stores config, and sets
+> > PCI power state. The resume return to full power state (D0), restores
+> > the config, and brings hardware back up. Full bringup is done by
+> > subsequent mac80211 calls.
 > 
-> Just a very late heads-up, this patch seems to be causing problems
-> for me.
-> 
-> Seems a bit weird given the content, but the symptom is that
-> when I bring up the device none of my probe requests are actually
-> getting sent, according to wireshark captures from another device.
-> Reverting just this patch helps, so my power table must be broken
-> at start up.
-> 
-> I saw that Bruno had a later series that touched this area, so I'll
-> try them next.
+> Ah, does this solve the suspend/resume bug that a number of people have
+> reported for the driver since the .36 release?  If so, should it go into
+> the kernel now and be backported to older releases?
 
-Yep, they should fix that problem. Please try them and report if they don't.
 
-Bruno
+Yes, this should solve the suspend/resume bug that people have reported. 
+(It doesn't solve the rfkill issues; Arend is working on a separate fix for
+that.)
+
+It should get backported, but it would be nice to get some confirmation from
+people that it fixes the issues they're seeing first.
+
+- Henry
+
+
