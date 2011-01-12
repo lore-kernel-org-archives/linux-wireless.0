@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42013 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231Ab1AFAP4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 19:15:56 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 4/5] ath9k:  Ensure xmit makes progress.
-Date: Wed,  5 Jan 2011 16:15:18 -0800
-Message-Id: <1294272919-7068-4-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1294272919-7068-1-git-send-email-greearb@candelatech.com>
-References: <1294272919-7068-1-git-send-email-greearb@candelatech.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:42863 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756202Ab1ALN0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 08:26:46 -0500
+Received: from dlep34.itg.ti.com ([157.170.170.115])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0CDQkbm028838
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 07:26:46 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep34.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0CDQj97025466
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 07:26:45 -0600 (CST)
+Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
+	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0CDQjt2011980
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 07:26:45 -0600 (CST)
+From: <coelho@ti.com>
+To: <coelho@ti.com>
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wl12xx: add hw configuration for max supported AMDPU size
+Date: Wed, 12 Jan 2011 15:27:03 +0200
+Message-ID: <1294838823-444-1-git-send-email-coelho@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Luciano Coelho <coelho@ti.com>
 
-If the txq->axq_q is empty, the code was breaking out
-of the tx_processq logic without checking to see if it should
-transmit other queued AMPDU frames (txq->axq_acq).
+The wl12xx chips do the AMDPU aggregation work in the firmware, but it
+supports a maximum of 8 frames per block.  Configure the mac80211 hw
+structure accordingly.
 
-This patches ensures ath_txq_schedule is called.
-
-This needs review.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Tested-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
-:100644 100644 c769037... 2248e47... M	drivers/net/wireless/ath/ath9k/xmit.c
- drivers/net/wireless/ath/ath9k/xmit.c |    2 ++
+ drivers/net/wireless/wl12xx/main.c |    2 ++
  1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index c769037..2248e47 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1999,6 +1999,8 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		spin_lock_bh(&txq->axq_lock);
- 		if (list_empty(&txq->axq_q)) {
- 			txq->axq_link = NULL;
-+			if (sc->sc_flags & SC_OP_TXAGGR)
-+				ath_txq_schedule(sc, txq);
- 			spin_unlock_bh(&txq->axq_lock);
- 			break;
- 		}
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 67732ea..463d6bf 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3178,6 +3178,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 
+ 	wl->hw->sta_data_size = sizeof(struct wl1271_station);
+ 
++	wl->hw->max_rx_aggregation_subframes = 8;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
 -- 
-1.7.2.3
+1.7.1
 
