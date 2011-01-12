@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38957 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317Ab1ADSTP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35563 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755190Ab1ALVTw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 13:19:15 -0500
-Received: by fxm20 with SMTP id 20so14325365fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 10:19:14 -0800 (PST)
-Message-ID: <4D2364A9.3050707@lwfinger.net>
-Date: Tue, 04 Jan 2011 12:19:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 12 Jan 2011 16:19:52 -0500
+Message-ID: <4D2E1AF7.4000104@candelatech.com>
+Date: Wed, 12 Jan 2011 13:19:51 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: N-PHY: enable support for PHYs rev 3 and higher
-References: <1292963384-23684-1-git-send-email-zajec5@gmail.com> <AANLkTikwKOLJ6A-DTEuVg43_g_cWgDg2xK4M6qQ0Lm4U@mail.gmail.com> <4D234604.8010602@lwfinger.net> <20110104181140.GC11333@tuxdriver.com>
-In-Reply-To: <20110104181140.GC11333@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: NetDev <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: TCP connections stall when station re-associates.
+References: <4D2CFDB8.3010907@candelatech.com>
+In-Reply-To: <4D2CFDB8.3010907@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/04/2011 12:11 PM, John W. Linville wrote:
-> On Tue, Jan 04, 2011 at 10:08:36AM -0600, Larry Finger wrote:
->> On 01/04/2011 09:50 AM, Rafał Miłecki wrote:
->>> W dniu 21 grudnia 2010 21:29 użytkownik Rafał Miłecki
->>> <zajec5@gmail.com> napisał:
->>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>> ---
->>>> John: can we still make it for 2.6.38 merge? It was tested with 14e4:432b,
->>>> support seems to be on the same level as for PHYs 1 and 2.
->>>
->>> John, I dont see patches for rev3+ in wireless-testing. Any problems with them?
->>>
->>> It means:
->>> [PATCH 1/4] b43: use correct firmware for newer cores
->>> [PATCH 2/4 v2] b43: N-PHY: implement radio 2056 init steps
->>> [PATCH 3/4] b43: N-PHY: add init tables for 2056 radio
->>> [PATCH 4/4] b43: N-PHY: avoid PHY hangs for rev 3 and 4
->>>
->>> [PATCH 1/2] b43: N-PHY: use correct channel tables for rev4+
->>> [PATCH 2/2 v2] b43: N-PHY: update 2056 radio on channel switch on rev3+
->>> and this one.
->>
->> John,
->>
->> I have been testing these patches with a 14e4:432b device for at least two
->> weeks. With them, the driver still does not handle WPA/WPA2 encryption and falls
->> over with OFDM rates, but it is rock solid with WEP encryption and at 11 Mb/s.
->> Rafał and I have some ideas why the limitations, but the holidays have
->> interfered with debugging.
->>
->> Larry
-> 
-> And with merging...
-> 
-> I hope to get caught-up soon.
+On 01/11/2011 05:02 PM, Ben Greear wrote:
+>
+> We're seeing something funny while testing ath9k and ath5k with
+> multiple VIFs. We are using send-to-self routing rules
+> and have a TCP connection going between two station interfaces
+> connected to the same AP. Kernel is ~2.6.37 (wireless-testing from
+> a few days ago, plus some local patches). We tried commercial
+> APs and ath9k/ath5k APs running 2.6.37 kernel and hostap with
+> similar results.
 
-I hope there are some rtlwifi/rtl8192ce updates there as well. I'll wait for
-some new merges before I bug you about the specific patches.
+When the stations re-connect, we re-run dhcp client, which involves
+setting IP to zero and then re-acquiring the IP address.  We
+then set up new routing rules, etc to have it back to the way
+it was before the station lost contact with the AP.
 
-Larry
+The TCP/IP connections are specifically bound to local IP and port.
+
+Maybe it is invalid to expect TCP connections to survive this
+IP change?
+
+I'll work on reproducing this DHCP behaviour on some regular
+wired interfaces and see if I can reproduce in a simpler test
+case.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
