@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39640 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758Ab1AAJux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Jan 2011 04:50:53 -0500
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<lrodriguez@atheros.com>, Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH] Revert "ath9k: Parse DTIM period from mac80211"
-References: <1293691681-3574-1-git-send-email-mshajakhan@atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 01 Jan 2011 11:50:50 +0200
-In-Reply-To: <1293691681-3574-1-git-send-email-mshajakhan@atheros.com> (Mohammed Shafi Shajakhan's message of "Thu\, 30 Dec 2010 12\:18\:01 +0530")
-Message-ID: <871v4xgdfp.fsf@purkki.adurom.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:54805 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756233Ab1ALVLB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 16:11:01 -0500
+Received: by iwn9 with SMTP id 9so939504iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 13:11:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1294796791-2521-1-git-send-email-lrodriguez@atheros.com>
+References: <1294796791-2521-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 12 Jan 2011 13:10:40 -0800
+Message-ID: <AANLkTimAA5AfvPxVZLmCngetNm_EoVNgjxSitXMtORyF@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_hw: disable PLL / Clkreq for ASPM for AR9003
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Jack Lee <jack.lee@atheros.com>,
+	Carl Huang <carl.huang@atheros.com>,
+	David Quan <david.quan@atheros.com>,
+	Nael Atallah <nael.atallah@atheros.com>,
+	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mshajakhan@atheros.com> writes:
+Please hold on
 
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On Tue, Jan 11, 2011 at 5:46 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This changes the PCIE PHY programming for better interoperability
+> with ASPM states. Without this AR9003 chipsets will hang when
+> using ASPM. This reproducible against an Apple Airport Extreme AP
+> by simply pinging it.
 >
-> This reverts commit 0ce3bcfc84900a64347b0fe1140229bd81314008.
->
-> Event though with the above commit we obtain the configured DTIM period
-> from the AP rather than always hardcoding it to '1', this seems to cause
-> problems under the following scenarios:
-> * Preventing association with broken AP's
+> Cc: stable@kernel.org
+> Cc: Jack Lee <jack.lee@atheros.com>
+> Cc: Carl Huang <carl.huang@atheros.com>
+> Cc: David Quan <david.quan@atheros.com>
+> Cc: Nael Atallah <nael.atallah@atheros.com>
+> Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-How can different dtim value cause problems with association? Power
-save should not be even enabled during association. Or do you mean
-there are problems after association, for example during eap
-negotation?
+John, if you have not merged this, please hold on this, I forgot one bit.
 
-> * Adds latency in roaming
-
-We should try to solve this problem differently than hardcoding dtim.
-There are other ways to trigger roaming than just following beacons.
-And if there's no data, there's no need to roam either. 
-
-I have been hoping to work on improving roaming, but never found the
-time to do it :/
-
-> So its better to always use the safe value of '1' for dtim period
-
-By hardcoding dtim you increase the power consumption in the case when
-there is no data traffic, so it's not definitely better in all cases.
-
-I would prefer to fix the real issues instead of hardcoding dtim. And
-if it's really essential to hardcode it now, please add a big fat
-warning indicating that this is a temporary solution and should be
-fixed properly without hardcoding anything.
-
--- 
-Kalle Valo
+  Luis
