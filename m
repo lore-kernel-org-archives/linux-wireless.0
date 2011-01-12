@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40518 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1AUDBB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50283 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287Ab1ALMxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:01:01 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so1249489iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:01 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63167.685562.673891@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:30:15 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 08/33] ath9k_htc: Make sequence number calculation per-VIF
+	Wed, 12 Jan 2011 07:53:24 -0500
+Subject: Re: [PATCH] mac80211: use maximum number of a-msdu frames as
+ default in BA RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+In-Reply-To: <1294836681-21712-1-git-send-email-coelho@ti.com>
+References: <1294836681-21712-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Jan 2011 13:54:04 +0100
+Message-ID: <1294836844.3639.26.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Wed, 2011-01-12 at 14:51 +0200, coelho@ti.com wrote:
+> From: Luciano Coelho <coelho@ti.com>
+> 
+> When the buffer size is set to zero in the block ack parameter set
+> field, we should use the maximum supported number of subframes.  The
+> existing code was bogus and was doing some unnecessary calculations
+> that lead to wrong values.
+> 
+> Thanks Johannes for helping me figure this one out.
+> 
+> Cc: stable@kernel.org
+> Cc: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h            |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 4e646fb..87e2d41 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -208,6 +208,7 @@ struct ath9k_htc_target_stats {
- 
- struct ath9k_htc_vif {
- 	u8 index;
-+	u16 seq_no;
- };
- 
- struct ath9k_vif_iter_data {
-@@ -372,7 +373,6 @@ struct ath9k_htc_priv {
- 	u16 txpowlimit;
- 	u16 nvifs;
- 	u16 nstations;
--	u16 seq_no;
- 	u32 bmiss_cnt;
- 	bool rearm_ani;
- 	bool reconfig_beacon;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 133f628..bbbdd60 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -207,9 +207,9 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending)
- 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
- 		struct ieee80211_hdr *hdr =
- 			(struct ieee80211_hdr *) beacon->data;
--		priv->seq_no += 0x10;
-+		avp->seq_no += 0x10;
- 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
--		hdr->seq_ctrl |= cpu_to_le16(priv->seq_no);
-+		hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
- 	}
- 
- 	tx_ctl.type = ATH9K_HTC_NORMAL;
--- 
-1.7.3.5
+It'd be easier for stable if you reordered with the other patch, I
+think, but I guess it's easy enough to fix up.
+
+Also some older stable versions might have this code in a different
+file, but I'm not sure how to handle that.
+
+johannes
+
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  net/mac80211/agg-rx.c |    9 ++-------
+>  1 files changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> index 002db5e..ed3ee93 100644
+> --- a/net/mac80211/agg-rx.c
+> +++ b/net/mac80211/agg-rx.c
+> @@ -231,13 +231,8 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+>  		goto end_no_lock;
+>  	}
+>  	/* determine default buffer size */
+> -	if (buf_size == 0) {
+> -		struct ieee80211_supported_band *sband;
+> -
+> -		sband = local->hw.wiphy->bands[conf->channel->band];
+> -		buf_size = IEEE80211_MIN_AMPDU_BUF;
+> -		buf_size = buf_size << sband->ht_cap.ampdu_factor;
+> -	}
+> +	if (buf_size == 0)
+> +		buf_size = IEEE80211_MAX_AMPDU_BUF;
+>  
+>  	/* make sure the size doesn't exceed the maximum supported by the hw */
+>  	if (buf_size > local->hw.max_rx_aggregation_subframes)
+
 
