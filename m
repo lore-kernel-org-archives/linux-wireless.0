@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40689 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752187Ab1AUDE1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:04:27 -0500
-Received: by iyj18 with SMTP id 18so1248234iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:04:27 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:48081 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932594Ab1ALNWR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 08:22:17 -0500
+Subject: Re: [PATCH] mac80211: use maximum number of a-msdu frames as
+ default in BA RX
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <1294837426.2097.32.camel@pimenta>
+References: <1294836681-21712-1-git-send-email-coelho@ti.com>
+	 <1294836844.3639.26.camel@jlt3.sipsolutions.net>
+	 <1294837426.2097.32.camel@pimenta>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 12 Jan 2011 15:21:23 +0200
+Message-ID: <1294838483.2097.38.camel@pimenta>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63373.791952.897019@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:33:41 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 30/33] ath9k_htc: Fix host RX initialization
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Wed, 2011-01-12 at 14:03 +0100, Coelho, Luciano wrote:
+> On Wed, 2011-01-12 at 13:54 +0100, Johannes Berg wrote:
+> > On Wed, 2011-01-12 at 14:51 +0200, coelho@ti.com wrote:
+> > > From: Luciano Coelho <coelho@ti.com>
+> > > 
+> > > When the buffer size is set to zero in the block ack parameter set
+> > > field, we should use the maximum supported number of subframes.  The
+> > > existing code was bogus and was doing some unnecessary calculations
+> > > that lead to wrong values.
+> > > 
+> > > Thanks Johannes for helping me figure this one out.
+> > > 
+> > > Cc: stable@kernel.org
+> > > Cc: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > It'd be easier for stable if you reordered with the other patch, I
+> > think, but I guess it's easy enough to fix up.
+> 
+> Will do.
 
-There is no need to set the BSSID mask or opmode when
-initializing RX, they would be set correctly in the HW reset
-routine.
+Sent v2 rebased in a cleaner head and changed "a-msdu" to AMPDU in the
+commit subject, as Johannes pointed out.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 9913ef0..458164f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -451,20 +451,12 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
- static void ath9k_htc_opmode_init(struct ath9k_htc_priv *priv)
- {
- 	struct ath_hw *ah = priv->ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--
- 	u32 rfilt, mfilt[2];
- 
- 	/* configure rx filter */
- 	rfilt = ath9k_htc_calcrxfilter(priv);
- 	ath9k_hw_setrxfilter(ah, rfilt);
- 
--	/* configure bssid mask */
--	ath_hw_setbssidmask(common);
--
--	/* configure operational mode */
--	ath9k_hw_setopmode(ah);
--
- 	/* calculate and install multicast filter */
- 	mfilt[0] = mfilt[1] = ~0;
- 	ath9k_hw_setmcastfilter(ah, mfilt[0], mfilt[1]);
 -- 
-1.7.3.5
+Cheers,
+Luca.
 
