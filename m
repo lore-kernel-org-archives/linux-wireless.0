@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:23723 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649Ab1AES3K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 13:29:10 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 10:28:41 -0800
-Date: Wed, 5 Jan 2011 10:28:38 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Kathy Giori <Kathy.Giori@Atheros.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	David Quan <David.Quan@Atheros.com>,
-	Michael Green <Michael.Green@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/8] wireless: DFS region support
-Message-ID: <20110105182838.GC10391@tux>
-References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
- <20110104184928.GA13239@tuxdriver.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51743 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753427Ab1ALIIJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 03:08:09 -0500
+Received: by wwa36 with SMTP id 36so325208wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 00:08:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110104184928.GA13239@tuxdriver.com>
+From: Joe Hershberger <joe.hershberger@gmail.com>
+Date: Wed, 12 Jan 2011 02:07:47 -0600
+Message-ID: <AANLkTimcx+BvmhbuwhyTabgsDA=WiGY3V_Yk8uGdQ2aR@mail.gmail.com>
+Subject: Regulatory Domain: User hint + Driver hint
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 04, 2011 at 10:49:28AM -0800, John W. Linville wrote:
-> On Mon, Dec 20, 2010 at 12:02:26PM -0500, Luis R. Rodriguez wrote:
-> > This series has a list of changes to kernel and userspace to start addressing
-> > DFS region support. I've cheated and figured out a way to alter the current
-> > regulatory database in such a way that it remains backwards compatible with
-> > older databases so that no new CRDAs are required and we don't have to provide
-> > two releases for old kernels and newer kernels for wireless-regdb updates.
-> > 
-> > In the end we end up passing the DFS region to the drivers. In terms of our DFS
-> > development roadmap this covers parts I and II as promissed that I would take care
-> > of by tomorrow, and leaves open now the chance for developers to start working
-> > on part III: "Where do we stuff DFS parameters for each region":
-> > 
-> > http://wireless.kernel.org/en/developers/DFS
-> > 
-> > In tomorrow's meeting we can cover who is going to work on part III. People who
-> > want to work on part III can start using these patches on their systems.
-> > 
-> > John, lets wait to merge these until Wednesday, I post these in patch form as I
-> > think they are ready but tomorrow's discussions may push us to alter this a
-> > bit, not sure. I will also review what we have done here with Michael Green so
-> > he is on the same page.
-> 
-> Well, now there has been plenty of time to reflect...comments? :-)
+Hi All,
 
-I'll reduce the number of bits to 8 instead of 16 for the DFS regions, I'll also
-try to schedule a call with Michael to finalize his review on this and then I'll
-respin and submit again.
+>From reading http://wireless.kernel.org/en/developers/Regulatory/processing_rules
+I am under the impression that the Driver hint gives the driver an
+opportunity to "lock" the card to a specific regdom based on its
+EEPROM.  Then any regdom set as a User hint (via "iw reg set ??" or
+wpa_supplicant) would be the intersection of the Driver hint and the
+User hint.
 
-  Luis
+What I'm seeing from the cfg80211 dbg prints is that the User hint
+simply overrides the Driver hint ("cfg80211: Regulatory domain changed
+to country").  I also don't see what looks like an intersection when
+comparing the resulting rules... it looks like a replacement.
+
+Looking at the code in net/wireless/reg.c in the ignore_request
+function, only if (last_request->initiator ==
+NL80211_REGDOM_SET_BY_COUNTRY_IE) return REG_INTERSECT;  This seems to
+disagree with the document.  Am I simply misinterpreting the code or
+is it broken as is?
+
+Any enlightenment would be greatly appreciated.
+
+I'm using Kernel.org 2.6.35 with ath5k 802.11 PCI card.
+
+Thanks,
+-Joe
