@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 124-197-1-37.callplus.net.nz ([124.197.1.37]:60331 "EHLO
-	elm.torus.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab1AXU1r (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62026 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756478Ab1ALBh3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 15:27:47 -0500
-Message-ID: <4D3DE0BE.8040900@davenport.net.nz>
-Date: Tue, 25 Jan 2011 09:27:42 +1300
-From: Hugh Davenport <hugh@davenport.net.nz>
+	Tue, 11 Jan 2011 20:37:29 -0500
+Received: by eye27 with SMTP id 27so29382eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 17:37:28 -0800 (PST)
 MIME-Version: 1.0
-To: ath5k-devel@lists.ath5k.org
-CC: linux-wireless@vger.kernel.org
-Subject: ath5k: issues with AHB support on ubiquiti bullet 2 (AR2315)
+In-Reply-To: <4D2BA3CD.4010305@openwrt.org>
+References: <AANLkTikj+40TksokdnAKzXnBi7CBE5GO4BEKoaxQG79D@mail.gmail.com>
+	<4D2BA3CD.4010305@openwrt.org>
+Date: Tue, 11 Jan 2011 20:37:27 -0500
+Message-ID: <AANLkTimsPoa=1ifA6x0q4rZ0t40tpbMUNzesXuCPk=wf@mail.gmail.com>
+Subject: Re: ath9k_hw_check_alive routine
+From: Bill Jordan <bjordan@rajant.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey all,
+On Mon, Jan 10, 2011 at 7:26 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-01-10 1:23 PM, Bill Jordan wrote:
+>>
+>> This routine is failing a lot on my AR9160. The ((reg&  0x7E7FFFEF) ==
+>> 0x00702400) test is the one that always fails. There is no debug
+>> messages in this path, so it may not be obvious whether others are
+>> experiencing the problem.
+>>
+>> This forces ath9k_tasklet to reset the hardware. If I increase the
+>> count to 500, I can eliminate most of the resets, so the hardware
+>> isn't really hung. However, it sometimes takes over 25 milliseconds
+>> before the test condition passes.
+>>
+>> I don't have specs for the radio, and the numeric constants aren't
+>> very useful, so I can't tell what condition we are waiting for or why.
+>>
+>> Can someone with a spec shed some light on this problem?
+>
+> I just posted a 4-patch series, the last patch of that should take care of
+> this problem. Please test.
+>
+> - Felix
+>
 
-I'm just letting you know that I have been having issues getting the the
-AHB support with the ath5k driver working (from compat-wireless 2011-01-05).
+I tried your patch. It improved the situation, but it still reset
+every couple minutes. It also seems to reset a few times in quick
+succession every time it resets. What is the routine testing for? Is
+this a test for a stuck transmitter? I'm in a very noisy environment,
+and it could take a while to transmit.
 
-I'm testing it on an ubiquiti bullet 2 device which internally is a
-AR2315 WiSoC. I am using openwrt backfire with the mac80211 package
-patched to use a later version of compat-wireless (ie one with AHB
-support in ath5k). I had to modify some of the patches in openwrt so
-they applied cleanly, but don't think any affected the ath5k (and would
-cause the problem i have).
-
-Basically the issue is this. When I try to load the module as is in the
-source tree, the system hangs and module never loads (device restarts
-itself).
-
-I tried a bit of debugging (sorry about any newbie techniques here, im
-new to kernel debugging) by just printing and returning errors after
-every main function called. The problem seemed to be with the first time
-it called ath5k_hw_reg_write, which from my tracing seemed to be in th
-wisoc reset function in the following chain.
-
-ath5k_hw_reg_write (ath5k.h)
-ath5k_hw_wisoc_reset (reset.c)
-ath5k_hw_nic_wakeup (reset.c)
-ath5k_hw_init (attach.c)
-ath5k_init_softc (base.c)
-ath_ahb_probe (ahb.c)
-
-
-I then tried out a few things in the vain attempt to get it to load the
-module, one which seemed to work is taking out the ioremap_nocache call
-in ath_ahb_probe, and set mem to be res->start (on my system this is
-0xb0000000 (the same as what madwifi tells me as well)). With this /fix/
-the module now loads, gives the output below, but i can't bring the
-interface up (device crashes again).
-
-Atheros AR2315 chip found (MAC: 0x87, PHY: 0x48)
-
-
-continuing traces when bring interface up brings me to another
-ath5k_hw_reg_write call in the following chain
-
-ath5k_hw_reg_write (ath5k.h)
-ath5k_hw_start_rx_dma (dma.c)
-ath5k_rx_start (base.c)
-ath5k_reset (base.c)
-ath5k_init_hw (base.c)
-ath5k_start (mac80211-ops.c)
-
-
-I am sorry about the long email, but I thought the more info you guys
-have, the better.
-
-If you have any ideas I can try, any more testing you may need me to do,
-or anything that could help me get it working, let me know, and i'll do
-my best to get anything done asap.
-
-Cheers,
-
-Hugh Davenport
+Bill Jordan
