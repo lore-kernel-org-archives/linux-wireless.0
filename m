@@ -1,142 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:47645 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104Ab1AUDDv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50578 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755331Ab1ALMOI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:03:51 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so1251567iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:03:51 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63337.657113.713305@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:33:05 +0530
+	Wed, 12 Jan 2011 07:14:08 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1PczaZ-0001RQ-7M
+	for linux-wireless@vger.kernel.org; Wed, 12 Jan 2011 13:14:07 +0100
+Message-Id: <20110112121322.702618109@sipsolutions.net>
+Date: Wed, 12 Jan 2011 13:13:22 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 26/33] ath9k_htc: Handle BSSID/AID for multiple interfaces
+Subject: [RFC 0/2] fix aggregation buffer size limits
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Luca and I found that we do not correctly handle
+peers that want a limit (other than 64) on the
+number of subframes in an aggregate. Here's a
+completely untested attempt at fixing this.
 
-The AID and BSSID should be set in the HW only for the
-first station interface or adhoc interface. Also, cancel
-the ANI timer in stop() for multi-STA scenario. And finally
-configure the HW beacon timers only for the first station
-interface.
+Comments welcome.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   17 ++++++++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   45 +++++++++++++++--------
- 2 files changed, 45 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index c3eae71..15b149e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -167,8 +167,9 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 	/* TSF out of range threshold fixed at 1 second */
- 	bs.bs_tsfoor_threshold = ATH9K_TSFOOR_THRESHOLD;
- 
--	ath_dbg(common, ATH_DBG_BEACON, "tsf: %llu tsftu: %u\n", tsf, tsftu);
--	ath_dbg(common, ATH_DBG_BEACON,
-+	ath_dbg(common, ATH_DBG_CONFIG, "intval: %u tsf: %llu tsftu: %u\n",
-+		intval, tsf, tsftu);
-+	ath_dbg(common, ATH_DBG_CONFIG,
- 		"bmiss: %u sleep: %u cfp-period: %u maxdur: %u next: %u\n",
- 		bs.bs_bmissthreshold, bs.bs_sleepduration,
- 		bs.bs_cfpperiod, bs.bs_cfpmaxduration, bs.bs_cfpnext);
-@@ -559,6 +560,18 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
- 		return;
- 	}
- 
-+	/*
-+	 * The beacon paramters are configured only for the first
-+	 * station interface.
-+	 */
-+	if ((priv->ah->opmode == NL80211_IFTYPE_STATION) &&
-+	    (priv->num_sta_vif > 1) &&
-+	    (vif->type == NL80211_IFTYPE_STATION)) {
-+		ath_dbg(common, ATH_DBG_CONFIG,
-+			"Beacon already configured for a station interface\n");
-+		return;
-+	}
-+
- 	cur_conf->beacon_interval = bss_conf->beacon_int;
- 	if (cur_conf->beacon_interval == 0)
- 		cur_conf->beacon_interval = 100;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 68a7687..4f72246 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1161,6 +1161,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	u8 cmd_rsp;
- 
- 	/* Cancel all the running timers/work .. */
-+	cancel_delayed_work_sync(&priv->ath9k_ani_work);
- 	cancel_work_sync(&priv->fatal_work);
- 	cancel_work_sync(&priv->ps_work);
- 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
-@@ -1598,30 +1599,44 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 	struct ath9k_htc_priv *priv = hw->priv;
- 	struct ath_hw *ah = priv->ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	bool set_assoc;
- 
- 	mutex_lock(&priv->mutex);
- 	ath9k_htc_ps_wakeup(priv);
- 
-+	/*
-+	 * Set the HW AID/BSSID only for the first station interface
-+	 * or in IBSS mode.
-+	 */
-+	set_assoc = !!((priv->ah->opmode == NL80211_IFTYPE_ADHOC) ||
-+		       ((priv->ah->opmode == NL80211_IFTYPE_STATION) &&
-+			(priv->num_sta_vif == 1)));
-+
-+
- 	if (changed & BSS_CHANGED_ASSOC) {
--		common->curaid = bss_conf->assoc ?
--				 bss_conf->aid : 0;
--		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
--			bss_conf->assoc);
-+		if (set_assoc) {
-+			ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
-+				bss_conf->assoc);
- 
--		if (bss_conf->assoc)
--			ath_start_ani(priv);
--		else
--			cancel_delayed_work_sync(&priv->ath9k_ani_work);
-+			common->curaid = bss_conf->assoc ?
-+				bss_conf->aid : 0;
-+
-+			if (bss_conf->assoc)
-+				ath_start_ani(priv);
-+			else
-+				cancel_delayed_work_sync(&priv->ath9k_ani_work);
-+		}
- 	}
- 
- 	if (changed & BSS_CHANGED_BSSID) {
--		/* Set BSSID */
--		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
--		ath9k_hw_write_associd(ah);
-+		if (set_assoc) {
-+			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
-+			ath9k_hw_write_associd(ah);
- 
--		ath_dbg(common, ATH_DBG_CONFIG,
--			"BSSID: %pM aid: 0x%x\n",
--			common->curbssid, common->curaid);
-+			ath_dbg(common, ATH_DBG_CONFIG,
-+				"BSSID: %pM aid: 0x%x\n",
-+				common->curbssid, common->curaid);
-+		}
- 	}
- 
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon) {
--- 
-1.7.3.5
+johannes
 
