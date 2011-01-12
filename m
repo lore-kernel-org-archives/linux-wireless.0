@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:43819 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753650Ab1ASLHa convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:32916 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014Ab1ALMbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 06:07:30 -0500
-Received: by qwa26 with SMTP id 26so695941qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 03:07:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110119092042.19628.81667.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092042.19628.81667.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 06:07:28 -0500
-Message-ID: <AANLkTinNaMK_QUDVRxQ32XtKiQXmyDeuHGoCv2rWnW=e@mail.gmail.com>
-Subject: Re: [PATCH 2/8] ath5k: Simplify loop when setting up channels
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 12 Jan 2011 07:31:11 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Pczr5-0001fC-2r
+	for linux-wireless@vger.kernel.org; Wed, 12 Jan 2011 13:31:11 +0100
+Message-Id: <20110112123132.021743908@sipsolutions.net>
+Date: Wed, 12 Jan 2011 13:31:01 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 1/2] mac80211: allow advertising correct maximum aggregate
+ size
+References: <20110112123100.615900267@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 4:20 AM, Bruno Randolf <br1@einfach.org> wrote:
-> Simplify confusing code and get rid of an unnecessary variable.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+From: Johannes Berg <johannes.berg@intel.com>
+
+Currently, mac80211 always advertises that it may send
+up to 64 subframes in an aggregate. This is fine, since
+it's the max, but might as well be set to zero instead
+since it doesn't have any information.
+
+However, drivers might have that information, so allow
+them to set a variable giving it, which will then be
+used. The default of zero will be fine since to the
+peer that means we don't know and it will just use its
+own limit for the buffer size.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/agg-tx.c  |    3 ++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2011-01-12 13:25:40.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2011-01-12 13:26:56.000000000 +0100
+@@ -1147,6 +1147,10 @@ enum ieee80211_hw_flags {
+  * @napi_weight: weight used for NAPI polling.  You must specify an
+  *	appropriate value here if a napi_poll operation is provided
+  *	by your driver.
++ *
++ * @max_tx_aggregation_subframes: maximum number of subframes in an
++ *	aggregate an HT driver will transmit, used by the peer as a
++ *	hint to size its reorder buffer.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1165,6 +1169,7 @@ struct ieee80211_hw {
+ 	u8 max_rates;
+ 	u8 max_report_rates;
+ 	u8 max_rate_tries;
++	u8 max_tx_aggregation_subframes;
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2011-01-12 13:27:01.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2011-01-12 13:27:20.000000000 +0100
+@@ -342,7 +342,8 @@ void ieee80211_tx_ba_session_handle_star
+ 	/* send AddBA request */
+ 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+ 				     tid_tx->dialog_token, start_seq_num,
+-				     0x40, tid_tx->timeout);
++				     local->hw.max_tx_aggregation_subframes,
++				     tid_tx->timeout);
+ }
+ 
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
 
 
-> @@ -285,8 +285,8 @@ ath5k_copy_channels(struct ath5k_hw *ah,
->                return 0;
->        }
->
-> -       for (i = 0, count = 0; i < size && max > 0; i++) {
-> -               ch = i + 1 ;
-> +       count = 0;
-> +       for (ch = 1; ch < size && count <= max; ch++) {
-
-Should be <= size now, right?  And maybe rename size to max_channel
-or something like that.
-
--- 
-Bob Copeland %% www.bobcopeland.com
