@@ -1,28 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56295 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:43986 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756116Ab1ALN1b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 08:27:31 -0500
-Date: Wed, 12 Jan 2011 14:26:04 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] mac80211: Fix mixed usage of spin_lock and
- spin_lock_irqsave on same lock
-Message-ID: <20110112132603.GA4111@redhat.com>
-References: <4d2d3810.F6Slpvbu6tV67Lp2%Larry.Finger@lwfinger.net>
- <1294822933.3639.14.camel@jlt3.sipsolutions.net>
+	id S1750780Ab1ALFXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 00:23:04 -0500
+Date: Wed, 12 Jan 2011 10:52:28 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Bernhard Walle <walle@corscience.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] [RFC] ath9k: Fix reporting of RX STBC streams to
+	userspace
+Message-ID: <20110112052227.GE31650@vasanth-laptop>
+References: <1294765194-30542-1-git-send-email-walle@corscience.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1294822933.3639.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1294765194-30542-1-git-send-email-walle@corscience.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 12, 2011 at 10:02:13AM +0100, Johannes Berg wrote:
-> local->skb_queue[_unreliable]. I think Stanislaw was right on (but why
-> didn't he offer a fix? :-) ).
-Heh, I did't know such simple fix exist :)
+On Tue, Jan 11, 2011 at 10:29:54PM +0530, Bernhard Walle wrote:
+> While the driver reports
+> 
+>         ath: TX streams 2, RX streams: 2
+> 
+> in the kernel log (with ATH_DBG_CONFIG set in the debug module
+> parameter), "iw list" only reported
+> 
+> [...]
+>         Capabilities: 0x12ce
+>                 HT20/HT40
+>                 SM Power Save disabled
+>                 RX HT40 SGI
+>                 TX STBC
+>                 RX STBC 1-streams
+> [...]
+> 
+> The driver seems to set the value as flag while the iw tool interprets
+> it as number. This patch fixes that.
 
-Stanislaw
+Nope. hw supports STBC for one Spatial stream only.
+
+Vasanth
