@@ -1,121 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:35185 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753629Ab1ATIQN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 03:16:13 -0500
-Message-ID: <20110120101606.53052h18mlpyp8w0@hayate.sektori.org>
-Date: Thu, 20 Jan 2011 10:16:06 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>, kvalo@adurom.com
-Subject: Re: [RFC PATCH 10/17] zd1211rw: implement beacon fetching and
- handling ieee80211_get_buffered_bc()
-References: <20110104234745.25309.72030.stgit@fate.lan>
- <201101092133.37610.chunkeey@googlemail.com>
- <20110119204903.179429gv9mcqcidc@hayate.sektori.org>
- <201101192122.25282.chunkeey@googlemail.com>
-In-Reply-To: <201101192122.25282.chunkeey@googlemail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1397 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752988Ab1ALR7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 12:59:40 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] staging: brcm80211: fix suspend/resume issue in
+ brcmsmac
+Date: Wed, 12 Jan 2011 18:59:27 +0100
+Message-ID: <1294855167-3718-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Christian Lamparter <chunkeey@googlemail.com>:
+PCI PM suspend callback took down the interface and resume brought
+it back up. In the mac80211 context this is done in subsequent calls.
+Rework implementation so that suspend only stores config, and sets
+PCI power state. The resume return to full power state (D0), restores
+the config, and brings hardware back up. Full bringup is done by
+subsequent mac80211 calls.
 
-> On Wednesday 19 January 2011 19:49:03 Jussi Kivilinna wrote:
->> Quoting Christian Lamparter <chunkeey@googlemail.com>:
->>> On Sunday 09 January 2011 16:46:56 Jussi Kivilinna wrote:
->>>> Quoting Christian Lamparter <chunkeey@googlemail.com>:
->>>>> this is an interesting one...
->>>>>
->>>>> Since zd_beacon_done also uploads the next beacon so long in advance,
->>>>> there could be an equally long race between the outdated state of the
->>>>> next beacon's DTIM broadcast traffic indicator (802.11-2007 7.3.2.6)
->>>>> which -in your case- was uploaded almost a beacon interval ago and
->>>>> the xmit of ieee80211_get_buffered_bc *now*.
->>>>>
->>>>> The dtim bc/mc bit might be not set, when a mc/bc arrived after the
->>>>> beacon was uploaded, but before the "beacon done event" from the
->>>>> hardware. So, dozing stations don't expect the broadcast traffic
->>>>> and of course, they might miss it completely.
->>>>>
->>>>> It's probably better to fix this in mac80211 (see the attached hack).
->>>>
->>>> Ok, should I add this to my patchset?
->>> well, difficult to say. As far as I can say, it should be correct for "your
->>> case". But, on the other hand: what about solutions that can't buffer
->>> mc/bc frames (and needs to call ieee80211_get_buffered_bc), however the
->>> firmware is clever enough to maintain a beacon internally (so they
->>> won't call ieee80211_beacon_get and only relies on set_tim)?
->>>
->>> Sure, it's just a unlikely corner case... In fact, I didn't check if
->>> that's even possible, but it does sound reasonable to some extend.
->>
->> From what I checked none of currect driver/device is such.
->> Maybe if such device appears then !bss->dtim_bc_mc check in
->> ieee80211_beacon_add_tim() could be masked with driver flag (something
->> like
->> IEEE80211_HW_CAN_AND_HANDLE_BEACON_BUT_STILL_NEEDS_HOST_BROADCAST_PS_BUFFERING).
->
-> True, but a recent discussion into this matter have made parts of the
-> API you are planning to use sort-of "deprecated"? [I think?]
->
-> http://marc.info/?l=linux-wireless&m=129463297300480
->
-> I don't know the exact details, but I'm sure Kvalo does have his reasons.
-> [afaik it has to do with wl12xx, he even explained it once, but I can't
-> find that mail anymore].
->
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   28 ++++++++++++---------
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.h |    4 +--
+ 2 files changed, 17 insertions(+), 15 deletions(-)
 
-What I understood from that thread is that rt2x00/usb doesn't have HW  
-buffering and doesn't enable IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING  
-(rt2x00/pci does), and yet enables AP-mode. Driver has this comment:
-	/*
-	 * Initialize all hw fields.
-	 *
-	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING unless we are
-	 * capable of sending the buffered frames out after the DTIM
-	 * transmission using rt2x00lib_beacondone. This will send out
-	 * multicast and broadcast traffic immediately instead of buffering it
-	 * infinitly and thus dropping it after some time.
-	 */
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index c2663bd..8f11409 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -179,7 +179,6 @@ static void wl_ops_stop(struct ieee80211_hw *hw)
+ 	struct wl_info *wl = hw->priv;
+ 	ASSERT(wl);
+ 	WL_LOCK(wl);
+-	wl_down(wl);
+ 	ieee80211_stop_queues(hw);
+ 	WL_UNLOCK(wl);
+ 
+@@ -216,6 +215,14 @@ wl_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ static void
+ wl_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
++	struct wl_info *wl;
++
++	wl = HW_TO_WL(hw);
++
++	/* put driver in down state */
++	WL_LOCK(wl);
++	wl_down(wl);
++	WL_UNLOCK(wl);
+ 	return;
+ }
+ 
+@@ -1059,7 +1066,6 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	return 0;
+ }
+ 
+-#ifdef LINUXSTA_PS
+ static int wl_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct wl_info *wl;
+@@ -1074,11 +1080,12 @@ static int wl_suspend(struct pci_dev *pdev, pm_message_t state)
+ 		return -ENODEV;
+ 	}
+ 
++	/* only need to flag hw is down for proper resume */
+ 	WL_LOCK(wl);
+-	wl_down(wl);
+ 	wl->pub->hw_up = false;
+ 	WL_UNLOCK(wl);
+-	pci_save_state(pdev, wl->pci_psstate);
++
++	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 	return pci_set_power_state(pdev, PCI_D3hot);
+ }
+@@ -1102,7 +1109,7 @@ static int wl_resume(struct pci_dev *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	pci_restore_state(pdev, wl->pci_psstate);
++	pci_restore_state(pdev);
+ 
+ 	err = pci_enable_device(pdev);
+ 	if (err)
+@@ -1114,13 +1121,12 @@ static int wl_resume(struct pci_dev *pdev)
+ 	if ((val & 0x0000ff00) != 0)
+ 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+ 
+-	WL_LOCK(wl);
+-	err = wl_up(wl);
+-	WL_UNLOCK(wl);
+-
++	/*
++	*  done. driver will be put in up state
++	*  in wl_ops_add_interface() call.
++	*/
+ 	return err;
+ }
+-#endif				/* LINUXSTA_PS */
+ 
+ static void wl_remove(struct pci_dev *pdev)
+ {
+@@ -1155,10 +1161,8 @@ static void wl_remove(struct pci_dev *pdev)
+ static struct pci_driver wl_pci_driver = {
+ 	.name  = KBUILD_MODNAME,
+ 	.probe = wl_pci_probe,
+-#ifdef LINUXSTA_PS
+ 	.suspend = wl_suspend,
+ 	.resume  = wl_resume,
+-#endif				/* LINUXSTA_PS */
+ 	.remove   = __devexit_p(wl_remove),
+ 	.id_table = wl_id_table,
+ };
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
+index 070fa94..f6b7354 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
+@@ -67,9 +67,7 @@ struct wl_info {
+ 	struct wl_timer *timers;	/* timer cleanup queue */
+ 	struct tasklet_struct tasklet;	/* dpc tasklet */
+ 	bool resched;		/* dpc needs to be and is rescheduled */
+-#ifdef LINUXSTA_PS
+-	u32 pci_psstate[16];	/* pci ps-state save/restore */
+-#endif
++
+ 	/* RPC, handle, lock, txq, workitem */
+ 	uint stats_id;		/* the current set of stats */
+ 	/* ping-pong stats counters updated by Linux watchdog */
+-- 
+1.7.1
 
->>>>> In fact, you could just as well drop "[09/17] zd1211rw: implement
->>>>> seq_num for IEEE80211_TX_CTL_ASSIGN_SEQ"... unless of course, I'm
->>>>> an idiot and there is a really clever way around these issues.
->>>>
->>>> Oh well, I should have checked this more closely before doing that
->>>> patch. HW is assigning seq-numbers already and that patch is not needed.
->>>
->>> heh, p54's fw can assign sequence numbers as well, but there's a  
->>> txdesc flag
->>> to control the counter, so the firmware does not mess with the
->>> sequence control
->>> of QoS-Data frames. I hope zd1211* has one too.
->>
->> There is tx-control flag that doesn't have effect, but since zd1211
->> doesn't appear to support QoS it's not a problem.
->
-> Ok, that sound reasonable.
->
-> One more thing, is there a tx-control flag to instruct the HW/FW to write
-> the TSF into probe response frames, just like it does for beacons frames?
->
-> Sure, this feature is far more important for IBSS, but the 802.11-2007
-> specs @11.1.4 says that a STA might use beacons or probe responses to
-> synchronize its timers. [However 11.1.1.1 and 11.1.3.4 say that STAs
-> should "only" pick this information from beacons, if I'm not mistaken?!]
-> (Also a uniform "0..0" timestamp in every probe-response looks so sad.)
->
-
-No such flag I'm afraid. Vendor driver appears to be reading  
-tsf-register from driver and writing value to probe response frames,  
-maybe something I should add to zd1211rw too.
-
--Jussi
 
