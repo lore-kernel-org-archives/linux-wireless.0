@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:48919 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943Ab1AZQac (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36855 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932532Ab1AMJT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 11:30:32 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so1035708iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 08:30:31 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19776.19422.571177.795197@gargle.gargle.HOWL>
-Date: Wed, 26 Jan 2011 21:59:18 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH] ath9k_hw: Fix INI fixup
+	Thu, 13 Jan 2011 04:19:58 -0500
+Subject: Re: [PATCH v2] mwifiex: remove linked list implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1294895783-26539-1-git-send-email-bzhao@marvell.com>
+References: <1294895783-26539-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 13 Jan 2011 10:19:40 +0100
+Message-ID: <1294910380.3725.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Wed, 2011-01-12 at 21:16 -0800, Bing Zhao wrote:
 
-Commit "ath9k_hw: move AR9280 PCI EEPROM fix to eeprom_def.c"
-changed the behavior of INI overriding which is needed only
-for PCI cards. Revert to the original check.
+Better,
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/eeprom_def.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> +	list_del((struct list_head *) tx_ba_tsr_tbl);
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index c9318ff..fccd87d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -247,9 +247,9 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
- 	}
+but you shouldn't be casting at all. Do list_del(&tx_ba_tsr_tbl->list);
+or so instead, so that this works when the list_head isn't the first
+item in the struct.
  
- 	/* Enable fixup for AR_AN_TOP2 if necessary */
--	if (AR_SREV_9280_20_OR_LATER(ah) &&
--	    (eep->baseEepHeader.version & 0xff) > 0x0a &&
--	    eep->baseEepHeader.pwdclkind == 0)
-+	if ((ah->hw_version.devid == AR9280_DEVID_PCI) &&
-+	    ((eep->baseEepHeader.version & 0xff) > 0x0a) &&
-+	    (eep->baseEepHeader.pwdclkind == 0))
- 		ah->need_an_top2_fixup = 1;
- 
- 	if ((common->bus_ops->ath_bus_type == ATH_USB) &&
--- 
-1.7.3.5
+> -	mwifiex_util_init_list((struct mwifiex_linked_list *) &priv->
+> -			       tx_ba_stream_tbl_ptr);
+> +	INIT_LIST_HEAD((struct list_head *) &priv->tx_ba_stream_tbl_ptr);
+
+Same here. Try to get rid of all casts. If you have any specific ones
+that you don't know how to get rid of, feel free to ask.
+
+> -	while (ra_list != (struct mwifiex_ra_list_tbl *) ra_list_hhead) {
+> -		if (mwifiex_util_peek_list(&ra_list->buf_head, true))
+> +	int is_list_empty;
+> +	unsigned long flags;
+> +
+> +	list_for_each_entry(ra_list, ra_list_hhead, list) {
+> +		spin_lock_irqsave(&ra_list->ra_list_tbl_lock, flags);
+> +		is_list_empty = list_empty(&ra_list->buf_head);
+> +		spin_unlock_irqrestore(&ra_list->ra_list_tbl_lock, flags);
+> +		if (!is_list_empty)
+>  			return false;
+> -
+> -		ra_list = (struct mwifiex_ra_list_tbl *) ra_list->next;
+>  	}
+
+This seems rather dubious. If the list is empty, the for_each_entry
+won't do anything? Or is that some other list?
+
+johannes
 
