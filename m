@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53532 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691Ab1AXNKW (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56240 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468Ab1AMBLz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 08:10:22 -0500
-Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jamie Kitson <jamie@kitten-x.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>
-In-Reply-To: <AANLkTimhBepRreUTfuzN2M=eVc3Bka0YWGk-ZbtX4DLt@mail.gmail.com>
-References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
-	 <4D3B0390.5070108@broadcom.com>
-	 <AANLkTinwPrar6ZBhSALBif8__4mHHsKuDYKsgr4FDqtu@mail.gmail.com>
-	 <AANLkTimhBepRreUTfuzN2M=eVc3Bka0YWGk-ZbtX4DLt@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 14:11:14 +0100
-Message-ID: <1295874674.3639.21.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 12 Jan 2011 20:11:55 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 12 Jan 2011 17:11:34 -0800
+Message-ID: <AANLkTi=PRg31io9=+i8xYBrn+=ny52tVHW4bLwwiG6tQ@mail.gmail.com>
+Subject: compat-wireless-2.6.37-4 is out
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-kernel@vger.kernel.org,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-24 at 13:08 +0000, Jamie Kitson wrote:
-> >> This may not be supported by this driver.
-> >
-> > Ok, how would I find out for sure?
-> 
-> I got this from the irc channel:
-> 
-> [12:55] <johill> JamieKitson: it doesn't, at least arend said that a
-> couple of days ago
+Thanks to Hauke for his fixes for this release.
 
-Well, I was referring to what you quoted above :-)
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-4.tar.bz2
+sha1sum: e1b6432ce9e6738e320334b26e4adb68d3dd2a80
 
-johannes
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-4-sn.tar.bz2
+sha1sum: 54b8d777287fdcc7a716d71cfb21884f1ae07157
 
+http://wireless.kernel.org/en/users/Download/stable
+
+  Luis
