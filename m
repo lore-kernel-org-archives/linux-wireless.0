@@ -1,94 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65238 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752204Ab1AWVDU (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:50959 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756571Ab1AMAz0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 16:03:20 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so3406578fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 13:03:20 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 6/6] wl12xx: configure probe-resp template according to notification
-Date: Sun, 23 Jan 2011 23:02:59 +0200
-Message-Id: <1295816579-28925-7-git-send-email-arik@wizery.com>
-In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	Wed, 12 Jan 2011 19:55:26 -0500
+Received: by iyj18 with SMTP id 18so1049679iyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 16:55:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
+References: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 12 Jan 2011 16:55:05 -0800
+Message-ID: <AANLkTikPBfnE80REkfMToR2Dhin8gAbsPkpEhfHqRuf8@mail.gmail.com>
+Subject: Re: [PATCH 0/2] compat-wireless-stable-2.6.37
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating in AP-mode, replace probe-response template when a
-notification is recieved from mac80211. We preserve the "legacy" way of
-configuring a probe-response according to beacon for IBSS mode and for
-versions of hostapd that do not support this feature.
+On Sun, Jan 9, 2011 at 7:06 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> These two patches should be backported form compat-wireless based on
+> linux-next to the stable version 2.6.37 as they are fixing some build
+> issues with some kernel version.
+>
+> Hauke Mehrtens (1):
+>  compat-wireless: backport power api in atl1c
+>
+> Luis R. Rodriguez (1):
+>  compat-wireless: remove 28-pm-qos-params.patch
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   32 +++++++++++++++++++++++++++++++-
- 1 files changed, 31 insertions(+), 1 deletions(-)
+Thanks, I'll apply and kick out a new *clean* release shortly.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9076555..49d6160 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2041,6 +2041,25 @@ static int wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *skb,
- 	return -ENOENT;
- }
- 
-+static int wl1271_ap_set_probe_resp_tmpl(struct wl1271 *wl, u32 rates)
-+{
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	skb = ieee80211_proberesp_get(wl->hw, wl->vif);
-+	if (!skb)
-+		return -EINVAL;
-+
-+	ret = wl1271_cmd_template_set(wl,
-+				      CMD_TEMPL_AP_PROBE_RESPONSE,
-+				      skb->data,
-+				      skb->len, 0,
-+				      rates);
-+
-+	dev_kfree_skb(skb);
-+	return ret;
-+}
-+
- static int wl1271_bss_erp_info_changed(struct wl1271 *wl,
- 				       struct ieee80211_bss_conf *bss_conf,
- 				       u32 changed)
-@@ -2102,8 +2121,10 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
- 		struct sk_buff *beacon = ieee80211_beacon_get(wl->hw, vif);
- 		u16 tmpl_id;
- 
--		if (!beacon)
-+		if (!beacon) {
-+			ret = -EINVAL;
- 			goto out;
-+		}
- 
- 		wl1271_debug(DEBUG_MASTER, "beacon updated");
- 
-@@ -2139,7 +2160,16 @@ static int wl1271_bss_beacon_info_changed(struct wl1271 *wl,
- 			goto out;
- 	}
- 
-+	if ((changed & BSS_CHANGED_AP_PROBE_RESP) && is_ap) {
-+		ret = wl1271_ap_set_probe_resp_tmpl(wl,
-+						wl1271_tx_min_rate_get(wl));
-+		if (ret < 0)
-+			goto out;
-+	}
-+
- out:
-+	if (ret != 0)
-+		wl1271_error("beacon info change failed: %d", ret);
- 	return ret;
- }
- 
--- 
-1.7.1
-
+  Luis
