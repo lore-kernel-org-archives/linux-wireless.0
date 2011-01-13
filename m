@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36087 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518Ab1ATSZu (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:53517 "HELO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752187Ab1AMXAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 13:25:50 -0500
-Subject: Re: [RFC 2/3] mac80211: Support scanning only current active
- channel.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D387D25.7080902@candelatech.com>
-References: <1295544750-6704-1-git-send-email-greearb@candelatech.com>
-	 <1295544750-6704-2-git-send-email-greearb@candelatech.com>
-	 <1295545143.3693.44.camel@jlt3.sipsolutions.net>
-	 <4D3879A6.2060909@candelatech.com>
-	 <1295547439.3693.46.camel@jlt3.sipsolutions.net>
-	 <4D387D25.7080902@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Jan 2011 19:25:49 +0100
-Message-ID: <1295547949.3693.49.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 13 Jan 2011 18:00:25 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 13 Jan 2011 14:58:29 -0800
+Subject: RE: [PATCH v2] mwifiex: remove linked list implementation
+Message-ID: <477F20668A386D41ADCC57781B1F704307F4E1B511@SC-VEXCH1.marvell.com>
+References: <1294895783-26539-1-git-send-email-bzhao@marvell.com>
+ <1294910380.3725.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1294910380.3725.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-20 at 10:21 -0800, Ben Greear wrote:
-
-> > No, it can't actually determine the order -- we sort them in cfg80211
-> > anyway to de-duplicate them.
-> 
-> Ok, so assuming we re-work scanning across the board, maybe the first
-> thing is to sort them such that the current channel is always first
-> (if it's in the list at all)?
-
-Yeah I guess mac80211 could do that -- I wouldn't necessarily do it in
-cfg80211. However, I'm not convinced it's necessary.
-
-> >> It seems to me that it would take quite a bit of re-work of the
-> >> mac80211 scanning logic to deal with scanning on the current
-> >> channel w/out affecting other tx/rx packets (as my patch attempts
-> >> to do), without setting some explicit flag before you enter
-> >> the scan state machine.
-> >
-> > Yeah, so maybe it needs some re-work, but I think what you're doing is a
-> > pretty strange hack.
-> 
-> If you have time to write some patches, I'll be happy to test them on
-> our ath9k and ath5k systems.
-
-I don't, unfortunately, at least not now.
-
-> If you don't, then I can make an attempt.  Suggestions for an acceptable
-> way to go about doing this would be welcome.
-
-Well I'd start by looking at the offchannel code and seeing if it has
-the flushing in all the right places. I don't think it does, so drivers
-attempt to work around it by flushing on channel changes. That could be
-improved first.
-
-Then I'd again look at the offchannel code and see how it can behave
-better when it's not actually going offchannel -- not stop beaconing
-etc., just reprogram the filters or so. That way, I'm not even sure if
-modifying much of the scan code will even be necessary, and I think you
-wouldn't even have to sort the channel list differently.
-
-johannes
-
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9o
+YW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFRo
+dXJzZGF5LCBKYW51YXJ5IDEzLCAyMDExIDE6MjAgQU0NCj4gVG86IEJpbmcgWmhhbw0KPiBDYzog
+bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZpbGxlOyBBbWl0a3Vt
+YXIgS2Fyd2FyOyBLaXJhbiBEaXZla2FyOyBGcmFuayBIdWFuZw0KPiBTdWJqZWN0OiBSZTogW1BB
+VENIIHYyXSBtd2lmaWV4OiByZW1vdmUgbGlua2VkIGxpc3QgaW1wbGVtZW50YXRpb24NCj4gDQo+
+IE9uIFdlZCwgMjAxMS0wMS0xMiBhdCAyMToxNiAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiAN
+Cj4gQmV0dGVyLA0KPiANCj4gPiArCWxpc3RfZGVsKChzdHJ1Y3QgbGlzdF9oZWFkICopIHR4X2Jh
+X3Rzcl90YmwpOw0KPiANCj4gYnV0IHlvdSBzaG91bGRuJ3QgYmUgY2FzdGluZyBhdCBhbGwuIERv
+IGxpc3RfZGVsKCZ0eF9iYV90c3JfdGJsLT5saXN0KTsNCj4gb3Igc28gaW5zdGVhZCwgc28gdGhh
+dCB0aGlzIHdvcmtzIHdoZW4gdGhlIGxpc3RfaGVhZCBpc24ndCB0aGUgZmlyc3QNCj4gaXRlbSBp
+biB0aGUgc3RydWN0Lg0KDQpUaGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMuIFdpbGwgcmVt
+b3ZlIHRoZSBjYXN0aW5nLg0KDQo+IA0KPiA+IC0JbXdpZmlleF91dGlsX2luaXRfbGlzdCgoc3Ry
+dWN0IG13aWZpZXhfbGlua2VkX2xpc3QgKikgJnByaXYtPg0KPiA+IC0JCQkgICAgICAgdHhfYmFf
+c3RyZWFtX3RibF9wdHIpOw0KPiA+ICsJSU5JVF9MSVNUX0hFQUQoKHN0cnVjdCBsaXN0X2hlYWQg
+KikgJnByaXYtPnR4X2JhX3N0cmVhbV90YmxfcHRyKTsNCj4gDQo+IFNhbWUgaGVyZS4gVHJ5IHRv
+IGdldCByaWQgb2YgYWxsIGNhc3RzLiBJZiB5b3UgaGF2ZSBhbnkgc3BlY2lmaWMgb25lcw0KPiB0
+aGF0IHlvdSBkb24ndCBrbm93IGhvdyB0byBnZXQgcmlkIG9mLCBmZWVsIGZyZWUgdG8gYXNrLg0K
+PiANCj4gPiAtCXdoaWxlIChyYV9saXN0ICE9IChzdHJ1Y3QgbXdpZmlleF9yYV9saXN0X3RibCAq
+KSByYV9saXN0X2hoZWFkKSB7DQo+ID4gLQkJaWYgKG13aWZpZXhfdXRpbF9wZWVrX2xpc3QoJnJh
+X2xpc3QtPmJ1Zl9oZWFkLCB0cnVlKSkNCj4gPiArCWludCBpc19saXN0X2VtcHR5Ow0KPiA+ICsJ
+dW5zaWduZWQgbG9uZyBmbGFnczsNCj4gPiArDQo+ID4gKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KHJh
+X2xpc3QsIHJhX2xpc3RfaGhlYWQsIGxpc3QpIHsNCj4gPiArCQlzcGluX2xvY2tfaXJxc2F2ZSgm
+cmFfbGlzdC0+cmFfbGlzdF90YmxfbG9jaywgZmxhZ3MpOw0KPiA+ICsJCWlzX2xpc3RfZW1wdHkg
+PSBsaXN0X2VtcHR5KCZyYV9saXN0LT5idWZfaGVhZCk7DQo+ID4gKwkJc3Bpbl91bmxvY2tfaXJx
+cmVzdG9yZSgmcmFfbGlzdC0+cmFfbGlzdF90YmxfbG9jaywgZmxhZ3MpOw0KPiA+ICsJCWlmICgh
+aXNfbGlzdF9lbXB0eSkNCj4gPiAgCQkJcmV0dXJuIGZhbHNlOw0KPiA+IC0NCj4gPiAtCQlyYV9s
+aXN0ID0gKHN0cnVjdCBtd2lmaWV4X3JhX2xpc3RfdGJsICopIHJhX2xpc3QtPm5leHQ7DQo+ID4g
+IAl9DQo+IA0KPiBUaGlzIHNlZW1zIHJhdGhlciBkdWJpb3VzLiBJZiB0aGUgbGlzdCBpcyBlbXB0
+eSwgdGhlIGZvcl9lYWNoX2VudHJ5DQo+IHdvbid0IGRvIGFueXRoaW5nPyBPciBpcyB0aGF0IHNv
+bWUgb3RoZXIgbGlzdD8NCg0KT24gZWFjaCBlbnRyeSBvZiB0aGUgbGlzdCwgd2UgZG8gZW1wdHkg
+Y2hlY2sgZm9yIGFub3RoZXIgbGlzdCAiYnVmX2hlYWQiLg0KVGhlIHN0cnVjdHVyZSBsb29rcyBs
+aWtlIHRoaXM6DQoNCnN0cnVjdCBtd2lmaWV4X3JhX2xpc3RfdGJsIHsNCiAgICAgICAgc3RydWN0
+IGxpc3RfaGVhZCBsaXN0Ow0KICAgICAgICBzdHJ1Y3QgbGlzdF9oZWFkIGJ1Zl9oZWFkOw0KICAg
+ICAgICAvKiBzcGluIGxvY2sgZm9yIHJhIGxpc3QgdGFibGUgKi8NCiAgICAgICAgc3BpbmxvY2tf
+dCByYV9saXN0X3RibF9sb2NrOw0KDQoJICAuLi4uLi4NCn07DQoNClRoYW5rcywNCg0KQmluZw0K
+DQo+IA0KPiBqb2hhbm5lcw0KDQo=
