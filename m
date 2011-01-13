@@ -1,73 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:59385 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752173Ab1APMsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 07:48:39 -0500
-Date: Sun, 16 Jan 2011 13:48:33 +0100
-From: Ignacy Gawedzki <i@lri.fr>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Dividing by a non-static value in carl9170-fw?
-Message-ID: <20110116124833.GA4711@zenon.in.qult.net>
-References: <20110116031600.GA21973@zenon.in.qult.net>
- <201101161245.54221.chunkeey@googlemail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46819 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468Ab1AMBTM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Jan 2011 20:19:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201101161245.54221.chunkeey@googlemail.com>
+In-Reply-To: <AANLkTi=PRg31io9=+i8xYBrn+=ny52tVHW4bLwwiG6tQ@mail.gmail.com>
+References: <AANLkTi=PRg31io9=+i8xYBrn+=ny52tVHW4bLwwiG6tQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 12 Jan 2011 17:18:50 -0800
+Message-ID: <AANLkTi=9BGupP0sOafQpyMpccYo+fqCY7n6AEH7Wqnn8@mail.gmail.com>
+Subject: Re: compat-wireless-2.6.37-4 is out
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-kernel@vger.kernel.org,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 16, 2011 at 12:45:53PM +0100, thus spake Christian Lamparter:
-> Hello,
-> 
-> please CC your mails to linux-wireless mailing-list in the future.
+On Wed, Jan 12, 2011 at 5:11 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> Thanks to Hauke for his fixes for this release.
+>
+> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-4.tar.bz2
+> sha1sum: e1b6432ce9e6738e320334b26e4adb68d3dd2a80
+>
+> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-4-sn.tar.bz2
+> sha1sum: 54b8d777287fdcc7a716d71cfb21884f1ae07157
+>
+> http://wireless.kernel.org/en/users/Download/stable
 
-Okay, sorry about that.
+Oh and here are the code stats for this release:
 
-> On Sunday 16 January 2011 04:16:00 Ignacy Gawedzki wrote:
-> > Since I recently noticed that you added the support for the ticks_per_msec
-> > field in fw, I thought it would be better to use that to convert durations
-> > from ticks to milliseconds, instead of the fixed 44 literal. =)
-> 
-> Is this a regression on my part? I don't see any references to __udivsi3_i4i
-> during build.
+compat-wireless code metrics
 
-Absolutely not.  I'm talking about my (experimental) modifications to the
-firmware code to measure TX frame service time and report that in msec in the
-tx status.
+    739767 - Total upstream lines of code being pulled
+      2153 - backport code changes
+      1901 - backport code additions
+       252 - backport code deletions
+      6386 - backport from compat module
+      8539 - total backport code
+    1.1543 - % of code consists of backport work
+       216 - Code changes brought in from pending-stable
+       137 - Code additions brought in from pending-stable
+        79 - Code deletions brought in from pending-stable
+    0.0292 - % of code being cherry picked from pending-stable
+       114 - Code changes brought in from linux-next
+       102 - Code additions brought in from linux-next
+        12 - Code deletions brought in from linux-next
+    0.0154 - % of code being cherry picked from linux-next
 
-> Also, you can almost always get around it by converting "a / b = c" to
-> "a = b * c".
+Base tree: linux-2.6-allstable.git
+Base tree version: v2.6.37
+compat-wireless release: compat-wireless-v2.6.37-4-sn
 
-I doubt so, since what I need to do is roughly
-
-  msec_to_report = ticks_measured / ticks_per_msec;
-
-my input being of course ticks_measured. :/
-
-> > Unfortunately, it seems that dividing by a non-static value is not supported
-> > natively on that platform and I get undefined reference to __udivsi3_i4i.  Do
-> > you, by any chance, know how to fix that?  Apparently there are some support
-> > libs in the toolchain's gcc with that symbol, but I just got lost in the CMake
-> > file hierarchy while looking for a place to start hacking that in.
-> 
-> No need for a hack, just get a udivsi3_i4i.S (a good place is the linux kernel
-> library sources in arch/sh/lib, you could also import one from the original
-> ar9170fw.git) and place it into carlfw/src. Next, you need to modify the
-> carlfw/CMakeLists.txt: add src/udivsi3_i4i.S to carl9170_lib_src and put
-> "set_source_files_properties(src/udivsi3_i4i.S PROPERTIES LANGUAGE C)"
-> a few lines further down.
-> 
-> compile...
-> 
-> [Note: you probably have to change the name of the __udivsi3_i4i symbol 
-> to ___udivsi3_i4i too]
-
-Great, thanks for the hint, I'll try that as soon as I can.
-
-Regards,
-
-Ignacy
-
--- 
-To err is human, to moo bovine.
+  Luis
