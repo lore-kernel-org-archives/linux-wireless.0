@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:33729 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754690Ab1A1QtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 11:49:09 -0500
-Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-wireless@vger.kernel.org>; Fri, 28 Jan 2011 08:49:06 -0800
-Date: Fri, 28 Jan 2011 08:49:06 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: enable CONFIG_WIRELESS_EXT
-Message-Id: <20110128084906.53c7c555.rdunlap@xenotime.net>
-In-Reply-To: <4D42E9C0.2050809@lockie.ca>
-References: <4D41DAF1.6080204@lockie.ca>
-	<4D41ED24.9010005@hauke-m.de>
-	<4D41FDF7.3040805@lockie.ca>
-	<AANLkTimG_46nLNAurBGfDEPdZwnUmKE3GPFOMWxC0UX0@mail.gmail.com>
-	<4D42E9C0.2050809@lockie.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from arroyo.ext.ti.com ([192.94.94.40]:53161 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932972Ab1AMLd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Jan 2011 06:33:26 -0500
+Received: from dlep33.itg.ti.com ([157.170.170.112])
+	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0DBXQTM001142
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 05:33:26 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0DBXPpf001784
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 05:33:25 -0600 (CST)
+Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
+	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0DBXPFZ000438
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 05:33:25 -0600 (CST)
+Subject: Re: [PATCH] wl12xx: lock the RCU when accessing sta via
+ ieee80211_find_sta()
+From: Luciano Coelho <coelho@ti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "DE CESCO, Jonathan" <jonathanc@ti.com>
+In-Reply-To: <1294769241-3118-1-git-send-email-coelho@ti.com>
+References: <1294769241-3118-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 13 Jan 2011 13:33:45 +0200
+Message-ID: <1294918425.2064.21.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 28 Jan 2011 11:07:28 -0500 James wrote:
+On Tue, 2011-01-11 at 19:07 +0100, coelho@ti.com wrote:
+> From: Luciano Coelho <coelho@ti.com>
+> 
+> We were calling ieee80211_find_sta() and the sta returned by it
+> without locking the RCU, which is required by mac80211.
+> 
+> Fix this and reorganize slightly the area of the code where the sta is
+> used.
+> 
+> Reported-by: Jonathan DE CESCO <jonathanc@ti.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-> On 01/27/11 18:39, Brian Prodoehl wrote:
-> > How are you trying to bring up the interface, in order to use dhcpcd
-> > on it?  Anyways, I would say that, yes, you do need
-> > CONFIG_WIRELESS_EXT.
-> >
-> > -Brian
-> >
-> I had to enable Device Drivers->Network device support->Wireless
-> LAN->Intel PRO/Wireless 2100 Network Connection  to get
-> CONFIG_WIRELESS_EXT=y
-> I propose there should be a new obvious kernel option to enable
-> CONFIG_WIRELESS_EXT.
+Applied and pushed to wl12xx.
 
+-- 
+Cheers,
+Luca.
 
-What wireless driver are you using?
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
