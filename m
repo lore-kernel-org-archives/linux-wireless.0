@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:53162 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431Ab1AOAzs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 19:55:48 -0500
-Received: by gwj20 with SMTP id 20so1332341gwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 16:55:45 -0800 (PST)
-Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and
- beacons with multiple vifs.
-From: Steve Brown <sbrown@cortland.com>
-Reply-To: sbrown@cortland.com
-To: =?ISO-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>
-Cc: greearb@candelatech.com, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=WTUiy1DYNhE12_KZp8QFUrWebY2Cpzud5P0b3@mail.gmail.com>
-References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
-	 <AANLkTi=WTUiy1DYNhE12_KZp8QFUrWebY2Cpzud5P0b3@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 14 Jan 2011 19:55:36 -0500
-Message-ID: <1295052936.2253.5.camel@mythtv.ewol.com>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:61292 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751579Ab1ANCTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Jan 2011 21:19:33 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 18:19:15 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
+	Jack Lee <jack.lee@atheros.com>,
+	Carl Huang <carl.huang@atheros.com>,
+	David Quan <david.quan@atheros.com>,
+	Nael Atallah <nael.atallah@atheros.com>,
+	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+Subject: [PATCH v2] ath9k_hw: ASPM interoperability fix for AR9380/AR9382
+Date: Thu, 13 Jan 2011 18:19:29 -0800
+Message-ID: <1294971569-2272-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-01-15 at 00:19 +0100, Björn Smedman wrote:
+There is an interoperability with AR9382/AR9380 in L1 state with a
+few root complexes which can cause a hang. This is fixed by
+setting some work around bits on the PCIE PHY. We fix by using
+a new ini array to modify these bits when the radio is idle.
 
-> Thank you for your efforts to get multi-vifs working better.
-> 
-> This is another comment that is a little out of place but when I see
-> the identifier beacon_interval in this context I cannot help bringing
-> up per-vif settings as a related problem: If I read the code (or
-> rather the lack of code) correctly the beacon interval of the last (or
-> first?) beaconing vif added will be used to set up beacon tx, whereas
-> the actual beacon contents will reflect the beacon intervals
-> configured for individual vifs which may all be different... The same
-> goes for e.g. tx queue configuration, no?
-> 
-> It feels like we need a general multi-vif cleanup here but it's too
-> big for me unfortunately.
-> 
-> /Björn
-> _______________________________________________
+Cc: stable@kernel.org
+Cc: Jack Lee <jack.lee@atheros.com>
+Cc: Carl Huang <carl.huang@atheros.com>
+Cc: David Quan <david.quan@atheros.com>
+Cc: Nael Atallah <nael.atallah@atheros.com>
+Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-For instance, an ap vif has a ~100ms interval and a mesh vif has a
-~1000ms interval. I don't see how to avoid a per vif interval.
-
-Steve
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 81f9cf2..9ecca93 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -1842,7 +1842,7 @@ static const u32 ar9300_2p2_soc_preamble[][2] = {
+ 
+ static const u32 ar9300PciePhy_pll_on_clkreq_disable_L1_2p2[][2] = {
+ 	/* Addr      allmodes  */
+-	{0x00004040, 0x08212e5e},
++	{0x00004040, 0x0821265e},
+ 	{0x00004040, 0x0008003b},
+ 	{0x00004044, 0x00000000},
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 6137634..06fb2c8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -146,8 +146,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 		/* Sleep Setting */
+ 
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-				ar9300PciePhy_clkreq_enable_L1_2p2,
+-				ARRAY_SIZE(ar9300PciePhy_clkreq_enable_L1_2p2),
++				ar9300PciePhy_pll_on_clkreq_disable_L1_2p2,
++				ARRAY_SIZE(ar9300PciePhy_pll_on_clkreq_disable_L1_2p2),
+ 				2);
+ 
+ 		/* Fast clock modal settings */
+-- 
+1.7.3.2.90.gd4c43
 
