@@ -1,40 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38542 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751791Ab1AQUEC (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38327 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab1ANR1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 15:04:02 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 397C054242F
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 15:05:50 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-17 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110117200400.8A54440F97@repository3.orbit-lab.org>
-Date: Mon, 17 Jan 2011 15:04:00 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 14 Jan 2011 12:27:25 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [RFC 2/2] ath9k:  Add 'misc' file to debugfs, fix queue indexes.
+Date: Fri, 14 Jan 2011 09:27:09 -0800
+Message-Id: <1295026029-21130-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
+References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   bed36d7..3281fc3  history    -> origin/history
- + e8883f8...f6c6cea master     -> origin/master  (forced update)
-   6ab8219..8a335bc  stable     -> origin/stable
- * [new tag]         next-20110117 -> next-20110117
+From: Ben Greear <greearb@candelatech.com>
 
-compat-wireless code metrics
+Add a misc file to show hardware op-mode, irq setup,
+number of various types of VIFs and more.
 
-    782520 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1989 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1956 - % of crap code
+Also, previous patches were using the wrong xmit queue
+indexes.  Change to use the internal ath9k indexes instead
+of the mac80211 queue indexes.
 
-Base tree: linux-next.git
-Base tree version: next-20110117
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 b0cb792... 5005621... M	drivers/net/wireless/ath/ath9k/debug.c
+ drivers/net/wireless/ath/ath9k/debug.c |  128 +++++++++++++++++++++++++++++---
+ 1 files changed, 116 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index b0cb792..5005621 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -595,10 +595,10 @@ static const struct file_operations fops_wiphy = {
+ do {									\
+ 	len += snprintf(buf + len, size - len,				\
+ 			"%s%13u%11u%10u%10u\n", str,			\
+-			(unsigned int)(sc->tx.txq[WME_AC_BE].elem),	\
+-			(unsigned int)(sc->tx.txq[WME_AC_BK].elem),	\
+-			(unsigned int)(sc->tx.txq[WME_AC_VI].elem),	\
+-			(unsigned int)(sc->tx.txq[WME_AC_VO].elem));	\
++			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_BE].elem),	\
++			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_BK].elem),	\
++			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_VI].elem),	\
++			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_VO].elem));	\
+ 	if (len >= size)						\
+ 		goto done;						\
+ } while(0)
+@@ -607,10 +607,10 @@ do {									\
+ do {									\
+ 	len += snprintf(buf + len, size - len,				\
+ 			"%s%13i%11i%10i%10i\n", str,			\
+-			list_empty(&sc->tx.txq[WME_AC_BE].elem),	\
+-			list_empty(&sc->tx.txq[WME_AC_BK].elem),	\
+-			list_empty(&sc->tx.txq[WME_AC_VI].elem),	\
+-			list_empty(&sc->tx.txq[WME_AC_VO].elem));	\
++			list_empty(&sc->tx.txq[ATH_TXQ_AC_BE].elem),	\
++			list_empty(&sc->tx.txq[ATH_TXQ_AC_BK].elem),	\
++			list_empty(&sc->tx.txq[ATH_TXQ_AC_VI].elem),	\
++			list_empty(&sc->tx.txq[ATH_TXQ_AC_VO].elem));	\
+ 	if (len >= size)						\
+ 		goto done;						\
+ } while (0)
+@@ -657,10 +657,10 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("hw-tx-proc-desc: ", txprocdesc);
+ 	len += snprintf(buf + len, size - len,
+ 			"%s%11p%11p%10p%10p\n", "txq-memory-address:",
+-			&(sc->tx.txq[WME_AC_BE]),
+-			&(sc->tx.txq[WME_AC_BK]),
+-			&(sc->tx.txq[WME_AC_VI]),
+-			&(sc->tx.txq[WME_AC_VO]));
++			&(sc->tx.txq[ATH_TXQ_AC_BE]),
++			&(sc->tx.txq[ATH_TXQ_AC_BK]),
++			&(sc->tx.txq[ATH_TXQ_AC_VI]),
++			&(sc->tx.txq[ATH_TXQ_AC_VO]));
+ 	if (len >= size)
+ 		goto done;
+ 
+@@ -777,6 +777,99 @@ done:
+ 	return retval;
+ }
+ 
++static ssize_t read_file_misc(struct file *file, char __user *user_buf,
++			      size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
++	char *buf;
++	unsigned int len = 0, size = 8000;
++	ssize_t retval = 0;
++	const char *tmp;
++	unsigned int reg;
++
++	buf = kzalloc(size, GFP_KERNEL);
++	if (buf == NULL)
++		return -ENOMEM;
++
++	switch (sc->sc_ah->opmode) {
++	case  NL80211_IFTYPE_ADHOC:
++		tmp = "ADHOC";
++		break;
++	case  NL80211_IFTYPE_MESH_POINT:
++		tmp = "MESH";
++		break;
++	case  NL80211_IFTYPE_AP:
++		tmp = "AP";
++		break;
++	case  NL80211_IFTYPE_STATION:
++		tmp = "STATION";
++		break;
++	default:
++		tmp = "???";
++		break;
++	}
++
++	len += snprintf(buf + len, size - len,
++			"curbssid: %pM\n"
++			"OP-Mode: %s(%i)\n"
++			"Beacon-Timer-Register: 0x%x\n",
++			common->curbssid,
++			tmp, (int)(sc->sc_ah->opmode),
++			REG_READ(ah, AR_BEACON_PERIOD));
++
++	reg = REG_READ(ah, AR_TIMER_MODE);
++	len += snprintf(buf + len, size - len, "Timer-Mode-Register: 0x%x (",
++			reg);
++	if (reg & AR_TBTT_TIMER_EN)
++		len += snprintf(buf + len, size - len, "TBTT ");
++	if (reg & AR_DBA_TIMER_EN)
++		len += snprintf(buf + len, size - len, "DBA ");
++	if (reg & AR_SWBA_TIMER_EN)
++		len += snprintf(buf + len, size - len, "SWBA ");
++	if (reg & AR_HCF_TIMER_EN)
++		len += snprintf(buf + len, size - len, "HCF ");
++	if (reg & AR_TIM_TIMER_EN)
++		len += snprintf(buf + len, size - len, "TIM ");
++	if (reg & AR_DTIM_TIMER_EN)
++		len += snprintf(buf + len, size - len, "DTIM ");
++	len += snprintf(buf + len, size - len, ")\n");
++
++	reg = sc->sc_ah->imask;
++	len += snprintf(buf + len, size - len, "imask: 0x%x (", reg);
++	if (reg & ATH9K_INT_SWBA)
++		len += snprintf(buf + len, size - len, "SWBA ");
++	if (reg & ATH9K_INT_BMISS)
++		len += snprintf(buf + len, size - len, "BMISS ");
++	if (reg & ATH9K_INT_CST)
++		len += snprintf(buf + len, size - len, "CST ");
++	if (reg & ATH9K_INT_RX)
++		len += snprintf(buf + len, size - len, "RX ");
++	if (reg & ATH9K_INT_RXHP)
++		len += snprintf(buf + len, size - len, "RXHP ");
++	if (reg & ATH9K_INT_RXLP)
++		len += snprintf(buf + len, size - len, "RXLP ");
++	if (reg & ATH9K_INT_BB_WATCHDOG)
++		len += snprintf(buf + len, size - len, "BB_WATCHDOG ");
++	/* there are other IRQs if one wanted to add them. */
++	len += snprintf(buf + len, size - len, ")\n");
++
++	len += snprintf(buf + len, size - len,
++			"VIF Counts: AP: %hi STA: %hi MESH: %hi WDS: %hi"
++			" ADHOC: %hi nvifs: %hi beacon-vifs: %hi\n",
++			sc->naps, sc->nstations, sc->nmeshes, sc->nwds,
++			sc->nadhocs, sc->nvifs, sc->nbcnvifs);
++
++	if (len > size)
++		len = size;
++
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	return retval;
++}
++
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+ 		       struct ath_tx_status *ts)
+ {
+@@ -822,6 +915,13 @@ static const struct file_operations fops_stations = {
+ 	.llseek = default_llseek,
+ };
+ 
++static const struct file_operations fops_misc = {
++	.read = read_file_misc,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -1063,6 +1163,10 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			sc, &fops_stations))
+ 		goto err;
+ 
++	if (!debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy,
++			sc, &fops_misc))
++		goto err;
++
+ 	if (!debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy,
+ 			sc, &fops_recv))
+ 		goto err;
+-- 
+1.7.2.3
+
