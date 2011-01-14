@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:49873 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751356Ab1AYJlq (ORCPT
+Received: from p3plsmtpa01-07.prod.phx3.secureserver.net ([72.167.82.87]:37832
+	"HELO p3plsmtpa01-07.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758099Ab1ANS6A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 04:41:46 -0500
-Date: Tue, 25 Jan 2011 11:41:30 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
-Message-ID: <20110125094130.GA25962@jm.kir.nu>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
- <20110124094433.GA5487@jm.kir.nu>
- <AANLkTimYZN5438DOGNOE9Ltny5M-qg-K1ShFKToRMyuw@mail.gmail.com>
+	Fri, 14 Jan 2011 13:58:00 -0500
+Message-ID: <D323CFEF4DEC4E18AFF56742F78C16B6@ChuckPC>
+From: "Chuck Crisler" <ccrisler@vgocom.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: intermittent eap authentication failure
+Date: Fri, 14 Jan 2011 13:51:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTimYZN5438DOGNOE9Ltny5M-qg-K1ShFKToRMyuw@mail.gmail.com>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 24, 2011 at 11:16:43PM +0200, Arik Nemtsov wrote:
-> The SSID-as-attr not used for the probe-resp template. It is used by
-> FW to filter out which probe-reqs should be responded to when
-> operating with a hidden SSID.
+I am running wpa_supplicant v. 0.6.10. I am having a problem remaining on a 
+network with PEEP authentication. I can initially get on the network but 
+then fail with the first session timeout sent by the AP. Sometimes if the 
+ESS is hidden I will have a subsequent probe request fail, causing me to 
+re-start the entire process, which will then succeed, only to fail with the 
+next session timeout.
 
-OK, that would be useful to mention in nl80211.h comments and
-cfg80211.h, too, I'd guess.
+Sometime ago I found a conflict between the supplicant and the MAC80211 code 
+dealing with Cisco session timeouts. When we were 'deauthenticated', the MAC 
+code notified the supplicant AND re-associated with the AP. When the driver 
+got the association response, it then notified the supplicant, which was in 
+the process of running a scan, which had often already been sent to the 
+driver, causing a mess. We modified the driver so that if it received a 
+de-auth with reason code 1 (undefined?), it would *NOT* notify the 
+supplicant but would re-associate, then notify the supplicant of the new 
+association. We modified the supplicant so that when it was in the completed 
+state and received an association event, it went through the disassociation 
+sequence of calls, then proceeded with whatever was remaining for the 
+authentication. Later we determined that we could receive the deauth with a 
+reason code = 4 also, so that was added.
+Specifically, this is what we do with a COMPLETED->ASSOCIATED transition in 
+wpa_supplicant_event_assoc in events.c:
 
-> The wl12xx FW updates the timestamp and DA. I mentioned in the
-> documentation of ieee80211_proberesp_get (and various other parts)
-> that the DA should be set manually and that this should be used as a
-> template (which also implies timestamp should be set). If some part is
-> unclear can you point out a specific patch?
+wpa_clear_keys(wpa_s, wpa_s->bssid);
+eapol_sm_notify_portEnabled(wpa_s->eapol, FALSE);
+eapol_sm_notify_portValid(wpa_s->eapol, FALSE);
+if (wpa_key_mgmt_wpa_psk(wpa_s->key_mgmt))
+    eapol_sm_notify_eap_success(wpa_s->eapol, FALSE);
+wpa_sm_set_config(wpa_s->eapol, NULL, NULL);
+wpa_s->new_connection = 1;
 
-DA should be pretty obvious. Timestamp is something that I hope is clear
-for whoever is implementing a driver, but it could be mentioned
-somewhere.
+This works fine with WPA/WPA2, but seems to fail with PEEP and (I guess) the 
+other EAP methods. I don't know EAP well enough yet to understand why this 
+is failing or what I need to do to make WPA/WPA2 and EAP all work. Would 
+someone please shed some light on this for me?
 
-> For WPS (without p2p), it appears the probe-resp doesn't depend on the
-> probe-req (in hostapd code).
+Thank you,
+Chuck Crisler 
 
-This is the case for WPS 1.0, but the protocol update in WSC 2.0 does
-introduce a dependency.
-
-> Perhaps we can start with these AP-mode only patches and expand the
-> functionality when it is needed for p2p?
-
-I'm fine with them if there is a capability flag that allows user space
-to know that the driver does not use user space -based Probe Request
-processing. With that, hostapd/wpa_supplicant can disable functionality
-like multi-SSID support, WPS 2.0, P2P until we get more complete
-capability information on what devices that process Probe Request frames
-internally can do.
-
-> Note that the current patch doesn't remove existing functionality - a
-> driver/FW operating in p2p mode can simply choose not to use the
-> template and just pass probe-requests up.
-
-Until now, I've been assuming that nl80211-based interface means that
-Probe Request frames are handled in user space. Since this set of
-patches makes it very obvious that that will not be the case, I do want
-to be able to figure that out in user space easily. All it really takes
-is to add a capability flag indicating whether user space -based Probe
-Request processing is used or not.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
