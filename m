@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:33368 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751750Ab1AXBK2 (ORCPT
+Received: from alcalazamora.dti2.net ([81.24.162.8]:1912 "EHLO
+	alcalazamora.dti2.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757430Ab1ANNzw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 20:10:28 -0500
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0627811424
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 10:10:26 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via wext when possible
-Date: Mon, 24 Jan 2011 10:10:38 +0900
-Cc: Paul Fertser <fercerpav@gmail.com>, linux-wireless@vger.kernel.org,
-	"Thomas d'Otreppe" <tdotreppe@gmail.com>,
-	Richard Farina <sidhayn@gmail.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>
-References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com> <1295773599.3639.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295773599.3639.4.camel@jlt3.sipsolutions.net>
+	Fri, 14 Jan 2011 08:55:52 -0500
+Received: from [172.16.16.6] ([81.24.161.20])
+	(authenticated user jorge@dti2.net)
+	by alcalazamora.dti2.net (alcalazamora.dti2.net [81.24.162.8])
+	(MDaemon PRO v11.0.2)
+	with ESMTP id md50013082267.msg
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 14:49:08 +0100
+Message-ID: <4D305453.6070307@dti2.net>
+Date: Fri, 14 Jan 2011 14:49:07 +0100
+From: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101241010.38393.br1@einfach.org>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: No beacons generated when you bring ath9k AP interface down and
+ up.
+References: <4D2FF7A4.3070106@candelatech.com> <20110114091226.GA32344@jm.kir.nu>
+In-Reply-To: <20110114091226.GA32344@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: jorge@dti2.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun January 23 2011 18:06:39 Johannes Berg wrote:
-> On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
-> > This makes it possible to retrieve the channel for the monitor interface
-> > in cases when it can be determined unambigously. Tested with ath5k.
+El 14/01/2011 10:12, Jouni Malinen escribió:
+> On Thu, Jan 13, 2011 at 11:13:40PM -0800, Ben Greear wrote:
+>> If you have an ath9k AP interface running with hostapd, and you
+>> run:  ip link set vap0 down; ip link set vap0 up;
+>> then it will disable beaconing.
 > 
-> NAK.
+> Yes. So what?
 > 
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
+>> I'm not sure where the problem actually lies:  Should ath9k
+>> start beaconing automatically on VAP interface add?  Is
+>> it up to hostapd to detect the ifdown/ifup and re-set everything
+>> up properly?  Or maybe it's just a very bad idea to bounce
+>> a VAP interface with 'ip link set'?
+> 
+> I would say it is up to whoever decided to set the interface down to
+> restart hostapd.. There is a proposed patch for hostapd to do this
+> automatically, but I'm yet to fully understand why one would set the
+> interface down in the first place.
 
-> I don't think so -- I don't recall anyone ever asking before ;-)
+	I usually do it to influence routing from within quagga. Quagga have no
+provisions to restart another daemons on interface state change. This is just an
+example, I'm sure there are others valid use cases, so I really think that
+hostapd should restart beaconing/whatever in this case.
 
-I definetly want this functionality for my WLAN monitoring tool ("horst" - 
-http://br1.einfach.org/horst). A similar patch has also been discussed for 
-aircrack-ng in June 2010 (https://patchwork.kernel.org/patch/103589/).
+	Regards,
+		Jorge
+-- 
+==============================================================
+Jorge Boncompte - Ingenieria y Gestion de RED
+DTI2 - Desarrollo de la Tecnologia de las Comunicaciones
+--------------------------------------------------------------
+C/ Abogado Enriquez Barrios, 5   14004 CORDOBA (SPAIN)
+Tlf: +34 957 761395 / FAX: +34 957 450380
+==============================================================
+- There is only so much duct tape you can put on something
+  before it just becomes a giant ball of duct tape.
+==============================================================
 
-I understand your point of not wanting to report wrong information, esp when 
-we have multiple interfaces on different channels - but in most situations for 
-sniffers etc this is not the case, we just have one monitor interface or one 
-interface + one monitor interface, in which cases I believe we should be able 
-to report a channel.
-
-So just for the record: I want it, pretty please! :)
-
-bruno
