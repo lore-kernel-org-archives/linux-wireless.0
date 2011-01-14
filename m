@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49214 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932190Ab1ACPHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 10:07:13 -0500
-Date: Mon, 3 Jan 2011 16:07:11 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 01/15]arch:m68k:ifpsp060:src:fpsp.S Typo change diable
- to disable.
-In-Reply-To: <AANLkTins7rj1o4rEcEFmVSA2=1yXZSfLdO000gqQP7cg@mail.gmail.com>
-Message-ID: <alpine.LNX.2.00.1101031607040.26685@pobox.suse.cz>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <AANLkTins7rj1o4rEcEFmVSA2=1yXZSfLdO000gqQP7cg@mail.gmail.com>
+Received: from mail.candelatech.com ([208.74.158.172]:41239 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757843Ab1ANSQp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 13:16:45 -0500
+Message-ID: <4D309307.6040806@candelatech.com>
+Date: Fri, 14 Jan 2011 10:16:39 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and beacons
+ with multiple vifs.
+References: <1295026029-21130-1-git-send-email-greearb@candelatech.com> <4D309086.7070703@openwrt.org>
+In-Reply-To: <4D309086.7070703@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 31 Dec 2010, Geert Uytterhoeven wrote:
+On 01/14/2011 10:05 AM, Felix Fietkau wrote:
+> On 2011-01-14 6:27 PM, greearb@candelatech.com wrote:
 
-> On Fri, Dec 31, 2010 at 00:07, Justin P. Mattock
-> <justinmattock@gmail.com> wrote:
-> > The below patch fixes a typo "diable" to "disable". Please let me know if this
-> > is correct or not.
-> >
-> > Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> 
-> Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
+>> b/drivers/net/wireless/ath/ath9k/ath9k.h
+>> index 3108699..a2da259 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+>> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+>> @@ -607,10 +607,15 @@ struct ath_softc {
+>> u32 sc_flags; /* SC_OP_* */
+>> u16 ps_flags; /* PS_* */
+>> u16 curtxpow;
+>> - u8 nbcnvifs;
+>> - u16 nvifs;
+>> bool ps_enabled;
+>> bool ps_idle;
+>> + short nbcnvifs;
+>> + short nvifs;
+>> + short naps; /* number of APs */
+>> + short nmeshes;
+>> + short nstations;
+>> + short nwds;
+>> + short nadhocs;
+>> unsigned long ps_usecount;
+>>
+>> struct ath_config config;
+> Do we really need all those counters? Wouldn't it be better to iterate
+> over active interfaces instead?
 
-Applied, thanks.
+Well, I like the counters.  If they ever do not match
+expected results, it will be a clue that we have bugs
+in our setup/teardown/change logic.
+
+Seems we use counters like this for ath5k with good
+results, btw.
+
+>> if (!ieee80211_is_beacon(fc) ||
+>> - compare_ether_addr(hdr->addr3, common->curbssid))
+>> + compare_ether_addr(hdr->addr3, common->curbssid)) {
+>> + /* TODO: This doesn't work well if you have stations
+>> + * associated to two different APs because curbssid
+>> + * is just the last AP that any of the stations associated
+>> + * with.
+>> + */
+>> return;
+>> + }
+>>
+>> if (rx_stats->rs_rssi != ATH9K_RSSI_BAD&& !rx_stats->rs_moreaggr)
+>> ATH_RSSI_LPF(aphy->last_rssi, rx_stats->rs_rssi);
+> Checking for the STA opmode is correct, this code should not be used for
+> STA+AP. For the multi-STA case, it may make sense to process the RSSI
+> average per vif and using the minimum for ANI.
+
+Ok.  I'll leave that alone for now.
+
+Thanks,
+Ben
+
 
 -- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
