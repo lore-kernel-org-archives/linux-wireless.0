@@ -1,158 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:60589 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055Ab1ADXs6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:48:58 -0500
-Subject: [RFC PATCH 08/17] zd1211rw: let zd_set_beacon_interval() set
-	dtim_period and add AP-beacon flag
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:48:53 +0200
-Message-ID: <20110104234853.25309.36926.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
+Received: from mail.atheros.com ([12.19.149.2]:47455 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804Ab1ANUEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 15:04:14 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 12:03:56 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: keep calibrated noise floor value for oper channel
+Date: Sat, 15 Jan 2011 01:33:28 +0530
+Message-ID: <1295035408-12507-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for AP-mode beacon. Also disable beacon when interface is set
-down as otherwise hw will keep flooding NEXT_BCN interrupts.
+The ath9k_hw assumes that caldata is valid only for
+oper channel. But with ath9k_htc case, the caldata is
+passed for all channels on hw_reset though we are not doing
+calibration on that channel. So the oper channel's nf history
+got cleared to default due to mismatch in channel flags.
+This patch also saves some space.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/zd1211rw/zd_chip.c |   33 ++++++++++++++++++++++++++-----
- drivers/net/wireless/zd1211rw/zd_chip.h |    4 +++-
- drivers/net/wireless/zd1211rw/zd_mac.c  |   17 ++++++++--------
- 3 files changed, 40 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    7 ++++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index f1813a2..fa90d06 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -887,14 +887,36 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 1ce506f..c976600 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -366,7 +366,7 @@ struct ath9k_htc_priv {
+ 	u16 seq_no;
+ 	u32 bmiss_cnt;
  
+-	struct ath9k_hw_cal_data caldata[ATH9K_NUM_CHANNELS];
++	struct ath9k_hw_cal_data caldata;
  
--static int set_beacon_interval(struct zd_chip *chip, u32 interval)
-+static int set_beacon_interval(struct zd_chip *chip, u16 interval,
-+			       u8 dtim_period, int type)
- {
- 	int r;
- 	struct aw_pt_bi s;
-+	u32 b_interval, mode_flag;
+ 	spinlock_t beacon_lock;
  
- 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index f4d576b..187af5b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -121,7 +121,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_channel *channel = priv->hw->conf.channel;
+-	struct ath9k_hw_cal_data *caldata;
++	struct ath9k_hw_cal_data *caldata = NULL;
+ 	enum htc_phymode mode;
+ 	__be16 htc_mode;
+ 	u8 cmd_rsp;
+@@ -139,7 +139,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
  
--	r = zd_iowrite32_locked(chip, interval, CR_BCN_INTERVAL);
-+	if (interval > 0) {
-+		switch (type) {
-+		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
-+			mode_flag = BCN_MODE_IBSS;
-+			break;
-+		case NL80211_IFTYPE_AP:
-+			mode_flag = BCN_MODE_AP;
-+			break;
-+		default:
-+			mode_flag = 0;
-+			break;
-+		}
-+	} else {
-+		dtim_period = 0;
-+		mode_flag = 0;
-+	}
-+
-+	b_interval = mode_flag | (dtim_period << 16) | interval;
-+
-+	r = zd_iowrite32_locked(chip, b_interval, CR_BCN_INTERVAL);
- 	if (r)
- 		return r;
- 	r = get_aw_pt_bi(chip, &s);
-@@ -903,12 +925,13 @@ static int set_beacon_interval(struct zd_chip *chip, u32 interval)
- 	return set_aw_pt_bi(chip, &s);
- }
+-	caldata = &priv->caldata[channel->hw_value];
++	caldata = &priv->caldata;
+ 	ret = ath9k_hw_reset(ah, ah->curchan, caldata, false);
+ 	if (ret) {
+ 		ath_err(common,
+@@ -202,7 +202,8 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
+ 		fastcc);
  
--int zd_set_beacon_interval(struct zd_chip *chip, u32 interval)
-+int zd_set_beacon_interval(struct zd_chip *chip, u16 interval, u8 dtim_period,
-+			   int type)
- {
- 	int r;
- 
- 	mutex_lock(&chip->mutex);
--	r = set_beacon_interval(chip, interval);
-+	r = set_beacon_interval(chip, interval, dtim_period, type);
- 	mutex_unlock(&chip->mutex);
- 	return r;
- }
-@@ -927,7 +950,7 @@ static int hw_init(struct zd_chip *chip)
- 	if (r)
- 		return r;
- 
--	return set_beacon_interval(chip, 100);
-+	return set_beacon_interval(chip, 100, 0, NL80211_IFTYPE_UNSPECIFIED);
- }
- 
- static zd_addr_t fw_reg_addr(struct zd_chip *chip, u16 offset)
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
-index 7b0c58c..14e4402 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.h
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.h
-@@ -546,6 +546,7 @@ enum {
- #define RX_FILTER_CTRL (RX_FILTER_RTS | RX_FILTER_CTS | \
- 	RX_FILTER_CFEND | RX_FILTER_CFACK)
- 
-+#define BCN_MODE_AP			0x1000000
- #define BCN_MODE_IBSS			0x2000000
- 
- /* Monitor mode sets filter to 0xfffff */
-@@ -921,7 +922,8 @@ enum led_status {
- 
- int zd_chip_control_leds(struct zd_chip *chip, enum led_status status);
- 
--int zd_set_beacon_interval(struct zd_chip *chip, u32 interval);
-+int zd_set_beacon_interval(struct zd_chip *chip, u16 interval, u8 dtim_period,
-+			   int type);
- 
- static inline int zd_get_beacon_interval(struct zd_chip *chip, u32 *interval)
- {
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 9dde27a..6be406e 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -926,7 +926,7 @@ static void zd_op_remove_interface(struct ieee80211_hw *hw,
- 	struct zd_mac *mac = zd_hw_mac(hw);
- 	mac->type = NL80211_IFTYPE_UNSPECIFIED;
- 	mac->vif = NULL;
--	zd_set_beacon_interval(&mac->chip, 0);
-+	zd_set_beacon_interval(&mac->chip, 0, 0, NL80211_IFTYPE_UNSPECIFIED);
- 	zd_write_mac_addr(&mac->chip, NULL);
- }
- 
-@@ -1054,15 +1054,16 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 
- 		if (changes & BSS_CHANGED_BEACON_ENABLED) {
--			u32 interval;
-+			u16 interval = 0;
-+			u8 period = 0;
- 
--			if (bss_conf->enable_beacon)
--				interval = BCN_MODE_IBSS |
--						bss_conf->beacon_int;
--			else
--				interval = 0;
-+			if (bss_conf->enable_beacon) {
-+				period = bss_conf->dtim_period;
-+				interval = bss_conf->beacon_int;
-+			}
- 
--			zd_set_beacon_interval(&mac->chip, interval);
-+			zd_set_beacon_interval(&mac->chip, interval, period,
-+					       mac->type);
- 		}
- 	} else
- 		associated = is_valid_ether_addr(bss_conf->bssid);
+-	caldata = &priv->caldata[channel->hw_value];
++	if (!fastcc)
++		caldata = &priv->caldata;
+ 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (ret) {
+ 		ath_err(common,
+-- 
+1.7.3.5
 
