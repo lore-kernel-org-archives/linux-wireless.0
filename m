@@ -1,44 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60078 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903Ab1ARMBm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 07:01:42 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so7110367fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 04:01:41 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/5] mac80211: add NOL functionality
-Date: Tue, 18 Jan 2011 13:01:14 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201101171621.29863.bernhard.schmidt@saxnet.de> <20110117161133.792EB2082@mx.techwires.net> <1295347426.3563.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295347426.3563.8.camel@jlt3.sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:34565 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752562Ab1ANTiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 14:38:08 -0500
+Message-ID: <4D30A61E.1020607@openwrt.org>
+Date: Fri, 14 Jan 2011 20:38:06 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101181301.39953.bernhard.schmidt@saxnet.de>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: preserve caldata history buffer across scanning
+References: <1295033482-12257-1-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1295033482-12257-1-git-send-email-rmanoharan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, January 18, 2011 11:43:46 Johannes Berg wrote:
-> On Mon, 2011-01-17 at 11:05 +0100, Bernhard Schmidt wrote:
-> > NOL is a list of channels on which radar interference has been
-> > detected. Such channels are not allowed to be used for a certain
-> > amount of time.
-> 
-> I don't think this should be implemented in mac80211.
-
-In cfg80211 then? I'd really prefer to keep all flag-handling together 
-instead of splitting it up between mac80211/userspace.
-
--- 
-Best regards,
-
-Dipl.-Inf. (FH) Bernhard Schmidt (software development)
-
-saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
-Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
-managing director: Steffen Dreise - county court Chemnitz - HRB 23017
-http://www.saxnet.de
+On 2011-01-14 8:31 PM, Rajkumar Manoharan wrote:
+> caldata's channel info is never filled with operating channel
+> info which is causing the operating channel's noise floor
+> history buffer is reset to default nf during channel change.
+>
+> Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
+Acked-by: Felix Fietkau <nbd@openwrt.org>
