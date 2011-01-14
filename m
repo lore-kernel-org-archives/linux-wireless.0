@@ -1,71 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34147 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433Ab1AYKmI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 05:42:08 -0500
-Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1295950241.3650.3.camel@jlt3.sipsolutions.net>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
-	 <1295869283.3639.7.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
-	 <1295950241.3650.3.camel@jlt3.sipsolutions.net>
+Received: from smtp206.alice.it ([82.57.200.102]:58916 "EHLO smtp206.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752335Ab1ANXis (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 18:38:48 -0500
+Subject: htc dream wl1251 and MSM_GPIO_TO_INT(29)
+From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Grazvydas Ignotas <notasas@gmail.com>,
+	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 25 Jan 2011 11:42:07 +0100
-Message-ID: <1295952127.3650.12.camel@jlt3.sipsolutions.net>
+Date: Sat, 15 Jan 2011 00:33:13 +0100
+Message-ID: <1295047993.24338.66.camel@gnutoo-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-25 at 11:10 +0100, Johannes Berg wrote:
-> On Mon, 2011-01-24 at 23:21 +0200, Arik Nemtsov wrote:
-> 
-> > Well a wiphy flag won't do here. Probe requests may be filtered in
-> > some modes (AP-mode) but needed in others (p2p?).
-> > I think flexibility is a nice added bonus here. A FW can decide to
-> > handle most standard probe-requests and simply not pass them up.
-> > Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
-> > 
-> > The current patches leave this policy in the hands of the driver/fw.
-> 
-> That is _very_ dangerous. If the user has older firmware that doesn't
-> know about WSC2, how would the user know not to configure WSC2 in
-> hostapd? That needs to be known to hostapd so it can verify this
-> situation. For P2P, we already know whether or not P2P is supported, but
-> that's rather vague in case there will ever be a revision of the P2P
-> spec with say different IEs.
-> 
-> Additionally, a "regular AP" (not P2P, not WSC) would still want to
-> reply to probe requests from WSC/P2P devices with the normal template.
-> 
-> IMHO it would be smarter to rework the firmware to only reply to probe
-> requests if the probe response is configured. Then, if WSC, P2P, or
-> similar technologies are in use on the interface, hostapd can simply
-> decide to not configure the probe response and have host-based
-> processing. Would that be a change you could still make?
+hi,
+In the TI driver available here:
+http://android.git.kernel.org/?p=platform/system/wlan/ti.git;a=blob;f=sta_dk_4_0_4_32/pform/linux/src/esta_drv.c;h=a968e20bebf6c22f9983d0a6db50b40f04f1f1e8;hb=refs/heads/froyo
+there is:
+#define TROUT_IRQ MSM_GPIO_TO_INT(29)
+[...]
+if (drv->irq)
+    [...]
+    if ((rc = request_irq (drv->irq, (irq_handler_t)tiwlan_interrupt,
+IRQF_SHARED | IRQF_TRIGGER_FALLING /*Dm:*/, drv->netdev->name,
+drv))){//error message}
+    [...]
+    set_irq_type (drv->irq, IRQ_TYPE_EDGE_FALLING);
+    [...]
+    disable_irq (drv->irq);
+
+So we learn several things here:
+*it uses MSM_GPIO_TO_INT(29)
+*the irq configuration.
+
+So I took the 2.6.32 kernel version available here:
+http://gitorious.org/htc-msm-2-6-32/leviathan-incoming/commits/android-msm-2.6.32-rebase
+
+I also took an old compat-wireless driver(because more recent ones have
+the runtime PM capability and I don't know how to make it work with an
+old 2.6.32 kernel that lacks such patches)
+The version is this one compat-wireless-2010-10-04
+
+I modified both the kernel and compat wireless to be able to pass the
+wl12xx struct directly, like in recent kernels, and it seem to work.
+
+The problem is the following:
+When I do that:
+modprobe msm_wifi, wich is the old wifi activator from bob copeland
+available here:
+http://bobcopeland.com/srcs/android/msm_wifi.patch
+
+it freeze the phone, and watch -n 0.1 cat /proc/interupts trough ssh
+seem frozen too
+
+Here's the code for passing the data :
+
+static void trout_wl1251_init(void)
+{
+        struct wl12xx_platform_data trout_wl1251_pdata;
+        int ret;
+
+        trout_wl1251_pdata.irq = MSM_GPIO_TO_INT(29);
+        if (trout_wl1251_pdata.irq < 0)
+                goto fail_irq;
+        trout_wl1251_pdata.use_eeprom = false;
+        ret = wl12xx_set_platform_data(&trout_wl1251_pdata);
+        if (ret < 0)
+                goto fail_irq;
+fail_irq:
+        printk("trout wifi GPIO failed\n");
+        gpio_free(TROUT_WIFI_IRQ_GPIO);
+
+}
+
+The data is beeing passed(else it wouldn't freesze) and the phone
+freezes.
+
+note that the compat wireless irq handling code is different from the ti
+driver:
+if (wl->irq) {
+    ret = request_irq(wl->irq, wl1251_line_irq, 0, "wl1251", wl);
+    if (ret < 0) {
+        wl1251_error("request_irq() failed: %d", ret);
+                goto disable;
+    }
+
+     set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+     disable_irq(wl->irq);
+
+     wl1251_sdio_ops.enable_irq = wl1251_enable_line_irq;
+     wl1251_sdio_ops.disable_irq = wl1251_disable_line_irq;
+
+     wl1251_info("using dedicated interrupt line");
+}
+
+in the TI driver there is IRQ_TYPE_EDGE_FALLING while here there is
+IRQ_TYPE_EDGE_RISING.
+
+How should I start debugging that issue? do I need a serial cable for my
+device and kgdb(doesn't serial need IRQ?, maybe I should look how msm
+serial works)?
+
+Denis.
 
 
-Of course, firmware can reply to non-p2p/non-wsc2 probe requests with a
-static probe response template.
-
-The question is how much knowledge you want to put into the firmware
-about those protocols. If you want to put all knowledge in there, then
-at least you need to indicate to hostapd which protocols the firmware
-knows not to reply to.
-
-Also, a way to turn off this behaviour would still be good for future
-protocol changes. If P2P changes in 3 years, I'm sure this firmware
-won't be updated to match since you'll be a few hardware generations
-ahead. Then, being able to turn off the offload completely would allow
-users to take advantage of new protocols without changing hardware. Of
-course, you may want to force users to buy new hardware that way -- but
-in that case we *still* need the advertisement of what's possible so
-users know right away that they need to buy new hardware and don't try
-to configure something that just fails in strange ways.
-
-johannes
 
