@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43341 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754955Ab1AGWy1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 17:54:27 -0500
-Received: by iwn9 with SMTP id 9so17644437iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 14:54:27 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:52595 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757900Ab1ANTGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 14:06:45 -0500
+Message-ID: <4D309EC2.2060409@openwrt.org>
+Date: Fri, 14 Jan 2011 20:06:42 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 7 Jan 2011 14:54:05 -0800
-Message-ID: <AANLkTingv5Ur6UHeZoKhfYpTUw6wGMK7ULPm7V49UfPn@mail.gmail.com>
-Subject: Compat-wireless as is on ChromeOS head 2011-01-07 for ath9k
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Paul Stewart <pstew@google.com>,
-	Nael Atallah <Nael.Atallah@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+CC: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: Handle interface changes properly
+References: <1294842652-7406-1-git-send-email-rmanoharan@atheros.com> <AANLkTi=S6TFk88cY27KFZ2q5mCykMMSn17LnH=V95MST@mail.gmail.com> <4D2E0653.7040606@openwrt.org> <20110113051849.GD8836@vmraj-lnx.users.atheros.com> <4D2F0ADF.1040009@openwrt.org> <20110113163513.GA9291@vmraj-lnx.users.atheros.com> <4D2F2D22.6070301@openwrt.org> <20110114181309.GA11920@vmraj-lnx.users.atheros.com> <4D30944A.30100@openwrt.org> <20110114185317.GA12051@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110114185317.GA12051@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FWIW I've taken a snapshot of today's ChromeOS kernel.git tree and
-sucked out any delta from the original compat-wireless-v2.6.36-5-spn
-used there on:
+On 2011-01-14 7:53 PM, Rajkumar Manoharan wrote:
+> On Fri, Jan 14, 2011 at 11:52:02PM +0530, Felix Fietkau wrote:
+>>  On 2011-01-14 7:13 PM, Rajkumar Manoharan wrote:
+>>  >  On Thu, Jan 13, 2011 at 10:19:38PM +0530, Felix Fietkau wrote:
+>>  >>   On 2011-01-13 5:35 PM, Rajkumar Manoharan wrote:
+>>  >>   >   Instead of setting opmde as AP for WDS, it is better to handle WDS
+>>  >>   >   case in ath9k_hw.
+>>  >>   Why? Right now I don't even see any NL80211_IFTYPE_WDS handling in
+>>  >>   ath9k_hw, and I can't think of anything that should be handled
+>>  >>   differently in ath9k_hw compared to the AP opmode.
+>>  >  For WDS station, what should be the interface type? Forgive if I'm wrong.
+>>  There is no WDS station opmode. 'WDS station' is a regular station
+>>  interface with 4-addr mode enabled. It needs no special handling in ath9k.
+> still not convinced. Then what is the point mac80211 is informing about
+> WDS type to drivers. mac itself can pass it as AP type like what it
+> is doing for p2p GO.
+The WDS type is something else. If you have two APs, you can link them 
+together with a separate WDS vif on each side pointing at the remote MAC 
+address of the other node.
+I think that when we use ah->opmode, we should only use it for very 
+generic operating modes:
 
-net/wireless
-net/mac80211/
-drivers/net/wireless/ath/
+AP: no TSF sync, beacon tx can be enabled.
+ADHOC: TSF sync against IBSS cell, beacon tx can be enabled
+STATION: TSF sync against one AP, only station beacon timers for PS.
 
-and put it back into a vanilla compat-wireless-v2.6.36-5-spn with
-ath9k selected already for driver-select. I figured others might want
-to test this for some other reasons so here is the code:
+Only the above distinctions are relevant for ath9k_hw, everything else 
+is handled by the driver/stack. There is no reason for adding extra 
+checks to ath9k_hw for mesh and WDS, since they work best with 
+ah->opmode set to AP, and there is nothing extra on the *hardware* side 
+that should be configured there via a different opmode. That's why I 
+think leaking the mac80211 interface types to ath9k_hw is a bad idea.
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/mods/compat-wireless-2.6.36-5-spn-google-2011-01-07.tar.bz2
-sha1sum: 8cd9e5eb74292d23c511cddbf0cb2d26f0451d9a
-
-The hope is the delta + anything else we need for the future will go
-into a vanilla -6 release.
-
-  Luis
+- Felix
