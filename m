@@ -1,86 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:51759 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055Ab1ADXtH (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43187 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937Ab1ANT3G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:49:07 -0500
-Subject: [RFC PATCH 09/17] zd1211rw: implement seq_num for
-	IEEE80211_TX_CTL_ASSIGN_SEQ
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:49:02 +0200
-Message-ID: <20110104234902.25309.49677.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
+	Fri, 14 Jan 2011 14:29:06 -0500
+Message-ID: <4D30A3FC.7040609@candelatech.com>
+Date: Fri, 14 Jan 2011 11:29:00 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Rajkumar Manoharan <rmanoharan@Atheros.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	=?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath9k: Handle interface changes properly
+References: <AANLkTi=S6TFk88cY27KFZ2q5mCykMMSn17LnH=V95MST@mail.gmail.com> <4D2E0653.7040606@openwrt.org> <20110113051849.GD8836@vmraj-lnx.users.atheros.com> <4D2F0ADF.1040009@openwrt.org> <20110113163513.GA9291@vmraj-lnx.users.atheros.com> <4D2F2D22.6070301@openwrt.org> <20110114181309.GA11920@vmraj-lnx.users.atheros.com> <4D30944A.30100@openwrt.org> <20110114185317.GA12051@vmraj-lnx.users.atheros.com> <4D309EC2.2060409@openwrt.org> <20110114192414.GA12090@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110114192414.GA12090@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |   21 +++++++++++++++++++++
- drivers/net/wireless/zd1211rw/zd_mac.h |    2 ++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+On 01/14/2011 11:24 AM, Rajkumar Manoharan wrote:
+> On Sat, Jan 15, 2011 at 12:36:42AM +0530, Felix Fietkau wrote:
+>> On 2011-01-14 7:53 PM, Rajkumar Manoharan wrote:
+>>> On Fri, Jan 14, 2011 at 11:52:02PM +0530, Felix Fietkau wrote:
+>>>>   On 2011-01-14 7:13 PM, Rajkumar Manoharan wrote:
+>>>>   >   On Thu, Jan 13, 2011 at 10:19:38PM +0530, Felix Fietkau wrote:
+>>>>   >>    On 2011-01-13 5:35 PM, Rajkumar Manoharan wrote:
+>>>>   >>    >    Instead of setting opmde as AP for WDS, it is better to handle WDS
+>>>>   >>    >    case in ath9k_hw.
+>>>>   >>    Why? Right now I don't even see any NL80211_IFTYPE_WDS handling in
+>>>>   >>    ath9k_hw, and I can't think of anything that should be handled
+>>>>   >>    differently in ath9k_hw compared to the AP opmode.
+>>>>   >   For WDS station, what should be the interface type? Forgive if I'm wrong.
+>>>>   There is no WDS station opmode. 'WDS station' is a regular station
+>>>>   interface with 4-addr mode enabled. It needs no special handling in ath9k.
+>>> still not convinced. Then what is the point mac80211 is informing about
+>>> WDS type to drivers. mac itself can pass it as AP type like what it
+>>> is doing for p2p GO.
+>> The WDS type is something else. If you have two APs, you can link them
+>> together with a separate WDS vif on each side pointing at the remote MAC
+>> address of the other node.
+>> I think that when we use ah->opmode, we should only use it for very
+>> generic operating modes:
+>>
+>> AP: no TSF sync, beacon tx can be enabled.
+>> ADHOC: TSF sync against IBSS cell, beacon tx can be enabled
+>> STATION: TSF sync against one AP, only station beacon timers for PS.
+>>
+>> Only the above distinctions are relevant for ath9k_hw, everything else
+>> is handled by the driver/stack. There is no reason for adding extra
+>> checks to ath9k_hw for mesh and WDS, since they work best with
+>> ah->opmode set to AP, and there is nothing extra on the *hardware* side
+>> that should be configured there via a different opmode. That's why I
+>> think leaking the mac80211 interface types to ath9k_hw is a bad idea.
+> Thanks for your detailed explanation. And meanwhile Ben is also
+> fixing hw mode based on vif counter. It would be better if he make
+> use this thread and address the same.
+>
+> Ben,
+> Any comments.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 6be406e..aace010 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -654,6 +654,24 @@ static int zd_mac_config_beacon(struct ieee80211_hw *hw, struct sk_buff *beacon)
- 			(full_len << 19));
- }
- 
-+static void create_tx_desc_seq(struct zd_mac *mac, struct ieee80211_hdr *hdr,
-+			       struct ieee80211_tx_info *info)
-+{
-+	unsigned long irqflags;
-+
-+	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
-+		return;
-+
-+	spin_lock_irqsave(&mac->seqlock, irqflags);
-+
-+	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+		mac->seqno += 0x10;
-+	hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+	hdr->seq_ctrl |= cpu_to_le16(mac->seqno);
-+
-+	spin_unlock_irqrestore(&mac->seqlock, irqflags);
-+}
-+
- static int fill_ctrlset(struct zd_mac *mac,
- 			struct sk_buff *skb)
- {
-@@ -678,6 +696,8 @@ static int fill_ctrlset(struct zd_mac *mac,
- 
- 	cs_set_control(mac, cs, hdr, info);
- 
-+	create_tx_desc_seq(mac, hdr, info);
-+
- 	packet_length = frag_len + sizeof(struct zd_ctrlset) + 10;
- 	ZD_ASSERT(packet_length <= 0xffff);
- 	/* ZD1211B: Computing the length difference this way, gives us
-@@ -1117,6 +1137,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
- 
- 	memset(mac, 0, sizeof(*mac));
- 	spin_lock_init(&mac->lock);
-+	spin_lock_init(&mac->seqlock);
- 	mac->hw = hw;
- 
- 	mac->type = NL80211_IFTYPE_UNSPECIFIED;
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
-index 0ec6bde..e663451 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-@@ -186,6 +186,8 @@ struct zd_mac {
- 	struct ieee80211_channel channels[14];
- 	struct ieee80211_rate rates[12];
- 	struct ieee80211_supported_band band;
-+	spinlock_t seqlock;
-+	u16 seqno;
- 
- 	/* Short preamble (used for RTS/CTS) */
- 	unsigned int short_preamble:1;
+If all I need to do is to treat WDS and MESH like an AP, that shouldn't
+be too hard.
+
+Does WDS need a beacon?
+
+Is there any limitations to the number of WDS vifs allowed, including
+combinations with other VIF types?
+
+Thanks,
+Ben
+
+>
+> --
+> Rajkumar
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
