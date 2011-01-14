@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:45363 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182Ab1AaHzh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 02:55:37 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 23:55:17 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Fix memory leak due to failed PAPRD frames
-Date: Mon, 31 Jan 2011 13:25:29 +0530
-Message-ID: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:56609 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429Ab1ANNXA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 08:23:00 -0500
+Message-ID: <4D304E32.4040806@candelatech.com>
+Date: Fri, 14 Jan 2011 05:22:58 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: No beacons generated when you bring ath9k AP interface down and
+ up.
+References: <4D2FF7A4.3070106@candelatech.com> <20110114091226.GA32344@jm.kir.nu>
+In-Reply-To: <20110114091226.GA32344@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On 01/14/2011 01:12 AM, Jouni Malinen wrote:
+> On Thu, Jan 13, 2011 at 11:13:40PM -0800, Ben Greear wrote:
+>> If you have an ath9k AP interface running with hostapd, and you
+>> run:  ip link set vap0 down; ip link set vap0 up;
+>> then it will disable beaconing.
+>
+> Yes. So what?
+>
+>> I'm not sure where the problem actually lies:  Should ath9k
+>> start beaconing automatically on VAP interface add?  Is
+>> it up to hostapd to detect the ifdown/ifup and re-set everything
+>> up properly?  Or maybe it's just a very bad idea to bounce
+>> a VAP interface with 'ip link set'?
+>
+> I would say it is up to whoever decided to set the interface down to
+> restart hostapd.. There is a proposed patch for hostapd to do this
+> automatically, but I'm yet to fully understand why one would set the
+> interface down in the first place.
 
-free the skb's when the Tx of PAPRD frames fails and also add a debug
-message indicating that.
+My tool automatically downs and ups interfaces when IPs configuration
+changes to clear IP & routing information.  It's not so difficult to
+restart hostapd or even not bounce the VAP to begin with.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+But, it was quite difficult to figure out
+that the VAP was just *mostly* working.  It seems that everything but
+beaconing was working, or at least 70 or so virtual station devices
+could associate and pass traffic, though they did complain about
+not receiving beacons.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 20c70ba..1447b55 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -331,6 +331,8 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
- {
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_tx_control txctl;
- 	int time_left;
- 
-@@ -348,8 +350,12 @@ static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int
- 	init_completion(&sc->paprd_complete);
- 	sc->paprd_pending = true;
- 	txctl.paprd = BIT(chain);
--	if (ath_tx_start(hw, skb, &txctl) != 0)
-+
-+	if (ath_tx_start(hw, skb, &txctl) != 0) {
-+		ath_dbg(common, ATH_DBG_XMIT, "PAPRD TX failed\n");
-+		dev_kfree_skb_any(skb);
- 		return false;
-+	}
- 
- 	time_left = wait_for_completion_timeout(&sc->paprd_complete,
- 			msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
+I think that we should either change hostapd to fix this up automatically,
+or have hostapd exit on error when this happens, or have some other very
+obvious clue that the VAP is not fully functional.
+
+Thanks,
+Ben
+
 -- 
-1.7.0.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
