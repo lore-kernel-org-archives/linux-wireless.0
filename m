@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:45167 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160Ab1AGDe5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 22:34:57 -0500
-Subject: Re: Odd behavior of ssb, b43, b43legacy, and b44
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D262109.20504@lwfinger.net> (sfid-20110106_210800_770742_63AA2C67)
-References: <4D262109.20504@lwfinger.net>
-	 (sfid-20110106_210800_770742_63AA2C67)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 04:34:36 +0100
-Message-ID: <1294371276.15564.0.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38946 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446Ab1AOBUA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Jan 2011 20:20:00 -0500
+Received: by iwn9 with SMTP id 9so3075916iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 17:20:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1295052936.2253.5.camel@mythtv.ewol.com>
+References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
+	<AANLkTi=WTUiy1DYNhE12_KZp8QFUrWebY2Cpzud5P0b3@mail.gmail.com>
+	<1295052936.2253.5.camel@mythtv.ewol.com>
+Date: Sat, 15 Jan 2011 02:20:00 +0100
+Message-ID: <AANLkTi=_qAB6aVEbsTBUfpVwTg4GbLsAYbyP0PA2n+NO@mail.gmail.com>
+Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and beacons
+ with multiple vifs.
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: sbrown@cortland.com
+Cc: greearb@candelatech.com, ath9k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-06 at 14:07 -0600, Larry Finger wrote: 
-> Michael,
-> 
-> On one of my boxes, I have installed two PCI-format BCM43xx cards for testing.
-> One is a BCM4306 Rev. 3, which uses b43. The other is a BCM4303, which uses
-> b43legacy. The output of lspci -nn for these devices is
-> 
-> 01:09.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g
-> Wireless LAN Controller [14e4:4320] (rev 03)
-> 01:0a.0 Network controller [0280]: Broadcom Corporation BCM4303 802.11b Wireless
-> LAN Controller [14e4:4301] (rev 02)
-> 
-> Upon booting, I noticed the following messages in the log:
-> 
->  b44: b44.c:v2.0
->  b44: Invalid MAC address found in EEPROM
->  b44 ssb1:1: Problem fetching invariants of chip, aborting
-> 
->  b44: probe of ssb1:1 failed with error -22
-> 
-> As this box does not have a b44 installed, I wondered why this was happening.
-> When I unloaded all the drivers and used modprobe to load ssb, I found that b43,
-> b43legacy and b44 were all loaded. The console output is
-> 
-> finger@pam:~> lsmod | grep b4             <== none loaded
-> finger@pam:~> sudo modprobe -v ssb        <== load ssb
-> insmod /lib/modules/2.6.37-wl+/kernel/drivers/ssb/ssb.ko
-> 
-> The above looks normal, but look at what is now resident!
-> 
-> finger@pam:~> lsmod | grep b4
-> b43legacy             115302  0
-> b44                    28767  0
-> b43                   174321  0
-> ssb                    38157  3 b43legacy,b44,b43
-> mac80211              266240  2 b43legacy,b43
-> cfg80211              161930  3 b43legacy,b43,mac80211
-> 
-> Any idea why loading ssb should silently load b43legacy AND b44? Any ideas on
-> where to look?
-> 
-> Thanks,
-> 
-> Larry
-> 
+2011/1/15 Steve Brown <sbrown@cortland.com>:
+> On Sat, 2011-01-15 at 00:19 +0100, Björn Smedman wrote:
+>> This is another comment that is a little out of place but when I see
+>> the identifier beacon_interval in this context I cannot help bringing
+>> up per-vif settings as a related problem: If I read the code (or
+>> rather the lack of code) correctly the beacon interval of the last (or
+>> first?) beaconing vif added will be used to set up beacon tx, whereas
+>> the actual beacon contents will reflect the beacon intervals
+>> configured for individual vifs which may all be different... The same
+>> goes for e.g. tx queue configuration, no?
+[snip]
+> For instance, an ap vif has a ~100ms interval and a mesh vif has a
+> ~1000ms interval. I don't see how to avoid a per vif interval.
 
-Does one of these wireless cards have a dangling ethernet core? I would
-not be surprised...
+I agree. We should fix ath9k so it works correctly even if beacon
+interval is different for different vifs (within some reasonable
+limits).
 
--- 
-Greetings Michael.
+In the mean time, as a workaround, try to configure the same beacon
+interval for all vifs.
 
+/Björn
