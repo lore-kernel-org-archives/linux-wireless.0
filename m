@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:17829 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751701Ab1ATQT1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 11:19:27 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH wireless-2.6.38] iwlwifi: don't read sku information from EEPROM for 4965
-Date: Thu, 20 Jan 2011 08:08:04 -0800
-Message-Id: <1295539684-19682-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59709 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752035Ab1AOLID (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 Jan 2011 06:08:03 -0500
+Date: Sat, 15 Jan 2011 13:07:51 +0200
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
+Cc: sbrown@cortland.com, greearb@candelatech.com,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and
+ beacons with multiple vifs.
+Message-ID: <20110115110751.GA7035@jm.kir.nu>
+References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
+ <AANLkTi=WTUiy1DYNhE12_KZp8QFUrWebY2Cpzud5P0b3@mail.gmail.com>
+ <1295052936.2253.5.camel@mythtv.ewol.com>
+ <AANLkTi=_qAB6aVEbsTBUfpVwTg4GbLsAYbyP0PA2n+NO@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTi=_qAB6aVEbsTBUfpVwTg4GbLsAYbyP0PA2n+NO@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For all the new devices, the sku information should read from EEPROM
-but for legacy devices such as 4965, appearly the EEPROM does not
-contain the necessary information. so skip the read from EEPROM
-and go back to use software configuration.
+On Sat, Jan 15, 2011 at 02:20:00AM +0100, Björn Smedman wrote:
+> 2011/1/15 Steve Brown <sbrown@cortland.com>:
+> > For instance, an ap vif has a ~100ms interval and a mesh vif has a
+> > ~1000ms interval. I don't see how to avoid a per vif interval.
+> 
+> I agree. We should fix ath9k so it works correctly even if beacon
+> interval is different for different vifs (within some reasonable
+> limits).
 
-Reported-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Tested-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
-this patch is also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
----
- drivers/net/wireless/iwlwifi/iwl-4965.c       |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |   11 +++++++----
- 2 files changed, 8 insertions(+), 4 deletions(-)
+Yes, up to a limit. Handling something like 100 TU on one vif and 1000
+TU on another is fine, but something like 100 TU and 103 TU would need
+to be forced to use the same interval. I've been thinking of adding some
+kind of mechanism for the driver to override Beacon interval in such
+cases (which would need to go back all the way to user space to hostapd
+in case of AP mode).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 3f1e5f1..91a9f52 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2624,6 +2624,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
- 	.fw_name_pre = IWL4965_FW_PRE,
- 	.ucode_api_max = IWL4965_UCODE_API_MAX,
- 	.ucode_api_min = IWL4965_UCODE_API_MIN,
-+	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_ABC,
- 	.eeprom_ver = EEPROM_4965_EEPROM_VERSION,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
-index 14ceb4d..27b5a3e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
-@@ -152,11 +152,14 @@ int iwl_eeprom_check_sku(struct iwl_priv *priv)
- 
- 	eeprom_sku = iwl_eeprom_query16(priv, EEPROM_SKU_CAP);
- 
--	priv->cfg->sku = ((eeprom_sku & EEPROM_SKU_CAP_BAND_SELECTION) >>
-+	if (!priv->cfg->sku) {
-+		/* not using sku overwrite */
-+		priv->cfg->sku =
-+			((eeprom_sku & EEPROM_SKU_CAP_BAND_SELECTION) >>
- 			EEPROM_SKU_CAP_BAND_POS);
--	if (eeprom_sku & EEPROM_SKU_CAP_11N_ENABLE)
--		priv->cfg->sku |= IWL_SKU_N;
--
-+		if (eeprom_sku & EEPROM_SKU_CAP_11N_ENABLE)
-+			priv->cfg->sku |= IWL_SKU_N;
-+	}
- 	if (!priv->cfg->sku) {
- 		IWL_ERR(priv, "Invalid device sku\n");
- 		return -EINVAL;
 -- 
-1.7.0.4
-
+Jouni Malinen                                            PGP id EFC895FA
