@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout026.mac.com ([17.148.16.101]:50629 "EHLO
-	asmtpout026.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932458Ab1ACSM0 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:41739 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751180Ab1AOUE7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 13:12:26 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Received: from [192.168.1.30] ([87.201.169.175])
- by asmtp026.mac.com (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep
- 26 2008; 64bit)) with ESMTPSA id <0LEG00711L884W30@asmtp026.mac.com> for
- linux-wireless@vger.kernel.org; Mon, 03 Jan 2011 10:12:12 -0800 (PST)
-Subject: Re: wl1271 status/update
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <0826983CC0CB074798C42E77D8ACD07F0616CB@pdtms1.pdt.com>
-Date: Mon, 03 Jan 2011 22:11:47 +0400
-Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Message-id: <84939413-EF08-49D3-B3F2-AEAD2DC2C1D5@mac.com>
-References: <0826983CC0CB074798C42E77D8ACD07F0616CB@pdtms1.pdt.com>
-To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+	Sat, 15 Jan 2011 15:04:59 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 7A2DD54022B
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 15:06:43 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110115200457.F276540F97@repository3.orbit-lab.org>
+Date: Sat, 15 Jan 2011 15:04:57 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + e70f43d...0eb1b34 akpm-end   -> origin/akpm-end  (forced update)
+   e0e736f..6ab8219  akpm-start -> origin/akpm-start
+   2271958..bed36d7  history    -> origin/history
+ + 1d506f8...e8883f8 master     -> origin/master  (forced update)
+   581548d..6ab8219  stable     -> origin/stable
+ * [new tag]         next-20110115 -> next-20110115
 
-On Jan 3, 2011, at 8:02 PM, Brzezowski, Karen wrote:
+compat-wireless code metrics
 
-> talk has been about compat-wireless, etc..
+    782520 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1989 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1956 - % of crap code
 
-I tried this briefly and abandoned it, because the android-2.6.32 kernel code base is
-different from the run-time pm sdio patch set that's published on the wl1271 wiki site.
-
-I managed to get the proprietary ti wilink 6.1.0.0 working with an arago-omappsp-03.00.00.05-kernel.
-
-But for some reason, when compiling it against the android-2.6.32 (rowboat-eclair-2.6.32 kernel)
-it gives some sdio related errors. I'm still working on it.
-
-the wl1271 wlan driver in the android kernel didn't work, possibly for the same reason that the wilink-6.1.0.0
-driver didn't work with the android kernel.
-
-I mean, one would think that its already been made to work, i.e. rowboat-eclair-2.6.32 kernel + android-2.2 wl1271 driver
-but that is so far from the truth.
-
-Elvis Dowson
+Base tree: linux-next.git
+Base tree version: next-20110115
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
