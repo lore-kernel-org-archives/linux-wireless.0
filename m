@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:40635 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731Ab1ATTDJ (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59577 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154Ab1AOPtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 14:03:09 -0500
-Received: by wwi17 with SMTP id 17so1836882wwi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 11:03:08 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Fwd: [Linux Wireless] Update of "en/users/Drivers/carl9170" by PaulFertser
-Date: Thu, 20 Jan 2011 20:02:49 +0100
-Cc: Paul Fertser <fercerpav@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <20110120183210.13527.33808@he.sipsolutions.net> <20110120184336.GK3333@home.lan> <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
-In-Reply-To: <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
+	Sat, 15 Jan 2011 10:49:13 -0500
+Received: by ywl5 with SMTP id 5so1219390ywl.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 07:49:12 -0800 (PST)
+Message-ID: <4D31C1F5.7080306@whoplays.asia>
+Date: Sun, 16 Jan 2011 00:49:09 +0900
+From: "u2@whoplays.asia" <u2@whoplays.asia>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101202002.49840.chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [Driver] NEC WL300NU-G
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 January 2011 19:50:43 Luis R. Rodriguez wrote:
-> On Thu, Jan 20, 2011 at 10:43 AM, Paul Fertser <fercerpav@gmail.com> wrote:
-> > On Thu, Jan 20, 2011 at 10:37:20AM -0800, Luis R. Rodriguez wrote:
-> >> Huh?
-> >
-> > Christian asked me to add that info to the wiki, is something i wrote wrong?
-> 
-> It is unclear to me, are you saying carl9170 does not support QoS and
-> aggregation?
+hi,
 
-It's not only carl9170, it's AR9170 (the chip) .
+According to the list linuxwireless.org/en/users/Devices/USB, Wireless 
+USB adapter NEC WL300NU-G[0x409:0x093f] is supported by ar9170usb.
 
-Take a look into the original firmware:
+But the one I bought via 
+www.amazon.co.jp/NEC-Aterm-WL300NU-G-PA-WL300NU-G is [0x409:0x0249] and 
+not detected by any drivers...
 
-<http://git.kernel.org/?p=linux/kernel/git/mcgrof/ar9170-fw.git;a=blob;f=STA/hostif.c;h=aa277d14ee5ec4c222b83975d7dc2d5c66dbf91c;hb=2e3574ce10c74a82047a06b046855de14d969948#l107>
+$ lsusb
+Bus 007 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 006 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 004 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 002 Device 006: ID 0a5c:2101 Broadcom Corp. Bluetooth Controller
+Bus 002 Device 005: ID 0853:0100 Topre Corporation HHKB Professional
+Bus 002 Device 004: ID 0409:005a NEC Corp. HighSpeed Hub
+Bus 002 Device 003: ID 0409:0249 NEC Corp.
+Bus 002 Device 002: ID 2019:ab50 PLANEX GW-US54Mini2
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+$ uname -a
+Linux localhost 2.6.32-5-amd64 #1 SMP Wed Jan 12 03:40:32 UTC 2011 
+x86_64 GNU/Linux
 
-107					/* TxQ number */
-108					//txqNum = (buf[2] >> 13);
-109					//if (txqNum > 4)
-110					{
-111						txqNum = 0;
-112					}
-113 
-114					zfDmaPutPacket(&zgTxQ[txqNum], desc);
-115					/* Trigger WLAN TX DMA */
-116					zm_wl_dma_trigger_reg = (1 << txqNum);
-
-So yes, someone took a shortcut along the way.
+Plz anyone describe me why this one has another vendor-productID, and 
+will this one supported?
 
 Regards,
-	Chr
+Miyagi
