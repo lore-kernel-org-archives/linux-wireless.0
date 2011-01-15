@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:42618 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753179Ab1AaSrX (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38346 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818Ab1AONeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:47:23 -0500
-Subject: [PATCH 02/22] zd1211rw: cancel process_intr work on
-	zd_chip_disable_int()
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Mon, 31 Jan 2011 20:47:17 +0200
-Message-ID: <20110131184717.10044.89440.stgit@fate.lan>
-In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
-References: <20110131184657.10044.98610.stgit@fate.lan>
+	Sat, 15 Jan 2011 08:34:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201101131423.51640.helmut.schaa@googlemail.com>
+References: <m31v4hkmkf.fsf@ingo.homenetwork>
+	<201101131423.51640.helmut.schaa@googlemail.com>
+Date: Sat, 15 Jan 2011 14:34:11 +0100
+Message-ID: <AANLkTimMVdsGONSD9OmnX2eJk51H5Pzj4K8irHa=E-qx@mail.gmail.com>
+Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Ingo Brunberg <ingo_brunberg@web.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OOPS if worker is running and disconnect() is called (triggered
-by unpluging device). Much harder to trigger at this stage but
-later when we have AP beacon work in process_intr it happens very
-easy.
+Hi,
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_chip.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+> Just a shot in the dark but since the stack trace shows the newly added
+> watchdog this might be the result of a race between a regular txdone work
+> (mac80211 workqueue) vs the watchdog work (global workqueue).
+>
+> I guess the following situation could happen:
+> A regular tx done work calls rt2x00lib_txdone which first sets entry->skb to
+> NULL, calls the driver specific clear_entry and afterwards increases
+> Q_INDEX_DONE. If the watchdog work calls rt2x00lib_txdone on a different CPU
+> inbetween the skb might be NULL and cause the above oops.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 6a9b660..b644ced 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -1407,6 +1407,9 @@ void zd_chip_disable_int(struct zd_chip *chip)
- 	mutex_lock(&chip->mutex);
- 	zd_usb_disable_int(&chip->usb);
- 	mutex_unlock(&chip->mutex);
-+
-+	/* cancel pending interrupt work */
-+	cancel_work_sync(&zd_chip_to_mac(chip)->process_intr);
- }
- 
- int zd_chip_enable_rxtx(struct zd_chip *chip)
+This could be, would be interesting to know if compat-wireless also shows
+this problem. Because the queue refactoring code which should have solved
+these race conditions was added after 2.6.37.
 
+Ivo
