@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:40961 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751072Ab1AKGOA (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:36091 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899Ab1APFme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 01:14:00 -0500
-Received: by mail-wy0-f178.google.com with SMTP id 42so20997701wyb.37
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 22:13:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <0826983CC0CB074798C42E77D8ACD07F067DE7@pdtms1.pdt.com>
-References: <AQHLsOWcAO4PZ7142ESGHYLUk4riDg==>
-	<0826983CC0CB074798C42E77D8ACD07F067DE7@pdtms1.pdt.com>
-Date: Tue, 11 Jan 2011 00:13:57 -0600
-Message-ID: <AANLkTinjGLvWbSnfeNoUkoC2q4jN+uRntSYS6MAvm1vv@mail.gmail.com>
-Subject: Re: What pieces are needed for wl1271..what directories, files,
- configs, etc..
-From: "Krakowski, Oz" <ozk@ti.com>
-To: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 16 Jan 2011 00:42:34 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so4134866wyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 21:42:34 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 07/10] wl12xx: AP-mode - support HW based link PS monitoring
+Date: Sun, 16 Jan 2011 07:42:11 +0200
+Message-Id: <1295156534-4178-8-git-send-email-arik@wizery.com>
+In-Reply-To: <1295156534-4178-1-git-send-email-arik@wizery.com>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Karen,
+When operating in AP mode the wl1271 hardware filters our null-data
+packets as well as management packets. This makes it impossible for
+mac80211 to monitor the PS mode by using the PM bit of incoming frames.
 
-On Mon, Jan 10, 2011 at 10:44 AM, Brzezowski, Karen
-<Karen.Brzezowski@pdt.com> wrote:
->
-> Hello all wireless gurus!!
->
-> I've been watching the linux-wireless mailings on the wl1271...........
->
-> I've been trying to figure out how to get the wl1271 working with
-> imx233 processor...
->
-> I think we are moving to Linux 2.6.35 and android gingerbread (2.3)...
->
-> I"m very confused as to what files/configs/etc..need to be grabbed to get my task going.......
->
-> I see spi, sdio...not sure where all changes are made for the wl1271...i'm assuming
-> not just in the ...net/wireless/wl1271 directory.......... i have firmware too...........(.bins..)
->
-> I'm quite confused about the chip and how each part will work (BT, WLAN, and FM)...
-> Do you have any documentation..(for dummies, that would be me!)
-> that would help me understand about the chip..how it communicates to the processor,
-> how it does it's job with respect to BT, WLAN, and FM, etc..
->
-> I have NO idea where to begin.......I've been googling and reading and I have downloaded
-> your wl12xx git........
+Disable mac80211 automatic link PS-mode handling by supporting
+IEEE80211_HW_AP_LINK_PS in HW flags.
 
-If you haven't done so already, suggest you start by going through the
-following wiki page: http://linuxwireless.org/en/users/Drivers/wl12xx
-This should give you an idea of where to get the latest code, how to
-compile it to your kernel (using compat-wireless) and links to the
-relevant patches needed.
-This will get you started with WLAN.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
->
-> If you can help me AT ALL to get me up to speed/ to start, what i need to do to connect
-> the wl1271 to the imx233....if not imx233..that whatever you have........
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 6318224..77c8974 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3147,7 +3147,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_SUPPORTS_UAPSD |
+ 		IEEE80211_HW_HAS_RATE_CONTROL |
+ 		IEEE80211_HW_CONNECTION_MONITOR |
+-		IEEE80211_HW_SUPPORTS_CQM_RSSI;
++		IEEE80211_HW_SUPPORTS_CQM_RSSI |
++		IEEE80211_HW_AP_LINK_PS;
+ 
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+-- 
+1.7.1
 
-The wiki page does include some basic information needed in order to
-port to different hardware platforms.
-
-Regards,
-Oz.
