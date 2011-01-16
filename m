@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:47351 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751039Ab1AZJh6 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35212 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657Ab1APCAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 04:37:58 -0500
-Date: Wed, 26 Jan 2011 11:37:00 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
+	Sat, 15 Jan 2011 21:00:41 -0500
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
+Date: Sun, 16 Jan 2011 02:59:14 +0100
+Cc: Ingo Brunberg <ingo_brunberg@web.de>, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/6] ath: Fix WEP hardware encryption
-Message-ID: <20110126093700.GA11832@jm.kir.nu>
-References: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
- <20110125041549.6944.15800.stgit@localhost6.localdomain6>
- <20110125183205.GA29410@jm.kir.nu>
- <201101261138.53169.br1@einfach.org>
+References: <m31v4hkmkf.fsf@ingo.homenetwork> <201101131423.51640.helmut.schaa@googlemail.com> <AANLkTimMVdsGONSD9OmnX2eJk51H5Pzj4K8irHa=E-qx@mail.gmail.com>
+In-Reply-To: <AANLkTimMVdsGONSD9OmnX2eJk51H5Pzj4K8irHa=E-qx@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201101261138.53169.br1@einfach.org>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101160259.14404.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 26, 2011 at 11:38:53AM +0900, Bruno Randolf wrote:
+Am Samstag, 15. Januar 2011 schrieb Ivo Van Doorn:
+> Hi,
+> 
+> > Just a shot in the dark but since the stack trace shows the newly added
+> > watchdog this might be the result of a race between a regular txdone work
+> > (mac80211 workqueue) vs the watchdog work (global workqueue).
+> >
+> > I guess the following situation could happen:
+> > A regular tx done work calls rt2x00lib_txdone which first sets entry->skb to
+> > NULL, calls the driver specific clear_entry and afterwards increases
+> > Q_INDEX_DONE. If the watchdog work calls rt2x00lib_txdone on a different CPU
+> > inbetween the skb might be NULL and cause the above oops.
+> 
+> This could be, would be interesting to know if compat-wireless also shows
+> this problem. Because the queue refactoring code which should have solved
+> these race conditions was added after 2.6.37.
 
-> Even without my patch, WEP does not work with multiple vifs. 
+I also guess that this issue would be fixed in compat-wireless due to the queue
+refactoring. But I guess that is way too big for a stable kernel :(
 
-Are you sure about that? Why would there be any issues in using software
-crypto for decrypting WEP frames while everything else is done in
-hardware? I'm really interested in cases where only one of the vifs is
-using WEP, but this should work even with multiple WEP vifs. The key is
-in mac80211 using more details of the frame header in selecting which
-key to use than the hardware key cache.
-
-> My patch just adds a special case for WEP, so it does not break anything for 
-> the other use cases. It improves the performance for the one vif case where 
-> WEP works right now.
-
-As far as I can tell, it will break all multi-vif cases where at least
-one of the vifs is using WEP (which would be one of the only acceptable
-uses of WEP as a temporary upgrade path while providing more reasonable
-security on other vifs). As such, I would have to NAK this patch in its
-current form.
-
-To make this acceptable, the patch would need to handle a case where
-multiple vifs are added (which may happen either before or after the WEP
-keys would be set to default key indexes) and prevent the use of those
-key indexes (which would include removing the already configured keys in
-case of vif added after the WEP configuration on another vif).
-
-Another alternative could be to figure out whether some of the new key
-cache functionality could be used to avoid the problems in some cases,
-but that may not be feasible with all the hardware revisions supported
-by ath5k.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Helmut
