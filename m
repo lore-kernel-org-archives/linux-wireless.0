@@ -1,194 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41477 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754736Ab1AUSFr (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:36091 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467Ab1APFmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 13:05:47 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] mac80211:  Optimize scans on current operating channel.
-Date: Fri, 21 Jan 2011 10:05:42 -0800
-Message-Id: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
+	Sun, 16 Jan 2011 00:42:39 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so4134866wyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 21:42:38 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 09/10] wl12xx: AP-mode - count free FW TX blocks per link
+Date: Sun, 16 Jan 2011 07:42:13 +0200
+Message-Id: <1295156534-4178-10-git-send-email-arik@wizery.com>
+In-Reply-To: <1295156534-4178-1-git-send-email-arik@wizery.com>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Count the number of FW TX blocks allocated per link. We add blocks to a
+link counter when allocated for a TX descriptor. We remove blocks
+according to counters in fw_status indicating the number of freed blocks
+in FW. These counters are polled after each IRQ.
 
-This should decrease un-necessary flushes, on/off channel work,
-and channel changes in cases where the only scanned channel is
-the current operating channel.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/main.c   |   11 +++++++
+ drivers/net/wireless/wl12xx/ps.c     |    2 -
+ drivers/net/wireless/wl12xx/tx.c     |   53 ++++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 ++
+ 4 files changed, 44 insertions(+), 26 deletions(-)
 
-v2:  Check channels instead of flag when determining if we should
-  do a channel change in scan_completed_finish.
-
-:100644 100644 c47d7c0... 59fe5e7... M	net/mac80211/ieee80211_i.h
-:100644 100644 1236710... e6de0e7... M	net/mac80211/rx.c
-:100644 100644 3e660db... fa0aeb9... M	net/mac80211/scan.c
- net/mac80211/ieee80211_i.h |    5 +++++
- net/mac80211/rx.c          |   11 ++++++++---
- net/mac80211/scan.c        |   41 +++++++++++++++++++++++++----------------
- 3 files changed, 38 insertions(+), 19 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c47d7c0..59fe5e7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -660,6 +660,10 @@ struct tpt_led_trigger {
-  *	that the scan completed.
-  * @SCAN_ABORTED: Set for our scan work function when the driver reported
-  *	a scan complete for an aborted scan.
-+ * @SCAN_LEFT_OPER_CHANNEL:  Set this flag if the scan process leaves the
-+ *      operating channel at any time.  If scanning ONLY the current operating
-+ *      channel this flag should not be set, and this will allow fewer
-+ *      offchannel changes.
-  */
- enum {
- 	SCAN_SW_SCANNING,
-@@ -667,6 +671,7 @@ enum {
- 	SCAN_OFF_CHANNEL,
- 	SCAN_COMPLETED,
- 	SCAN_ABORTED,
-+	SCAN_LEFT_OPER_CHANNEL,
- };
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d600cff..a83d26d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -549,6 +549,17 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 	if (total)
+ 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
  
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1236710..e6de0e7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -388,6 +388,7 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- 	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
- 	struct sk_buff *skb = rx->skb;
-+	int ret;
- 
- 	if (likely(!(status->rx_flags & IEEE80211_RX_IN_SCAN)))
- 		return RX_CONTINUE;
-@@ -396,10 +397,14 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- 		return ieee80211_scan_rx(rx->sdata, skb);
- 
- 	if (test_bit(SCAN_SW_SCANNING, &local->scanning)) {
--		/* drop all the other packets during a software scan anyway */
--		if (ieee80211_scan_rx(rx->sdata, skb) != RX_QUEUED)
-+		ret = ieee80211_scan_rx(rx->sdata, skb);
-+		/* drop all the other packets while scanning off channel */
-+		if (ret != RX_QUEUED &&
-+		    test_bit(SCAN_OFF_CHANNEL, &local->scanning)) {
- 			dev_kfree_skb(skb);
--		return RX_QUEUED;
-+			return RX_QUEUED;
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		for (i = 0; i < AP_MAX_LINKS; i++) {
++			u8 cnt = status->tx_lnk_free_blks[i] -
++				wl->links[i].prev_freed_blks;
++
++			wl->links[i].prev_freed_blks =
++				status->tx_lnk_free_blks[i];
++			wl->links[i].allocated_blks -= cnt;
 +		}
-+		return ret;
- 	}
++	}
++
+ 	/* update the host-chipset time offset */
+ 	getnstimeofday(&ts);
+ 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 60a3738..92397ad 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -174,5 +174,3 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
  
- 	/* scanning finished during invoking of handlers */
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 3e660db..fa0aeb9 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -293,11 +293,14 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+-
+-
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index d43193e..128c274 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -108,7 +108,7 @@ u8 wl1271_tx_get_hlid(struct sk_buff *skb)
+ }
+ 
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+-				u32 buf_offset)
++				u32 buf_offset, u8 hlid)
  {
- 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+@@ -137,6 +137,9 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
  
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+	if ((local->oper_channel != local->hw.conf.channel) || was_hw_scan)
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 		wl->tx_blocks_available -= total_blocks;
+ 
++		if (wl->bss_type == BSS_TYPE_AP_BSS)
++			wl->links[hlid].allocated_blks += total_blocks;
 +
- 	if (!was_hw_scan) {
- 		ieee80211_configure_filter(local);
- 		drv_sw_scan_complete(local);
--		ieee80211_offchannel_return(local, true);
-+		if (test_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning))
-+			ieee80211_offchannel_return(local, true);
- 	}
+ 		ret = 0;
  
- 	mutex_lock(&local->mtx);
-@@ -397,13 +400,10 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 		wl1271_debug(DEBUG_TX,
+@@ -150,7 +153,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ }
  
- 	drv_sw_scan_start(local);
+ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+-			      u32 extra, struct ieee80211_tx_info *control)
++			      u32 extra, struct ieee80211_tx_info *control,
++			      u8 hlid)
+ {
+ 	struct timespec ts;
+ 	struct wl1271_tx_hw_descr *desc;
+@@ -186,7 +190,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	desc->tid = ac;
  
--	ieee80211_offchannel_stop_beaconing(local);
--
- 	local->leave_oper_channel_time = 0;
- 	local->next_scan_state = SCAN_DECISION;
- 	local->scan_channel_idx = 0;
--
--	drv_flush(local, false);
-+	__clear_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning);
+ 	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+-		desc->aid = TX_HW_DEFAULT_AID;
++		desc->aid = hlid;
  
- 	ieee80211_configure_filter(local);
- 
-@@ -543,7 +543,18 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- 
--	if (local->scan_channel) {
-+	next_chan = local->scan_req->channels[local->scan_channel_idx];
-+
-+	if (local->oper_channel == local->hw.conf.channel) {
-+		if (next_chan == local->oper_channel)
-+			local->next_scan_state = SCAN_SET_CHANNEL;
-+		else
-+			/*
-+			 * we're on the operating channel currently, let's
-+			 * leave that channel now to scan another one
-+			 */
-+			local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
-+	} else {
- 		/*
- 		 * we're currently scanning a different channel, let's
- 		 * see if we can scan another channel without interfering
-@@ -559,7 +570,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 		 *
- 		 * Otherwise switch back to the operating channel.
- 		 */
--		next_chan = local->scan_req->channels[local->scan_channel_idx];
- 
- 		bad_latency = time_after(jiffies +
- 				ieee80211_scan_get_channel_time(next_chan),
-@@ -577,12 +587,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 			local->next_scan_state = SCAN_ENTER_OPER_CHANNEL;
+ 		/* if the packets are destined for AP (have a STA entry)
+ 		   send them with AP rate policies, otherwise use default
+@@ -196,25 +200,17 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
  		else
- 			local->next_scan_state = SCAN_SET_CHANNEL;
--	} else {
--		/*
--		 * we're on the operating channel currently, let's
--		 * leave that channel now to scan another one
--		 */
--		local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
+ 			rate_idx = ACX_TX_BASIC_RATE;
+ 	} else {
+-		if (control->control.sta) {
+-			struct wl1271_station *wl_sta;
+-
+-			wl_sta = (struct wl1271_station *)
+-					control->control.sta->drv_priv;
+-			desc->hlid = wl_sta->hlid;
++		desc->hlid = hlid;
++		switch (hlid) {
++		case WL1271_AP_GLOBAL_HLID:
++			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
++			break;
++		case WL1271_AP_BROADCAST_HLID:
++			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
++			break;
++		default:
+ 			rate_idx = ac;
+-		} else {
+-			struct ieee80211_hdr *hdr;
+-
+-			hdr = (struct ieee80211_hdr *)
+-						(skb->data + sizeof(*desc));
+-			if (ieee80211_is_mgmt(hdr->frame_control)) {
+-				desc->hlid = WL1271_AP_GLOBAL_HLID;
+-				rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
+-			} else {
+-				desc->hlid = WL1271_AP_BROADCAST_HLID;
+-				rate_idx = ACX_TX_AP_MODE_BCST_RATE;
+-			}
++			break;
+ 		}
  	}
  
- 	*next_delay = 0;
-@@ -591,9 +595,12 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
- 						    unsigned long *next_delay)
- {
-+	ieee80211_offchannel_stop_beaconing(local);
-+
- 	ieee80211_offchannel_stop_station(local);
+@@ -245,6 +241,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 	u32 extra = 0;
+ 	int ret = 0;
+ 	u32 total_len;
++	u8 hlid;
  
- 	__set_bit(SCAN_OFF_CHANNEL, &local->scanning);
-+	__set_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning);
+ 	if (!skb)
+ 		return -EINVAL;
+@@ -271,14 +268,19 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		}
+ 	}
+ 
+-	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		hlid = wl1271_tx_get_hlid(skb);
++	else
++		hlid = TX_HW_DEFAULT_AID;
++
++	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
+ 
+-	wl1271_tx_fill_hdr(wl, skb, extra, info);
++	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
  
  	/*
- 	 * What if the nullfunc frames didn't arrive?
-@@ -640,8 +647,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	chan = local->scan_req->channels[local->scan_channel_idx];
+ 	 * The length of each packet is stored in terms of words. Thus, we must
+@@ -656,8 +658,11 @@ void wl1271_tx_reset(struct wl1271 *wl)
  
- 	local->scan_channel = chan;
--	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
--		skip = 1;
+ 	/* TX failure */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+-		for (i = 0; i < AP_MAX_LINKS; i++)
++		for (i = 0; i < AP_MAX_LINKS; i++) {
+ 			wl1271_tx_reset_link_queues(wl, i);
++			wl->links[i].allocated_blks = 0;
++			wl->links[i].prev_freed_blks = 0;
++		}
+ 
+ 		wl->last_tx_hlid = 0;
+ 	} else {
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 0027e00..59d687b 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -271,6 +271,10 @@ struct wl1271_ap_key {
+ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
 +
-+	if (chan != local->hw.conf.channel)
-+		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
-+			skip = 1;
++	/* accounting for allocated / available TX blocks in FW */
++	u8 allocated_blks;
++	u8 prev_freed_blks;
+ };
  
- 	/* advance state machine to next channel/band */
- 	local->scan_channel_idx++;
+ struct wl1271 {
 -- 
-1.7.2.3
+1.7.1
 
