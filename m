@@ -1,140 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:39926 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751148Ab1AJPoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 10:44:08 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0AFi8HF024070
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 09:44:08 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0AFi79Y012636
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 09:44:07 -0600 (CST)
-Subject: Re: [PATCH v3 2/2] wl12xx: BA receiver support
-From: Luciano Coelho <coelho@ti.com>
-To: Shahar Levi <shahar_levi@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294062164-3459-3-git-send-email-shahar_levi@ti.com>
-References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
-	 <1294062164-3459-3-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Jan 2011 17:44:16 +0200
-Message-ID: <1294674256.1992.141.camel@pimenta>
-MIME-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51176 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706Ab1APFmV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jan 2011 00:42:21 -0500
+Received: by mail-ww0-f44.google.com with SMTP id 36so4401170wwa.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 21:42:21 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 01/10] wl12xx: fix potential race condition with TX queue watermark
+Date: Sun, 16 Jan 2011 07:42:05 +0200
+Message-Id: <1295156534-4178-2-git-send-email-arik@wizery.com>
+In-Reply-To: <1295156534-4178-1-git-send-email-arik@wizery.com>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-03 at 14:42 +0100, Shahar Levi wrote:
-> Add new ampdu_action ops to support receiver BA.
-> The BA initiator session management in FW independently.
-> 
-> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-> ---
+Check the conditions for the high/low TX queue watermarks when the
+spin-lock is taken. This prevents race conditions as tx_queue_count and
+the flag checked are only modified when the spin-lock is taken.
 
-Some comments.
+The following race was in mind:
+- Queues are almost full and wl1271_op_tx() will stop the queues, but it
+  doesn't get the spin-lock yet.
+- (on another CPU) tx_work_locked() dequeues 15 skbs from this queue and
+  tx_queue_count is updated to reflect this
+- wl1271_op_tx() does not check tx_queue_count after taking the
+  spin-lock and incorrectly stops the queue.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   24 +++++++++++-------------
+ drivers/net/wireless/wl12xx/tx.c   |    2 +-
+ 2 files changed, 12 insertions(+), 14 deletions(-)
 
-
-> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-> index 54fd68d..f33ab50 100644
-> --- a/drivers/net/wireless/wl12xx/acx.c
-> +++ b/drivers/net/wireless/wl12xx/acx.c
-> @@ -1359,6 +1359,42 @@ out:
->  	return ret;
->  }
->  
-> +/* setup BA session receiver setting in the FW. */
-> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
-> +				       u16 *ssn, u8 policy)
-
-You don't modify ssn here, so why pass it as a pointer? Use u16 directly
-here instead.
-
-Actually it's even worse.  As stated in mac80211.h, ssn can be NULL
-here, so you would be accessing a NULL pointer in that case.
-
-I see that you check "policy", which indicates whether ssn is valid or
-not, but why not make it cleaner by checking if ssn is NULL and setting
-it to zero before passing instead?
-
-
-> +       acx->enable = policy;
-
-Also, because of this, it would make more sense if policy was a boolean
-and was called "enable" instead.
-
-
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index c44462d..04b69ab 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -2251,6 +2251,64 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
->  	return 0;
->  }
->  
-> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> +			   enum ieee80211_ampdu_mlme_action action,
-> +			   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-> +{
-> +	struct wl1271 *wl = hw->priv;
-> +	int ret;
-> +
-> +	mutex_lock(&wl->mutex);
-> +
-> +	if (unlikely(wl->state == WL1271_STATE_OFF)) {
-> +		ret = -EAGAIN;
-> +		goto out;
-> +	}
-> +
-> +	ret = wl1271_ps_elp_wakeup(wl, false);
-> +	if (ret < 0)
-> +		goto out;
-> +
-> +	switch (action) {
-> +	case IEEE80211_AMPDU_RX_START:
-> +		if ((wl->ba_allowed) && (wl->ba_support)) {
-
-I'm a bit confused.  What is ba_allowed, actually? In the previous patch
-you always call wl1271_set_ba_policies() which always sets it to true.
-So it seems quite useless.
-
-
-> +			ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
-> +								 true);
-> +			if (!ret)
-> +				wl->ba_rx_bitmap |= BIT(tid);
-> +		} else
-> +			ret = -EPERM;
-
-The indentation is wrong here.  And -EPERM is definitely not the right
-return code for this.  It should probably -ENOTSUPP or something like
-that.
-
-> +	/*
-> +	 * The BA initiator session management in FW independently.
-> +	 * Falling break here on purpose for all TX APDU commands.
-> +	 */
-> +	case IEEE80211_AMPDU_TX_START:
-> +	case IEEE80211_AMPDU_TX_STOP:
-> +	case IEEE80211_AMPDU_TX_OPERATIONAL:
-> +		ret = -EINVAL;
-> +		break;
-
--EINVAL? Actually, should mac80211 even call us with these actions? I
-don't remember now, did you implement the way to prevent mac80211 from
-trying to to AMPDU_TX by itself?
-
-
-> +
-> +	default:
-> +		wl1271_error("Incorrect ampdu action id=%x\n", action);
-> +		ret = -ENODEV;
-
--ENODEV? All these error codes look quite random to me.  Can you explain
-your choices?
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 9076555..6163167 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -984,6 +984,17 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
+ #endif
+ 	wl->tx_queue_count++;
++
++	/*
++	 * The workqueue is slow to process the tx_queue and we need stop
++	 * the queue here, otherwise the queue will get too long.
++	 */
++	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
++		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
++		ieee80211_stop_queues(wl->hw);
++		__set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
++	}
++
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
  
-
+ 	/* queue the packet */
+@@ -998,19 +1009,6 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags))
+ 		ieee80211_queue_work(wl->hw, &wl->tx_work);
+ 
+-	/*
+-	 * The workqueue is slow to process the tx_queue and we need stop
+-	 * the queue here, otherwise the queue will get too long.
+-	 */
+-	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
+-		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
+-
+-		spin_lock_irqsave(&wl->wl_lock, flags);
+-		ieee80211_stop_queues(wl->hw);
+-		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+-		spin_unlock_irqrestore(&wl->wl_lock, flags);
+-	}
+-
+ 	return NETDEV_TX_OK;
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 2347f25..fdec4a3 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -288,7 +288,7 @@ static void handle_tx_low_watermark(struct wl1271 *wl)
+ 		/* firmware buffer has space, restart queues */
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		ieee80211_wake_queues(wl->hw);
+-		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
++		__clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 	}
+ }
 -- 
-Cheers,
-Luca.
+1.7.1
 
