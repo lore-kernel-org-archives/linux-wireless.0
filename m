@@ -1,102 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:23023 "EHLO mail.atheros.com"
+Received: from qult.net ([82.238.217.46]:59385 "EHLO qult.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752129Ab1AXLWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 06:22:06 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 03:21:47 -0800
-Date: Mon, 24 Jan 2011 16:51:11 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Bruno Randolf <br1@einfach.org>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] RFC: ath: Fix WEP hardware encryption
-Message-ID: <20110124112111.GF20058@vasanth-laptop>
-References: <20110121101608.22697.88960.stgit@localhost6.localdomain6> <20110121151023.GE20058@vasanth-laptop> <201101221130.25322.br1@einfach.org>
+	id S1752173Ab1APMsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jan 2011 07:48:39 -0500
+Date: Sun, 16 Jan 2011 13:48:33 +0100
+From: Ignacy Gawedzki <i@lri.fr>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Dividing by a non-static value in carl9170-fw?
+Message-ID: <20110116124833.GA4711@zenon.in.qult.net>
+References: <20110116031600.GA21973@zenon.in.qult.net>
+ <201101161245.54221.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201101221130.25322.br1@einfach.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201101161245.54221.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding  linux-wireless in CC
-On Sat, Jan 22, 2011 at 08:00:25AM +0530, Bruno Randolf wrote:
-> On Saturday 22 January 2011 00:10:23 Vasanthakumar Thiagarajan wrote:
-> > On Fri, Jan 21, 2011 at 03:46:08PM +0530, Bruno Randolf wrote:
-> > > I need this to enable HW encryption for WEP.
-> > > Otherwise we fall back to software decryption - i only checked the
-> > > decryption case.
-> > 
-> > Encryption/Decryption is done in hw by default. In which case are you
-> > seeing it done in sw?.
+On Sun, Jan 16, 2011 at 12:45:53PM +0100, thus spake Christian Lamparter:
+> Hello,
 > 
-> Sorry i was not very verbose in my description yesterday.
+> please CC your mails to linux-wireless mailing-list in the future.
+
+Okay, sorry about that.
+
+> On Sunday 16 January 2011 04:16:00 Ignacy Gawedzki wrote:
+> > Since I recently noticed that you added the support for the ticks_per_msec
+> > field in fw, I thought it would be better to use that to convert durations
+> > from ticks to milliseconds, instead of the fixed 44 literal. =)
 > 
-> I'm seeing the problem when i have an AP configured with WEP.
+> Is this a regression on my part? I don't see any references to __udivsi3_i4i
+> during build.
+
+Absolutely not.  I'm talking about my (experimental) modifications to the
+firmware code to measure TX frame service time and report that in msec in the
+tx status.
+
+> Also, you can almost always get around it by converting "a / b = c" to
+> "a = b * c".
+
+I doubt so, since what I need to do is roughly
+
+  msec_to_report = ticks_measured / ticks_per_msec;
+
+my input being of course ticks_measured. :/
+
+> > Unfortunately, it seems that dividing by a non-static value is not supported
+> > natively on that platform and I get undefined reference to __udivsi3_i4i.  Do
+> > you, by any chance, know how to fix that?  Apparently there are some support
+> > libs in the toolchain's gcc with that symbol, but I just got lost in the CMake
+> > file hierarchy while looking for a place to start hacking that in.
 > 
-> The reason is that the index returned by the "reserve_keycache_entry" function 
-> (sorry i dont have the code here right now) is >= 4 (hw_key_index) while the 
-> key index in the packet header is 0-3. This is ok for transmit but received 
-> packets are not decrypted and therefore mac80211 has to decrypt it in SW - 
-> this can be easily seen by adding some debug prints in mac80211/wep.c. I have 
-> noticed it by watching the system CPU load under high traffic.
+> No need for a hack, just get a udivsi3_i4i.S (a good place is the linux kernel
+> library sources in arch/sh/lib, you could also import one from the original
+> ar9170fw.git) and place it into carlfw/src. Next, you need to modify the
+> carlfw/CMakeLists.txt: add src/udivsi3_i4i.S to carl9170_lib_src and put
+> "set_source_files_properties(src/udivsi3_i4i.S PROPERTIES LANGUAGE C)"
+> a few lines further down.
 > 
-> bruno
+> compile...
 > 
-> > > Any comments?
-> > > 
-> > > bruno
-> > > ---
-> > > 
-> > >  drivers/net/wireless/ath/key.c |   14 +++++++++++---
-> > >  1 files changed, 11 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/key.c
-> > > b/drivers/net/wireless/ath/key.c index 5d465e5..5748dae 100644
-> > > --- a/drivers/net/wireless/ath/key.c
-> > > +++ b/drivers/net/wireless/ath/key.c
-> > > @@ -465,6 +465,16 @@ int ath_key_config(struct ath_common *common,
-> > > 
-> > >  	hk.kv_len = key->keylen;
-> > >  	memcpy(hk.kv_val, key->key, key->keylen);
-> > > 
-> > > +	/* set WEP keys directly to index */
-> > > +	if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
-> > > +	     key->cipher == WLAN_CIPHER_SUITE_WEP104) && key->keyidx < 4) {
-> > > +		ret = ath_hw_set_keycache_entry(common, key->keyidx, &hk, 
-> NULL);
-> > > +		if (!ret)
-> > > +			return -EIO;
-> > > +		set_bit(key->keyidx, common->keymap);
-> > > +		return key->keyidx;
-> > > +	}
-> > > +
-> > > 
-> > >  	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-> > >  	
-> > >  		switch (vif->type) {
-> > > 
-> > >  		case NL80211_IFTYPE_AP:
-> > > @@ -541,10 +551,8 @@ EXPORT_SYMBOL(ath_key_config);
-> > > 
-> > >  void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf
-> > >  *key) {
-> > >  
-> > >  	ath_hw_keyreset(common, key->hw_key_idx);
-> > > 
-> > > -	if (key->hw_key_idx < IEEE80211_WEP_NKID)
-> > > -		return;
-> > > -
-> > > 
-> > >  	clear_bit(key->hw_key_idx, common->keymap);
-> > > 
-> > > +
-> > > 
-> > >  	if (key->cipher != WLAN_CIPHER_SUITE_TKIP)
-> > >  	
-> > >  		return;
+> [Note: you probably have to change the name of the __udivsi3_i4i symbol 
+> to ___udivsi3_i4i too]
+
+Great, thanks for the hint, I'll try that as soon as I can.
+
+Regards,
+
+Ignacy
+
+-- 
+To err is human, to moo bovine.
