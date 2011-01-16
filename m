@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47838 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006Ab1AESpL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 13:45:11 -0500
-Date: Wed, 5 Jan 2011 13:30:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Kathy Giori <Kathy.Giori@atheros.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/8] wireless: DFS region support
-Message-ID: <20110105183018.GA2725@tuxdriver.com>
-References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
- <20110104184928.GA13239@tuxdriver.com>
- <20110105182838.GC10391@tux>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:58473 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752102Ab1APNiD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jan 2011 08:38:03 -0500
+Received: by mail-fx0-f54.google.com with SMTP id 16so4959910fxm.41
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Jan 2011 05:38:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110105182838.GC10391@tux>
+In-Reply-To: <AANLkTimNRzc9M0wKZsQLMh4ihSHEeycFJ-S34CA=jPAc@mail.gmail.com>
+References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+	<1294062164-3459-3-git-send-email-shahar_levi@ti.com>
+	<1294674256.1992.141.camel@pimenta>
+	<AANLkTimNRzc9M0wKZsQLMh4ihSHEeycFJ-S34CA=jPAc@mail.gmail.com>
+Date: Sun, 16 Jan 2011 15:38:01 +0200
+Message-ID: <AANLkTikuPg3FSmSuNq-gD04r_k5cmdyBQ2sr0h_eD__8@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] wl12xx: BA receiver support
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 05, 2011 at 10:28:38AM -0800, Luis R. Rodriguez wrote:
-> On Tue, Jan 04, 2011 at 10:49:28AM -0800, John W. Linville wrote:
-> > On Mon, Dec 20, 2010 at 12:02:26PM -0500, Luis R. Rodriguez wrote:
-> > > This series has a list of changes to kernel and userspace to start addressing
-> > > DFS region support. I've cheated and figured out a way to alter the current
-> > > regulatory database in such a way that it remains backwards compatible with
-> > > older databases so that no new CRDAs are required and we don't have to provide
-> > > two releases for old kernels and newer kernels for wireless-regdb updates.
-> > > 
-> > > In the end we end up passing the DFS region to the drivers. In terms of our DFS
-> > > development roadmap this covers parts I and II as promissed that I would take care
-> > > of by tomorrow, and leaves open now the chance for developers to start working
-> > > on part III: "Where do we stuff DFS parameters for each region":
-> > > 
-> > > http://wireless.kernel.org/en/developers/DFS
-> > > 
-> > > In tomorrow's meeting we can cover who is going to work on part III. People who
-> > > want to work on part III can start using these patches on their systems.
-> > > 
-> > > John, lets wait to merge these until Wednesday, I post these in patch form as I
-> > > think they are ready but tomorrow's discussions may push us to alter this a
-> > > bit, not sure. I will also review what we have done here with Michael Green so
-> > > he is on the same page.
-> > 
-> > Well, now there has been plenty of time to reflect...comments? :-)
-> 
-> I'll reduce the number of bits to 8 instead of 16 for the DFS regions, I'll also
-> try to schedule a call with Michael to finalize his review on this and then I'll
-> respin and submit again.
+On Tue, Jan 11, 2011 at 2:54 AM, Levi, Shahar <shahar_levi@ti.com> wrote:
+>>> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+>>> index 54fd68d..f33ab50 100644
+>>> --- a/drivers/net/wireless/wl12xx/acx.c
+>>> +++ b/drivers/net/wireless/wl12xx/acx.c
+>>> @@ -1359,6 +1359,42 @@ out:
+>>>       return ret;
+>>>  }
+>>>
+>>> +/* setup BA session receiver setting in the FW. */
+>>> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+>>> +                                    u16 *ssn, u8 policy)
+>>
+>> You don't modify ssn here, so why pass it as a pointer? Use u16 directly
+>> here instead.
+>>
+>> Actually it's even worse.  As stated in mac80211.h, ssn can be NULL
+>> here, so you would be accessing a NULL pointer in that case.
+>>
+>> I see that you check "policy", which indicates whether ssn is valid or
+>> not, but why not make it cleaner by checking if ssn is NULL and setting
+>> it to zero before passing instead?
+> good chtch. it was left from previous implantation. will be fix.
+There is two options from you suggestion:
+a) move ssn directly and then check policy if it is valid
+b) keep ssn as pointer and check it to validate it is valid.
 
-Well, since Linus released 2.6.37 yesterday there is now no great hurry...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I will use a option.
+Thanks,
+Shahar
