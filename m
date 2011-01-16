@@ -1,100 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nexicom.net ([216.168.96.13]:57311 "EHLO smtp.nexicom.net"
+Received: from mail.atheros.com ([12.19.149.2]:65317 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751544Ab1ATSpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 13:45:47 -0500
-Message-ID: <4D3882D5.2080902@lockie.ca>
-Date: Thu, 20 Jan 2011 13:45:41 -0500
-From: James <bjlockie@lockie.ca>
+	id S1750822Ab1APGUm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Jan 2011 01:20:42 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 22:20:24 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: abort tx/rx on fast channel change
+Date: Sun, 16 Jan 2011 11:49:54 +0530
+Message-ID: <1295158794-3088-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k problem with kernel 2.6.37
-References: <4D37E2A9.6010209@lockie.ca> <AANLkTikhpK09=wyq=g6kHbsgd-C13A4Vc1TrA29utd5k@mail.gmail.com>
-In-Reply-To: <AANLkTikhpK09=wyq=g6kHbsgd-C13A4Vc1TrA29utd5k@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/11 03:35, Mohammed Shafi wrote:
-> On Thu, Jan 20, 2011 at 12:52 PM, James <bjlockie@lockie.ca> wrote:
->> phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
->> mem=0xffffc90001880000, irq=17
->>
->> I get few or no results when I do
->> iwlist wlan1 scan with kernel 2.6.37
->>
-> We will check it out
->
->> but it is consistently good with kernel 2.6.36.2
->>
->> Is there a way to compare the kernel configs to make sure I didn't
->> change anything?
-> Please try with latest compat wireless, which might be helpful
-I got:
-http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+Abort Tx/Rx on fast channel change before hw reset.
+This helps to avoid timeout on loading noise floor
+values after channel change.
 
-I can't compile it:
-/usr/src/compat-wireless-2011-01-19 $ sudo make 
-/usr/src/compat-wireless-2011-01-19/config.mk:202: "WARNING:
-CONFIG_CFG80211_WEXT will be deactivated or not working because kernel
-was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like
-iwconfig will not work. To activate it build your kernel e.g. with
-CONFIG_LIBIPW=m."
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.37/build M=/usr/src/compat-wireless-2011-01-19
-modules
-make[1]: Entering directory `/usr/src/linux-2.6.37'
-  CC [M]  /usr/src/compat-wireless-2011-01-19/compat/main.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/compat/compat-2.6.38.o
-  LD [M]  /usr/src/compat-wireless-2011-01-19/compat/compat.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/hci_vhci.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/bcm203x.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/bpa10x.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/bfusb.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/btusb.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/ath3k.o
-  CC [M] 
-/usr/src/compat-wireless-2011-01-19/drivers/bluetooth/btmrvl_main.o
-  LD [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/btmrvl.o
-  CC [M] 
-/usr/src/compat-wireless-2011-01-19/drivers/misc/eeprom/eeprom_93cx6.o
-  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/net/b44.o
-/usr/src/compat-wireless-2011-01-19/drivers/net/b44.c:13:1: warning:
-"pr_fmt" redefined
-In file included from include/linux/kernel.h:20,
-                 from include/linux/skbuff.h:17,
-                 from include/linux/if_ether.h:125,
-                 from include/linux/netdevice.h:29,
-                 from
-/usr/src/compat-wireless-2011-01-19/include/linux/compat-2.6.29.h:5,
-                 from
-/usr/src/compat-wireless-2011-01-19/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/linux/printk.h:161:1: warning: this is the location of the
-previous definition
-/usr/src/compat-wireless-2011-01-19/drivers/net/b44.c: In function
-'b44_pci_init':
-/usr/src/compat-wireless-2011-01-19/drivers/net/b44.c:2345: error:
-implicit declaration of function 'ssb_pcihost_register'
-make[3]: *** [/usr/src/compat-wireless-2011-01-19/drivers/net/b44.o] Error 1
-make[2]: *** [/usr/src/compat-wireless-2011-01-19/drivers/net] Error 2
-make[1]: *** [_module_/usr/src/compat-wireless-2011-01-19] Error 2
-make[1]: Leaving directory `/usr/src/linux-2.6.37'
-make: *** [modules] Error 2
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-Do I understand it correctly that it is just newer and will be in the
-kernel eventually?
-
-How can I see what version of the driver I am using?
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 187af5b..d374867 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -193,8 +193,6 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	ath9k_htc_ps_wakeup(priv);
+ 	htc_stop(priv->htc);
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+-	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+-	WMI_CMD(WMI_STOP_RECV_CMDID);
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"(%u MHz) -> (%u MHz), HT: %d, HT40: %d fastcc: %d\n",
+@@ -202,8 +200,21 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
+ 		fastcc);
+ 
+-	if (!fastcc)
++	if (fastcc) {
++		/* abort pending tx frames */
++		WMI_CMD(WMI_ABORT_TX_DMA_CMDID);
++		WMI_CMD(WMI_ABORT_TXQ_CMDID);
++
++		/* Clear receive filter */
++		ath9k_hw_setrxfilter(ah, 0);
++
++		WMI_CMD(WMI_STOP_DMA_RECV_CMDID);
++		WMI_CMD(WMI_RX_LINK_CMDID);
++	} else {
++		WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
++		WMI_CMD(WMI_STOP_RECV_CMDID);
+ 		caldata = &priv->caldata;
++	}
+ 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (ret) {
+ 		ath_err(common,
+-- 
+1.7.3.5
 
