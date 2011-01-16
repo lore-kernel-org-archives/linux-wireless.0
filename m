@@ -1,53 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smarthost1.greenhost.nl ([195.190.28.78]:46382 "EHLO
-	smarthost1.greenhost.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825Ab1AHLgg (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:32899 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820Ab1APHti (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 06:36:36 -0500
-Message-ID: <50516d36d926af475ea7fdc9d3a7c6d2.squirrel@webmail.greenhost.nl>
-Date: Sat, 8 Jan 2011 12:17:27 +0100 (CET)
-Subject: [PATCH] ipw2200: Check for -1 INTA in tasklet too.
-From: "Indan Zupancic" <indan@nul.nu>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;charset=UTF-8
+	Sun, 16 Jan 2011 02:49:38 -0500
+Received: by wyb28 with SMTP id 28so4169280wyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 23:49:37 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: fix some sparse warnings
+Date: Sun, 16 Jan 2011 09:49:44 +0200
+Message-Id: <1295164184-25592-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an attempt to fix a long standing open bug:
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1334
+fix the following warnings:
 
-The interrupt handler checks for INTA being -1, apparently that means that the
-hardware is gone. But the interrupt handler defers actual interrupt processing
-to a tasklet. By the time the tasklet is run and checks INTA again, the
-hardware might be gone and INTA be -1, which confuses the driver because all
-event bits are set.
+  CHECK   drivers/net/wireless/wl12xx/cmd.c
+drivers/net/wireless/wl12xx/cmd.c:987:20: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/cmd.c:987:20:    expected restricted __le16 [usertype] aging_period
+drivers/net/wireless/wl12xx/cmd.c:987:20:    got int
+  CHECK   drivers/net/wireless/wl12xx/tx.c
+drivers/net/wireless/wl12xx/tx.c:197:2: warning: cast from restricted __le16
+drivers/net/wireless/wl12xx/tx.c:197:2: warning: cast from restricted __le16
+drivers/net/wireless/wl12xx/tx.c:197:2: warning: cast from restricted __le16
+  CHECK   drivers/net/wireless/wl12xx/acx.c
+drivers/net/wireless/wl12xx/acx.c:816:23: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/acx.c:816:23:    expected restricted __le32 [usertype] rate_policy_idx
+drivers/net/wireless/wl12xx/acx.c:816:23:    got unsigned char [unsigned] [usertype] idx
 
-The patch applies to 2.6.37.
-
-Signed-off-by: Indan Zupancic <indan@nul.nu>
-
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/acx.c |    2 +-
+ drivers/net/wireless/wl12xx/cmd.c |    2 +-
+ drivers/net/wireless/wl12xx/tx.c  |    6 +++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c
-b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 8d6ed5f..ae438ed 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -1973,6 +1973,13 @@ static void ipw_irq_tasklet(struct ipw_priv *priv)
-
- 	inta = ipw_read32(priv, IPW_INTA_RW);
- 	inta_mask = ipw_read32(priv, IPW_INTA_MASK_R);
-+
-+	if (inta == 0xFFFFFFFF) {
-+		/* Hardware disappeared */
-+		IPW_WARNING("TASKLET INTA == 0xFFFFFFFF\n");
-+		/* Only handle the cached INTA values */
-+		inta = 0;
-+	}
- 	inta &= (IPW_INTA_MASK_ALL & inta_mask);
-
- 	/* Add any cached INTA values that need to be handled */
-
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 646d278..df73a21 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -813,7 +813,7 @@ int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
+ 	acx->rate_policy.long_retry_limit = c->long_retry_limit;
+ 	acx->rate_policy.aflags = c->aflags;
+ 
+-	acx->rate_policy_idx = idx;
++	acx->rate_policy_idx = __cpu_to_le32(idx);
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index e28d9ca..6ce188d 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -984,7 +984,7 @@ int wl1271_cmd_start_bss(struct wl1271 *wl)
+ 
+ 	memcpy(cmd->bssid, bss_conf->bssid, ETH_ALEN);
+ 
+-	cmd->aging_period = WL1271_AP_DEF_INACTIV_SEC;
++	cmd->aging_period = __cpu_to_le16(WL1271_AP_DEF_INACTIV_SEC);
+ 	cmd->bss_index = WL1271_AP_BSS_INDEX;
+ 	cmd->global_hlid = WL1271_AP_GLOBAL_HLID;
+ 	cmd->broadcast_hlid = WL1271_AP_BROADCAST_HLID;
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 2347f25..209d4db 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -195,9 +195,9 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	desc->tx_attr = cpu_to_le16(tx_attr);
+ 
+ 	wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d hlid: %d "
+-		"tx_attr: 0x%x len: %d life: %d mem: %d", pad, (int)desc->hlid,
+-		(int)desc->tx_attr, (int)desc->length, (int)desc->life_time,
+-		(int)desc->total_mem_blocks);
++		"tx_attr: 0x%x len: %d life: %d mem: %d", pad, desc->hlid,
++		__le16_to_cpu(desc->tx_attr), __le16_to_cpu(desc->length),
++		__le16_to_cpu(desc->life_time), desc->total_mem_blocks);
+ }
+ 
+ /* caller must hold wl->mutex */
+-- 
+1.7.0.4
 
