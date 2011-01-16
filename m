@@ -1,30 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38726 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59367 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280Ab1AQSNT (ORCPT
+	with ESMTP id S1750823Ab1API2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 13:13:19 -0500
-Subject: Re: [PATCH] wl12xx: free firmware after booting the chip
+	Sun, 16 Jan 2011 03:28:46 -0500
+Subject: Re: [PATCH] wl12xx: fix some sparse warnings
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Eliad Peller <eliad@wizery.com>
 Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTikhz0p1SCP1Lm2qzR4TYdh3OH+vSzWBshfoG5-e@mail.gmail.com>
-References: <1295284675-30029-1-git-send-email-eliad@wizery.com>
-	 <1295287108.3726.49.camel@jlt3.sipsolutions.net>
-	 <AANLkTikhz0p1SCP1Lm2qzR4TYdh3OH+vSzWBshfoG5-e@mail.gmail.com>
+In-Reply-To: <1295164184-25592-1-git-send-email-eliad@wizery.com>
+References: <1295164184-25592-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 17 Jan 2011 19:13:16 +0100
-Message-ID: <1295287996.3726.50.camel@jlt3.sipsolutions.net>
+Date: Sun, 16 Jan 2011 09:28:42 +0100
+Message-ID: <1295166522.3574.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 20:11 +0200, Eliad Peller wrote:
-> good point!
-> does loading it on suspend makes sense, or i should abandon this patch?
+On Sun, 2011-01-16 at 09:49 +0200, Eliad Peller wrote:
 
-I wouldn't, you then run into failure modes where it can't be loaded
-during suspend either, etc. It's not huge anyway, is it?
+> @@ -813,7 +813,7 @@ int wl1271_acx_ap_rate_policy(struct wl1271 *wl, struct conf_tx_rate_class *c,
+>  	acx->rate_policy.long_retry_limit = c->long_retry_limit;
+>  	acx->rate_policy.aflags = c->aflags;
+>  
+> -	acx->rate_policy_idx = idx;
+> +	acx->rate_policy_idx = __cpu_to_le32(idx);
 
+The underscore version doesn't look appropriate at this point or in fact
+anywhere in this patch.
+
+Also, your patch subject and commit log is wrong -- this doesn't just
+fix sparse warnings, it fixes actual bugs pointed out by sparse, so
+commit log should reflect that.
+ 
 johannes
 
