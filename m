@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:44061 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750921Ab1AIR0d (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:38099 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090Ab1AQLVQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 12:26:33 -0500
-Date: Sun, 9 Jan 2011 19:26:29 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Chaoxing Lin <CLin@3eti.com>
-Cc: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: Re: hostapd hangs on quit, multi-BSSID scenario
-Message-ID: <20110109172629.GA12229@jm.kir.nu>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
+	Mon, 17 Jan 2011 06:21:16 -0500
+From: Florian Fainelli <florian@openwrt.org>
+To: Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>
+Subject: Re: Merging SSB and HND/AI support
+Date: Mon, 17 Jan 2011 12:20:52 +0100
+Cc: Jonas Gorski <jonas.gorski@gmail.com>, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com> <1295261783.24530.3.camel@maggie>
+In-Reply-To: <1295261783.24530.3.camel@maggie>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201101171220.52292.florian@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 07, 2011 at 05:44:30PM +0000, Chaoxing Lin wrote:
->  When I run hostapd with 8+1 BSSID over one radio (ath9160), it runs well. All 9 BSS accepts clients.
-> But when I "Ctrl + C" or "killall hostapd", hostapd daemon can NOT gracefully shut down. It hangs forever. I have to "Ctrl + C" again. Then it quits and print message like "
+On Monday 17 January 2011 11:56:23 Michael Büsch wrote:
+> On Mon, 2011-01-17 at 11:46 +0100, Jonas Gorski wrote:
+> > Hello,
+> > 
+> > I am currently looking into adding support for the newer Broadcom
+> > BCM47xx/53xx SoCs. They require having HND/AI support, which probably
+> > means merging the current SSB code and the HND/AI code from the
+> > brcm80211 driver. Is anyone already working on this?
+> > 
+> > As far as I can see, there are two possibilities:
+> > 
+> > a) Merge the HND/AI code into the current SSB code, or
+> > 
+> > b) add the missing code for SoCs to brcm80211 and replace the SSB code
+> > with it.
+> 
+> Why can't we keep those two platforms separated?
 
-> ^Celoop: could not process SIGINT or SIGTERM in two seconds. Looks like there
-> is a bug that ends up in a busy loop that prevents clean shutdown.
-> Killing program forcefully.
+That is also what I am wondering about. Considering that previous BCM47xx 
+platforms use a MIPS4k core and newer one use MIPS74k or later, you would not 
+be able to build a single kernel for both which takes advantages of compile-
+time optimizations targetting MIPS74k. If this ist not a big concern, then 
+let's target a single kernel.
 
-Fixed here:
-http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=8546ea19301f31e5faf58a0f154773c3123e6474
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> Is there really a lot of shared code between SSB and HND/AI?
+> 
+> It's true that there's currently a lot of device functionality built
+> into ssb. Like pci bridge, mips core, extif, etc...
+> If you take all that code out, you're probably not left with anything.
+> 
+> So why do we need to replace or merge SSB in the first place? Can't
+> it co-exist with HND/AI?
