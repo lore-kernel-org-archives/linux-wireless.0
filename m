@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57039 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754957Ab1ASWfN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 17:35:13 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so1417828fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 14:35:13 -0800 (PST)
-From: Jonas Gorski <jonas.gorski@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFT 5/8] staging: brcm80211: Remove ETHER_TYPE_BRCM.
-Date: Wed, 19 Jan 2011 23:35:29 +0100
-Message-Id: <1295476532-21130-6-git-send-email-jonas.gorski@gmail.com>
-In-Reply-To: <1295476532-21130-5-git-send-email-jonas.gorski@gmail.com>
-References: <1295476532-21130-1-git-send-email-jonas.gorski@gmail.com>
- <1295476532-21130-2-git-send-email-jonas.gorski@gmail.com>
- <1295476532-21130-3-git-send-email-jonas.gorski@gmail.com>
- <1295476532-21130-4-git-send-email-jonas.gorski@gmail.com>
- <1295476532-21130-5-git-send-email-jonas.gorski@gmail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:41968 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753015Ab1AQLRx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 06:17:53 -0500
+Subject: Re: Merging SSB and HND/AI support
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jonas Gorski <jonas.gorski@gmail.com>, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <1295262781.3726.6.camel@jlt3.sipsolutions.net> (sfid-20110117_121317_233137_FFFFFFFFECA6016B)
+References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com>
+	 (sfid-20110117_114654_053644_FFFFFFFF84F9C750)  <1295261783.24530.3.camel@maggie>
+	 <1295262781.3726.6.camel@jlt3.sipsolutions.net>
+	 (sfid-20110117_121317_233137_FFFFFFFFECA6016B)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 17 Jan 2011 12:17:42 +0100
+Message-ID: <1295263062.24530.6.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the recently introduced ETH_P_LINK_CTL instead of ETHER_TYPE_BRCM, and
-remove the define.
+On Mon, 2011-01-17 at 12:13 +0100, Johannes Berg wrote: 
+> On Mon, 2011-01-17 at 11:56 +0100, Michael Büsch wrote:
+> 
+> > > As far as I can see, there are two possibilities:
+> > > 
+> > > a) Merge the HND/AI code into the current SSB code, or
+> > > 
+> > > b) add the missing code for SoCs to brcm80211 and replace the SSB code with it.
+> > 
+> > Why can't we keep those two platforms separated?
+> > Is there really a lot of shared code between SSB and HND/AI?
+> 
+> I don't think there's a lot of shared code, but I believe that you need
+> b43 to be able to target cores on both? And b43 currently uses the SSB
+> APIs only.
 
-Signed-off-by: Jonas Gorski <jonas.gorski@gmail.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    2 +-
- drivers/staging/brcm80211/include/proto/ethernet.h |    2 --
- 2 files changed, 1 insertions(+), 3 deletions(-)
+Yeah right. That's what I was thinking about, too. Just leave SSB alone
+and add bus glues to b43 for HND/AI. There's almost no SSB specific code
+in b43. So it should be easily possible to add another probe entry from
+the (to be written or derived from brcm80211) HND/AI subsystem.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 87bf42d..71c5203 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -1215,7 +1215,7 @@ void dhd_rx_frame(dhd_pub_t *dhdp, int ifidx, struct sk_buff *pktbuf,
- 		skb_pull(skb, ETH_HLEN);
- 
- 		/* Process special event packets and then discard them */
--		if (ntoh16(skb->protocol) == ETHER_TYPE_BRCM)
-+		if (skb->protocol == htons(ETH_P_LINK_CTL))
- 			dhd_wl_host_event(dhd, &ifidx,
- 					  skb_mac_header(skb),
- 					  &event, &data);
-diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
-index bc99842..77deb94 100644
---- a/drivers/staging/brcm80211/include/proto/ethernet.h
-+++ b/drivers/staging/brcm80211/include/proto/ethernet.h
-@@ -21,8 +21,6 @@
- 
- #include <packed_section_start.h>
- 
--#define	ETHER_TYPE_BRCM		0x886c
--
- BWL_PRE_PACKED_STRUCT struct ether_addr {
- 	u8 octet[ETH_ALEN];
- } BWL_POST_PACKED_STRUCT;
 -- 
-1.5.6.5
+Greetings Michael.
 
