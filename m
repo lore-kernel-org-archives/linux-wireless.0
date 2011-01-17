@@ -1,48 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:53766 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753133Ab1AYSGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 13:06:46 -0500
-Received: from xenotime.net ([2001:470:0:13c::4834:7338]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 10:06:44 -0800
-Message-ID: <48698.64.134.136.58.1295978804.squirrel@xenotime.net>
-In-Reply-To: <4D3F0DBC.90302@lockie.ca>
-References: <4D3F0DBC.90302@lockie.ca>
-Date: Tue, 25 Jan 2011 10:06:44 -0800 (PST)
-Subject: Re: LIBIPW
-From: "Randy Dunlap" <rdunlap@xenotime.net>
-To: "James" <bjlockie@lockie.ca>
-Cc: "linux-wireless Mailing List" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from he.sipsolutions.net ([78.46.109.217]:50258 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab1AQR6c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 12:58:32 -0500
+Subject: Re: [PATCH] wl12xx: free firmware after booting the chip
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1295284675-30029-1-git-send-email-eliad@wizery.com>
+References: <1295284675-30029-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 17 Jan 2011 18:58:28 +0100
+Message-ID: <1295287108.3726.49.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2011-01-17 at 19:17 +0200, Eliad Peller wrote:
+> There is no need to save the fw in memory after it has been
+> uploaded to the chip.
 
-On Tue, January 25, 2011 9:51 am, James wrote:
-> /usr/src/compat-wireless-2011-01-24 $ sudo make
-> /usr/src/compat-wireless-2011-01-24/config.mk:202: "WARNING:
-> CONFIG_CFG80211_WEXT will be deactivated or not working because kernel
-> was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like
-> iwconfig will not work. To activate it build your kernel e.g. with
-> CONFIG_LIBIPW=m."
->
->
-> $ sudo grep LIBIPW ../linux/.config
-> ''
->
->
-> What does LIBIPW depend on?
-> I don't even see a choice to turn it on.
+Are you sure it's not needed for resume? At which point userspace isn't
+up so you can't load it.
 
-It's not a user-visible prompted symbol.
-It's selected by IPW2100 or IPW2200.
-
-Also, the help text for LIBIPW (in 2.6.37) says:
-
-	This option enables the hardware independent IEEE 802.11
-	networking stack.  This component is deprecated in favor of the
-	mac80211 component.
-
--- 
-~Randy
+johannes
 
