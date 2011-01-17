@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883Ab1A0Kd0 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58100 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752930Ab1AQOBx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 05:33:26 -0500
-Subject: Re: [PATCH 05/10] wl12xx: report invalid TX rate when returning
- non-TX-ed skbs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1296121901.5263.116.camel@pimenta>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
-	 <1295156534-4178-6-git-send-email-arik@wizery.com>
-	 <1296121901.5263.116.camel@pimenta>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 Jan 2011 11:33:23 +0100
-Message-ID: <1296124403.3622.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 17 Jan 2011 09:01:53 -0500
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinwGaqg8ahGWd3+_dfhrCNTQNOfO1E-EUepFJ+C@mail.gmail.com>
+References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com>
+ <1295261783.24530.3.camel@maggie> <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
+ <1295265468.24530.23.camel@maggie> <AANLkTims0DPfG+u9qynuuj_-0WjUr1nAGLuFz3k706T-@mail.gmail.com>
+ <AANLkTinwGaqg8ahGWd3+_dfhrCNTQNOfO1E-EUepFJ+C@mail.gmail.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Mon, 17 Jan 2011 15:01:32 +0100
+Message-ID: <AANLkTi=6p_bzwRtP0dOyGXGJzMg=_dQg-593Zc9BYeu0@mail.gmail.com>
+Subject: Re: Merging SSB and HND/AI support
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-27 at 11:51 +0200, Luciano Coelho wrote:
-> On Sun, 2011-01-16 at 06:42 +0100, Arik Nemtsov wrote:
-> > Report a TX rate idx of -1 when returning untransmitted skbs to mac80211
-> > using ieee80211_tx_status(). Otherwise mac80211 tries to use the
-> > returned (essentially garbage) status.
-> > 
-> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> > ---
-> 
-> Is this a documented way of doing it or it just happens to work?
+On 17 January 2011 14:54, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> If it's AMBA, can it be integrated with the existing code in drivers/amba/?
 
-I think the more expected way would be to set the TX counts to 0?
+Hm, I once had a sentence about it there, I must have accidentally deleted it.
 
-johannes
+I tried finding similarities between Broadcom's code and ARM's AMBA
+specification to better understand the code, but except some tiny ones
+I couldn't find anything usable. Unfortunately I couldn't find
+anything about Broadcom's AMBA implementation, except that it's "AMBA"
+licensed from ARM.
 
+Jonas
