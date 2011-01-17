@@ -1,667 +1,434 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:48218 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338Ab1A3MYW (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:57070 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab1AQURc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:22 -0500
-Received: by ewy5 with SMTP id 5so2118506ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:20 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 01/21] rt2x00: Refactor beacon code to make use of start- and stop_queue
-Date: Sun, 30 Jan 2011 13:16:03 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+	Mon, 17 Jan 2011 15:17:32 -0500
+Received: by qyk12 with SMTP id 12so6157792qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 12:17:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101301316.04044.IvDoorn@gmail.com>
+In-Reply-To: <20110117043728.8024.13541.stgit@localhost6.localdomain6>
+References: <20110117043728.8024.13541.stgit@localhost6.localdomain6>
+Date: Mon, 17 Jan 2011 15:17:31 -0500
+Message-ID: <AANLkTinx+wFDFnDrxrBS5T=RqvZgRLxFOeeibrLxorde@mail.gmail.com>
+Subject: Re: [PATCH 2] cfg80211: Extend channel to frequency mapping for 802.11j
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	gwingerde@gmail.com, libertas-dev@lists.infradead.org,
+	dcbw@redhat.com, IvDoorn@gmail.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Sun, Jan 16, 2011 at 11:37 PM, Bruno Randolf <br1@einfach.org> wrote:
+> Extend channel to frequency mapping for 802.11j Japan 4.9GHz band, according to
+> IEEE802.11 section 17.3.8.3.2 and Annex J. Because there are now overlapping
+> channel numbers in the 2GHz and 5GHz band we can't map from channel to
+> frequency without knowing the band. This is no problem as in most contexts we
+> know the band. In places where we don't know the band (and WEXT compatibility)
+> we assume the 2GHz band for channels below 14.
+>
+> This patch does not implement all channel to frequency mappings defined in
+> 802.11, it's just an extension for 802.11j 20MHz channels. 5MHz and 10MHz
+> channels as well as 802.11y channels have been omitted.
+>
+> The following drivers have been updated to reflect the API changes:
+> iwl-3945, iwl-agn, iwmc3200wifi, libertas, mwl8k, rt2x00, wl1251, wl12xx.
+> The drivers have been compile-tested only.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+>
+> ---
+>
+> v2:     Added necessary driver changes first posted by Brian Prodoehl.
+>        Brian, do you want to add your Signed-off-by?
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c      |    5 ++--
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |    5 ++--
+>  drivers/net/wireless/iwlwifi/iwl-core.c      |    3 +-
+>  drivers/net/wireless/iwmc3200wifi/cfg80211.c |    3 +-
+>  drivers/net/wireless/iwmc3200wifi/rx.c       |    7 ++++-
+>  drivers/net/wireless/libertas/cfg.c          |    6 +++-
+>  drivers/net/wireless/mwl8k.c                 |    6 +++-
+>  drivers/net/wireless/rt2x00/rt2x00dev.c      |    5 +++-
+>  drivers/net/wireless/wl1251/rx.c             |    3 +-
+>  drivers/net/wireless/wl12xx/rx.c             |    2 +
+>  include/net/cfg80211.h                       |    3 +-
+>  net/mac80211/ibss.c                          |    3 +-
+>  net/mac80211/mesh.c                          |    2 +
+>  net/mac80211/mlme.c                          |    8 ++++--
+>  net/mac80211/scan.c                          |    3 +-
+>  net/wireless/reg.c                           |    6 ++--
+>  net/wireless/util.c                          |   36 ++++++++++++++++----------
+>  net/wireless/wext-compat.c                   |    5 +++-
+>  18 files changed, 71 insertions(+), 40 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index a9b852b..1d9dcd7 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -594,10 +594,11 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
+>
+>        rx_status.flag = 0;
+>        rx_status.mactime = le64_to_cpu(rx_end->timestamp);
+> -       rx_status.freq =
+> -               ieee80211_channel_to_frequency(le16_to_cpu(rx_hdr->channel));
+>        rx_status.band = (rx_hdr->phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK) ?
+>                                IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
+> +       rx_status.freq =
+> +               ieee80211_channel_to_frequency(le16_to_cpu(rx_hdr->channel),
+> +                                              rx_status.band);
+>
+>        rx_status.rate_idx = iwl3945_hwrate_to_plcp_idx(rx_hdr->rate);
+>        if (rx_status.band == IEEE80211_BAND_5GHZ)
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> index 3dee87e..a800318 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> @@ -1157,10 +1157,11 @@ void iwlagn_rx_reply_rx(struct iwl_priv *priv,
+>
+>        /* rx_status carries information about the packet to mac80211 */
+>        rx_status.mactime = le64_to_cpu(phy_res->timestamp);
+> -       rx_status.freq =
+> -               ieee80211_channel_to_frequency(le16_to_cpu(phy_res->channel));
+>        rx_status.band = (phy_res->phy_flags & RX_RES_PHY_FLAGS_BAND_24_MSK) ?
+>                                IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
+> +       rx_status.freq =
+> +               ieee80211_channel_to_frequency(le16_to_cpu(phy_res->channel),
+> +                                              rx_status.band);
+>        rx_status.rate_idx =
+>                iwlagn_hwrate_to_mac80211_idx(rate_n_flags, rx_status.band);
+>        rx_status.flag = 0;
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+> index efbde1f..a8d4a93 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -227,7 +227,8 @@ int iwlcore_init_geos(struct iwl_priv *priv)
+>                geo_ch = &sband->channels[sband->n_channels++];
+>
+>                geo_ch->center_freq =
+> -                               ieee80211_channel_to_frequency(ch->channel);
+> +                               ieee80211_channel_to_frequency(ch->channel,
+> +                                                              sband->band);
+>                geo_ch->max_power = ch->max_power_avg;
+>                geo_ch->max_antenna_gain = 0xff;
+>                geo_ch->hw_value = ch->channel;
+> diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+> index 5a49822..ed57e44 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+> @@ -287,7 +287,8 @@ int iwm_cfg80211_inform_bss(struct iwm_priv *iwm)
+>                        return -EINVAL;
+>                }
+>
+> -               freq = ieee80211_channel_to_frequency(umac_bss->channel);
+> +               freq = ieee80211_channel_to_frequency(umac_bss->channel,
+> +                                                     band->band);
+>                channel = ieee80211_get_channel(wiphy, freq);
+>                signal = umac_bss->rssi * 100;
+>
+> diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+> index a944893..9a57cf6 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/rx.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+> @@ -543,7 +543,10 @@ static int iwm_mlme_assoc_complete(struct iwm_priv *iwm, u8 *buf,
+>        switch (le32_to_cpu(complete->status)) {
+>        case UMAC_ASSOC_COMPLETE_SUCCESS:
+>                chan = ieee80211_get_channel(wiphy,
+> -                       ieee80211_channel_to_frequency(complete->channel));
+> +                       ieee80211_channel_to_frequency(complete->channel,
+> +                               complete->band == UMAC_BAND_2GHZ ?
+> +                                       IEEE80211_BAND_2GHZ :
+> +                                       IEEE80211_BAND_5GHZ));
+>                if (!chan || chan->flags & IEEE80211_CHAN_DISABLED) {
+>                        /* Associated to a unallowed channel, disassociate. */
+>                        __iwm_invalidate_mlme_profile(iwm);
+> @@ -841,7 +844,7 @@ static int iwm_mlme_update_bss_table(struct iwm_priv *iwm, u8 *buf,
+>                goto err;
+>        }
+>
+> -       freq = ieee80211_channel_to_frequency(umac_bss->channel);
+> +       freq = ieee80211_channel_to_frequency(umac_bss->channel, band->band);
+>        channel = ieee80211_get_channel(wiphy, freq);
+>        signal = umac_bss->rssi * 100;
+>
+> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+> index 698a1f7..30ef035 100644
+> --- a/drivers/net/wireless/libertas/cfg.c
+> +++ b/drivers/net/wireless/libertas/cfg.c
+> @@ -607,7 +607,8 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+>                /* No channel, no luck */
+>                if (chan_no != -1) {
+>                        struct wiphy *wiphy = priv->wdev->wiphy;
+> -                       int freq = ieee80211_channel_to_frequency(chan_no);
+> +                       int freq = ieee80211_channel_to_frequency(chan_no,
+> +                                                       IEEE80211_BAND_2GHZ);
+>                        struct ieee80211_channel *channel =
+>                                ieee80211_get_channel(wiphy, freq);
+>
+> @@ -1597,7 +1598,8 @@ static int lbs_get_survey(struct wiphy *wiphy, struct net_device *dev,
+>        lbs_deb_enter(LBS_DEB_CFG80211);
+>
+>        survey->channel = ieee80211_get_channel(wiphy,
+> -               ieee80211_channel_to_frequency(priv->channel));
+> +               ieee80211_channel_to_frequency(priv->channel,
+> +                                              IEEE80211_BAND_2GHZ));
+>
+>        ret = lbs_get_rssi(priv, &signal, &noise);
+>        if (ret == 0) {
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index 809f2bf..b62f7ef 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -906,7 +906,8 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
+>        } else {
+>                status->band = IEEE80211_BAND_2GHZ;
+>        }
+> -       status->freq = ieee80211_channel_to_frequency(rxd->channel);
+> +       status->freq = ieee80211_channel_to_frequency(rxd->channel,
+> +                                                     status->band);
+>
+>        *qos = rxd->qos_control;
+>
+> @@ -1013,7 +1014,8 @@ mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
+>        } else {
+>                status->band = IEEE80211_BAND_2GHZ;
+>        }
+> -       status->freq = ieee80211_channel_to_frequency(rxd->channel);
+> +       status->freq = ieee80211_channel_to_frequency(rxd->channel,
+> +                                                     status->band);
+>
+>        *qos = rxd->qos_control;
+>        if ((rxd->rx_ctrl & MWL8K_STA_RX_CTRL_DECRYPT_ERROR) &&
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 9597a03..31b7db0 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -649,7 +649,10 @@ static void rt2x00lib_channel(struct ieee80211_channel *entry,
+>                              const int channel, const int tx_power,
+>                              const int value)
+>  {
+> -       entry->center_freq = ieee80211_channel_to_frequency(channel);
+> +       /* XXX: this assumption about the band is wrong for 802.11j */
+> +       entry->band = channel <= 14 ? IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
+> +       entry->center_freq = ieee80211_channel_to_frequency(channel,
+> +                                                           entry->band);
+>        entry->hw_value = value;
+>        entry->max_power = tx_power;
+>        entry->max_antenna_gain = 0xff;
+> diff --git a/drivers/net/wireless/wl1251/rx.c b/drivers/net/wireless/wl1251/rx.c
+> index efa5360..86eef45 100644
+> --- a/drivers/net/wireless/wl1251/rx.c
+> +++ b/drivers/net/wireless/wl1251/rx.c
+> @@ -78,7 +78,8 @@ static void wl1251_rx_status(struct wl1251 *wl,
+>         */
+>        wl->noise = desc->rssi - desc->snr / 2;
+>
+> -       status->freq = ieee80211_channel_to_frequency(desc->channel);
+> +       status->freq = ieee80211_channel_to_frequency(desc->channel,
+> +                                                     status->band);
+>
+>        status->flag |= RX_FLAG_TSFT;
+>
+> diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+> index 682304c..ec8d843 100644
+> --- a/drivers/net/wireless/wl12xx/rx.c
+> +++ b/drivers/net/wireless/wl12xx/rx.c
+> @@ -76,7 +76,7 @@ static void wl1271_rx_status(struct wl1271 *wl,
+>         */
+>        wl->noise = desc->rssi - (desc->snr >> 1);
+>
+> -       status->freq = ieee80211_channel_to_frequency(desc->channel);
+> +       status->freq = ieee80211_channel_to_frequency(desc->channel, desc_band);
+>
+>        if (desc->flags & WL1271_RX_DESC_ENCRYPT_MASK) {
+>                status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 1322695..679a049 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1790,8 +1790,9 @@ static inline void *wdev_priv(struct wireless_dev *wdev)
+>  /**
+>  * ieee80211_channel_to_frequency - convert channel number to frequency
+>  * @chan: channel number
+> + * @band: band, necessary due to channel number overlap
+>  */
+> -extern int ieee80211_channel_to_frequency(int chan);
+> +extern int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band);
+>
+>  /**
+>  * ieee80211_frequency_to_channel - convert frequency to channel number
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 53c7077..775fb63 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -270,7 +270,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>        enum ieee80211_band band = rx_status->band;
+>
+>        if (elems->ds_params && elems->ds_params_len == 1)
+> -               freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
+> +               freq = ieee80211_channel_to_frequency(elems->ds_params[0],
+> +                                                     band);
+>        else
+>                freq = rx_status->freq;
+>
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index 2563fd1..2a57cc0 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -574,7 +574,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+>                               &elems);
+>
+>        if (elems.ds_params && elems.ds_params_len == 1)
+> -               freq = ieee80211_channel_to_frequency(elems.ds_params[0]);
+> +               freq = ieee80211_channel_to_frequency(elems.ds_params[0], band);
+>        else
+>                freq = rx_status->freq;
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 45fbb9e..33bd6d4 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -176,7 +176,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+>
+>        /* check that channel matches the right operating channel */
+>        if (local->hw.conf.channel->center_freq !=
+> -           ieee80211_channel_to_frequency(hti->control_chan))
+> +           ieee80211_channel_to_frequency(hti->control_chan, sband->band))
+>                enable_ht = false;
+>
+>        if (enable_ht) {
+> @@ -429,7 +429,8 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>                container_of((void *)bss, struct cfg80211_bss, priv);
+>        struct ieee80211_channel *new_ch;
+>        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num);
+> +       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
+> +                                                     cbss->channel->band);
+>
+>        ASSERT_MGD_MTX(ifmgd);
+>
+> @@ -1519,7 +1520,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>        }
+>
+>        if (elems->ds_params && elems->ds_params_len == 1)
+> -               freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
+> +               freq = ieee80211_channel_to_frequency(elems->ds_params[0],
+> +                                                     rx_status->band);
+>        else
+>                freq = rx_status->freq;
+>
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index fb274db..1ef73be 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -196,7 +196,8 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+>        ieee802_11_parse_elems(elements, skb->len - baselen, &elems);
+>
+>        if (elems.ds_params && elems.ds_params_len == 1)
+> -               freq = ieee80211_channel_to_frequency(elems.ds_params[0]);
+> +               freq = ieee80211_channel_to_frequency(elems.ds_params[0],
+> +                                                     rx_status->band);
+>        else
+>                freq = rx_status->freq;
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 37693b6..c565689 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1801,9 +1801,9 @@ void regulatory_hint_disconnect(void)
+>
+>  static bool freq_is_chan_12_13_14(u16 freq)
+>  {
+> -       if (freq == ieee80211_channel_to_frequency(12) ||
+> -           freq == ieee80211_channel_to_frequency(13) ||
+> -           freq == ieee80211_channel_to_frequency(14))
+> +       if (freq == ieee80211_channel_to_frequency(12, IEEE80211_BAND_2GHZ) ||
+> +           freq == ieee80211_channel_to_frequency(13, IEEE80211_BAND_2GHZ) ||
+> +           freq == ieee80211_channel_to_frequency(14, IEEE80211_BAND_2GHZ))
+>                return true;
+>        return false;
+>  }
+> diff --git a/net/wireless/util.c b/net/wireless/util.c
+> index 7620ae2..4ed065d 100644
+> --- a/net/wireless/util.c
+> +++ b/net/wireless/util.c
+> @@ -29,29 +29,37 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+>  }
+>  EXPORT_SYMBOL(ieee80211_get_response_rate);
+>
+> -int ieee80211_channel_to_frequency(int chan)
+> +int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
+>  {
+> -       if (chan < 14)
+> -               return 2407 + chan * 5;
+> -
+> -       if (chan == 14)
+> -               return 2484;
+> -
+> -       /* FIXME: 802.11j 17.3.8.3.2 */
+> -       return (chan + 1000) * 5;
+> +       /* see 802.11 17.3.8.3.2 and Annex J
+> +        * there are overlapping channel numbers in 5GHz and 2GHz bands */
+> +       if (band == IEEE80211_BAND_5GHZ) {
+> +               if (chan >= 182 && chan <= 196)
+> +                       return 4000 + chan * 5;
+> +               else
+> +                       return 5000 + chan * 5;
+> +       } else { /* IEEE80211_BAND_2GHZ */
+> +               if (chan == 14)
+> +                       return 2484;
+> +               else if (chan < 14)
+> +                       return 2407 + chan * 5;
+> +               else
+> +                       return 0; /* not supported */
+> +       }
+>  }
+>  EXPORT_SYMBOL(ieee80211_channel_to_frequency);
+>
+>  int ieee80211_frequency_to_channel(int freq)
+>  {
+> +       /* see 802.11 17.3.8.3.2 and Annex J */
+>        if (freq == 2484)
+>                return 14;
+> -
+> -       if (freq < 2484)
+> +       else if (freq < 2484)
+>                return (freq - 2407) / 5;
+> -
+> -       /* FIXME: 802.11j 17.3.8.3.2 */
+> -       return freq/5 - 1000;
+> +       else if (freq >= 4910 && freq <= 4980)
+> +               return (freq - 4000) / 5;
+> +       else
+> +               return (freq - 5000) / 5;
+>  }
+>  EXPORT_SYMBOL(ieee80211_frequency_to_channel);
+>
+> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+> index 3e5dbd4..7f1f4ec 100644
+> --- a/net/wireless/wext-compat.c
+> +++ b/net/wireless/wext-compat.c
+> @@ -267,9 +267,12 @@ int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq)
+>         * -EINVAL for impossible things.
+>         */
+>        if (freq->e == 0) {
+> +               enum ieee80211_band band = IEEE80211_BAND_2GHZ;
+>                if (freq->m < 0)
+>                        return 0;
+> -               return ieee80211_channel_to_frequency(freq->m);
+> +               if (freq->m > 14)
+> +                       band = IEEE80211_BAND_5GHZ;
+> +               return ieee80211_channel_to_frequency(freq->m, band);
+>        } else {
+>                int i, div = 1000000;
+>                for (i = 0; i < freq->e; i++)
 
-This patch allows to dynamically remove beaconing interfaces without
-shutting beaconing down on all interfaces.
 
-The only place to start and stop beaconing are now the start- and
-stop_queue callbacks. Hence, we can remove some register writes during
-interface bring up (config_intf) and only write the correct sync mode
-to the register there.
+Yeah, looks good.  Is it worth noting that none of the drivers
+actually support the 802.11j channels yet?  Not sure of the format of
+follow-up s-o-b's, so here goes...
 
-When multiple beaconing interfaces are present we should enable
-beaconing as soon as mac80211 enables beaconing on at least one of
-them. The beacon queue gets stopped when the last beaconing
-interface was stopped by mac80211. Therefore, introduce another
-interface counter to keep track ot the number of enabled beaconing
-interfaces and start or stop the beacon queue accordingly.
-
-To allow single interfaces to stop beaconing, add a new driver
-callback clear_beacon to clear a single interface's beacon without
-affecting the other interfaces. Don't overload the clear_entry callback
-for clearing beacons as that would introduce additional overhead
-(check for each TX queue) into the clear_entry callback which is used
-on the drivers TX/RX hotpaths.
-
-Furthermore, the write beacon callback doesn't need to enable beaconing
-anymore but since beaconing should be disabled while a new beacon is
-written or cleared we still disable beacon generation and enable it
-afterwards again in the driver specific callbacks. However, beacon
-related interrupts should not be disabled/enabled here, that's solely
-done from the start- and stop queue callbacks. It would be nice to stop
-the beacon queue just before the beacon update and enable it afterwards
-in rt2x00queue itself instead of the current implementation that relies
-on the driver doing the right thing. However, since start- and
-stop_queue are mutex protected we cannot use them for atomic beacon
-updates.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c   |    4 --
- drivers/net/wireless/rt2x00/rt2500pci.c   |    4 --
- drivers/net/wireless/rt2x00/rt2500usb.c   |    2 -
- drivers/net/wireless/rt2x00/rt2800lib.c   |   67 ++++++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2800lib.h   |    1 +
- drivers/net/wireless/rt2x00/rt2800pci.c   |    9 ++++
- drivers/net/wireless/rt2x00/rt2800usb.c   |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h      |    4 ++
- drivers/net/wireless/rt2x00/rt2x00dev.c   |    4 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h   |   12 ++++-
- drivers/net/wireless/rt2x00/rt2x00mac.c   |   41 ++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00queue.c |   38 ++++++++++++----
- drivers/net/wireless/rt2x00/rt61pci.c     |   41 ++++++++++++------
- drivers/net/wireless/rt2x00/rt73usb.c     |   42 ++++++++++++------
- 14 files changed, 185 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 54ca49a..cb28e1b 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -305,9 +305,7 @@ static void rt2400pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
--		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
- 		rt2x00_set_field32(&reg, CSR14_TSF_SYNC, conf->sync);
--		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
- 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 	}
- 
-@@ -1183,8 +1181,6 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
- 	/*
- 	 * Enable beaconing again.
- 	 */
--	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
--	rt2x00_set_field32(&reg, CSR14_TBCN, 1);
- 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
- 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index a9ff26a..5225ae1 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -311,9 +311,7 @@ static void rt2500pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
--		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
- 		rt2x00_set_field32(&reg, CSR14_TSF_SYNC, conf->sync);
--		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
- 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 	}
- 
-@@ -1337,8 +1335,6 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
- 	/*
- 	 * Enable beaconing again.
- 	 */
--	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
--	rt2x00_set_field32(&reg, CSR14_TBCN, 1);
- 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 1);
- 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 6b3b1de4..157516e 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -478,9 +478,7 @@ static void rt2500usb_config_intf(struct rt2x00_dev *rt2x00dev,
- 		rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
- 
- 		rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
--		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 1);
- 		rt2x00_set_field16(&reg, TXRX_CSR19_TSF_SYNC, conf->sync);
--		rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 1);
- 		rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
- 	}
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f8ba01c..4753fb1 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -818,8 +818,6 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 	/*
- 	 * Enable beaconing again.
- 	 */
--	rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
--	rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
- 	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
-@@ -831,8 +829,8 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- }
- EXPORT_SYMBOL_GPL(rt2800_write_beacon);
- 
--static inline void rt2800_clear_beacon(struct rt2x00_dev *rt2x00dev,
--				       unsigned int beacon_base)
-+static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
-+						unsigned int beacon_base)
- {
- 	int i;
- 
-@@ -845,6 +843,33 @@ static inline void rt2800_clear_beacon(struct rt2x00_dev *rt2x00dev,
- 		rt2800_register_write(rt2x00dev, beacon_base + i, 0);
- }
- 
-+void rt2800_clear_beacon(struct queue_entry *entry)
-+{
-+	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	u32 reg;
-+
-+	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
-+	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
-+	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+
-+	/*
-+	 * Clear beacon.
-+	 */
-+	rt2800_clear_beacon_register(rt2x00dev,
-+				     HW_BEACON_OFFSET(entry->entry_idx));
-+
-+	/*
-+	 * Enabled beaconing again.
-+	 */
-+	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
-+	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+}
-+EXPORT_SYMBOL_GPL(rt2800_clear_beacon);
-+
- #ifdef CONFIG_RT2X00_LIB_DEBUGFS
- const struct rt2x00debug rt2800_rt2x00debug = {
- 	.owner	= THIS_MODULE,
-@@ -1155,29 +1180,11 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
- 
- 	if (flags & CONFIG_UPDATE_TYPE) {
- 		/*
--		 * Clear current synchronisation setup.
--		 */
--		rt2800_clear_beacon(rt2x00dev,
--				    HW_BEACON_OFFSET(intf->beacon->entry_idx));
--		/*
- 		 * Enable synchronisation.
- 		 */
- 		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
--		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_SYNC, conf->sync);
--		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE,
--				   (conf->sync == TSF_SYNC_ADHOC ||
--				    conf->sync == TSF_SYNC_AP_NONE));
- 		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
--
--		/*
--		 * Enable pre tbtt interrupt for beaconing modes
--		 */
--		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
--		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER,
--				   (conf->sync == TSF_SYNC_AP_NONE));
--		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
--
- 	}
- 
- 	if (flags & CONFIG_UPDATE_MAC) {
-@@ -2187,14 +2194,14 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Clear all beacons
- 	 */
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE0);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE1);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE2);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE3);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE4);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE5);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE6);
--	rt2800_clear_beacon(rt2x00dev, HW_BEACON_BASE7);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE0);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE1);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE2);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE3);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE4);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE5);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE6);
-+	rt2800_clear_beacon_register(rt2x00dev, HW_BEACON_BASE7);
- 
- 	if (rt2x00_is_usb(rt2x00dev)) {
- 		rt2800_register_read(rt2x00dev, US_CYC_CNT, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 3efafb7..0c92d86 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -156,6 +156,7 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev);
- void rt2800_txdone_entry(struct queue_entry *entry, u32 status);
- 
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
-+void rt2800_clear_beacon(struct queue_entry *entry);
- 
- extern const struct rt2x00debug rt2800_rt2x00debug;
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index bfc2fc5..54e37e0 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -205,6 +205,10 @@ static void rt2800pci_start_queue(struct data_queue *queue)
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 1);
- 		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+
-+		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
-+		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 1);
-+		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
- 		break;
- 	default:
- 		break;
-@@ -250,6 +254,10 @@ static void rt2800pci_stop_queue(struct data_queue *queue)
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 0);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
- 		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
-+
-+		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
-+		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 0);
-+		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
- 		break;
- 	default:
- 		break;
-@@ -974,6 +982,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.write_tx_desc		= rt2800pci_write_tx_desc,
- 	.write_tx_data		= rt2800_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
-+	.clear_beacon		= rt2800_clear_beacon,
- 	.fill_rxdone		= rt2800pci_fill_rxdone,
- 	.config_shared_key	= rt2800_config_shared_key,
- 	.config_pairwise_key	= rt2800_config_pairwise_key,
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index b97a4a5..3ebe473 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -633,6 +633,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
- 	.write_tx_desc		= rt2800usb_write_tx_desc,
- 	.write_tx_data		= rt2800usb_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
-+	.clear_beacon		= rt2800_clear_beacon,
- 	.get_tx_data_len	= rt2800usb_get_tx_data_len,
- 	.fill_rxdone		= rt2800usb_fill_rxdone,
- 	.config_shared_key	= rt2800_config_shared_key,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 84aaf39..985982b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -368,6 +368,7 @@ struct rt2x00_intf {
- 	 * dedicated beacon entry.
- 	 */
- 	struct queue_entry *beacon;
-+	bool enable_beacon;
- 
- 	/*
- 	 * Actions that needed rescheduling.
-@@ -573,6 +574,7 @@ struct rt2x00lib_ops {
- 			       struct txentry_desc *txdesc);
- 	void (*write_beacon) (struct queue_entry *entry,
- 			      struct txentry_desc *txdesc);
-+	void (*clear_beacon) (struct queue_entry *entry);
- 	int (*get_tx_data_len) (struct queue_entry *entry);
- 
- 	/*
-@@ -788,10 +790,12 @@ struct rt2x00_dev {
- 	 *  - Open ap interface count.
- 	 *  - Open sta interface count.
- 	 *  - Association count.
-+	 *  - Beaconing enabled count.
- 	 */
- 	unsigned int intf_ap_count;
- 	unsigned int intf_sta_count;
- 	unsigned int intf_associated;
-+	unsigned int intf_beaconing;
- 
- 	/*
- 	 * Link quality
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 31b7db0..2c65038 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -121,7 +121,7 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
- 		return;
- 
- 	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags))
--		rt2x00queue_update_beacon(rt2x00dev, vif, true);
-+		rt2x00queue_update_beacon(rt2x00dev, vif);
- }
- 
- static void rt2x00lib_intf_scheduled(struct work_struct *work)
-@@ -174,7 +174,7 @@ static void rt2x00lib_beaconupdate_iter(void *data, u8 *mac,
- 	    vif->type != NL80211_IFTYPE_WDS)
- 		return;
- 
--	rt2x00queue_update_beacon(rt2x00dev, vif, true);
-+	rt2x00queue_update_beacon(rt2x00dev, vif);
- }
- 
- void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index a105c50..6c6a8f1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -160,11 +160,17 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
-  * rt2x00queue_update_beacon - Send new beacon from mac80211 to hardware
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
-  * @vif: Interface for which the beacon should be updated.
-- * @enable_beacon: Enable beaconing
-  */
- int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
--			      struct ieee80211_vif *vif,
--			      const bool enable_beacon);
-+			      struct ieee80211_vif *vif);
-+
-+/**
-+ * rt2x00queue_clear_beacon - Clear beacon in hardware
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @vif: Interface for which the beacon should be updated.
-+ */
-+int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
-+			     struct ieee80211_vif *vif);
- 
- /**
-  * rt2x00queue_index_inc - Index incrementation function
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index f3da051..7d33167 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -619,9 +619,44 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 	/*
- 	 * Update the beacon.
- 	 */
--	if (changes & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED))
--		rt2x00queue_update_beacon(rt2x00dev, vif,
--					  bss_conf->enable_beacon);
-+	if (changes & BSS_CHANGED_BEACON)
-+		rt2x00queue_update_beacon(rt2x00dev, vif);
-+
-+	/*
-+	 * Start/stop beaconing.
-+	 */
-+	if (changes & BSS_CHANGED_BEACON_ENABLED) {
-+		if (!bss_conf->enable_beacon && intf->enable_beacon) {
-+			rt2x00queue_clear_beacon(rt2x00dev, vif);
-+			rt2x00dev->intf_beaconing--;
-+			intf->enable_beacon = false;
-+
-+			if (rt2x00dev->intf_beaconing == 0) {
-+				/*
-+				 * Last beaconing interface disabled
-+				 * -> stop beacon queue.
-+				 */
-+				mutex_lock(&intf->beacon_skb_mutex);
-+				rt2x00queue_stop_queue(rt2x00dev->bcn);
-+				mutex_unlock(&intf->beacon_skb_mutex);
-+			}
-+
-+
-+		} else if (bss_conf->enable_beacon && !intf->enable_beacon) {
-+			rt2x00dev->intf_beaconing++;
-+			intf->enable_beacon = true;
-+
-+			if (rt2x00dev->intf_beaconing == 1) {
-+				/*
-+				 * First beaconing interface enabled
-+				 * -> start beacon queue.
-+				 */
-+				mutex_lock(&intf->beacon_skb_mutex);
-+				rt2x00queue_start_queue(rt2x00dev->bcn);
-+				mutex_unlock(&intf->beacon_skb_mutex);
-+			}
-+		}
-+	}
- 
- 	/*
- 	 * When the association status has changed we must reset the link
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index ca82b3a..24bcdb4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -566,9 +566,35 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 	return 0;
- }
- 
-+int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
-+			     struct ieee80211_vif *vif)
-+{
-+	struct rt2x00_intf *intf = vif_to_intf(vif);
-+
-+	if (unlikely(!intf->beacon))
-+		return -ENOBUFS;
-+
-+	mutex_lock(&intf->beacon_skb_mutex);
-+
-+	/*
-+	 * Clean up the beacon skb.
-+	 */
-+	rt2x00queue_free_skb(intf->beacon);
-+
-+	/*
-+	 * Clear beacon (single bssid devices don't need to clear the beacon
-+	 * since the beacon queue will get stopped anyway).
-+	 */
-+	if (rt2x00dev->ops->lib->clear_beacon)
-+		rt2x00dev->ops->lib->clear_beacon(intf->beacon);
-+
-+	mutex_unlock(&intf->beacon_skb_mutex);
-+
-+	return 0;
-+}
-+
- int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
--			      struct ieee80211_vif *vif,
--			      const bool enable_beacon)
-+			      struct ieee80211_vif *vif)
- {
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
- 	struct skb_frame_desc *skbdesc;
-@@ -584,12 +610,6 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	 */
- 	rt2x00queue_free_skb(intf->beacon);
- 
--	if (!enable_beacon) {
--		rt2x00queue_stop_queue(intf->beacon->queue);
--		mutex_unlock(&intf->beacon_skb_mutex);
--		return 0;
--	}
--
- 	intf->beacon->skb = ieee80211_beacon_get(rt2x00dev->hw, vif);
- 	if (!intf->beacon->skb) {
- 		mutex_unlock(&intf->beacon_skb_mutex);
-@@ -611,7 +631,7 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
--	 * Send beacon to hardware and enable beacon genaration..
-+	 * Send beacon to hardware.
- 	 */
- 	rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 8de44dd..f14cc45 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -551,26 +551,14 @@ static void rt61pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 				struct rt2x00intf_conf *conf,
- 				const unsigned int flags)
- {
--	unsigned int beacon_base;
- 	u32 reg;
- 
- 	if (flags & CONFIG_UPDATE_TYPE) {
- 		/*
--		 * Clear current synchronisation setup.
--		 * For the Beacon base registers, we only need to clear
--		 * the first byte since that byte contains the VALID and OWNER
--		 * bits which (when set to 0) will invalidate the entire beacon.
--		 */
--		beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
--		rt2x00pci_register_write(rt2x00dev, beacon_base, 0);
--
--		/*
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
- 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- 	}
- 
-@@ -2002,8 +1990,6 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
- 	 */
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR10, 0x00001008);
- 
--	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
--	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
- 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
-@@ -2014,6 +2000,32 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
- 	entry->skb = NULL;
- }
- 
-+static void rt61pci_clear_beacon(struct queue_entry *entry)
-+{
-+	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	u32 reg;
-+
-+	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
-+	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
-+	/*
-+	 * Clear beacon.
-+	 */
-+	rt2x00pci_register_write(rt2x00dev,
-+				 HW_BEACON_OFFSET(entry->entry_idx), 0);
-+
-+	/*
-+	 * Enable beaconing again.
-+	 */
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
-+	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
-+}
-+
- /*
-  * RX control handlers
-  */
-@@ -2903,6 +2915,7 @@ static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
- 	.stop_queue		= rt61pci_stop_queue,
- 	.write_tx_desc		= rt61pci_write_tx_desc,
- 	.write_beacon		= rt61pci_write_beacon,
-+	.clear_beacon		= rt61pci_clear_beacon,
- 	.fill_rxdone		= rt61pci_fill_rxdone,
- 	.config_shared_key	= rt61pci_config_shared_key,
- 	.config_pairwise_key	= rt61pci_config_pairwise_key,
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 029be3c..330353e 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -502,26 +502,14 @@ static void rt73usb_config_intf(struct rt2x00_dev *rt2x00dev,
- 				struct rt2x00intf_conf *conf,
- 				const unsigned int flags)
- {
--	unsigned int beacon_base;
- 	u32 reg;
- 
- 	if (flags & CONFIG_UPDATE_TYPE) {
- 		/*
--		 * Clear current synchronisation setup.
--		 * For the Beacon base registers we only need to clear
--		 * the first byte since that byte contains the VALID and OWNER
--		 * bits which (when set to 0) will invalidate the entire beacon.
--		 */
--		beacon_base = HW_BEACON_OFFSET(intf->beacon->entry_idx);
--		rt2x00usb_register_write(rt2x00dev, beacon_base, 0);
--
--		/*
- 		 * Enable synchronisation.
- 		 */
- 		rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
--		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
- 		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 	}
- 
-@@ -1590,8 +1578,6 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
- 	 */
- 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR10, 0x00001008);
- 
--	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
--	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
- 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
- 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
-@@ -1602,6 +1588,33 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
- 	entry->skb = NULL;
- }
- 
-+static void rt73usb_clear_beacon(struct queue_entry *entry)
-+{
-+	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	unsigned int beacon_base;
-+	u32 reg;
-+
-+	/*
-+	 * Disable beaconing while we are reloading the beacon data,
-+	 * otherwise we might be sending out invalid data.
-+	 */
-+	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
-+	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
-+	/*
-+	 * Clear beacon.
-+	 */
-+	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
-+	rt2x00usb_register_write(rt2x00dev, beacon_base, 0);
-+
-+	/*
-+	 * Enable beaconing again.
-+	 */
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
-+	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
-+}
-+
- static int rt73usb_get_tx_data_len(struct queue_entry *entry)
- {
- 	int length;
-@@ -2313,6 +2326,7 @@ static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
- 	.flush_queue		= rt2x00usb_flush_queue,
- 	.write_tx_desc		= rt73usb_write_tx_desc,
- 	.write_beacon		= rt73usb_write_beacon,
-+	.clear_beacon		= rt73usb_clear_beacon,
- 	.get_tx_data_len	= rt73usb_get_tx_data_len,
- 	.fill_rxdone		= rt73usb_fill_rxdone,
- 	.config_shared_key	= rt73usb_config_shared_key,
--- 
-1.7.2.3
-
+Signed-off-by: Brian Prodoehl <bprodoehl@gmail.com>
