@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386Ab1AFVEp (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:56844 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662Ab1AQPVb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 16:04:45 -0500
-Subject: Re: Question about iwl3945
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D262CED.5070409@lwfinger.net>
-References: <4D262CED.5070409@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 Jan 2011 22:04:41 +0100
-Message-ID: <1294347881.25228.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 17 Jan 2011 10:21:31 -0500
+Received: by fxm20 with SMTP id 20so6149232fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 07:21:29 -0800 (PST)
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/13] DFS/radar state/userspace handling
+Date: Mon, 17 Jan 2011 16:21:29 +0100
+Cc: lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
+	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201101171621.29863.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-06 at 14:58 -0600, Larry Finger wrote:
-> Is there any reason why the Intel3495 wireless card using the iwl3945 driver
-> with kernel 2.6.34 does not work in AP mode using hostapd? The message is
-> 
-> nl80211: Failed to set interface wlan0 into AP mode
-> nl80211 driver initialization failed.
+Hi,
 
-Neither 3945 nor 4965 can ever support AP mode due to firmware
-restrictions, sorry.
+Based on the IRC discussions I started implementing the required bits 
+for handling DFS states and channel flags in cfg/mac80211 and userspace. 
+This is WIP, so not really complete, just wanted to get that out so we 
+have something to discuss about on tomorrows meeting.
 
-johannes
+Implemented so far is the complete state machine, handling CAC and NOL 
+as well as starting appropriate action in hostapd. Note, this is based 
+on top of the 'dfs region support' work posted by Luis.
 
+TODO:
+- Documentation
+- CSA
+- unset beacon on CAC
+- unset beacon if interference is detected
+- prevent beacon from being set if channel is !CLEAR
+- prevent frames from being sent if channel is !CLEAR
+  A few bits are already there, but by far not complete, e.g. we
+  discard auth responses but allow probe responses and deauth frames.
+
+-- 
+Best regards,
+
+Dipl.-Inf. (FH) Bernhard Schmidt (software development)
+
+saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
+Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
+managing director: Steffen Dreise - county court Chemnitz - HRB 23017
+http://www.saxnet.de
