@@ -1,131 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:61479 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932125Ab1ALNCR (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59961 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630Ab1AQW0W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 08:02:17 -0500
-Received: by pzk35 with SMTP id 35so87197pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 05:02:17 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 17 Jan 2011 17:26:22 -0500
+Received: by vws16 with SMTP id 16so2201382vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 14:26:21 -0800 (PST)
+Message-ID: <4D34C225.4060108@lwfinger.net>
+Date: Mon, 17 Jan 2011 16:26:45 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19757.42544.304328.698003@gargle.gargle.HOWL>
-Date: Wed, 12 Jan 2011 18:31:36 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] mac80211: track receivers aggregation reorder buffer size
-In-Reply-To: <20110112121417.852157387@sipsolutions.net>
-References: <20110112121322.702618109@sipsolutions.net>
-	<20110112121417.852157387@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+CC: Daniel Halperin <dhalperi@cs.washington.edu>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Logs spammed by associate / authenticate / CRDA calls
+References: <4D34A421.3070804@lwfinger.net> <AANLkTin_DESckMrOMK41z3oJtXwmHvL026Mi8ayLeKLA@mail.gmail.com> <4D34BC83.2030406@candelatech.com>
+In-Reply-To: <4D34BC83.2030406@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 01/17/2011 04:02 PM, Ben Greear wrote:
+> On 01/17/2011 12:26 PM, Daniel Halperin wrote:
+>> On Mon, Jan 17, 2011 at 12:18 PM, Larry Finger
+>>
+>> Scanning happens every time you associate/re-associate; disassociation
+>> due to inactivity happens when your device doesn't send packets to the
+>> AP for some period of time.  It looks like your AP's (or device's)
+>> timeout is 100s.
 > 
-> The aggregation code currently doesn't implement the
-> buffer size negotiation. It will always request a max
-> buffer size (which is fine, if a little pointless, as
-> the mac80211 code doesn't know and might just use 0
-> instead), but if the peer requests a smaller size it
-> isn't possible to honour this request.
-> 
-> In order to fix this, look at the buffer size in the
-> addBA response frame, keep track of it and pass it to
-> the driver in the ampdu_action callback when called
-> with the IEEE80211_AMPDU_TX_OPERATIONAL action. That
-> way the driver can limit the number of subframes in
-> aggregates appropriately.
-> 
-> Note that this doesn't fix any drivers apart from the
-> addition of the new argument -- they all need to be
-> updated separately to use this variable!
+> From what I can tell, this message can also happen if the local
+> STA thinks it cannot connect to the remote.  For instance, if it
+> doesn't get a TX callback within 500ms for ath5k/ath9k (and perhaps
+> others).
 
-At least for ath9k_htc, the fix is pretty simple, something like the patch below.
-I tested this with a peer advertising a non-default subframe count
-(using max_tx_aggregation_subframes) and it seems to work. Now all that is needed
-is to fix the FW to actually _use_ this value. :)
+Thanks Dan and Ben. It is clearly not an ordinary timeout from inactivity as it
+happens even when I'm doing a download. I'll push it back to the Realtek people
+to see if they can figure out a cause.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 1ce506f..94a4b14 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -210,6 +210,7 @@ struct ath9k_htc_vif {
- 
- #define ATH9K_HTC_MAX_STA 8
- #define ATH9K_HTC_MAX_TID 8
-+#define ATH9K_HTC_MAX_SUBFRAME 20
- 
- enum tid_aggr_state {
- 	AGGR_STOP = 0,
-@@ -433,7 +434,7 @@ void ath9k_htc_txep(void *priv, struct sk_buff *skb, enum htc_endpoint_id ep_id,
- void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
- 			enum htc_endpoint_id ep_id, bool txok);
- 
--int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv);
-+int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv, u8 buf_size);
- void ath9k_htc_station_work(struct work_struct *work);
- void ath9k_htc_aggr_work(struct work_struct *work);
- void ath9k_ani_work(struct work_struct *work);;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index f4d576b..3a3f982 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -304,7 +304,7 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
- 	/*
- 	 * Set chainmask etc. on the target.
- 	 */
--	ret = ath9k_htc_update_cap_target(priv);
-+	ret = ath9k_htc_update_cap_target(priv, ATH9K_HTC_MAX_SUBFRAME);
- 	if (ret)
- 		ath_dbg(common, ATH_DBG_CONFIG,
- 			"Failed to update capability in target\n");
-@@ -430,7 +430,7 @@ static int ath9k_htc_remove_station(struct ath9k_htc_priv *priv,
- 	return 0;
- }
- 
--int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
-+int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv, u8 buf_size)
- {
- 	struct ath9k_htc_cap_target tcap;
- 	int ret;
-@@ -442,7 +442,7 @@ int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
- 	tcap.flags = 0x240c40;
- 	tcap.flags_ext = 0x80601000;
- 	tcap.ampdu_limit = 0xffff0000;
--	tcap.ampdu_subframes = 20;
-+	tcap.ampdu_subframes = min((u8)ATH9K_HTC_MAX_SUBFRAME, buf_size);
- 	tcap.tx_chainmask_legacy = priv->ah->caps.tx_chainmask;
- 	tcap.protmode = 1;
- 	tcap.tx_chainmask = priv->ah->caps.tx_chainmask;
-@@ -1130,7 +1130,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out;
- 
--	ret = ath9k_htc_update_cap_target(priv);
-+	ret = ath9k_htc_update_cap_target(priv, ATH9K_HTC_MAX_SUBFRAME);
- 	if (ret)
- 		ath_dbg(common, ATH_DBG_CONFIG,
- 			"Failed to update capability in target\n");
-@@ -1548,7 +1548,7 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif,
- 				  enum ieee80211_ampdu_mlme_action action,
- 				  struct ieee80211_sta *sta,
--				  u16 tid, u16 *ssn)
-+				  u16 tid, u16 *ssn, u8 buf_size)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 	struct ath9k_htc_sta *ista;
-@@ -1570,6 +1570,12 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
-+		if (buf_size < ATH9K_HTC_MAX_SUBFRAME) {
-+			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_CONFIG,
-+				"Choosing subframe count %d for station %pM\n",
-+				buf_size, sta->addr);
-+			ath9k_htc_update_cap_target(priv, buf_size);
-+		}
- 		spin_lock_bh(&priv->tx_lock);
- 		ista->tid_state[tid] = AGGR_OPERATIONAL;
- 		spin_unlock_bh(&priv->tx_lock);
+Larry
