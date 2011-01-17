@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56211 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752732Ab1AZRVs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 12:21:48 -0500
-Received: by iyj18 with SMTP id 18so575334iyj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 09:21:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <19776.19422.571177.795197@gargle.gargle.HOWL>
-References: <19776.19422.571177.795197@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 Jan 2011 09:21:27 -0800
-Message-ID: <AANLkTi=881eHyZEHnjY_XkCGLnzNWz1iuUVoJQA_KkAB@mail.gmail.com>
-Subject: Re: [PATCH] ath9k_hw: Fix INI fixup
-To: Sujith <m.sujith@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Sujith.Manoharan@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mx.techwires.net ([79.140.39.242]:12298 "EHLO mx.techwires.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751597Ab1AQQUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 11:20:04 -0500
+In-Reply-To: <201101171621.29863.bernhard.schmidt@saxnet.de>
+References: <201101171621.29863.bernhard.schmidt@saxnet.de>
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 17 Jan 2011 13:56:59 +0100
+Subject: [PATCH 2/8] hostap: add channel_list config parameter
+Cc: <lrodriguez@atheros.com>, <nbd@openwrt.org>, <dubowoj@neratec.com>,
+	<zefir.kurtisi@neratec.com>, <simon.wunderlich@saxnet.de>
+Message-Id: <20110117161327.79817208F@mx.techwires.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 26, 2011 at 8:29 AM, Sujith <m.sujith@gmail.com> wrote:
-> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
->
-> Commit "ath9k_hw: move AR9280 PCI EEPROM fix to eeprom_def.c"
-> changed the behavior of INI overriding which is needed only
-> for PCI cards. Revert to the original check.
->
-> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ hostapd/config_file.c |    7 +++++++
+ src/ap/ap_config.c    |    1 +
+ src/ap/ap_config.h    |    1 +
+ 3 files changed, 9 insertions(+), 0 deletions(-)
 
-You leave me no option but to come out of e-mail reply slumber. What
-issues was this causing?
+diff --git a/hostapd/config_file.c b/hostapd/config_file.c
+index f6b9926..119a4bb 100644
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -1736,6 +1736,13 @@ struct hostapd_config * hostapd_config_read(const char *fname)
+ 			}
+ 		} else if (os_strcmp(buf, "channel") == 0) {
+ 			conf->channel = atoi(pos);
++		} else if (os_strcmp(buf, "channel_list") == 0) {
++			if (hostapd_parse_int_list(&conf->channel_list,
++						   pos)) {
++				wpa_printf(MSG_ERROR, "Line %d: invalid channel"
++					   " list", line);
++				errors++;
++			}
+ 		} else if (os_strcmp(buf, "beacon_int") == 0) {
+ 			int val = atoi(pos);
+ 			/* MIB defines range as 1..65535, but very small values
+diff --git a/src/ap/ap_config.c b/src/ap/ap_config.c
+index 702cb76..38e70fb 100644
+--- a/src/ap/ap_config.c
++++ b/src/ap/ap_config.c
+@@ -466,6 +466,7 @@ void hostapd_config_free(struct hostapd_config *conf)
+ 	os_free(conf->bss);
+ 	os_free(conf->supported_rates);
+ 	os_free(conf->basic_rates);
++	os_free(conf->channel_list);
+ 
+ 	os_free(conf);
+ }
+diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+index 0a929d6..57c977d 100644
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -340,6 +340,7 @@ struct hostapd_config {
+ 	int fragm_threshold;
+ 	u8 send_probe_response;
+ 	u8 channel;
++	int *channel_list;
+ 	enum hostapd_hw_mode hw_mode; /* HOSTAPD_MODE_IEEE80211A, .. */
+ 	enum {
+ 		LONG_PREAMBLE = 0,
+-- 
+1.5.6.5
 
-  Luis
