@@ -1,76 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40986 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab1AUDAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:00:24 -0500
-Received: by mail-iy0-f174.google.com with SMTP id 18so1245111iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:00:23 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63129.521681.626480@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:29:37 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 04/33] ath9k_htc: Remove OP_PREAMBLE_SHORT
+Received: from mx.techwires.net ([79.140.39.242]:27286 "EHLO mx.techwires.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752049Ab1AQQUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 11:20:05 -0500
+In-Reply-To: <201101171621.29863.bernhard.schmidt@saxnet.de>
+References: <201101171621.29863.bernhard.schmidt@saxnet.de>
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 17 Jan 2011 14:00:17 +0100
+Subject: [PATCH 3/8] hostapd: select random channel of the list
+Cc: <lrodriguez@atheros.com>, <nbd@openwrt.org>, <dubowoj@neratec.com>,
+	<zefir.kurtisi@neratec.com>, <simon.wunderlich@saxnet.de>
+Message-Id: <20110117161327.819592091@mx.techwires.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-
-mac80211's BSS info can be used for this.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |   13 ++++++-------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    9 ---------
- 2 files changed, 6 insertions(+), 16 deletions(-)
+ src/ap/hw_features.c |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/ap/hw_features.h |    1 +
+ 2 files changed, 55 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index ff6bfd9..08ab28d 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -335,13 +335,12 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
- #define OP_SCANNING		   BIT(1)
- #define OP_LED_ASSOCIATED	   BIT(2)
- #define OP_LED_ON		   BIT(3)
--#define OP_PREAMBLE_SHORT	   BIT(4)
--#define OP_PROTECT_ENABLE	   BIT(5)
--#define OP_ASSOCIATED		   BIT(6)
--#define OP_ENABLE_BEACON	   BIT(7)
--#define OP_LED_DEINIT		   BIT(8)
--#define OP_BT_PRIORITY_DETECTED    BIT(9)
--#define OP_BT_SCAN                 BIT(10)
-+#define OP_PROTECT_ENABLE	   BIT(4)
-+#define OP_ASSOCIATED		   BIT(5)
-+#define OP_ENABLE_BEACON	   BIT(6)
-+#define OP_LED_DEINIT		   BIT(7)
-+#define OP_BT_PRIORITY_DETECTED    BIT(8)
-+#define OP_BT_SCAN                 BIT(9)
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index 133ed74..743d567 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -27,6 +27,58 @@
+ #include "hw_features.h"
  
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index b3b33ff..8e76589 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1521,15 +1521,6 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_htc_beacon_config(priv, vif);
+ 
++int hostapd_select_random_channel(struct hostapd_iface *iface)
++{
++	int i, j, ret;
++
++	if (iface->conf->channel_list == NULL ||
++	    iface->conf->channel_list[0] == -1)
++		return -1;
++
++	ret = -1;
++	if (iface->conf->channel == 0 && iface->conf->channel_list != NULL) {
++		int *chans, chans_num = 1, hw_chans_num;
++		u8 buf;
++
++		for (i = 0; iface->conf->channel_list[i] > 0; i++)
++			chans_num++;
++
++		chans = os_malloc(sizeof(int) * chans_num);
++		if (chans == NULL)
++			return -1;
++		os_memcpy(chans, iface->conf->channel_list,
++			  sizeof(int) * chans_num);
++
++		hw_chans_num = iface->current_mode->num_channels;
++		buf = chans_num;
++		do {
++			struct hostapd_channel_data *hchan = NULL;
++
++			for (i = j = 0; i < chans_num; i++, j++) {
++				if (i == buf)
++					j++;
++				chans[i] = chans[j];
++			}
++
++			os_get_random(&buf, 1);
++			buf %= chans_num;
++
++			for (i = 0; i < hw_chans_num; i++) {
++				hchan = &iface->current_mode->channels[i];
++				if (hchan->chan == chans[buf] &&
++				    !(hchan->flag & HOSTAPD_CHAN_DISABLED)) {
++					iface->conf->channel = hchan->chan;
++					ret = 0;
++					break;
++				}
++			}
++			chans_num--;
++		} while (iface->conf->channel == 0 && chans_num > 0);
++		os_free(chans);
++	}
++	return ret;
++}
++
+ void hostapd_free_hw_features(struct hostapd_hw_modes *hw_features,
+ 			      size_t num_hw_features)
+ {
+@@ -642,6 +694,8 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 			break;
+ 		}
  	}
++	if (iface->conf->channel == 0 && !hostapd_select_random_channel(iface))
++		ok = 1;
+ 	if (ok && iface->conf->secondary_channel) {
+ 		int sec_ok = 0;
+ 		int sec_chan = iface->conf->channel +
+diff --git a/src/ap/hw_features.h b/src/ap/hw_features.h
+index 88c2322..f800562 100644
+--- a/src/ap/hw_features.h
++++ b/src/ap/hw_features.h
+@@ -17,6 +17,7 @@
+ #define HW_FEATURES_H
  
--	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
--		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed PREAMBLE %d\n",
--			bss_conf->use_short_preamble);
--		if (bss_conf->use_short_preamble)
--			priv->op_flags |= OP_PREAMBLE_SHORT;
--		else
--			priv->op_flags &= ~OP_PREAMBLE_SHORT;
--	}
--
- 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
- 		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed CTS PROT %d\n",
- 			bss_conf->use_cts_prot);
+ #ifdef NEED_AP_MLME
++int hostapd_select_random_channel(struct hostapd_iface *iface);
+ void hostapd_free_hw_features(struct hostapd_hw_modes *hw_features,
+ 			      size_t num_hw_features);
+ int hostapd_get_hw_features(struct hostapd_iface *iface);
 -- 
-1.7.3.5
+1.5.6.5
 
