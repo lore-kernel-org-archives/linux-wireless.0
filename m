@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43852 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635Ab1AUKBF (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37455 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752143Ab1AQNn2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 05:01:05 -0500
-Received: by iyj18 with SMTP id 18so1502121iyj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 02:01:05 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 17 Jan 2011 08:43:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19769.22827.129895.302810@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 15:30:11 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [RFC/WIP 23/33] ath9k_htc: Enable AP mode
-In-Reply-To: <1295599422.3831.0.camel@jlt3.sipsolutions.net>
-References: <19768.63310.121728.324735@gargle.gargle.HOWL>
-	<1295599422.3831.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295265468.24530.23.camel@maggie>
+References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com>
+ <1295261783.24530.3.camel@maggie> <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
+ <1295265468.24530.23.camel@maggie>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Mon, 17 Jan 2011 14:43:08 +0100
+Message-ID: <AANLkTims0DPfG+u9qynuuj_-0WjUr1nAGLuFz3k706T-@mail.gmail.com>
+Subject: Re: Merging SSB and HND/AI support
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2011-01-21 at 08:32 +0530, Sujith wrote:
-> > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> > 
-> > Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> > index dc96c06..b4ae719 100644
-> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> > @@ -753,7 +753,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
-> >  
-> >  	hw->wiphy->interface_modes =
-> >  		BIT(NL80211_IFTYPE_STATION) |
-> > -		BIT(NL80211_IFTYPE_ADHOC);
-> > +		BIT(NL80211_IFTYPE_ADHOC) |
-> > +		BIT(NL80211_IFTYPE_AP);
-> 
-> It'd be kinda nice if that could be made dependent on firmware
-> capability bits or version since otherwise everybody will think they
-> have it ... and it will not work?
+On 17 January 2011 12:57, Michael Büsch <mb@bu3sch.de> wrote:
+> Well... I don't really like the idea of running one driver and
+> subsystem implementation on completely distinct types of silicon.
+> We will end up with the same mess that broadcom ended up with in
+> their "SB" code (broadcom's SSB backplane implementation).
+> For example, in their code the driver calls pci_enable_device() and
+> related PCI functions, even if there is no PCI device at all. The calls
+> are magically re-routed to the actual SB backplane.
+> You'd have to do the same mess with SSB. Calling ssb_device_enable()
+> will mean "enable the SSB device", if the backplane is SSB, and will
+> mean "enable the HND/AI" device, if the backplane is HND/AI.
 
-Well, the current firmware has no version mechanism and this series requires
-the new FW for non-AP modes too. I am aware that breaking compatibilty with existing FW
-is frowned upon, but unfortunately this is required since the command layout has
-been cleaned up. I'll add a check to bail out at driver load time when the old FW is used.
+It didn't strike me as that bad, but I also didn't look at any PCI code.
 
-Sujith
+> So I'm still in favor of doing a separate HND/AI bus implementation,
+> even if
+> that means duplicating a few lines of code.
+
+Well, it means at least duplicating most of the chipcommon driver and
+the mips core driver. But if you are fine with that, I see no problem
+with having a separate driver for the AI bus.
+
+> SSB doesn't search for SSB busses in the system, because there's no
+> way to do so. The architecture (or the PCI/PCMCIA/SDIO device) registers
+> the bus,
+> if it detected an SSB device. So for the embedded case, it's hardcoded
+> in the arch code. For the PCI case it simply depends on the PCI IDs.
+> I don't see a problem here. Your arch code will already have to know
+> what machine it is running on. So it will have to decide whether to
+> register a SSB or HND/AI bus.
+
+Okay. This is mostly for the embedded case, where it is possible to
+create a single kernel that boots on both. The "detection" could also
+be done through the cpu type (74k => register AI bus, else SSB bus)
+instead of the chipid register of the common core.
+
+>> Also I don't know
+>> if it is a good idea to let arch-specific code depend on code in
+>> staging.
+>
+> Sure. The code needs to be cleaned up and moved to the mainline kernel
+> _anyway_. You don't get around this.
+
+Yes, you are right.
+
+
+So I guess the proposed course of action would be:
+
+1. Make the HND/AI-Bus code from brcm80211 its own independent driver,
+2. Re-add the non-wifi related code (chipcommon, mips, etc),
+3. Clean up the code until it meets Linux' code style/quality,
+4. Move it out of staging,
+
+and finally
+
+5. Add the required arch specific code to bcm47xx for the newer SoCs.
+
+Jonas
+
+P.S: Any suggestions for the name? Would be "ai" okay? Technically
+it's "AMBA Interconnect", but "amba" is already taken.
