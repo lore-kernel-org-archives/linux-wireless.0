@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59784 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206Ab1AWVDS (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:37639 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753314Ab1AQLV0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 16:03:18 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so3406598fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 13:03:17 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 5/6] wl12xx: AP mode - support hidden SSID
-Date: Sun, 23 Jan 2011 23:02:58 +0200
-Message-Id: <1295816579-28925-6-git-send-email-arik@wizery.com>
-In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	Mon, 17 Jan 2011 06:21:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <1295261783.24530.3.camel@maggie>
+References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com> <1295261783.24530.3.camel@maggie>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Mon, 17 Jan 2011 12:21:05 +0100
+Message-ID: <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
+Subject: Re: Merging SSB and HND/AI support
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Detect whether our SSID is hidden by comparing beacon data with
-the SSID in bss_conf.
+On 17 January 2011 11:56, Michael Büsch <mb@bu3sch.de> wrote:
+> On Mon, 2011-01-17 at 11:46 +0100, Jonas Gorski wrote:
+>> a) Merge the HND/AI code into the current SSB code, or
+>>
+>> b) add the missing code for SoCs to brcm80211 and replace the SSB code with it.
+>
+> Why can't we keep those two platforms separated?
+> Is there really a lot of shared code between SSB and HND/AI?
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c |   23 ++++++++++-------------
- 1 files changed, 10 insertions(+), 13 deletions(-)
+Yes, as far as I understand the AI bus behaves mostly like a SSB bus
+except for places like enabling/disabling cores. E.g. the AI bus also
+has a common core, which has a bit for telling whether its a SSB or AI
+bus, and has the mostly the same registers as the SSB common cores (so
+most driver_chipcommon_* stuff also applies for the AI bus).
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index e28d9ca..7a6f39e 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -966,16 +966,6 @@ int wl1271_cmd_start_bss(struct wl1271 *wl)
- 
- 	wl1271_debug(DEBUG_CMD, "cmd start bss");
- 
--	/*
--	 * FIXME: We currently do not support hidden SSID. The real SSID
--	 * should be fetched from mac80211 first.
--	 */
--	if (wl->ssid_len == 0) {
--		wl1271_warning("Hidden SSID currently not supported for AP");
--		ret = -EINVAL;
--		goto out;
--	}
--
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	if (!cmd) {
- 		ret = -ENOMEM;
-@@ -993,9 +983,16 @@ int wl1271_cmd_start_bss(struct wl1271 *wl)
- 	cmd->dtim_interval = bss_conf->dtim_period;
- 	cmd->beacon_expiry = WL1271_AP_DEF_BEACON_EXP;
- 	cmd->channel = wl->channel;
--	cmd->ssid_len = wl->ssid_len;
--	cmd->ssid_type = SSID_TYPE_PUBLIC;
--	memcpy(cmd->ssid, wl->ssid, wl->ssid_len);
-+
-+	/* We use a visible SSID if the beacon SSID matches bss_conf */
-+	if (wl->ssid_len > 0 && wl->ssid_len == bss_conf->ssid_len &&
-+	    !memcmp(wl->ssid, bss_conf->ssid, wl->ssid_len))
-+		cmd->ssid_type = SSID_TYPE_PUBLIC;
-+	else
-+		cmd->ssid_type = SSID_TYPE_HIDDEN;
-+
-+	cmd->ssid_len = bss_conf->ssid_len;
-+	memcpy(cmd->ssid, bss_conf->ssid, bss_conf->ssid_len);
- 
- 	switch (wl->band) {
- 	case IEEE80211_BAND_2GHZ:
--- 
-1.7.1
+> It's true that there's currently a lot of device functionality built
+> into ssb. Like pci bridge, mips core, extif, etc...
+> If you take all that code out, you're probably not left with anything.
 
+That's because most shared code isn't in brcm80211, but only found in
+the SDKs for the SoCs.
+
+> So why do we need to replace or merge SSB in the first place? Can't
+> it co-exist with HND/AI?
+
+It probably can, but then the SSB code must be at least made AI aware
+so it doesn't try to attach itself if it finds one. Also I don't know
+if it is a good idea to let arch-specific code depend on code in
+staging.
+
+Jonas
