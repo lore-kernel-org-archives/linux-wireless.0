@@ -1,87 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:38722 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771Ab1A3TLt (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:38542 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751791Ab1AQUEC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:11:49 -0500
-Message-ID: <4D45B7DF.1030703@davizone.at>
-Date: Sun, 30 Jan 2011 20:11:27 +0100
-From: David Gnedt <david.gnedt@davizone.at>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 18/18] wl1251: disable retry and ACK policy for injected packets
-References: <4D45A7BD.705@davizone.at>
-In-Reply-To: <4D45A7BD.705@davizone.at>
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 17 Jan 2011 15:04:02 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 397C054242F
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 15:05:50 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110117200400.8A54440F97@repository3.orbit-lab.org>
+Date: Mon, 17 Jan 2011 15:04:00 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the retry limit to 0 and disable the ACK policy for injected packets.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   bed36d7..3281fc3  history    -> origin/history
+ + e8883f8...f6c6cea master     -> origin/master  (forced update)
+   6ab8219..8a335bc  stable     -> origin/stable
+ * [new tag]         next-20110117 -> next-20110117
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
-Sorry for the partly broken patches, I thought I configured my client the
-right way. I tried to stop the mails at my mailserver, but it was mostly
-already too late.
----
- drivers/net/wireless/wl1251/acx.c |    8 +++++++-
- drivers/net/wireless/wl1251/tx.c  |    7 ++++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/wl1251/acx.c b/drivers/net/wireless/wl1251/acx.c
-index 38d33f0..435ed08 100644
---- a/drivers/net/wireless/wl1251/acx.c
-+++ b/drivers/net/wireless/wl1251/acx.c
-@@ -947,12 +947,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
- 	}
- 
- 	/* configure one default (one-size-fits-all) rate class */
--	acx->rate_class_cnt = 1;
-+	acx->rate_class_cnt = 2;
- 	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
- 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].aflags = 0;
- 
-+	/* no-retry rate class */
-+	acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
-+	acx->rate_class[1].short_retry_limit = 0;
-+	acx->rate_class[1].long_retry_limit = 0;
-+	acx->rate_class[1].aflags = 0;
-+
- 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1251_warning("Setting of rate policies failed: %d", ret);
-diff --git a/drivers/net/wireless/wl1251/tx.c b/drivers/net/wireless/wl1251/tx.c
-index 1de4ccb..e559bc4 100644
---- a/drivers/net/wireless/wl1251/tx.c
-+++ b/drivers/net/wireless/wl1251/tx.c
-@@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
- 	/* 802.11 packets */
- 	tx_hdr->control.packet_type = 0;
- 
--	if (control->flags & IEEE80211_TX_CTL_NO_ACK)
-+	/* Also disable retry and ACK policy for injected packets */
-+	if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
-+	    (control->flags & IEEE80211_TX_CTL_INJECTED)) {
-+		tx_hdr->control.rate_policy = 1;
- 		tx_hdr->control.ack_policy = 1;
-+	}
- 
- 	tx_hdr->control.tx_complete = 1;
- 
-@@ -414,6 +418,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
- 	info = IEEE80211_SKB_CB(skb);
- 
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
-+	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
- 	    (result->status == TX_SUCCESS))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 
--- 
-1.7.0.4
+    782520 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1989 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1956 - % of crap code
 
-
+Base tree: linux-next.git
+Base tree version: next-20110117
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
