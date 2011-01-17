@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35918 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484Ab1AFWsA (ORCPT
+Received: from mgw-da02.ext.nokia.com ([147.243.128.26]:47632 "EHLO
+	mgw-da02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761Ab1AQG0n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 17:48:00 -0500
-Received: by fxm20 with SMTP id 20so16482909fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 14:47:59 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: fix sequence no. accounting off-by-one error
-Date: Thu, 6 Jan 2011 23:47:52 +0100
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101062347.53191.chunkeey@googlemail.com>
+	Mon, 17 Jan 2011 01:26:43 -0500
+Subject: Re: [PATCH] wl12xx: Cleanup PLT mode when module is removed
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1295244269.18570.106.camel@wimaxnb.nmp.nokia.com>
+References: <1295005726-10323-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1295011013.1960.269.camel@pimenta>
+	 <1295244269.18570.106.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 17 Jan 2011 08:26:34 +0200
+Message-ID: <1295245594.18570.119.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P54_HDR_FLAG_DATA_OUT_SEQNR is meant to tell the
-firmware that "the frame's sequence number has
-already been set by the application."
+On Mon, 2011-01-17 at 08:04 +0200, ext Juuso Oikarinen wrote:
+> On Fri, 2011-01-14 at 15:16 +0200, ext Luciano Coelho wrote:
+> > Hi Juuso,
+> > 
+> > On Fri, 2011-01-14 at 12:48 +0100, juuso.oikarinen@nokia.com wrote:
+> > > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> > > index 9076555..863e660 100644
+> > > --- a/drivers/net/wireless/wl12xx/main.c
+> > > +++ b/drivers/net/wireless/wl12xx/main.c
+> > > @@ -917,12 +917,10 @@ out:
+> > >  	return ret;
+> > >  }
 
-Whereas IEEE80211_TX_CTL_ASSIGN_SEQ is set for
-frames which lack a valid sequence number and
-either the driver or firmware has to assign one.
 
-Yup, it's the exact opposite!
+> > 
+> > Again we have this kind of unlock-lock case.  Wouldn't it be better to
+> > move the cancel_work calls outside this function and call them after
+> > __wl1271_plt_stop() has returned? Yeah, there will be duplicate code if
+> > we do this, but I think it's a bit safer, isn't it?
+> > 
+> 
+> Heh, I did consider this too. But I did come to the conclusion that in
+> this case it is safer to unlock/lock than to duplicate the code -
+> duplicating this type of code has its risks too, and in this case
+> nothing is actually performed after the last mutex-lock - except for
+> unlocking in again.
+> 
+> I'll change this to benefit both PoVs: I'll create a separate function
+> to cancel the works, and just call that function from two places. That
+> way, the to-be cancelled work items are in a single place.
+> 
 
-Cc: <stable@kernel.org>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-Patch looks fairly harmless, so what can possibly go wrong ;)
----
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 76b2318..f618b96 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -618,7 +618,7 @@ static void p54_tx_80211_header(struct p54_common *priv, struct sk_buff *skb,
- 	else
- 		*burst_possible = false;
- 
--	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
-+	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
- 		*flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
- 
- 	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
+And then I realise we can't easily do that. In the typical case (user
+space stops plt mode) there is no work after the last mutex lock, but in
+this module-removal scenario there is.
+
+To solve that, we'd have to extend the knowledge about the plt mode onto
+the bus specific modules (sdio/spi) because they call the wl12xx
+unregister_hw function with the mutex already held.
+
+So in essence, I would like to keep the current patch :o
+
+-Juuso
+
