@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46568 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756190Ab1AKRZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 12:25:30 -0500
-From: <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: arik@wizery.com, johannes@sipsolutions.net,
-	Luciano Coelho <coelho@ti.com>
-Subject: [PATCH] wl12xx: don't modify the global supported band structures
-Date: Tue, 11 Jan 2011 19:25:18 +0200
-Message-ID: <1294766718-2472-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:59235 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753076Ab1AQOUw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 09:20:52 -0500
+Subject: Re: [PATCH] mac80211: drop non-auth 3-addr data frames when
+ running as a 4-addr station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1295098708-99081-1-git-send-email-nbd@openwrt.org>
+References: <1295098708-99081-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 17 Jan 2011 15:20:50 +0100
+Message-ID: <1295274050.3726.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+On Sat, 2011-01-15 at 14:38 +0100, Felix Fietkau wrote:
+> When running as a 4-addr station against an AP that has the 4-addr VLAN
+> interface and the main 3-addr AP interface bridged together, sometimes
+> frames originating from the station were looping back from the 3-addr AP
+> interface, causing the bridge code to emit warnings about receiving frames
+> with its own source address.
+> I'm not sure why this is happening yet, but I think it's a good idea to
+> drop all frames (except 802.1x/EAP frames) that do not match the configured
+> addressing mode, including 4-address frames sent to a 3-address station.
+> User test reports indicate that the problem goes away with this patch.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  net/mac80211/rx.c |    8 ++++++--
+>  1 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index a6701ed..54e3108 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1561,9 +1561,13 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+>  	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
+>  		return -1;
+>  
+> +	if (!ieee80211_802_1x_port_control(rx) &&
 
-When 11a is not supported, we were modifying the global structure that
-contains the bands supported by the driver.  This causes problems when
-having more one wl12xx device in the same system because they all use
-the same global.  This also causes problems when the wl12xx_sdio
-module is removed and the wl12xx module remains.
+I think you need a different check there. This just checks the STA is
+authorized.
 
-Fix this problem by copying the band structure into the wl12xx
-instance.
-
-Reported-by: Arik Nemtsov <arik@wizery.com>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c   |   16 ++++++++++++++--
- drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
- 2 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8a35491..862ec9c 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3148,8 +3148,20 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	 */
- 	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
- 			sizeof(struct ieee80211_header);
--	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
--	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
-+
-+	/*
-+	 * We keep local copies of the band structs because we need to
-+	 * modify them on a per-device basis.
-+	 */
-+	memcpy(&wl->bands[IEEE80211_BAND_2GHZ], &wl1271_band_2ghz,
-+	       sizeof(wl1271_band_2ghz));
-+	memcpy(&wl->bands[IEEE80211_BAND_5GHZ], &wl1271_band_5ghz,
-+	       sizeof(wl1271_band_5ghz));
-+
-+	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-+		&wl->bands[IEEE80211_BAND_2GHZ];
-+	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
-+		&wl->bands[IEEE80211_BAND_5GHZ];
- 
- 	wl->hw->queues = 4;
- 	wl->hw->max_rates = 1;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 80e0e39..cf5c1a5 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -457,6 +457,9 @@ struct wl1271 {
- 
- 	/* recoreded keys for AP-mode - set here before AP startup */
- 	struct wl1271_ap_key *recorded_ap_keys[MAX_NUM_KEYS];
-+
-+	/* bands supported by this instance of wl12xx */
-+	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
- };
- 
- struct wl1271_station {
--- 
-1.7.1
+johannes
 
