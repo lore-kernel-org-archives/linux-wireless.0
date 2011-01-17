@@ -1,29 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:41854 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:42019 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755196Ab1ALSRD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 13:17:03 -0500
-Subject: experimental iwlwifi 5000 uCode available
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 10:15:57 -0800
-Message-Id: <1294856157.20725.26.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1751253Ab1AQSJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 13:09:07 -0500
+From: wey-yi.w.guy@intel.com
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] mac80211: mesh only parameter mppath maybe unused
+Date: Mon, 17 Jan 2011 10:08:01 -0800
+Message-Id: <1295287681-17951-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Experimental version 8.83.5.1 of uCode for Intel@ 5000 Series WiFi
-Adapters is now available for download from 
-http://www.intellinuxwireless.org/?n=experimental
+mppath is mesh related parameter and maybe unused
 
-Experimental uCode is the WiFi uCode released by the Intel uCode team
-with the latest bug fixes to address issues being reported by external
-parties. The Experimental uCode has not gone through the full regression
-test procedures, and the goal is to address the issue(s) that can’t be
-easily reproduced within the internal testing environment.
- 
-Wey
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ net/mac80211/tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index dc261bb..2378305 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1750,7 +1750,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	__le16 fc;
+ 	struct ieee80211_hdr hdr;
+ 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
+-	struct mesh_path *mppath = NULL;
++	struct mesh_path __maybe_unused *mppath = NULL;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+ 	int nh_pos, h_pos;
+-- 
+1.6.0.4
 
