@@ -1,67 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38839 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57707 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751434Ab1AaO64 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 09:58:56 -0500
-Subject: Re: [PATCH 7/8] iwlagn: remove
- CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
-From: wwguy <wey-yi.w.guy@intel.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTinBneG0nqGFt=mnP0-ZSdLGzdxhfYpyo62WYJQA@mail.gmail.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-	 <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
-	 <1296231817.7388.18.camel@wwguy-ubuntu>	<20110128164136.GF2452@redhat.com>
-	 <1296256821.8832.1.camel@wwguy-ubuntu>	<20110131094624.GA20641@redhat.com>
-	 <AANLkTinBneG0nqGFt=mnP0-ZSdLGzdxhfYpyo62WYJQA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 06:57:20 -0800
-Message-ID: <1296485840.10026.4.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1752225Ab1AQNEA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 08:04:00 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org, kernel@lists.fedoraproject.org
+Cc: Kyle McMartin <kmcmartin@redhat.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.35.y] hostap_cs: fix sleeping function called from invalid context
+Date: Mon, 17 Jan 2011 14:03:36 +0100
+Message-Id: <1295269416-4870-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw,
+commit 4e5518ca53be29c1ec3c00089c97bef36bfed515 upstream.
 
-On Mon, 2011-01-31 at 02:23 -0800, Rafał Miłecki wrote:
-> 2011/1/31 Stanislaw Gruszka <sgruszka@redhat.com>:
-> > On Fri, Jan 28, 2011 at 03:20:21PM -0800, wwguy wrote:
-> >> > What is easiest and less time consuming:
-> >> >
-> >> > this:
-> >> >
-> >> > $ mv /lib/firmware/iwlwifi-5000-exp.ucode /lib/firmware/iwlwifi-5000-exp.ucode.not_use
-> >> >
-> >> > or this:
-> >> >
-> >> > $ make menuconfig
-> >> > navigate to find option and edit it
-> >> > $ make modules
-> >> > $ make modules_install
-> >> >
-> >> > ?
-> >> >
-> >> > > Also put it in Kconfig file, so it is easy for user to see they are
-> >> > > using experimental option. Agree?
-> >> >
-> >> > Not really. I believe someone who download a tarball, unpack it and copy
-> >> > files to /lib/firmware is pretty much aware what he/she is doing.
-> >> >
-> >> Agree whoever download the tarball know what he/she is doing, but I am
-> >> not fully agree the driver always use experimental uCode if it is in the
-> >> firmware directory
-> >
-> > I do not understand what for you need that, but ok, I can live with it.
-> >
-> > John, please skip this patch.
-> 
-> Maybe make it module parameter? Like use_experimental_fw, default to 0?
-> 
-I think module parameter is better idea, if you agree, and I will ack
+pcmcia_request_irq() and pcmcia_enable_device() are intended
+to be called from process context (first function allocate memory
+with GFP_KERNEL, second take a mutex). We can not take spin lock
+and call them.
 
-Thanks
-Wey
+It's safe to move spin lock after pcmcia_enable_device() as we
+still hold off IRQ until dev->base_addr is 0 and driver will
+not proceed with interrupts when is not ready.
+
+Patch resolves:
+https://bugzilla.redhat.com/show_bug.cgi?id=643758
+
+Reported-and-tested-by: rbugz@biobind.com
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/hostap/hostap_cs.c |   15 ++++++---------
+ 1 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
+index 29b31a6..4ebf63d 100644
+--- a/drivers/net/wireless/hostap/hostap_cs.c
++++ b/drivers/net/wireless/hostap/hostap_cs.c
+@@ -627,14 +627,13 @@ static int prism2_config(struct pcmcia_device *link)
+ 	hw_priv->link = link;
+ 
+ 	/*
+-	 * Make sure the IRQ handler cannot proceed until at least
+-	 * dev->base_addr is initialized.
++	 * We enable IRQ here, but IRQ handler will not proceed
++	 * until dev->base_addr is set below. This protect us from
++	 * receive interrupts when driver is not initialized.
+ 	 */
+-	spin_lock_irqsave(&local->irq_init_lock, flags);
+-
+ 	ret = pcmcia_request_irq(link, prism2_interrupt);
+ 	if (ret)
+-		goto failed_unlock;
++		goto failed;
+ 
+ 	/*
+ 	 * This actually configures the PCMCIA socket -- setting up
+@@ -643,11 +642,11 @@ static int prism2_config(struct pcmcia_device *link)
+ 	 */
+ 	ret = pcmcia_request_configuration(link, &link->conf);
+ 	if (ret)
+-		goto failed_unlock;
++		goto failed;
+ 
++	spin_lock_irqsave(&local->irq_init_lock, flags);
+ 	dev->irq = link->irq;
+ 	dev->base_addr = link->io.BasePort1;
+-
+ 	spin_unlock_irqrestore(&local->irq_init_lock, flags);
+ 
+ 	/* Finally, report what we've done */
+@@ -676,8 +675,6 @@ static int prism2_config(struct pcmcia_device *link)
+ 
+ 	return ret;
+ 
+- failed_unlock:
+-	 spin_unlock_irqrestore(&local->irq_init_lock, flags);
+  failed:
+ 	kfree(hw_priv);
+ 	prism2_release((u_long)link);
+-- 
+1.7.1
 
