@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:56220 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932276Ab1AKQ7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 11:59:54 -0500
-From: Bernhard Walle <walle@corscience.de>
-To: lrodriguez@atheros.com, jmalinen@atheros.com, vasanth@atheros.com,
-	senthilkumar@atheros.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] [RFC] ath9k: Fix reporting of RX STBC streams to userspace
-Date: Tue, 11 Jan 2011 17:59:54 +0100
-Message-Id: <1294765194-30542-1-git-send-email-walle@corscience.de>
+Received: from mx.techwires.net ([79.140.39.242]:51774 "EHLO mx.techwires.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751662Ab1AQQUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 11:20:04 -0500
+In-Reply-To: <201101171621.29863.bernhard.schmidt@saxnet.de>
+References: <201101171621.29863.bernhard.schmidt@saxnet.de>
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 17 Jan 2011 13:55:23 +0100
+Subject: [PATCH 1/8] hostap: make hostapd_parse_rates generic
+Cc: <lrodriguez@atheros.com>, <nbd@openwrt.org>, <dubowoj@neratec.com>,
+	<zefir.kurtisi@neratec.com>, <simon.wunderlich@saxnet.de>
+Message-Id: <20110117161327.7437B208D@mx.techwires.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While the driver reports
-
-        ath: TX streams 2, RX streams: 2
-
-in the kernel log (with ATH_DBG_CONFIG set in the debug module
-parameter), "iw list" only reported
-
-[...]
-        Capabilities: 0x12ce
-                HT20/HT40
-                SM Power Save disabled
-                RX HT40 SGI
-                TX STBC
-                RX STBC 1-streams
-[...]
-
-The driver seems to set the value as flag while the iw tool interprets
-it as number. This patch fixes that.
-
-Signed-off-by: Bernhard Walle <walle@corscience.de>
 ---
- drivers/net/wireless/ath/ath9k/init.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ hostapd/config_file.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 639dc93..935b6c3 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -215,17 +215,17 @@ static void setup_ht_cap(struct ath_softc *sc,
- 	else
- 		max_streams = 2;
+diff --git a/hostapd/config_file.c b/hostapd/config_file.c
+index 4938611..f6b9926 100644
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -646,14 +646,14 @@ static int hostapd_config_read_wep(struct hostapd_wep_keys *wep, int keyidx,
+ }
  
--	if (AR_SREV_9280_20_OR_LATER(ah)) {
--		if (max_streams >= 2)
--			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
--		ht_info->cap |= (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
--	}
--
- 	/* set up supported mcs set */
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
- 	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, max_streams);
- 	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, max_streams);
  
-+	if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		if (max_streams >= 2)
-+			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-+		ht_info->cap |= (rx_streams << IEEE80211_HT_CAP_RX_STBC_SHIFT);
-+	}
-+
- 	ath_print(common, ATH_DBG_CONFIG,
- 		  "TX streams %d, RX streams: %d\n",
- 		  tx_streams, rx_streams);
+-static int hostapd_parse_rates(int **rate_list, char *val)
++static int hostapd_parse_int_list(int **int_list, char *val)
+ {
+ 	int *list;
+ 	int count;
+ 	char *pos, *end;
+ 
+-	os_free(*rate_list);
+-	*rate_list = NULL;
++	os_free(*int_list);
++	*int_list = NULL;
+ 
+ 	pos = val;
+ 	count = 0;
+@@ -680,7 +680,7 @@ static int hostapd_parse_rates(int **rate_list, char *val)
+ 	}
+ 	list[count] = -1;
+ 
+-	*rate_list = list;
++	*int_list = list;
+ 	return 0;
+ }
+ 
+@@ -1785,13 +1785,14 @@ struct hostapd_config * hostapd_config_read(const char *fname)
+ 			} else
+ 				conf->send_probe_response = val;
+ 		} else if (os_strcmp(buf, "supported_rates") == 0) {
+-			if (hostapd_parse_rates(&conf->supported_rates, pos)) {
++			if (hostapd_parse_int_list(&conf->supported_rates,
++						   pos)) {
+ 				wpa_printf(MSG_ERROR, "Line %d: invalid rate "
+ 					   "list", line);
+ 				errors++;
+ 			}
+ 		} else if (os_strcmp(buf, "basic_rates") == 0) {
+-			if (hostapd_parse_rates(&conf->basic_rates, pos)) {
++			if (hostapd_parse_int_list(&conf->basic_rates, pos)) {
+ 				wpa_printf(MSG_ERROR, "Line %d: invalid rate "
+ 					   "list", line);
+ 				errors++;
 -- 
-1.7.1
+1.5.6.5
 
