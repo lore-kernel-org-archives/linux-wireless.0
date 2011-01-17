@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49868
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754731Ab1AJVMZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 16:12:25 -0500
-Date: Mon, 10 Jan 2011 13:12:57 -0800 (PST)
-Message-Id: <20110110.131257.212413498.davem@davemloft.net>
-To: gwingerde@gmail.com
-Cc: eric.dumazet@gmail.com, torvalds@linux-foundation.org,
-	alex.arnautu96@gmail.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel 2.6.37-rc5 rc7 Oops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4D2B7550.5000008@gmail.com>
-References: <1293652965.7150.13.camel@edumazet-laptop>
-	<20110110.000650.124002380.davem@davemloft.net>
-	<4D2B7550.5000008@gmail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37357 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751790Ab1AQL54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 06:57:56 -0500
+Subject: Re: Merging SSB and HND/AI support
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Jonas Gorski <jonas.gorski@gmail.com>
+Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com> (sfid-20110117_122135_343461_FFFFFFFFFA00D75F)
+References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com>
+	 <1295261783.24530.3.camel@maggie>
+	 <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
+	 (sfid-20110117_122135_343461_FFFFFFFFFA00D75F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 17 Jan 2011 12:57:48 +0100
+Message-ID: <1295265468.24530.23.camel@maggie>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Date: Mon, 10 Jan 2011 22:08:32 +0100
-
-> On 01/10/11 09:06, David Miller wrote:
->> From: Eric Dumazet <eric.dumazet@gmail.com>
->> Date: Wed, 29 Dec 2010 21:02:45 +0100
->> 
->>> Le mercredi 29 décembre 2010 à 11:23 -0800, Linus Torvalds a écrit :
->>>> On Wed, Dec 29, 2010 at 4:26 AM, Alex Arnautu <alex.arnautu96@gmail.com> wrote:
->>>>>
->>>>> I get an oops with 2.6.37-rc5 and 2.6.37-rc7-git1.
->>>>> http://www.fotoshack.us/fotos/19044P271210_15.14_[01].jpg
->>>>
->>>> Hmm. Davem added to the list of people involved. This _may_ be fixed
->>>> by the "always clone skbs" commit in -rc8 (commit 173021072), but
->>>> David can make a better judgment call.
->>>>
->>>
->>> Very unlikely, as commit 173021072 only fix a bug in case mirred is
->>> used.
->> 
->> This should be taken to the wireless list (now CC:'d) as the rt2xxx
->> driver and the wireless stack are both in that backtrace.
+On Mon, 2011-01-17 at 12:21 +0100, Jonas Gorski wrote: 
+> On 17 January 2011 11:56, Michael BÃ¼sch <mb@bu3sch.de> wrote:
+> > On Mon, 2011-01-17 at 11:46 +0100, Jonas Gorski wrote:
+> >> a) Merge the HND/AI code into the current SSB code, or
+> >>
+> >> b) add the missing code for SoCs to brcm80211 and replace the SSB code with it.
+> >
+> > Why can't we keep those two platforms separated?
+> > Is there really a lot of shared code between SSB and HND/AI?
 > 
-> Hmmm, the jpg images of the oops don't seem to be available anymore
-> (a 404 not found is returned on the URL.
-> Does anybody still have the backtrace? Otherwise it will be very hard to look
-> into this.
+> Yes, as far as I understand the AI bus behaves mostly like a SSB bus
+> except for places like enabling/disabling cores. E.g. the AI bus also
+> has a common core, which has a bit for telling whether its a SSB or AI
+> bus, and has the mostly the same registers as the SSB common cores (so
+> most driver_chipcommon_* stuff also applies for the AI bus).
 
-You must have copy-and-paste'd it wrong, the URL works perfectly fine
-for me.
+Well... I don't really like the idea of running one driver and
+subsystem implementation on completely distinct types of silicon.
+We will end up with the same mess that broadcom ended up with in
+their "SB" code (broadcom's SSB backplane implementation).
+For example, in their code the driver calls pci_enable_device() and
+related PCI functions, even if there is no PCI device at all. The calls
+are magically re-routed to the actual SB backplane.
+You'd have to do the same mess with SSB. Calling ssb_device_enable()
+will mean "enable the SSB device", if the backplane is SSB, and will
+mean "enable the HND/AI" device, if the backplane is HND/AI.
 
-I also put up a copy at:
+So I'm still in favor of doing a separate HND/AI bus implementation,
+even if
+that means duplicating a few lines of code. I think that compared to the
+workarounds and conditionals needed for getting SSB to run on HND/AI
+hardware, it will be a net win.
 
-http://vger.kernel.org/~davem/crash.jpg
+> > So why do we need to replace or merge SSB in the first place? Can't
+> > it co-exist with HND/AI?
+> 
+> It probably can, but then the SSB code must be at least made AI aware
+> so it doesn't try to attach itself if it finds one.
+
+SSB doesn't search for SSB busses in the system, because there's no
+way to do so. The architecture (or the PCI/PCMCIA/SDIO device) registers
+the bus,
+if it detected an SSB device. So for the embedded case, it's hardcoded
+in the arch code. For the PCI case it simply depends on the PCI IDs.
+I don't see a problem here. Your arch code will already have to know
+what machine it is running on. So it will have to decide whether to
+register a SSB or HND/AI bus.
+
+It's like a platform_device. However, it doesn't use the platform_device
+mechanism. There's no technical reason. It would be trivial to port the
+SSB bus registration to use platform_device, however.
+
+> Also I don't know
+> if it is a good idea to let arch-specific code depend on code in
+> staging.
+
+Sure. The code needs to be cleaned up and moved to the mainline kernel
+_anyway_. You don't get around this.
+
+-- 
+Greetings Michael.
+
