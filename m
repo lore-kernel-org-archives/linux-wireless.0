@@ -1,61 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50182 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53760 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665Ab1AXLhz (ORCPT
+	with ESMTP id S1752100Ab1AROzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 06:37:55 -0500
-Subject: Re: [PATCH v2 4/6] mac80211: Save probe response data for BSS
+	Tue, 18 Jan 2011 09:55:50 -0500
+Subject: Re: [PATCH v2] mac80211: drop non-auth 3-addr data frames when
+ running as a 4-addr station
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1295816579-28925-5-git-send-email-arik@wizery.com>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
-	 <1295816579-28925-5-git-send-email-arik@wizery.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1295362128-2294-1-git-send-email-nbd@openwrt.org>
+References: <1295362128-2294-1-git-send-email-nbd@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 12:38:46 +0100
-Message-ID: <1295869126.3639.4.camel@jlt3.sipsolutions.net>
+Date: Tue, 18 Jan 2011 15:55:47 +0100
+Message-ID: <1295362547.3563.22.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-01-23 at 23:02 +0200, Arik Nemtsov wrote:
+On Tue, 2011-01-18 at 15:48 +0100, Felix Fietkau wrote:
+> When running as a 4-addr station against an AP that has the 4-addr VLAN
+> interface and the main 3-addr AP interface bridged together, sometimes
+> frames originating from the station were looping back from the 3-addr AP
+> interface, causing the bridge code to emit warnings about receiving frames
+> with its own source address.
+> I'm not sure why this is happening yet, but I think it's a good idea to
+> drop all frames (except 802.1x/EAP frames) that do not match the configured
+> addressing mode, including 4-address frames sent to a 3-address station.
+> User test reports indicate that the problem goes away with this patch.
 
-> +static int ieee80211_set_probe_resp(struct wiphy *wiphy,
-> +				    struct net_device *dev, u8 *resp,
-> +				    size_t resp_len)
-> +{
-> +	struct ieee80211_sub_if_data *sdata;
-> +	struct sk_buff *new, *old;
-> +
-> +	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	old = sdata->u.ap.probe_resp;
-> +
-> +	if (!resp || !resp_len)
-> +		return -EINVAL;
-> +
-> +	new = dev_alloc_skb(resp_len);
-> +	if (!new) {
-> +		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
-> +		       "response template\n", sdata->name);
-> +		return -ENOMEM;
-
-I'd remove that message -- userspace already knows, and it's the only
-thing that really needs to?
-
-> +	}
-> +
-> +	memcpy(skb_put(new, resp_len), resp, resp_len);
-> +
-> +	rcu_assign_pointer(sdata->u.ap.probe_resp, new);
-> +	synchronize_rcu();
-> +
-> +	if (old)
-> +		dev_kfree_skb(old);
-
-Just a note -- I don't really expect you to implement this -- but I
-think since the skb's CB is not used otherwise, we could easily use
-call_rcu() to free it.
+This looks better, thanks. But did they really test _this_ patch? :)
 
 johannes
+
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  net/mac80211/rx.c |   25 ++++++++++++++++++++++---
+>  1 files changed, 22 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index a6701ed..1236710 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1556,17 +1556,36 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+>  {
+>  	struct ieee80211_sub_if_data *sdata = rx->sdata;
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+> +	bool check_port_control = false;
+> +	struct ethhdr *ehdr;
+> +	int ret;
+>  
+>  	if (ieee80211_has_a4(hdr->frame_control) &&
+>  	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
+>  		return -1;
+>  
+> +	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+> +	    !!sdata->u.mgd.use_4addr != !!ieee80211_has_a4(hdr->frame_control)) {
+> +
+> +		if (!sdata->u.mgd.use_4addr)
+> +			return -1;
+> +		else
+> +			check_port_control = true;
+> +	}
+> +
+>  	if (is_multicast_ether_addr(hdr->addr1) &&
+> -	    ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->u.vlan.sta) ||
+> -	     (sdata->vif.type == NL80211_IFTYPE_STATION && sdata->u.mgd.use_4addr)))
+> +	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->u.vlan.sta)
+>  		return -1;
+>  
+> -	return ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
+> +	ret = ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
+> +	if (ret < 0 || !check_port_control)
+> +		return ret;
+> +
+> +	ehdr = (struct ethhdr *) rx->skb->data;
+> +	if (ehdr->h_proto != rx->sdata->control_port_protocol)
+> +		return -1;
+> +
+> +	return 0;
+>  }
+>  
+>  /*
+
 
