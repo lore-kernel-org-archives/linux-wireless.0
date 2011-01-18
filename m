@@ -1,58 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3577 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354Ab1AUVk7 convert rfc822-to-8bit (ORCPT
+Received: from p3plsmtpa01-08.prod.phx3.secureserver.net ([72.167.82.88]:59670
+	"HELO p3plsmtpa01-08.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751564Ab1AROdv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 16:40:59 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Greg KH" <gregkh@suse.de>
-cc: "Greg KH" <greg@kroah.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 21 Jan 2011 13:36:10 -0800
-Subject: RE: [PATCH] staging: brcm80211: fix suspend/resume issue in
- brcmsmac
-Message-ID: <400C43189542CE41BC0A5B252FC90136952F059562@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <1294855167-3718-1-git-send-email-arend@broadcom.com>
- <20110120201753.GA18529@kroah.com>
- <400C43189542CE41BC0A5B252FC90136952F05955A@SJEXCHCCR02.corp.ad.broadcom.com>,<20110121151246.GA29290@suse.de>
-In-Reply-To: <20110121151246.GA29290@suse.de>
+	Tue, 18 Jan 2011 09:33:51 -0500
+Message-ID: <BB274B92115347F9A8E250DEF0C2B732@ChuckPC>
+From: "Chuck Crisler" <ccrisler@vgocom.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+References: <D323CFEF4DEC4E18AFF56742F78C16B6@ChuckPC> <1295347932.3563.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295347932.3563.13.camel@jlt3.sipsolutions.net>
+Subject: Re: intermittent eap authentication failure
+Date: Tue, 18 Jan 2011 09:33:40 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
- charset=us-ascii
+	format=flowed;
+	charset="utf-8";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+It is the MAC80211 code. I am looking to find the exact code that 
+re-associates. We are running an old kernel (2.6.31.6) but can't update 
+right now.
 
-I think you miss my point. I currently have a suspend/resume issue with 2.6.37 and 2.6.38-rc1
-that is not related to our driver as I did suspend/resume without loading our driver module.
+Our app is a mobile video conferencing system (a robot). It is imperative 
+that my connection to the network always be good. When you get  a session 
+timeout from the AP there isn't any reason to do a scan. The MAC driver can 
+send the association request and then notify the supplicant when it receives 
+the assosication response. The supplicant can then handle the higher layer 
+authentication. With the minor supplicant change that I included earler this 
+works with all authentication schemes. However, I have removed the 2 lines 
+that dealt with setting the EAP authentication to NULL. I think that they 
+were causing the EAP problems. The result is that now I re-connect after a 
+session timeout withint 0.75 seconds.
 
-Gr. AvS
-________________________________________
-From: Greg KH [gregkh@suse.de]
-Sent: Friday, January 21, 2011 4:12 PM
-To: Arend Van Spriel
-Cc: Greg KH; devel@linuxdriverproject.org; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: brcm80211: fix suspend/resume issue in brcmsmac
+Another problem that I found is that sometimes (not often) the Cisco WLC was 
+sending us a second deauthentication while we were still 'disconnected'. The 
+MAC driver dutifully sent that to the supplicant which was busy trying to 
+re-authenticate, again causing a mess. Now, I have changed the MAC driver to 
+drop that second deauth message if we aren't connected. It works a lot 
+better.
 
-On Fri, Jan 21, 2011 at 06:37:54AM -0800, Arend Van Spriel wrote:
-> Hi Greg,
+The response that Daniel Halperin made to Larry Finger concerning the reason 
+code 4 (inactivity) isn't correct. That may be the intent but Cisco sends 
+that reason code more often. I have received it withint 3 seconds of 
+receiving an association response. Again, not often but it does happen. I am 
+currently working to understand why the Cisco WLC does this and have 
+extensive logging enabled on my WLC. Unfortuantely, all of the failures are 
+occurring after the WLC times out my putty session!
+
+More to come.
+
+----- Original Message ----- 
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Chuck Crisler" <ccrisler@vgocom.com>
+Cc: <linux-wireless@vger.kernel.org>
+Sent: Tuesday, January 18, 2011 5:52 AM
+Subject: Re: intermittent eap authentication failure
+
+
+> Chuck,
 >
-> I did not retest the suspend/resume change functionally (only compiled it). I decided
-> to do that on v2.6.38-rc1 to be sure and on my system the suspend works. However,
-> upon resume my system reboots without any feedback. System seem to come to
-> live (DVD spinning) and then BIOS boot screen pops up. So I tried suspend/resume
-> without our driver loaded. Results were the same. Also 2.6.37 shows same behaviour.
+>> Sometime ago I found a conflict between the supplicant and the MAC80211 
+>> code
+>> dealing with Cisco session timeouts. When we were 'deauthenticated', the 
+>> MAC
+>> code notified the supplicant AND re-associated with the AP.
 >
-> On 2.6.37-rc5 I did not have any issues and suspend/resume worked for our driver
-> and the kernel in general. Anyone else observed such behaviour?
-
-Yes, lots of other people reported problems with this, I thought you got
-the reports (like from Jon Masters?)
-
-thanks,
-
-greg k-h
-
+> That doesn't seem right, mac80211 will never re-associate by itself.
+>
+>> We modified the driver so that if it received a
+>> de-auth with reason code 1 (undefined?), it would *NOT* notify the
+>> supplicant but would re-associate, then notify the supplicant of the new
+>> association.
+>
+> What's that driver you're talking about? A mac80211 driver that
+> reassociates by itself doesn't seem right at all.
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
