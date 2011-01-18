@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35035 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802Ab1AZSKe (ORCPT
+Received: from mail-fx0-f66.google.com ([209.85.161.66]:53079 "EHLO
+	mail-fx0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254Ab1ARM2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 13:10:34 -0500
-Message-ID: <4D406396.2090407@candelatech.com>
-Date: Wed, 26 Jan 2011 10:10:30 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Tue, 18 Jan 2011 07:28:11 -0500
+Received: by mail-fx0-f66.google.com with SMTP id 14so2807840fxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 04:28:11 -0800 (PST)
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating channel.
-References: <1295633142-7437-1-git-send-email-greearb@candelatech.com> <1296056188.3635.36.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296056188.3635.36.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH 4/5] mac80211: add primarily CAC support
+Date: Tue, 18 Jan 2011 13:28:08 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
+	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
+References: <201101171621.29863.bernhard.schmidt@saxnet.de> <201101181301.45021.bernhard.schmidt@saxnet.de> <1295352740.3563.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295352740.3563.14.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201101181328.09624.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2011 07:36 AM, Johannes Berg wrote:
-> On Fri, 2011-01-21 at 10:05 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> This should decrease un-necessary flushes, on/off channel work,
->> and channel changes in cases where the only scanned channel is
->> the current operating channel.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->>
->> v2:  Check channels instead of flag when determining if we should
->>    do a channel change in scan_completed_finish.
->
-> Can you look at work.c -- where we call
-> ieee80211_offchannel_stop_beaconing etc.
->
-> In this patch, you're moving the call to
-> ieee80211_offchannel_stop_beaconing next to
-> ieee80211_offchannel_stop_station in scan.c.
->
-> Therefore, you can combine those two into one function.
->
-> However, I guess it'd also be nice to also address the TODO in work.c
-> and move the "don't do so much if not really off-channel" logic into
-> that function? You must run into that when trying to associate on one
-> vif and the others get stopped etc. unnecessarily to do that.
+On Tuesday, January 18, 2011 13:12:20 Johannes Berg wrote:
+> On Tue, 2011-01-18 at 13:01 +0100, Bernhard Schmidt wrote:
+> > > > +	mutex_lock(&radar->mtx);
+> > > 
+> > > Clearly, you haven't even tested this code. I'm not sure why I'm
+> > > even reviewing it.
+> > 
+> > Granted, I did only some basic tests with only a few predefined
+> > scenarios, not at all is just wrong. Anyways, I should have
+> > mentioned in 0/13 that preventing channel changes while in CAC
+> > should be considered and chan should be assigned to local variable
+> > then.
+> 
+> I was more referring to the fact that you're trying to lock a mutex
+> in a timer -- so you can't have executed this code path ever?!
 
-I think you are right about this, but due to the tricky nature
-of this code, maybe save that for a second patch?
-
-Thanks,
-Ben
-
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+I'm running it right now, the code path *is* executed, what am I missing 
+here?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Best regards,
 
+Dipl.-Inf. (FH) Bernhard Schmidt (software development)
+
+saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
+Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
+managing director: Steffen Dreise - county court Chemnitz - HRB 23017
+http://www.saxnet.de
