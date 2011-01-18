@@ -1,77 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:54249 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754949Ab1AUTkW (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52766 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751745Ab1ARUEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 14:40:22 -0500
-Date: Fri, 21 Jan 2011 13:40:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix possible NULL dereference
-Message-ID: <4d39e146.pMRUu8w8cfc0mj0L%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 18 Jan 2011 15:04:12 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 149EC540765
+	for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 15:06:00 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110118200408.42A7F40F97@repository3.orbit-lab.org>
+Date: Tue, 18 Jan 2011 15:04:08 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jesper Juhl <jj@chaosbits.net>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   3281fc3..8ffd020  history    -> origin/history
+ + f6c6cea...a4e85a5 master     -> origin/master  (forced update)
+   8a335bc..9e8a462  stable     -> origin/stable
+ * [new tag]         next-20110118 -> next-20110118
 
-In drivers/net/wireless/rtlwifi/pci.c::_rtl_pci_rx_interrupt() we call 
-dev_alloc_skb(), which may fail and return NULL, but we do not check the 
-returned value against NULL before dereferencing the returned pointer. 
-This may lead to a NULL pointer dereference which means we'll crash - not 
-good.
+compat-wireless code metrics
 
-In a separate call to dev_alloc_skb(), the debug level is changed so that
-the failure message will always be logged.
+    782522 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1989 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1956 - % of crap code
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-John,
-
-Material for 2.6.38.
-
-Larry
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-@@ -619,6 +619,13 @@ static void _rtl_pci_rx_interrupt(struct
- 					struct sk_buff *uskb = NULL;
- 					u8 *pdata;
- 					uskb = dev_alloc_skb(skb->len + 128);
-+					if (!uskb) {
-+						RT_TRACE(rtlpriv,
-+							(COMP_INTR | COMP_RECV),
-+							DBG_EMERG,
-+							("can't alloc rx skb\n"));
-+						goto done;
-+					}
- 					memcpy(IEEE80211_SKB_RXCB(uskb),
- 							&rx_status,
- 							sizeof(rx_status));
-@@ -641,7 +648,7 @@ static void _rtl_pci_rx_interrupt(struct
- 			new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
- 			if (unlikely(!new_skb)) {
- 				RT_TRACE(rtlpriv, (COMP_INTR | COMP_RECV),
--					 DBG_DMESG,
-+					 DBG_EMERG,
- 					 ("can't alloc skb for rx\n"));
- 				goto done;
- 			}
-@@ -1066,9 +1073,9 @@ static int _rtl_pci_init_rx_ring(struct
- 			struct sk_buff *skb =
- 			    dev_alloc_skb(rtlpci->rxbuffersize);
- 			u32 bufferaddress;
--			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
- 			if (!skb)
- 				return 0;
-+			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
- 
- 			/*skb->dev = dev; */
- 
+Base tree: linux-next.git
+Base tree version: next-20110118
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
