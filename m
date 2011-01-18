@@ -1,105 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3508 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559Ab1AaS6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:58:18 -0500
-Subject: Re: [PATCH 1/1] compat-wireless: Fix ath9k debug log issue.
-From: Joe Perches <joe@perches.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: luis.rodriguez@atheros.com, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <1296473865-18529-1-git-send-email-senthilkumar@atheros.com>
-References: <1296473865-18529-1-git-send-email-senthilkumar@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 10:58:16 -0800
-Message-ID: <1296500296.4131.175.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60078 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903Ab1ARMBm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 07:01:42 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so7110367fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 04:01:41 -0800 (PST)
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/5] mac80211: add NOL functionality
+Date: Tue, 18 Jan 2011 13:01:14 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
+	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
+References: <201101171621.29863.bernhard.schmidt@saxnet.de> <20110117161133.792EB2082@mx.techwires.net> <1295347426.3563.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295347426.3563.8.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201101181301.39953.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 17:07 +0530, Senthil Balasubramanian wrote:
-> ath9k debug logs are not shown as we are using recursive vsnprintf
-> which are supported in kernel 2.6.36 and above. use vprintk for older
-> kernels.
+On Tuesday, January 18, 2011 11:43:46 Johannes Berg wrote:
+> On Mon, 2011-01-17 at 11:05 +0100, Bernhard Schmidt wrote:
+> > NOL is a list of channels on which radar interference has been
+> > detected. Such channels are not allowed to be used for a certain
+> > amount of time.
+> 
+> I don't think this should be implemented in mac80211.
 
-#ifdefs spread around the tree for this sort of
-change are not very nice.
+In cfg80211 then? I'd really prefer to keep all flag-handling together 
+instead of splitting it up between mac80211/userspace.
 
-Perhaps wireless-compat should not be an impediment to
-mainline progress and these sorts of changes should be
-minimized.
- 
-If this is really necessary for backward compatibility,
-I think the %pV could just be removed.
+-- 
+Best regards,
 
-If not, because this style would be used in several
-places, perhaps another macro could be used to hide the
-use of %pV.
+Dipl.-Inf. (FH) Bernhard Schmidt (software development)
 
-Maybe something like:
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-#define PRINTK_VA_LIST(level, prefix, fmt, __va_list)	\
-({							\
- 	struct va_format vaf;				\
- 							\
- 	vaf.fmt = fmt;					\
- 	vaf.va = &__va_list;				\
-							\
-	printk("%s" prefix "%pV", level, &vaf);		\
-})
-#else
-#define PRINTK_VA_LIST(level, prefix, fmt, __va_list)	\
-({							\
-	printk("%s" prefix, level);			\
-	vprintk(fmt, __va_list);			\
-})
-#endif
-
-> +diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-> +index c325202..e3e60d4 100644
-> +--- a/drivers/net/wireless/ath/main.c
-> ++++ b/drivers/net/wireless/ath/main.c
-> +@@ -60,16 +60,23 @@ EXPORT_SYMBOL(ath_rxbuf_alloc);
-> + int ath_printk(const char *level, struct ath_common *common,
-> + 	       const char *fmt, ...)
-> + {
-> ++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-> + 	struct va_format vaf;
-> ++#endif
-> + 	va_list args;
-> + 	int rtn;
-> + 
-> + 	va_start(args, fmt);
-> + 
-> ++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-> + 	vaf.fmt = fmt;
-> + 	vaf.va = &args;
-> + 
-> + 	rtn = printk("%sath: %pV", level, &vaf);
-> ++#else
-> ++	printk("%sath: ", level);
-> ++	rtn = vprintk(fmt, args);
-> ++#endif
-> + 
-> + 	va_end(args);
-> + 
-
-So this would become something like:
-
-int ath_printk(const char *level, struct ath_common *common,
-	       const char *fmt, ...)
-{
-	va_list args;
-	int rtn;
-
-	va_start(args, fmt);
-
-	rtn = PRINTK_VA_LIST(level, "ath: ", fmt, args);
-
-	va_end(args);
-
-	return rtn;
-}
-
-
+saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
+Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
+managing director: Steffen Dreise - county court Chemnitz - HRB 23017
+http://www.saxnet.de
