@@ -1,71 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:38314 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753867Ab1ASJUV (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38398 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab1ARD0g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 04:20:21 -0500
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0960678820
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:20:20 +0900 (JST)
-Subject: [PATCH 3/8] ath5k: Rename ath5k_copy_channels
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Jan 2011 18:20:47 +0900
-Message-ID: <20110119092047.19628.99228.stgit@localhost6.localdomain6>
-In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+	Mon, 17 Jan 2011 22:26:36 -0500
+Received: by iyj18 with SMTP id 18so5274791iyj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 19:26:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
+References: <1295033760-31108-1-git-send-email-bzhao@marvell.com>
+ <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com> <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 18 Jan 2011 14:26:15 +1100
+Message-ID: <AANLkTi=UfKkYcX6CF9bQ84+anr74DKS-tXuH61NASObf@mail.gmail.com>
+Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename ath5k_copy_channels() to ath5k_setup_channels() - nothing is copied
-here.
+On Tue, Jan 18, 2011 at 14:07, Bing Zhao <bzhao@marvell.com> wrote:
+> Hi Julian,
+>
+>> -----Original Message-----
+>> From: Julian Calaby [mailto:julian.calaby@gmail.com]
+>> Sent: Friday, January 14, 2011 6:59 PM
+>> To: Bing Zhao
+>> Cc: linux-wireless@vger.kernel.org; John W. Linville; Johannes Berg; Amitkumar Karwar; Kiran Divekar;
+>> Frank Huang
+>> Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
+>>
+>> On Sat, Jan 15, 2011 at 06:36, Bing Zhao <bzhao@marvell.com> wrote:
+>> > From: Amitkumar Karwar <akarwar@marvell.com>
+>> >
+>> > Some functions have unnecessory NULL check for an input parameter
+>> > because the caller to those functions is already checking the parameter
+>> > for NULL before calling them.
+>>
+>> It may be more readable and efficient to eliminate the NULL checks in
+>> the callers - and adjust the code to inform the callers of the case
+>> where the pointer passed is null and make the callers to properly
+>> handle this case.
+>
+> Thank you very much for your comments.
+>
+> There are still some cases that the NULL check needs to be done at the first place. For example,
+>
+[snip]
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+In this case, dropping the null check is the right thing to do, given
+that you can guarantee that all callers of mwiflex_init_cmd_node()
+will check that the pointer isn't null before calling it.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 0387acb..9e8b1f4 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -256,7 +256,7 @@ static bool ath5k_is_standard_channel(short chan)
- }
- 
- static unsigned int
--ath5k_copy_channels(struct ath5k_hw *ah,
-+ath5k_setup_channels(struct ath5k_hw *ah,
- 		struct ieee80211_channel *channels,
- 		unsigned int mode,
- 		unsigned int max)
-@@ -356,7 +356,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
- 		sband->n_bitrates = 12;
- 
- 		sband->channels = sc->channels;
--		sband->n_channels = ath5k_copy_channels(ah, sband->channels,
-+		sband->n_channels = ath5k_setup_channels(ah, sband->channels,
- 					AR5K_MODE_11G, max_c);
- 
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
-@@ -382,7 +382,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
- 		}
- 
- 		sband->channels = sc->channels;
--		sband->n_channels = ath5k_copy_channels(ah, sband->channels,
-+		sband->n_channels = ath5k_setup_channels(ah, sband->channels,
- 					AR5K_MODE_11B, max_c);
- 
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
-@@ -402,7 +402,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
- 		sband->n_bitrates = 8;
- 
- 		sband->channels = &sc->channels[count_c];
--		sband->n_channels = ath5k_copy_channels(ah, sband->channels,
-+		sband->n_channels = ath5k_setup_channels(ah, sband->channels,
- 					AR5K_MODE_11A, max_c);
- 
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] = sband;
+>> This should also make the driver more robust as failures can be passed
+>> up the stack to places that can deal with them more effectively than
+>> just printing a message.
+>
+> I could have misunderstood your point, however. If so, could you please explain a little bit more on how you would make the changes based on above example?
 
+I was referring more to that fact that functions that appear to do
+things, e.g. mwifiex_init_cmd_node(), don't return anything - hence if
+something fails within them, e.g. being passed a null pointer, they
+can't notify their caller, e.g. mwifiex_prepare_cmd() that something
+has gone wrong.
+
+That said, I haven't looked at the code except through your patches,
+so I can't say if this is a scenario that actually could happen, and
+whether this added functionality is worthwhile.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
