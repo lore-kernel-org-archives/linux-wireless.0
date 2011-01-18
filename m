@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34044 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924Ab1AGCjp convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:41044 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753127Ab1ARBGJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 21:39:45 -0500
-Received: by iyi12 with SMTP id 12so15423979iyi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 18:39:45 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 17 Jan 2011 20:06:09 -0500
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0768152766
+	for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 10:06:07 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Brian Prodoehl <bprodoehl@gmail.com>
+Subject: Re: [PATCH 2] cfg80211: Extend channel to frequency mapping for 802.11j
+Date: Tue, 18 Jan 2011 10:06:17 +0900
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	gwingerde@gmail.com, dcbw@redhat.com,
+	linux-wireless@vger.kernel.org
+References: <20110117043728.8024.13541.stgit@localhost6.localdomain6> <AANLkTinx+wFDFnDrxrBS5T=RqvZgRLxFOeeibrLxorde@mail.gmail.com>
+In-Reply-To: <AANLkTinx+wFDFnDrxrBS5T=RqvZgRLxFOeeibrLxorde@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <19750.31960.215220.239389@gargle.gargle.HOWL>
-Date: Fri, 7 Jan 2011 08:09:20 +0530
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC v2] cfg80211: Add HT BSS attributes
-In-Reply-To: <AANLkTimgd-EbLBe6KHnj5_9Paeg++rp1v8J5s5hy_NOa@mail.gmail.com>
-References: <19749.32067.311517.479374@gargle.gargle.HOWL>
-	<19749.37051.292861.996698@gargle.gargle.HOWL>
-	<19750.24410.495583.789895@gargle.gargle.HOWL>
-	<AANLkTintPXzmiGnjEQvXUO3hVCW9J4tGn=MookTx1qBM@mail.gmail.com>
-	<AANLkTi=ZcigYLqqmhHc638_AxSODWrVrTV5KELRws3XX@mail.gmail.com>
-	<19750.30510.548719.848168@gargle.gargle.HOWL>
-	<AANLkTimgd-EbLBe6KHnj5_9Paeg++rp1v8J5s5hy_NOa@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101181006.17322.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Halperin wrote:
-> On Thu, Jan 6, 2011 at 6:15 PM, Sujith <m.sujith@gmail.com> wrote:
-> > Daniel Halperin wrote:
-> >> Yeah, me too.  Isn't greenfield mode (whether there are legacy devices
-> >> around) part of the operating capabilities and should be supported by
-> >> hostapd?
-> >
-> > Yes, hostapd does check if there are non-GF stations in the BSS and updates
-> > the HT operation mode parameters. But the nl80211 interface hook is currently
-> > not implemented.
-> >
+On Tue January 18 2011 05:17:31 Brian Prodoehl wrote:
+> Yeah, looks good.  Is it worth noting that none of the drivers
+> actually support the 802.11j channels yet?  
+
+I am already using it locally in ath5k. I have it working in 4.9GHz, but i'm 
+not exactly sure in which cases i can enable the 4.9GHz channels. I will send 
+patches after the mac80211 part got merged.
+
+> Not sure of the format of
+> follow-up s-o-b's, so here goes...
 > 
-> right.. so don't we want this patch? :)  Sorry if I'm being obtuse
+> Signed-off-by: Brian Prodoehl <bprodoehl@gmail.com>
 
-The Greenfield status is part of opmode (see operation_mode in struct ieee80211_ht_info).
-This is already handled by mac80211 through NL80211_ATTR_BSS_HT_OPMODE for AP mode.
+Not sure, either, but i hope John will pick it up. Thanks!
 
-Sujith
+bruno
