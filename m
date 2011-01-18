@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2970 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751540Ab1AETkL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 14:40:11 -0500
-Subject: Re: [PATCH 1/3] ath5k: move nohwcrypt to ath_common structure
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	ath9k-devel@venema.h4ckr.net
-In-Reply-To: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
-References: <1294255328-14322-1-git-send-email-linville@tuxdriver.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:51618 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab1ARMpg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 07:45:36 -0500
+Subject: [PATCH] mac80211: don't return beacons when mesh is disabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 05 Jan 2011 11:40:09 -0800
-Message-ID: <1294256409.12561.8.camel@Joe-Laptop>
+Date: Tue, 18 Jan 2011 13:45:32 +0100
+Message-ID: <1295354732.3563.18.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-05 at 14:22 -0500, John W. Linville wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-[]
-> +	bool nohwcrypt;
+When mesh is disabled, mac80211 was returning
+beacons with an empty mesh ID. That isn't
+desirable, even if drivers shouldn't be trying
+to get beacons to start with.
 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> -int modparam_nohwcrypt;
-> +static int modparam_nohwcrypt;
->  module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-bool/int matching?
-
-Perhaps the modparam_nohwcrypts should be
-bool and S_IRUGO
-
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c 
-[]
-> -int modparam_nohwcrypt;
-> +static int modparam_nohwcrypt;
->  module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
-
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c 
-[]
-> -int htc_modparam_nohwcrypt;
-> -module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
-> +static int modparam_nohwcrypt;
-> +module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
+--- wireless-testing.orig/net/mac80211/tx.c	2011-01-13 12:07:19.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2011-01-13 12:07:26.000000000 +0100
+@@ -2299,6 +2299,11 @@ struct sk_buff *ieee80211_beacon_get_tim
+ 		struct ieee80211_mgmt *mgmt;
+ 		u8 *pos;
+ 
++#ifdef CONFIG_MAC80211_MESH
++		if (!sdata->u.mesh.mesh_id_len)
++			goto out;
++#endif
++
+ 		/* headroom, head length, tail length and maximum TIM length */
+ 		skb = dev_alloc_skb(local->tx_headroom + 400 +
+ 				sdata->u.mesh.vendor_ie_len);
 
 
