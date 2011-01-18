@@ -1,57 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51176 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab1APFmT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 00:42:19 -0500
-Received: by wwa36 with SMTP id 36so4401170wwa.1
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 21:42:18 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:33588 "HELO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753476Ab1ARDKr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Jan 2011 22:10:47 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 00/10] wl12xx: AP-mode per link PSM
-Date: Sun, 16 Jan 2011 07:42:04 +0200
-Message-Id: <1295156534-4178-1-git-send-email-arik@wizery.com>
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 17 Jan 2011 19:07:39 -0800
+Subject: RE: [PATCH] mwifiex: remove duplicated NULL checks
+Message-ID: <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
+References: <1295033760-31108-1-git-send-email-bzhao@marvell.com>
+ <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com>
+In-Reply-To: <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset introduces per-link PSM for AP-mode. The PS status of each
-link is updated from FW.
-The wl12xx concept of PSM is different from the mac80211 one - some data
-must remain in FW for a link in PSM since the TIM is updated automatically
-by FW.
-Exported functions to manually toggle PSM in mac80211 are added
-to bridge this gap.
+Hi Julian,
 
-We set up a skb-queue per link which allows for a cleaner link
-disconnection and prepares the code for regulating each link separately.
+> -----Original Message-----
+> From: Julian Calaby [mailto:julian.calaby@gmail.com]
+> Sent: Friday, January 14, 2011 6:59 PM
+> To: Bing Zhao
+> Cc: linux-wireless@vger.kernel.org; John W. Linville; Johannes Berg; Amitkumar Karwar; Kiran Divekar;
+> Frank Huang
+> Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
+> 
+> On Sat, Jan 15, 2011 at 06:36, Bing Zhao <bzhao@marvell.com> wrote:
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > Some functions have unnecessory NULL check for an input parameter
+> > because the caller to those functions is already checking the parameter
+> > for NULL before calling them.
+> 
+> It may be more readable and efficient to eliminate the NULL checks in
+> the callers - and adjust the code to inform the callers of the case
+> where the pointer passed is null and make the callers to properly
+> handle this case.
 
-A few other AP-mode related small bug fixes and enchancements are included.
+Thank you very much for your comments.
 
-Arik Nemtsov (10):
-  wl12xx: fix potential race condition with TX queue watermark
-  wl12xx: AP-mode - fix race condition on sta connection
-  wl12xx: AP-mode - TX queue per link in AC
-  mac80211: do not calc frame duration when using HW rate-control
-  wl12xx: report invalid TX rate when returning non-TX-ed skbs
-  mac80211: add HW flag for disabling auto link-PS in AP mode
-  wl12xx: AP-mode - support HW based link PS monitoring
-  wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
-  wl12xx: AP-mode - count free FW TX blocks per link
-  wl12xx: AP-mode - management of links in PS-mode
+There are still some cases that the NULL check needs to be done at the first place. For example,
 
- drivers/net/wireless/wl12xx/acx.c    |   25 ++++
- drivers/net/wireless/wl12xx/acx.h    |    9 ++
- drivers/net/wireless/wl12xx/main.c   |  125 +++++++++++++++----
- drivers/net/wireless/wl12xx/ps.c     |   78 ++++++++++++
- drivers/net/wireless/wl12xx/ps.h     |    2 +
- drivers/net/wireless/wl12xx/tx.c     |  232 +++++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/tx.h     |    3 +
- drivers/net/wireless/wl12xx/wl12xx.h |   37 ++++++
- include/net/mac80211.h               |   38 ++++++
- net/mac80211/rx.c                    |   19 +++-
- net/mac80211/tx.c                    |    3 +-
- 11 files changed, 512 insertions(+), 59 deletions(-)
 
+/* the caller function */
+enum mwifiex_status mwifiex_prepare_cmd(struct mwifiex_private *priv,
+                u16 cmd_no, u16 cmd_action, u32 cmd_oid,
+		    void *ioctl_buf, void *data_buf)
+
+	......
+
+      cmd_node = mwifiex_get_cmd_node(adapter);
+
+      if (cmd_node == NULL) {
+              PRINTM(MERROR, "PREP_CMD: No free cmd node\n");
+              ret = MWIFIEX_STATUS_FAILURE;
+              goto done;
+      }
+	/*
+	  Here the cmd_node is allocated and the NULL check is preformed
+        immediately. If the pointer is NULL then the error code is
+	  returned for proper handling.
+	*/
+
+
+	/*
+	  Now cmd_node is passed to the callee as a parameter
+ 	*/
+      mwifiex_init_cmd_node(priv, cmd_node, cmd_oid, ioctl_buf,
+                              data_buf);
+
+	......
+}
+
+/* the callee function */
+static void mwifiex_init_cmd_node(struct mwifiex_private *priv,
+                      struct cmd_ctrl_node *cmd_node,
+                      u32 cmd_oid, void *ioctl_buf, void *data_buf)
+{
+      ENTER();
+
+-	if (cmd_node == NULL) {
+-		LEAVE();
+-		return;
+-	}
+-
+	/*
+	  Here it is redundant to check it again since the cmd_node
+        has already been validated by the caller. 
+	*/
+
+      cmd_node->priv = priv;
+      cmd_node->cmd_oid = cmd_oid;
+      cmd_node->ioctl_buf = ioctl_buf;
+
+	......
+}
+
+> 
+> This should also make the driver more robust as failures can be passed
+> up the stack to places that can deal with them more effectively than
+> just printing a message.
+
+I could have misunderstood your point, however. If so, could you please explain a little bit more on how you would make the changes based on above example?
+
+Thanks in advance for your help!
+
+Bing
+
+> 
+> Thanks,
+> 
+> --
+> 
+> Julian Calaby
+> 
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
