@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42685 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50171 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211Ab1AWKMZ (ORCPT
+	with ESMTP id S1750900Ab1ARNvW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 05:12:25 -0500
-Subject: Re: [PATCH] mac80211: use DECLARE_EVENT_CLASS
+	Tue, 18 Jan 2011 08:51:22 -0500
+Subject: Re: [RFC] mac80211: reset connection poll on receiving unicast
+ data frames
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110121212447.GB7092@tuxdriver.com>
-References: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
-	 <20110121212447.GB7092@tuxdriver.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1295358285-9336-1-git-send-email-rmanoharan@atheros.com>
+References: <1295358285-9336-1-git-send-email-rmanoharan@atheros.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 23 Jan 2011 11:12:23 +0100
-Message-ID: <1295777543.3639.29.camel@jlt3.sipsolutions.net>
+Date: Tue, 18 Jan 2011 14:51:20 +0100
+Message-ID: <1295358680.3563.21.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-01-21 at 16:24 -0500, John W. Linville wrote:
-> On Wed, Jan 19, 2011 at 12:50:59PM +0100, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > For events that include only the local struct as
-> > their parameter, we can use DECLARE_EVENT_CLASS
-> > and save quite some binary size across segments
-> > as well lines of code.
-> > 
-> >    text	   data	    bss	    dec	    hex	filename
-> >  375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
-> >  367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
-> >   -8272   -1408       0   -9680   -25d0 delta
-> > 
-> > Some more tracepoints with identical arguments
-> > could be combined like this but for now this is
-> > the one that benefits most.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> Is this patch complete?  It seems to break the build with undefined symbols...
+On Tue, 2011-01-18 at 19:14 +0530, Rajkumar Manoharan wrote:
+> In noisy channel conditions, some APs do not reply to probe
+> requests which results in STA disconnection. It is perfectly
+> fine to reset the connection polling if unicast frames are
+> received from that AP properly.
 
-Yes, I believe it is, I'll resend the version I just compile tested
-against wireless-testing.
+I'm not convinced. We often have no trouble hearing the AP but the AP
+isn't hearing us because sensitivity is different etc.
 
 johannes
 
