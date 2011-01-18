@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:45545 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752647Ab1AZUDc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56967 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab1ARKjw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 15:03:32 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 359135400F2
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 15:05:40 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110126200331.8DB8140F97@repository3.orbit-lab.org>
-Date: Wed, 26 Jan 2011 15:03:31 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 18 Jan 2011 05:39:52 -0500
+Subject: Re: [PATCH 1/5] mac80211: add DFS related channel flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
+	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
+In-Reply-To: <20110117161133.66B54207E@mx.techwires.net>
+References: <201101171621.29863.bernhard.schmidt@saxnet.de>
+	 <20110117161133.66B54207E@mx.techwires.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Jan 2011 11:40:36 +0100
+Message-ID: <1295347236.3563.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2011-01-17 at 09:31 +0100, Bernhard Schmidt wrote:
+> Before a radar channel can be used, a full CAC has be done, the
+> IEEE80211_CHAN_RADAR_CLEAR flags indicates that this has been done. If either
+> during CAC or in-service monitoring interference is detected, the channel is
+> added to NOL and marked with IEEE80211_CHAN_RADAR_INTERFERENCE.
 
-compat-wireless code metrics
+I'm not sure about this -- shouldn't that be global information? If one
+device in the system records a radar on the channel, it surely applies
+to other devices as well, even if they are hot-plugged after the radar
+was found?
 
-    782984 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1982 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1955 - % of crap code
+johannes
 
-Base tree: linux-next.git
-Base tree version: next-20110121
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
