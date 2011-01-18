@@ -1,28 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50258 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080Ab1AQR6c (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:46957 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753190Ab1ARTX7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 12:58:32 -0500
-Subject: Re: [PATCH] wl12xx: free firmware after booting the chip
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1295284675-30029-1-git-send-email-eliad@wizery.com>
-References: <1295284675-30029-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 17 Jan 2011 18:58:28 +0100
-Message-ID: <1295287108.3726.49.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 18 Jan 2011 14:23:59 -0500
+Received: by qyk12 with SMTP id 12so7383289qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 11:23:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4D35E5FD.8030804@gmail.com>
+References: <4D35E5FD.8030804@gmail.com>
+Date: Tue, 18 Jan 2011 20:23:57 +0100
+Message-ID: <AANLkTinS784Pw27axvMty578tK=gmvVoFGp6iUQNL7V3@mail.gmail.com>
+Subject: Re: Does linux wireless support TL-WN861N
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: JD <jd1008@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 19:17 +0200, Eliad Peller wrote:
-> There is no need to save the fw in memory after it has been
-> uploaded to the chip.
+2011/1/18 JD <jd1008@gmail.com>:
+> TP-Link TL-WN861N
+> see
+> http://www.tp-link.com/products/productDetails.asp?class=&content=spe&pmodel=TL-WN861N
 
-Are you sure it's not needed for resume? At which point userspace isn't
-up so you can't load it.
+https://forum.openwrt.org/viewtopic.php?id=25431
+http://www.wikidevi.com/wiki/TP-LINK_TL-WN861N_v2
 
-johannes
+Both sources tell about AR9223 chipset, but I is not mentioned on
+http://wireless.kernel.org/en/users/Drivers/ath9k
 
+Maybe someone from ath9k ML knows it? Or try to Google it.
+
+-- 
+Rafał
