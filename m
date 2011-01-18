@@ -1,78 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22142 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754478Ab1AUIdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 03:33:31 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 00:33:13 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: clean up enums and unused macros
-Date: Fri, 21 Jan 2011 14:03:24 +0530
-Message-ID: <1295598804-2043-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:36944 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab1ARMwZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 07:52:25 -0500
+Subject: [PATCH] mac80211: allow advertising correct maximum aggregate size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Jan 2011 13:52:23 +0100
+Message-ID: <1295355143.3563.20.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Remove unused macros and cleanup buffer_type enumeration
+Currently, mac80211 always advertises that it may send
+up to 64 subframes in an aggregate. This is fine, since
+it's the max, but might as well be set to zero instead
+since it doesn't have any information.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+However, drivers might have that information, so allow
+them to set a variable giving it, which will then be
+used. The default of zero will be fine since to the
+peer that means we don't know and it will just use its
+own limit for the buffer size.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    7 +++----
- drivers/net/wireless/ath/ath9k/xmit.c  |    2 --
- 2 files changed, 3 insertions(+), 6 deletions(-)
+This will apply only after Luca's patch
+"mac80211: add hw configuration for max ampdu buffer size"
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 6e22135..818b085 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -95,9 +95,9 @@ struct ath_config {
-  * @BUF_XRETRY: To denote excessive retries of the buffer
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/agg-tx.c  |    3 ++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2011-01-18 13:49:49.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2011-01-18 13:50:20.000000000 +0100
+@@ -1154,6 +1154,10 @@ enum ieee80211_hw_flags {
+  *	This is only relevant if the device has restrictions on the
+  *	number of subframes, if it relies on mac80211 to do reordering
+  *	it shouldn't be set.
++ *
++ * @max_tx_aggregation_subframes: maximum number of subframes in an
++ *	aggregate an HT driver will transmit, used by the peer as a
++ *	hint to size its reorder buffer.
   */
- enum buffer_type {
--	BUF_AMPDU		= BIT(2),
--	BUF_AGGR		= BIT(3),
--	BUF_XRETRY		= BIT(5),
-+	BUF_AMPDU		= BIT(0),
-+	BUF_AGGR		= BIT(1),
-+	BUF_XRETRY		= BIT(2),
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1173,6 +1177,7 @@ struct ieee80211_hw {
+ 	u8 max_report_rates;
+ 	u8 max_rate_tries;
+ 	u8 max_rx_aggregation_subframes;
++	u8 max_tx_aggregation_subframes;
  };
  
- #define bf_isampdu(bf)		(bf->bf_state.bf_type & BUF_AMPDU)
-@@ -137,7 +137,6 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
- 	 (((_tid) == 4) || ((_tid) == 5)) ? WME_AC_VI :	\
- 	 WME_AC_VO)
+ /**
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2011-01-18 13:49:49.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2011-01-18 13:50:20.000000000 +0100
+@@ -342,7 +342,8 @@ void ieee80211_tx_ba_session_handle_star
+ 	/* send AddBA request */
+ 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+ 				     tid_tx->dialog_token, start_seq_num,
+-				     0x40, tid_tx->timeout);
++				     local->hw.max_tx_aggregation_subframes,
++				     tid_tx->timeout);
+ }
  
--#define ADDBA_EXCHANGE_ATTEMPTS    10
- #define ATH_AGGR_DELIM_SZ          4
- #define ATH_AGGR_MINPLEN           256 /* in bytes, minimum packet length */
- /* number of delimiters for encryption padding */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index ad569e1..59ccecf 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -19,7 +19,6 @@
- 
- #define BITS_PER_BYTE           8
- #define OFDM_PLCP_BITS          22
--#define HT_RC_2_MCS(_rc)        ((_rc) & 0x1f)
- #define HT_RC_2_STREAMS(_rc)    ((((_rc) & 0x78) >> 3) + 1)
- #define L_STF                   8
- #define L_LTF                   8
-@@ -32,7 +31,6 @@
- #define NUM_SYMBOLS_PER_USEC(_usec) (_usec >> 2)
- #define NUM_SYMBOLS_PER_USEC_HALFGI(_usec) (((_usec*5)-4)/18)
- 
--#define OFDM_SIFS_TIME    	    16
- 
- static u16 bits_per_symbol[][2] = {
- 	/* 20MHz 40MHz */
--- 
-1.7.0.4
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+
 
