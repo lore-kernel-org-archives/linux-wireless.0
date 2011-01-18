@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:52486 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752124Ab1AXWNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 17:13:10 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0OMD94X030174
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:13:10 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0OMD9O9011958
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:13:09 -0600 (CST)
-Received: from dlee73.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OMD96q000163
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:13:09 -0600 (CST)
-Received: from [172.24.68.2] (h68-2.vpn.ti.com [172.24.68.2])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OMD70A014022	for
- <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:13:08 -0600
-Subject: wl12xx tree rebased
-From: Luciano Coelho <coelho@ti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:57546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575Ab1ARPYA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 10:24:00 -0500
+Subject: Re: intermittent eap authentication failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chuck Crisler <ccrisler@vgocom.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <48A27D1459A9493C8A16D0D6308A5FB1@ChuckPC>
+References: <D323CFEF4DEC4E18AFF56742F78C16B6@ChuckPC>
+	 <1295347932.3563.13.camel@jlt3.sipsolutions.net>
+	 <BB274B92115347F9A8E250DEF0C2B732@ChuckPC>
+	 <1F9D19D1999A4D7885D0A4DD7BEBCEE8@ChuckPC>
+	 <1295362622.3563.23.camel@jlt3.sipsolutions.net>
+	 <48A27D1459A9493C8A16D0D6308A5FB1@ChuckPC>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 25 Jan 2011 00:13:19 +0200
-Message-ID: <1295907199.4430.15.camel@pimenta>
-MIME-Version: 1.0
+Date: Tue, 18 Jan 2011 16:23:58 +0100
+Message-ID: <1295364238.3563.24.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2011-01-18 at 10:21 -0500, Chuck Crisler wrote:
+> What is the reason that the design calls for a scan in response to a session 
+> timeout? A session timeout doesn't happen because of a roam, so the original 
+> AP is probably still good. Why scan?
 
-I have rebased the wl12xx master and wl12xx-next branches with latest
-wireless-testing and wireless-next, respectively, as a base.
+I don't think there's any design here, and in any case that's
+wpa_supplicant's doing. :)
 
-Please update your local trees.
-
--- 
-Cheers,
-Luca.
+johannes
 
