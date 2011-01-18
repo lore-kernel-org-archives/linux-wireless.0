@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:44151 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752890Ab1AYO6X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 09:58:23 -0500
-Date: Tue, 25 Jan 2011 19:41:05 +0800
-From: Greg KH <gregkh@suse.de>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] staging: brcm80211: bugfix for softmac crash on multi
- cpu configurations
-Message-ID: <20110125114105.GA15568@suse.de>
-References: <1295952716-16161-1-git-send-email-rvossen@broadcom.com>
- <20110125111813.GA14763@suse.de>
- <400C43189542CE41BC0A5B252FC90136952F08D15D@SJEXCHCCR02.corp.ad.broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <400C43189542CE41BC0A5B252FC90136952F08D15D@SJEXCHCCR02.corp.ad.broadcom.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:4695 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865Ab1ARNGZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 08:06:25 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, br1@einfach.org
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: fix locking in tx_complete_poll_work
+Date: Tue, 18 Jan 2011 08:06:43 -0500
+Message-Id: <1295356003-1425-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 25, 2011 at 03:24:38AM -0800, Roland Vossen wrote:
-> >Should this also go to the .37 stable kernel tree?
-> 
-> Yes it should. Should I send you a patch for the .37 stable kernel tree ?
+ath5k_reset must be called with sc->lock.  Since the tx queue
+watchdog runs in a workqueue and accesses sc, it's appropriate
+to just take the lock over the whole function.
 
-Not at the moment, I'll just mark it for the stable tree, and if it
-doesn't apply there properly, I'll email you asking for an updated
-version.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-For more details about the stable kernel process, see the file,
-Documentation/stable_kernel_rules.txt
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 019a74d..09ae4ef 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2294,6 +2294,8 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+ 	int i;
+ 	bool needreset = false;
+ 
++	mutex_lock(&sc->lock);
++
+ 	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++) {
+ 		if (sc->txqs[i].setup) {
+ 			txq = &sc->txqs[i];
+@@ -2321,6 +2323,8 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+ 		ath5k_reset(sc, NULL, true);
+ 	}
+ 
++	mutex_unlock(&sc->lock);
++
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+ 		msecs_to_jiffies(ATH5K_TX_COMPLETE_POLL_INT));
+ }
+-- 
+1.7.1.1
 
-thanks,
 
-greg k-h
