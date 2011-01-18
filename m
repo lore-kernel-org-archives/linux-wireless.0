@@ -1,102 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:50302 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754Ab1ALFLU (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38850 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab1ARTmM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 00:11:20 -0500
-Date: Tue, 11 Jan 2011 23:11:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] mac80211: Fix mixed usage of spin_lock and
- spin_lock_irqsave on same lock
-Message-ID: <4d2d3810.F6Slpvbu6tV67Lp2%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 18 Jan 2011 14:42:12 -0500
+Received: by wyb28 with SMTP id 28so6495367wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 11:42:11 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] wl12xx: Add channel 14 to list of supported 2ghz channels
+Date: Tue, 18 Jan 2011 21:39:52 +0200
+Message-Id: <1295379592-6223-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My system has logged the following locking problem:
+Channel 14 is only supported in Japan (JP country code in).
+The FW limits tranmissions to CCK only on this channel.
 
-==================================================================
- [ INFO: inconsistent lock state ]
- 2.6.37-Linus-03737-g0c21e3a-dirty #251
- ---------------------------------
- inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
- takes:
-  (&(&list->lock)->rlock#5){?.-...}, at: skb_queue_tail+0x26/0x60
- {HARDIRQ-ON-W} state was registered at:
- __lock_acquire+0xb25/0x1cc0
- lock_acquire+0x93/0x130
- _raw_spin_lock+0x2c/0x40
- ieee80211_rx_handlers+0x27/0x1c80 [mac80211]
- ieee80211_prepare_and_rx_handle+0x238/0x900 [mac80211]
- ieee80211_rx+0x31a/0x940 [mac80211]
- ieee80211_tasklet_handler+0xc1/0xd0 [mac80211]
- tasklet_action+0x73/0x120
- __do_softirq+0xce/0x200
+Tested in both STA and AP modes to work correctly.
 
-==================================================================
-
-The reason is that ieee80211_rx_handlers() locks rx->local->rx_skb_queue.lock
-using spin_lock(), but skb_queue_tail() locks the same entity with
-spin_lock_irqsave().
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Johannes,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 9076555..59582ab 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2771,6 +2771,7 @@ static struct ieee80211_channel wl1271_channels[] = {
+ 	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
+ 	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
+ 	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
++	{ .hw_value = 14, .center_freq = 2484, .max_power = 25 },
+ };
+ 
+ /* mapping to indexes for wl1271_rates */
+-- 
+1.7.1
 
-I think this is correct. At least the lockdep warning goes away on my
-machine.
-
-Larry
----
-
-Index: linux-2.6/net/mac80211/rx.c
-===================================================================
---- linux-2.6.orig/net/mac80211/rx.c
-+++ linux-2.6/net/mac80211/rx.c
-@@ -2465,6 +2465,7 @@ static void ieee80211_rx_handlers(struct
- {
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
- 	struct sk_buff *skb;
-+	unsigned long flags;
- 
- #define CALL_RXH(rxh)			\
- 	do {				\
-@@ -2473,14 +2474,14 @@ static void ieee80211_rx_handlers(struct
- 			goto rxh_next;  \
- 	} while (0);
- 
--	spin_lock(&rx->local->rx_skb_queue.lock);
-+	spin_lock_irqsave(&rx->local->rx_skb_queue.lock, flags);
- 	if (rx->local->running_rx_handler)
- 		goto unlock;
- 
- 	rx->local->running_rx_handler = true;
- 
- 	while ((skb = __skb_dequeue(&rx->local->rx_skb_queue))) {
--		spin_unlock(&rx->local->rx_skb_queue.lock);
-+		spin_unlock_irqrestore(&rx->local->rx_skb_queue.lock, flags);
- 
- 		/*
- 		 * all the other fields are valid across frames
-@@ -2513,14 +2514,14 @@ static void ieee80211_rx_handlers(struct
- 
-  rxh_next:
- 		ieee80211_rx_handlers_result(rx, res);
--		spin_lock(&rx->local->rx_skb_queue.lock);
-+		spin_lock_irqsave(&rx->local->rx_skb_queue.lock, flags);
- #undef CALL_RXH
- 	}
- 
- 	rx->local->running_rx_handler = false;
- 
-  unlock:
--	spin_unlock(&rx->local->rx_skb_queue.lock);
-+	spin_unlock_irqrestore(&rx->local->rx_skb_queue.lock, flags);
- }
- 
- static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)
