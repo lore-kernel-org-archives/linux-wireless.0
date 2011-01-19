@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432Ab1AaLQt (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60443 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753908Ab1ASLOm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:16:49 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:49 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 05/10] wl12xx: report invalid TX rate when returning non-TX-ed skbs
-Date: Mon, 31 Jan 2011 13:16:24 +0200
-Message-Id: <1296472589-26401-6-git-send-email-arik@wizery.com>
-In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
+	Wed, 19 Jan 2011 06:14:42 -0500
+Received: by qwa26 with SMTP id 26so702234qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 03:14:41 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110119092057.19628.9296.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+	<20110119092057.19628.9296.stgit@localhost6.localdomain6>
+Date: Wed, 19 Jan 2011 06:14:41 -0500
+Message-ID: <AANLkTi=2crGZhucAhNHU-iaOkRamg33tQo_-K5h9d64v@mail.gmail.com>
+Subject: Re: [PATCH 5/8] ath5k: Add 802.11j 4.9GHz channels to allowed channels
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Report a TX rate idx of -1 and count 0 when returning untransmitted
-skbs to mac80211 using ieee80211_tx_status(). Otherwise mac80211
-tries to use the returned (essentially garbage) status.
+On Wed, Jan 19, 2011 at 4:20 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Add the 802.11j (20MHz channel width) channels to the allowed channels. This
+> still does not enable 802.11j in ath5k since these frequencies are out of the
+> configured range. A later patch will deal with that.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/tx.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+> -static bool ath5k_is_standard_channel(short chan)
+> +static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
+>  {
+> -       return ((chan <= 14) ||
+> -               /* UNII 1,2 */
+> -               ((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
+> +       if (band == IEEE80211_BAND_2GHZ && chan <= 14)
+> +               return true;
 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index c658821..71d964c 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -628,10 +628,14 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
- 	struct sk_buff *skb;
- 	int i, total = 0;
- 	unsigned long flags;
-+	struct ieee80211_tx_info *info;
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
- 			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
-+			info = IEEE80211_SKB_CB(skb);
-+			info->status.rates[0].idx = -1;
-+			info->status.rates[0].count = 0;
- 			ieee80211_tx_status(wl->hw, skb);
- 			total++;
- 		}
-@@ -649,6 +653,7 @@ void wl1271_tx_reset(struct wl1271 *wl)
- {
- 	int i;
- 	struct sk_buff *skb;
-+	struct ieee80211_tx_info *info;
- 
- 	/* TX failure */
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-@@ -661,6 +666,9 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
- 				wl1271_debug(DEBUG_TX, "freeing skb 0x%p",
- 					     skb);
-+				info = IEEE80211_SKB_CB(skb);
-+				info->status.rates[0].idx = -1;
-+				info->status.rates[0].count = 0;
- 				ieee80211_tx_status(wl->hw, skb);
- 			}
- 		}
-@@ -679,6 +687,9 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 			skb = wl->tx_frames[i];
- 			wl1271_free_tx_id(wl, i);
- 			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
-+			info = IEEE80211_SKB_CB(skb);
-+			info->status.rates[0].idx = -1;
-+			info->status.rates[0].count = 0;
- 			ieee80211_tx_status(wl->hw, skb);
- 		}
- }
+This routine is only used to post-filter the channels so I don't
+think we need to check the band.  It's mostly just to weed out all
+of the 10 mhz-spaced 5 ghz channels we used to export.
+
+> -               ((chan & 3) == 1 && chan >= 149 && chan <= 165));
+> +               ((chan & 3) == 1 && chan >= 149 && chan <= 165) ||
+> +               /* 802.11j 5.030-5.080 GHz (20MHz) */
+> +               (chan == 8 || chan == 12 || chan == 16) ||
+
+Ok I was also going to complain that some channel numbers < 14 were
+valid in the 5 ghz band but you know that :)
+
 -- 
-1.7.1
-
+Bob Copeland %% www.bobcopeland.com
