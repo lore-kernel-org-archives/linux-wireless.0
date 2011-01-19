@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30374 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755905Ab1AaPDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 10:03:17 -0500
-Subject: Re: [PATCH 7/8] iwlagn: remove
- CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110131112916.GA22367@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-	 <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
-	 <1296231817.7388.18.camel@wwguy-ubuntu> <20110128164136.GF2452@redhat.com>
-	 <1296256821.8832.1.camel@wwguy-ubuntu> <20110131094624.GA20641@redhat.com>
-	 <AANLkTinBneG0nqGFt=mnP0-ZSdLGzdxhfYpyo62WYJQA@mail.gmail.com>
-	 <20110131112916.GA22367@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 07:01:41 -0800
-Message-ID: <1296486101.10026.7.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:28696 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753636Ab1ASLw1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 06:52:27 -0500
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0706147946
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 20:52:26 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 5/8] ath5k: Add 802.11j 4.9GHz channels to allowed channels
+Date: Wed, 19 Jan 2011 20:52:53 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6> <20110119092057.19628.9296.stgit@localhost6.localdomain6> <AANLkTi=2crGZhucAhNHU-iaOkRamg33tQo_-K5h9d64v@mail.gmail.com>
+In-Reply-To: <AANLkTi=2crGZhucAhNHU-iaOkRamg33tQo_-K5h9d64v@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101192052.53702.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 03:29 -0800, Stanislaw Gruszka wrote:
-> On Mon, Jan 31, 2011 at 11:23:33AM +0100, Rafał Miłecki wrote:
-> > >> > Not really. I believe someone who download a tarball, unpack it and copy
-> > >> > files to /lib/firmware is pretty much aware what he/she is doing.
-> > >> >
-> > >> Agree whoever download the tarball know what he/she is doing, but I am
-> > >> not fully agree the driver always use experimental uCode if it is in the
-> > >> firmware directory
-> > >
-> > > I do not understand what for you need that, but ok, I can live with it.
-> > >
-> > > John, please skip this patch.
+On Wed January 19 2011 20:14:41 Bob Copeland wrote:
+> On Wed, Jan 19, 2011 at 4:20 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > Add the 802.11j (20MHz channel width) channels to the allowed channels.
+> > This still does not enable 802.11j in ath5k since these frequencies are
+> > out of the configured range. A later patch will deal with that.
 > > 
-> > Maybe make it module parameter? Like use_experimental_fw, default to 0?
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > ---
+> > 
+> > -static bool ath5k_is_standard_channel(short chan)
+> > +static bool ath5k_is_standard_channel(short chan, enum ieee80211_band
+> > band) {
+> > -       return ((chan <= 14) ||
+> > -               /* UNII 1,2 */
+> > -               ((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
+> > +       if (band == IEEE80211_BAND_2GHZ && chan <= 14)
+> > +               return true;
 > 
-> For me that even worse. Now I can provide users with kernel binaries with
-> enabled experimental fw support. Telling them to install firmware is
-> enough, to get test results.
+> This routine is only used to post-filter the channels so I don't
+> think we need to check the band.  It's mostly just to weed out all
+> of the 10 mhz-spaced 5 ghz channels we used to export.
 > 
-> With module option:
+> > -               ((chan & 3) == 1 && chan >= 149 && chan <= 165));
+> > +               ((chan & 3) == 1 && chan >= 149 && chan <= 165) ||
+> > +               /* 802.11j 5.030-5.080 GHz (20MHz) */
+> > +               (chan == 8 || chan == 12 || chan == 16) ||
 > 
-> sgruszka: download exp firmware and load module with use_experimental_fw=1
-> user: ok, but how to do this 
-> sgruszka: echo "options iwlagn use_experiental_fw=1" >> /etc/modprobe.d/iwlwifi.conf
-> sgruszka: and restart the system
-> user: hmm, I have error
-> user: bash: /etc/modprobe.d/iwlwifi.conf: Permission denied 
-> sgruszka: login as root
-> user: ok I did, but new firmware did not help me
-> sgruszka: show me dmesg please
-> user: dmesg
-> sgruszka: old firmware is used
-> sgruszka: gash, I made a typo, it should be
-> sgruszka: echo "options iwlagn use_experimental_fw=1" >> /etc/modprobe.d/iwlwifi.conf
-> sgruszka: grrrrrrr
-> 
-there is a "ucode_alternative" module parameter already there which
-doing the similar thing
+> Ok I was also going to complain that some channel numbers < 14 were
+> valid in the 5 ghz band but you know that :)
 
-I agree there will be mistake, but whoever want to use the experimental
-uCode should know what they are doing, otherwise, regular uCode
-works.right?
+That's also the reason why we need to know the band:
 
-Wey
+in 2GHz all channels < 14 are allowed.
+in 5GHz only a few.
 
+Thanks for your review!
 
+bruno
