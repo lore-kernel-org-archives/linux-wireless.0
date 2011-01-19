@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10254 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755737Ab1AaMCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 07:02:05 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] iwlwifi: correct frequency settings
-Date: Mon, 31 Jan 2011 13:01:35 +0100
-Message-Id: <1296475295-5420-1-git-send-email-sgruszka@redhat.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:1478 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753795Ab1ASJUs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 04:20:48 -0500
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0122248846
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:20:46 +0900 (JST)
+Subject: [PATCH 8/8] ath5k: Remove redundant sc->curband
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Jan 2011 18:21:13 +0900
+Message-ID: <20110119092113.19628.33322.stgit@localhost6.localdomain6>
+In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After commit 59eb21a6504731fc16db4cf9463065dd61093e08
-"cfg80211: Extend channel to frequency mapping for 802.11j"
-we use uninitialized sband->band when assign channel frequencies, what
-results that 5GHz channels have erroneous (zero) center_freq value.
+Remove sc->curband because the band is already stored in the current channel.
 
-Patch fixes problem and simplifies code a bit.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |   11 ++++-------
+ drivers/net/wireless/ath/ath5k/base.h |    2 --
+ 2 files changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 92724cb..4ad8938 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -219,16 +219,12 @@ int iwlcore_init_geos(struct iwl_priv *priv)
- 		if (!is_channel_valid(ch))
- 			continue;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a00cc11..0e39ee8 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -551,7 +551,7 @@ ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
+ 			"hw_rix out of bounds: %x\n", hw_rix))
+ 		return 0;
  
--		if (is_channel_a_band(ch))
--			sband =  &priv->bands[IEEE80211_BAND_5GHZ];
--		else
--			sband =  &priv->bands[IEEE80211_BAND_2GHZ];
-+		sband =  &priv->bands[ch->band];
+-	rix = sc->rate_idx[sc->curband->band][hw_rix];
++	rix = sc->rate_idx[sc->curchan->band][hw_rix];
+ 	if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
+ 		rix = 0;
  
- 		geo_ch = &sband->channels[sband->n_channels++];
+@@ -1361,7 +1361,7 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
+ 	rxs->flag |= RX_FLAG_TSFT;
  
- 		geo_ch->center_freq =
--				ieee80211_channel_to_frequency(ch->channel,
--							       sband->band);
-+			ieee80211_channel_to_frequency(ch->channel, ch->band);
- 		geo_ch->max_power = ch->max_power_avg;
- 		geo_ch->max_antenna_gain = 0xff;
- 		geo_ch->hw_value = ch->channel;
--- 
-1.7.1
+ 	rxs->freq = sc->curchan->center_freq;
+-	rxs->band = sc->curband->band;
++	rxs->band = sc->curchan->band;
+ 
+ 	rxs->signal = sc->ah->ah_noise_floor + rs->rs_rssi;
+ 
+@@ -1376,7 +1376,7 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
+ 	rxs->flag |= ath5k_rx_decrypted(sc, skb, rs);
+ 
+ 	if (rxs->rate_idx >= 0 && rs->rs_rate ==
+-	    sc->curband->bitrates[rxs->rate_idx].hw_value_short)
++	    sc->sbands[sc->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
+ 		rxs->flag |= RX_FLAG_SHORTPRE;
+ 
+ 	ath5k_debug_dump_skb(sc, skb, "RX  ", 0);
+@@ -2536,7 +2536,6 @@ ath5k_init_hw(struct ath5k_softc *sc)
+ 	 * and then setup of the interrupt mask.
+ 	 */
+ 	sc->curchan = sc->hw->conf.channel;
+-	sc->curband = &sc->sbands[sc->curchan->band];
+ 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+ 		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
+@@ -2663,10 +2662,8 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+ 	 * so we should also free any remaining
+ 	 * tx buffers */
+ 	ath5k_drain_tx_buffs(sc);
+-	if (chan) {
++	if (chan)
+ 		sc->curchan = chan;
+-		sc->curband = &sc->sbands[chan->band];
+-	}
+ 	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL,
+ 								skip_pcu);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 58660e4..8f919dc 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -183,8 +183,6 @@ struct ath5k_softc {
+ 	enum nl80211_iftype	opmode;
+ 	struct ath5k_hw		*ah;		/* Atheros HW */
+ 
+-	struct ieee80211_supported_band		*curband;
+-
+ #ifdef CONFIG_ATH5K_DEBUG
+ 	struct ath5k_dbg_info	debug;		/* debug info */
+ #endif /* CONFIG_ATH5K_DEBUG */
 
