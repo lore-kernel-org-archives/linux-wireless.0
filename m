@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34999 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752632Ab1AQNy0 convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65303 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255Ab1ASHG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 08:54:26 -0500
+	Wed, 19 Jan 2011 02:06:26 -0500
+Received: by gyb11 with SMTP id 11so142157gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 23:06:26 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTims0DPfG+u9qynuuj_-0WjUr1nAGLuFz3k706T-@mail.gmail.com>
-References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com>
-	<1295261783.24530.3.camel@maggie>
-	<AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
-	<1295265468.24530.23.camel@maggie>
-	<AANLkTims0DPfG+u9qynuuj_-0WjUr1nAGLuFz3k706T-@mail.gmail.com>
-Date: Mon, 17 Jan 2011 14:54:24 +0100
-Message-ID: <AANLkTinwGaqg8ahGWd3+_dfhrCNTQNOfO1E-EUepFJ+C@mail.gmail.com>
-Subject: Re: Merging SSB and HND/AI support
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1295420717.10758.111.camel@pimenta>
+References: <1295379592-6223-1-git-send-email-arik@wizery.com> <1295420717.10758.111.camel@pimenta>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 19 Jan 2011 09:06:10 +0200
+Message-ID: <AANLkTik=UbE1Qp5oA4AKvGOnT=xO858iqxx4EQEUs=xu@mail.gmail.com>
+Subject: Re: [PATCH v2] wl12xx: Add channel 14 to list of supported 2ghz channels
+To: Luciano Coelho <coelho@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 17, 2011 at 14:43, Jonas Gorski <jonas.gorski@gmail.com> wrote:
-> On 17 January 2011 12:57, Michael Büsch <mb@bu3sch.de> wrote:
->> Well... I don't really like the idea of running one driver and
->> subsystem implementation on completely distinct types of silicon.
->> We will end up with the same mess that broadcom ended up with in
->> their "SB" code (broadcom's SSB backplane implementation).
->> For example, in their code the driver calls pci_enable_device() and
->> related PCI functions, even if there is no PCI device at all. The calls
->> are magically re-routed to the actual SB backplane.
->> You'd have to do the same mess with SSB. Calling ssb_device_enable()
->> will mean "enable the SSB device", if the backplane is SSB, and will
->> mean "enable the HND/AI" device, if the backplane is HND/AI.
+On Wed, Jan 19, 2011 at 09:05, Luciano Coelho <coelho@ti.com> wrote:
+>
+> On Tue, 2011-01-18 at 20:39 +0100, Arik Nemtsov wrote:
+> > Channel 14 is only supported in Japan (JP country code in).
+> > The FW limits tranmissions to CCK only on this channel.
+> >
+> > Tested in both STA and AP modes to work correctly.
+> >
+> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> > ---
+>
+> Good, thanks Arik!
+>
+> I guess instead of (JP country code in) you meant (JP country code in
+> regdb), right? I'll fix that manually before applying.
+>
 
-> P.S: Any suggestions for the name? Would be "ai" okay? Technically
-> it's "AMBA Interconnect", but "amba" is already taken.
+Yes Luca. Thanks.
 
-If it's AMBA, can it be integrated with the existing code in drivers/amba/?
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Regards,
+Arik
