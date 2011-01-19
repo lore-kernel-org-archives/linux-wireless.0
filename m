@@ -1,28 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57874 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55424 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253Ab1AaSxw (ORCPT
+	with ESMTP id S1753644Ab1ASJv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:53:52 -0500
-Subject: Re: [PATCH] mac80211: disable power save if an infra AP vif exists
+	Wed, 19 Jan 2011 04:51:27 -0500
+Subject: Re: [2.6.38-rc1] iwlagn lock misuse...
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1296499518-3895-1-git-send-email-rmanoharan@atheros.com>
-References: <1296499518-3895-1-git-send-email-rmanoharan@atheros.com>
+To: Daniel J Blueman <daniel.blueman@gmail.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <AANLkTi=DLpfpLYAftktUKa5grNyTeT0-reyjEsrr-NwR@mail.gmail.com>
+References: <AANLkTi=DLpfpLYAftktUKa5grNyTeT0-reyjEsrr-NwR@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 19:53:38 +0100
-Message-ID: <1296500018.3812.42.camel@jlt3.sipsolutions.net>
+Date: Wed, 19 Jan 2011 10:51:22 +0100
+Message-ID: <1295430682.4685.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-01 at 00:15 +0530, Rajkumar Manoharan wrote:
+On Wed, 2011-01-19 at 16:44 +0700, Daniel J Blueman wrote:
+> Booting an instrumented 2.6.38-rc1 kernel with an Intel WiFi Link 5300
+> card and associating with an access point, I see a lockdep warning
+> [attached].
+> 
+> This is essentially (struct iwl_priv)->lock being taken with
+> interrupts disabled in iwl-agn-ict.c:152 [1] and the same lock taken
+> with interrupts enabled in rx.c:2476 [2] (confirmed via disassembly).
+> 
+> It feels like this would have been introduced in this commit:
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6e8cc38d5b05bb812f89a35bd9bf52405e67d0df
 
-> +		if ((sdata->vif.type == NL80211_IFTYPE_AP) ||
-> +		    (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
-
-I still think you should drop the VLAN check?
+I think you're running into a lockdep false positive, it's not actually
+the same lock and lockdep confuses a few skb queue locks. Please apply
+this patch
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=53c16b8e752e8e58f4313f1155f3afadf78311bb
+and see if the problem persists.
 
 johannes
 
