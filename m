@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:38495 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab1ADXuO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:50:14 -0500
-Subject: [RFC PATCH 17/17] zd1211rw: enable NL80211_IFTYPE_AP
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:50:09 +0200
-Message-ID: <20110104235009.25309.38556.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
+Received: from mail.atheros.com ([12.19.149.2]:56126 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751698Ab1ASPsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 10:48:30 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 07:48:12 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Jack Lee <jlee@atheros.com>
+Subject: [PATCH 1/2] ath9k_hw: Fix system hang when resuming from S3/S4
+Date: Wed, 19 Jan 2011 21:17:42 +0530
+Message-ID: <1295452063-13828-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It should be safe to enable AP-mode now.
+The bit 6 & 7 of AR_WA (0x4004) should be enabled only
+for the chips that are supporting L0s functionality
+while resuming back from S3/S4.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Enabling these bits for AR9280 is causing system hang
+within a few S3/S4-resume cycles.
+
+Cc: Jack Lee <jlee@atheros.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 1fc733c..73006ac 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -1047,6 +1047,7 @@ static int zd_op_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_AP:
- 		mac->type = vif->type;
- 		break;
- 	default:
-@@ -1219,7 +1220,8 @@ static void zd_op_bss_info_changed(struct ieee80211_hw *hw,
- 	dev_dbg_f(zd_mac_dev(mac), "changes: %x\n", changes);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index f8a7771..f44c84a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -426,9 +426,8 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 		}
  
- 	if (mac->type == NL80211_IFTYPE_MESH_POINT ||
--	    mac->type == NL80211_IFTYPE_ADHOC) {
-+	    mac->type == NL80211_IFTYPE_ADHOC ||
-+	    mac->type == NL80211_IFTYPE_AP) {
- 		associated = true;
- 		if (changes & BSS_CHANGED_BEACON) {
- 			struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
-@@ -1323,7 +1325,8 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_MESH_POINT) |
- 		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) |
-+		BIT(NL80211_IFTYPE_AP);
+ 		/* WAR for ASPM system hang */
+-		if (AR_SREV_9280(ah) || AR_SREV_9285(ah) || AR_SREV_9287(ah)) {
++		if (AR_SREV_9285(ah) || AR_SREV_9287(ah))
+ 			val |= (AR_WA_BIT6 | AR_WA_BIT7);
+-		}
  
- 	hw->max_signal = 100;
- 	hw->queues = 1;
+ 		if (AR_SREV_9285E_20(ah))
+ 			val |= AR_WA_BIT23;
+-- 
+1.7.3.5
 
