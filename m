@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46500 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753703Ab1A1PsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 10:48:10 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 6/8] iwl3945: do not use agn specific IWL_RATE_COUNT
-Date: Fri, 28 Jan 2011 16:47:49 +0100
-Message-Id: <1296229671-3041-6-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:30278 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753106Ab1ASA6g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 19:58:36 -0500
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-055688712
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 09:58:34 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH] ath5k: fix locking in tx_complete_poll_work
+Date: Wed, 19 Jan 2011 09:58:51 +0900
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+References: <1295356003-1425-1-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1295356003-1425-1-git-send-email-me@bobcopeland.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201101190958.51192.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only use IWL_RATE_COUNT_3945 in 3945 code.
+On Tue January 18 2011 22:06:43 Bob Copeland wrote:
+> ath5k_reset must be called with sc->lock.  Since the tx queue
+> watchdog runs in a workqueue and accesses sc, it's appropriate
+> to just take the lock over the whole function.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c
+> b/drivers/net/wireless/ath/ath5k/base.c index 019a74d..09ae4ef 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -2294,6 +2294,8 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+>  	int i;
+>  	bool needreset = false;
+> 
+> +	mutex_lock(&sc->lock);
+> +
+>  	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++) {
+>  		if (sc->txqs[i].setup) {
+>  			txq = &sc->txqs[i];
+> @@ -2321,6 +2323,8 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+>  		ath5k_reset(sc, NULL, true);
+>  	}
+> 
+> +	mutex_unlock(&sc->lock);
+> +
+>  	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+>  		msecs_to_jiffies(ATH5K_TX_COMPLETE_POLL_INT));
+>  }
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    5 ++---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 294221b..58213e7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -762,8 +762,7 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl_priv *priv,
- 
- 	/* We need to figure out how to get the sta->supp_rates while
- 	 * in this running context */
--	rate_mask = IWL_RATES_MASK;
--
-+	rate_mask = IWL_RATES_MASK_3945;
- 
- 	/* Set retry limit on DATA packets and Probe Responses*/
- 	if (ieee80211_is_probe_resp(fc))
-@@ -1650,7 +1649,7 @@ static int iwl3945_hw_reg_comp_txpower_temp(struct iwl_priv *priv)
- 							      ref_temp);
- 
- 		/* set tx power value for all rates, OFDM and CCK */
--		for (rate_index = 0; rate_index < IWL_RATE_COUNT;
-+		for (rate_index = 0; rate_index < IWL_RATE_COUNT_3945;
- 		     rate_index++) {
- 			int power_idx =
- 			    ch_info->power_info[rate_index].base_power_index;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index 75e50d3..184828c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -213,6 +213,7 @@ enum {
- 	 IWL_CCK_BASIC_RATES_MASK)
- 
- #define IWL_RATES_MASK ((1 << IWL_RATE_COUNT) - 1)
-+#define IWL_RATES_MASK_3945 ((1 << IWL_RATE_COUNT_3945) - 1)
- 
- #define IWL_INVALID_VALUE    -1
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 55837d6..2945acd 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2517,7 +2517,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
- 
- 	ieee80211_wake_queues(priv->hw);
- 
--	priv->active_rate = IWL_RATES_MASK;
-+	priv->active_rate = IWL_RATES_MASK_3945;
- 
- 	iwl_power_update_mode(priv, true);
- 
--- 
-1.7.1
-
+Acked-by: Bruno Randolf <br1@einfach.org>
