@@ -1,68 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:48135 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753622Ab1AGOqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 09:46:04 -0500
-Subject: Re: Odd behavior of ssb, b43, b43legacy, and b44
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D269711.1040003@lwfinger.net> (sfid-20110107_053108_647486_0233929A)
-References: <4D262109.20504@lwfinger.net>
-	 (sfid-20110106_210800_770742_63AA2C67) <1294371276.15564.0.camel@maggie>
-	 <4D269711.1040003@lwfinger.net> (sfid-20110107_053108_647486_0233929A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 15:45:55 +0100
-Message-ID: <1294411555.18385.1.camel@maggie>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51696 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755032Ab1ASWaD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 17:30:03 -0500
+Date: Wed, 19 Jan 2011 17:23:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing rebased on 2.6.38-rc1
+Message-ID: <20110119222352.GA16160@tuxdriver.com>
+References: <20110119182236.GA2370@tuxdriver.com>
+ <4D376309.9020300@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D376309.9020300@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-06 at 22:31 -0600, Larry Finger wrote: 
-> On 01/06/2011 09:34 PM, Michael Büsch wrote:
-> > 
-> > Does one of these wireless cards have a dangling ethernet core? I would
-> > not be surprised...
+On Wed, Jan 19, 2011 at 02:17:45PM -0800, Ben Greear wrote:
+> On 01/19/2011 10:22 AM, John W. Linville wrote:
+> >The wireless-testing tree has been rebased upon 2.6.38-rc1.
+> >Please updates your trees accordingly.
 > 
-> Yes. The core scan for the BCM4303 is as follows:
+> Did you remove the 'wl' from the kernel name on purpose?
 > 
-> ssb: Core 0 found: IEEE 802.11 (cc 0x812, rev 0x02, vendor 0x4243)
-> ssb: Core 1 found: PCMCIA (cc 0x80D, rev 0x00, vendor 0x4243)
-> ssb: Core 2 found: Fast Ethernet (cc 0x806, rev 0x02, vendor 0x4243)
-> ssb: Core 3 found: V90 (cc 0x807, rev 0x01, vendor 0x4243)
-> ssb: Core 4 found: PCI (cc 0x804, rev 0x03, vendor 0x4243)
-> ssb: Sonics Silicon Backplane found on PCI device 0000:01:09.0
-> 
-> Larry
-> 
+> (Or did I screw that up locally somehow?)
 
-Can you please try this patch?
+Arg...no...
 
+I'll fix it...
 
-Index: linux-2.6.37/drivers/ssb/scan.c
-===================================================================
---- linux-2.6.37.orig/drivers/ssb/scan.c	2011-01-07 15:35:10.518000002 +0100
-+++ linux-2.6.37/drivers/ssb/scan.c	2011-01-07 15:45:54.231998930 +0100
-@@ -420,6 +420,16 @@
- 			bus->pcicore.dev = dev;
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- 			break;
-+		case SSB_DEV_ETHERNET:
-+			if (bus->bustype == SSB_BUSTYPE_PCI) {
-+				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
-+				    (bus->host_pci->device & 0xFF00) == 0x4300) {
-+					/* This is a dangling ethernet core on a
-+					 * wireless device. Ignore it. */
-+					continue;
-+				}
-+			}
-+			break;
- 		default:
- 			break;
- 		}
-
-
+John
 -- 
-Greetings Michael.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
