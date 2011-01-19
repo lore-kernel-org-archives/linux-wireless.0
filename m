@@ -1,70 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51834 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973Ab1ATShl convert rfc822-to-8bit (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:32921 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752901Ab1ASS5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 13:37:41 -0500
-Received: by iwn9 with SMTP id 9so845125iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 10:37:40 -0800 (PST)
+	Wed, 19 Jan 2011 13:57:31 -0500
+Message-ID: <20110119204903.179429gv9mcqcidc@hayate.sektori.org>
+Date: Wed, 19 Jan 2011 20:49:03 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: [RFC PATCH 10/17] zd1211rw: implement beacon fetching and
+ handling ieee80211_get_buffered_bc()
+References: <20110104234745.25309.72030.stgit@fate.lan>
+ <201101062246.38932.chunkeey@googlemail.com>
+ <20110109174656.86162gssuhct8hog@hayate.sektori.org>
+ <201101092133.37610.chunkeey@googlemail.com>
+In-Reply-To: <201101092133.37610.chunkeey@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110120183210.13527.33808@he.sipsolutions.net>
-References: <20110120183210.13527.33808@he.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 20 Jan 2011 10:37:20 -0800
-Message-ID: <AANLkTi=EDRimawaentk_ppcrsTf1Rex7H9QJspktaa3C@mail.gmail.com>
-Subject: Fwd: [Linux Wireless] Update of "en/users/Drivers/carl9170" by PaulFertser
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Paul Fertser <fercerpav@gmail.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Huh?
+Quoting Christian Lamparter <chunkeey@googlemail.com>:
 
+> On Sunday 09 January 2011 16:46:56 Jussi Kivilinna wrote:
+>> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+>> > On Wednesday 05 January 2011 00:49:10 Jussi Kivilinna wrote:
+>> >> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
+>> >> b/drivers/net/wireless/zd1211rw/zd_mac.c
+>> >> index aace010..a3c7e8f 100644
+>> >> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+>> >> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+>> >> @@ -958,16 +958,46 @@ static int zd_op_config(struct ieee80211_hw
+>> >> *hw, u32 changed)
+>> >>  	return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
+>> >>  }
+>> >>
+>> >> +static void zd_beacon_done(struct zd_mac *mac)
+>> >> +{
+>> >
+>> > this is an interesting one...
+>> >
+>> > Since zd_beacon_done also uploads the next beacon so long in advance,
+>> > there could be an equally long race between the outdated state of the
+>> > next beacon's DTIM broadcast traffic indicator (802.11-2007 7.3.2.6)
+>> > which -in your case- was uploaded almost a beacon interval ago and
+>> > the xmit of ieee80211_get_buffered_bc *now*.
+>> >
+>> > The dtim bc/mc bit might be not set, when a mc/bc arrived after the
+>> > beacon was uploaded, but before the "beacon done event" from the
+>> > hardware. So, dozing stations don't expect the broadcast traffic
+>> > and of course, they might miss it completely.
+>> >
+>> > It's probably better to fix this in mac80211 (see the attached hack).
+>>
+>> Ok, should I add this to my patchset?
+> well, difficult to say. As far as I can say, it should be correct for "your
+> case". But, on the other hand: what about solutions that can't buffer
+> mc/bc frames (and needs to call ieee80211_get_buffered_bc), however the
+> firmware is clever enough to maintain a beacon internally (so they
+> won't call ieee80211_beacon_get and only relies on set_tim)?
+>
+> Sure, it's just a unlikely corner case... In fact, I didn't check if
+> that's even possible, but it does sound reasonable to some extend.
+>
 
----------- Forwarded message ----------
-From: Linux Wireless <johannes@sipsolutions.net>
-Date: Thu, Jan 20, 2011 at 10:32 AM
-Subject: [Linux Wireless] Update of "en/users/Drivers/carl9170" by PaulFertser
-To: Linux Wireless <johannes@sipsolutions.net>
+ From what I checked none of currect driver/device is such. Maybe if  
+such device appears then !bss->dtim_bc_mc check in  
+ieee80211_beacon_add_tim() could be masked with driver flag (something  
+like  
+IEEE80211_HW_CAN_AND_HANDLE_BEACON_BUT_STILL_NEEDS_HOST_BROADCAST_PS_BUFFERING).
 
+>> > In fact, you could just as well drop "[09/17] zd1211rw: implement
+>> > seq_num for IEEE80211_TX_CTL_ASSIGN_SEQ"... unless of course, I'm
+>> > an idiot and there is a really clever way around these issues.
+>>
+>> Oh well, I should have checked this more closely before doing that
+>> patch. HW is assigning seq-numbers already and that patch is not needed.
+>
+> heh, p54's fw can assign sequence numbers as well, but there's a txdesc flag
+> to control the counter, so the firmware does not mess with the  
+> sequence control
+> of QoS-Data frames. I hope zd1211* has one too.
+>
 
-Dear Wiki user,
+There is tx-control flag that doesn't have effect, but since zd1211  
+doesn't appear to support QoS it's not a problem.
 
-You have subscribed to a wiki page or wiki category on "Linux
-Wireless" for change notification.
+-Jussi
 
-The "en/users/Drivers/carl9170" page has been changed by PaulFertser:
-http://linuxwireless.org/en/users/Drivers/carl9170?action=diff&rev1=17&rev2=18
-
-Comment:
-Information about QoS^AMPDU and WOL support
-
- == 802.11n Compatibility ==
-
- It's worth mentioning that the chip was designed, produced and sold
-in the early 802.11n-draft period.
-- Compatibility will always be an issue.
-+ Compatibility will always be an issue.
-+
-+ A [[http://git.kernel.org/?p=linux/kernel/git/chr/carl9170fw.git;a=commitdiff;h=39be7dc384e0dd45dc36b4b517fd9fae874b06f0|known
-problem]] is that hardware can not support
-+ [[http://en.wikipedia.org/wiki/IEEE_802.11n-2009#Frame_aggregation|frame
-+ aggregation]] and
-+ [[QoS|http://en.wikipedia.org/wiki/Wireless_Multimedia_Extensions]] at
-+ the same time, meaning the device is not suitable for any serious
-+ 802.11n setup.
-
- ||Hardware||||Problem||||Solution?||
- ||'''BCM4313'''||||''Hardware incompatibility''||||''replace hardware''||
-@@ -70, +77 @@
-
-  * Input device for WPS button event (depending on hardware)
-  * automatic recovery from several fatal events
-  * Regulatory domain restrictions
-+  * [[http://git.kernel.org/?p=linux/kernel/git/chr/carl9170fw.git;a=commit;h=6476369c2c6d4ba487408cb5daff8df0480d6b4a|Wake-on-LAN
-+  support]] (can resume your system from suspend-to-ram)
-
- == not working yet ==
-  * Power Save Mode, It's implemented but buggy
