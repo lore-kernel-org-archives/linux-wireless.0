@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:23710 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752559Ab1AYEP2 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:43510 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751792Ab1ASUFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 23:15:28 -0500
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0369478923
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 13:15:26 +0900 (JST)
-Subject: [PATCH 1/6] ath5k: ath5k_setup_channels cleanup and whitespace
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 25 Jan 2011 13:15:22 +0900
-Message-ID: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 19 Jan 2011 15:05:05 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 708B454070F
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 15:06:57 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-19 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110119200503.473B440F97@repository3.orbit-lab.org>
+Date: Wed, 19 Jan 2011 15:05:03 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove useless test_bit - it's not going to happen because of the way this
-function is called only when that bit is set.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   8ffd020..143a29f  history    -> origin/history
+ + a4e85a5...a3d484f master     -> origin/master  (forced update)
+   9e8a462..c56eb8f  stable     -> origin/stable
+ * [new tag]         next-20110119 -> next-20110119
+ * [new tag]         v2.6.38-rc1 -> v2.6.38-rc1
 
-And fix some whitespace.
+compat-wireless code metrics
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
-Acked-by: Bob Copeland <me@bobcopeland.com>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+    782530 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1989 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1956 - % of crap code
 
----
-
-Has this been lost from my last series?
----
- drivers/net/wireless/ath/ath5k/base.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 14377ac..dae0bdc 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -262,21 +262,16 @@ static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
- }
- 
- static unsigned int
--ath5k_setup_channels(struct ath5k_hw *ah,
--		struct ieee80211_channel *channels,
--		unsigned int mode,
--		unsigned int max)
-+ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
-+		unsigned int mode, unsigned int max)
- {
- 	unsigned int count, size, chfreq, freq, ch;
- 	enum ieee80211_band band;
- 
--	if (!test_bit(mode, ah->ah_modes))
--		return 0;
--
- 	switch (mode) {
- 	case AR5K_MODE_11A:
- 		/* 1..220, but 2GHz frequencies are filtered by check_channel */
--		size = 220 ;
-+		size = 220;
- 		chfreq = CHANNEL_5GHZ;
- 		band = IEEE80211_BAND_5GHZ;
- 		break;
-
+Base tree: linux-next.git
+Base tree version: next-20110119
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
