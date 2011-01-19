@@ -1,56 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57796 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564Ab1ATSGd (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47582 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326Ab1ASP5C convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 13:06:33 -0500
-Message-ID: <4D3879A6.2060909@candelatech.com>
-Date: Thu, 20 Jan 2011 10:06:30 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 19 Jan 2011 10:57:02 -0500
+Received: by pwj3 with SMTP id 3so179802pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 07:57:02 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/3] mac80211: Support scanning only current active channel.
-References: <1295544750-6704-1-git-send-email-greearb@candelatech.com>	 <1295544750-6704-2-git-send-email-greearb@candelatech.com> <1295545143.3693.44.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295545143.3693.44.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20110119092113.19628.33322.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+	<20110119092113.19628.33322.stgit@localhost6.localdomain6>
+Date: Wed, 19 Jan 2011 17:57:02 +0200
+Message-ID: <AANLkTinrTN_Pbewd-QNTbcQ1qEQJzZjRoz9iBDcHJonL@mail.gmail.com>
+Subject: Re: [PATCH 8/8] ath5k: Remove redundant sc->curband
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2011 09:39 AM, Johannes Berg wrote:
-> On Thu, 2011-01-20 at 09:32 -0800, greearb@candelatech.com wrote:
+2011/1/19 Bruno Randolf <br1@einfach.org>:
+> Remove sc->curband because the band is already stored in the current channel.
 >
->> -	ieee80211_offchannel_stop_beaconing(local);
->> +	if (local->ops->sw_scan_start_cur&&
->> +	    local->scan_req->n_channels == 1&&
->> +	    local->scan_req->channels[0] == local->hw.conf.channel) {
->> +		__set_bit(SCAN_ON_CUR_CHANNEL,&local->scanning);
->> +		drv_sw_scan_start_cur(local, true);
->> +	} else
->> +		drv_sw_scan_start(local);
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |   11 ++++-------
+>  drivers/net/wireless/ath/ath5k/base.h |    2 --
+>  2 files changed, 4 insertions(+), 9 deletions(-)
 >
-> This doesn't seem to make much sense either -- even if we do a scan over
-> multiple channels we should be able to optimise the part on the current
-> channel (maybe put it at the beginning or end too).
-
-Maybe..but user-space can specify the channels it wants to scan,
-and I assume that means what order to scan them in.  I have no
-idea if changing that order would confuse some application.
-
-It seems to me that it would take quite a bit of re-work of the
-mac80211 scanning logic to deal with scanning on the current
-channel w/out affecting other tx/rx packets (as my patch attempts
-to do), without setting some explicit flag before you enter
-the scan state machine.
-
-Thanks,
-Ben
-
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index a00cc11..0e39ee8 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -551,7 +551,7 @@ ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
+>                        "hw_rix out of bounds: %x\n", hw_rix))
+>                return 0;
 >
-> johannes
+> -       rix = sc->rate_idx[sc->curband->band][hw_rix];
+> +       rix = sc->rate_idx[sc->curchan->band][hw_rix];
+>        if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
+>                rix = 0;
+>
+> @@ -1361,7 +1361,7 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
+>        rxs->flag |= RX_FLAG_TSFT;
+>
+>        rxs->freq = sc->curchan->center_freq;
+> -       rxs->band = sc->curband->band;
+> +       rxs->band = sc->curchan->band;
+>
+>        rxs->signal = sc->ah->ah_noise_floor + rs->rs_rssi;
+>
+> @@ -1376,7 +1376,7 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
+>        rxs->flag |= ath5k_rx_decrypted(sc, skb, rs);
+>
+>        if (rxs->rate_idx >= 0 && rs->rs_rate ==
+> -           sc->curband->bitrates[rxs->rate_idx].hw_value_short)
+> +           sc->sbands[sc->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
+>                rxs->flag |= RX_FLAG_SHORTPRE;
+>
+>        ath5k_debug_dump_skb(sc, skb, "RX  ", 0);
+> @@ -2536,7 +2536,6 @@ ath5k_init_hw(struct ath5k_softc *sc)
+>         * and then setup of the interrupt mask.
+>         */
+>        sc->curchan = sc->hw->conf.channel;
+> -       sc->curband = &sc->sbands[sc->curchan->band];
+>        sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+>                AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+>                AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
+> @@ -2663,10 +2662,8 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+>         * so we should also free any remaining
+>         * tx buffers */
+>        ath5k_drain_tx_buffs(sc);
+> -       if (chan) {
+> +       if (chan)
+>                sc->curchan = chan;
+> -               sc->curband = &sc->sbands[chan->band];
+> -       }
+>        ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL,
+>                                                                skip_pcu);
+>        if (ret) {
+> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+> index 58660e4..8f919dc 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.h
+> +++ b/drivers/net/wireless/ath/ath5k/base.h
+> @@ -183,8 +183,6 @@ struct ath5k_softc {
+>        enum nl80211_iftype     opmode;
+>        struct ath5k_hw         *ah;            /* Atheros HW */
+>
+> -       struct ieee80211_supported_band         *curband;
+> -
+>  #ifdef CONFIG_ATH5K_DEBUG
+>        struct ath5k_dbg_info   debug;          /* debug info */
+>  #endif /* CONFIG_ATH5K_DEBUG */
+>
+
+
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
