@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60850 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924Ab1AGCsu (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:38314 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753867Ab1ASJUV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 21:48:50 -0500
-Message-ID: <4D267F0D.6030508@candelatech.com>
-Date: Thu, 06 Jan 2011 18:48:45 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 19 Jan 2011 04:20:21 -0500
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0960678820
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:20:20 +0900 (JST)
+Subject: [PATCH 3/8] ath5k: Rename ath5k_copy_channels
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Jan 2011 18:20:47 +0900
+Message-ID: <20110119092047.19628.99228.stgit@localhost6.localdomain6>
+In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [ath9k-devel] [PATCH 3/3] ath9k: Keep track of stations for debugfs.
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com> <1294361165-15308-3-git-send-email-greearb@candelatech.com> <4D267E47.6050408@openwrt.org>
-In-Reply-To: <4D267E47.6050408@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2011 06:45 PM, Felix Fietkau wrote:
-> On 2011-01-06 5:46 PM, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> The stations hold the ath_node, which holds the tid
->> and other xmit logic structures. In order to debug
->> stuck xmit logic, we need a way to print out the tid
->> state for the stations.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> I really don't like the array with the hardcoded size. How about just adding a struct list_head to the ath_node struct and tracking that?
+Rename ath5k_copy_channels() to ath5k_setup_channels() - nothing is copied
+here.
 
-I can do that..would probably want a pointer back from the ath_node to it's STA struct
-as well.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-I'll re-work the patch to use a list.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 0387acb..9e8b1f4 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -256,7 +256,7 @@ static bool ath5k_is_standard_channel(short chan)
+ }
+ 
+ static unsigned int
+-ath5k_copy_channels(struct ath5k_hw *ah,
++ath5k_setup_channels(struct ath5k_hw *ah,
+ 		struct ieee80211_channel *channels,
+ 		unsigned int mode,
+ 		unsigned int max)
+@@ -356,7 +356,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+ 		sband->n_bitrates = 12;
+ 
+ 		sband->channels = sc->channels;
+-		sband->n_channels = ath5k_copy_channels(ah, sband->channels,
++		sband->n_channels = ath5k_setup_channels(ah, sband->channels,
+ 					AR5K_MODE_11G, max_c);
+ 
+ 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
+@@ -382,7 +382,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+ 		}
+ 
+ 		sband->channels = sc->channels;
+-		sband->n_channels = ath5k_copy_channels(ah, sband->channels,
++		sband->n_channels = ath5k_setup_channels(ah, sband->channels,
+ 					AR5K_MODE_11B, max_c);
+ 
+ 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
+@@ -402,7 +402,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+ 		sband->n_bitrates = 8;
+ 
+ 		sband->channels = &sc->channels[count_c];
+-		sband->n_channels = ath5k_copy_channels(ah, sband->channels,
++		sband->n_channels = ath5k_setup_channels(ah, sband->channels,
+ 					AR5K_MODE_11A, max_c);
+ 
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] = sband;
 
-Thanks,
-Ben
-
->
-> - Felix
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
