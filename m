@@ -1,33 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:36290 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753650Ab1ASLSU (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57039 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025Ab1ASWfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 06:18:20 -0500
-Received: by qyj19 with SMTP id 19so488854qyj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 03:18:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110119092108.19628.43971.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092108.19628.43971.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 06:17:46 -0500
-Message-ID: <AANLkTinsDhH+bg8jm-S2qjrDSsbjrTEAp3Vdmvqd+1Wn@mail.gmail.com>
-Subject: Re: [PATCH 7/8] ath5k: Remove unused sc->curmode
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 19 Jan 2011 17:35:15 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so1417828fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 14:35:15 -0800 (PST)
+From: Jonas Gorski <jonas.gorski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [RFT 4/8] staging: brcm80211: Remove ETHER_MAX_LEN definition.
+Date: Wed, 19 Jan 2011 23:35:28 +0100
+Message-Id: <1295476532-21130-5-git-send-email-jonas.gorski@gmail.com>
+In-Reply-To: <1295476532-21130-4-git-send-email-jonas.gorski@gmail.com>
+References: <1295476532-21130-1-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-2-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-3-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-4-git-send-email-jonas.gorski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 4:21 AM, Bruno Randolf <br1@einfach.org> wrote:
-> sc->curmode is set but never used. Remove it and the helper function. Also the
-> ath5k_rate_update which is refered to in the comment does not exist (any more?)
-> so we don't need to setup the band in that place.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+Since ETHER_MAX_LEN is only used for CDC_MAX_MSG_SIZE, directly use the value
+in bcmcdc.h and remove the definition.
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Jonas Gorski <jonas.gorski@gmail.com>
+---
+ drivers/staging/brcm80211/include/bcmcdc.h         |    3 +--
+ drivers/staging/brcm80211/include/proto/ethernet.h |    2 --
+ 2 files changed, 1 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/include/bcmcdc.h b/drivers/staging/brcm80211/include/bcmcdc.h
+index 10c1ddc..e56470e 100644
+--- a/drivers/staging/brcm80211/include/bcmcdc.h
++++ b/drivers/staging/brcm80211/include/bcmcdc.h
+@@ -13,7 +13,6 @@
+  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+-#include <proto/ethernet.h>
+ 
+ typedef struct cdc_ioctl {
+ 	u32 cmd;		/* ioctl command value */
+@@ -24,7 +23,7 @@ typedef struct cdc_ioctl {
+ } cdc_ioctl_t;
+ 
+ /* Max valid buffer size that can be sent to the dongle */
+-#define CDC_MAX_MSG_SIZE   ETHER_MAX_LEN
++#define CDC_MAX_MSG_SIZE	1518
+ 
+ /* len field is divided into input and output buffer lengths */
+ #define CDCL_IOC_OUTLEN_MASK   0x0000FFFF	/* maximum or expected
+diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
+index 1176df9..bc99842 100644
+--- a/drivers/staging/brcm80211/include/proto/ethernet.h
++++ b/drivers/staging/brcm80211/include/proto/ethernet.h
+@@ -21,8 +21,6 @@
+ 
+ #include <packed_section_start.h>
+ 
+-#define	ETHER_MAX_LEN		1518
+-
+ #define	ETHER_TYPE_BRCM		0x886c
+ 
+ BWL_PRE_PACKED_STRUCT struct ether_addr {
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.5
+
