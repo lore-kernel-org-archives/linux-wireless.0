@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:53161 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932972Ab1AMLd0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jan 2011 06:33:26 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0DBXQTM001142
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 05:33:26 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0DBXPpf001784
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 05:33:25 -0600 (CST)
-Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0DBXPFZ000438
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Jan 2011 05:33:25 -0600 (CST)
-Subject: Re: [PATCH] wl12xx: lock the RCU when accessing sta via
- ieee80211_find_sta()
-From: Luciano Coelho <coelho@ti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "DE CESCO, Jonathan" <jonathanc@ti.com>
-In-Reply-To: <1294769241-3118-1-git-send-email-coelho@ti.com>
-References: <1294769241-3118-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 13 Jan 2011 13:33:45 +0200
-Message-ID: <1294918425.2064.21.camel@pimenta>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:45448 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978Ab1ASP6U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 10:58:20 -0500
+Received: by pwj3 with SMTP id 3so180098pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 07:58:19 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+Date: Wed, 19 Jan 2011 17:58:19 +0200
+Message-ID: <AANLkTimoaMY2BW0HPySk=YGnAiUJT0Yju94ZuO-6=AXF@mail.gmail.com>
+Subject: Re: [PATCH 0/8] ath5k 802.11j preparation and cleanup
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-11 at 19:07 +0100, coelho@ti.com wrote:
-> From: Luciano Coelho <coelho@ti.com>
-> 
-> We were calling ieee80211_find_sta() and the sta returned by it
-> without locking the RCU, which is required by mac80211.
-> 
-> Fix this and reorganize slightly the area of the code where the sta is
-> used.
-> 
-> Reported-by: Jonathan DE CESCO <jonathanc@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+2011/1/19 Bruno Randolf <br1@einfach.org>:
+> This series prepares ath5k for 802.11j (4.9GHz) support but most of the patches
+> are just cleaning up things i found in the process. 802.11j is still not
+> enabled.
+>
+> bruno
+>
 > ---
+>
+> Bruno Randolf (8):
+>      ath5k: Use mac80211 channel mapping function
+>      ath5k: Simplify loop when setting up channels
+>      ath5k: Rename ath5k_copy_channels
+>      ath5k: ath5k_setup_channels cleanup and whitespace
+>      ath5k: Add 802.11j 4.9GHz channels to allowed channels
+>      ath5: Remove unused CTL definitions
+>      ath5k: Remove unused sc->curmode
+>      ath5k: Remove redundant sc->curband
+>
+>
+>  drivers/net/wireless/ath/ath5k/base.c   |   95 +++++++++++--------------------
+>  drivers/net/wireless/ath/ath5k/base.h   |    3 -
+>  drivers/net/wireless/ath/ath5k/eeprom.h |   23 --------
+>  3 files changed, 34 insertions(+), 87 deletions(-)
+>
+> --
+> Signature
 
-Applied and pushed to wl12xx.
+Nice clean up !
+
 
 -- 
-Cheers,
-Luca.
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
