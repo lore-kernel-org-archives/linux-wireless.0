@@ -1,58 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:39528 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755734Ab1AaMAj (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39913 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753351Ab1ASBaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 07:00:39 -0500
-Received: by pwj3 with SMTP id 3so1017082pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 04:00:39 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19782.42068.326897.606824@gargle.gargle.HOWL>
-Date: Mon, 31 Jan 2011 17:30:20 +0530
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC] mac80211: deauthenticate STAs before suspend
-In-Reply-To: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
-References: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
+	Tue, 18 Jan 2011 20:30:08 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k:  Try more than one queue when scheduling new aggregate.
+Date: Tue, 18 Jan 2011 17:30:00 -0800
+Message-Id: <1295400600-20596-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
->  #ifdef CONFIG_PM
-> +static int ieee80211_pre_suspend(struct wiphy *wiphy)
-> +{
-> +	struct ieee80211_local *local = wiphy_priv(wiphy);
-> +	struct ieee80211_sub_if_data *sdata = NULL;
-> +	struct ieee80211_if_managed *ifmgd = NULL;
-> +	struct cfg80211_deauth_request req;
-> +
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		ifmgd = &sdata->u.mgd;
+From: Ben Greear <greearb@candelatech.com>
 
-Shouldn't the interface type be checked here ?
+Try all xmit queues until the hardware buffers are full.
 
-> +	.pre_suspend = ieee80211_pre_suspend,
->  	.suspend = ieee80211_suspend,
->  	.resume = ieee80211_resume,
->  	.scan = ieee80211_scan,
-> diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-> index 4294fa2..944d589 100644
-> --- a/net/wireless/sysfs.c
-> +++ b/net/wireless/sysfs.c
-> @@ -91,6 +91,12 @@ static int wiphy_suspend(struct device *dev, pm_message_t state)
->  
->  	rdev->suspend_at = get_seconds();
->  
-> +	if (rdev->ops->pre_suspend) {
-> +		rtnl_lock();
-> +		ret = rdev->ops->pre_suspend(&rdev->wiphy);
-> +		rtnl_unlock();
-> +	}
-> +
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 2ad732d... 5f05a3a... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/xmit.c |   64 +++++++++++++++++++--------------
+ 1 files changed, 37 insertions(+), 27 deletions(-)
 
-Why a 'pre-suspend' ? :)
-Can't this be done in __ieee80211_suspend() ?
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 2ad732d..5f05a3a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1222,49 +1222,59 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
+ 	sc->tx.txqsetup &= ~(1<<txq->axq_qnum);
+ }
+ 
++/* For each axq_acq entry, for each tid, try to schedule packets
++ * for transmit until ampdu_depth has reached min Q depth.
++ */
+ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
+ {
+-	struct ath_atx_ac *ac;
+-	struct ath_atx_tid *tid, *last;
++	struct ath_atx_ac *ac, *ac_tmp, *last_ac;
++	struct ath_atx_tid *tid, *last_tid;
+ 
+ 	if (list_empty(&txq->axq_acq) ||
+ 	    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+ 		return;
+ 
+ 	ac = list_first_entry(&txq->axq_acq, struct ath_atx_ac, list);
+-	last = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
+-	list_del(&ac->list);
+-	ac->sched = false;
++	last_ac = list_entry(txq->axq_acq.prev, struct ath_atx_ac, list);
+ 
+-	do {
+-		if (list_empty(&ac->tid_q))
+-			return;
++	list_for_each_entry_safe(ac, ac_tmp, &txq->axq_acq, list) {
++		last_tid = list_entry(ac->tid_q.prev, struct ath_atx_tid, list);
++		list_del(&ac->list);
++		ac->sched = false;
+ 
+-		tid = list_first_entry(&ac->tid_q, struct ath_atx_tid, list);
+-		list_del(&tid->list);
+-		tid->sched = false;
++		while (!list_empty(&ac->tid_q)) {
++			tid = list_first_entry(&ac->tid_q, struct ath_atx_tid,
++					       list);
++			list_del(&tid->list);
++			tid->sched = false;
+ 
+-		if (tid->paused)
+-			continue;
++			if (tid->paused)
++				continue;
+ 
+-		ath_tx_sched_aggr(sc, txq, tid);
++			ath_tx_sched_aggr(sc, txq, tid);
+ 
+-		/*
+-		 * add tid to round-robin queue if more frames
+-		 * are pending for the tid
+-		 */
+-		if (!list_empty(&tid->buf_q))
+-			ath_tx_queue_tid(txq, tid);
++			/*
++			 * add tid to round-robin queue if more frames
++			 * are pending for the tid
++			 */
++			if (!list_empty(&tid->buf_q))
++				ath_tx_queue_tid(txq, tid);
+ 
+-		if (tid == last || txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
+-			break;
+-	} while (!list_empty(&ac->tid_q));
++			if (tid == last_tid ||
++			    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++				break;
++		}
+ 
+-	if (!list_empty(&ac->tid_q)) {
+-		if (!ac->sched) {
+-			ac->sched = true;
+-			list_add_tail(&ac->list, &txq->axq_acq);
++		if (!list_empty(&ac->tid_q)) {
++			if (!ac->sched) {
++				ac->sched = true;
++				list_add_tail(&ac->list, &txq->axq_acq);
++			}
+ 		}
++
++		if (ac == last_ac ||
++		    txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH)
++			return;
+ 	}
+ }
+ 
+-- 
+1.7.2.3
 
-Sujith
