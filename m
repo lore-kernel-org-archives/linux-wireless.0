@@ -1,119 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:40464 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077Ab1AYM2a convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:28461 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753795Ab1ASJUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 07:28:30 -0500
-Received: by pzk35 with SMTP id 35so854157pzk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 04:28:30 -0800 (PST)
+	Wed, 19 Jan 2011 04:20:45 -0500
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0947738841
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:20:44 +0900 (JST)
+Subject: [PATCH 7/8] ath5k: Remove unused sc->curmode
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 19 Jan 2011 18:21:08 +0900
+Message-ID: <20110119092108.19628.43971.stgit@localhost6.localdomain6>
+In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <1295929976-11858-2-git-send-email-me@bobcopeland.com>
-References: <1295929976-11858-1-git-send-email-me@bobcopeland.com>
-	<1295929976-11858-2-git-send-email-me@bobcopeland.com>
-Date: Tue, 25 Jan 2011 14:28:27 +0200
-Message-ID: <AANLkTi=i8N6ZTiZUvDASXws-FBgxYVw8Zy4=A7kQwNgs@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath5k: remove debug_dump_skb() functions
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Bruno Randolf <br1@einfach.org>, jirislaby@gmail.com,
-	lrodriguez@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/25 Bob Copeland <me@bobcopeland.com>:
-> Now that rx and tx dumps go through the tracing infrastructure,
-> we no longer need to keep these routines around.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/debug.c |   20 --------------------
->  drivers/net/wireless/ath/ath5k/debug.h |   10 ----------
->  2 files changed, 0 insertions(+), 30 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-> index d2f84d7..0230f30 100644
-> --- a/drivers/net/wireless/ath/ath5k/debug.c
-> +++ b/drivers/net/wireless/ath/ath5k/debug.c
-> @@ -308,8 +308,6 @@ static const struct {
->        { ATH5K_DEBUG_CALIBRATE, "calib",       "periodic calibration" },
->        { ATH5K_DEBUG_TXPOWER,  "txpower",      "transmit power setting" },
->        { ATH5K_DEBUG_LED,      "led",          "LED management" },
-> -       { ATH5K_DEBUG_DUMP_RX,  "dumprx",       "print received skb content" },
-> -       { ATH5K_DEBUG_DUMP_TX,  "dumptx",       "print transmit skb content" },
->        { ATH5K_DEBUG_DUMPBANDS, "dumpbands",   "dump bands" },
->        { ATH5K_DEBUG_DMA,      "dma",          "dma start/stop" },
->        { ATH5K_DEBUG_ANI,      "ani",          "adaptive noise immunity" },
-> @@ -1036,24 +1034,6 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
->  }
->
->  void
-> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> -                       struct sk_buff *skb, const char *prefix, int tx)
-> -{
-> -       char buf[16];
-> -
-> -       if (likely(!((tx && (sc->debug.level & ATH5K_DEBUG_DUMP_TX)) ||
-> -                    (!tx && (sc->debug.level & ATH5K_DEBUG_DUMP_RX)))))
-> -               return;
-> -
-> -       snprintf(buf, sizeof(buf), "%s %s", wiphy_name(sc->hw->wiphy), prefix);
-> -
-> -       print_hex_dump_bytes(buf, DUMP_PREFIX_NONE, skb->data,
-> -               min(200U, skb->len));
-> -
-> -       printk(KERN_DEBUG "\n");
-> -}
-> -
-> -void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf)
->  {
->        struct ath5k_desc *ds = bf->desc;
-> diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
-> index 3e34428..b0355ae 100644
-> --- a/drivers/net/wireless/ath/ath5k/debug.h
-> +++ b/drivers/net/wireless/ath/ath5k/debug.h
-> @@ -116,8 +116,6 @@ enum ath5k_debug_level {
->        ATH5K_DEBUG_CALIBRATE   = 0x00000020,
->        ATH5K_DEBUG_TXPOWER     = 0x00000040,
->        ATH5K_DEBUG_LED         = 0x00000080,
-> -       ATH5K_DEBUG_DUMP_RX     = 0x00000100,
-> -       ATH5K_DEBUG_DUMP_TX     = 0x00000200,
->        ATH5K_DEBUG_DUMPBANDS   = 0x00000400,
->        ATH5K_DEBUG_DMA         = 0x00000800,
->        ATH5K_DEBUG_ANI         = 0x00002000,
-> @@ -152,10 +150,6 @@ void
->  ath5k_debug_dump_bands(struct ath5k_softc *sc);
->
->  void
-> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> -                       struct sk_buff *skb, const char *prefix, int tx);
-> -
-> -void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf);
->
->  #else /* no debugging */
-> @@ -182,10 +176,6 @@ static inline void
->  ath5k_debug_dump_bands(struct ath5k_softc *sc) {}
->
->  static inline void
-> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> -                       struct sk_buff *skb, const char *prefix, int tx) {}
-> -
-> -static inline void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf) {}
->
->  #endif /* ifdef CONFIG_ATH5K_DEBUG */
-> --
-> 1.7.1.1
->
+sc->curmode is set but never used. Remove it and the helper function. Also the
+ath5k_rate_update which is refered to in the comment does not exist (any more?)
+so we don't need to setup the band in that place.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   18 ------------------
+ drivers/net/wireless/ath/ath5k/base.h |    1 -
+ 2 files changed, 0 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 6900543..a00cc11 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -439,18 +439,6 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 	return ath5k_reset(sc, chan, true);
+ }
+ 
+-static void
+-ath5k_setcurmode(struct ath5k_softc *sc, unsigned int mode)
+-{
+-	sc->curmode = mode;
+-
+-	if (mode == AR5K_MODE_11A) {
+-		sc->curband = &sc->sbands[IEEE80211_BAND_5GHZ];
+-	} else {
+-		sc->curband = &sc->sbands[IEEE80211_BAND_2GHZ];
+-	}
+-}
+-
+ struct ath_vif_iter_data {
+ 	const u8	*hw_macaddr;
+ 	u8		mask[ETH_ALEN];
+@@ -2776,12 +2764,6 @@ ath5k_init(struct ieee80211_hw *hw)
+ 		goto err;
+ 	}
+ 
+-	/* NB: setup here so ath5k_rate_update is happy */
+-	if (test_bit(AR5K_MODE_11A, ah->ah_modes))
+-		ath5k_setcurmode(sc, AR5K_MODE_11A);
+-	else
+-		ath5k_setcurmode(sc, AR5K_MODE_11B);
+-
+ 	/*
+ 	 * Allocate tx+rx descriptors and populate the lists.
+ 	 */
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 6d51147..58660e4 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -202,7 +202,6 @@ struct ath5k_softc {
+ #define ATH_STAT_STARTED	4		/* opened & irqs enabled */
+ 
+ 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
+-	unsigned int		curmode;	/* current phy mode */
+ 	struct ieee80211_channel *curchan;	/* current h/w channel */
+ 
+ 	u16			nvifs;
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
