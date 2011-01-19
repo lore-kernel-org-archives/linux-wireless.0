@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44234 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873Ab1AONie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 08:38:34 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] mac80211: drop non-auth 3-addr data frames when running as a 4-addr station
-Date: Sat, 15 Jan 2011 14:38:28 +0100
-Message-Id: <1295098708-99081-1-git-send-email-nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59657 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911Ab1ASLIJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 06:08:09 -0500
+Received: by qwa26 with SMTP id 26so696481qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 03:08:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110119092047.19628.99228.stgit@localhost6.localdomain6>
+References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+	<20110119092047.19628.99228.stgit@localhost6.localdomain6>
+Date: Wed, 19 Jan 2011 06:08:08 -0500
+Message-ID: <AANLkTi=aFnRvX1vdoB9egVAas6zMgkyQVwpzfH0N=4+2@mail.gmail.com>
+Subject: Re: [PATCH 3/8] ath5k: Rename ath5k_copy_channels
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running as a 4-addr station against an AP that has the 4-addr VLAN
-interface and the main 3-addr AP interface bridged together, sometimes
-frames originating from the station were looping back from the 3-addr AP
-interface, causing the bridge code to emit warnings about receiving frames
-with its own source address.
-I'm not sure why this is happening yet, but I think it's a good idea to
-drop all frames (except 802.1x/EAP frames) that do not match the configured
-addressing mode, including 4-address frames sent to a 3-address station.
-User test reports indicate that the problem goes away with this patch.
+On Wed, Jan 19, 2011 at 4:20 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Rename ath5k_copy_channels() to ath5k_setup_channels() - nothing is copied
+> here.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 0387acb..9e8b1f4 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -256,7 +256,7 @@ static bool ath5k_is_standard_channel(short chan)
+>  }
+>
+>  static unsigned int
+> -ath5k_copy_channels(struct ath5k_hw *ah,
+> +ath5k_setup_channels(struct ath5k_hw *ah,
+>                struct ieee80211_channel *channels,
+>                unsigned int mode,
+>                unsigned int max)
+> @@ -356,7 +356,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+>                sband->n_bitrates = 12;
+>
+>                sband->channels = sc->channels;
+> -               sband->n_channels = ath5k_copy_channels(ah, sband->channels,
+> +               sband->n_channels = ath5k_setup_channels(ah, sband->channels,
+>                                        AR5K_MODE_11G, max_c);
+>
+>                hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
+> @@ -382,7 +382,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+>                }
+>
+>                sband->channels = sc->channels;
+> -               sband->n_channels = ath5k_copy_channels(ah, sband->channels,
+> +               sband->n_channels = ath5k_setup_channels(ah, sband->channels,
+>                                        AR5K_MODE_11B, max_c);
+>
+>                hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
+> @@ -402,7 +402,7 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+>                sband->n_bitrates = 8;
+>
+>                sband->channels = &sc->channels[count_c];
+> -               sband->n_channels = ath5k_copy_channels(ah, sband->channels,
+> +               sband->n_channels = ath5k_setup_channels(ah, sband->channels,
+>                                        AR5K_MODE_11A, max_c);
+>
+>                hw->wiphy->bands[IEEE80211_BAND_5GHZ] = sband;
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rx.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a6701ed..54e3108 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1561,9 +1561,13 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
- 		return -1;
- 
-+	if (!ieee80211_802_1x_port_control(rx) &&
-+	    sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    !!sdata->u.mgd.use_4addr != !!ieee80211_has_a4(hdr->frame_control))
-+		return -1;
-+
- 	if (is_multicast_ether_addr(hdr->addr1) &&
--	    ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->u.vlan.sta) ||
--	     (sdata->vif.type == NL80211_IFTYPE_STATION && sdata->u.mgd.use_4addr)))
-+	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->u.vlan.sta)
- 		return -1;
- 
- 	return ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
 -- 
-1.7.3.2
-
+Bob Copeland %% www.bobcopeland.com
