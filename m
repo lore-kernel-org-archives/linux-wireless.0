@@ -1,119 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dell.nexicom.net ([216.168.96.13]:57344 "EHLO smtp.nexicom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751707Ab1A0Rib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 12:38:31 -0500
-Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-36.nexicom.net [216.168.118.36])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p0RHcMIk009114
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 12:38:25 -0500
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 36B0098517
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 12:38:22 -0500 (EST)
-Message-ID: <4D41AD8E.5040500@lockie.ca>
-Date: Thu, 27 Jan 2011 12:38:22 -0500
-From: James <bjlockie@lockie.ca>
-MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Unspecified failure
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57039 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957Ab1ASWfN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Jan 2011 17:35:13 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so1417828fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 14:35:13 -0800 (PST)
+From: Jonas Gorski <jonas.gorski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [RFT 5/8] staging: brcm80211: Remove ETHER_TYPE_BRCM.
+Date: Wed, 19 Jan 2011 23:35:29 +0100
+Message-Id: <1295476532-21130-6-git-send-email-jonas.gorski@gmail.com>
+In-Reply-To: <1295476532-21130-5-git-send-email-jonas.gorski@gmail.com>
+References: <1295476532-21130-1-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-2-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-3-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-4-git-send-email-jonas.gorski@gmail.com>
+ <1295476532-21130-5-git-send-email-jonas.gorski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How can I find out what the "Unspecified failure" is?
+Use the recently introduced ETH_P_LINK_CTL instead of ETHER_TYPE_BRCM, and
+remove the define.
 
+Signed-off-by: Jonas Gorski <jonas.gorski@gmail.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    2 +-
+ drivers/staging/brcm80211/include/proto/ethernet.h |    2 --
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-$ sudo iw --debug dev wlan1 connect -w "test"     
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE
----------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 164
-    .nlmsg_type = 18 <0x12>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 0
-    .nlmsg_pid = 0
-  [PAYLOAD] 148 octets
-    21 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 !.................
-    00 00 0c 00 2d 00 08 00 00 00 74 65 73 74 74 00 2c 00 ....-.....testt.,.
-    08 00 00 00 6c 09 00 00 08 00 01 00 71 09 00 00 08 00 ....l.......q.....
-    02 00 76 09 00 00 08 00 03 00 7b 09 00 00 08 00 04 00 ..v.......{.......
-    80 09 00 00 08 00 05 00 85 09 00 00 08 00 06 00 8a 09 ..................
-    00 00 08 00 07 00 8f 09 00 00 08 00 08 00 94 09 00 00 ..................
-    08 00 09 00 99 09 00 00 08 00 0a 00 9e 09 00 00 08 00 ..................
-    0b 00 a3 09 00 00 08 00 0c 00 a8 09 00 00 08 00 0d 00 ..................
-    b4 09 00 00                                           ....
----------------------------  END NETLINK MESSAGE  
----------------------------
--- Error: Invalid message: type=0x12 length=164 flags=<> sequence-nr=0 pid=0
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE
----------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 36
-    .nlmsg_type = 2 <ERROR>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 1296149664
-    .nlmsg_pid = 2927
-  [ERRORMSG] 20 octets
-    .error = 0 "Success"
-  [ORIGINAL MESSAGE] 16 octets
-    .nlmsg_len = 16
-    .nlmsg_type = 18 <0x12>
-    .nlmsg_flags = 5 <REQUEST,ACK>
-    .nlmsg_seq = 1296149664
-    .nlmsg_pid = 2927
----------------------------  END NETLINK MESSAGE  
----------------------------
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE
----------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 164
-    .nlmsg_type = 18 <0x12>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 0
-    .nlmsg_pid = 0
-  [PAYLOAD] 148 octets
-    22 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 ".................
-    00 00 0c 00 2d 00 08 00 00 00 74 65 73 74 74 00 2c 00 ....-.....testt.,.
-    08 00 00 00 6c 09 00 00 08 00 01 00 71 09 00 00 08 00 ....l.......q.....
-    02 00 76 09 00 00 08 00 03 00 7b 09 00 00 08 00 04 00 ..v.......{.......
-    80 09 00 00 08 00 05 00 85 09 00 00 08 00 06 00 8a 09 ..................
-    00 00 08 00 07 00 8f 09 00 00 08 00 08 00 94 09 00 00 ..................
-    08 00 09 00 99 09 00 00 08 00 0a 00 9e 09 00 00 08 00 ..................
-    0b 00 a3 09 00 00 08 00 0c 00 a8 09 00 00 08 00 0d 00 ..................
-    b4 09 00 00                                           ....
----------------------------  END NETLINK MESSAGE  
----------------------------
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE
----------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 52
-    .nlmsg_type = 18 <0x12>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 0
-    .nlmsg_pid = 0
-  [PAYLOAD] 36 octets
-    25 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 %.................
-    00 00 04 00 41 00 0a 00 06 00 00 18 3f b6 7d 69 00 00 ....A.......?.}i..
----------------------------  END NETLINK MESSAGE  
----------------------------
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE
----------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 56
-    .nlmsg_type = 18 <0x12>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 0
-    .nlmsg_pid = 0
-  [PAYLOAD] 40 octets
-    2e 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 ..................
-    00 00 0a 00 06 00 00 18 3f b6 7d 69 00 00 06 00 48 00 ........?.}i....H.
-    01 00 00 00                                           ....
----------------------------  END NETLINK MESSAGE  
----------------------------
-wlan1 (phy #0): failed to connect to 00:18:3f:b6:7d:69, status: 1:
-Unspecified failure
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 87bf42d..71c5203 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -1215,7 +1215,7 @@ void dhd_rx_frame(dhd_pub_t *dhdp, int ifidx, struct sk_buff *pktbuf,
+ 		skb_pull(skb, ETH_HLEN);
+ 
+ 		/* Process special event packets and then discard them */
+-		if (ntoh16(skb->protocol) == ETHER_TYPE_BRCM)
++		if (skb->protocol == htons(ETH_P_LINK_CTL))
+ 			dhd_wl_host_event(dhd, &ifidx,
+ 					  skb_mac_header(skb),
+ 					  &event, &data);
+diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
+index bc99842..77deb94 100644
+--- a/drivers/staging/brcm80211/include/proto/ethernet.h
++++ b/drivers/staging/brcm80211/include/proto/ethernet.h
+@@ -21,8 +21,6 @@
+ 
+ #include <packed_section_start.h>
+ 
+-#define	ETHER_TYPE_BRCM		0x886c
+-
+ BWL_PRE_PACKED_STRUCT struct ether_addr {
+ 	u8 octet[ETH_ALEN];
+ } BWL_POST_PACKED_STRUCT;
+-- 
+1.5.6.5
 
