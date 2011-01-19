@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11165 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:46913 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754120Ab1AaWId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:08:33 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH  wireless-2.6.38] iwlagn: overwrite EEPROM chain setting for 6250 devices
-Date: Mon, 31 Jan 2011 13:56:03 -0800
-Message-Id: <1296510963-11266-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751254Ab1ASAdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Jan 2011 19:33:46 -0500
+Message-ID: <4D363165.1010306@openwrt.org>
+Date: Wed, 19 Jan 2011 01:33:41 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 1/2] ath9k: try more than one tid when scheduling a new
+ aggregate
+References: <1295098215-98910-1-git-send-email-nbd@openwrt.org> <4D362FC5.3090003@candelatech.com>
+In-Reply-To: <4D362FC5.3090003@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-6250 2x2 devices have 2 tx chain and 2 rx chain. For some reason,
-the EEPROM contain incorrect information and indicate it only has single
-tx chain. overwrite it with .cfg parameter to make sure both chain 'A' and
-chain 'B' can be used for transmit and receive
+On 2011-01-19 1:26 AM, Ben Greear wrote:
+> On 01/15/2011 05:30 AM, Felix Fietkau wrote:
+>> Sometimes the first TID in the first AC's list is not available for forming
+>> a new aggregate (the BAW might not allow it), however other TIDs may have
+>> data available for sending.
+>> Prevent a slowdown of other TIDs by going through multiple entries until
+>> we've either hit the last one or enough AMPDUs are pending in the hardware
+>> queue.
+> 
+> I had attempted a similar patch, but I was thinking we should iterate
+> through all of the txq->axq_acq entries, not just use the first one?
+> 
+> If you agree, I can merge my patch with your patch below
+> and re-post.
+My patch was merged, how about sending an incremental patch on top of it
+for review?
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch is also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
----
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index af505bc..ef36aff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -681,6 +681,8 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
- 	.fw_name_pre = IWL6050_FW_PRE,				\
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,			\
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,			\
-+	.valid_tx_ant = ANT_AB,		/* .cfg overwrite */	\
-+	.valid_rx_ant = ANT_AB,		/* .cfg overwrite */	\
- 	.ops = &iwl6050_ops,					\
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,		\
- 	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,	\
--- 
-1.7.0.4
-
+- Felix
