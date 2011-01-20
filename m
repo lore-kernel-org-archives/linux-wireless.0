@@ -1,46 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34742 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469Ab1AZVyQ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33649 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753523Ab1ATWj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 16:54:16 -0500
-Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta
- connection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
-	 <1295156534-4178-3-git-send-email-arik@wizery.com>
-	 <1296077594.3635.40.camel@jlt3.sipsolutions.net>
-	 <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Jan 2011 22:54:17 +0100
-Message-ID: <1296078857.3635.41.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 20 Jan 2011 17:39:27 -0500
+Message-ID: <4D38B990.50406@candelatech.com>
+Date: Thu, 20 Jan 2011 14:39:12 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 1/4] ath9k: remove the virtual wiphy debugfs interface
+References: <1295562349-17161-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1295562349-17161-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-26 at 23:44 +0200, Arik Nemtsov wrote:
+On 01/20/2011 02:25 PM, Felix Fietkau wrote:
+> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+> ---
+>   drivers/net/wireless/ath/ath9k/debug.c |  202 --------------------------------
+>   1 files changed, 0 insertions(+), 202 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index 3586c43..73644c4 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -381,204 +381,6 @@ static const struct file_operations fops_interrupt = {
+>   	.llseek = default_llseek,
+>   };
 
-> Well no it doesn't do that. But the FW takes some time to know its
-> authenticated.
-> The flow is this:
-> 
-> 1. hostapd sends auth complete (the FW doesn't know anything about this)
+I think a lot of this could still be useful, even if it's named something
+other than wiphy, so please don't remove all the filter debug and
+similar...
 
-you mean assoc, right?
+Thanks,
+Ben
 
-> 2. The STA transmits something
-> 3. The AP FW deauths the STA
-> 4. hostapd adds the station, causing mac80211 to call add_sta(), which
-> causes the FW to add the sta
-> 
-> Then we have an endless loop of sta add/remove..
+>
+> -static const char * ath_wiphy_state_str(enum ath_wiphy_state state)
+> -{
+> -	switch (state) {
+> -	case ATH_WIPHY_INACTIVE:
+> -		return "INACTIVE";
+> -	case ATH_WIPHY_ACTIVE:
+> -		return "ACTIVE";
+> -	case ATH_WIPHY_PAUSING:
+> -		return "PAUSING";
+> -	case ATH_WIPHY_PAUSED:
+> -		return "PAUSED";
+> -	case ATH_WIPHY_SCAN:
+> -		return "SCAN";
+> -	}
+> -	return "?";
+> -}
+> -
+> -static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+> -			       size_t count, loff_t *ppos)
+> -{
+> -	struct ath_softc *sc = file->private_data;
+> -	struct ath_wiphy *aphy = sc->pri_wiphy;
+> -	struct ieee80211_channel *chan = aphy->hw->conf.channel;
+> -	char buf[512];
+> -	unsigned int len = 0;
+> -	int i;
+> -	u8 addr[ETH_ALEN];
+> -	u32 tmp;
+> -
+> -	len += snprintf(buf + len, sizeof(buf) - len,
+> -			"primary: %s (%s chan=%d ht=%d)\n",
+> -			wiphy_name(sc->pri_wiphy->hw->wiphy),
+> -			ath_wiphy_state_str(sc->pri_wiphy->state),
+> -			ieee80211_frequency_to_channel(chan->center_freq),
+> -			aphy->chan_is_ht);
+> -
+> -	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
+> -	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1)&  0xffff, addr + 4);
+> -	len += snprintf(buf + len, sizeof(buf) - len,
+> -			"addr: %pM\n", addr);
+> -	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
+> -	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU)&  0xffff, addr + 4);
+> -	len += snprintf(buf + len, sizeof(buf) - len,
+> -			"addrmask: %pM\n", addr);
+> -	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
+> -	len += snprintf(buf + len, sizeof(buf) - len,
+> -			"rfilt: 0x%x", tmp);
+> -	if (tmp&  ATH9K_RX_FILTER_UCAST)
+> -		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
+> -	if (tmp&  ATH9K_RX_FILTER_MCAST)
+> -		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
 
-I'd wondered about that race condition before -- maybe hostapd should
-add the station before sending the assoc complete. The race also exists
-in practice with just mac80211, except it only leads to a dropped frame.
+Thanks,
+Ben
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
