@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:41254 "EHLO comal.ext.ti.com"
+Received: from lo.gmane.org ([80.91.229.12]:51854 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751868Ab1AJQCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 11:02:46 -0500
-Subject: Re: [PATCH] wl12xx: fix some sparse warnings
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1293017932-9806-1-git-send-email-eliad@wizery.com>
-References: <1293017932-9806-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 Jan 2011 18:02:50 +0200
-Message-ID: <1294675370.1992.142.camel@pimenta>
-MIME-Version: 1.0
+	id S1753626Ab1ATLZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 06:25:06 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PfsdU-000537-To
+	for linux-wireless@vger.kernel.org; Thu, 20 Jan 2011 12:25:05 +0100
+Received: from 145.90.70.115.static.exetel.com.au ([115.70.90.145])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 12:25:04 +0100
+Received: from conflatulence by 145.90.70.115.static.exetel.com.au with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 12:25:04 +0100
+To: linux-wireless@vger.kernel.org
+From: zach <conflatulence@gmail.com>
+Subject: Re: [PATCH] Kernel Panic on Associate with brcm80211.
+Date: Thu, 20 Jan 2011 11:21:26 +0000 (UTC)
+Message-ID: <loom.20110120T120235-29@post.gmane.org>
+References: <4D334D00.4030604@mythicnet.org> <4D3521FD.9020001@mythicnet.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 12:38 +0100, Eliad Peller wrote:
-> Note that wl1271_write32() calls cpu_to_le32() by itself, so calling
-> wl1271_write32(addr, cpu_to_le32(val)) is in fact a bug on BE systems.
-> 
-> Fix the following sparse warnings:
-> 
-> drivers/net/wireless/wl12xx/cmd.c:662:16: warning: incorrect type in assignment (different base types)
-> drivers/net/wireless/wl12xx/cmd.c:662:16:    expected unsigned short [unsigned] [addressable] [usertype] llc_type
-> drivers/net/wireless/wl12xx/cmd.c:662:16:    got restricted __be16 [usertype] <noident>
-> drivers/net/wireless/wl12xx/cmd.c:674:17: warning: incorrect type in assignment (different base types)
-> drivers/net/wireless/wl12xx/cmd.c:674:17:    expected unsigned int [unsigned] [addressable] [usertype] sender_ip
-> drivers/net/wireless/wl12xx/cmd.c:674:17:    got restricted __be32 [usertype] ip_addr
-> drivers/net/wireless/wl12xx/rx.c:202:4: warning: incorrect type in argument 3 (different base types)
-> drivers/net/wireless/wl12xx/rx.c:202:4:    expected unsigned int [unsigned] [usertype] val
-> drivers/net/wireless/wl12xx/rx.c:202:4:    got restricted __le32 [usertype] <noident>
-> drivers/net/wireless/wl12xx/acx.c:1247:23: warning: incorrect type in assignment (different base types)
-> drivers/net/wireless/wl12xx/acx.c:1247:23:    expected restricted __le32 [usertype] ht_capabilites
-> drivers/net/wireless/wl12xx/acx.c:1247:23:    got unsigned long
-> drivers/net/wireless/wl12xx/acx.c:1250:24: warning: invalid assignment: |=
-> drivers/net/wireless/wl12xx/acx.c:1250:24:    left side has type restricted __le32
-> drivers/net/wireless/wl12xx/acx.c:1250:24:    right side has type unsigned long
-> drivers/net/wireless/wl12xx/acx.c:1253:24: warning: invalid assignment: |=
-> drivers/net/wireless/wl12xx/acx.c:1253:24:    left side has type restricted __le32
-> drivers/net/wireless/wl12xx/acx.c:1253:24:    right side has type unsigned long
-> drivers/net/wireless/wl12xx/acx.c:1256:24: warning: invalid assignment: |=
-> drivers/net/wireless/wl12xx/acx.c:1256:24:    left side has type restricted __le32
-> drivers/net/wireless/wl12xx/acx.c:1256:24:    right side has type unsigned long
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+Ilya Kogan <ikogan@...> writes:
 
-Applied, thank you!
+> 
+> I'm going to admit I'm fairly new to this but after some reading, I 
+> couldn't quite understand why there is an assertion ensuring that the 
+> sk_buff being sent is not cloned. I was going to see what exploded if I 
+> removed it and to my surprise...nothing did. In fact, except for a few
+> 
+> [12014.013409] wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 
+> 382/256 dur 3562/1504
+> 
+> things seem to work fine. I'll be doing some more testing with this over 
+> the next couple of days. What obvious thing does this break horribly?
+> 
 
+Hi, I think I had the same panic on emachines em350 with BCM4313 using Fedora 14
+and kernel 2.6.38-rc1. Network manager applet shows little blue dots going round
+and then panic. Applying your change solved it. Thanks!
+Photo of panic
+http://picasaweb.google.com/lh/photo/hWEO_uFGNO-jAKjqhyJvkLevz6n8KX8fvZ44UIlA3yw?feat=directlink
 
--- 
-Cheers,
-Luca.
+config http://pastebin.com/9z8AmJ3E
+
+zach
 
