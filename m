@@ -1,107 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34180 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858Ab1AHGOM (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:63549 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083Ab1ATRvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 01:14:12 -0500
-Received: by wyb28 with SMTP id 28so18051891wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 22:14:10 -0800 (PST)
+	Thu, 20 Jan 2011 12:51:39 -0500
+Received: by wwi17 with SMTP id 17so1761430wwi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 09:51:38 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [RFC PATCH 10/17] zd1211rw: implement beacon fetching and handling ieee80211_get_buffered_bc()
+Date: Thu, 20 Jan 2011 18:43:56 +0100
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+References: <20110104234745.25309.72030.stgit@fate.lan> <201101192122.25282.chunkeey@googlemail.com> <20110120101606.53052h18mlpyp8w0@hayate.sektori.org>
+In-Reply-To: <20110120101606.53052h18mlpyp8w0@hayate.sektori.org>
 MIME-Version: 1.0
-In-Reply-To: <20110107202224.GI21588@tux>
-References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
-	<AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
-	<20110107024432.GC20431@tux>
-	<201101071111.17423.helmut.schaa@googlemail.com>
-	<AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
-	<20110107202224.GI21588@tux>
-Date: Fri, 7 Jan 2011 22:14:10 -0800
-Message-ID: <AANLkTintU_vSt5eWoma4_d9tNCxPpOfpGZMq7XXppjpP@mail.gmail.com>
-Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
-From: Aleksandar Milivojevic <alex@milivojevic.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Wolfgang Kufner <wolfgang.kufner@gmail.com>,
-	Luis Correia <buga@loide.net>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201101201843.56916.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 7, 2011 at 12:22 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> You may want to try checing the 'iw event -t' output while the issue happens.
+On Thursday 20 January 2011 09:16:06 Jussi Kivilinna wrote:
+> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+>> On Wednesday 19 January 2011 19:49:03 Jussi Kivilinna wrote:
+>>> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+>>>> On Sunday 09 January 2011 16:46:56 Jussi Kivilinna wrote:
+>>>>> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+>>>>>> Since zd_beacon_done also uploads the next beacon so long in advance,
+>>>>>> there could be an equally long race between the outdated state of the
+>>>>>> next beacon's DTIM broadcast traffic indicator (802.11-2007 7.3.2.6)
+>>>>>> which -in your case- was uploaded almost a beacon interval ago and
+>>>>>> the xmit of ieee80211_get_buffered_bc *now*.
+>>>>>>
+>>>>>> The dtim bc/mc bit might be not set, when a mc/bc arrived after the
+>>>>>> beacon was uploaded, but before the "beacon done event" from the
+>>>>>> hardware. So, dozing stations don't expect the broadcast traffic
+>>>>>> and of course, they might miss it completely.
+>>>>>>
+>>>>>> It's probably better to fix this in mac80211 (see the attached hack).
+>>>>>
+>>>>> Ok, should I add this to my patchset?
+>>>> well, difficult to say. As far as I can say, it should be correct for "your
+>>>> case". But, on the other hand: what about solutions that can't buffer
+>>>> mc/bc frames (and needs to call ieee80211_get_buffered_bc), however the
+>>>> firmware is clever enough to maintain a beacon internally (so they
+>>>> won't call ieee80211_beacon_get and only relies on set_tim)?
+>>>>
+>>>> Sure, it's just a unlikely corner case... In fact, I didn't check if
+>>>> that's even possible, but it does sound reasonable to some extend.
+>>>
+>>> From what I checked none of currect driver/device is such.
+>>> Maybe if such device appears then !bss->dtim_bc_mc check in
+>>> ieee80211_beacon_add_tim() could be masked with driver flag (something
+>>> like
+>>> IEEE80211_HW_CAN_AND_HANDLE_BEACON_BUT_STILL_NEEDS_HOST_BROADCAST_PS_BUFFERING).
+>>
+>> True, but a recent discussion into this matter have made parts of the
+>> API you are planning to use sort-of "deprecated"? [I think?]
+>>
+>> http://marc.info/?l=linux-wireless&m=129463297300480
+>>
+>> I don't know the exact details, but I'm sure Kvalo does have his reasons.
+>> [afaik it has to do with wl12xx, he even explained it once, but I can't
+>> find that mail anymore].
+>>
+>
+> What I understood from that thread is that rt2x00/usb doesn't have HW  
+> buffering and doesn't enable IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING  
+> (rt2x00/pci does), and yet enables AP-mode. Driver has this comment:
+> 	/*
+> 	 * Initialize all hw fields.
+> 	 *
+> 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING unless we are
+> 	 * capable of sending the buffered frames out after the DTIM
+> 	 * transmission using rt2x00lib_beacondone. This will send out
+> 	 * multicast and broadcast traffic immediately instead of buffering it
+> 	 * infinitly and thus dropping it after some time.
+> 	 */
 
-Running 'iw event -t' shows a lot of disassociation due to inactivity.
- This happens even if there is regular flow of traffic (for example, I
-start ping to my AP and leave it running, or I leave Pandora streaming
-music in the browser).
+My bad, you are right. This is not something to worry about anymore.
 
-Below is example of output of 'iw event -t' (these lines repeat in the
-output at irregularl intervals):
+> > One more thing, is there a tx-control flag to instruct the HW/FW to write
+> > the TSF into probe response frames, just like it does for beacons frames?
+> >
+> > Sure, this feature is far more important for IBSS, but the 802.11-2007
+> > specs @11.1.4 says that a STA might use beacons or probe responses to
+> > synchronize its timers. [However 11.1.1.1 and 11.1.3.4 say that STAs
+> > should "only" pick this information from beacons, if I'm not mistaken?!]
+> > (Also a uniform "0..0" timestamp in every probe-response looks so sad.)
+> >
+> 
+> No such flag I'm afraid. Vendor driver appears to be reading  
+> tsf-register from driver and writing value to probe response frames,  
+> maybe something I should add to zd1211rw too.
+It's more of a cosmetic thing, but very difficult to get it right without
+firmware/hw support [over an usb]. So you might just leave it as it
+is...
 
-1294464037.037450: wlan0 (phy #0): deauth 00:1c:10:ea:2a:cb ->
-00:1e:52:79:e9:ff reason 4: Disassociated due to inactivity
-1294464037.037538: wlan0 (phy #0): disconnected (local request)
-1294464037.051747: phy #0: regulatory domain change: set to world
-roaming by the wireless core upon initialization request
-1294464037.143040: wlan0 (phy #0): scan started
-1294464040.158920: wlan0 (phy #0): scan finished: 2412 2417 2422 2427
-2432 2437 2442 2447 2452 2457 2462 2467 2472 2484 5180 5190 5200 5220
-5230 5240 5745 5755 5765 5785 5795 5805 5825, ""
-1294464041.799682: wlan0 (phy #0): auth 00:1e:52:79:e9:ff ->
-00:1c:10:ea:2a:cb status: 0: Successful
-1294464041.811304: wlan0: new station 00:1e:52:79:e9:ff
-1294464041.841934: wlan0 (phy #0): assoc 00:1e:52:79:e9:ff ->
-00:1c:10:ea:2a:cb status: 0: Successful
-1294464041.842021: wlan0 (phy #0): connected to 00:1e:52:79:e9:ff
-1294464041.877275: phy #0: regulatory domain change: set to US by a
-country IE request on phy0
-
-I also noticed that from time to time there would be periods when ping
-round trip times would become very irregular, ranging from 3ms to 3-4
-seconds (normally, they would be consistently in approximately 3-4ms
-range).  These periods of high ping latencies do not seem to coincide
-with connection drops between wireless card and AP.  The periods of
-high ping latency would sometime last for few seconds, sometimes for
-few minutes.  For example (an shorter one):
-
-64 bytes from 192.168.0.1: icmp_req=600 ttl=255 time=3.37 ms
-64 bytes from 192.168.0.1: icmp_req=601 ttl=255 time=3.36 ms
-64 bytes from 192.168.0.1: icmp_req=602 ttl=255 time=3.37 ms
-64 bytes from 192.168.0.1: icmp_req=603 ttl=255 time=7.38 ms
-64 bytes from 192.168.0.1: icmp_req=604 ttl=255 time=3.23 ms
-64 bytes from 192.168.0.1: icmp_req=605 ttl=255 time=3.73 ms
-64 bytes from 192.168.0.1: icmp_req=606 ttl=255 time=3.26 ms
-64 bytes from 192.168.0.1: icmp_req=607 ttl=255 time=2665 ms
-64 bytes from 192.168.0.1: icmp_req=608 ttl=255 time=1658 ms
-64 bytes from 192.168.0.1: icmp_req=609 ttl=255 time=650 ms
-64 bytes from 192.168.0.1: icmp_req=610 ttl=255 time=1538 ms
-64 bytes from 192.168.0.1: icmp_req=611 ttl=255 time=530 ms
-64 bytes from 192.168.0.1: icmp_req=612 ttl=255 time=1417 ms
-64 bytes from 192.168.0.1: icmp_req=613 ttl=255 time=409 ms
-64 bytes from 192.168.0.1: icmp_req=614 ttl=255 time=1298 ms
-64 bytes from 192.168.0.1: icmp_req=615 ttl=255 time=290 ms
-64 bytes from 192.168.0.1: icmp_req=616 ttl=255 time=1172 ms
-64 bytes from 192.168.0.1: icmp_req=617 ttl=255 time=164 ms
-64 bytes from 192.168.0.1: icmp_req=618 ttl=255 time=1046 ms
-64 bytes from 192.168.0.1: icmp_req=619 ttl=255 time=41.0 ms
-64 bytes from 192.168.0.1: icmp_req=620 ttl=255 time=923 ms
-64 bytes from 192.168.0.1: icmp_req=621 ttl=255 time=0.561 ms
-64 bytes from 192.168.0.1: icmp_req=622 ttl=255 time=44.8 ms
-64 bytes from 192.168.0.1: icmp_req=623 ttl=255 time=26.9 ms
-64 bytes from 192.168.0.1: icmp_req=624 ttl=255 time=1609 ms
-64 bytes from 192.168.0.1: icmp_req=625 ttl=255 time=610 ms
-64 bytes from 192.168.0.1: icmp_req=626 ttl=255 time=1494 ms
-64 bytes from 192.168.0.1: icmp_req=627 ttl=255 time=488 ms
-64 bytes from 192.168.0.1: icmp_req=628 ttl=255 time=1391 ms
-64 bytes from 192.168.0.1: icmp_req=629 ttl=255 time=383 ms
-64 bytes from 192.168.0.1: icmp_req=630 ttl=255 time=3.42 ms
-64 bytes from 192.168.0.1: icmp_req=631 ttl=255 time=3.43 ms
-64 bytes from 192.168.0.1: icmp_req=632 ttl=255 time=3.20 ms
-64 bytes from 192.168.0.1: icmp_req=633 ttl=255 time=3.91 ms
-64 bytes from 192.168.0.1: icmp_req=634 ttl=255 time=3.24 ms
-64 bytes from 192.168.0.1: icmp_req=635 ttl=255 time=3.74 ms
-64 bytes from 192.168.0.1: icmp_req=636 ttl=255 time=3.36 ms
-64 bytes from 192.168.0.1: icmp_req=637 ttl=255 time=3.39 ms
+Best regards,
+	Christian
