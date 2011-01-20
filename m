@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43271 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753141Ab1ASSaE (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59718 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753219Ab1ATSvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 13:30:04 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1PfcnD-0001SC-U0
-	for linux-wireless@vger.kernel.org; Wed, 19 Jan 2011 13:30:03 -0500
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p0JIMbd1018654
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 13:22:37 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id p0JIMbeh018652
-	for linux-wireless@vger.kernel.org; Wed, 19 Jan 2011 13:22:37 -0500
-Date: Wed, 19 Jan 2011 13:22:37 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-testing rebased on 2.6.38-rc1
-Message-ID: <20110119182236.GA2370@tuxdriver.com>
+	Thu, 20 Jan 2011 13:51:19 -0500
+Received: by iyj18 with SMTP id 18so860450iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 10:51:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110120184336.GK3333@home.lan>
+References: <20110120183210.13527.33808@he.sipsolutions.net>
+ <AANLkTi=EDRimawaentk_ppcrsTf1Rex7H9QJspktaa3C@mail.gmail.com> <20110120184336.GK3333@home.lan>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 20 Jan 2011 10:50:43 -0800
+Message-ID: <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
+Subject: Re: Fwd: [Linux Wireless] Update of "en/users/Drivers/carl9170" by PaulFertser
+To: Paul Fertser <fercerpav@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless-testing tree has been rebased upon 2.6.38-rc1.
-Please updates your trees accordingly.
+On Thu, Jan 20, 2011 at 10:43 AM, Paul Fertser <fercerpav@gmail.com> wrote:
+> On Thu, Jan 20, 2011 at 10:37:20AM -0800, Luis R. Rodriguez wrote:
+>> Huh?
+>
+> Christian asked me to add that info to the wiki, is something i wrote wrong?
 
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+It is unclear to me, are you saying carl9170 does not support QoS and
+aggregation?
+  Luis
