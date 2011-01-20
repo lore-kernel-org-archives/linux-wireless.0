@@ -1,99 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:10337 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755143Ab1AGUZd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 15:25:33 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:25:15 -0800
-Date: Fri, 7 Jan 2011 12:25:31 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Peter Stuge <peter@stuge.se>, Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [PATCH 3/3] ath9k: Keep track of stations for
- debugfs.
-Message-ID: <20110107202531.GK21588@tux>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
- <1294361165-15308-3-git-send-email-greearb@candelatech.com>
- <AANLkTikjjKe96Ok09Yz1R_nqsoO+n-9X-abeF8VUoOwQ@mail.gmail.com>
- <4D267E4D.7000608@candelatech.com>
- <20110107024909.GD20431@tux>
- <4D2685CC.7020502@candelatech.com>
- <20110107153607.11061.qmail@stuge.se>
- <20110107200101.GE21588@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110107200101.GE21588@tux>
+Received: from mail.candelatech.com ([208.74.158.172]:43652 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab1ATRch (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 12:32:37 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 1/3] mac80211: Support sw_scan_start_cur
+Date: Thu, 20 Jan 2011 09:32:28 -0800
+Message-Id: <1295544750-6704-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 07, 2011 at 12:01:01PM -0800, Luis Rodriguez wrote:
-> On Fri, Jan 07, 2011 at 07:36:07AM -0800, Peter Stuge wrote:
-> > Ben Greear wrote:
-> > > > but at least other clueless users would not go over stable limit
-> > > > you have found.
-> > > 
-> > > I think it's very likely that the problems I find are general
-> > > issues that are just much easier to hit with lots of stations.
-> > 
-> > I strongly support this. I recognize several of your problems from my
-> > attempts at using ath9k with only a single STA which was all but stable.
-> 
-> Sure, see my other e-mail.
-> 
-> > > There is probably no 'safe' number of stations...just takes longer
-> > > to see bugs with fewer stations.
-> > > 
-> > > For instance, you still see the failure-to-stop-DMA errors with a
-> > > single station, right? And the tx locking stuff was just easier to
-> > > exercise with lots of stations, but it would have been possible to
-> > > hit it with 2 stations.
-> > > 
-> > > The current tx-hang stuff I'm chasing seems like logic bugs in the
-> > > queueing, probably nothing in particular about the chipset.
-> > 
-> > This is also my impression. Since it is important for Atheros to have
-> > bugzilla reports rather than discussion on list
-> 
-> I'm trying to tell you how you can more efficiently work with developers
-> on reporting issues, I'm not singling you out but I am telling you that
-> the energy you spend on complaining on things not being addressed can be
-> better put on reporting issues more efficiently.
-> 
-> Reporting issues on the list helps but what helps is a describin the
-> issue for a specific release but the most difficult thing to do sometimes
-> is to come up with a recipe for a way to reproduce a specific issue. Without
-> this it is harder to debug issues. If you can come up with ways to reproduce
-> issues then it becomes easier for engineers to start digging. Additionally
-> if an issue is seen that was not observed before the reporter may also
-> do a git bisect to try to identify the culprit commit. Be aware though that
-> bisecting on wireless-testing can only be done against the master-* tags,
-> and not on the entire tree due to the way John updates his tree. If you
-> see the issue on a stable kernel though you can just use Linus' tree or
-> the linux-2.6-allstable git tree which will have the stable extra versioned
-> kernels as well.
-> 
-> Reporting issues for stable kernels should go through the kernel bugzilla,
-> but can start off on the mailing list. ath9k-devel though is not ideal for
-> reporting major issues and I recommend linux-wireless to be used instead
-> for that. If an issue is reporting for wireless-testing with a good series
-> of reproducible steps chances are very high it will be addressed. Motivated
-> highly technical users willing to help further get bonus points if they go
-> the extra mile and bisect.
-> 
-> Furthermore, issues can be kept track on here:
-> 
-> http://wireless.kernel.org/en/users/Drivers/ath9k/bugs
-> 
-> This keeps track of major issues reported, and what people are working on.
+From: Ben Greear <greearb@candelatech.com>
 
-I'll also note:
+This method is called when driver can support
+scanning the currect active channel without otherwise
+impeding traffic on that channel.  The mac80211 scan
+logic may call this when we are only scanning on the
+active channel and thus do not need to go off channel.
 
-http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 d6b0045... 3e89ae7... M	include/net/mac80211.h
+ include/net/mac80211.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-If this needs update feel free to edit. The hope is to make it easier for
-users to identify issues and report them properly.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d6b0045..3e89ae7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1672,6 +1672,12 @@ enum ieee80211_ampdu_mlme_action {
+  *	is started. Can be NULL, if the driver doesn't need this notification.
+  *	The callback can sleep.
+  *
++ * @sw_scan_start_cur: Notifier function that is called just before a software
++ *	scan on only the current channel is started. If NULL, sw_scan_start
++ *      will be used instead.  sw_scan_start_cur with second argument set to
++ *      false should be treated identically to sw_scan_start.
++ *	The callback can sleep.
++ *
+  * @sw_scan_complete: Notifier function that is called just after a
+  *	software scan finished. Can be NULL, if the driver doesn't need
+  *	this notification.
+@@ -1820,6 +1826,8 @@ struct ieee80211_ops {
+ 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       struct cfg80211_scan_request *req);
+ 	void (*sw_scan_start)(struct ieee80211_hw *hw);
++	void (*sw_scan_start_cur)(struct ieee80211_hw *hw,
++				  bool cur_channel_only);
+ 	void (*sw_scan_complete)(struct ieee80211_hw *hw);
+ 	int (*get_stats)(struct ieee80211_hw *hw,
+ 			 struct ieee80211_low_level_stats *stats);
+-- 
+1.7.2.3
 
-  Luis
