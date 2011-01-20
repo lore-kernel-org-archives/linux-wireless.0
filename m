@@ -1,53 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39234 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910Ab1AIBG7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 20:06:59 -0500
-Message-ID: <4D290A2C.6040803@candelatech.com>
-Date: Sat, 08 Jan 2011 17:06:52 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
-References: <1294500800-29191-1-git-send-email-greearb@candelatech.com> <4D28FF57.9040706@openwrt.org> <4D290307.4080807@candelatech.com> <4D290450.8070700@openwrt.org>
-In-Reply-To: <4D290450.8070700@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:17829 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751701Ab1ATQT1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 11:19:27 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-2.6.38] iwlwifi: don't read sku information from EEPROM for 4965
+Date: Thu, 20 Jan 2011 08:08:04 -0800
+Message-Id: <1295539684-19682-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2011 04:41 PM, Felix Fietkau wrote:
-> On 2011-01-08 5:36 PM, Ben Greear wrote:
->> On 01/08/2011 04:20 PM, Felix Fietkau wrote:
->>> I think this should be dependent on packet size, maybe even based on the architecture. Especially on embedded hardware, copying large frames is probably quite a
->>> bit more expensive than allocating large buffers. Cache sizes are small, memory access takes several cycles, especially during concurrent DMA.
->>> Once I'm back home, I could try a few packet size threshold to find a sweet spot for the typical MIPS hardware that I'm playing with. I expect a visible
->>> performance regression from this patch when applied as-is.
->>
->> I see a serious performance improvement with this patch. My current test is sending 1024 byte UDP
->> payloads to/from each of 60 stations at 128kbps. Please do try it out on your system and see how
->> it performs there. I'm guessing that any time you have more than 1 VIF this will be a good
->> improvement since mac80211 does skb_copy (and you would typically be copying a much smaller
->> packet with this patch).
->>
->> If we do see performance differences on different platforms, this could perhaps be
->> something we could tune at run-time.
-> What kind of system are you testing on? If it's a PC, then the performance characteristics will be completely different compared to embedded hardware. I've had
-> to remove a few copybreak-like implementations from various ethernet drivers on similar hardware, because even taking the hit of unaligned load/store exceptions
-> (which are already *very* expensive on MIPS) was less than copying the full packet data, even with packet sizes less than what you're using.
->
-> I don't have suitable test hardware with me right now, but I'll do some tests in a week or so.
+For all the new devices, the sku information should read from EEPROM
+but for legacy devices such as 4965, appearly the EEPROM does not
+contain the necessary information. so skip the read from EEPROM
+and go back to use software configuration.
 
-I'm on a dual-core Atom processor.  I'm interested in your MIPs results when you get them...
+Reported-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Tested-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |   11 +++++++----
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-Thanks,
-Ben
-
->
-> - Felix
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 3f1e5f1..91a9f52 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2624,6 +2624,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.fw_name_pre = IWL4965_FW_PRE,
+ 	.ucode_api_max = IWL4965_UCODE_API_MAX,
+ 	.ucode_api_min = IWL4965_UCODE_API_MIN,
++	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_ABC,
+ 	.eeprom_ver = EEPROM_4965_EEPROM_VERSION,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+index 14ceb4d..27b5a3e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+@@ -152,11 +152,14 @@ int iwl_eeprom_check_sku(struct iwl_priv *priv)
+ 
+ 	eeprom_sku = iwl_eeprom_query16(priv, EEPROM_SKU_CAP);
+ 
+-	priv->cfg->sku = ((eeprom_sku & EEPROM_SKU_CAP_BAND_SELECTION) >>
++	if (!priv->cfg->sku) {
++		/* not using sku overwrite */
++		priv->cfg->sku =
++			((eeprom_sku & EEPROM_SKU_CAP_BAND_SELECTION) >>
+ 			EEPROM_SKU_CAP_BAND_POS);
+-	if (eeprom_sku & EEPROM_SKU_CAP_11N_ENABLE)
+-		priv->cfg->sku |= IWL_SKU_N;
+-
++		if (eeprom_sku & EEPROM_SKU_CAP_11N_ENABLE)
++			priv->cfg->sku |= IWL_SKU_N;
++	}
+ 	if (!priv->cfg->sku) {
+ 		IWL_ERR(priv, "Invalid device sku\n");
+ 		return -EINVAL;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
