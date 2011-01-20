@@ -1,49 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:47902 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648Ab1A0Tyh (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:62572 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903Ab1ATXzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 14:54:37 -0500
-Received: by ewy5 with SMTP id 5so1153522ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 11:54:36 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/4] wl12xx: move to new firmware (6.1.3.50.49)
-Date: Thu, 27 Jan 2011 21:54:37 +0200
-Message-Id: <1296158081-16398-1-git-send-email-eliad@wizery.com>
+	Thu, 20 Jan 2011 18:55:16 -0500
+Message-ID: <4D38CB7E.5000304@lwfinger.net>
+Date: Thu, 20 Jan 2011 17:55:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jesper Juhl <jj@chaosbits.net>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH] Fix NULL dereference in rtlwifi driver
+References: <alpine.LNX.2.00.1101202309030.11854@swampdragon.chaosbits.net>
+In-Reply-To: <alpine.LNX.2.00.1101202309030.11854@swampdragon.chaosbits.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the wl12xx driver start working with the latest
-wl12xx firmware (6.1.3.50.49).
+On 01/20/2011 04:18 PM, Jesper Juhl wrote:
+> In drivers/net/wireless/rtlwifi/pci.c::_rtl_pci_rx_interrupt() we call 
+> dev_alloc_skb(), which may fail and return NULL, but we do not check the 
+> returned value against NULL before dereferencing the returned pointer. 
+> This may lead to a NULL pointer dereference which means we'll crash - not 
+> good.
+> 
+> This patch tries to solve the issue by testing for NULL and bailing out if 
+> we couldn't allocate a skb. However, I don't know this code well, so I'm 
+> not sure that jumping to the 'done' label here is the correct action to 
+> take. Someone more knowledgable about this code than me should definately 
+> review it before it is applied anywhere.
+> While I was in the area I also moved an assignment in 
+> _rtl_pci_init_rx_ring() a bit - if the dev_alloc_skb() call in that 
+> function fails there's no reason to waste clock cycles assigning to the 
+> local variable 'entry', we may as well do that after the NULL check and 
+> potential bail out.
+> 
+> Here's the proposed patch, but please don't take it as much more than a 
+> bug report. If it happens to be correct, then by all means apply it, but 
+> I'm not personally making any guarantees.
+> 
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+> ---
+>  pci.c |    9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+>   compile tested only, I don't have the hardware to test for real.
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 0fa36aa..5e99f89 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -619,6 +619,13 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>  					struct sk_buff *uskb = NULL;
+>  					u8 *pdata;
+>  					uskb = dev_alloc_skb(skb->len + 128);
+> +					if (!uskb) {
+> +						RT_TRACE(rtlpriv,
+> +							(COMP_INTR | COMP_RECV),
+> +							DBG_DMESG,
+> +							("can't alloc rx skb\n"));
+> +						goto done;
+> +					}
+>  					memcpy(IEEE80211_SKB_RXCB(uskb),
+>  							&rx_status,
+>  							sizeof(rx_status));
+> @@ -1066,9 +1073,9 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw)
+>  			struct sk_buff *skb =
+>  			    dev_alloc_skb(rtlpci->rxbuffersize);
+>  			u32 bufferaddress;
+> -			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
+>  			if (!skb)
+>  				return 0;
+> +			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
+>  
+>  			/*skb->dev = dev; */
+>  
 
-The patchset only migrates exisiting functionality. 
-(i.e. it doesn't contain the new firmware features)
+This patch looks mostly good to me. The only change I would make is to replace
+"DBG_DMESG" in the RT_TRACE statement with "DBG_EMERG". The standard setting of
+the debug variable does not generate output for DBG_DMESG.
 
-Note that this new firmware is not backward compatible with the
-current firmware, so a new firmware name is being used.
+With that change, ACK and
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Eliad Peller (4):
-  wl12xx: mcp2.5 - add config_ps acx
-  wl12xx: move to new firmware (6.1.3.50.49)
-  wl12xx: use the conf struct instead of macros for memory
-    configuration
-  wl12xx: set supported_rates after association
-
- drivers/net/wireless/wl12xx/acx.c    |   86 ++++++++++++++++++---
- drivers/net/wireless/wl12xx/acx.h    |   41 ++++++++---
- drivers/net/wireless/wl12xx/cmd.c    |   10 +-
- drivers/net/wireless/wl12xx/cmd.h    |   14 +---
- drivers/net/wireless/wl12xx/conf.h   |   49 ++++++++++++
- drivers/net/wireless/wl12xx/event.c  |   14 ----
- drivers/net/wireless/wl12xx/event.h  |    2 -
- drivers/net/wireless/wl12xx/init.c   |   13 +++
- drivers/net/wireless/wl12xx/main.c   |  139 +++++++++++++++++-----------------
- drivers/net/wireless/wl12xx/ps.c     |    6 +-
- drivers/net/wireless/wl12xx/rx.c     |    6 +-
- drivers/net/wireless/wl12xx/rx.h     |    2 +-
- drivers/net/wireless/wl12xx/tx.c     |   22 ------
- drivers/net/wireless/wl12xx/wl12xx.h |   31 +++++++-
- 14 files changed, 279 insertions(+), 156 deletions(-)
+Larry
 
