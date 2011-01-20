@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37758 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752550Ab1AaPI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 10:08:29 -0500
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
-References: <4D45A583.3060605@davizone.at> <4D45B7B2.40001@davizone.at>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 31 Jan 2011 17:08:27 +0200
-In-Reply-To: <4D45B7B2.40001@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 20\:10\:42 +0100")
-Message-ID: <87r5btdsb8.fsf@purkki.adurom.net>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:56099 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782Ab1ATIff convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 03:35:35 -0500
+Received: by wyb28 with SMTP id 28so362752wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 00:35:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D37E2A9.6010209@lockie.ca>
+References: <4D37E2A9.6010209@lockie.ca>
+Date: Thu, 20 Jan 2011 14:05:34 +0530
+Message-ID: <AANLkTikhpK09=wyq=g6kHbsgd-C13A4Vc1TrA29utd5k@mail.gmail.com>
+Subject: Re: ath9k problem with kernel 2.6.37
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: James <bjlockie@lockie.ca>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+On Thu, Jan 20, 2011 at 12:52 PM, James <bjlockie@lockie.ca> wrote:
+> phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
+> mem=0xffffc90001880000, irq=17
+>
+> I get few or no results when I do
+> iwlist wlan1 scan with kernel 2.6.37
+>
 
-David Gnedt <david.gnedt@davizone.at> writes:
+We will check it out
 
-> Patch 01-03 fix some bugs.
-> Patch 04-09 contain some feature ports from Maemo Fremantle and wl1271.
-> Patch 10-18 implement (mainly) monitor mode and packet injection.
+> but it is consistently good with kernel 2.6.36.2
+>
+> Is there a way to compare the kernel configs to make sure I didn't
+> change anything?
 
-How did you test the patches? For example, what hardware did you use
-etc.
+Please try with latest compat wireless, which might be helpful
 
-About the code from fremantle kernels. Few weeks ago nokia sent me
-privately the original patches from their internal git tree, I gave
-some comments and never heard back. So, in theory I should have all
-the fremantle patches somewhere in my email archives. I would just
-need to clean them up and send them here. I'll go over your patches
-and let's see what we should do.
-
-> Sorry for the partly broken patches, I thought I configured my client the
-> right way. I tried to stop the mails at my mailserver, but it was mostly
-> already too late.
-
-No problem. But whenever you resend your patchset, please add a
-revision to them, otherwise it's impossible to know which patch is
-which. Good way is to use tag "[PATCH v2]" or similar.
-
--- 
-Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
