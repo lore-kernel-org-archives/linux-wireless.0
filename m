@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4173 "EHLO MMS3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:43696 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882Ab1AVQTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jan 2011 11:19:41 -0500
-Message-ID: <4D3B0390.5070108@broadcom.com>
-Date: Sat, 22 Jan 2011 17:19:28 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Jamie Kitson" <jamie@kitten-x.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>
-Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
-References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
-In-Reply-To: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1751209Ab1ATU5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 15:57:39 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/2] ath9k: remove a bogus error message
+Date: Thu, 20 Jan 2011 21:57:30 +0100
+Message-Id: <1295557051-64138-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jamie,
+When beacons are being added or removed for an interface, ieee80211_beacon_get
+will sometimes not return a beacon. This is normal and should not result in
+useless logspam.
 
-On 01/08/2011 01:37 AM, Jamie Kitson wrote:
-> Hello,
->
-> I've received the following kernel panic twice in two days since I
-> started using the brcm80211 driver:
->
-> http://farm6.static.flickr.com/5202/5334637544_a0dacd5edd_b.jpg
->
-> I have a Dell M101z with:
->
-> 03:00.0 Network controller: Broadcom Corporation BCM4313 802.11b/g/n
-> Wireless LAN Controller (rev 01)
->
-> I am running:
->
-> Linux jamie-laptop 2.6.36-ARCH #1 SMP PREEMPT Fri Dec 10 20:32:37 CET
-> 2010 x86_64 AMD Athlon(tm) II Neo K325 Dual-Core Processor
-> AuthenticAMD GNU/Linux
->
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Rereading the whole thread I noticed the PREEMPT in your uname message. 
-Does this mean you are running with CONFIG_PREEMPT (Preemptible Kernel)? 
-This may not be supported by this driver.
-
-> Cheers, Jamie
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 8de591e..ab8c05c 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -279,10 +279,8 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 
+ 	/* NB: the beacon data buffer must be 32-bit aligned. */
+ 	skb = ieee80211_beacon_get(sc->hw, vif);
+-	if (skb == NULL) {
+-		ath_err(common, "ieee80211_beacon_get failed\n");
++	if (skb == NULL)
+ 		return -ENOMEM;
+-	}
+ 
+ 	tstamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+ 	sc->beacon.bc_tstamp = le64_to_cpu(tstamp);
 -- 
-Gr. AvS
+1.7.3.2
 
