@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37992 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231Ab1AGXZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 18:25:04 -0500
-Message-ID: <4D27A0C7.9080709@openwrt.org>
-Date: Fri, 07 Jan 2011 16:24:55 -0700
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:46868 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046Ab1ATRw3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 12:52:29 -0500
+Message-ID: <4D387658.8040002@candelatech.com>
+Date: Thu, 20 Jan 2011 09:52:24 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "greearb@candelatech.com" <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [PATCH v2 3/3] ath9k: Keep track of stations for
- debugfs.
-References: <1294375752-3946-1-git-send-email-greearb@candelatech.com> <20110107201204.GG21588@tux>
-In-Reply-To: <20110107201204.GG21588@tux>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/3] mac80211: Support sw_scan_start_cur
+References: <1295544750-6704-1-git-send-email-greearb@candelatech.com> <1295545044.3693.43.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295545044.3693.43.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-07 1:12 PM, Luis R. Rodriguez wrote:
-> On Thu, Jan 06, 2011 at 08:49:12PM -0800, greearb@candelatech.com wrote:
->>  From: Ben Greear<greearb@candelatech.com>
+On 01/20/2011 09:37 AM, Johannes Berg wrote:
+> On Thu, 2011-01-20 at 09:32 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
 >>
->>  The stations hold the ath_node, which holds the tid
->>  and other xmit logic structures.  In order to debug
->>  stuck xmit logic, we need a way to print out the tid
->>  state for the stations.
->>
->>  Signed-off-by: Ben Greear<greearb@candelatech.com>
->>  ---
->>
->>  v1 ->  v2:  Use linked list instead of array.  Protect with spinlock.
+>> This method is called when driver can support
+>> scanning the currect active channel without otherwise
+>> impeding traffic on that channel.  The mac80211 scan
+>> logic may call this when we are only scanning on the
+>> active channel and thus do not need to go off channel.
 >
-> Again, see my comments about the # STAs limit. I think this can go in
-> as a cfg80211 driver limitation which can be exposed. If you want to go
-> over the supported number (known to work, safe, call it what you want)
-> then a kconfig option can be used.
-I disagree with putting in an essentially arbitrary restriction based on 
-what has been tested, unless we can actually point at a *specific* 
-limitation that makes the limit necessary.
-If ath9k gets unstable with too many STA interfaces, then we should 
-identify the underlying cause or fix it.
+> I frankly don't see any point telling the driver about this. Looking at
+> the ath9k patch you sent, it seems to avoid some things like flushing --
+> but the flushing should be controlled by mac80211 already (or converted
+> to be) so that it's not necessary to have this.
 
-- Felix
+mac80211 + ath9k is a house of cards, and this seemed the least
+invasive approach.  It also lets us not change behaviour for
+the rest of the drivers until they are audited and potentially
+updated.  At best I can test/hack on ath5k and ath9k.  These are
+touchy enough, and other drivers may be even more twitchy...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
