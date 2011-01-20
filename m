@@ -1,60 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52678 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932577Ab1AKTpF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 14:45:05 -0500
-Received: by qwa26 with SMTP id 26so21349088qwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 11:45:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D2C85FE.4030709@lwfinger.net>
-References: <4D2A9309.7000500@lwfinger.net>
-	<201101101913.17311.chunkeey@googlemail.com>
-	<4D2B59EA.4000200@lwfinger.net>
-	<201101102018.35232.chunkeey@googlemail.com>
-	<4D2C85FE.4030709@lwfinger.net>
-Date: Tue, 11 Jan 2011 14:45:04 -0500
-Message-ID: <AANLkTikPoEjHRXjqVkSopCjUcyp7AauvFAfaVN_8T0qG@mail.gmail.com>
-Subject: Re: Locking problem reported for mainline
-From: Bob Copeland <me@bobcopeland.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from lo.gmane.org ([80.91.229.12]:42011 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752110Ab1ATJaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 04:30:09 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PfqqD-0005VR-Bk
+	for linux-wireless@vger.kernel.org; Thu, 20 Jan 2011 10:30:05 +0100
+Received: from dslb-084-059-120-020.pools.arcor-ip.net ([84.59.120.20])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 10:30:05 +0100
+Received: from alexander.simon by dslb-084-059-120-020.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 10:30:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Alexander Simon <alexander.simon@saxnet.de>
+Subject: [RFC 3/4] mac80211: support for IEEE80211N in IBSS
+Date: Thu, 20 Jan 2011 09:26:30 +0000 (UTC)
+Message-ID: <loom.20110120T102202-752@post.gmane.org>
+References: <201101191438.01161.alexander.simon@saxnet.de> <1295447708.4685.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 11, 2011 at 11:31 AM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> Is there a document that explains what the meaning of these semantics?
->
-> inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
-> kdostartupconfi/3502 [HC1[1]:SC0[0]:HE0:SE1] takes:
->  (&(&list->lock)->rlock#5){?.-...}, at: [<ffffffff812995c6>]
-> skb_queue_tail+0x26/0x60
-> {HARDIRQ-ON-W} state was registered at:
+Parse a new stations HT IE.
+ieee80211_ibss_add_sta is called with a new argument, ht capabilities of that
+new station.
+Luckily there was that function ieee80211_ht_cap_ie_to_sta_ht_cap that is
+called. This inserts these HT capabilities into the sta_info struct that is eg
+used by the rate algorithm.
+As mentioned before, this parameter will be NULL when called from rx.c (main
+receive path).
 
-I'm not sure about all the HC1[1]:SC0[0] etc stuff, but check out
-Documentation/lockdep-design.txt for the basics.
+diff -Nrup compat-wireless-2011-01-17.2/net/mac80211/ibss.c
+compat-wireless-2011-01-17.3//net/mac80211/ibss.c
+--- compat-wireless-2011-01-17.2/net/mac80211/ibss.c	2011-01-20
+10:02:16.000000000 +0100
++++ compat-wireless-2011-01-17.3//net/mac80211/ibss.c	2011-01-20
+10:03:11.000000000 +0100
+@@ -391,7 +391,7 @@ static void ieee80211_rx_bss_info(struct
+ 				}
+ 			} else
+ 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+-						mgmt->sa, supp_rates,
++						mgmt->sa, supp_rates, elems->ht_cap_elem,
+ 						GFP_ATOMIC);
+ 		}
+ 
+@@ -490,7 +490,7 @@ static void ieee80211_rx_bss_info(struct
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-				       supp_rates, GFP_KERNEL);
++				       supp_rates, elems->ht_cap_elem, GFP_KERNEL);
+ 	}
+ 
+  put_bss:
+@@ -503,8 +503,8 @@ static void ieee80211_rx_bss_info(struct
+  * must be callable in atomic context.
+  */
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+-					u8 *bssid,u8 *addr, u32 supp_rates,
+-					gfp_t gfp)
++					u8 *bssid, u8 *addr, u32 supp_rates,
++					struct ieee80211_ht_cap *ht_cap, gfp_t gfp)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -544,6 +544,10 @@ struct sta_info *ieee80211_ibss_add_sta(
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
++	if (ht_cap)
++		ieee80211_ht_cap_ie_to_sta_ht_cap(local->hw.wiphy->bands[band],
++				ht_cap, &sta->sta.ht_cap);
++
+ 	rate_control_rate_init(sta);
+ 
+ 	/* If it fails, maybe we raced another insertion? */
+diff -Nrup compat-wireless-2011-01-17.2/net/mac80211/ieee80211_i.h
+compat-wireless-2011-01-17.3//net/mac80211/ieee80211_i.h
+--- compat-wireless-2011-01-17.2/net/mac80211/ieee80211_i.h	2011-01-20
+10:01:56.000000000 +0100
++++ compat-wireless-2011-01-17.3//net/mac80211/ieee80211_i.h	2011-01-20
+10:03:11.000000000 +0100
+@@ -1111,7 +1111,7 @@ void ieee80211_ibss_notify_scan_complete
+ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata);
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 					u8 *bssid, u8 *addr, u32 supp_rates,
+-					gfp_t gfp);
++					struct ieee80211_ht_cap *ht_cap, gfp_t gfp);
+ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params);
+ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
+diff -Nrup compat-wireless-2011-01-17.2/net/mac80211/rx.c
+compat-wireless-2011-01-17.3//net/mac80211/rx.c
+--- compat-wireless-2011-01-17.2/net/mac80211/rx.c	2011-01-17 21:03:26.000000000
++0100
++++ compat-wireless-2011-01-17.3//net/mac80211/rx.c	2011-01-20
+10:03:11.000000000 +0100
+@@ -2618,7 +2618,7 @@ static int prepare_for_handlers(struct i
+ 			else
+ 				rate_idx = status->rate_idx;
+ 			rx->sta = ieee80211_ibss_add_sta(sdata, bssid,
+-					hdr->addr2, BIT(rate_idx), GFP_ATOMIC);
++					hdr->addr2, BIT(rate_idx), NULL, GFP_ATOMIC);
+ 		}
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
 
-In this case, someone took a lock with interrupts enabled (HARDIRQ-ON-W)
-while someone else took it in a hard IRQ context (IN-HARDIRQ-W) where
-they are normally disabled.  The problem of course is:
 
-cpu0:
-spin_lock(&foo);
-do some stuff protected by foo;
-
-----> interrupt happens here
-   spin_lock(&foo);  /* darn, deadlock! */
-   other stuff;
-   spin_unlock(&foo);
-<----
-
-spin_unlock(&foo);
-
-Could be a missing _irqsave() if it's not, as Stanislaw suggested, a false
-positive.
-
--- 
-Bob Copeland %% www.bobcopeland.com
