@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54184 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715Ab1AJFs6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 00:48:58 -0500
-Message-ID: <4D2A9DC6.1030405@candelatech.com>
-Date: Sun, 09 Jan 2011 21:48:54 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:49702 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751254Ab1ATWmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 17:42:33 -0500
+Message-ID: <4D38BA56.4060207@openwrt.org>
+Date: Thu, 20 Jan 2011 23:42:30 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@Atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH 2/2] ath9k:  Fix incorrect tx-hang detection logic.
-References: <1294423259-8163-1-git-send-email-greearb@candelatech.com> <1294423259-8163-2-git-send-email-greearb@candelatech.com> <20110110053835.GB5656@vasanth-laptop>
-In-Reply-To: <20110110053835.GB5656@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 1/4] ath9k: remove the virtual wiphy debugfs interface
+References: <1295562349-17161-1-git-send-email-nbd@openwrt.org> <4D38B990.50406@candelatech.com>
+In-Reply-To: <4D38B990.50406@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2011 09:38 PM, Vasanthakumar Thiagarajan wrote:
-> On Fri, Jan 07, 2011 at 11:30:59PM +0530, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
+On 2011-01-20 11:39 PM, Ben Greear wrote:
+> On 01/20/2011 02:25 PM, Felix Fietkau wrote:
+>> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/debug.c |  202 --------------------------------
+>>   1 files changed, 0 insertions(+), 202 deletions(-)
 >>
->> It is not guaranteed that the ath_tx_complete_poll_work runs
->> after some fixed duration because the channel-reset logic
->> removes the work and then re-adds it to run immediately.
->> Two channel-changes 1ms apart, with a transmit was being
->> attempted, could thus incorrectly trigger a reset by
->> the ath_tx_complete_poll_work method.
->
-> I don't think so. axq_tx_inprogress is reset in ath_draintxq().
+>> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+>> index 3586c43..73644c4 100644
+>> --- a/drivers/net/wireless/ath/ath9k/debug.c
+>> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+>> @@ -381,204 +381,6 @@ static const struct file_operations fops_interrupt = {
+>>   	.llseek = default_llseek,
+>>   };
+> 
+> I think a lot of this could still be useful, even if it's named something
+> other than wiphy, so please don't remove all the filter debug and
+> similar...
+Yeah, I overlooked that part. I'll send a v3
 
-Ahhh, I see now.
-
-I'll remove this patch from my queue and make sure it still runs
-as well.
-
-Thanks,
-Ben
-
->
-> Vasanth
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+- Felix
