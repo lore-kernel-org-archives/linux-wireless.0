@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33215 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517Ab1AYJfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 04:35:31 -0500
-Date: Tue, 25 Jan 2011 10:35:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: [RFC] iwl3945: remove check_plcp_health
-Message-ID: <20110125093507.GA6429@redhat.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35175 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754919Ab1ATJOy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 04:14:54 -0500
+Received: by fxm20 with SMTP id 20so338435fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 01:14:53 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [RFC PATCH 10/17] zd1211rw: implement beacon fetching and handling ieee80211_get_buffered_bc()
+Date: Thu, 20 Jan 2011 10:13:08 +0100
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>, kvalo@adurom.com
+References: <20110104234745.25309.72030.stgit@fate.lan> <201101192122.25282.chunkeey@googlemail.com> <20110120101606.53052h18mlpyp8w0@hayate.sektori.org>
+In-Reply-To: <20110120101606.53052h18mlpyp8w0@hayate.sektori.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101201013.09222.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch helps some users currently complaining about iwl3945
-performance.
+Am Donnerstag, 20. Januar 2011 schrieb Jussi Kivilinna:
+> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+> > True, but a recent discussion into this matter have made parts of the
+> > API you are planning to use sort-of "deprecated"? [I think?]
+> >
+> > http://marc.info/?l=linux-wireless&m=129463297300480
+> >
+> > I don't know the exact details, but I'm sure Kvalo does have his reasons.
+> > [afaik it has to do with wl12xx, he even explained it once, but I can't
+> > find that mail anymore].
+> >
+> 
+> What I understood from that thread is that rt2x00/usb doesn't have HW  
+> buffering and doesn't enable IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING  
+> (rt2x00/pci does), and yet enables AP-mode. Driver has this comment:
+> 	/*
+> 	 * Initialize all hw fields.
+> 	 *
+> 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING unless we are
+> 	 * capable of sending the buffered frames out after the DTIM
+> 	 * transmission using rt2x00lib_beacondone. This will send out
+> 	 * multicast and broadcast traffic immediately instead of buffering it
+> 	 * infinitly and thus dropping it after some time.
+> 	 */
 
-https://bugzilla.redhat.com/show_bug.cgi?id=654599
-https://bugs.launchpad.net/ubuntu/maverick/+source/linux/+bug/621265/+index?comments=all
+Yep, your interpretation is correct. Multi- and broadcast buffering in mac80211
+will stay, but only if your device is able to send them out in a timely manner,
+which rt2x00 usb devices are not.
 
-Patch does not helps all users, but they seems to be affected
-by different bug or bugs.
-
-Patch effectively reverts commit a29576a7844326c5223f4d4adbfd3f4d64173d4c
-"iwl3945: add plcp error checking". It is minimal fix intended to
--stable posting. I will post cleaning up patch, if fix will be accepted.
-
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 8cacb4e..eb916d7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2832,7 +2832,6 @@ static struct iwl_lib_ops iwl3945_lib = {
- 	.config_ap = iwl3945_config_ap,
- 	.manage_ibss_station = iwl3945_manage_ibss_station,
- 	.recover_from_tx_stall = iwl_bg_monitor_recover,
--	.check_plcp_health = iwl3945_good_plcp_health,
- 
- 	.debugfs_ops = {
- 		.rx_stats_read = iwl3945_ucode_rx_stats_read,
--- 
-1.7.1
-
+Helmut
