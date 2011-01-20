@@ -1,264 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:38966 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753179Ab1AaSrO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:47:14 -0500
-Subject: [PATCH 01/22] zd1211rw: use urb anchors for tx and fix tx-queue
-	disabling
+Received: from nbd.name ([46.4.11.11]:55264 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753908Ab1ATWt3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 17:49:29 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Mon, 31 Jan 2011 20:47:08 +0200
-Message-ID: <20110131184708.10044.23351.stgit@fate.lan>
-In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
-References: <20110131184657.10044.98610.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v3 3/4] ath9k: remove the bf->aphy field
+Date: Thu, 20 Jan 2011 23:49:24 +0100
+Message-Id: <1295563765-23852-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1295563765-23852-2-git-send-email-nbd@openwrt.org>
+References: <1295563765-23852-1-git-send-email-nbd@openwrt.org>
+ <1295563765-23852-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When stress testing AP-mode I hit OOPS when unpluging or rmmodding
-driver.
-
-It appears that when tx-queue is disabled, tx-urbs might be left pending.
-These can cause ehci to call non-existing tx_urb_complete() (after rmmod)
-or uninitialized/reseted private structure (after disconnect()). Add skb
-queue for submitted packets and unlink pending urbs on zd_usb_disable_tx().
-
-Part of the problem seems to be usb->free_urb_list that isn't always
-working as it should, causing machine freeze when trying to free the list
-in zd_usb_disable_tx(). Caching free urbs isn't what other drivers seem
-to be doing (usbnet for example) so strip free_usb_list.
-
-Patch makes tx-urb handling saner with use of urb anchors.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/zd1211rw/zd_usb.c |  108 +++++++++++---------------------
- drivers/net/wireless/zd1211rw/zd_usb.h |    8 +-
- 2 files changed, 41 insertions(+), 75 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   38 +++++++++++++------------------
+ 2 files changed, 17 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 06041cb..c32a247 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -779,19 +779,20 @@ void zd_usb_disable_tx(struct zd_usb *usb)
- {
- 	struct zd_usb_tx *tx = &usb->tx;
- 	unsigned long flags;
--	struct list_head *pos, *n;
-+
-+	atomic_set(&tx->enabled, 0);
-+
-+	/* kill all submitted tx-urbs */
-+	usb_kill_anchored_urbs(&tx->submitted);
- 
- 	spin_lock_irqsave(&tx->lock, flags);
--	list_for_each_safe(pos, n, &tx->free_urb_list) {
--		list_del(pos);
--		usb_free_urb(list_entry(pos, struct urb, urb_list));
--	}
--	tx->enabled = 0;
-+	WARN_ON(tx->submitted_urbs != 0);
- 	tx->submitted_urbs = 0;
-+	spin_unlock_irqrestore(&tx->lock, flags);
-+
- 	/* The stopped state is ignored, relying on ieee80211_wake_queues()
- 	 * in a potentionally following zd_usb_enable_tx().
- 	 */
--	spin_unlock_irqrestore(&tx->lock, flags);
- }
- 
- /**
-@@ -807,63 +808,13 @@ void zd_usb_enable_tx(struct zd_usb *usb)
- 	struct zd_usb_tx *tx = &usb->tx;
- 
- 	spin_lock_irqsave(&tx->lock, flags);
--	tx->enabled = 1;
-+	atomic_set(&tx->enabled, 1);
- 	tx->submitted_urbs = 0;
- 	ieee80211_wake_queues(zd_usb_to_hw(usb));
- 	tx->stopped = 0;
- 	spin_unlock_irqrestore(&tx->lock, flags);
- }
- 
--/**
-- * alloc_tx_urb - provides an tx URB
-- * @usb: a &struct zd_usb pointer
-- *
-- * Allocates a new URB. If possible takes the urb from the free list in
-- * usb->tx.
-- */
--static struct urb *alloc_tx_urb(struct zd_usb *usb)
--{
--	struct zd_usb_tx *tx = &usb->tx;
--	unsigned long flags;
--	struct list_head *entry;
--	struct urb *urb;
--
--	spin_lock_irqsave(&tx->lock, flags);
--	if (list_empty(&tx->free_urb_list)) {
--		urb = usb_alloc_urb(0, GFP_ATOMIC);
--		goto out;
--	}
--	entry = tx->free_urb_list.next;
--	list_del(entry);
--	urb = list_entry(entry, struct urb, urb_list);
--out:
--	spin_unlock_irqrestore(&tx->lock, flags);
--	return urb;
--}
--
--/**
-- * free_tx_urb - frees a used tx URB
-- * @usb: a &struct zd_usb pointer
-- * @urb: URB to be freed
-- *
-- * Frees the transmission URB, which means to put it on the free URB
-- * list.
-- */
--static void free_tx_urb(struct zd_usb *usb, struct urb *urb)
--{
--	struct zd_usb_tx *tx = &usb->tx;
--	unsigned long flags;
--
--	spin_lock_irqsave(&tx->lock, flags);
--	if (!tx->enabled) {
--		usb_free_urb(urb);
--		goto out;
--	}
--	list_add(&urb->urb_list, &tx->free_urb_list);
--out:
--	spin_unlock_irqrestore(&tx->lock, flags);
--}
--
- static void tx_dec_submitted_urbs(struct zd_usb *usb)
- {
- 	struct zd_usb_tx *tx = &usb->tx;
-@@ -905,6 +856,16 @@ static void tx_urb_complete(struct urb *urb)
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 	struct zd_usb *usb;
-+	struct zd_usb_tx *tx;
-+
-+	skb = (struct sk_buff *)urb->context;
-+	info = IEEE80211_SKB_CB(skb);
-+	/*
-+	 * grab 'usb' pointer before handing off the skb (since
-+	 * it might be freed by zd_mac_tx_to_dev or mac80211)
-+	 */
-+	usb = &zd_hw_mac(info->rate_driver_data[0])->chip.usb;
-+	tx = &usb->tx;
- 
- 	switch (urb->status) {
- 	case 0:
-@@ -922,20 +883,15 @@ static void tx_urb_complete(struct urb *urb)
- 		goto resubmit;
- 	}
- free_urb:
--	skb = (struct sk_buff *)urb->context;
--	/*
--	 * grab 'usb' pointer before handing off the skb (since
--	 * it might be freed by zd_mac_tx_to_dev or mac80211)
--	 */
--	info = IEEE80211_SKB_CB(skb);
--	usb = &zd_hw_mac(info->rate_driver_data[0])->chip.usb;
- 	zd_mac_tx_to_dev(skb, urb->status);
--	free_tx_urb(usb, urb);
-+	usb_free_urb(urb);
- 	tx_dec_submitted_urbs(usb);
- 	return;
- resubmit:
-+	usb_anchor_urb(urb, &tx->submitted);
- 	r = usb_submit_urb(urb, GFP_ATOMIC);
- 	if (r) {
-+		usb_unanchor_urb(urb);
- 		dev_dbg_f(urb_dev(urb), "error resubmit urb %p %d\n", urb, r);
- 		goto free_urb;
- 	}
-@@ -958,8 +914,14 @@ int zd_usb_tx(struct zd_usb *usb, struct sk_buff *skb)
- 	int r;
- 	struct usb_device *udev = zd_usb_to_usbdev(usb);
- 	struct urb *urb;
-+	struct zd_usb_tx *tx = &usb->tx;
- 
--	urb = alloc_tx_urb(usb);
-+	if (!atomic_read(&tx->enabled)) {
-+		r = -ENOENT;
-+		goto out;
-+	}
-+
-+	urb = usb_alloc_urb(0, GFP_ATOMIC);
- 	if (!urb) {
- 		r = -ENOMEM;
- 		goto out;
-@@ -968,13 +930,16 @@ int zd_usb_tx(struct zd_usb *usb, struct sk_buff *skb)
- 	usb_fill_bulk_urb(urb, udev, usb_sndbulkpipe(udev, EP_DATA_OUT),
- 		          skb->data, skb->len, tx_urb_complete, skb);
- 
-+	usb_anchor_urb(urb, &tx->submitted);
- 	r = usb_submit_urb(urb, GFP_ATOMIC);
--	if (r)
-+	if (r) {
-+		usb_unanchor_urb(urb);
- 		goto error;
-+	}
- 	tx_inc_submitted_urbs(usb);
- 	return 0;
- error:
--	free_tx_urb(usb, urb);
-+	usb_free_urb(urb);
- out:
- 	return r;
- }
-@@ -1005,9 +970,9 @@ static inline void init_usb_tx(struct zd_usb *usb)
- {
- 	struct zd_usb_tx *tx = &usb->tx;
- 	spin_lock_init(&tx->lock);
--	tx->enabled = 0;
-+	atomic_set(&tx->enabled, 0);
- 	tx->stopped = 0;
--	INIT_LIST_HEAD(&tx->free_urb_list);
-+	init_usb_anchor(&tx->submitted);
- 	tx->submitted_urbs = 0;
- }
- 
-@@ -1240,6 +1205,7 @@ static void disconnect(struct usb_interface *intf)
- 	ieee80211_unregister_hw(hw);
- 
- 	/* Just in case something has gone wrong! */
-+	zd_usb_disable_tx(usb);
- 	zd_usb_disable_rx(usb);
- 	zd_usb_disable_int(usb);
- 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
-index 1b1655c..233ce82 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.h
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.h
-@@ -184,18 +184,18 @@ struct zd_usb_rx {
- 
- /**
-  * struct zd_usb_tx - structure used for transmitting frames
-+ * @enabled: atomic enabled flag, indicates whether tx is enabled
-  * @lock: lock for transmission
-- * @free_urb_list: list of free URBs, contains all the URBs, which can be used
-+ * @submitted: anchor for URBs sent to device
-  * @submitted_urbs: atomic integer that counts the URBs having sent to the
-  *	device, which haven't been completed
-- * @enabled: enabled flag, indicates whether tx is enabled
-  * @stopped: indicates whether higher level tx queues are stopped
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 3caa54d..fe6a69c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -32,6 +32,7 @@
   */
- struct zd_usb_tx {
-+	atomic_t enabled;
- 	spinlock_t lock;
--	struct list_head free_urb_list;
-+	struct usb_anchor submitted;
- 	int submitted_urbs;
--	int enabled;
- 	int stopped;
+ 
+ struct ath_node;
++struct ath_wiphy;
+ 
+ /* Macro to expand scalars to 64-bit objects */
+ 
+@@ -233,7 +234,6 @@ struct ath_buf {
+ 	bool bf_stale;
+ 	u16 bf_flags;
+ 	struct ath_buf_state bf_state;
+-	struct ath_wiphy *aphy;
  };
  
+ struct ath_atx_tid {
+@@ -556,7 +556,6 @@ struct ath_ant_comb {
+ #define PS_WAIT_FOR_TX_ACK        BIT(3)
+ #define PS_BEACON_SYNC            BIT(4)
+ 
+-struct ath_wiphy;
+ struct ath_rate_table;
+ 
+ struct ath9k_vif_iter_data {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a7c3048..80dc0cc 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -57,8 +57,9 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 			     struct list_head *head);
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
+-static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+-			     int nframes, int nbad, int txok, bool update_rc);
++static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
++			     struct ath_tx_status *ts, int nframes, int nbad,
++			     int txok, bool update_rc);
+ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 			      int seqno);
+ 
+@@ -297,7 +298,6 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 
+ 	ATH_TXBUF_RESET(tbf);
+ 
+-	tbf->aphy = bf->aphy;
+ 	tbf->bf_mpdu = bf->bf_mpdu;
+ 	tbf->bf_buf_addr = bf->bf_buf_addr;
+ 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
+@@ -345,7 +345,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_node *an = NULL;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_sta *sta;
+-	struct ieee80211_hw *hw;
++	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct ath_atx_tid *tid = NULL;
+@@ -364,7 +364,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 	tx_info = IEEE80211_SKB_CB(skb);
+-	hw = bf->aphy->hw;
+ 
+ 	memcpy(rates, tx_info->control.rates, sizeof(rates));
+ 
+@@ -383,7 +382,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			    !bf->bf_stale || bf_next != NULL)
+ 				list_move_tail(&bf->list, &bf_head);
+ 
+-			ath_tx_rc_status(bf, ts, 1, 1, 0, false);
++			ath_tx_rc_status(sc, bf, ts, 1, 1, 0, false);
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+ 				0, 0);
+ 
+@@ -489,10 +488,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
+ 				memcpy(tx_info->control.rates, rates, sizeof(rates));
+-				ath_tx_rc_status(bf, ts, nframes, nbad, txok, true);
++				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, true);
+ 				rc_update = false;
+ 			} else {
+-				ath_tx_rc_status(bf, ts, nframes, nbad, txok, false);
++				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, false);
+ 			}
+ 
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+@@ -516,7 +515,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 						bf->bf_state.bf_type |=
+ 							BUF_XRETRY;
+-						ath_tx_rc_status(bf, ts, nframes,
++						ath_tx_rc_status(sc, bf, ts, nframes,
+ 								nbad, 0, false);
+ 						ath_tx_complete_buf(sc, bf, txq,
+ 								    &bf_head,
+@@ -1667,7 +1666,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
+ 
+ 	ATH_TXBUF_RESET(bf);
+ 
+-	bf->aphy = aphy;
+ 	bf->bf_flags = setup_tx_flags(skb);
+ 	bf->bf_mpdu = skb;
+ 
+@@ -1821,8 +1819,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ /*****************/
+ 
+ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+-			    struct ath_wiphy *aphy, int tx_flags, int ftype,
+-			    struct ath_txq *txq)
++			    int tx_flags, int ftype, struct ath_txq *txq)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+@@ -1832,9 +1829,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 	ath_dbg(common, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
+ 
+-	if (aphy)
+-		hw = aphy->hw;
+-
+ 	if (tx_flags & ATH_TX_BAR)
+ 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+ 
+@@ -1908,7 +1902,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 			complete(&sc->paprd_complete);
+ 	} else {
+ 		ath_debug_stat_tx(sc, bf, ts);
+-		ath_tx_complete(sc, skb, bf->aphy, tx_flags,
++		ath_tx_complete(sc, skb, tx_flags,
+ 				bf->bf_state.bfs_ftype, txq);
+ 	}
+ 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+@@ -1924,14 +1918,14 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+ }
+ 
+-static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+-			     int nframes, int nbad, int txok, bool update_rc)
++static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
++			     struct ath_tx_status *ts, int nframes, int nbad,
++			     int txok, bool update_rc)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hw *hw = bf->aphy->hw;
+-	struct ath_softc *sc = bf->aphy->sc;
++	struct ieee80211_hw *hw = sc->hw;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	u8 i, tx_rateindex;
+ 
+@@ -2067,7 +2061,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 			 */
+ 			if (ts.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			ath_tx_rc_status(bf, &ts, 1, txok ? 0 : 1, txok, true);
++			ath_tx_rc_status(sc, bf, &ts, 1, txok ? 0 : 1, txok, true);
+ 		}
+ 
+ 		if (bf_isampdu(bf))
+@@ -2186,7 +2180,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		if (!bf_isampdu(bf)) {
+ 			if (txs.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			ath_tx_rc_status(bf, &txs, 1, txok ? 0 : 1, txok, true);
++			ath_tx_rc_status(sc, bf, &txs, 1, txok ? 0 : 1, txok, true);
+ 		}
+ 
+ 		if (bf_isampdu(bf))
+-- 
+1.7.3.2
 
