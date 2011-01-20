@@ -1,41 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42908 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371Ab1AHSbA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 13:31:00 -0500
-From: greearb@candelatech.com
+Received: from nbd.name ([46.4.11.11]:55263 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753523Ab1ATWt3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 17:49:29 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Fix skb-copy failure debug message.
-Date: Sat,  8 Jan 2011 10:30:54 -0800
-Message-Id: <1294511454-29985-1-git-send-email-greearb@candelatech.com>
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v3 1/4] ath9k: remove the virtual wiphy debugfs interface
+Date: Thu, 20 Jan 2011 23:49:22 +0100
+Message-Id: <1295563765-23852-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+It does not make much sense to keep the current virtual wiphy implementation
+any longer - it adds significant complexity, has very few users and is still
+very experimental. At some point in time, it will be replaced by a proper
+implementation in mac80211.
 
-This particular error isn't about multicast.
+By making the code easier to read and maintain, removing virtual wiphy support
+helps with fixing the remaining driver issues and adding further improvements.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-:100644 100644 a6701ed... 6d2c59b... M	net/mac80211/rx.c
- net/mac80211/rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |  137 +-------------------------------
+ 1 files changed, 4 insertions(+), 133 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a6701ed..6d2c59b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2692,7 +2692,7 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- 		if (!skb) {
- 			if (net_ratelimit())
- 				wiphy_debug(local->hw.wiphy,
--					"failed to copy multicast frame for %s\n",
-+					"failed to copy skb for %s\n",
- 					sdata->name);
- 			return true;
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 3586c43..72ab1ce 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -381,41 +381,21 @@ static const struct file_operations fops_interrupt = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static const char * ath_wiphy_state_str(enum ath_wiphy_state state)
+-{
+-	switch (state) {
+-	case ATH_WIPHY_INACTIVE:
+-		return "INACTIVE";
+-	case ATH_WIPHY_ACTIVE:
+-		return "ACTIVE";
+-	case ATH_WIPHY_PAUSING:
+-		return "PAUSING";
+-	case ATH_WIPHY_PAUSED:
+-		return "PAUSED";
+-	case ATH_WIPHY_SCAN:
+-		return "SCAN";
+-	}
+-	return "?";
+-}
+-
+ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 			       size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+-	struct ath_wiphy *aphy = sc->pri_wiphy;
+-	struct ieee80211_channel *chan = aphy->hw->conf.channel;
++	struct ieee80211_channel *chan = sc->hw->conf.channel;
+ 	char buf[512];
+ 	unsigned int len = 0;
+-	int i;
+ 	u8 addr[ETH_ALEN];
+ 	u32 tmp;
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+-			"primary: %s (%s chan=%d ht=%d)\n",
+-			wiphy_name(sc->pri_wiphy->hw->wiphy),
+-			ath_wiphy_state_str(sc->pri_wiphy->state),
++			"%s (chan=%d ht=%d)\n",
++			wiphy_name(sc->hw->wiphy),
+ 			ieee80211_frequency_to_channel(chan->center_freq),
+-			aphy->chan_is_ht);
++			conf_is_ht(&sc->hw->conf));
+ 
+ 	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
+ 	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
+@@ -457,123 +437,14 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 	else
+ 		len += snprintf(buf + len, sizeof(buf) - len, "\n");
+ 
+-	/* Put variable-length stuff down here, and check for overflows. */
+-	for (i = 0; i < sc->num_sec_wiphy; i++) {
+-		struct ath_wiphy *aphy_tmp = sc->sec_wiphy[i];
+-		if (aphy_tmp == NULL)
+-			continue;
+-		chan = aphy_tmp->hw->conf.channel;
+-		len += snprintf(buf + len, sizeof(buf) - len,
+-			"secondary: %s (%s chan=%d ht=%d)\n",
+-			wiphy_name(aphy_tmp->hw->wiphy),
+-			ath_wiphy_state_str(aphy_tmp->state),
+-			ieee80211_frequency_to_channel(chan->center_freq),
+-						       aphy_tmp->chan_is_ht);
+-	}
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+-static struct ath_wiphy * get_wiphy(struct ath_softc *sc, const char *name)
+-{
+-	int i;
+-	if (strcmp(name, wiphy_name(sc->pri_wiphy->hw->wiphy)) == 0)
+-		return sc->pri_wiphy;
+-	for (i = 0; i < sc->num_sec_wiphy; i++) {
+-		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+-		if (aphy && strcmp(name, wiphy_name(aphy->hw->wiphy)) == 0)
+-			return aphy;
+-	}
+-	return NULL;
+-}
+-
+-static int del_wiphy(struct ath_softc *sc, const char *name)
+-{
+-	struct ath_wiphy *aphy = get_wiphy(sc, name);
+-	if (!aphy)
+-		return -ENOENT;
+-	return ath9k_wiphy_del(aphy);
+-}
+-
+-static int pause_wiphy(struct ath_softc *sc, const char *name)
+-{
+-	struct ath_wiphy *aphy = get_wiphy(sc, name);
+-	if (!aphy)
+-		return -ENOENT;
+-	return ath9k_wiphy_pause(aphy);
+-}
+-
+-static int unpause_wiphy(struct ath_softc *sc, const char *name)
+-{
+-	struct ath_wiphy *aphy = get_wiphy(sc, name);
+-	if (!aphy)
+-		return -ENOENT;
+-	return ath9k_wiphy_unpause(aphy);
+-}
+-
+-static int select_wiphy(struct ath_softc *sc, const char *name)
+-{
+-	struct ath_wiphy *aphy = get_wiphy(sc, name);
+-	if (!aphy)
+-		return -ENOENT;
+-	return ath9k_wiphy_select(aphy);
+-}
+-
+-static int schedule_wiphy(struct ath_softc *sc, const char *msec)
+-{
+-	ath9k_wiphy_set_scheduler(sc, simple_strtoul(msec, NULL, 0));
+-	return 0;
+-}
+-
+-static ssize_t write_file_wiphy(struct file *file, const char __user *user_buf,
+-				size_t count, loff_t *ppos)
+-{
+-	struct ath_softc *sc = file->private_data;
+-	char buf[50];
+-	size_t len;
+-
+-	len = min(count, sizeof(buf) - 1);
+-	if (copy_from_user(buf, user_buf, len))
+-		return -EFAULT;
+-	buf[len] = '\0';
+-	if (len > 0 && buf[len - 1] == '\n')
+-		buf[len - 1] = '\0';
+-
+-	if (strncmp(buf, "add", 3) == 0) {
+-		int res = ath9k_wiphy_add(sc);
+-		if (res < 0)
+-			return res;
+-	} else if (strncmp(buf, "del=", 4) == 0) {
+-		int res = del_wiphy(sc, buf + 4);
+-		if (res < 0)
+-			return res;
+-	} else if (strncmp(buf, "pause=", 6) == 0) {
+-		int res = pause_wiphy(sc, buf + 6);
+-		if (res < 0)
+-			return res;
+-	} else if (strncmp(buf, "unpause=", 8) == 0) {
+-		int res = unpause_wiphy(sc, buf + 8);
+-		if (res < 0)
+-			return res;
+-	} else if (strncmp(buf, "select=", 7) == 0) {
+-		int res = select_wiphy(sc, buf + 7);
+-		if (res < 0)
+-			return res;
+-	} else if (strncmp(buf, "schedule=", 9) == 0) {
+-		int res = schedule_wiphy(sc, buf + 9);
+-		if (res < 0)
+-			return res;
+-	} else
+-		return -EOPNOTSUPP;
+-
+-	return count;
+-}
+-
+ static const struct file_operations fops_wiphy = {
+ 	.read = read_file_wiphy,
+-	.write = write_file_wiphy,
+ 	.open = ath9k_debugfs_open,
+ 	.owner = THIS_MODULE,
+ 	.llseek = default_llseek,
 -- 
-1.7.2.3
+1.7.3.2
 
