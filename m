@@ -1,35 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:53884 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750820Ab1AVUDi (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:35185 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753629Ab1ATIQN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Jan 2011 15:03:38 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id ADCA0540040
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Jan 2011 15:05:37 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-22 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110122200337.7A5C840F97@repository3.orbit-lab.org>
-Date: Sat, 22 Jan 2011 15:03:37 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 20 Jan 2011 03:16:13 -0500
+Message-ID: <20110120101606.53052h18mlpyp8w0@hayate.sektori.org>
+Date: Thu, 20 Jan 2011 10:16:06 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>, kvalo@adurom.com
+Subject: Re: [RFC PATCH 10/17] zd1211rw: implement beacon fetching and
+ handling ieee80211_get_buffered_bc()
+References: <20110104234745.25309.72030.stgit@fate.lan>
+ <201101092133.37610.chunkeey@googlemail.com>
+ <20110119204903.179429gv9mcqcidc@hayate.sektori.org>
+ <201101192122.25282.chunkeey@googlemail.com>
+In-Reply-To: <201101192122.25282.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Christian Lamparter <chunkeey@googlemail.com>:
 
-compat-wireless code metrics
+> On Wednesday 19 January 2011 19:49:03 Jussi Kivilinna wrote:
+>> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+>>> On Sunday 09 January 2011 16:46:56 Jussi Kivilinna wrote:
+>>>> Quoting Christian Lamparter <chunkeey@googlemail.com>:
+>>>>> this is an interesting one...
+>>>>>
+>>>>> Since zd_beacon_done also uploads the next beacon so long in advance,
+>>>>> there could be an equally long race between the outdated state of the
+>>>>> next beacon's DTIM broadcast traffic indicator (802.11-2007 7.3.2.6)
+>>>>> which -in your case- was uploaded almost a beacon interval ago and
+>>>>> the xmit of ieee80211_get_buffered_bc *now*.
+>>>>>
+>>>>> The dtim bc/mc bit might be not set, when a mc/bc arrived after the
+>>>>> beacon was uploaded, but before the "beacon done event" from the
+>>>>> hardware. So, dozing stations don't expect the broadcast traffic
+>>>>> and of course, they might miss it completely.
+>>>>>
+>>>>> It's probably better to fix this in mac80211 (see the attached hack).
+>>>>
+>>>> Ok, should I add this to my patchset?
+>>> well, difficult to say. As far as I can say, it should be correct for "your
+>>> case". But, on the other hand: what about solutions that can't buffer
+>>> mc/bc frames (and needs to call ieee80211_get_buffered_bc), however the
+>>> firmware is clever enough to maintain a beacon internally (so they
+>>> won't call ieee80211_beacon_get and only relies on set_tim)?
+>>>
+>>> Sure, it's just a unlikely corner case... In fact, I didn't check if
+>>> that's even possible, but it does sound reasonable to some extend.
+>>
+>> From what I checked none of currect driver/device is such.
+>> Maybe if such device appears then !bss->dtim_bc_mc check in
+>> ieee80211_beacon_add_tim() could be masked with driver flag (something
+>> like
+>> IEEE80211_HW_CAN_AND_HANDLE_BEACON_BUT_STILL_NEEDS_HOST_BROADCAST_PS_BUFFERING).
+>
+> True, but a recent discussion into this matter have made parts of the
+> API you are planning to use sort-of "deprecated"? [I think?]
+>
+> http://marc.info/?l=linux-wireless&m=129463297300480
+>
+> I don't know the exact details, but I'm sure Kvalo does have his reasons.
+> [afaik it has to do with wl12xx, he even explained it once, but I can't
+> find that mail anymore].
+>
 
-    782984 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1982 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1955 - % of crap code
+What I understood from that thread is that rt2x00/usb doesn't have HW  
+buffering and doesn't enable IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING  
+(rt2x00/pci does), and yet enables AP-mode. Driver has this comment:
+	/*
+	 * Initialize all hw fields.
+	 *
+	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING unless we are
+	 * capable of sending the buffered frames out after the DTIM
+	 * transmission using rt2x00lib_beacondone. This will send out
+	 * multicast and broadcast traffic immediately instead of buffering it
+	 * infinitly and thus dropping it after some time.
+	 */
 
-Base tree: linux-next.git
-Base tree version: next-20110121
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
+>>>>> In fact, you could just as well drop "[09/17] zd1211rw: implement
+>>>>> seq_num for IEEE80211_TX_CTL_ASSIGN_SEQ"... unless of course, I'm
+>>>>> an idiot and there is a really clever way around these issues.
+>>>>
+>>>> Oh well, I should have checked this more closely before doing that
+>>>> patch. HW is assigning seq-numbers already and that patch is not needed.
+>>>
+>>> heh, p54's fw can assign sequence numbers as well, but there's a  
+>>> txdesc flag
+>>> to control the counter, so the firmware does not mess with the
+>>> sequence control
+>>> of QoS-Data frames. I hope zd1211* has one too.
+>>
+>> There is tx-control flag that doesn't have effect, but since zd1211
+>> doesn't appear to support QoS it's not a problem.
+>
+> Ok, that sound reasonable.
+>
+> One more thing, is there a tx-control flag to instruct the HW/FW to write
+> the TSF into probe response frames, just like it does for beacons frames?
+>
+> Sure, this feature is far more important for IBSS, but the 802.11-2007
+> specs @11.1.4 says that a STA might use beacons or probe responses to
+> synchronize its timers. [However 11.1.1.1 and 11.1.3.4 say that STAs
+> should "only" pick this information from beacons, if I'm not mistaken?!]
+> (Also a uniform "0..0" timestamp in every probe-response looks so sad.)
+>
+
+No such flag I'm afraid. Vendor driver appears to be reading  
+tsf-register from driver and writing value to probe response frames,  
+maybe something I should add to zd1211rw too.
+
+-Jussi
+
