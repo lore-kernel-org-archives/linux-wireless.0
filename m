@@ -1,105 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47582 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326Ab1ASP5C convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 10:57:02 -0500
-Received: by pwj3 with SMTP id 3so179802pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 07:57:02 -0800 (PST)
+Received: from smtp.nexicom.net ([216.168.96.13]:57311 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751544Ab1ATSpr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 13:45:47 -0500
+Message-ID: <4D3882D5.2080902@lockie.ca>
+Date: Thu, 20 Jan 2011 13:45:41 -0500
+From: James <bjlockie@lockie.ca>
 MIME-Version: 1.0
-In-Reply-To: <20110119092113.19628.33322.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092113.19628.33322.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 17:57:02 +0200
-Message-ID: <AANLkTinrTN_Pbewd-QNTbcQ1qEQJzZjRoz9iBDcHJonL@mail.gmail.com>
-Subject: Re: [PATCH 8/8] ath5k: Remove redundant sc->curband
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k problem with kernel 2.6.37
+References: <4D37E2A9.6010209@lockie.ca> <AANLkTikhpK09=wyq=g6kHbsgd-C13A4Vc1TrA29utd5k@mail.gmail.com>
+In-Reply-To: <AANLkTikhpK09=wyq=g6kHbsgd-C13A4Vc1TrA29utd5k@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/19 Bruno Randolf <br1@einfach.org>:
-> Remove sc->curband because the band is already stored in the current channel.
+On 01/20/11 03:35, Mohammed Shafi wrote:
+> On Thu, Jan 20, 2011 at 12:52 PM, James <bjlockie@lockie.ca> wrote:
+>> phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
+>> mem=0xffffc90001880000, irq=17
+>>
+>> I get few or no results when I do
+>> iwlist wlan1 scan with kernel 2.6.37
+>>
+> We will check it out
 >
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   11 ++++-------
->  drivers/net/wireless/ath/ath5k/base.h |    2 --
->  2 files changed, 4 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a00cc11..0e39ee8 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -551,7 +551,7 @@ ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
->                        "hw_rix out of bounds: %x\n", hw_rix))
->                return 0;
->
-> -       rix = sc->rate_idx[sc->curband->band][hw_rix];
-> +       rix = sc->rate_idx[sc->curchan->band][hw_rix];
->        if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
->                rix = 0;
->
-> @@ -1361,7 +1361,7 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
->        rxs->flag |= RX_FLAG_TSFT;
->
->        rxs->freq = sc->curchan->center_freq;
-> -       rxs->band = sc->curband->band;
-> +       rxs->band = sc->curchan->band;
->
->        rxs->signal = sc->ah->ah_noise_floor + rs->rs_rssi;
->
-> @@ -1376,7 +1376,7 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
->        rxs->flag |= ath5k_rx_decrypted(sc, skb, rs);
->
->        if (rxs->rate_idx >= 0 && rs->rs_rate ==
-> -           sc->curband->bitrates[rxs->rate_idx].hw_value_short)
-> +           sc->sbands[sc->curchan->band].bitrates[rxs->rate_idx].hw_value_short)
->                rxs->flag |= RX_FLAG_SHORTPRE;
->
->        ath5k_debug_dump_skb(sc, skb, "RX  ", 0);
-> @@ -2536,7 +2536,6 @@ ath5k_init_hw(struct ath5k_softc *sc)
->         * and then setup of the interrupt mask.
->         */
->        sc->curchan = sc->hw->conf.channel;
-> -       sc->curband = &sc->sbands[sc->curchan->band];
->        sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
->                AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
->                AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
-> @@ -2663,10 +2662,8 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
->         * so we should also free any remaining
->         * tx buffers */
->        ath5k_drain_tx_buffs(sc);
-> -       if (chan) {
-> +       if (chan)
->                sc->curchan = chan;
-> -               sc->curband = &sc->sbands[chan->band];
-> -       }
->        ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL,
->                                                                skip_pcu);
->        if (ret) {
-> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-> index 58660e4..8f919dc 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.h
-> +++ b/drivers/net/wireless/ath/ath5k/base.h
-> @@ -183,8 +183,6 @@ struct ath5k_softc {
->        enum nl80211_iftype     opmode;
->        struct ath5k_hw         *ah;            /* Atheros HW */
->
-> -       struct ieee80211_supported_band         *curband;
-> -
->  #ifdef CONFIG_ATH5K_DEBUG
->        struct ath5k_dbg_info   debug;          /* debug info */
->  #endif /* CONFIG_ATH5K_DEBUG */
+>> but it is consistently good with kernel 2.6.36.2
+>>
+>> Is there a way to compare the kernel configs to make sure I didn't
+>> change anything?
+> Please try with latest compat wireless, which might be helpful
+I got:
+http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+
+I can't compile it:
+/usr/src/compat-wireless-2011-01-19 $ sudo make 
+/usr/src/compat-wireless-2011-01-19/config.mk:202: "WARNING:
+CONFIG_CFG80211_WEXT will be deactivated or not working because kernel
+was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like
+iwconfig will not work. To activate it build your kernel e.g. with
+CONFIG_LIBIPW=m."
+./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+make -C /lib/modules/2.6.37/build M=/usr/src/compat-wireless-2011-01-19
+modules
+make[1]: Entering directory `/usr/src/linux-2.6.37'
+  CC [M]  /usr/src/compat-wireless-2011-01-19/compat/main.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/compat/compat-2.6.38.o
+  LD [M]  /usr/src/compat-wireless-2011-01-19/compat/compat.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/hci_vhci.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/bcm203x.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/bpa10x.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/bfusb.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/btusb.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/ath3k.o
+  CC [M] 
+/usr/src/compat-wireless-2011-01-19/drivers/bluetooth/btmrvl_main.o
+  LD [M]  /usr/src/compat-wireless-2011-01-19/drivers/bluetooth/btmrvl.o
+  CC [M] 
+/usr/src/compat-wireless-2011-01-19/drivers/misc/eeprom/eeprom_93cx6.o
+  CC [M]  /usr/src/compat-wireless-2011-01-19/drivers/net/b44.o
+/usr/src/compat-wireless-2011-01-19/drivers/net/b44.c:13:1: warning:
+"pr_fmt" redefined
+In file included from include/linux/kernel.h:20,
+                 from include/linux/skbuff.h:17,
+                 from include/linux/if_ether.h:125,
+                 from include/linux/netdevice.h:29,
+                 from
+/usr/src/compat-wireless-2011-01-19/include/linux/compat-2.6.29.h:5,
+                 from
+/usr/src/compat-wireless-2011-01-19/include/linux/compat-2.6.h:24,
+                 from <command-line>:0:
+include/linux/printk.h:161:1: warning: this is the location of the
+previous definition
+/usr/src/compat-wireless-2011-01-19/drivers/net/b44.c: In function
+'b44_pci_init':
+/usr/src/compat-wireless-2011-01-19/drivers/net/b44.c:2345: error:
+implicit declaration of function 'ssb_pcihost_register'
+make[3]: *** [/usr/src/compat-wireless-2011-01-19/drivers/net/b44.o] Error 1
+make[2]: *** [/usr/src/compat-wireless-2011-01-19/drivers/net] Error 2
+make[1]: *** [_module_/usr/src/compat-wireless-2011-01-19] Error 2
+make[1]: Leaving directory `/usr/src/linux-2.6.37'
+make: *** [modules] Error 2
+
+Do I understand it correctly that it is just newer and will be in the
+kernel eventually?
+
+How can I see what version of the driver I am using?
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
