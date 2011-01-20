@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34331 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297Ab1ALQiQ (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:40635 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731Ab1ATTDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 11:38:16 -0500
-Subject: Re: [RFC 2/2] iwlwifi: use maximum aggregation size
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294849399.3591.34.camel@wwguy-huron>
-References: <20110112121322.702618109@sipsolutions.net>
-	 <20110112121418.037714947@sipsolutions.net>
-	 <1294849399.3591.34.camel@wwguy-huron>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 17:38:57 +0100
-Message-ID: <1294850337.3639.28.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 20 Jan 2011 14:03:09 -0500
+Received: by wwi17 with SMTP id 17so1836882wwi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 11:03:08 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Fwd: [Linux Wireless] Update of "en/users/Drivers/carl9170" by PaulFertser
+Date: Thu, 20 Jan 2011 20:02:49 +0100
+Cc: Paul Fertser <fercerpav@gmail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <20110120183210.13527.33808@he.sipsolutions.net> <20110120184336.GK3333@home.lan> <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
+In-Reply-To: <AANLkTimFGzFgjNWs4QyHuyGixgCiDm_uAb_z4t4m7nD8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201101202002.49840.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 08:23 -0800, Guy, Wey-Yi wrote:
-
-> > +	lq_cmd->agg_params.agg_frame_cnt_limit =
-> > +		sta_priv->max_agg_bufsize ?: LINK_QUAL_AGG_FRAME_LIMIT_DEF;
+On Thursday 20 January 2011 19:50:43 Luis R. Rodriguez wrote:
+> On Thu, Jan 20, 2011 at 10:43 AM, Paul Fertser <fercerpav@gmail.com> wrote:
+> > On Thu, Jan 20, 2011 at 10:37:20AM -0800, Luis R. Rodriguez wrote:
+> >> Huh?
+> >
+> > Christian asked me to add that info to the wiki, is something i wrote wrong?
 > 
-> at this point, sta_priv->lq_sta.lq.agg_params.agg_frame_cnt_limit has
-> the right value, why not use it?
+> It is unclear to me, are you saying carl9170 does not support QoS and
+> aggregation?
 
-I wasn't sure it would _always_ have the right value, and if the ucode
-would accept 0 before needed -- the ?: construct will use it if
-non-zero, and use the default otherwise.
+It's not only carl9170, it's AR9170 (the chip) .
 
-> on the other hand, sta_priv->max_agg_bufsize ==
-> sta_priv->lq_sta.lq.agg_params.agg_frame_cnt_limit
-> 
-> why need both?
+Take a look into the original firmware:
 
-Yeah I guess that would work if we put the init somewhere else, and
-didn't change it above in that function -- we need the minimum
-calculation to work. This seemed easier to verify to me :-)
+<http://git.kernel.org/?p=linux/kernel/git/mcgrof/ar9170-fw.git;a=blob;f=STA/hostif.c;h=aa277d14ee5ec4c222b83975d7dc2d5c66dbf91c;hb=2e3574ce10c74a82047a06b046855de14d969948#l107>
 
-> > +		/*
-> > +		 * Even though in theory the peer could have different
-> > +		 * aggregation reorder buffer sizes for different sessions,
-> > +		 * our ucode doesn't allow for that and has a global limit
-> > +		 * for each station. Therefore, use the minimum of all the
-> > +		 * aggregation sessions and our default value.
-> > +		 */
-> > +		sta_priv->max_agg_bufsize =
-> > +			min(sta_priv->max_agg_bufsize, buf_size);
-> > +
-> not sure where the "bus_size" come from?
+107					/* TxQ number */
+108					//txqNum = (buf[2] >> 13);
+109					//if (txqNum > 4)
+110					{
+111						txqNum = 0;
+112					}
+113 
+114					zfDmaPutPacket(&zgTxQ[txqNum], desc);
+115					/* Trigger WLAN TX DMA */
+116					zm_wl_dma_trigger_reg = (1 << txqNum);
 
-It's a new argument to the function -- see patch 1/2.
+So yes, someone took a shortcut along the way.
 
-johannes
-
+Regards,
+	Chr
