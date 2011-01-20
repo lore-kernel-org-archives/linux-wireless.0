@@ -1,46 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:6922 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751829Ab1AYKrI (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36413 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239Ab1ATGRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 05:47:08 -0500
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0182472425
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 19:47:07 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 2/2] ath5k: correct endianness of frame duration
-Date: Tue, 25 Jan 2011 19:47:03 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com
-References: <1295929904-11806-1-git-send-email-me@bobcopeland.com> <201101251423.32008.br1@einfach.org> <20110125103803.GA2239@hash.localnet>
-In-Reply-To: <20110125103803.GA2239@hash.localnet>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101251947.03685.br1@einfach.org>
+	Thu, 20 Jan 2011 01:17:04 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, gregkh@suse.de,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [RFC 1/3]staging: brcm80211 dhd.h Remove CONFIG_HAS_WAKELOCK
+Date: Wed, 19 Jan 2011 22:16:04 -0800
+Message-Id: <1295504166-1042-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue January 25 2011 19:38:03 Bob Copeland wrote:
-> On Tue, Jan 25, 2011 at 02:23:31PM +0900, Bruno Randolf wrote:
-> > > The ath5k version of ieee80211_generic_frame_duration() returns
-> > > an __le16 for standard modes but a cpu-endian int for turbo/half/
-> > > quarter rates.  Make it always return cpu-endian values.
-> > 
-> > I wonder what effect this has in ath5k_hw_set_ifs_intervals() where
-> > ack_tx_time was little endian before...
-> 
-> Good point, I didn't think about that.  My guess is EIFS would have
-> been much too large on big endian arches before the patch.  But then
-> EIFS resets after successful rx so maybe our many BE users (heh)
-> wouldn't have noticed except on very idle channels...
+Note:not sure if there is already something like this submitted or not.
 
-Allright, just the EIFS is affected - shouldn't be a big deal. Anyhow it's 
-correct now and was wrong before.
+The first two patches removes CONFIG_HAS_WAKELOCK since it is no longer in the kernel.
+Please let me know, if this is the proper way of doing this and/or more needs
+to be done..
 
-But you meant on a very busy channel, right?
 
-I'm on a BE board ;) I can try to see what difference it makes tomorrow.
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-bruno
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h |   41 ------------------------------
+ 1 files changed, 0 insertions(+), 41 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 69c6a02..6a382c8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -33,9 +33,6 @@
+ #include <linux/ethtool.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+-#if defined(CONFIG_HAS_WAKELOCK)
+-#include <linux/wakelock.h>
+-#endif			/* defined (CONFIG_HAS_WAKELOCK) */
+ /* The kernel threading is sdio-specific */
+ 
+ #include <wlioctl.h>
+@@ -145,9 +142,6 @@ typedef struct dhd_pub {
+ 	u8 country_code[WLC_CNTRY_BUF_SZ];
+ 	char eventmask[WL_EVENTING_MASK_LEN];
+ 
+-#if defined(CONFIG_HAS_WAKELOCK)
+-	struct wake_lock wakelock[WAKE_LOCK_MAX];
+-#endif		/*  defined (CONFIG_HAS_WAKELOCK) */
+ } dhd_pub_t;
+ 
+ #if defined(CONFIG_PM_SLEEP)
+@@ -230,41 +224,6 @@ static inline void MUTEX_UNLOCK_WL_SCAN_SET(void)
+ {
+ }
+ 
+-static inline void WAKE_LOCK_INIT(dhd_pub_t *dhdp, int index, char *y)
+-{
+-#if defined(CONFIG_HAS_WAKELOCK)
+-	wake_lock_init(&dhdp->wakelock[index], WAKE_LOCK_SUSPEND, y);
+-#endif	/* defined (CONFIG_HAS_WAKELOCK) */
+-}
+-
+-static inline void WAKE_LOCK(dhd_pub_t *dhdp, int index)
+-{
+-#if defined(CONFIG_HAS_WAKELOCK)
+-	wake_lock(&dhdp->wakelock[index]);
+-#endif	/* defined (CONFIG_HAS_WAKELOCK) */
+-}
+-
+-static inline void WAKE_UNLOCK(dhd_pub_t *dhdp, int index)
+-{
+-#if defined(CONFIG_HAS_WAKELOCK)
+-	wake_unlock(&dhdp->wakelock[index]);
+-#endif	/* defined (CONFIG_HAS_WAKELOCK) */
+-}
+-
+-static inline void WAKE_LOCK_TIMEOUT(dhd_pub_t *dhdp, int index, long time)
+-{
+-#if defined(CONFIG_HAS_WAKELOCK)
+-	wake_lock_timeout(&dhdp->wakelock[index], time);
+-#endif	/* defined (CONFIG_HAS_WAKELOCK) */
+-}
+-
+-static inline void WAKE_LOCK_DESTROY(dhd_pub_t *dhdp, int index)
+-{
+-#if defined(CONFIG_HAS_WAKELOCK)
+-	wake_lock_destroy(&dhdp->wakelock[index]);
+-#endif /* defined (CONFIG_HAS_WAKELOCK) */
+-}
+-
+ typedef struct dhd_if_event {
+ 	u8 ifidx;
+ 	u8 action;
+-- 
+1.6.5.GIT
+
