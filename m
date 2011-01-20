@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39829 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554Ab1AXL0t (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:32891 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755901Ab1ATPrw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 06:26:49 -0500
-Subject: Re: [PATCH 1/1] CHROMIUM: config: bluetooth: rfkill driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: aidapalapati@nvidia.com
-Cc: olofj@chromium.org, linville@tuxdriver.com, uraval@nvidia.com,
-	krakesh@nvidia.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1295867209-6156-1-git-send-email-aidapalapati@nvidia.com>
-References: <1295867209-6156-1-git-send-email-aidapalapati@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 12:27:34 +0100
-Message-ID: <1295868454.3639.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 20 Jan 2011 10:47:52 -0500
+Received: by eye27 with SMTP id 27so313667eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 07:47:51 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Subject: Re: iwl4965: 11n broken
+Date: Thu, 20 Jan 2011 16:46:21 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <201101201242.24680.helmut.schaa@googlemail.com> <1295537707.21281.1.camel@wwguy-ubuntu>
+In-Reply-To: <1295537707.21281.1.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101201646.21583.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-24 at 16:36 +0530, aidapalapati@nvidia.com wrote:
+Am Donnerstag, 20. Januar 2011 schrieb Guy, Wey-Yi:
+> Sorry for the mistake, here I attach the patch to address this issue.
+> Please give a try to see if it fix it, I will also push this patch
+> upstream if works for you.
 
-> A new "rfkill" driver is added to control BT radio.
-> A new kernel config variable CONFIG_BT_RFKILL needs to
-> be configured to include this driver in the kernel.
-> 
-> Three resources are expected by the driver.
-> One Shutdown GPIO, One Reset Gpio and One reference Clock.
-> if any/all of the resources can be defined by a platform.
+Sure, works fine. Feel free to add a
 
-If that's a generic driver, why can it use
+Tested-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-> +		tegra_gpio_enable(bt_rfkill->gpio_reset);
+to the patch when submitting.
 
-tegra_* functions?
-
-johannes
-
+Thanks,
+Helmut
