@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2461 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751708Ab1AYJHs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 04:07:48 -0500
-To: "Jamie Kitson" <jamie@kitten-x.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
-References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE13CD2B113F@SJEXCHCCR01.corp.ad.broadcom.com>
- <AANLkTimkgrc19QCdeOhc+huTsrGCD_Y8cqHnz_dQjc5y@mail.gmail.com>
- <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
- <AANLkTingheCkPNvc+8qM5oQh8NHPAX2h4Z6C1YZEFRBc@mail.gmail.com>
- <AANLkTimmLbtQUDWZGChH9LzwNwv6ZXihTz4a+mZefm60@mail.gmail.com>
- <4D3ACE90.5040707@broadcom.com>
- <AANLkTi=YpOhbqCNZsLiY=24+HJiupe4zL0KW8ZOmFzjU@mail.gmail.com>
-Date: Tue, 25 Jan 2011 10:07:30 +0100
+Received: from mail.candelatech.com ([208.74.158.172]:57796 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab1ATSGd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 13:06:33 -0500
+Message-ID: <4D3879A6.2060909@candelatech.com>
+Date: Thu, 20 Jan 2011 10:06:30 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vpuwyqyx3ri7v4@arend-laptop>
-In-Reply-To: <AANLkTi=YpOhbqCNZsLiY=24+HJiupe4zL0KW8ZOmFzjU@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/3] mac80211: Support scanning only current active channel.
+References: <1295544750-6704-1-git-send-email-greearb@candelatech.com>	 <1295544750-6704-2-git-send-email-greearb@candelatech.com> <1295545143.3693.44.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295545143.3693.44.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jamie,
-
-On Mon, 24 Jan 2011 22:40:35 +0100, Jamie Kitson <jamie@kitten-x.com>  
-wrote:
-
->> Could you also provide the panic trace?
+On 01/20/2011 09:39 AM, Johannes Berg wrote:
+> On Thu, 2011-01-20 at 09:32 -0800, greearb@candelatech.com wrote:
 >
-> How/where do I find that?
+>> -	ieee80211_offchannel_stop_beaconing(local);
+>> +	if (local->ops->sw_scan_start_cur&&
+>> +	    local->scan_req->n_channels == 1&&
+>> +	    local->scan_req->channels[0] == local->hw.conf.channel) {
+>> +		__set_bit(SCAN_ON_CUR_CHANNEL,&local->scanning);
+>> +		drv_sw_scan_start_cur(local, true);
+>> +	} else
+>> +		drv_sw_scan_start(local);
 >
-> Thanks, Jamie
->
-I actually found some screenshots you posted on ArchLinux forum so if  
-those are valid I am all set.
+> This doesn't seem to make much sense either -- even if we do a scan over
+> multiple channels we should be able to optimise the part on the current
+> channel (maybe put it at the beginning or end too).
 
-Gr. AvS
+Maybe..but user-space can specify the channels it wants to scan,
+and I assume that means what order to scan them in.  I have no
+idea if changing that order would confuse some application.
+
+It seems to me that it would take quite a bit of re-work of the
+mac80211 scanning logic to deal with scanning on the current
+channel w/out affecting other tx/rx packets (as my patch attempts
+to do), without setting some explicit flag before you enter
+the scan state machine.
+
+Thanks,
+Ben
+
+>
+> johannes
+
 
 -- 
-Using Opera's revolutionary email client: http://www.opera.com/mail/
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
