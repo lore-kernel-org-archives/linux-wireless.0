@@ -1,200 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55264 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753908Ab1ATWt3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 17:49:29 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v3 3/4] ath9k: remove the bf->aphy field
-Date: Thu, 20 Jan 2011 23:49:24 +0100
-Message-Id: <1295563765-23852-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1295563765-23852-2-git-send-email-nbd@openwrt.org>
-References: <1295563765-23852-1-git-send-email-nbd@openwrt.org>
- <1295563765-23852-2-git-send-email-nbd@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:53461 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431Ab1AUEjK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 23:39:10 -0500
+Message-ID: <4D390DE6.8030507@candelatech.com>
+Date: Thu, 20 Jan 2011 20:39:02 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/3] mac80211: Support scanning only current active channel.
+References: <1295544750-6704-1-git-send-email-greearb@candelatech.com> <1295547439.3693.46.camel@jlt3.sipsolutions.net> <4D387D25.7080902@candelatech.com> <201101202014.51161.helmut.schaa@googlemail.com>
+In-Reply-To: <201101202014.51161.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |   38 +++++++++++++------------------
- 2 files changed, 17 insertions(+), 24 deletions(-)
+On 01/20/2011 11:14 AM, Helmut Schaa wrote:
+> Am Donnerstag, 20. Januar 2011 schrieb Ben Greear:
+>> On 01/20/2011 10:17 AM, Johannes Berg wrote:
+>>> Yeah, so maybe it needs some re-work, but I think what you're doing is a
+>>> pretty strange hack.
+>>
+>> If you have time to write some patches, I'll be happy to test them on
+>> our ath9k and ath5k systems.
+>
+> Try this, I only ran a quick test with iwlagn (disable_hw_scan=1), seems to
+> work fine. However, I did not think much about it yet ;)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 3caa54d..fe6a69c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -32,6 +32,7 @@
-  */
- 
- struct ath_node;
-+struct ath_wiphy;
- 
- /* Macro to expand scalars to 64-bit objects */
- 
-@@ -233,7 +234,6 @@ struct ath_buf {
- 	bool bf_stale;
- 	u16 bf_flags;
- 	struct ath_buf_state bf_state;
--	struct ath_wiphy *aphy;
- };
- 
- struct ath_atx_tid {
-@@ -556,7 +556,6 @@ struct ath_ant_comb {
- #define PS_WAIT_FOR_TX_ACK        BIT(3)
- #define PS_BEACON_SYNC            BIT(4)
- 
--struct ath_wiphy;
- struct ath_rate_table;
- 
- struct ath9k_vif_iter_data {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a7c3048..80dc0cc 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -57,8 +57,9 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 			     struct list_head *head);
- static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
--static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
--			     int nframes, int nbad, int txok, bool update_rc);
-+static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
-+			     struct ath_tx_status *ts, int nframes, int nbad,
-+			     int txok, bool update_rc);
- static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
- 			      int seqno);
- 
-@@ -297,7 +298,6 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
- 
- 	ATH_TXBUF_RESET(tbf);
- 
--	tbf->aphy = bf->aphy;
- 	tbf->bf_mpdu = bf->bf_mpdu;
- 	tbf->bf_buf_addr = bf->bf_buf_addr;
- 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
-@@ -345,7 +345,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	struct ath_node *an = NULL;
- 	struct sk_buff *skb;
- 	struct ieee80211_sta *sta;
--	struct ieee80211_hw *hw;
-+	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ath_atx_tid *tid = NULL;
-@@ -364,7 +364,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
--	hw = bf->aphy->hw;
- 
- 	memcpy(rates, tx_info->control.rates, sizeof(rates));
- 
-@@ -383,7 +382,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			    !bf->bf_stale || bf_next != NULL)
- 				list_move_tail(&bf->list, &bf_head);
- 
--			ath_tx_rc_status(bf, ts, 1, 1, 0, false);
-+			ath_tx_rc_status(sc, bf, ts, 1, 1, 0, false);
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
- 				0, 0);
- 
-@@ -489,10 +488,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
- 				memcpy(tx_info->control.rates, rates, sizeof(rates));
--				ath_tx_rc_status(bf, ts, nframes, nbad, txok, true);
-+				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, true);
- 				rc_update = false;
- 			} else {
--				ath_tx_rc_status(bf, ts, nframes, nbad, txok, false);
-+				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, false);
- 			}
- 
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
-@@ -516,7 +515,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 						bf->bf_state.bf_type |=
- 							BUF_XRETRY;
--						ath_tx_rc_status(bf, ts, nframes,
-+						ath_tx_rc_status(sc, bf, ts, nframes,
- 								nbad, 0, false);
- 						ath_tx_complete_buf(sc, bf, txq,
- 								    &bf_head,
-@@ -1667,7 +1666,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
- 
- 	ATH_TXBUF_RESET(bf);
- 
--	bf->aphy = aphy;
- 	bf->bf_flags = setup_tx_flags(skb);
- 	bf->bf_mpdu = skb;
- 
-@@ -1821,8 +1819,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- /*****************/
- 
- static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
--			    struct ath_wiphy *aphy, int tx_flags, int ftype,
--			    struct ath_txq *txq)
-+			    int tx_flags, int ftype, struct ath_txq *txq)
- {
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -1832,9 +1829,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 
- 	ath_dbg(common, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
- 
--	if (aphy)
--		hw = aphy->hw;
--
- 	if (tx_flags & ATH_TX_BAR)
- 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
- 
-@@ -1908,7 +1902,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 			complete(&sc->paprd_complete);
- 	} else {
- 		ath_debug_stat_tx(sc, bf, ts);
--		ath_tx_complete(sc, skb, bf->aphy, tx_flags,
-+		ath_tx_complete(sc, skb, tx_flags,
- 				bf->bf_state.bfs_ftype, txq);
- 	}
- 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
-@@ -1924,14 +1918,14 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
- }
- 
--static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
--			     int nframes, int nbad, int txok, bool update_rc)
-+static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
-+			     struct ath_tx_status *ts, int nframes, int nbad,
-+			     int txok, bool update_rc)
- {
- 	struct sk_buff *skb = bf->bf_mpdu;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hw *hw = bf->aphy->hw;
--	struct ath_softc *sc = bf->aphy->sc;
-+	struct ieee80211_hw *hw = sc->hw;
- 	struct ath_hw *ah = sc->sc_ah;
- 	u8 i, tx_rateindex;
- 
-@@ -2067,7 +2061,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 			 */
- 			if (ts.ts_status & ATH9K_TXERR_XRETRY)
- 				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(bf, &ts, 1, txok ? 0 : 1, txok, true);
-+			ath_tx_rc_status(sc, bf, &ts, 1, txok ? 0 : 1, txok, true);
- 		}
- 
- 		if (bf_isampdu(bf))
-@@ -2186,7 +2180,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		if (!bf_isampdu(bf)) {
- 			if (txs.ts_status & ATH9K_TXERR_XRETRY)
- 				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(bf, &txs, 1, txok ? 0 : 1, txok, true);
-+			ath_tx_rc_status(sc, bf, &txs, 1, txok ? 0 : 1, txok, true);
- 		}
- 
- 		if (bf_isampdu(bf))
+I think it has a few issues, but might be moving in the right direction.
+
+First, it doesn't deal with not calling change-channel on scan completion
+if we never left the operating channel.  And doesn't mitigate the off-channel
+call when scanning starts.
+
+> @@ -534,6 +536,21 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+>   static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
+>   						    unsigned long *next_delay)
+>   {
+> +	struct ieee80211_channel *chan;
+> +	chan = local->scan_req->channels[local->scan_channel_idx];
+> +
+> +	/* remember when we left the operating channel */
+> +	local->leave_oper_channel_time = jiffies;
+> +
+> +	/* advance to the next channel to be scanned */
+> +	local->next_scan_state = SCAN_SET_CHANNEL;
+> +
+> +	/* Scanning operating channel, take the shortcut */
+> +	if (chan == local->oper_channel) {
+> +		*next_delay = 0;
+> +		return;
+> +	}
+
+I think here you might need to compare against the current channel, which could be
+one we are scanning on before we scan the operating channel, not the oper_channel.
+
+
+>   static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *local,
+> @@ -583,8 +594,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+>   	chan = local->scan_req->channels[local->scan_channel_idx];
+>
+>   	local->scan_channel = chan;
+> -	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+> -		skip = 1;
+> +
+> +	if (chan != local->oper_channel)
+> +		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+> +			skip = 1;
+
+Same problem here I think.
+
+I may be mis-understanding what oper_channel implies, however.
+
+Thanks,
+Ben
+
+
 -- 
-1.7.3.2
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
