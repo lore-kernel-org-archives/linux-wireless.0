@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39042 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751856Ab1AIAl4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 19:41:56 -0500
-Message-ID: <4D290450.8070700@openwrt.org>
-Date: Sat, 08 Jan 2011 17:41:52 -0700
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43852 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635Ab1AUKBF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 05:01:05 -0500
+Received: by iyj18 with SMTP id 18so1502121iyj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 02:01:05 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
-References: <1294500800-29191-1-git-send-email-greearb@candelatech.com> <4D28FF57.9040706@openwrt.org> <4D290307.4080807@candelatech.com>
-In-Reply-To: <4D290307.4080807@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19769.22827.129895.302810@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 15:30:11 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC/WIP 23/33] ath9k_htc: Enable AP mode
+In-Reply-To: <1295599422.3831.0.camel@jlt3.sipsolutions.net>
+References: <19768.63310.121728.324735@gargle.gargle.HOWL>
+	<1295599422.3831.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-08 5:36 PM, Ben Greear wrote:
-> On 01/08/2011 04:20 PM, Felix Fietkau wrote:
->>  I think this should be dependent on packet size, maybe even based on the architecture. Especially on embedded hardware, copying large frames is probably quite a
->>  bit more expensive than allocating large buffers. Cache sizes are small, memory access takes several cycles, especially during concurrent DMA.
->>  Once I'm back home, I could try a few packet size threshold to find a sweet spot for the typical MIPS hardware that I'm playing with. I expect a visible
->>  performance regression from this patch when applied as-is.
->
-> I see a serious performance improvement with this patch.  My current test is sending 1024 byte UDP
-> payloads to/from each of 60 stations at 128kbps.  Please do try it out on your system and see how
-> it performs there.  I'm guessing that any time you have more than 1 VIF this will be a good
-> improvement since mac80211 does skb_copy (and you would typically be copying a much smaller
-> packet with this patch).
->
-> If we do see performance differences on different platforms, this could perhaps be
-> something we could tune at run-time.
-What kind of system are you testing on? If it's a PC, then the 
-performance characteristics will be completely different compared to 
-embedded hardware. I've had to remove a few copybreak-like 
-implementations from various ethernet drivers on similar hardware, 
-because even taking the hit of unaligned load/store exceptions (which 
-are already *very* expensive on MIPS) was less than copying the full 
-packet data, even with packet sizes less than what you're using.
+Johannes Berg wrote:
+> On Fri, 2011-01-21 at 08:32 +0530, Sujith wrote:
+> > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> > 
+> > Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> > index dc96c06..b4ae719 100644
+> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> > @@ -753,7 +753,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+> >  
+> >  	hw->wiphy->interface_modes =
+> >  		BIT(NL80211_IFTYPE_STATION) |
+> > -		BIT(NL80211_IFTYPE_ADHOC);
+> > +		BIT(NL80211_IFTYPE_ADHOC) |
+> > +		BIT(NL80211_IFTYPE_AP);
+> 
+> It'd be kinda nice if that could be made dependent on firmware
+> capability bits or version since otherwise everybody will think they
+> have it ... and it will not work?
 
-I don't have suitable test hardware with me right now, but I'll do some 
-tests in a week or so.
+Well, the current firmware has no version mechanism and this series requires
+the new FW for non-AP modes too. I am aware that breaking compatibilty with existing FW
+is frowned upon, but unfortunately this is required since the command layout has
+been cleaned up. I'll add a check to bail out at driver load time when the old FW is used.
 
-- Felix
+Sujith
