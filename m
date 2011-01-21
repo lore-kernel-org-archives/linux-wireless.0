@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64427 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab1AJTLV (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47645 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956Ab1AUDES (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 14:11:21 -0500
-Received: by fxm20 with SMTP id 20so19160522fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 11:11:20 -0800 (PST)
-Message-ID: <4D2B59EA.4000200@lwfinger.net>
-Date: Mon, 10 Jan 2011 13:11:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 20 Jan 2011 22:04:18 -0500
+Received: by mail-iw0-f174.google.com with SMTP id 9so1251567iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:04:18 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Locking problem reported for mainline
-References: <4D2A9309.7000500@lwfinger.net> <201101101913.17311.chunkeey@googlemail.com>
-In-Reply-To: <201101101913.17311.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63364.704614.856827@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:33:32 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 29/33] ath9k_htc: Fix RX length check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/2011 12:13 PM, Christian Lamparter wrote:
-> Does this patch help?
-> 
-> ---
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a6701ed..8f13a83 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -549,7 +549,9 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
->  	tid_agg_rx->reorder_buf[index] = NULL;
->  	status = IEEE80211_SKB_RXCB(skb);
->  	status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
-> -	skb_queue_tail(&local->rx_skb_queue, skb);
-> +	spin_lock(&rx->local->rx_skb_queue.lock);
-> +	__skb_queue_tail(&local->rx_skb_queue, skb);
-> +	spin_unlock(&rx->local->rx_skb_queue.lock);
->  
->  no_frame:
->  	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-> @@ -780,7 +782,9 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
->  		return;
->  
->   dont_reorder:spin_lock(&rx->local->rx_skb_queue.lock);
-> -	skb_queue_tail(&local->rx_skb_queue, skb);
-> +	spin_lock(&rx->local->rx_skb_queue.lock);
-> +	__skb_queue_tail(&local->rx_skb_queue, skb);
-> +	spin_unlock(&rx->local->rx_skb_queue.lock);
->  }
->  
->  static ieee80211_rx_result debug_noinline
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Did not compile. In ieee80211_release_reorder_frame at lines 552 and 554, rx is
-not defined.
+The length of the received SKB could be equal to
+HTC_RX_FRAME_HEADER_SIZE in case of packets with phy/crc errors,
+in which case they are dropped without being processed.
+Fix this check so that the error counters are updated correctly.
 
-Larry
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 1b629fd..9913ef0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -528,8 +528,9 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	__le16 fc;
+ 
+-	if (skb->len <= HTC_RX_FRAME_HEADER_SIZE) {
+-		ath_err(common, "Corrupted RX frame, dropping\n");
++	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
++		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
++			skb->len);
+ 		goto rx_next;
+ 	}
+ 
+-- 
+1.7.3.5
+
