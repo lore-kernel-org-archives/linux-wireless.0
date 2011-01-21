@@ -1,80 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47455 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750804Ab1ANUEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 15:04:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 12:03:56 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: keep calibrated noise floor value for oper channel
-Date: Sat, 15 Jan 2011 01:33:28 +0530
-Message-ID: <1295035408-12507-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47310 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab1AUDBw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 22:01:52 -0500
+Received: by iyj18 with SMTP id 18so1246469iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:52 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63219.25077.245547@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:31:07 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 13/33] ath9k_htc: Allow AP interface to be created
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath9k_hw assumes that caldata is valid only for
-oper channel. But with ath9k_htc case, the caldata is
-passed for all channels on hw_reset though we are not doing
-calibration on that channel. So the oper channel's nf history
-got cleared to default due to mismatch in channel flags.
-This patch also saves some space.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    7 ++++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    8 ++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   11 +++++++++++
+ 2 files changed, 19 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 1ce506f..c976600 100644
+index f650439..378aba3 100644
 --- a/drivers/net/wireless/ath/ath9k/htc.h
 +++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -366,7 +366,7 @@ struct ath9k_htc_priv {
- 	u16 seq_no;
- 	u32 bmiss_cnt;
+@@ -205,6 +205,7 @@ struct ath9k_htc_target_stats {
+ } __packed;
  
--	struct ath9k_hw_cal_data caldata[ATH9K_NUM_CHANNELS];
-+	struct ath9k_hw_cal_data caldata;
+ #define ATH9K_HTC_MAX_VIF 2
++#define ATH9K_HTC_MAX_BCN_VIF 2
  
- 	spinlock_t beacon_lock;
+ #define INC_VIF(_priv, _type) do {		\
+ 		switch (_type) {		\
+@@ -214,6 +215,9 @@ struct ath9k_htc_target_stats {
+ 		case NL80211_IFTYPE_ADHOC:	\
+ 			_priv->num_ibss_vif++;	\
+ 			break;			\
++		case NL80211_IFTYPE_AP:		\
++			_priv->num_ap_vif++;	\
++			break;			\
+ 		default:			\
+ 			break;			\
+ 		}				\
+@@ -227,6 +231,9 @@ struct ath9k_htc_target_stats {
+ 		case NL80211_IFTYPE_ADHOC:	\
+ 			_priv->num_ibss_vif--;	\
+ 			break;			\
++		case NL80211_IFTYPE_AP:		\
++			_priv->num_ap_vif--;	\
++			break;			\
+ 		default:			\
+ 			break;			\
+ 		}				\
+@@ -395,6 +402,7 @@ struct ath9k_htc_priv {
+ 	u8 vif_sta_pos[ATH9K_HTC_MAX_VIF];
+ 	u8 num_ibss_vif;
+ 	u8 num_sta_vif;
++	u8 num_ap_vif;
  
+ 	u16 op_flags;
+ 	u16 curtxpow;
 diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index f4d576b..187af5b 100644
+index f5333dc9..0694f2e 100644
 --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
 +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -121,7 +121,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- 	struct ath_hw *ah = priv->ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_channel *channel = priv->hw->conf.channel;
--	struct ath9k_hw_cal_data *caldata;
-+	struct ath9k_hw_cal_data *caldata = NULL;
- 	enum htc_phymode mode;
- 	__be16 htc_mode;
- 	u8 cmd_rsp;
-@@ -139,7 +139,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
+@@ -1202,6 +1202,14 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 		return -ENOBUFS;
+ 	}
  
--	caldata = &priv->caldata[channel->hw_value];
-+	caldata = &priv->caldata;
- 	ret = ath9k_hw_reset(ah, ah->curchan, caldata, false);
- 	if (ret) {
++	if (((vif->type == NL80211_IFTYPE_AP) ||
++	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
++	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
++		ath_err(common, "Max. number of beaconing interfaces reached\n");
++		mutex_unlock(&priv->mutex);
++		return -ENOBUFS;
++	}
++
+ 	ath9k_htc_ps_wakeup(priv);
+ 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+ 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
+@@ -1213,6 +1221,9 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
+ 		break;
++	case NL80211_IFTYPE_AP:
++		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
++		break;
+ 	default:
  		ath_err(common,
-@@ -202,7 +202,8 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
- 		fastcc);
- 
--	caldata = &priv->caldata[channel->hw_value];
-+	if (!fastcc)
-+		caldata = &priv->caldata;
- 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
- 	if (ret) {
- 		ath_err(common,
+ 			"Interface type %d not yet supported\n", vif->type);
 -- 
 1.7.3.5
 
