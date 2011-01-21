@@ -1,58 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47256 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756023Ab1AaPiR (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56009 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700Ab1AUDDO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 10:38:17 -0500
-Received: by qwa26 with SMTP id 26so5593688qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 07:38:16 -0800 (PST)
+	Thu, 20 Jan 2011 22:03:14 -0500
+Received: by mail-iy0-f174.google.com with SMTP id 18so1246881iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:03:14 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1296487362.3812.33.camel@jlt3.sipsolutions.net>
-References: <201101311600.39486.IvDoorn@gmail.com>
-	<1296487362.3812.33.camel@jlt3.sipsolutions.net>
-Date: Mon, 31 Jan 2011 16:38:16 +0100
-Message-ID: <AANLkTikzz0b+2N1ktVLz_CFZUBKzwrPF5y6xYLvmknbS@mail.gmail.com>
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in
- powersave mode
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63300.589868.940308@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:32:28 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 22/33] ath9k_htc: Handle buffered frames in AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
->> Add a delayed work structure which can be used to wakeup the device
->> just before a beacon from the AP is expected. This then allows the device
->> to receive the beacon, check if there are pending broadcast or multicast frames.
->>
->> TODO: Split out mac80211 changes into a separate patch. We also need
->> to know if we need this check in mac80211 or in the driver. Personally I think the
->> check belongs in mac80211, but at this time that work has been deferred to the drivers.
->> However this means that a lot of logic is needed in the driver to check if the correct IE
->> is available, and then check the value, while mac80211 will obtains that exact IE anyway
->> during RX processing anyway...
->
-> Hmm. I've always said that there's no efficient way to do this in
-> mac80211. If you do it close to the beacon, unexpected latency means
-> that we miss -- this can be severe if something else is happening in the
-> system, especially with USB devices. If you do it early before the
-> beacon, then you don't save much power. As a consequence, I don't really
-> like this in mac80211.
->
-> However, it seems you only added "stay awake after beacon" code to
-> mac80211 that checks the TIM. Assuming the device actually stays awake
-> for multicast traffic by itself that seems like an option, though I
-> wouldn't wait for the next beacon before going to sleep again --
-> wouldn't that happen with the timer anyway?
+Use the CAB endpoint to send buffered multicast or
+broadcast frames after each SWBA event.
 
-The timer is needed to automatically wake the device up in time to receive
-the beacon. When the beacon is received all the driver needs to know if the
-device should go back to sleep again for the next beacon period.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            |    6 +++-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   43 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    5 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   14 ++++++--
+ 5 files changed, 65 insertions(+), 6 deletions(-)
 
-This is a similar behavior as carl9170 driver, which currently checks for
-pending Mcast/Bcast frames in the RX path just before the frame is send
-to mac80211.
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index bd1610f..912cce8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -291,6 +291,7 @@ struct ath9k_htc_tx_ctl {
+ 
+ #define TX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.tx_stats.c++)
+ #define RX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.rx_stats.c++)
++#define CAB_STAT_INC   priv->debug.tx_stats.cab_queued++
+ 
+ #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
+ 
+@@ -300,6 +301,7 @@ struct ath_tx_stats {
+ 	u32 skb_queued;
+ 	u32 skb_completed;
+ 	u32 skb_dropped;
++	u32 cab_queued;
+ 	u32 queue_stats[WME_NUM_AC];
+ };
+ 
+@@ -323,6 +325,7 @@ struct ath9k_debug {
+ 
+ #define TX_STAT_INC(c) do { } while (0)
+ #define RX_STAT_INC(c) do { } while (0)
++#define CAB_STAT_INC   do { } while (0)
+ 
+ #define TX_QSTAT_INC(c) do { } while (0)
+ 
+@@ -499,7 +502,8 @@ void ath_start_ani(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv);
+ void ath9k_tx_tasklet(unsigned long data);
+-int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb);
++int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
++		       struct sk_buff *skb, bool is_cab);
+ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
+ bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv, int subtype);
+ int ath9k_htc_cabq_setup(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index c480469..927bb27 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -275,6 +275,48 @@ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
+ 	dev_kfree_skb_any(skb);
+ }
+ 
++static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
++				    int slot)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ieee80211_vif *vif;
++	struct sk_buff *skb;
++	struct ieee80211_hdr *hdr;
++	int padpos, padsize, ret;
++
++	spin_lock_bh(&priv->beacon_lock);
++
++	vif = priv->cur_beacon_conf.bslot[slot];
++
++	skb = ieee80211_get_buffered_bc(priv->hw, vif);
++
++	while(skb) {
++		hdr = (struct ieee80211_hdr *) skb->data;
++
++		padpos = ath9k_cmn_padpos(hdr->frame_control);
++		padsize = padpos & 3;
++		if (padsize && skb->len > padpos) {
++			if (skb_headroom(skb) < padsize) {
++				dev_kfree_skb_any(skb);
++				goto next;
++			}
++			skb_push(skb, padsize);
++			memmove(skb->data, skb->data + padsize, padpos);
++		}
++
++		ret = ath9k_htc_tx_start(priv, skb, true);
++		if (ret != 0) {
++			ath_dbg(common, ATH_DBG_FATAL,
++				"Failed to send CAB frame\n");
++			dev_kfree_skb_any(skb);
++		}
++	next:
++		skb = ieee80211_get_buffered_bc(priv->hw, vif);
++	}
++
++	spin_unlock_bh(&priv->beacon_lock);
++}
++
+ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 				  int slot)
+ {
+@@ -393,6 +435,7 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv)
+ 	}
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 
++	ath9k_htc_send_buffered(priv, slot);
+ 	ath9k_htc_send_beacon(priv, slot);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 37a41fe..dc96c06 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -748,7 +748,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 		IEEE80211_HW_HAS_RATE_CONTROL |
+ 		IEEE80211_HW_RX_INCLUDES_FCS |
+ 		IEEE80211_HW_SUPPORTS_PS |
+-		IEEE80211_HW_PS_NULLFUNC_STACK;
++		IEEE80211_HW_PS_NULLFUNC_STACK |
++		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_STATION) |
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 5f8e54c..cc05177 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -806,6 +806,9 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "SKBs dropped",
+ 			priv->debug.tx_stats.skb_dropped);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "CAB queued",
++			priv->debug.tx_stats.cab_queued);
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "BE queued",
+@@ -1056,7 +1059,7 @@ static int ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		memmove(skb->data, skb->data + padsize, padpos);
+ 	}
+ 
+-	ret = ath9k_htc_tx_start(priv, skb);
++	ret = ath9k_htc_tx_start(priv, skb, false);
+ 	if (ret != 0) {
+ 		if (ret == -ENOMEM) {
+ 			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 127a99b..3dd87a5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -79,7 +79,8 @@ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
+ 	return error;
+ }
+ 
+-int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
++int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
++		       struct sk_buff *skb, bool is_cab)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_mgmt *mgmt;
+@@ -170,6 +171,12 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 		tx_fhdr = skb_push(skb, sizeof(tx_hdr));
+ 		memcpy(tx_fhdr, (u8 *) &tx_hdr, sizeof(tx_hdr));
+ 
++		if (is_cab) {
++			CAB_STAT_INC;
++			epid = priv->cab_ep;
++			goto send;
++		}
++
+ 		qnum = skb_get_queue_mapping(skb);
+ 
+ 		switch (qnum) {
+@@ -222,7 +229,7 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 		memcpy(tx_fhdr, (u8 *) &mgmt_hdr, sizeof(mgmt_hdr));
+ 		epid = priv->mgmt_ep;
+ 	}
+-
++send:
+ 	return htc_send(priv->htc, skb, epid, &tx_ctl);
+ }
+ 
+@@ -326,7 +333,8 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+ 	} else if ((ep_id == priv->data_bk_ep) ||
+ 		   (ep_id == priv->data_be_ep) ||
+ 		   (ep_id == priv->data_vi_ep) ||
+-		   (ep_id == priv->data_vo_ep)) {
++		   (ep_id == priv->data_vo_ep) ||
++		   (ep_id == priv->cab_ep)) {
+ 		skb_pull(skb, sizeof(struct tx_frame_hdr));
+ 	} else {
+ 		ath_err(common, "Unsupported TX EPID: %d\n", ep_id);
+-- 
+1.7.3.5
 
-Ivo
