@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44689 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754369Ab1A2Afh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:35:37 -0500
-Received: by iwn9 with SMTP id 9so3637223iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Jan 2011 16:35:36 -0800 (PST)
+Received: from kroah.org ([198.145.64.141]:43435 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754822Ab1AUTin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 14:38:43 -0500
+Date: Fri, 21 Jan 2011 11:38:30 -0800
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	joe@perches.com
+Subject: Re: [PATCH 00/83] staging: ath6kl: Style cleanup
+Message-ID: <20110121193830.GA17789@kroah.com>
+References: <1295637798-18355-1-git-send-email-vmehta@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4D435D76.2040703@candelatech.com>
-References: <4D4345A8.6060806@candelatech.com> <4D435D76.2040703@candelatech.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Fri, 28 Jan 2011 16:35:16 -0800
-Message-ID: <AANLkTimji+Y0KfDCzWDX63KfOjRFzxgKbVAq6HhMcw20@mail.gmail.com>
-Subject: Re: hti->control_chan is 15??
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1295637798-18355-1-git-send-email-vmehta@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 28, 2011 at 4:21 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 01/28/2011 02:39 PM, Ben Greear wrote:
->>
->> When testing with 60 stations, 30 against a netgear running HT40
->> and 30 against a cheap cisco AP, using HT20, I notice that the
->> stations on the netgear often choose NO_HT instead of HT40
->> for their channel type.
->>
->> The root cause appears to be that the hti->control_chan is 15
->> in the ieee80211_enable_ht method.
->>
->> Everything *should* be running on channel 11.
->>
->> Is this just a bug with the AP, or could this be a local
->> issue?
->
-> I sniffed on a separate machine (using ath9k NIC), and it agrees
-> that the beacon's control_channel is 14 (I have since set the AP to channel
-> 10 instead of 11, but the control_channel remains 4 higher than expected.)
->
+On Fri, Jan 21, 2011 at 11:23:18AM -0800, Vipin Mehta wrote:
+> The following set of patches fixes the driver's coding style in 
+> accordance with the Linux kernel coding style. The patches ended 
+> being huge so putting them up on a shared location where they can 
+> be retrieved using wget.
+> 
+> http://userweb.kernel.org/~vmehta/ath6kl-cleanup.tar.bz2
 
-How did you configure the AP to HT40 mode? Did you put HT40+ or HT40-
-in the hostapd.conf file?
+Interesting, however the very first patch fails to apply :(
 
-Look at IEEE 802.11n-2009, Annex I and J.  They explain what these
-mean and which combinations are valid in which sets.
+So, care to make up a git tree that I could pull these from?  Or at the
+least, rebase them so that I can apply them?
 
-Looks like you're using a weird domain and/or disabled ath's
-regulatory checks? I'd think that they would catch this otherwise.
-Or, it could also be a bug related to the Japan regulatory stuff that
-seemed to cause problems for iwlwifi also.
+thanks,
 
-Dan
+greg k-h
