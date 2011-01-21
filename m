@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54691 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755463Ab1AKRaF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 12:30:05 -0500
-MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1101110044580.32164@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1101110044580.32164@swampdragon.chaosbits.net>
-Date: Tue, 11 Jan 2011 18:30:03 +0100
-Message-ID: <AANLkTimDHO=oiR3ncX4BLmMJaoUAmaQL6r=bZcWV4-Gg@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: Don't leak mem in error path of rt2x00lib_request_firmware()
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.perches.com ([173.55.12.10]:3244 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754980Ab1AUTnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 14:43:42 -0500
+Subject: Re: [PATCH 00/83] staging: ath6kl: Style cleanup
+From: Joe Perches <joe@perches.com>
+To: Greg KH <greg@kroah.com>
+Cc: Vipin Mehta <vmehta@atheros.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+In-Reply-To: <20110121193830.GA17789@kroah.com>
+References: <1295637798-18355-1-git-send-email-vmehta@atheros.com>
+	 <20110121193830.GA17789@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 21 Jan 2011 11:43:40 -0800
+Message-ID: <1295639020.25868.28.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2011-01-21 at 11:38 -0800, Greg KH wrote:
+> On Fri, Jan 21, 2011 at 11:23:18AM -0800, Vipin Mehta wrote:
+> > The following set of patches fixes the driver's coding style in 
+> > accordance with the Linux kernel coding style. The patches ended 
+> > being huge so putting them up on a shared location where they can 
+> > be retrieved using wget.
+> > 
+> > http://userweb.kernel.org/~vmehta/ath6kl-cleanup.tar.bz2
+> 
+> Interesting, however the very first patch fails to apply :(
+> 
+> So, care to make up a git tree that I could pull these from?  Or at the
+> least, rebase them so that I can apply them?
 
-> We need to release_firmware() in order not to leak memory.
->
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+I'll have a tree to pull from soon.
 
-I can assume that release_firmware() checks if 'fw' is null?
-If so:
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
->  rt2x00firmware.c |    1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-> index f0e1eb7..be0ff78 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00firmware.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00firmware.c
-> @@ -58,6 +58,7 @@ static int rt2x00lib_request_firmware(struct rt2x00_dev *rt2x00dev)
->
->        if (!fw || !fw->size || !fw->data) {
->                ERROR(rt2x00dev, "Failed to read Firmware.\n");
-> +               release_firmware(fw);
->                return -ENOENT;
->        }
->
->
->
-> --
-> Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-> Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-> Plain text mails only, please.
->
->
