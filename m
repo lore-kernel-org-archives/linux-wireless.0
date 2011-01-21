@@ -1,627 +1,589 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53657 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752772Ab1ATWZ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 17:25:56 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 4/4] ath9k: fold struct ath_wiphy into struct ath_softc
-Date: Thu, 20 Jan 2011 23:25:49 +0100
-Message-Id: <1295562349-17161-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1295562349-17161-3-git-send-email-nbd@openwrt.org>
-References: <1295562349-17161-1-git-send-email-nbd@openwrt.org>
- <1295562349-17161-2-git-send-email-nbd@openwrt.org>
- <1295562349-17161-3-git-send-email-nbd@openwrt.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62421 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677Ab1AUUrV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 15:47:21 -0500
+Received: by eye27 with SMTP id 27so1164523eye.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 12:47:20 -0800 (PST)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Colin McCabe <colin@cozybit.com>,
+	Marek Vasut <marek.vasut@gmail.com>, anarsoul@gmail.com
+Subject: [PATCH 1/3] libertas_spi: Use workqueue in hw_host_to_card
+Date: Fri, 21 Jan 2011 22:44:48 +0200
+Message-Id: <1295642690-16646-2-git-send-email-anarsoul@gmail.com>
+In-Reply-To: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
+References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ahb.c    |   12 +----
- drivers/net/wireless/ath/ath9k/ath9k.h  |   13 ++----
- drivers/net/wireless/ath/ath9k/beacon.c |    9 +--
- drivers/net/wireless/ath/ath9k/gpio.c   |    3 +-
- drivers/net/wireless/ath/ath9k/init.c   |    6 +--
- drivers/net/wireless/ath/ath9k/main.c   |   78 +++++++++++--------------------
- drivers/net/wireless/ath/ath9k/pci.c    |   18 ++-----
- drivers/net/wireless/ath/ath9k/rc.c     |    3 +-
- drivers/net/wireless/ath/ath9k/recv.c   |    6 +-
- drivers/net/wireless/ath/ath9k/xmit.c   |    9 +--
- 10 files changed, 52 insertions(+), 105 deletions(-)
+Use workqueue to perform SPI xfers, it's necessary to fix
+nasty "BUG: scheduling while atomic", because
+spu_write() calls spi_sync() and spi_sync() may sleep, but
+hw_host_to_card() callback can be called from atomic context.
+Remove kthread completely, workqueue now does its job.
+Restore intermediate buffers which were removed in commit
+86c34fe89e9cad9e1ba4d1a8bbf98259035f4caf that introduced
+mentioned bug.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 72f430e..9936721 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -54,7 +54,6 @@ static struct ath_bus_ops ath_ahb_bus_ops  = {
- static int ath_ahb_probe(struct platform_device *pdev)
- {
- 	void __iomem *mem;
--	struct ath_wiphy *aphy;
- 	struct ath_softc *sc;
- 	struct ieee80211_hw *hw;
- 	struct resource *res;
-@@ -92,8 +91,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
+---
+ drivers/net/wireless/libertas/if_spi.c |  368 +++++++++++++++++++++-----------
+ 1 files changed, 239 insertions(+), 129 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 0060023..f6c2cd6 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -20,10 +20,8 @@
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+ #include <linux/jiffies.h>
+-#include <linux/kthread.h>
+ #include <linux/list.h>
+ #include <linux/netdevice.h>
+-#include <linux/semaphore.h>
+ #include <linux/slab.h>
+ #include <linux/spi/libertas_spi.h>
+ #include <linux/spi/spi.h>
+@@ -34,6 +32,12 @@
+ #include "dev.h"
+ #include "if_spi.h"
  
- 	irq = res->start;
- 
--	hw = ieee80211_alloc_hw(sizeof(struct ath_wiphy) +
--				sizeof(struct ath_softc), &ath9k_ops);
-+	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
- 	if (hw == NULL) {
- 		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
- 		ret = -ENOMEM;
-@@ -103,10 +101,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 	platform_set_drvdata(pdev, hw);
- 
--	aphy = hw->priv;
--	sc = (struct ath_softc *) (aphy + 1);
--	aphy->sc = sc;
--	aphy->hw = hw;
-+	sc = hw->priv;
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
- 	sc->mem = mem;
-@@ -150,8 +145,7 @@ static int ath_ahb_remove(struct platform_device *pdev)
- 	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
- 
- 	if (hw) {
--		struct ath_wiphy *aphy = hw->priv;
--		struct ath_softc *sc = aphy->sc;
-+		struct ath_softc *sc = hw->priv;
- 		void __iomem *mem = sc->mem;
- 
- 		ath9k_deinit_device(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index fe6a69c..887fd4b 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -32,7 +32,6 @@
-  */
- 
- struct ath_node;
--struct ath_wiphy;
- 
- /* Macro to expand scalars to 64-bit objects */
- 
-@@ -391,7 +390,7 @@ struct ath_beacon {
- 
- void ath_beacon_tasklet(unsigned long data);
- void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
--int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif);
-+int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif);
- void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp);
- int ath_beaconq_config(struct ath_softc *sc);
- 
-@@ -621,6 +620,9 @@ struct ath_softc {
- 	int led_on_cnt;
- 	int led_off_cnt;
- 
-+	struct ath9k_hw_cal_data caldata;
-+	int last_rssi;
++struct if_spi_packet {
++	struct list_head		list;
++	u16				blen;
++	u8				buffer[0] __attribute__((aligned(4)));
++};
 +
- 	int beacon_interval;
+ struct if_spi_card {
+ 	struct spi_device		*spi;
+ 	struct lbs_private		*priv;
+@@ -51,18 +55,36 @@ struct if_spi_card {
+ 	unsigned long			spu_reg_delay;
  
- #ifdef CONFIG_ATH9K_DEBUGFS
-@@ -637,13 +639,6 @@ struct ath_softc {
- 	struct pm_qos_request_list pm_qos_req;
+ 	/* Handles all SPI communication (except for FW load) */
+-	struct task_struct		*spi_thread;
+-	int				run_thread;
+-
+-	/* Used to wake up the spi_thread */
+-	struct semaphore		spi_ready;
+-	struct semaphore		spi_thread_terminated;
++	struct workqueue_struct		*workqueue;
++	struct work_struct		packet_work;
+ 
+ 	u8				cmd_buffer[IF_SPI_CMD_BUF_SIZE];
++
++	/* A buffer of incoming packets from libertas core.
++	 * Since we can't sleep in hw_host_to_card, we have to buffer
++	 * them. */
++	struct list_head		cmd_packet_list;
++	struct list_head		data_packet_list;
++
++	/* Protects cmd_packet_list and data_packet_list */
++	spinlock_t			buffer_lock;
  };
  
--struct ath_wiphy {
--	struct ath_softc *sc; /* shared for all virtual wiphys */
--	struct ieee80211_hw *hw;
--	struct ath9k_hw_cal_data caldata;
--	int last_rssi;
--};
+ static void free_if_spi_card(struct if_spi_card *card)
+ {
++	struct list_head *cursor, *next;
++	struct if_spi_packet *packet;
++
++	list_for_each_safe(cursor, next, &card->cmd_packet_list) {
++		packet = container_of(cursor, struct if_spi_packet, list);
++		list_del(&packet->list);
++		kfree(packet);
++	}
++	list_for_each_safe(cursor, next, &card->data_packet_list) {
++		packet = container_of(cursor, struct if_spi_packet, list);
++		list_del(&packet->list);
++		kfree(packet);
++	}
+ 	spi_set_drvdata(card->spi, NULL);
+ 	kfree(card);
+ }
+@@ -622,7 +644,7 @@ out:
+ /*
+  * SPI Transfer Thread
+  *
+- * The SPI thread handles all SPI transfers, so there is no need for a lock.
++ * The SPI worker handles all SPI transfers, so there is no need for a lock.
+  */
+ 
+ /* Move a command from the card to the host */
+@@ -742,6 +764,40 @@ out:
+ 	return err;
+ }
+ 
++/* Move data or a command from the host to the card. */
++static void if_spi_h2c(struct if_spi_card *card,
++			struct if_spi_packet *packet, int type)
++{
++	int err = 0;
++	u16 int_type, port_reg;
++
++	switch (type) {
++	case MVMS_DAT:
++		int_type = IF_SPI_CIC_TX_DOWNLOAD_OVER;
++		port_reg = IF_SPI_DATA_RDWRPORT_REG;
++		break;
++	case MVMS_CMD:
++		int_type = IF_SPI_CIC_CMD_DOWNLOAD_OVER;
++		port_reg = IF_SPI_CMD_RDWRPORT_REG;
++		break;
++	default:
++		lbs_pr_err("can't transfer buffer of type %d\n", type);
++		err = -EINVAL;
++		goto out;
++	}
++
++	/* Write the data to the card */
++	err = spu_write(card, port_reg, packet->buffer, packet->blen);
++	if (err)
++		goto out;
++
++out:
++	kfree(packet);
++
++	if (err)
++		lbs_pr_err("%s: error %d\n", __func__, err);
++}
++
+ /* Inform the host about a card event */
+ static void if_spi_e2h(struct if_spi_card *card)
+ {
+@@ -766,71 +822,88 @@ out:
+ 		lbs_pr_err("%s: error %d\n", __func__, err);
+ }
+ 
+-static int lbs_spi_thread(void *data)
++static void if_spi_host_to_card_worker(struct work_struct *work)
+ {
+ 	int err;
+-	struct if_spi_card *card = data;
++	struct if_spi_card *card;
+ 	u16 hiStatus;
++	unsigned long flags;
++	struct if_spi_packet *packet;
+ 
+-	while (1) {
+-		/* Wait to be woken up by one of two things.  First, our ISR
+-		 * could tell us that something happened on the WLAN.
+-		 * Secondly, libertas could call hw_host_to_card with more
+-		 * data, which we might be able to send.
+-		 */
+-		do {
+-			err = down_interruptible(&card->spi_ready);
+-			if (!card->run_thread) {
+-				up(&card->spi_thread_terminated);
+-				do_exit(0);
+-			}
+-		} while (err == -EINTR);
++	card = container_of(work, struct if_spi_card, packet_work);
+ 
+-		/* Read the host interrupt status register to see what we
+-		 * can do. */
+-		err = spu_read_u16(card, IF_SPI_HOST_INT_STATUS_REG,
+-					&hiStatus);
+-		if (err) {
+-			lbs_pr_err("I/O error\n");
++	lbs_deb_enter(LBS_DEB_SPI);
++
++	/* Read the host interrupt status register to see what we
++	 * can do. */
++	err = spu_read_u16(card, IF_SPI_HOST_INT_STATUS_REG,
++				&hiStatus);
++	if (err) {
++		lbs_pr_err("I/O error\n");
++		goto err;
++	}
++
++	if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY) {
++		err = if_spi_c2h_cmd(card);
++		if (err)
+ 			goto err;
+-		}
++	}
++	if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY) {
++		err = if_spi_c2h_data(card);
++		if (err)
++			goto err;
++	}
+ 
+-		if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY) {
+-			err = if_spi_c2h_cmd(card);
+-			if (err)
+-				goto err;
+-		}
+-		if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY) {
+-			err = if_spi_c2h_data(card);
+-			if (err)
+-				goto err;
++	/* workaround: in PS mode, the card does not set the Command
++	 * Download Ready bit, but it sets TX Download Ready. */
++	if (hiStatus & IF_SPI_HIST_CMD_DOWNLOAD_RDY ||
++	   (card->priv->psstate != PS_STATE_FULL_POWER &&
++	    (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY))) {
++		/* This means two things. First of all,
++		 * if there was a previous command sent, the card has
++		 * successfully received it.
++		 * Secondly, it is now ready to download another
++		 * command.
++		 */
++		lbs_host_to_card_done(card->priv);
++
++		/* Do we have any command packets from the host to
++		 * send? */
++		packet = NULL;
++		spin_lock_irqsave(&card->buffer_lock, flags);
++		if (!list_empty(&card->cmd_packet_list)) {
++			packet = (struct if_spi_packet *)(card->
++					cmd_packet_list.next);
++			list_del(&packet->list);
+ 		}
++		spin_unlock_irqrestore(&card->buffer_lock, flags);
+ 
+-		/* workaround: in PS mode, the card does not set the Command
+-		 * Download Ready bit, but it sets TX Download Ready. */
+-		if (hiStatus & IF_SPI_HIST_CMD_DOWNLOAD_RDY ||
+-		   (card->priv->psstate != PS_STATE_FULL_POWER &&
+-		    (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY))) {
+-			lbs_host_to_card_done(card->priv);
++		if (packet)
++			if_spi_h2c(card, packet, MVMS_CMD);
++	}
++	if (hiStatus & IF_SPI_HIST_TX_DOWNLOAD_RDY) {
++		/* Do we have any data packets from the host to
++		 * send? */
++		packet = NULL;
++		spin_lock_irqsave(&card->buffer_lock, flags);
++		if (!list_empty(&card->data_packet_list)) {
++			packet = (struct if_spi_packet *)(card->
++					data_packet_list.next);
++			list_del(&packet->list);
+ 		}
++		spin_unlock_irqrestore(&card->buffer_lock, flags);
+ 
+-		if (hiStatus & IF_SPI_HIST_CARD_EVENT)
+-			if_spi_e2h(card);
++		if (packet)
++			if_spi_h2c(card, packet, MVMS_DAT);
++	}
++	if (hiStatus & IF_SPI_HIST_CARD_EVENT)
++		if_spi_e2h(card);
+ 
+ err:
+-		if (err)
+-			lbs_pr_err("%s: got error %d\n", __func__, err);
+-	}
+-}
++	if (err)
++		lbs_pr_err("%s: got error %d\n", __func__, err);
+ 
+-/* Block until lbs_spi_thread thread has terminated */
+-static void if_spi_terminate_spi_thread(struct if_spi_card *card)
+-{
+-	/* It would be nice to use kthread_stop here, but that function
+-	 * can't wake threads waiting for a semaphore. */
+-	card->run_thread = 0;
+-	up(&card->spi_ready);
+-	down(&card->spi_thread_terminated);
++	lbs_deb_leave(LBS_DEB_SPI);
+ }
+ 
+ /*
+@@ -842,18 +915,40 @@ static int if_spi_host_to_card(struct lbs_private *priv,
+ 				u8 type, u8 *buf, u16 nb)
+ {
+ 	int err = 0;
++	unsigned long flags;
+ 	struct if_spi_card *card = priv->card;
++	struct if_spi_packet *packet;
++	u16 blen;
+ 
+ 	lbs_deb_enter_args(LBS_DEB_SPI, "type %d, bytes %d", type, nb);
+ 
+-	nb = ALIGN(nb, 4);
++	if (nb == 0) {
++		lbs_pr_err("%s: invalid size requested: %d\n", __func__, nb);
++		err = -EINVAL;
++		goto out;
++	}
++	blen = ALIGN(nb, 4);
++	packet = kzalloc(sizeof(struct if_spi_packet) + blen, GFP_ATOMIC);
++	if (!packet) {
++		err = -ENOMEM;
++		goto out;
++	}
++	packet->blen = blen;
++	memcpy(packet->buffer, buf, nb);
++	memset(packet->buffer + nb, 0, blen - nb);
+ 
+ 	switch (type) {
+ 	case MVMS_CMD:
+-		err = spu_write(card, IF_SPI_CMD_RDWRPORT_REG, buf, nb);
++		priv->dnld_sent = DNLD_CMD_SENT;
++		spin_lock_irqsave(&card->buffer_lock, flags);
++		list_add_tail(&packet->list, &card->cmd_packet_list);
++		spin_unlock_irqrestore(&card->buffer_lock, flags);
+ 		break;
+ 	case MVMS_DAT:
+-		err = spu_write(card, IF_SPI_DATA_RDWRPORT_REG, buf, nb);
++		priv->dnld_sent = DNLD_DATA_SENT;
++		spin_lock_irqsave(&card->buffer_lock, flags);
++		list_add_tail(&packet->list, &card->data_packet_list);
++		spin_unlock_irqrestore(&card->buffer_lock, flags);
+ 		break;
+ 	default:
+ 		lbs_pr_err("can't transfer buffer of type %d", type);
+@@ -861,6 +956,9 @@ static int if_spi_host_to_card(struct lbs_private *priv,
+ 		break;
+ 	}
+ 
++	/* Queue spi xfer work */
++	queue_work(card->workqueue, &card->packet_work);
++out:
+ 	lbs_deb_leave_args(LBS_DEB_SPI, "err=%d", err);
+ 	return err;
+ }
+@@ -869,13 +967,14 @@ static int if_spi_host_to_card(struct lbs_private *priv,
+  * Host Interrupts
+  *
+  * Service incoming interrupts from the WLAN device. We can't sleep here, so
+- * don't try to talk on the SPI bus, just wake up the SPI thread.
++ * don't try to talk on the SPI bus, just queue the SPI xfer work.
+  */
+ static irqreturn_t if_spi_host_interrupt(int irq, void *dev_id)
+ {
+ 	struct if_spi_card *card = dev_id;
+ 
+-	up(&card->spi_ready);
++	queue_work(card->workqueue, &card->packet_work);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -883,56 +982,26 @@ static irqreturn_t if_spi_host_interrupt(int irq, void *dev_id)
+  * SPI callbacks
+  */
+ 
+-static int __devinit if_spi_probe(struct spi_device *spi)
++static int if_spi_init_card(struct if_spi_card *card)
+ {
+-	struct if_spi_card *card;
+-	struct lbs_private *priv = NULL;
+-	struct libertas_spi_platform_data *pdata = spi->dev.platform_data;
+-	int err = 0, i;
++	struct spi_device *spi = card->spi;
++	int err, i;
+ 	u32 scratch;
+-	struct sched_param param = { .sched_priority = 1 };
+ 	const struct firmware *helper = NULL;
+ 	const struct firmware *mainfw = NULL;
+ 
+ 	lbs_deb_enter(LBS_DEB_SPI);
+ 
+-	if (!pdata) {
+-		err = -EINVAL;
+-		goto out;
+-	}
 -
- void ath9k_tasklet(unsigned long data);
- int ath_reset(struct ath_softc *sc, bool retry_tx);
- int ath_cabq_update(struct ath_softc *);
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 77c8e70..87ba44c 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -112,8 +112,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+-	if (pdata->setup) {
+-		err = pdata->setup(spi);
+-		if (err)
+-			goto out;
+-	}
+-
+-	/* Allocate card structure to represent this specific device */
+-	card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
+-	if (!card) {
+-		err = -ENOMEM;
+-		goto out;
+-	}
+-	spi_set_drvdata(spi, card);
+-	card->pdata = pdata;
+-	card->spi = spi;
+-	card->prev_xfer_time = jiffies;
+-
+-	sema_init(&card->spi_ready, 0);
+-	sema_init(&card->spi_thread_terminated, 0);
+-
+-	/* Initialize the SPI Interface Unit */
+-	err = spu_init(card, pdata->use_dummy_writes);
++	err = spu_init(card, card->pdata->use_dummy_writes);
+ 	if (err)
+-		goto free_card;
++		goto out;
+ 	err = spu_get_chip_revision(card, &card->card_id, &card->card_rev);
+ 	if (err)
+-		goto free_card;
++		goto out;
  
- static void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_tx_control txctl;
+-	/* Firmware load */
+ 	err = spu_read_u32(card, IF_SPI_SCRATCH_4_REG, &scratch);
+ 	if (err)
+-		goto free_card;
++		goto out;
+ 	if (scratch == SUCCESSFUL_FW_DOWNLOAD_MAGIC)
+ 		lbs_deb_spi("Firmware is already loaded for "
+ 			    "Marvell WLAN 802.11 adapter\n");
+@@ -946,7 +1015,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 			lbs_pr_err("Unsupported chip_id: 0x%02x\n",
+ 					card->card_id);
+ 			err = -ENODEV;
+-			goto free_card;
++			goto out;
+ 		}
  
-@@ -132,8 +131,7 @@ static void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb)
- static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 					   struct ieee80211_vif *vif)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_buf *bf;
- 	struct ath_vif *avp;
-@@ -222,9 +220,8 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 	return bf;
+ 		err = lbs_get_firmware(&card->spi->dev, NULL, NULL,
+@@ -954,7 +1023,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 					&mainfw);
+ 		if (err) {
+ 			lbs_pr_err("failed to find firmware (%d)\n", err);
+-			goto free_card;
++			goto out;
+ 		}
+ 
+ 		lbs_deb_spi("Initializing FW for Marvell WLAN 802.11 adapter "
+@@ -966,15 +1035,68 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 				spi->max_speed_hz);
+ 		err = if_spi_prog_helper_firmware(card, helper);
+ 		if (err)
+-			goto free_card;
++			goto out;
+ 		err = if_spi_prog_main_firmware(card, mainfw);
+ 		if (err)
+-			goto free_card;
++			goto out;
+ 		lbs_deb_spi("loaded FW for Marvell WLAN 802.11 adapter\n");
+ 	}
+ 
+ 	err = spu_set_interrupt_mode(card, 0, 1);
+ 	if (err)
++		goto out;
++
++out:
++	if (helper)
++		release_firmware(helper);
++	if (mainfw)
++		release_firmware(mainfw);
++
++	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
++
++	return err;
++}
++
++static int __devinit if_spi_probe(struct spi_device *spi)
++{
++	struct if_spi_card *card;
++	struct lbs_private *priv = NULL;
++	struct libertas_spi_platform_data *pdata = spi->dev.platform_data;
++	int err = 0;
++
++	lbs_deb_enter(LBS_DEB_SPI);
++
++	if (!pdata) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	if (pdata->setup) {
++		err = pdata->setup(spi);
++		if (err)
++			goto out;
++	}
++
++	/* Allocate card structure to represent this specific device */
++	card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
++	if (!card) {
++		err = -ENOMEM;
++		goto teardown;
++	}
++	spi_set_drvdata(spi, card);
++	card->pdata = pdata;
++	card->spi = spi;
++	card->prev_xfer_time = jiffies;
++
++	INIT_LIST_HEAD(&card->cmd_packet_list);
++	INIT_LIST_HEAD(&card->data_packet_list);
++	spin_lock_init(&card->buffer_lock);
++
++	/* Initialize the SPI Interface Unit */
++
++	/* Firmware load */
++	err = if_spi_init_card(card);
++	if (err)
+ 		goto free_card;
+ 
+ 	/* Register our card with libertas.
+@@ -993,27 +1115,16 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	priv->fw_ready = 1;
+ 
+ 	/* Initialize interrupt handling stuff. */
+-	card->run_thread = 1;
+-	card->spi_thread = kthread_run(lbs_spi_thread, card, "lbs_spi_thread");
+-	if (IS_ERR(card->spi_thread)) {
+-		card->run_thread = 0;
+-		err = PTR_ERR(card->spi_thread);
+-		lbs_pr_err("error creating SPI thread: err=%d\n", err);
+-		goto remove_card;
+-	}
+-	if (sched_setscheduler(card->spi_thread, SCHED_FIFO, &param))
+-		lbs_pr_err("Error setting scheduler, using default.\n");
++	card->workqueue = create_workqueue("libertas_spi");
++	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
+ 
+ 	err = request_irq(spi->irq, if_spi_host_interrupt,
+ 			IRQF_TRIGGER_FALLING, "libertas_spi", card);
+ 	if (err) {
+ 		lbs_pr_err("can't get host irq line-- request_irq failed\n");
+-		goto terminate_thread;
++		goto terminate_workqueue;
+ 	}
+ 
+-	/* poke the IRQ handler so that we don't miss the first interrupt */
+-	up(&card->spi_ready);
+-
+ 	/* Start the card.
+ 	 * This will call register_netdev, and we'll start
+ 	 * getting interrupts... */
+@@ -1028,18 +1139,16 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 
+ release_irq:
+ 	free_irq(spi->irq, card);
+-terminate_thread:
+-	if_spi_terminate_spi_thread(card);
+-remove_card:
++terminate_workqueue:
++	flush_workqueue(card->workqueue);
++	destroy_workqueue(card->workqueue);
+ 	lbs_remove_card(priv); /* will call free_netdev */
+ free_card:
+ 	free_if_spi_card(card);
++teardown:
++	if (pdata->teardown)
++		pdata->teardown(spi);
+ out:
+-	if (helper)
+-		release_firmware(helper);
+-	if (mainfw)
+-		release_firmware(mainfw);
+-
+ 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
+ 	return err;
  }
+@@ -1056,7 +1165,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+ 	lbs_remove_card(priv); /* will call free_netdev */
  
--int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
-+int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif)
- {
--	struct ath_softc *sc = aphy->sc;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp;
- 	struct ath_buf *bf;
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 1337640..fb4f17a 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -201,8 +201,7 @@ static bool ath_is_rfkill_set(struct ath_softc *sc)
- 
- void ath9k_rfkill_poll_state(struct ieee80211_hw *hw)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	bool blocked = !!ath_is_rfkill_set(sc);
- 
- 	wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b55a1be..83b9523 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -254,8 +254,7 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- 			      struct regulatory_request *request)
- {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_regulatory *reg = ath9k_hw_regulatory(sc->sc_ah);
- 
- 	return ath_reg_notifier_apply(wiphy, request, reg);
-@@ -698,7 +697,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 		    const struct ath_bus_ops *bus_ops)
- {
- 	struct ieee80211_hw *hw = sc->hw;
--	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_common *common;
- 	struct ath_hw *ah;
- 	int error = 0;
-@@ -753,7 +751,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 
- 	INIT_WORK(&sc->hw_check_work, ath_hw_check);
- 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
--	aphy->last_rssi = ATH_RSSI_DUMMY_MARKER;
-+	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 
- 	ath_init_leds(sc);
- 	ath_start_rfkill_poll(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index deb92fd..086043c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -215,7 +215,6 @@ static void ath_update_survey_stats(struct ath_softc *sc)
- int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 		    struct ath9k_channel *hchan)
- {
--	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_conf *conf = &common->hw->conf;
-@@ -262,7 +261,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 		fastcc = false;
- 
- 	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
--		caldata = &aphy->caldata;
-+		caldata = &sc->caldata;
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
-@@ -841,7 +840,6 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *bss_conf)
- {
--	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
-@@ -865,7 +863,7 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 		ath_beacon_config(sc, vif);
- 
- 		/* Reset rssi stats */
--		aphy->last_rssi = ATH_RSSI_DUMMY_MARKER;
-+		sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
- 
- 		sc->sc_flags |= SC_OP_ANI_RUN;
-@@ -1062,8 +1060,7 @@ void ath9k_update_ichannel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 
- static int ath9k_start(struct ieee80211_hw *hw)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_channel *curchan = hw->conf.channel;
-@@ -1180,8 +1177,7 @@ mutex_unlock:
- static int ath9k_tx(struct ieee80211_hw *hw,
- 		    struct sk_buff *skb)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_tx_control txctl;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -1244,8 +1240,7 @@ exit:
- 
- static void ath9k_stop(struct ieee80211_hw *hw)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
-@@ -1380,8 +1375,7 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       struct ath9k_vif_iter_data *iter_data)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
-@@ -1405,8 +1399,7 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- 					  struct ieee80211_vif *vif)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_vif_iter_data iter_data;
-@@ -1462,8 +1455,7 @@ static void ath9k_calculate_summary_state(struct ieee80211_hw *hw,
- static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 
- 	ath9k_calculate_summary_state(hw, vif);
- 
-@@ -1476,7 +1468,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
- 		 * in the info_changed method and set up beacons properly
- 		 * there.
- 		 */
--		error = ath_beacon_alloc(aphy, vif);
-+		error = ath_beacon_alloc(sc, vif);
- 		if (error)
- 			ath9k_reclaim_beacon(sc, vif);
- 		else
-@@ -1488,8 +1480,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
- static int ath9k_add_interface(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-@@ -1549,8 +1540,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 				  enum nl80211_iftype new_type,
- 				  bool p2p)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int ret = 0;
- 
-@@ -1592,8 +1582,7 @@ out:
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface\n");
-@@ -1647,8 +1636,7 @@ static void ath9k_disable_ps(struct ath_softc *sc)
- 
- static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_conf *conf = &hw->conf;
-@@ -1792,8 +1780,7 @@ static void ath9k_configure_filter(struct ieee80211_hw *hw,
- 				   unsigned int *total_flags,
- 				   u64 multicast)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	u32 rfilt;
- 
- 	changed_flags &= SUPPORTED_FILTERS;
-@@ -1813,8 +1800,7 @@ static int ath9k_sta_add(struct ieee80211_hw *hw,
- 			 struct ieee80211_vif *vif,
- 			 struct ieee80211_sta *sta)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 
- 	ath_node_attach(sc, sta);
- 
-@@ -1825,8 +1811,7 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 
- 	ath_node_detach(sc, sta);
- 
-@@ -1836,8 +1821,7 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
- static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			 const struct ieee80211_tx_queue_params *params)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_txq *txq;
- 	struct ath9k_tx_queue_info qi;
-@@ -1881,8 +1865,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 			 struct ieee80211_sta *sta,
- 			 struct ieee80211_key_conf *key)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int ret = 0;
- 
-@@ -1926,8 +1909,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 				   struct ieee80211_bss_conf *bss_conf,
- 				   u32 changed)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-@@ -1957,7 +1939,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	if ((changed & BSS_CHANGED_BEACON) ||
- 	    ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon)) {
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--		error = ath_beacon_alloc(aphy, vif);
-+		error = ath_beacon_alloc(sc, vif);
- 		if (!error)
- 			ath_beacon_config(sc, vif);
- 	}
-@@ -1994,7 +1976,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		if (vif->type == NL80211_IFTYPE_AP) {
- 			sc->sc_flags |= SC_OP_TSF_RESET;
- 			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--			error = ath_beacon_alloc(aphy, vif);
-+			error = ath_beacon_alloc(sc, vif);
- 			if (!error)
- 				ath_beacon_config(sc, vif);
- 		} else {
-@@ -2032,9 +2014,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 
- static u64 ath9k_get_tsf(struct ieee80211_hw *hw)
- {
-+	struct ath_softc *sc = hw->priv;
- 	u64 tsf;
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
- 
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
-@@ -2047,8 +2028,7 @@ static u64 ath9k_get_tsf(struct ieee80211_hw *hw)
- 
- static void ath9k_set_tsf(struct ieee80211_hw *hw, u64 tsf)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
-@@ -2059,8 +2039,7 @@ static void ath9k_set_tsf(struct ieee80211_hw *hw, u64 tsf)
- 
- static void ath9k_reset_tsf(struct ieee80211_hw *hw)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -2077,8 +2056,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta,
- 			      u16 tid, u16 *ssn, u8 buf_size)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	int ret = 0;
- 
- 	local_bh_disable();
-@@ -2123,8 +2101,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
- 			     struct survey_info *survey)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
-@@ -2160,8 +2137,7 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
- 
- static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 
- 	mutex_lock(&sc->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 1f60b8c..e83128c 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -126,7 +126,6 @@ static const struct ath_bus_ops ath_pci_bus_ops = {
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	void __iomem *mem;
--	struct ath_wiphy *aphy;
- 	struct ath_softc *sc;
- 	struct ieee80211_hw *hw;
- 	u8 csz;
-@@ -198,8 +197,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto err_iomap;
- 	}
- 
--	hw = ieee80211_alloc_hw(sizeof(struct ath_wiphy) +
--				sizeof(struct ath_softc), &ath9k_ops);
-+	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
- 	if (!hw) {
- 		dev_err(&pdev->dev, "No memory for ieee80211_hw\n");
- 		ret = -ENOMEM;
-@@ -209,10 +207,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 	pci_set_drvdata(pdev, hw);
- 
--	aphy = hw->priv;
--	sc = (struct ath_softc *) (aphy + 1);
--	aphy->sc = sc;
--	aphy->hw = hw;
-+	sc = hw->priv;
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
- 	sc->mem = mem;
-@@ -259,8 +254,7 @@ err_dma:
- static void ath_pci_remove(struct pci_dev *pdev)
- {
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	void __iomem *mem = sc->mem;
- 
- 	if (!is_ath9k_unloaded)
-@@ -280,8 +274,7 @@ static int ath_pci_suspend(struct device *device)
- {
- 	struct pci_dev *pdev = to_pci_dev(device);
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
-@@ -292,8 +285,7 @@ static int ath_pci_resume(struct device *device)
- {
- 	struct pci_dev *pdev = to_pci_dev(device);
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	u32 val;
- 
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index e451478..960d717 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1560,8 +1560,7 @@ static void ath_rate_add_sta_debugfs(void *priv, void *priv_sta,
- 
- static void *ath_rate_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	return aphy->sc;
-+	return hw->priv;
- }
- 
- static void ath_rate_free(void *priv)
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c84a675..b2b12a2 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -927,7 +927,7 @@ static void ath9k_process_rssi(struct ath_common *common,
- 			       struct ieee80211_hdr *hdr,
- 			       struct ath_rx_status *rx_stats)
- {
--	struct ath_wiphy *aphy = hw->priv;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = common->ah;
- 	int last_rssi;
- 	__le16 fc;
-@@ -947,9 +947,9 @@ static void ath9k_process_rssi(struct ath_common *common,
- 	}
- 
- 	if (rx_stats->rs_rssi != ATH9K_RSSI_BAD && !rx_stats->rs_moreaggr)
--		ATH_RSSI_LPF(aphy->last_rssi, rx_stats->rs_rssi);
-+		ATH_RSSI_LPF(sc->last_rssi, rx_stats->rs_rssi);
- 
--	last_rssi = aphy->last_rssi;
-+	last_rssi = sc->last_rssi;
- 	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
- 		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
- 					      ATH_RSSI_EP_MULTIPLIER);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 80dc0cc..0ddfdbc 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1430,8 +1430,7 @@ static enum ath9k_pkt_type get_hw_packet_type(struct sk_buff *skb)
- static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
- 			     int framelen)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_sta *sta = tx_info->control.sta;
- 	struct ieee80211_key_conf *hw_key = tx_info->control.hw_key;
-@@ -1649,8 +1648,7 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
- 					   struct ath_txq *txq,
- 					   struct sk_buff *skb)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_frame_info *fi = get_frame_info(skb);
-@@ -1751,8 +1749,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_sta *sta = info->control.sta;
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
-+	struct ath_softc *sc = hw->priv;
- 	struct ath_txq *txq = txctl->txq;
- 	struct ath_buf *bf;
- 	int padpos, padsize;
+ 	free_irq(spi->irq, card);
+-	if_spi_terminate_spi_thread(card);
++	flush_workqueue(card->workqueue);
++	destroy_workqueue(card->workqueue);
+ 	if (card->pdata->teardown)
+ 		card->pdata->teardown(spi);
+ 	free_if_spi_card(card);
 -- 
-1.7.3.2
+1.7.4.rc1
 
