@@ -1,58 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:58948 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753624Ab1AGUEd (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41477 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754736Ab1AUSFr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 15:04:33 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id EFD21540A3C
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Jan 2011 15:06:00 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-07 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110107200432.49DE740F97@repository3.orbit-lab.org>
-Date: Fri,  7 Jan 2011 15:04:32 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 21 Jan 2011 13:05:47 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] mac80211:  Optimize scans on current operating channel.
+Date: Fri, 21 Jan 2011 10:05:42 -0800
+Message-Id: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   07667d5..919757f  linux-2.6.37.y -> origin/linux-2.6.37.y
-   c46a7ef..69ec1f8  master     -> origin/master
- * [new tag]         compat-wireless-2011-01-06 -> compat-wireless-2011-01-06
- * [new tag]         compat-wireless-v2.6.37-2 -> compat-wireless-v2.6.37-2
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   dcd6955..4bf0115  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   91493a5..d184f08  history    -> origin/history
- + 47ec851...f69eb67 master     -> origin/master  (forced update)
-   3c0eee3..cb600d2  stable     -> origin/stable
- * [new tag]         next-20110107 -> next-20110107
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+From: Ben Greear <greearb@candelatech.com>
 
-compat-wireless code metrics
+This should decrease un-necessary flushes, on/off channel work,
+and channel changes in cases where the only scanned channel is
+the current operating channel.
 
-    782479 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1990 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1957 - % of crap code
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-Base tree: linux-next.git
-Base tree version: next-20110107
-compat-wireless release: compat-wireless-2011-01-06-pc
+v2:  Check channels instead of flag when determining if we should
+  do a channel change in scan_completed_finish.
+
+:100644 100644 c47d7c0... 59fe5e7... M	net/mac80211/ieee80211_i.h
+:100644 100644 1236710... e6de0e7... M	net/mac80211/rx.c
+:100644 100644 3e660db... fa0aeb9... M	net/mac80211/scan.c
+ net/mac80211/ieee80211_i.h |    5 +++++
+ net/mac80211/rx.c          |   11 ++++++++---
+ net/mac80211/scan.c        |   41 +++++++++++++++++++++++++----------------
+ 3 files changed, 38 insertions(+), 19 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c47d7c0..59fe5e7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -660,6 +660,10 @@ struct tpt_led_trigger {
+  *	that the scan completed.
+  * @SCAN_ABORTED: Set for our scan work function when the driver reported
+  *	a scan complete for an aborted scan.
++ * @SCAN_LEFT_OPER_CHANNEL:  Set this flag if the scan process leaves the
++ *      operating channel at any time.  If scanning ONLY the current operating
++ *      channel this flag should not be set, and this will allow fewer
++ *      offchannel changes.
+  */
+ enum {
+ 	SCAN_SW_SCANNING,
+@@ -667,6 +671,7 @@ enum {
+ 	SCAN_OFF_CHANNEL,
+ 	SCAN_COMPLETED,
+ 	SCAN_ABORTED,
++	SCAN_LEFT_OPER_CHANNEL,
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 1236710..e6de0e7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -388,6 +388,7 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_local *local = rx->local;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+ 	struct sk_buff *skb = rx->skb;
++	int ret;
+ 
+ 	if (likely(!(status->rx_flags & IEEE80211_RX_IN_SCAN)))
+ 		return RX_CONTINUE;
+@@ -396,10 +397,14 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+ 		return ieee80211_scan_rx(rx->sdata, skb);
+ 
+ 	if (test_bit(SCAN_SW_SCANNING, &local->scanning)) {
+-		/* drop all the other packets during a software scan anyway */
+-		if (ieee80211_scan_rx(rx->sdata, skb) != RX_QUEUED)
++		ret = ieee80211_scan_rx(rx->sdata, skb);
++		/* drop all the other packets while scanning off channel */
++		if (ret != RX_QUEUED &&
++		    test_bit(SCAN_OFF_CHANNEL, &local->scanning)) {
+ 			dev_kfree_skb(skb);
+-		return RX_QUEUED;
++			return RX_QUEUED;
++		}
++		return ret;
+ 	}
+ 
+ 	/* scanning finished during invoking of handlers */
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 3e660db..fa0aeb9 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -293,11 +293,14 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++	if ((local->oper_channel != local->hw.conf.channel) || was_hw_scan)
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++
+ 	if (!was_hw_scan) {
+ 		ieee80211_configure_filter(local);
+ 		drv_sw_scan_complete(local);
+-		ieee80211_offchannel_return(local, true);
++		if (test_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning))
++			ieee80211_offchannel_return(local, true);
+ 	}
+ 
+ 	mutex_lock(&local->mtx);
+@@ -397,13 +400,10 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 
+ 	drv_sw_scan_start(local);
+ 
+-	ieee80211_offchannel_stop_beaconing(local);
+-
+ 	local->leave_oper_channel_time = 0;
+ 	local->next_scan_state = SCAN_DECISION;
+ 	local->scan_channel_idx = 0;
+-
+-	drv_flush(local, false);
++	__clear_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning);
+ 
+ 	ieee80211_configure_filter(local);
+ 
+@@ -543,7 +543,18 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+ 
+-	if (local->scan_channel) {
++	next_chan = local->scan_req->channels[local->scan_channel_idx];
++
++	if (local->oper_channel == local->hw.conf.channel) {
++		if (next_chan == local->oper_channel)
++			local->next_scan_state = SCAN_SET_CHANNEL;
++		else
++			/*
++			 * we're on the operating channel currently, let's
++			 * leave that channel now to scan another one
++			 */
++			local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
++	} else {
+ 		/*
+ 		 * we're currently scanning a different channel, let's
+ 		 * see if we can scan another channel without interfering
+@@ -559,7 +570,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 		 *
+ 		 * Otherwise switch back to the operating channel.
+ 		 */
+-		next_chan = local->scan_req->channels[local->scan_channel_idx];
+ 
+ 		bad_latency = time_after(jiffies +
+ 				ieee80211_scan_get_channel_time(next_chan),
+@@ -577,12 +587,6 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 			local->next_scan_state = SCAN_ENTER_OPER_CHANNEL;
+ 		else
+ 			local->next_scan_state = SCAN_SET_CHANNEL;
+-	} else {
+-		/*
+-		 * we're on the operating channel currently, let's
+-		 * leave that channel now to scan another one
+-		 */
+-		local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
+ 	}
+ 
+ 	*next_delay = 0;
+@@ -591,9 +595,12 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
+ 						    unsigned long *next_delay)
+ {
++	ieee80211_offchannel_stop_beaconing(local);
++
+ 	ieee80211_offchannel_stop_station(local);
+ 
+ 	__set_bit(SCAN_OFF_CHANNEL, &local->scanning);
++	__set_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning);
+ 
+ 	/*
+ 	 * What if the nullfunc frames didn't arrive?
+@@ -640,8 +647,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	chan = local->scan_req->channels[local->scan_channel_idx];
+ 
+ 	local->scan_channel = chan;
+-	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+-		skip = 1;
++
++	if (chan != local->hw.conf.channel)
++		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
++			skip = 1;
+ 
+ 	/* advance state machine to next channel/band */
+ 	local->scan_channel_idx++;
+-- 
+1.7.2.3
+
