@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33044 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753412Ab1ACE4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Jan 2011 23:56:20 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 02 Jan 2011 20:56:03 -0800
-Message-ID: <4D2156E6.7040307@atheros.com>
-Date: Mon, 3 Jan 2011 10:26:06 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: Reset keycache on resume
-References: <1293000612-10884-1-git-send-email-mshajakhan@atheros.com> <8762u9ge8m.fsf@purkki.adurom.net>
-In-Reply-To: <8762u9ge8m.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:48077 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754175Ab1AUIno (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 03:43:44 -0500
+Subject: Re: [RFC/WIP 23/33] ath9k_htc: Enable AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+In-Reply-To: <19768.63310.121728.324735@gargle.gargle.HOWL>
+References: <19768.63310.121728.324735@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 21 Jan 2011 09:43:42 +0100
+Message-ID: <1295599422.3831.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 01 January 2011 03:03 PM, Kalle Valo wrote:
-> Hi,
->
-> a minor nitpick:
->    
-Thanks for pointing it out.
-> Mohammed Shafi Shajakhan<mshajakhan@atheros.com>  writes:
->
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>      
-> This means that Mohammed is the author of the patch.
->
-> [...]
->    
-Jouni is the author.
->    
->> Signed-off-by: Jouni Malinen<Jouni.Malinen@Atheros.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>      
-> But here the author's sob line should be first one, the order is from
-> top to bottom. If Mohammed is the author, the sob lines should be
-> reversed. But if Jouni actually is the author, the From line should be
-> fixed.
->
-> Of course this is just a style issue and doesn't matter that much, but
-> it's still nice to get it right.
->
->    
+On Fri, 2011-01-21 at 08:32 +0530, Sujith wrote:
+> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> 
+> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> index dc96c06..b4ae719 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> @@ -753,7 +753,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+>  
+>  	hw->wiphy->interface_modes =
+>  		BIT(NL80211_IFTYPE_STATION) |
+> -		BIT(NL80211_IFTYPE_ADHOC);
+> +		BIT(NL80211_IFTYPE_ADHOC) |
+> +		BIT(NL80211_IFTYPE_AP);
+
+It'd be kinda nice if that could be made dependent on firmware
+capability bits or version since otherwise everybody will think they
+have it ... and it will not work?
+
+johannes
+
