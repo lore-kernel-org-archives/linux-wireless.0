@@ -1,61 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:59515 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047Ab1ADWaA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 17:30:00 -0500
-Received: from kpbe13.cbf.corp.google.com (kpbe13.cbf.corp.google.com [172.25.105.77])
-	by smtp-out.google.com with ESMTP id p04MTxGU007681
-	for <linux-wireless@vger.kernel.org>; Tue, 4 Jan 2011 14:29:59 -0800
-Received: from iyb26 (iyb26.prod.google.com [10.241.49.90])
-	by kpbe13.cbf.corp.google.com with ESMTP id p04MTs4i005740
-	for <linux-wireless@vger.kernel.org>; Tue, 4 Jan 2011 14:29:58 -0800
-Received: by iyb26 with SMTP id 26so14779910iyb.27
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jan 2011 14:29:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinvrdj4jbzH3COVZ9gW8W0h0em7uD6DBWBEXUp=@mail.gmail.com>
-References: <1292482775.3542.8.camel@jlt3.sipsolutions.net>
-	<AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
-	<1292499024.3612.3.camel@jlt3.sipsolutions.net>
-	<AANLkTimxoA+3GaZZWODKJ9MVJTJzRhnj5oh_jWGJhzWc@mail.gmail.com>
-	<1292501047.3612.9.camel@jlt3.sipsolutions.net>
-	<AANLkTiktMJvk55fz-Ww_nUtHcTS1mNVSR-hhkfbux+j_@mail.gmail.com>
-	<1292502934.3612.15.camel@jlt3.sipsolutions.net>
-	<AANLkTimZdxQNk2hr-ekGPAWJB5YTZBqxdppOAjdbrb1i@mail.gmail.com>
-	<1292504020.3612.17.camel@jlt3.sipsolutions.net>
-	<AANLkTinWkYK2Zu1LsKw9YQ4dAXJ2b_quEvZLc59-c_5q@mail.gmail.com>
-	<20101216174410.GB5677@tux>
-	<AANLkTinvrdj4jbzH3COVZ9gW8W0h0em7uD6DBWBEXUp=@mail.gmail.com>
-Date: Tue, 4 Jan 2011 14:29:53 -0800
-Message-ID: <AANLkTikDP_uF_jGh5bNyMv17VoZB=9u-SrdWRUQ15gRb@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
-From: Paul Stewart <pstew@google.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:42439 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750786Ab1AURwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 12:52:41 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH] ath9k: add missing ps wakeup/restore calls
+Date: Fri, 21 Jan 2011 18:52:38 +0100
+Message-Id: <1295632358-27754-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 4, 2011 at 10:19 AM, Paul Stewart <pstew@google.com> wrote:
-> On Thu, Dec 16, 2010 at 9:44 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> Try this:
->
-> Happy new year.  I've tried this patch, and the system continues to
-> suspend and resume successfully (i.e, the fix from the earlier patches
-> continues to alleviate the original problem), however the system
-> continues to be "deaf" to beacons at resume time if the system
-> suspends and resumes while associated.  You don't need a ChromeOS
-> system to reproduce this issue.  Just associate to the network and
-> suspend/resume.  On resume the system believes it should be
-> associated, but then the beacon loss timer kicks in and we
-> disassociate, since we are never successful in receiving a response.
+There are several places where ath_reset() was called without proper
+calls to ath9k_ps_wakeup/ath9k_ps_restore. To fix this, add those calls
+directly to ath_reset and drop them from callers where it makes sense.
 
-Whoops.  I didn't apply that change correctly.  Actually, I think this
-change works.  I think I may have spotted a couple of unrelated
-anomalies I'll trace down and address separately.
+Also add them to the config callback around ath_update_txpow to fix a
+crash that happens when the tx power changed before any vif is brought up.
 
---
-Paul
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 --
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 086043c..f21e956 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -596,14 +596,12 @@ void ath9k_tasklet(unsigned long data)
+ 	u32 status = sc->intrstatus;
+ 	u32 rxmask;
+ 
+-	ath9k_ps_wakeup(sc);
+-
+ 	if (status & ATH9K_INT_FATAL) {
+ 		ath_reset(sc, true);
+-		ath9k_ps_restore(sc);
+ 		return;
+ 	}
+ 
++	ath9k_ps_wakeup(sc);
+ 	spin_lock(&sc->sc_pcu_lock);
+ 
+ 	/*
+@@ -980,6 +978,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	/* Stop ANI */
+ 	del_timer_sync(&common->ani.timer);
+ 
++	ath9k_ps_wakeup(sc);
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	ieee80211_stop_queues(hw);
+@@ -1026,6 +1025,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 
+ 	/* Start ANI */
+ 	ath_start_ani(common);
++	ath9k_ps_restore(sc);
+ 
+ 	return r;
+ }
+@@ -1751,7 +1751,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		sc->config.txpowlimit = 2 * conf->power_level;
++		ath9k_ps_wakeup(sc);
+ 		ath_update_txpow(sc);
++		ath9k_ps_restore(sc);
+ 	}
+ 
+ 	if (disable_radio) {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 0ddfdbc..412806b 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2101,9 +2101,7 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 	if (needreset) {
+ 		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
+ 			"tx hung, resetting the chip\n");
+-		ath9k_ps_wakeup(sc);
+ 		ath_reset(sc, true);
+-		ath9k_ps_restore(sc);
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+-- 
+1.7.3.2
+
