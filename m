@@ -1,341 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53443 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751660Ab1ALObl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 09:31:41 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 06:31:23 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [RFC] ath9k: Handle interface changes properly
-Date: Wed, 12 Jan 2011 20:00:52 +0530
-Message-ID: <1294842652-7406-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56009 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854Ab1AUDC3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 22:02:29 -0500
+Received: by iyj18 with SMTP id 18so1246881iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:02:28 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63255.172642.805173@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:31:43 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 17/33] ath9k_htc: Configure beacon timers in AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit ""ath9k: Add change_interface callback" was failed
-to update of hw opmode, ani and interrupt mask. This leads
-to break p2p functionality on ath9k. And the existing add and
-remove interface functions are not handling hw opmode and
-ANI properly.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-This patch combines the common code in interface callbacks
-and also takes care of multi-vif cases.
+Handle multi-interface situations by checking if
+AP interfaces are already present.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    7 +
- drivers/net/wireless/ath/ath9k/main.c  |  195 +++++++++++++------------------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 3 files changed, 90 insertions(+), 114 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h            |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   78 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   45 +++++++++++--
+ drivers/net/wireless/ath/ath9k/wmi.c            |    4 -
+ 4 files changed, 115 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 3681caf5..ef00f93 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -309,6 +309,7 @@ int ath_startrecv(struct ath_softc *sc);
- bool ath_stoprecv(struct ath_softc *sc);
- void ath_flushrecv(struct ath_softc *sc);
- u32 ath_calcrxfilter(struct ath_softc *sc);
-+void ath_opmode_init(struct ath_softc *sc);
- int ath_rx_init(struct ath_softc *sc, int nbufs);
- void ath_rx_cleanup(struct ath_softc *sc);
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp);
-@@ -337,6 +338,12 @@ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid
- /* VIFs */
- /********/
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 83deb94..4c11ffe 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -352,10 +352,8 @@ struct ath_led {
  
-+enum ath_iface_optype {
-+	ATH9K_ADD_IFACE,
-+	ATH9K_MOD_IFACE,
-+	ATH9K_DEL_IFACE,
-+};
-+
- struct ath_vif {
- 	int av_bslot;
- 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f90a6ca..b6dd7d0 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1341,64 +1341,114 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	ath_dbg(common, ATH_DBG_CONFIG, "Driver halt\n");
+ struct htc_beacon_config {
+ 	u16 beacon_interval;
+-	u16 listen_interval;
+ 	u16 dtim_period;
+ 	u16 bmiss_timeout;
+-	u8 dtim_count;
+ };
+ 
+ struct ath_btcoex {
+@@ -379,6 +377,7 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_LED_DEINIT		   BIT(5)
+ #define OP_BT_PRIORITY_DETECTED    BIT(6)
+ #define OP_BT_SCAN                 BIT(7)
++#define OP_TSF_RESET               BIT(8)
+ 
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index bbbdd60..e897a56 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -138,6 +138,51 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
  }
  
--static int ath9k_add_interface(struct ieee80211_hw *hw,
--			       struct ieee80211_vif *vif)
-+static void ath9k_reclaim_beacon(struct ath_softc *sc,
-+				 struct ieee80211_vif *vif)
++static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
++				       struct htc_beacon_config *bss_conf)
 +{
-+	struct ath_vif *avp = (void *)vif->drv_priv;
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	enum ath9k_int imask = 0;
++	u32 nexttbtt, intval, tsftu;
++	__be32 htc_imask = 0;
++	int ret;
++	u8 cmd_rsp;
++	u64 tsf;
 +
-+	/* Disable SWBA interrupt */
-+	sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
-+	ath9k_ps_wakeup(sc);
-+	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
-+	tasklet_kill(&sc->bcon_tasklet);
-+	ath9k_ps_restore(sc);
++	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
++	intval /= ATH9K_HTC_MAX_BCN_VIF;
++	nexttbtt = intval;
 +
-+	ath_beacon_return(sc, avp);
-+	sc->sc_flags &= ~SC_OP_BEACONS;
-+
-+	if (sc->nbcnvifs > 0) {
-+		/* Re-enable beaconing */
-+		sc->sc_ah->imask |= ATH9K_INT_SWBA;
-+		ath9k_ps_wakeup(sc);
-+		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+		ath9k_ps_restore(sc);
++	if (priv->op_flags & OP_TSF_RESET) {
++		intval |= ATH9K_BEACON_RESET_TSF;
++		priv->op_flags &= ~OP_TSF_RESET;
++	} else {
++		/*
++		 * Pull nexttbtt forward to reflect the current TSF.
++		 */
++		tsf = ath9k_hw_gettsf64(priv->ah);
++		tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
++		do {
++			nexttbtt += intval;
++		} while (nexttbtt < tsftu);
 +	}
++
++	intval |= ATH9K_BEACON_ENA;
++
++	if (priv->op_flags & OP_ENABLE_BEACON)
++		imask |= ATH9K_INT_SWBA;
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"AP Beacon config, intval: %d, nexttbtt: %u imask: 0x%x\n",
++		bss_conf->beacon_interval, nexttbtt, imask);
++
++	WMI_CMD(WMI_DISABLE_INTR_CMDID);
++	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
++	priv->bmiss_cnt = 0;
++	htc_imask = cpu_to_be32(imask);
++	WMI_CMD_BUF(WMI_ENABLE_INTR_CMDID, &htc_imask);
 +}
 +
-+static int ath9k_iface_work(struct ieee80211_hw *hw,
-+			    struct ieee80211_vif *vif,
-+			    enum nl80211_iftype new_type,
-+			    bool p2p,
-+			    u8 optype)
+ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ 					  struct htc_beacon_config *bss_conf)
  {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
--	enum nl80211_iftype ic_opmode = NL80211_IFTYPE_UNSPECIFIED;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	enum nl80211_iftype iftype;
- 	int ret = 0;
+@@ -260,13 +305,36 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
  
- 	mutex_lock(&sc->mutex);
- 
--	switch (vif->type) {
-+	/* Stop ANI timer */
-+	del_timer_sync(&common->ani.timer);
-+
-+	iftype = (optype == ATH9K_MOD_IFACE) ? new_type : vif->type;
-+
-+	/* Remove interface */
-+	if (optype == ATH9K_DEL_IFACE) {
-+		if ((iftype == NL80211_IFTYPE_AP) ||
-+		    (iftype == NL80211_IFTYPE_ADHOC)) {
-+			ath9k_reclaim_beacon(sc, vif);
-+			if (!sc->nbcnvifs)
-+				sc->sc_flags &= ~SC_OP_ANI_RUN;
-+		}
-+		ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface\n");
-+		sc->nvifs--;
-+		goto out;
++	/*
++	 * Changing the beacon interval when multiple AP interfaces
++	 * are configured will affect beacon transmission of all
++	 * of them.
++	 */
++	if ((priv->ah->opmode == NL80211_IFTYPE_AP) &&
++	    (priv->num_ap_vif > 1) &&
++	    (vif->type == NL80211_IFTYPE_AP) &&
++	    (cur_conf->beacon_interval != bss_conf->beacon_int)) {
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Changing beacon interval of multiple AP interfaces !\n");
++		return;
 +	}
 +
-+	switch (iftype) {
- 	case NL80211_IFTYPE_STATION:
--		ic_opmode = NL80211_IFTYPE_STATION;
-+		if ((optype == ATH9K_MOD_IFACE) &&
-+		    ((vif->type == NL80211_IFTYPE_AP) ||
-+		     (vif->type == NL80211_IFTYPE_ADHOC)))
-+			ath9k_reclaim_beacon(sc, vif);
-+		if (!sc->nbcnvifs) {
-+			sc->sc_flags &= ~SC_OP_ANI_RUN;
-+			ah->opmode = iftype;
-+		}
- 		break;
- 	case NL80211_IFTYPE_WDS:
--		ic_opmode = NL80211_IFTYPE_WDS;
-+		ah->opmode = iftype;
- 		break;
++	/*
++	 * If the HW is operating in AP mode, any new station interfaces that
++	 * are added cannot change the beacon parameters.
++	 */
++	if (priv->num_ap_vif &&
++	    (vif->type != NL80211_IFTYPE_AP)) {
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"HW in AP mode, cannot set STA beacon parameters\n");
++		return;
++	}
++
+ 	cur_conf->beacon_interval = bss_conf->beacon_int;
+ 	if (cur_conf->beacon_interval == 0)
+ 		cur_conf->beacon_interval = 100;
+ 
+ 	cur_conf->dtim_period = bss_conf->dtim_period;
+-	cur_conf->listen_interval = 1;
+-	cur_conf->dtim_count = 1;
+ 	cur_conf->bmiss_timeout =
+ 		ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
+ 
+@@ -277,6 +345,9 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
  	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_AP:
- 		if (sc->nbcnvifs >= ATH_BCBUF) {
- 			ret = -ENOBUFS;
- 			goto out;
- 		}
--		ic_opmode = vif->type;
-+		sc->sc_flags |= SC_OP_ANI_RUN;
-+		ah->opmode = iftype;
+ 		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
  		break;
++	case NL80211_IFTYPE_AP:
++		ath9k_htc_beacon_config_ap(priv, cur_conf);
++		break;
  	default:
- 		ath_err(common, "Interface type %d not yet supported\n",
--			vif->type);
-+				iftype);
- 		ret = -EOPNOTSUPP;
- 		goto out;
- 	}
--
--	ath_dbg(common, ATH_DBG_CONFIG,
--		"Attach a VIF of type: %d\n", ic_opmode);
--
--	/* Set the VIF opmode */
--	avp->av_opmode = ic_opmode;
-+	avp->av_opmode = iftype;
- 	avp->av_bslot = -1;
-+	vif->type = iftype;
-+	vif->p2p = p2p;
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Unsupported beaconing mode\n");
+@@ -296,6 +367,9 @@ void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
+ 		break;
++	case NL80211_IFTYPE_AP:
++		ath9k_htc_beacon_config_ap(priv, cur_conf);
++		break;
+ 	default:
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Unsupported beaconing mode\n");
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index b98749e..6494c7e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -121,6 +121,9 @@ static void ath9k_htc_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	struct ath9k_htc_priv *priv = data;
+ 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
  
--	sc->nvifs++;
--
--	ath9k_set_bssid_mask(hw, vif);
--
--	if (sc->nvifs > 1)
--		goto out; /* skip global settings for secondary vif */
-+	if (optype == ATH9K_ADD_IFACE) {
-+		ath_dbg(common, ATH_DBG_CONFIG,
-+			"Attach Interface of type %d\n", vif->type);
-+		sc->nvifs++;
-+	} else
-+		ath_dbg(common, ATH_DBG_CONFIG,
-+			"Change Interface to type %d\n", vif->type);
++	if ((vif->type == NL80211_IFTYPE_AP) && bss_conf->enable_beacon)
++		priv->reconfig_beacon = true;
++
+ 	if (bss_conf->assoc) {
+ 		priv->rearm_ani = true;
+ 		priv->reconfig_beacon = true;
+@@ -297,6 +300,11 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		goto err;
  
--	if (ic_opmode == NL80211_IFTYPE_AP) {
-+	ath_opmode_init(sc);
-+	if (vif->type == NL80211_IFTYPE_AP) {
- 		ath9k_hw_set_tsfadjust(ah, 1);
- 		sc->sc_flags |= SC_OP_TSF_RESET;
- 	}
- 
--	/* Set the device opmode */
--	ah->opmode = ic_opmode;
--
- 	/*
- 	 * Enable MIB interrupts when there are hardware phy counters.
- 	 * Note we only do this (at the moment) for station mode.
-@@ -1410,43 +1460,18 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 			ah->imask |= ATH9K_INT_MIB;
- 		ah->imask |= ATH9K_INT_TSFOOR;
- 	}
--
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
--	if (vif->type == NL80211_IFTYPE_AP    ||
--	    vif->type == NL80211_IFTYPE_ADHOC) {
--		sc->sc_flags |= SC_OP_ANI_RUN;
--		ath_start_ani(common);
--	}
--
- out:
-+	ath_start_ani(common);
- 	mutex_unlock(&sc->mutex);
+ 	htc_start(priv->htc);
++
++	if (!(priv->op_flags & OP_SCANNING) &&
++	    !(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
++		ath9k_htc_vif_reconfig(priv);
++
+ err:
+ 	ath9k_htc_ps_restore(priv);
  	return ret;
- }
+@@ -1602,17 +1610,40 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 			common->curbssid, common->curaid);
+ 	}
  
--static void ath9k_reclaim_beacon(struct ath_softc *sc,
--				 struct ieee80211_vif *vif)
-+static int ath9k_add_interface(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif)
+-	if ((changed & BSS_CHANGED_BEACON_INT) ||
+-	    (changed & BSS_CHANGED_BEACON) ||
+-	    ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+-	    bss_conf->enable_beacon)) {
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon) {
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Beacon enabled for BSS: %pM\n", bss_conf->bssid);
+ 		priv->op_flags |= OP_ENABLE_BEACON;
+ 		ath9k_htc_beacon_config(priv, vif);
+ 	}
+ 
+-	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+-	    !bss_conf->enable_beacon) {
+-		priv->op_flags &= ~OP_ENABLE_BEACON;
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && !bss_conf->enable_beacon) {
++		/*
++		 * Disable SWBA interrupt only if there are no
++		 * AP/IBSS interfaces.
++		 */
++		if ((priv->num_ap_vif <= 1) || priv->num_ibss_vif) {
++			ath_dbg(common, ATH_DBG_CONFIG,
++				"Beacon disabled for BSS: %pM\n",
++				bss_conf->bssid);
++			priv->op_flags &= ~OP_ENABLE_BEACON;
++			ath9k_htc_beacon_config(priv, vif);
++		}
++	}
++
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		/*
++		 * Reset the HW TSF for the first AP interface.
++		 */
++		if ((priv->ah->opmode == NL80211_IFTYPE_AP) &&
++		    (priv->nvifs == 1) &&
++		    (priv->num_ap_vif == 1) &&
++		    (vif->type == NL80211_IFTYPE_AP)) {
++			priv->op_flags |= OP_TSF_RESET;
++		}
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Beacon interval changed for BSS: %pM\n",
++			bss_conf->bssid);
+ 		ath9k_htc_beacon_config(priv, vif);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 8ed6fe6..5c36c66 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -123,12 +123,8 @@ void ath9k_deinit_wmi(struct ath9k_htc_priv *priv)
+ void ath9k_swba_tasklet(unsigned long data)
  {
--	struct ath_vif *avp = (void *)vif->drv_priv;
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+-	struct ath_common *common = ath9k_hw_common(priv->ah);
 -
--	/* Disable SWBA interrupt */
--	sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
--	ath9k_ps_wakeup(sc);
--	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
--	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--	tasklet_kill(&sc->bcon_tasklet);
--	ath9k_ps_restore(sc);
+-	ath_dbg(common, ATH_DBG_WMI, "SWBA Event received\n");
+ 
+ 	ath9k_htc_swba(priv, priv->wmi->beacon_pending);
 -
--	ath_beacon_return(sc, avp);
--	sc->sc_flags &= ~SC_OP_BEACONS;
--
--	if (sc->nbcnvifs > 0) {
--		/* Re-enable beaconing */
--		sc->sc_ah->imask |= ATH9K_INT_SWBA;
--		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
--		ath9k_ps_restore(sc);
--	}
-+	return ath9k_iface_work(hw, vif, vif->type, vif->p2p, ATH9K_ADD_IFACE);
  }
  
- static int ath9k_change_interface(struct ieee80211_hw *hw,
-@@ -1454,69 +1479,13 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 				  enum nl80211_iftype new_type,
- 				  bool p2p)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	int ret = 0;
--
--	ath_dbg(common, ATH_DBG_CONFIG, "Change Interface\n");
--	mutex_lock(&sc->mutex);
--
--	switch (new_type) {
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_ADHOC:
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ath_err(common, "No beacon slot available\n");
--			ret = -ENOBUFS;
--			goto out;
--		}
--		break;
--	case NL80211_IFTYPE_STATION:
--		/* Stop ANI */
--		sc->sc_flags &= ~SC_OP_ANI_RUN;
--		del_timer_sync(&common->ani.timer);
--		if ((vif->type == NL80211_IFTYPE_AP) ||
--		    (vif->type == NL80211_IFTYPE_ADHOC))
--			ath9k_reclaim_beacon(sc, vif);
--		break;
--	default:
--		ath_err(common, "Interface type %d not yet supported\n",
--				vif->type);
--		ret = -ENOTSUPP;
--		goto out;
--	}
--	vif->type = new_type;
--	vif->p2p = p2p;
--
--out:
--	mutex_unlock(&sc->mutex);
--	return ret;
-+	return ath9k_iface_work(hw, vif, new_type, p2p, ATH9K_MOD_IFACE);
- }
- 
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
--	struct ath_wiphy *aphy = hw->priv;
--	struct ath_softc *sc = aphy->sc;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--
--	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface\n");
--
--	mutex_lock(&sc->mutex);
--
--	/* Stop ANI */
--	sc->sc_flags &= ~SC_OP_ANI_RUN;
--	del_timer_sync(&common->ani.timer);
--
--	/* Reclaim beacon resources */
--	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
--	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
--	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT))
--		ath9k_reclaim_beacon(sc, vif);
--
--	sc->nvifs--;
--
--	mutex_unlock(&sc->mutex);
-+	ath9k_iface_work(hw, vif, vif->type, vif->p2p, ATH9K_DEL_IFACE);
- }
- 
- static void ath9k_enable_ps(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b2497b8..f02a709 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -107,7 +107,7 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
- 	sc->rx.rxotherant = 0;
- }
- 
--static void ath_opmode_init(struct ath_softc *sc)
-+void ath_opmode_init(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
+ void ath9k_fatal_work(struct work_struct *work)
 -- 
 1.7.3.5
 
