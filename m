@@ -1,54 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48027 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561Ab1A0Atl (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:51005 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752764Ab1AUT5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 19:49:41 -0500
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p0R0ncaB014313
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 16:49:39 -0800
-Message-ID: <4D40C122.9020402@candelatech.com>
-Date: Wed, 26 Jan 2011 16:49:38 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 21 Jan 2011 14:57:04 -0500
+Date: Fri, 21 Jan 2011 13:57:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix firmware upload errors
+Message-ID: <4d39e531.0rk48a+WQ91WHhKW%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Question on power-save
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was looking at this ps_enable method:
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
-{
-	struct ieee80211_local *local = sdata->local;
-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+When the source code from Realtek was prepared for kernel inclusion,
+some routines were refactored to reduce the level of indentation. This
+patch repairs errors introduced in that process.
 
-	local->offchannel_ps_enabled = false;
+Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-	/* FIXME: what to do when local->pspolling is true? */
+John,
 
-	del_timer_sync(&local->dynamic_ps_timer);
-	del_timer_sync(&ifmgd->bcn_mon_timer);
-	del_timer_sync(&ifmgd->conn_mon_timer);
+This is 2.6.38 material.
 
-	cancel_work_sync(&local->dynamic_ps_enable_work);
+Larry
+---
 
-	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-		local->offchannel_ps_enabled = true;
-		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-	}
-
-I must be missing something, but it appears that the code above _disables_
-power-save instead of enables it?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Index: linux-2.6/drivers/net/wireless/rtlwifi/efuse.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/rtlwifi/efuse.c
++++ linux-2.6/drivers/net/wireless/rtlwifi/efuse.c
+@@ -726,9 +726,9 @@ static int efuse_pg_packet_read(struct i
+ }
+ 
+ static void efuse_write_data_case1(struct ieee80211_hw *hw, u16 *efuse_addr,
+-				u8 efuse_data, u8 offset, int *bcontinual,
+-				u8 *write_state, struct pgpkt_struct target_pkt,
+-				int *repeat_times, int *bresult, u8 word_en)
++			u8 efuse_data, u8 offset, int *bcontinual,
++			u8 *write_state, struct pgpkt_struct *target_pkt,
++			int *repeat_times, int *bresult, u8 word_en)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct pgpkt_struct tmp_pkt;
+@@ -744,8 +744,8 @@ static void efuse_write_data_case1(struc
+ 	tmp_pkt.word_en = tmp_header & 0x0F;
+ 	tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
+ 
+-	if (tmp_pkt.offset != target_pkt.offset) {
+-		efuse_addr = efuse_addr + (tmp_word_cnts * 2) + 1;
++	if (tmp_pkt.offset != target_pkt->offset) {
++		*efuse_addr = *efuse_addr + (tmp_word_cnts * 2) + 1;
+ 		*write_state = PG_STATE_HEADER;
+ 	} else {
+ 		for (tmpindex = 0; tmpindex < (tmp_word_cnts * 2); tmpindex++) {
+@@ -756,23 +756,23 @@ static void efuse_write_data_case1(struc
+ 		}
+ 
+ 		if (bdataempty == false) {
+-			efuse_addr = efuse_addr + (tmp_word_cnts * 2) + 1;
++			*efuse_addr = *efuse_addr + (tmp_word_cnts * 2) + 1;
+ 			*write_state = PG_STATE_HEADER;
+ 		} else {
+ 			match_word_en = 0x0F;
+-			if (!((target_pkt.word_en & BIT(0)) |
++			if (!((target_pkt->word_en & BIT(0)) |
+ 			     (tmp_pkt.word_en & BIT(0))))
+ 				match_word_en &= (~BIT(0));
+ 
+-			if (!((target_pkt.word_en & BIT(1)) |
++			if (!((target_pkt->word_en & BIT(1)) |
+ 			     (tmp_pkt.word_en & BIT(1))))
+ 				match_word_en &= (~BIT(1));
+ 
+-			if (!((target_pkt.word_en & BIT(2)) |
++			if (!((target_pkt->word_en & BIT(2)) |
+ 			     (tmp_pkt.word_en & BIT(2))))
+ 				match_word_en &= (~BIT(2));
+ 
+-			if (!((target_pkt.word_en & BIT(3)) |
++			if (!((target_pkt->word_en & BIT(3)) |
+ 			     (tmp_pkt.word_en & BIT(3))))
+ 				match_word_en &= (~BIT(3));
+ 
+@@ -780,7 +780,7 @@ static void efuse_write_data_case1(struc
+ 				badworden = efuse_word_enable_data_write(
+ 							    hw, *efuse_addr + 1,
+ 							    tmp_pkt.word_en,
+-							    target_pkt.data);
++							    target_pkt->data);
+ 
+ 				if (0x0F != (badworden & 0x0F)) {
+ 					u8 reorg_offset = offset;
+@@ -791,26 +791,26 @@ static void efuse_write_data_case1(struc
+ 				}
+ 
+ 				tmp_word_en = 0x0F;
+-				if ((target_pkt.word_en & BIT(0)) ^
++				if ((target_pkt->word_en & BIT(0)) ^
+ 				    (match_word_en & BIT(0)))
+ 					tmp_word_en &= (~BIT(0));
+ 
+-				if ((target_pkt.word_en & BIT(1)) ^
++				if ((target_pkt->word_en & BIT(1)) ^
+ 				    (match_word_en & BIT(1)))
+ 					tmp_word_en &= (~BIT(1));
+ 
+-				if ((target_pkt.word_en & BIT(2)) ^
++				if ((target_pkt->word_en & BIT(2)) ^
+ 					(match_word_en & BIT(2)))
+ 					tmp_word_en &= (~BIT(2));
+ 
+-				if ((target_pkt.word_en & BIT(3)) ^
++				if ((target_pkt->word_en & BIT(3)) ^
+ 				    (match_word_en & BIT(3)))
+ 					tmp_word_en &= (~BIT(3));
+ 
+ 				if ((tmp_word_en & 0x0F) != 0x0F) {
+ 					*efuse_addr = efuse_get_current_size(hw);
+-					target_pkt.offset = offset;
+-					target_pkt.word_en = tmp_word_en;
++					target_pkt->offset = offset;
++					target_pkt->word_en = tmp_word_en;
+ 				} else
+ 					*bcontinual = false;
+ 				*write_state = PG_STATE_HEADER;
+@@ -821,8 +821,8 @@ static void efuse_write_data_case1(struc
+ 				}
+ 			} else {
+ 				*efuse_addr += (2 * tmp_word_cnts) + 1;
+-				target_pkt.offset = offset;
+-				target_pkt.word_en = word_en;
++				target_pkt->offset = offset;
++				target_pkt->word_en = word_en;
+ 				*write_state = PG_STATE_HEADER;
+ 			}
+ 		}
+@@ -938,7 +938,7 @@ static int efuse_pg_packet_write(struct
+ 				efuse_write_data_case1(hw, &efuse_addr,
+ 						       efuse_data, offset,
+ 						       &bcontinual,
+-						       &write_state, target_pkt,
++						       &write_state, &target_pkt,
+ 						       &repeat_times, &bresult,
+ 						       word_en);
+ 			else
