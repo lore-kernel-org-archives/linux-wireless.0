@@ -1,61 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:56218 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278Ab1A1OQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 09:16:58 -0500
-Date: Fri, 28 Jan 2011 15:16:53 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] net/wireless/nl80211.c: Avoid call to genlmsg_cancel
-In-Reply-To: <1296223267.5118.7.camel@jlt3.sipsolutions.net>
-Message-ID: <Pine.LNX.4.64.1101281515410.8546@pc-004.diku.dk>
-References: <1296224232-8115-1-git-send-email-julia@diku.dk>
- <1296223267.5118.7.camel@jlt3.sipsolutions.net>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54103 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710Ab1AUC4s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 21:56:48 -0500
+Received: by pzk35 with SMTP id 35so217653pzk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 18:56:48 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.62903.947245.576431@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:25:51 +0530
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: ath9k-devel <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 00/33] ath9k_htc AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 28 Jan 2011, Johannes Berg wrote:
+This series is the preliminary work for enabling AP mode for ath9k_htc.
 
-> On Fri, 2011-01-28 at 15:17 +0100, Julia Lawall wrote:
-> 
-> > diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> > index 9b62710..864ddfb 100644
-> > --- a/net/wireless/nl80211.c
-> > +++ b/net/wireless/nl80211.c
-> > @@ -2718,7 +2718,7 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
-> >  	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-> >  			     NL80211_CMD_GET_MESH_CONFIG);
-> >  	if (!hdr)
-> > -		goto nla_put_failure;
-> > +		goto out;
-> 
-> 
-> > @@ -2954,7 +2955,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
-> >  	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-> >  			     NL80211_CMD_GET_REG);
-> >  	if (!hdr)
-> > -		goto nla_put_failure;
-> > +		goto put_failure;
-> >  
-> >  	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2,
-> >  		cfg80211_regdomain->alpha2);
-> 
-> Seems fine. Actually, since the message is freed anyhow, the call to
-> genlmsg_cancel is *completely* unnecessary, I just put it in to make it
-> nest better and not rely on it not having side effects.
-> 
-> But why did you call the label differently? :)
+A firmware update is needed, place look at:
+http://wireless.kernel.org/en/users/Drivers/ath9k_htc#AP_Mode
 
-Because out is already used in this case, and I didn't want to change all 
-of the other occurrences of nla_put_failure.  It's a bit sloppy though, 
-because this code is the actual nla_put_failure.  I can change it if you 
-prefer.
+Known issues:
 
-julia
+* Beacon misses under heavy TX load
+  ( hopefully, a fix would be sent out soon).
+
+This has not been tested rigorously, so consider this series as
+experimental code.
+
+Sujith
+
+Sujith Manoharan (33):
+  ath9k_htc: Allow upto two simultaneous interfaces
+  ath9k_htc: Unify target capability updation
+  ath9k_htc: Fix error handling in add_interface
+  ath9k_htc: Remove OP_PREAMBLE_SHORT
+  ath9k_htc: Remove OP_PROTECT_ENABLE
+  ath9k_htc: Remove OP_ASSOCIATED variable
+  ath9k_htc: Set the BSSID mask for multiple interfaces
+  ath9k_htc: Make sequence number calculation per-VIF
+  ath9k_htc: Use VIF from the packet's control data
+  ath9k_htc: Protect ampdu_action with a mutex
+  ath9k_htc: Fix WMI and beacon header
+  ath9k_htc: Maintain individual counters for interfaces
+  ath9k_htc: Allow AP interface to be created
+  ath9k_htc: Calculate and set the HW opmode
+  ath9k_htc: Add ANI for AP mode
+  ath9k_htc: Disable powersave if an AP interface is present
+  ath9k_htc: Configure beacon timers in AP mode
+  ath9k_htc: Add beacon slots
+  ath9k_htc: Fix TBTT calculation for IBSS mode
+  ath9k_htc: Add TSF adjust capability
+  ath9k_htc: Configure the beacon queue
+  ath9k_htc: Handle buffered frames in AP mode
+  ath9k_htc: Enable AP mode
+  ath9k_htc: Fix beacon miss under heavy load
+  ath9k_htc: Queue WMI events
+  ath9k_htc: Handle BSSID/AID for multiple interfaces
+  ath9k_htc: Move debug code to a separate file
+  ath9k_htc: Add RX error statistics
+  ath9k_htc: Fix RX length check
+  ath9k_htc: Fix host RX initialization
+  ath9k_htc: Remove unused WMI commands
+  ath9k_htc: Use SKB's private area for TX parameters
+  ath9k_htc: Drain packets on station removal
+
+ drivers/net/wireless/ath/ath9k/Makefile         |    2 +
+ drivers/net/wireless/ath/ath9k/hif_usb.c        |   51 ++-
+ drivers/net/wireless/ath/ath9k/htc.h            |  133 ++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |  432 ++++++++++++++--
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c  |  310 +++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |   14 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |  649 +++++++++++------------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |  127 +++--
+ drivers/net/wireless/ath/ath9k/htc_hst.c        |   23 +-
+ drivers/net/wireless/ath/ath9k/htc_hst.h        |    7 +-
+ drivers/net/wireless/ath/ath9k/wmi.c            |   89 ++--
+ drivers/net/wireless/ath/ath9k/wmi.h            |   18 +-
+ 12 files changed, 1329 insertions(+), 526 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+
+-- 
+1.7.3.5
+
