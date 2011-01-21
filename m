@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63351 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754265Ab1AJVx0 convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44780 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209Ab1AUDAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 16:53:26 -0500
-Received: by wyb28 with SMTP id 28so19839493wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 13:53:24 -0800 (PST)
+	Thu, 20 Jan 2011 22:00:33 -0500
+Received: by mail-pz0-f46.google.com with SMTP id 35so218028pzk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:00:33 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <801634.53195.qm@web29514.mail.ird.yahoo.com>
-References: <AANLkTi=iDFiuxKiCXCf54uAf4f1Vk-meNf=4J94Bn4a0@mail.gmail.com> <801634.53195.qm@web29514.mail.ird.yahoo.com>
-From: Klaas De Craemer <klaasdc@gmail.com>
-Date: Mon, 10 Jan 2011 22:49:10 +0100
-Message-ID: <AANLkTimFuEqdbhkehBCLYPvi08gVrHuvgve6EE9g4121@mail.gmail.com>
-Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
-To: htl10@users.sourceforge.net
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63139.963913.947597@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:29:47 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 05/33] ath9k_htc: Remove OP_PROTECT_ENABLE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 10, 2011 at 20:10, Hin-Tak Leung
-<htl10@users.sourceforge.net> wrote:
-> --- On Mon, 10/1/11, Klaas De Craemer <klaasdc@gmail.com> wrote:
->
->> Hello all,
->>
->> I can add to this that the rtl8187 driver seems to perform
->> worse then
->> its Windows counterpart (for this device anyway). Today,
->> the Linux
->> driver could not even connect anymore to the AP. Issuing
->> "iwconfig
->> wlan0 apname" just doesn't do anything. I could connect to
->> another,
->> more closer AP in Linux however.
->> I'm very annoyed to announce that, despite the loss in
->> flexibility, we
->> will be moving this box to Windows because the wireless
->> connection
->> then "just works".
->> I'll still check the list and I will remain available to
->> test anything
->> that could help the Linux driver though.
->
-> I would suggest you having a go at studying the windows driver under ndiswrapper, and using the kernel debugfs to study how the windows driver communicate with the device via USB and compared that with what the native driver is doing. That was how I got to be associated with the native driver - spotting what it was doing wrong/different from how the vendor linux driver was doing; the same should work with ndiswrapper+windows driver. (it did for a little bit, from personal experience).
->
-> There is no magic to it - if you want the driver to work for you, you can spend some time on it. You know the windows driver works "better" (for you), and there is a way to study the windows driver via ndiswrapper and compared that with the native driver, so it is do-able, just time and patience.
->
-> AFAIK, none of us have any special secret knowledge about the RTL8187L, much beyond what's publicly avaialable - i.e. the Realtek "official" driver code and a few spec sheets, and studying the windows driver via ndiswrapper; and AFAIK none of us are paid to work on the Realtek driver - Herton probably are paid to work on linux-things (given the e-mail address) but presumably not specifically on any one driver; I just happened to own a laptop with such a device built-in and Larry seems to be more or less of the same situation.
->
-> P.S. I am annoyed by the "I am very annoyed..." part of your e-mail message.
->
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-My apologies if it sounded that negative. What I meant was that I
-enjoy using Linux and that it now bothers me to have to put windows on
-something like this. I'm still glad that people like you, Larry and
-Herton are willing to put so much effort in developing drivers.
+CTS protection can be obtained from mac80211 directly.
 
-Klaas
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |   11 +++++------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   10 ----------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
+ 3 files changed, 6 insertions(+), 17 deletions(-)
 
->
->
->
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 08ab28d..79b67a1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -335,12 +335,11 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_SCANNING		   BIT(1)
+ #define OP_LED_ASSOCIATED	   BIT(2)
+ #define OP_LED_ON		   BIT(3)
+-#define OP_PROTECT_ENABLE	   BIT(4)
+-#define OP_ASSOCIATED		   BIT(5)
+-#define OP_ENABLE_BEACON	   BIT(6)
+-#define OP_LED_DEINIT		   BIT(7)
+-#define OP_BT_PRIORITY_DETECTED    BIT(8)
+-#define OP_BT_SCAN                 BIT(9)
++#define OP_ASSOCIATED		   BIT(4)
++#define OP_ENABLE_BEACON	   BIT(5)
++#define OP_LED_DEINIT		   BIT(6)
++#define OP_BT_PRIORITY_DETECTED    BIT(7)
++#define OP_BT_SCAN                 BIT(8)
+ 
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 8e76589..fe6e0bb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1521,16 +1521,6 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath9k_htc_beacon_config(priv, vif);
+ 	}
+ 
+-	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+-		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed CTS PROT %d\n",
+-			bss_conf->use_cts_prot);
+-		if (bss_conf->use_cts_prot &&
+-		    hw->conf.channel->band != IEEE80211_BAND_5GHZ)
+-			priv->op_flags |= OP_PROTECT_ENABLE;
+-		else
+-			priv->op_flags &= ~OP_PROTECT_ENABLE;
+-	}
+-
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+ 		if (bss_conf->use_short_slot)
+ 			ah->slottime = 9;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index d5f0f41..884deeb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -156,7 +156,7 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 
+ 		/* CTS-to-self */
+ 		if (!(flags & ATH9K_HTC_TX_RTSCTS) &&
+-		    (priv->op_flags & OP_PROTECT_ENABLE))
++		    (vif && vif->bss_conf.use_cts_prot))
+ 			flags |= ATH9K_HTC_TX_CTSONLY;
+ 
+ 		tx_hdr.flags = cpu_to_be32(flags);
+-- 
+1.7.3.5
+
