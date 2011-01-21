@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:36564 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375Ab1A0PBT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 10:01:19 -0500
-Received: by vws16 with SMTP id 16so749303vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 07:01:18 -0800 (PST)
-Message-ID: <4D4188E5.3020507@lwfinger.net>
-Date: Thu, 27 Jan 2011 09:01:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from kroah.org ([198.145.64.141]:36506 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752903Ab1AUTzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 14:55:45 -0500
+Date: Fri, 21 Jan 2011 11:55:09 -0800
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: Vipin Mehta <Vipin.Mehta@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"joe@perches.com" <joe@perches.com>
+Subject: Re: [PATCH 00/83] staging: ath6kl: Style cleanup
+Message-ID: <20110121195509.GB18700@kroah.com>
+References: <1295637798-18355-1-git-send-email-vmehta@atheros.com>
+ <20110121193830.GA17789@kroah.com>
+ <20110121194840.GA18603@vmehta-desktop>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Wanted: Suggestions for Big-endian test platform
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110121194840.GA18603@vmehta-desktop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am looking to acquire a big-endian Linux platform for testing drivers. It
-would need to handle full-height mini PCIe and USB 2.0 devices. A small physical
-size (laptop?) would be preferred, but I could handle a tower. In addition, my
-budget is not large.
+On Fri, Jan 21, 2011 at 11:48:40AM -0800, Vipin Mehta wrote:
+> On Fri, Jan 21, 2011 at 11:38:30AM -0800, Greg KH wrote:
+> > On Fri, Jan 21, 2011 at 11:23:18AM -0800, Vipin Mehta wrote:
+> > > The following set of patches fixes the driver's coding style in 
+> > > accordance with the Linux kernel coding style. The patches ended 
+> > > being huge so putting them up on a shared location where they can 
+> > > be retrieved using wget.
+> > > 
+> > > http://userweb.kernel.org/~vmehta/ath6kl-cleanup.tar.bz2
+> > 
+> > Interesting, however the very first patch fails to apply :(
+> 
+> I generated the patches after rebasing my tree to the
+> remotes/origin/staging-linus in the staging-2.6 tree. I tested it
+> again just a whilw back and the patches do apply.
 
-If you can suggest such a platform, or if you have one that is surplus, please
-let me know.
+These patches are NOT for staging-linus as they are not to go to him
+until the .39 merge window is open, right?  Please rebase them on the
+staging-next tree.
 
-Thanks,
+thanks,
 
-Larry
+greg k-h
