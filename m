@@ -1,32 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42724 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753565Ab1AZVdO (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56009 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496Ab1AUDCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 16:33:14 -0500
-Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta
- connection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1295156534-4178-3-git-send-email-arik@wizery.com>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
-	 <1295156534-4178-3-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Jan 2011 22:33:14 +0100
-Message-ID: <1296077594.3635.40.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 20 Jan 2011 22:02:47 -0500
+Received: by mail-iy0-f174.google.com with SMTP id 18so1246881iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:02:47 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63273.407923.407455@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:32:01 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 19/33] ath9k_htc: Fix TBTT calculation for IBSS mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-01-16 at 07:42 +0200, Arik Nemtsov wrote:
-> If a sta starts transmitting immediately after authentication, sometimes
-> the FW deauthenticates it. Fix this by marking the sta "in-connection"
-> in FW before sending the autentication response.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Starts transmitting what? If it starts transmitting data frames, it's
-supposed to be deauthenticated ... it mustn't do that before it has
-associated?!
+The target beacon transmission time has to be synced with the HW
+TSF when configuring beacon timers in Adhoc mode. Failing to do this
+would cause erroneous beacon transmission, for example, on completion
+of a scan run to check for IBSS merges.
 
-johannes
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index b4431a9..0803c25 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -190,20 +190,31 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	enum ath9k_int imask = 0;
+-	u32 nexttbtt, intval;
++	u32 nexttbtt, intval, tsftu;
+ 	__be32 htc_imask = 0;
+ 	int ret;
+ 	u8 cmd_rsp;
++	u64 tsf;
+ 
+ 	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
+ 	nexttbtt = intval;
++
++	/*
++	 * Pull nexttbtt forward to reflect the current TSF.
++	 */
++	tsf = ath9k_hw_gettsf64(priv->ah);
++	tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
++	do {
++		nexttbtt += intval;
++	} while (nexttbtt < tsftu);
++
+ 	intval |= ATH9K_BEACON_ENA;
+ 	if (priv->op_flags & OP_ENABLE_BEACON)
+ 		imask |= ATH9K_INT_SWBA;
+ 
+-	ath_dbg(common, ATH_DBG_BEACON,
+-		"IBSS Beacon config, intval: %d, imask: 0x%x\n",
+-		bss_conf->beacon_interval, imask);
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"IBSS Beacon config, intval: %d, nexttbtt: %u, imask: 0x%x\n",
++		bss_conf->beacon_interval, nexttbtt, imask);
+ 
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
+-- 
+1.7.3.5
 
