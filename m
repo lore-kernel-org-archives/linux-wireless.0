@@ -1,92 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37683 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209Ab1AGWU4 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56009 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496Ab1AUDC4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 17:20:56 -0500
-Message-ID: <4D2791BD.7050502@candelatech.com>
-Date: Fri, 07 Jan 2011 14:20:45 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 20 Jan 2011 22:02:56 -0500
+Received: by mail-iy0-f174.google.com with SMTP id 18so1246881iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:02:56 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
- one page.
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>	 <1294397880.3467.1.camel@jlt3.sipsolutions.net>	 <4D275CCC.90905@candelatech.com>  <20110107200913.GF21588@tux> <1294432018.2709.2.camel@edumazet-laptop>
-In-Reply-To: <1294432018.2709.2.camel@edumazet-laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63282.419046.995240@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:32:10 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 20/33] ath9k_htc: Add TSF adjust capability
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2011 12:26 PM, Eric Dumazet wrote:
-> Le vendredi 07 janvier 2011 à 12:09 -0800, Luis R. Rodriguez a écrit :
->> On Fri, Jan 07, 2011 at 10:34:52AM -0800, Ben Greear wrote:
->>> On 01/07/2011 02:58 AM, Johannes Berg wrote:
->>>> On Thu, 2011-01-06 at 16:46 -0800, greearb@candelatech.com wrote:
->>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>
->>>>> Patch is from Eric Dumazet, as described here:
->>>>> https://patchwork.kernel.org/patch/104271/
->>>>>
->>>>> Reported-by: Michael Guntsche<mike@it-loops.com>
->>>>> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
->>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
->>>>> ---
->>>>>
->>>>> NOTE:  This needs review by ath9k and/or other informed
->>>>> people.
->>>>
->>>> This doesn't make sense. It might help, but it'll probably lead to not
->>>> being able to receive all frames off the air.
->>>>
->>>> If this is an issue, ath9k should do paged RX like iwlwifi.
->>>
->>> Ok, I backed this out..but now I'm back to getting buffer allocation
->>> failures (and this is on a system with 2GB RAM).
->>>
->>> Seems it's coming from mac80211 instead of ath9k, at least most of
->>> the time (I'm using 60 stations, so it probably needs to make lots of
->>> copies in the rx path).  The traffic I'm generating/receiving is 1024 byte UDP
->>> payloads.
->>>
->>> Does this mean I really received a packet that was 3872 bytes long,
->>> or is the skb_copy allocating/copying empty data?
->>
->> Good question. The buffer we setup for DMA should be large since we
->> need to support AMSDU RX up to a certain bytes of RX data for the frame.
->> Harwdware should tell us the right size for the RX'd data and the skb
->> should be set with that size, respectively. Following this logic,
->> skb_copy() should only allocate on the order of the required skb->len.
->>
->> Remember that trick we did to force the older memory leak issues by
->> forcing an skb_copy() on every RX'd frame and then just discarding that
->> buffer immediately? You can try to do the same and print the skb->len
->> there, just to check what's going on.
->
->
-> Using skb_copy() is wrong then, since it makes a copy (order-1
-> allocations)
->
-> It should use :
->   skb_alloc( actual_size_of_frame  not the 3840 thing ...)
->   copy(data)
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-We need the extra stuff copied too I think (like skb->cb).
+In multi-interface mode, beacons/probe responses that are
+sent out must have their timestamp field updated. Calculate
+the TSF adjustment value for each beaconing interface and set it
+in the frame properly.
 
-If you could provide a bit more complete example code, I'll be happy
-to test it...
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            |    3 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   36 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    5 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   12 +++++++-
+ 4 files changed, 54 insertions(+), 2 deletions(-)
 
-Thanks,
-Ben
-
->
->
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 6b3f0f3..bd1610f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -244,6 +244,7 @@ struct ath9k_htc_vif {
+ 	u8 index;
+ 	u16 seq_no;
+ 	int bslot;
++	__le64 tsfadjust;
+ };
+ 
+ struct ath9k_vif_iter_data {
+@@ -475,6 +476,8 @@ void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif);
+ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif);
++void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
++			     struct ieee80211_vif *vif);
+ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 0803c25..64934cf 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -237,6 +237,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 	struct tx_beacon_header beacon_hdr;
+ 	struct ath9k_htc_tx_ctl tx_ctl;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_mgmt *mgmt;
+ 	struct sk_buff *beacon;
+ 	u8 *tx_fhdr;
+ 
+@@ -260,6 +261,13 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 		return;
+ 	}
+ 
++	/*
++	 * Update the TSF adjust value here, the HW will
++	 * add this value for every beacon.
++	 */
++	mgmt = (struct ieee80211_mgmt *)beacon->data;
++	mgmt->u.beacon.timestamp = avp->tsfadjust;
++
+ 	info = IEEE80211_SKB_CB(beacon);
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+ 		struct ieee80211_hdr *hdr =
+@@ -409,6 +417,34 @@ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 		"Removed interface at beacon slot: %d\n", avp->bslot);
+ }
+ 
++/*
++ * Calculate the TSF adjustment value for all slots
++ * other than zero.
++ */
++void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
++			     struct ieee80211_vif *vif)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
++	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	u64 tsfadjust;
++
++	if (avp->bslot == 0)
++		return;
++
++	/*
++	 * The beacon interval cannot be different for multi-AP mode,
++	 * and we reach here only for VIF slots greater than zero,
++	 * so beacon_interval is guaranteed to be set in cur_conf.
++	 */
++	tsfadjust = cur_conf->beacon_interval * avp->bslot / ATH9K_HTC_MAX_BCN_VIF;
++	avp->tsfadjust = cpu_to_le64(TU_TO_USEC(tsfadjust));
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"tsfadjust is: %llu for bslot: %d\n",
++		(unsigned long long)tsfadjust, avp->bslot);
++}
++
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 4980525..5f8e54c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1282,8 +1282,10 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 
+ 	ath9k_htc_set_opmode(priv);
+ 
+-	if (priv->ah->opmode == NL80211_IFTYPE_AP)
++	if (priv->ah->opmode == NL80211_IFTYPE_AP) {
++		ath9k_hw_set_tsfadjust(priv->ah, 1);
+ 		ath_start_ani(priv);
++	}
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
+@@ -1621,6 +1623,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon) {
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Beacon enabled for BSS: %pM\n", bss_conf->bssid);
++		ath9k_htc_set_tsfadjust(priv, vif);
+ 		priv->op_flags |= OP_ENABLE_BEACON;
+ 		ath9k_htc_beacon_config(priv, vif);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 04d8248..127a99b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -82,11 +82,12 @@ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
+ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_mgmt *mgmt;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sta *sta = tx_info->control.sta;
+ 	struct ieee80211_vif *vif = tx_info->control.vif;
+ 	struct ath9k_htc_sta *ista;
+-	struct ath9k_htc_vif *avp;
++	struct ath9k_htc_vif *avp = NULL;
+ 	struct ath9k_htc_tx_ctl tx_ctl;
+ 	enum htc_endpoint_id epid;
+ 	u16 qnum;
+@@ -195,6 +196,15 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 
+ 		memset(&mgmt_hdr, 0, sizeof(struct tx_mgmt_hdr));
+ 
++		/*
++		 * Set the TSF adjust value for probe response
++		 * frame also.
++		 */
++		if (avp && unlikely(ieee80211_is_probe_resp(fc))) {
++			mgmt = (struct ieee80211_mgmt *)skb->data;
++			mgmt->u.probe_resp.timestamp = avp->tsfadjust;
++		}
++
+ 		tx_ctl.type = ATH9K_HTC_NORMAL;
+ 
+ 		mgmt_hdr.node_idx = sta_idx;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.3.5
 
