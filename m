@@ -1,38 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lider.pardus.org.tr ([193.140.100.216]:57436 "EHLO
-	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab1A3TJo (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46839 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753766Ab1AUUr0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:09:44 -0500
-Message-ID: <4D45B776.4000403@pardus.org.tr>
-Date: Sun, 30 Jan 2011 21:09:42 +0200
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org, platform-driver-x86@vger.kernel.org
-Subject: Re: Rfkill always soft/hard blocked upon boot
-References: <4D455DC1.6010909@pardus.org.tr> <4D45B338.8010802@lwfinger.net>
-In-Reply-To: <4D45B338.8010802@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 21 Jan 2011 15:47:26 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so1170225ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 12:47:25 -0800 (PST)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Colin McCabe <colin@cozybit.com>,
+	Marek Vasut <marek.vasut@gmail.com>, anarsoul@gmail.com
+Subject: [PATCH 3/3] libertas_spi: Add support for suspend/resume
+Date: Fri, 21 Jan 2011 22:44:50 +0200
+Message-Id: <1295642690-16646-4-git-send-email-anarsoul@gmail.com>
+In-Reply-To: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
+References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30.01.2011 20:51, Larry Finger wrote:
+Add support for suspend/resume in if_spi.
 
-> The nature of that Fn-F2 key depends on how the motherboard manufacturer coded
-> their BIOS. Most do it as a toggle and use some WMI (Windows Management
-> Interface) code to initialize it on boot up. As this no-name laptop is unlikely
-> to have a WMI driver the way that name brands do, it probably generates a
-> keystroke. That is easy to check - Use CTRL-ALT-F1 to switch to a console, log
-> in, and issue the command "showkey". Is a keycode returned when Fn-F2 is pressed?
+Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
+---
+ drivers/net/wireless/libertas/if_spi.c |   55 ++++++++++++++++++++++++++++++++
+ 1 files changed, 55 insertions(+), 0 deletions(-)
 
-Hmm I've got it. So maybe taking look at the ACPI tables/WMI block can 
-reveal a way to initialize the toggle? I'm not really experienced in 
-these things but I'll take a look out of curiosity.
-
-Thanks!
-
-
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index f6c2cd6..772da3a 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -57,6 +57,7 @@ struct if_spi_card {
+ 	/* Handles all SPI communication (except for FW load) */
+ 	struct workqueue_struct		*workqueue;
+ 	struct work_struct		packet_work;
++	struct work_struct		resume_work;
+ 
+ 	u8				cmd_buffer[IF_SPI_CMD_BUF_SIZE];
+ 
+@@ -1057,6 +1058,24 @@ out:
+ 	return err;
+ }
+ 
++static void if_spi_resume_worker(struct work_struct *work)
++{
++	struct if_spi_card *card;
++
++	card = container_of(work, struct if_spi_card, resume_work);
++
++	if (card->pdata->setup)
++		card->pdata->setup(card->spi);
++
++	/* Init card ... */
++	if_spi_init_card(card);
++
++	enable_irq(card->spi->irq);
++
++	/* And resume it ... */
++	lbs_resume(card->priv);
++}
++
+ static int __devinit if_spi_probe(struct spi_device *spi)
+ {
+ 	struct if_spi_card *card;
+@@ -1107,6 +1126,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 		goto free_card;
+ 	}
+ 	card->priv = priv;
++	priv->setup_fw_on_resume = 1;
+ 	priv->card = card;
+ 	priv->hw_host_to_card = if_spi_host_to_card;
+ 	priv->enter_deep_sleep = NULL;
+@@ -1117,6 +1137,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	/* Initialize interrupt handling stuff. */
+ 	card->workqueue = create_workqueue("libertas_spi");
+ 	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
++	INIT_WORK(&card->resume_work, if_spi_resume_worker);
+ 
+ 	err = request_irq(spi->irq, if_spi_host_interrupt,
+ 			IRQF_TRIGGER_FALLING, "libertas_spi", card);
+@@ -1161,6 +1182,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+ 	lbs_deb_spi("libertas_spi_remove\n");
+ 	lbs_deb_enter(LBS_DEB_SPI);
+ 
++	cancel_work_sync(&card->resume_work);
++
+ 	lbs_stop_card(priv);
+ 	lbs_remove_card(priv); /* will call free_netdev */
+ 
+@@ -1174,6 +1197,37 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+ 	return 0;
+ }
+ 
++static int if_spi_suspend(struct device *dev)
++{
++	struct spi_device *spi = to_spi_device(dev);
++	struct if_spi_card *card = spi_get_drvdata(spi);
++
++	lbs_suspend(card->priv);
++	flush_workqueue(card->workqueue);
++	disable_irq(spi->irq);
++
++	if (card->pdata->teardown)
++		card->pdata->teardown(spi);
++
++	return 0;
++}
++
++static int if_spi_resume(struct device *dev)
++{
++	struct spi_device *spi = to_spi_device(dev);
++	struct if_spi_card *card = spi_get_drvdata(spi);
++
++	/* Schedule delayed work */
++	schedule_work(&card->resume_work);
++
++	return 0;
++}
++
++static const struct dev_pm_ops if_spi_pm_ops = {
++	.suspend	= if_spi_suspend,
++	.resume		= if_spi_resume,
++};
++
+ static struct spi_driver libertas_spi_driver = {
+ 	.probe	= if_spi_probe,
+ 	.remove = __devexit_p(libertas_spi_remove),
+@@ -1181,6 +1235,7 @@ static struct spi_driver libertas_spi_driver = {
+ 		.name	= "libertas_spi",
+ 		.bus	= &spi_bus_type,
+ 		.owner	= THIS_MODULE,
++		.pm	= &if_spi_pm_ops,
+ 	},
+ };
+ 
 -- 
-Pardus Linux
-http://www.pardus.org.tr/eng
+1.7.4.rc1
+
