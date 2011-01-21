@@ -1,176 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:56232 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046Ab1AUDEz (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40518 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854Ab1AUDAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:04:55 -0500
-Received: by yxt3 with SMTP id 3so402107yxt.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:04:55 -0800 (PST)
+	Thu, 20 Jan 2011 22:00:43 -0500
+Received: by iwn9 with SMTP id 9so1249489iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:00:42 -0800 (PST)
 From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63400.912018.285601@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:34:08 +0530
+Message-ID: <19768.63149.35095.281380@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:29:57 +0530
 To: linux-wireless@vger.kernel.org
 CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 33/33] ath9k_htc: Drain packets on station removal
+Subject: [RFC/WIP 06/33] ath9k_htc: Remove OP_ASSOCIATED variable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-When a station entry is removed, there could still be
-pending packets destined for that station in the HIF layer.
-Sending these to the target is not necessary, so drain them
-in the driver itself.
+mac80211 stores the association state in ieee80211_bss_conf.
+Use this and remove the local state, which is incorrect anyway
+since it is stored globally and not on a per-VIF basis.
+
+Restarting ANI and reconfiguration of HW beacon timers when a
+scan run ends requires more work. This is handled by iterating
+over the active interfaces.
+
+Finally, remove the useless check for associated status in RX
+processing.
 
 Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c      |   34 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 ++++++
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    5 +++
- drivers/net/wireless/ath/ath9k/htc_hst.h      |    2 +
- 6 files changed, 53 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h            |   14 +++---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   19 ++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   56 ++++++++++++++---------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   26 +++++------
+ 4 files changed, 74 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 2c96960..9384e83 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -352,6 +352,39 @@ static void hif_usb_stop(void *hif_handle, u8 pipe_id)
- 	}
- }
- 
-+static inline bool check_index(struct sk_buff *skb, u8 idx)
-+{
-+	struct ath9k_htc_tx_ctl *tx_ctl;
-+
-+	tx_ctl = HTC_SKB_CB(skb);
-+
-+	if ((tx_ctl->type == ATH9K_HTC_AMPDU) &&
-+	    (tx_ctl->sta_idx == idx))
-+		return true;
-+
-+	return false;
-+}
-+
-+static void hif_usb_drain(void *hif_handle, u8 idx)
-+{
-+	struct hif_device_usb *hif_dev = (struct hif_device_usb *)hif_handle;
-+	struct sk_buff *skb, *tmp;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
-+
-+	skb_queue_walk_safe(&hif_dev->tx.tx_skb_queue, skb, tmp) {
-+		if (check_index(skb, idx)) {
-+			__skb_unlink(skb, &hif_dev->tx.tx_skb_queue);
-+			hif_dev->tx.tx_skb_cnt--;
-+			dev_kfree_skb_any(skb);
-+			TX_STAT_INC(skb_dropped);
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
-+}
-+
- static int hif_usb_send(void *hif_handle, u8 pipe_id, struct sk_buff *skb)
- {
- 	struct hif_device_usb *hif_dev = (struct hif_device_usb *)hif_handle;
-@@ -383,6 +416,7 @@ static struct ath9k_htc_hif hif_usb = {
- 
- 	.start = hif_usb_start,
- 	.stop = hif_usb_stop,
-+	.drain = hif_usb_drain,
- 	.send = hif_usb_send,
- };
- 
 diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index ec3511d..bbed402 100644
+index 79b67a1..425c8d0 100644
 --- a/drivers/net/wireless/ath/ath9k/htc.h
 +++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -288,6 +288,7 @@ struct ath9k_htc_rx {
+@@ -335,11 +335,10 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_SCANNING		   BIT(1)
+ #define OP_LED_ASSOCIATED	   BIT(2)
+ #define OP_LED_ON		   BIT(3)
+-#define OP_ASSOCIATED		   BIT(4)
+-#define OP_ENABLE_BEACON	   BIT(5)
+-#define OP_LED_DEINIT		   BIT(6)
+-#define OP_BT_PRIORITY_DETECTED    BIT(7)
+-#define OP_BT_SCAN                 BIT(8)
++#define OP_ENABLE_BEACON	   BIT(4)
++#define OP_LED_DEINIT		   BIT(5)
++#define OP_BT_PRIORITY_DETECTED    BIT(6)
++#define OP_BT_SCAN                 BIT(7)
  
- struct ath9k_htc_tx_ctl {
- 	u8 type; /* ATH9K_HTC_* */
-+	u8 sta_idx;
- };
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+@@ -370,6 +369,8 @@ struct ath9k_htc_priv {
+ 	u16 nstations;
+ 	u16 seq_no;
+ 	u32 bmiss_cnt;
++	bool rearm_ani;
++	bool reconfig_beacon;
  
- static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index a5476e8..d6bbd26 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1279,10 +1279,13 @@ static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
- 				struct ieee80211_sta *sta)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
-+	struct ath9k_htc_sta *ista;
- 	int ret;
+ 	struct ath9k_hw_cal_data caldata;
  
- 	mutex_lock(&priv->mutex);
- 	ath9k_htc_ps_wakeup(priv);
-+	ista = (struct ath9k_htc_sta *) sta->drv_priv;
-+	htc_drain(priv->htc, ista->index);
- 	ret = ath9k_htc_remove_station(priv, vif, sta);
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 7357e70..6b31ebf 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -139,6 +139,14 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv,
- 		tx_hdr.node_idx = sta_idx;
- 		tx_hdr.vif_idx = vif_idx;
+@@ -429,6 +430,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
++void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv);
+ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending);
  
-+		/*
-+		 * This is a bit redundant but it helps to get
-+		 * the per-packet index quickly when draining the
-+		 * TX queue in the HIF layer. Otherwise we would
-+		 * have to parse the packet contents ...
-+		 */
-+		tx_ctl->sta_idx = sta_idx;
-+
- 		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
- 			tx_ctl->type = ATH9K_HTC_AMPDU;
- 			tx_hdr.data_type = ATH9K_HTC_AMPDU;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 6ee53de..be92cbf 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -317,6 +317,11 @@ void htc_start(struct htc_target *target)
+ void ath9k_htc_rxep(void *priv, struct sk_buff *skb,
+@@ -441,7 +443,7 @@ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
+ int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv);
+ void ath9k_htc_station_work(struct work_struct *work);
+ void ath9k_htc_aggr_work(struct work_struct *work);
+-void ath9k_ani_work(struct work_struct *work);;
++void ath9k_ani_work(struct work_struct *work);
+ void ath_start_ani(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 87cc65a..133f628 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -283,3 +283,22 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 		return;
  	}
  }
- 
-+void htc_drain(struct htc_target *target, u8 idx)
++
++void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
 +{
-+	target->hif->drain(target->hif_dev, idx);
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++
++	switch (priv->ah->opmode) {
++	case NL80211_IFTYPE_STATION:
++		ath9k_htc_beacon_config_sta(priv, cur_conf);
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
++		break;
++	default:
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Unsupported beaconing mode\n");
++		return;
++	}
++}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index fe6e0bb..04b1609 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -116,6 +116,34 @@ void ath9k_ps_work(struct work_struct *work)
+ 	ath9k_htc_setpower(priv, ATH9K_PM_NETWORK_SLEEP);
+ }
+ 
++static void ath9k_htc_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct ath9k_htc_priv *priv = data;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++
++	if (bss_conf->assoc) {
++		priv->rearm_ani = true;
++		priv->reconfig_beacon = true;
++	}
 +}
 +
- void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
- 			       struct sk_buff *skb, bool txok)
++static void ath9k_htc_vif_reconfig(struct ath9k_htc_priv *priv)
++{
++	priv->rearm_ani = false;
++	priv->reconfig_beacon = false;
++
++	ieee80211_iterate_active_interfaces_atomic(priv->hw,
++						   ath9k_htc_vif_iter, priv);
++	if (priv->rearm_ani)
++		ath_start_ani(priv);
++
++	if (priv->reconfig_beacon) {
++		ath9k_htc_ps_wakeup(priv);
++		ath9k_htc_beacon_reconfig(priv);
++		ath9k_htc_ps_restore(priv);
++	}
++}
++
+ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
  {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index 3531552..b1341ba 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -35,6 +35,7 @@ struct ath9k_htc_hif {
+ 	struct ath_hw *ah = priv->ah;
+@@ -130,9 +158,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
  
- 	void (*start) (void *hif_handle, u8 pipe);
- 	void (*stop) (void *hif_handle, u8 pipe);
-+	void (*drain) (void *hif_handle, u8 idx);
- 	int (*send) (void *hif_handle, u8 pipe, struct sk_buff *buf);
- };
+-	if (priv->op_flags & OP_ASSOCIATED)
+-		cancel_delayed_work_sync(&priv->ath9k_ani_work);
+-
++	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	ieee80211_stop_queues(priv->hw);
+ 	htc_stop(priv->htc);
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+@@ -158,12 +184,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
  
-@@ -208,6 +209,7 @@ int htc_send(struct htc_target *target, struct sk_buff *skb,
- 	     enum htc_endpoint_id eid);
- void htc_stop(struct htc_target *target);
- void htc_start(struct htc_target *target);
-+void htc_drain(struct htc_target *target, u8 idx);
+ 	WMI_CMD(WMI_ENABLE_INTR_CMDID);
+ 	htc_start(priv->htc);
+-
+-	if (priv->op_flags & OP_ASSOCIATED) {
+-		ath9k_htc_beacon_config(priv, priv->vif);
+-		ath_start_ani(priv);
+-	}
+-
++	ath9k_htc_vif_reconfig(priv);
+ 	ieee80211_wake_queues(priv->hw);
  
- void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 		      struct sk_buff *skb, u32 len, u8 pipe_id);
+ 	ath9k_htc_ps_restore(priv);
+@@ -1488,13 +1509,10 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
+ 			bss_conf->assoc);
+ 
+-		if (bss_conf->assoc) {
+-			priv->op_flags |= OP_ASSOCIATED;
++		if (bss_conf->assoc)
+ 			ath_start_ani(priv);
+-		} else {
+-			priv->op_flags &= ~OP_ASSOCIATED;
++		else
+ 			cancel_delayed_work_sync(&priv->ath9k_ani_work);
+-		}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
+@@ -1619,8 +1637,7 @@ static void ath9k_htc_sw_scan_start(struct ieee80211_hw *hw)
+ 	priv->op_flags |= OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	cancel_work_sync(&priv->ps_work);
+-	if (priv->op_flags & OP_ASSOCIATED)
+-		cancel_delayed_work_sync(&priv->ath9k_ani_work);
++	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -1629,14 +1646,11 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 
+ 	mutex_lock(&priv->mutex);
+-	ath9k_htc_ps_wakeup(priv);
+ 	spin_lock_bh(&priv->beacon_lock);
+ 	priv->op_flags &= ~OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+-	if (priv->op_flags & OP_ASSOCIATED) {
+-		ath9k_htc_beacon_config(priv, priv->vif);
+-		ath_start_ani(priv);
+-	}
++	ath9k_htc_ps_wakeup(priv);
++	ath9k_htc_vif_reconfig(priv);
+ 	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 884deeb..6ddcf93 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -591,24 +591,22 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
+ 			   rxbuf->rxstatus.rs_flags);
+ 
+-	if (priv->op_flags & OP_ASSOCIATED) {
+-		if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
+-		    !rxbuf->rxstatus.rs_moreaggr)
+-			ATH_RSSI_LPF(priv->rx.last_rssi,
+-				     rxbuf->rxstatus.rs_rssi);
++	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
++	    !rxbuf->rxstatus.rs_moreaggr)
++		ATH_RSSI_LPF(priv->rx.last_rssi,
++			     rxbuf->rxstatus.rs_rssi);
+ 
+-		last_rssi = priv->rx.last_rssi;
++	last_rssi = priv->rx.last_rssi;
+ 
+-		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-			rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
+-							     ATH_RSSI_EP_MULTIPLIER);
++	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
++		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
++						     ATH_RSSI_EP_MULTIPLIER);
+ 
+-		if (rxbuf->rxstatus.rs_rssi < 0)
+-			rxbuf->rxstatus.rs_rssi = 0;
++	if (rxbuf->rxstatus.rs_rssi < 0)
++		rxbuf->rxstatus.rs_rssi = 0;
+ 
+-		if (ieee80211_is_beacon(fc))
+-			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
+-	}
++	if (ieee80211_is_beacon(fc))
++		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
+ 
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
 -- 
 1.7.3.5
 
