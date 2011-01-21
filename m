@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:37093 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932780Ab1ANSyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 13:54:05 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 10:53:46 -0800
-Date: Sat, 15 Jan 2011 00:23:18 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	=?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k: Handle interface changes properly
-Message-ID: <20110114185317.GA12051@vmraj-lnx.users.atheros.com>
-References: <1294842652-7406-1-git-send-email-rmanoharan@atheros.com>
- <AANLkTi=S6TFk88cY27KFZ2q5mCykMMSn17LnH=V95MST@mail.gmail.com>
- <4D2E0653.7040606@openwrt.org>
- <20110113051849.GD8836@vmraj-lnx.users.atheros.com>
- <4D2F0ADF.1040009@openwrt.org>
- <20110113163513.GA9291@vmraj-lnx.users.atheros.com>
- <4D2F2D22.6070301@openwrt.org>
- <20110114181309.GA11920@vmraj-lnx.users.atheros.com>
- <4D30944A.30100@openwrt.org>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:43657 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab1AUDBV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Jan 2011 22:01:21 -0500
+Received: by pxi15 with SMTP id 15so217636pxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:21 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D30944A.30100@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19768.63187.572339.174364@gargle.gargle.HOWL>
+Date: Fri, 21 Jan 2011 08:30:35 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC/WIP 10/33] ath9k_htc: Protect ampdu_action with a mutex
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 14, 2011 at 11:52:02PM +0530, Felix Fietkau wrote:
-> On 2011-01-14 7:13 PM, Rajkumar Manoharan wrote:
-> > On Thu, Jan 13, 2011 at 10:19:38PM +0530, Felix Fietkau wrote:
-> >>  On 2011-01-13 5:35 PM, Rajkumar Manoharan wrote:
-> >>  >  Instead of setting opmde as AP for WDS, it is better to handle WDS
-> >>  >  case in ath9k_hw.
-> >>  Why? Right now I don't even see any NL80211_IFTYPE_WDS handling in
-> >>  ath9k_hw, and I can't think of anything that should be handled
-> >>  differently in ath9k_hw compared to the AP opmode.
-> > For WDS station, what should be the interface type? Forgive if I'm wrong.
-> There is no WDS station opmode. 'WDS station' is a regular station 
-> interface with 4-addr mode enabled. It needs no special handling in ath9k.
-still not convinced. Then what is the point mac80211 is informing about
-WDS type to drivers. mac itself can pass it as AP type like what it 
-is doing for p2p GO.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
---
-Rajkumar
+This is required when issuing commands to the firmware.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 6bd7e25..b6c8363 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1636,6 +1636,8 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
+ 	struct ath9k_htc_sta *ista;
+ 	int ret = 0;
+ 
++	mutex_lock(&priv->mutex);
++
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+ 		break;
+@@ -1660,6 +1662,8 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
+ 		ath_err(ath9k_hw_common(priv->ah), "Unknown AMPDU action\n");
+ 	}
+ 
++	mutex_unlock(&priv->mutex);
++
+ 	return ret;
+ }
+ 
+-- 
+1.7.3.5
+
