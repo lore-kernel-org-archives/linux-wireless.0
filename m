@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tulikuusama.dnainternet.net ([83.102.40.132]:46422 "EHLO
-	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755546Ab1ACSLm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 13:11:42 -0500
-Message-ID: <20110103201138.146879onsq0vcqqg@hayate.sektori.org>
-Date: Mon, 03 Jan 2011 20:11:38 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: OOPS at ieee80211_aes_ccm_encrypt()?
-References: <20110103001006.13085vt89qfm6pcs@hayate.sektori.org>
- <1294073190.3436.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1294073190.3436.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
+Received: from mx1.redhat.com ([209.132.183.28]:34756 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753897Ab1AUMwO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 07:52:14 -0500
+Date: Fri, 21 Jan 2011 13:51:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] ath9k_htc: fix race conditions when stop device
+Message-ID: <20110121135138.147697db@dhcp-lab-109.englab.brq.redhat.com>
+In-Reply-To: <19769.24127.113716.558660@gargle.gargle.HOWL>
+References: <20110121061204.GA3041@redhat.com>
+	<19769.24127.113716.558660@gargle.gargle.HOWL>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Johannes Berg <johannes@sipsolutions.net>:
+On Fri, 21 Jan 2011 15:51:51 +0530
+Sujith <m.sujith@gmail.com> wrote:
 
->
-> It looks like it. Can you reproduce this fairly easily? I wonder if it's
-> an RCU problem, we do key lookups under RCU but I see no grace period
-> right now ... try the patch below, I'll look into it in more detail.
->
+> Stanislaw Gruszka wrote:
+> > Similar fix I already posted for ath9k. When stopping device, disable
+> > interrupts, kill tasklets and then works, in correct order. Patch drop
+> > mutex in them middle of a function, which I don't like and can possibly
+> > not be correct. Perhaps this can be arranged differently. Also
+> > there is no synchronize_irq, which IMHO should be added somewhere in
+> > htc/wmi stop.
+> 
+> It should be okay if the work instances are canceled first before the mutex
+> is acquired. 
 
-I have been running tests past two weeks and this came up once. I have  
-been running hostapd with wpa_group_rekey=30 and wpa_ptk_rekey=60 and  
-doing 'nc < /dev/zero > /dev/null' at both ends and 'ping -f'. When  
-this crash happened other end was rndis_wlan. I'll try reproducing,  
-but doubt it will.
+IIRC, there is possibility to schedule priv->ps_work from ath9k_rx_tasklet (when
+receive beacon frame and being in power save mode), so we should cancel that work
+after assure tasklet will not be executed.
 
--Jussi
+> And I don't think synchronize_irq() is required since this is a USB driver.
+> 
+> But when the driver is loaded and unloaded without bringing the interface up,
+> stop() wouldn't be called at all, but I guess it's alright since no tasklet would
+> have been scheduled. 
 
+I assumed ath9k_htc_rxep() and ath9k_htc_txep() can not be called before _start()
+(and after _stop() of course), hence removing tasklet_kill's from ath9k_deinit_priv()
 
+> I tested with ath9k_htc and saw no issues.
+
+Thanks!
+Stanislaw
