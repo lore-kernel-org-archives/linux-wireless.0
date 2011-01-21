@@ -1,48 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:44909 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751866Ab1AYSdF (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:54314 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904Ab1AUV0s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 13:33:05 -0500
-Date: Tue, 25 Jan 2011 20:32:05 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/6] ath: Fix WEP hardware encryption
-Message-ID: <20110125183205.GA29410@jm.kir.nu>
-References: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
- <20110125041549.6944.15800.stgit@localhost6.localdomain6>
+	Fri, 21 Jan 2011 16:26:48 -0500
+Received: by bwz15 with SMTP id 15so2011789bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 13:26:47 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Sujith <m.sujith@gmail.com>
+Subject: Re: [RFC/WIP 00/33] ath9k_htc AP mode
+Date: Fri, 21 Jan 2011 22:26:40 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel" <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <j@w1.fi>
+References: <19768.62903.947245.576431@gargle.gargle.HOWL>
+In-Reply-To: <19768.62903.947245.576431@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110125041549.6944.15800.stgit@localhost6.localdomain6>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101212226.40435.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 25, 2011 at 01:15:49PM +0900, Bruno Randolf wrote:
-> In AP mode hardware encryption for WEP was not used on the RX side because
-> there was a mismatch in the key indices. The key index in the WLAN header is
-> 0-3 while the hardware key cache was configured for key indices >= 4. This is
-> ok for transmit but received packets were not decrypted in HW and therefore
-> mac80211 had to decrypt them in SW - this can be easily seen by adding some
-> debug prints in mac80211/wep.c (around line 296). I have noticed it by watching
-> the system CPU load under high traffic.
+On Friday 21 January 2011 03:55:51 Sujith wrote:
+> This series is the preliminary work for enabling AP mode for ath9k_htc.
 > 
-> This patch configures WEP keys into the "standard" key indices 0-4 which were
-> reserved for that.
+> A firmware update is needed, place look at:
+> http://wireless.kernel.org/en/users/Drivers/ath9k_htc#AP_Mode
+> 
+> Known issues:
+> 
+> * Beacon misses under heavy TX load
+>   ( hopefully, a fix would be sent out soon).
+> 
+> This has not been tested rigorously, so consider this series as
+> experimental code.
+> 
+Hey that's great! I gave this series a quick whirl and it worked on the first try!
+I had no probles getting ath9k to connect, well apart form a WARN_ON_ONCE
 
-Have you tested this with multiple vifs? I would assume it would break
-things pretty completely for all but one vif.. As such, I'm not sure
-that it would be that good of an idea to try to improve on something
-like WEP which is known to be completely insecure and unusable with
-802.11n when it is likely to break use cases that are much more relevant
-in modern, post-WEP, time..
+WARNING: at net/mac80211/tx.c:57 ieee80211_duration+0x50/0x1b3 [mac80211]()
+Call Trace:
+[  322.971940]  [<ffffffffa01d1cb0>] ? ieee80211_duration+0x50/0x1b3 [mac80211]
+[  322.979297]  [<ffffffffa01d33d5>] ? invoke_tx_handlers+0xf65/0x1001 [mac80211]
+[  322.987053]  [<ffffffffa01d0f2d>] ? ieee80211_prepare_and_rx_handle+0x7ff/0x845 [mac80211]
+[  322.995865]  [<ffffffffa0004f5d>] ? usb_hcd_giveback_urb+0x76/0xa5 [usbcore]
 
-If you really think you need this, there would need to be code somewhere
-kicking out the default keys from key cache if another vif is added.
-When working with the key cache implementation for ath9k, the extra
-effort did not seem to be justifiable for WEP and it is now couple of
-years from that and surely there is even less justification now.
+but that's ok, ieee80211_duration does not make sense when
+the rate control is done by the firmware.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--------
+
+But what seems to be strange is the tx feedback...
+Because it looks like ath9k_htc just sets IEEE80211_TX_STAT_ACK
+for every frame, which obviously can't be "true", right? ;)
+
+This might also break mac80211's *unicast buffering*.
+
+Because the code in ieee80211_tx_status - net/mac80211/status.c
+works like this:
+
+211  acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
+212  if (!acked && test_sta_flags(sta, WLAN_STA_PS_STA)) {
+213		/*
+214		 * The STA is in power save mode, so assume
+215		 * that this TX packet failed because of that.
+216		 */
+217		ieee80211_handle_filtered_frame(local, sta, skb);
+218		rcu_read_unlock();
+219		return;
+220	}
+...
+239	if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
+240		ieee80211_handle_filtered_frame(local, sta, skb);
+241		rcu_read_unlock();
+242		return;
+243	} else {
+244		if (!acked)
+245			sta->tx_retry_failed++;
+246		sta->tx_retry_count += retry_count;
+247	}
+
+so, mac80211 will never know when it needs to resend certain
+frame which could be affected by the race between the "sleepy"
+station sending a frame with a PSM-bit set and mac80211 finally
+updating the WLAN_STA_PS_STA flag.
+[see long comment in mac80211/status.c @ line 73]
+
+unless of course, you don't need it and the firmware can
+buffer those frames until the STA comes back?!
+
+Best regards,
+	Christian
