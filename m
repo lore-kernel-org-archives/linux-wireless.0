@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46413 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023Ab1A3RBJ convert rfc822-to-8bit (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:3471 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753200Ab1AUOiF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 12:01:09 -0500
-Received: by fxm20 with SMTP id 20so4877344fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 09:01:08 -0800 (PST)
+	Fri, 21 Jan 2011 09:38:05 -0500
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Greg KH" <greg@kroah.com>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 21 Jan 2011 06:37:54 -0800
+Subject: RE: [PATCH] staging: brcm80211: fix suspend/resume issue in
+ brcmsmac
+Message-ID: <400C43189542CE41BC0A5B252FC90136952F05955A@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <1294855167-3718-1-git-send-email-arend@broadcom.com>,<20110120201753.GA18529@kroah.com>
+In-Reply-To: <20110120201753.GA18529@kroah.com>
 MIME-Version: 1.0
-Date: Sun, 30 Jan 2011 12:01:08 -0500
-Message-ID: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
-From: Mark Mentovai <mark@moxienet.com>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> When setting a new regulatory domain after the initial one had
-> been set by the driver, the original maximum power is
-> overwritten with the new regulatory power value. This is wrong
-> because chan->orig_mpwr is supposed to contain the hardware tx
-> power limit.
+Hi Greg,
 
-I don’t think this is correct. In the existing code, chan->orig_mpwr
-contains the channel’s maximum power in the driver’s requested
-regulatory domain. There isn’t currently any field that’s used to
-track the hardware limit.
+I did not retest the suspend/resume change functionally (only compiled it). I decided
+to do that on v2.6.38-rc1 to be sure and on my system the suspend works. However,
+upon resume my system reboots without any feedback. System seem to come to
+live (DVD spinning) and then BIOS boot screen pops up. So I tried suspend/resume
+without our driver loaded. Results were the same. Also 2.6.37 shows same behaviour.
 
-The comment in net/wireless/reg.c explains the use of the orig_* fields:
+On 2.6.37-rc5 I did not have any issues and suspend/resume worked for our driver
+and the kernel in general. Anyone else observed such behaviour?
 
-		/*
-		 * This gaurantees the driver's requested regulatory domain
-		 * will always be used as a base for further regulatory
-		 * settings
-		 */
+Gr. AvS
+________________________________________
+From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Greg KH [greg@kroah.com]
+Sent: Thursday, January 20, 2011 9:17 PM
+To: Arend Van Spriel
+Cc: gregkh@suse.de; devel@linuxdriverproject.org; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: brcm80211: fix suspend/resume issue in brcmsmac
 
-orig_flags and orig_mag track the values of flags and max_antenna_gain
-for the driver’s requested regulatory domain in the same way that
-orig_mpwr tracks max_power.
+On Wed, Jan 12, 2011 at 06:59:27PM +0100, Arend van Spriel wrote:
+> PCI PM suspend callback took down the interface and resume brought
+> it back up. In the mac80211 context this is done in subsequent calls.
+> Rework implementation so that suspend only stores config, and sets
+> PCI power state. The resume return to full power state (D0), restores
+> the config, and brings hardware back up. Full bringup is done by
+> subsequent mac80211 calls.
+>
+> Reviewed-by: Brett Rudley <brudley@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   28 ++++++++++++---------
+>  drivers/staging/brcm80211/brcmsmac/wl_mac80211.h |    4 +--
+>  2 files changed, 17 insertions(+), 15 deletions(-)
 
-Your patch permits max_power to exceed the power level permitted in
-the regulatory domain specified by the driver itself. This is contrary
-to the design of the wireless regulatory framework. Values derived
-from a driver hint must never be exceeded.
+This patch doesn't apply to Linus's tree, which is where it needs to go
+right now.  Can you please redo it so that I can apply it?
 
-Your patch also doesn’t work properly for me using the ath9k driver.
-With your patch, I wind up with an artificial power limit of 20dBm
-across the board, although the hardware limit is actually 25dBm on the
-AR9223 I’m testing with. This stems from the fact that ath9k doesn’t
-know how to properly compute the hardware limit.
-ath9k_init_txpower_limits is implemented on top of
-ath9k_hw_set_txpowerlimit, which uses a channel’s current max_power
-value as a basis for its computation. This means that it will either
-use the hard-coded initial value of 20dBm from CHAN2G and CHAN5G in
-drivers/net/wireless/ath/ath9k/init.c, or it will use world regulatory
-domain values (also 20dBm) set by ath_regd_init_wiphy calling
-wiphy_apply_custom_regulatory.
+thanks,
 
-I don’t know if other drivers currently know how to properly compute
-hardware power limits. I suspect that some (most?) also don’t.
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I certainly like the idea of providing better feedback of the
-effective power level, or even the power level limit, back to users.
-This patch seems to artificially limit the effective power level in
-some cases, while allowing a value in excess of what would be
-appropriate in others.
+
