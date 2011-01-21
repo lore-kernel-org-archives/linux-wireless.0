@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54124 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961Ab1AIPcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 10:32:36 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: do not write git-clone
-Date: Sun,  9 Jan 2011 16:32:21 +0100
-Message-Id: <1294587141-11353-4-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
-References: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:40915 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab1AUFmS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 00:42:18 -0500
+Message-ID: <4D391CB3.2010006@candelatech.com>
+Date: Thu, 20 Jan 2011 21:42:11 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/3] mac80211: Support scanning only current active channel.
+References: <1295544750-6704-1-git-send-email-greearb@candelatech.com> <1295547439.3693.46.camel@jlt3.sipsolutions.net> <4D387D25.7080902@candelatech.com> <201101202014.51161.helmut.schaa@googlemail.com>
+In-Reply-To: <201101202014.51161.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the command git-clone was removed and git clone should be used now.
-Update error message.
+On 01/20/2011 11:14 AM, Helmut Schaa wrote:
+> Am Donnerstag, 20. Januar 2011 schrieb Ben Greear:
+>> On 01/20/2011 10:17 AM, Johannes Berg wrote:
+>>> Yeah, so maybe it needs some re-work, but I think what you're doing is a
+>>> pretty strange hack.
+>>
+>> If you have time to write some patches, I'll be happy to test them on
+>> our ath9k and ath5k systems.
+>
+> Try this, I only ran a quick test with iwlagn (disable_hw_scan=1), seems to
+> work fine. However, I did not think much about it yet ;)
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/admin-update.sh |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I re-worked your patch, made it a bit more like my original
+one, and re-posted it.  A quick test on ath9k with 128 stations
+seems to be positive, but I haven't added tracing yet to make
+sure it really skips going on/off channel when it's supposed to.
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index bf8e080..650c489 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -191,7 +191,7 @@ if [ -z $GIT_TREE ]; then
- 		echo "  export GIT_TREE=/home/$USER/linux-next/"
- 		echo
- 		echo "If you do not have one you can clone the repository:"
--		echo "  git-clone $GIT_URL"
-+		echo "  git clone $GIT_URL"
- 		exit 1
- 	fi
- else
-@@ -207,7 +207,7 @@ if [ -z $GIT_COMPAT_TREE ]; then
- 		echo "  export GIT_COMPAT_TREE=/home/$USER/compat/"
- 		echo
- 		echo "If you do not have one you can clone the repository:"
--		echo "  git-clone $GIT_COMPAT_URL"
-+		echo "  git clone $GIT_COMPAT_URL"
- 		exit 1
- 	fi
- else
+If you get a chance to try it out, please let me know how it goes.
+
+Thanks,
+Ben
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
