@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45114 "EHLO bear.ext.ti.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4389 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751044Ab1AKIcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 03:32:21 -0500
-Subject: Re: [PATCH] wl12xx: reset 5ghz num channels on hw init
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294734327.3611.1.camel@jlt3.sipsolutions.net>
-References: <1294693444-30807-1-git-send-email-arik@wizery.com>
-	 <1294734327.3611.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 Jan 2011 10:32:18 +0200
-Message-ID: <1294734738.12992.45.camel@pimenta>
+	id S1751921Ab1AVMdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jan 2011 07:33:45 -0500
+Message-ID: <4D3ACE90.5040707@broadcom.com>
+Date: Sat, 22 Jan 2011 13:33:20 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Jamie Kitson" <jamie@kitten-x.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
+References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE13CD2B113F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <AANLkTimkgrc19QCdeOhc+huTsrGCD_Y8cqHnz_dQjc5y@mail.gmail.com>
+ <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
+ <AANLkTingheCkPNvc+8qM5oQh8NHPAX2h4Z6C1YZEFRBc@mail.gmail.com>
+ <AANLkTimmLbtQUDWZGChH9LzwNwv6ZXihTz4a+mZefm60@mail.gmail.com>
+In-Reply-To: <AANLkTimmLbtQUDWZGChH9LzwNwv6ZXihTz4a+mZefm60@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi, Jamie
 
-On Tue, 2011-01-11 at 09:25 +0100, Johannes Berg wrote:
-> On Mon, 2011-01-10 at 23:04 +0200, Arik Nemtsov wrote:
-> > The number of 5ghz channels is set to 0 when 11a is not supported in the
-> > NVS file. When a single rmmod/insmod of wl12xx_sdio this leads to a
-> > supported band (5ghz) with 0 supported channels, which mac80211
-> > considers illegal.
-> 
-> The setting to 0 shouldn't be happening in a global structure anyway
-> since that way you can't support two different devices in the same
-> system!!
+On 01/22/2011 12:12 PM, Jamie Kitson wrote:
+> Someone here is suggesting that adding maxcpus=1 to the boot options
+> has fixed their crashes. Could this be my issue?
+>
+What kernel are you using? Could you also provide the panic trace?
+> https://bbs.archlinux.org/viewtopic.php?pid=877645
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-This is that hack we discussed some time ago on how to disable the 11a
-channels.  We only know that they're not supported after the driver is
-loaded and the supported channels are already registered.  We get the
-info that the 11a are not supported in the calibration data that we
-receive later.
-
-See commit fb6a6819fad0d71b47577a51709440a9f8441f0a.
-
-Earlier I was disabling the channels by setting the DISABLED flag, but
-that was bad, because I was touching regulatory stuff and it was causing
-other problems.
-
--- 
-Cheers,
-Luca.
+Gr. AvS
 
