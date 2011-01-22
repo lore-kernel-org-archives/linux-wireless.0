@@ -1,134 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.techwires.net ([79.140.39.242]:27287 "EHLO mx.techwires.net"
+Received: from mga02.intel.com ([134.134.136.20]:47754 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752052Ab1AQQUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 11:20:05 -0500
-In-Reply-To: <201101171621.29863.bernhard.schmidt@saxnet.de>
-References: <201101171621.29863.bernhard.schmidt@saxnet.de>
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 17 Jan 2011 11:24:54 +0100
-Subject: [PATCH 4/5] mac80211: add primarily CAC support
-Cc: <lrodriguez@atheros.com>, <nbd@openwrt.org>, <dubowoj@neratec.com>,
-	<zefir.kurtisi@neratec.com>, <simon.wunderlich@saxnet.de>
-Message-Id: <20110117161133.8150D2084@mx.techwires.net>
+	id S1754933Ab1AVASY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 19:18:24 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/14] iwlwifi: initial P2P support
+Date: Fri, 21 Jan 2011 16:06:49 -0800
+Message-Id: <1295654809-5790-15-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- net/mac80211/radar.c |   65 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/radar.h |    4 +++
- 2 files changed, 69 insertions(+), 0 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/net/mac80211/radar.c b/net/mac80211/radar.c
-index e90b8bf..afb2ae1 100644
---- a/net/mac80211/radar.c
-+++ b/net/mac80211/radar.c
-@@ -15,6 +15,66 @@
- #include "driver-ops.h"
- #include "radar.h"
+If PAN functionality is present, advertise
+P2P interface type support and thus support
+for P2P. However, the support is currently
+somewhat incomplete -- NoA schedule isn't
+added to probe responses, and 11b bitrates
+may be used still, etc. Therefore, make it
+all optional with a Kconfig option.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig    |   16 ++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |    5 +++--
+ 3 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 236f900..e1e3b1c 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -116,6 +116,22 @@ config IWL5000
+ 		Intel 100 Series Wi-Fi Adapters (100BGN and 130BGN)
+ 		Intel 2000 Series Wi-Fi Adapters
  
-+static void cac_timer(unsigned long data)
-+{
-+	struct ieee80211_local *local = (void *) data;
-+	struct ieee80211_radar *radar = &local->radar;
-+	struct ieee80211_channel *chan;
++config IWL_P2P
++	bool "iwlwifi experimental P2P support"
++	depends on IWL5000
++	help
++	  This option enables experimental P2P support for some devices
++	  based on microcode support. Since P2P support is still under
++	  development, this option may even enable it for some devices
++	  now that turn out to not support it in the future due to
++	  microcode restrictions.
 +
-+	printk(KERN_INFO "CAC done\n");
++	  To determine if your microcode supports the experimental P2P
++	  offered by this option, check if the driver advertises AP
++	  support when it is loaded.
 +
-+	chan = local->oper_channel;
-+	mutex_lock(&radar->mtx);
-+	if ((chan->flags & IEEE80211_CHAN_RADAR_INTERFERENCE) == 0) {
-+		chan->flags |= IEEE80211_CHAN_RADAR_CLEAR;
-+	}
-+	radar->cac = 0;
-+	mutex_unlock(&radar->mtx);
-+}
++	  Say Y only if you want to experiment with P2P.
 +
-+int ieee80211_radar_cac(struct wiphy *wiphy, int enable)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_radar *radar = &local->radar;
-+	struct ieee80211_channel *chan = local->oper_channel;
-+	int ret;
-+
-+	ret = ieee80211_radar_detection_enable(local, chan);
-+	if (ret != 0)
-+		return ret;
-+
-+	if (!enable && !radar->cac)
-+		return -EINVAL;
-+	if (!enable && radar->cac) {
-+		printk(KERN_INFO "stopping CAC\n");
-+
-+		del_timer_sync(&radar->cac_timer);
-+		mutex_lock(&radar->mtx);
-+		radar->cac = 0;
-+		mutex_unlock(&radar->mtx);
-+		return 0;
-+	}
-+	if (enable) {
-+		if ((chan->flags & IEEE80211_CHAN_RADAR_INTERFERENCE))
-+			return -EINVAL;
-+
-+		printk(KERN_INFO "starting CAC\n");
-+
-+		del_timer_sync(&radar->cac_timer);
-+		mutex_lock(&radar->mtx);
-+		if ((chan->flags & IEEE80211_CHAN_RADAR) &&
-+		    (chan->flags & IEEE80211_CHAN_RADAR_CLEAR)) {
-+			chan->flags &= ~IEEE80211_CHAN_RADAR_CLEAR;
-+		}
-+		radar->cac = 1;
-+		mutex_unlock(&radar->mtx);
-+		mod_timer(&radar->cac_timer, jiffies +
-+			  msecs_to_jiffies(radar->params->cac_period * 1000));
-+	}
-+
-+	return 0;
-+}
-+
- static void nol_timer(unsigned long data)
- {
- 	struct ieee80211_local *local = (void *) data;
-@@ -136,6 +196,9 @@ void ieee80211_radar_init(struct ieee80211_local *local)
+ config IWL3945
+ 	tristate "Intel PRO/Wireless 3945ABG/BG Network Connection (iwl3945)"
+ 	depends on IWLWIFI
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 02771ef..eb16647 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4136,6 +4136,10 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	priv->contexts[IWL_RXON_CTX_PAN].mcast_queue = IWL_IPAN_MCAST_QUEUE;
+ 	priv->contexts[IWL_RXON_CTX_PAN].interface_modes =
+ 		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP);
++#ifdef CONFIG_IWL_P2P
++	priv->contexts[IWL_RXON_CTX_PAN].interface_modes |=
++		BIT(NL80211_IFTYPE_P2P_CLIENT) | BIT(NL80211_IFTYPE_P2P_GO);
++#endif
+ 	priv->contexts[IWL_RXON_CTX_PAN].ap_devtype = RXON_DEV_TYPE_CP;
+ 	priv->contexts[IWL_RXON_CTX_PAN].station_devtype = RXON_DEV_TYPE_2STA;
+ 	priv->contexts[IWL_RXON_CTX_PAN].unused_devtype = RXON_DEV_TYPE_P2P;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 8e1b801..a46ad60 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1404,9 +1404,10 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+ 	struct iwl_rxon_context *tmp, *ctx = NULL;
+ 	int err;
++	enum nl80211_iftype viftype = ieee80211_vif_type_p2p(vif);
  
- 	mutex_init(&radar->mtx);
+ 	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
+-			   vif->type, vif->addr);
++			   viftype, vif->addr);
  
-+	radar->cac = 0;
-+	setup_timer(&radar->cac_timer, cac_timer, (unsigned long)local);
-+
- 	INIT_LIST_HEAD(&radar->nol_list);
- 	setup_timer(&radar->nol_timer, nol_timer, (unsigned long)local);
- 	mod_timer(&radar->nol_timer, jiffies + msecs_to_jiffies(1000));
-@@ -146,6 +209,8 @@ void ieee80211_radar_deinit(struct ieee80211_local *local)
- 	struct ieee80211_radar *radar = &local->radar;
- 	struct ieee80211_radar_nol_list *nol, *tmp;
+ 	mutex_lock(&priv->mutex);
  
-+	del_timer_sync(&radar->cac_timer);
-+
- 	del_timer_sync(&radar->nol_timer);
- 	mutex_lock(&radar->mtx);
- 	list_for_each_entry_safe(nol, tmp, &radar->nol_list, list) {
-diff --git a/net/mac80211/radar.h b/net/mac80211/radar.h
-index 79684b5..6e8bc36 100644
---- a/net/mac80211/radar.h
-+++ b/net/mac80211/radar.h
-@@ -31,10 +31,14 @@ struct ieee80211_radar {
- 	struct mutex mtx;
- 	struct ieee80211_radar_parameters *params;
+@@ -1430,7 +1431,7 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 			continue;
+ 		}
  
-+	int cac;
-+	struct timer_list cac_timer;
-+
- 	struct timer_list nol_timer;
- 	struct list_head nol_list;
- };
+-		if (!(possible_modes & BIT(vif->type)))
++		if (!(possible_modes & BIT(viftype)))
+ 			continue;
  
-+int ieee80211_radar_cac(struct wiphy *wiphy, int enable);
- int ieee80211_radar_detection_enable(struct ieee80211_local *local,
- 				     struct ieee80211_channel *chan);
- int ieee80211_radar_detection_disable(struct ieee80211_local *local,
+ 		/* have maybe usable context w/o interface */
 -- 
-1.5.6.5
+1.7.0.4
 
