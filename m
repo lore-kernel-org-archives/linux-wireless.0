@@ -1,112 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:54333 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752185Ab1AJHMW convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35474 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab1AVChd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 02:12:22 -0500
-Received: by wwa36 with SMTP id 36so371030wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Jan 2011 23:12:21 -0800 (PST)
+	Fri, 21 Jan 2011 21:37:33 -0500
+Received: by qyj19 with SMTP id 19so1245651qyj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 18:37:32 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201101081047.18475.helmut.schaa@googlemail.com>
-References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
-	<20110107202224.GI21588@tux>
-	<AANLkTintU_vSt5eWoma4_d9tNCxPpOfpGZMq7XXppjpP@mail.gmail.com>
-	<201101081047.18475.helmut.schaa@googlemail.com>
-Date: Sun, 9 Jan 2011 23:12:20 -0800
-Message-ID: <AANLkTimDW2i1iKHG50__2BOYyvyWiii2eWVOP2HjkxtR@mail.gmail.com>
-Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
-From: Aleksandar Milivojevic <alex@milivojevic.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Wolfgang Kufner <wolfgang.kufner@gmail.com>,
-	Luis Correia <buga@loide.net>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+In-Reply-To: <AANLkTik11iCqMF+pRYX7jvzj03t_cTCZh1ivb1Tt3L01@mail.gmail.com>
+References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1295654809-5790-5-git-send-email-wey-yi.w.guy@intel.com> <AANLkTinqZ-7E943Qd8swN0hS5XFaSeayBm75Lkz768Bv@mail.gmail.com>
+ <AANLkTik11iCqMF+pRYX7jvzj03t_cTCZh1ivb1Tt3L01@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 22 Jan 2011 03:37:12 +0100
+Message-ID: <AANLkTimf-GodWmUqbJkCiP_BPChAT60oQ0ZVTRq_0p73@mail.gmail.com>
+Subject: Re: [ipw3945-devel] [PATCH 04/14] iwlagn: 2000 series devices support
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 8, 2011 at 1:47 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Samstag, 8. Januar 2011 schrieb Aleksandar Milivojevic:
->> Running 'iw event -t' shows a lot of disassociation due to inactivity.
->>  This happens even if there is regular flow of traffic (for example, I
->> start ping to my AP and leave it running, or I leave Pandora streaming
->> music in the browser).
+2011/1/22 Daniel Halperin <dhalperi@cs.washington.edu>:
+> 2011/1/21 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> On Sat, Jan 22, 2011 at 1:06 AM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+>>> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+>>>
+>>> Adding 2000 series devices supports, the 2000 series devices has
+>>> many different SKUs which includes 1x1 and 2x2 devices,also with
 >>
->> Below is example of output of 'iw event -t' (these lines repeat in the
->> output at irregularl intervals):
->>
->> 1294464037.037450: wlan0 (phy #0): deauth 00:1c:10:ea:2a:cb ->
->> 00:1e:52:79:e9:ff reason 4: Disassociated due to inactivity
->> 1294464037.037538: wlan0 (phy #0): disconnected (local request)
+>> Is it just me, or is Intel really abandoning 3-stream 802.11n technology?
 >
-> Aha, so it's not the AP disassociating you but it's your client disconnecting
-> on its own. Mind to provide the wpa_supplicant log for the same situation when
-> run with "-ddt"?
+> It's just you.  They released the 6300 not that long ago!  But think
+> about the market, how many 3-stream APs can you buy today?
 
-Normally, I use NetworkManager, so all of wpa_supplican is kind of
-hidden under the hood.  For this, I stopped NetworkManager, and
-created following simple wpa_supplicant config file:
+Well, there is the Airport Extreme, the D-Link DIR-665 (with a
+Marvell-chipped mini-PCI card inside), and also an offering from
+Senao.
 
-# WPA-PSK/TKIP
-ctrl_interface=/var/run/wpa_supplicant
-network={
-  ssid="MySSID"
-  scan_ssid=1
-  key_mgmt=WPA-PSK
-  psk="MyGreatSecret"
-}
+> Atheros
+> still doesn't even have a 3-stream NIC end users can buy (though some
+> companies are getting close!), but Intel's had one for nearly 3 years.
+>
+> There's a lot more room in the market at the low end, and that's where
+> it makes sense to put your efforts towards product diversity.
+> Manufacturers are looking for chips for printers, phones, netbooks,
+> tiny laptops, etc., why would they pay for the silicon for extra
+> processing and the design constraints(!) for extra antennas when it's
+> not going to get used?  Heck, a lot of these APs (see, e.g., Apple's
+> airport express) only come with 100 Mbps wired ports!
+>
+> Dan
+>
 
-Run wpa_supplicant by hand as "wpa_supplicant
--c/path/to/my/wpa_supplicant.conf -iwlan0 -ddt".  The log is rather
-big, however I guess interesting part (if there's anything interesting
-there) is at the point where connection got dropped.  In
-/var/log/debug, I found following logged by the kernel (same as in
-previous logs I posted):
-
-Jan  9 22:37:17 toporko kernel: [ 3152.500035] ieee80211 phy0: wlan0:
-No probe response from AP 00:1e:52:79:e9:ff after 500ms,
-disconnecting.
-Jan  9 22:37:19 toporko kernel: [ 3154.138808] cfg80211: All devices
-are disconnected, going to restore regulatory settings
-
-The output of wpa_supplicant was quiet until above "no probe response"
-was logged by the kernel (1294641437 timestamp corresponds to 22:37:17
-local time):
-
-1294641437.407476: RTM_NEWLINK: operstate=1 ifi_flags=0x1003 ([UP])
-1294641437.407493: RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-1294641439.045890: RTM_NEWLINK: operstate=1 ifi_flags=0x1003 ([UP])
-1294641439.045908: RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-1294641439.045913: Wireless event: cmd=0x8b15 len=20
-1294641439.045916: Wireless event: new AP: 00:00:00:00:00:00
-1294641439.045930: Setting scan request: 0 sec 100000 usec
-1294641439.045938: Added BSSID 00:1e:52:79:e9:ff into blacklist
-1294641439.045944: CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-1294641439.045947: wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0
-seq_len=0 key_len=0
-1294641439.045966: wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0
-seq_len=0 key_len=0
-1294641439.045976: wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0
-seq_len=0 key_len=0
-1294641439.045984: wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0
-seq_len=0 key_len=0
-1294641439.045993: wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0
-seq_len=0 key_len=0
-1294641439.046001: State: COMPLETED -> DISCONNECTED
-1294641439.046007: wpa_driver_wext_set_operstate: operstate 1->0 (DORMANT)
-1294641439.046010: WEXT: Operstate: linkmode=-1, operstate=5
-1294641439.046027: EAPOL: External notification - portEnabled=0
-1294641439.046032: EAPOL: SUPP_PAE entering state DISCONNECTED
-1294641439.046034: EAPOL: SUPP_BE entering state INITIALIZE
-1294641439.046038: EAPOL: External notification - portValid=0
-1294641439.046041: EAPOL: External notification - EAP success=0
-1294641439.146109: State: DISCONNECTED -> SCANNING
-1294641439.146128: Starting AP scan (broadcast SSID)
-1294641439.148479: Scan requested (ret=0) - scan timeout 30 seconds
-
-And the following lines look just like standard
-scan/authentication/association thing...  Not sure if anything of the
-above is of any use...
+The problem is that what I currently see is that Intel is updating the
+basic 2x2 half-mini offering (true, they are also releasing Bluetooth
+combos and other new devices, but AFAIK one of the "g2" devices is
+exactly the same feature-wise as the Centrino 6200), while the 6300
+has not received any update ("released not that long ago"? AFAIK it's
+been a year at least since it came out), and the 6350 was cancelled
+before release, leaving 5350 without a successor.
