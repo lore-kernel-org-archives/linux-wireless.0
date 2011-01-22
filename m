@@ -1,113 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59784 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab1AWVDP (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44253 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954Ab1AWAD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 16:03:15 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so3406598fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 13:03:15 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 3/6] mac80211: add SSID for AP mode with change notification
-Date: Sun, 23 Jan 2011 23:02:56 +0200
-Message-Id: <1295816579-28925-4-git-send-email-arik@wizery.com>
-In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	Sat, 22 Jan 2011 19:03:58 -0500
+Received: by bwz15 with SMTP id 15so2636425bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jan 2011 16:03:57 -0800 (PST)
+Message-Id: <2137e711f16faed3f59698cbcb210a1e650dd34c.1295740096.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 22 Jan 2011 22:46:49 +0100
+Subject: [PATCH 1/3] carl9170: update fw/hw headers
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating as AP, save SSID data as part of the ieee80211_bss_conf
-struct. Allow low level drivers to receive notifications about SSID
-changes.
+This patch syncs up the header files with
+the project's main firmware carl9170fw.git.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- include/net/mac80211.h |    6 ++++++
- net/mac80211/cfg.c     |    7 +++++++
- net/mac80211/util.c    |    7 ++++++-
- 3 files changed, 19 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/carl9170/fwcmd.h   |    1 +
+ drivers/net/wireless/ath/carl9170/fwdesc.h  |   28 +++++++++++++++++++++-----
+ drivers/net/wireless/ath/carl9170/hw.h      |   25 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/carl9170/version.h |    8 +++---
+ drivers/net/wireless/ath/carl9170/wlan.h    |   20 ++++++++++++++++++-
+ 5 files changed, 71 insertions(+), 11 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 62c0ce2..ff3bad1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -164,6 +164,7 @@ struct ieee80211_low_level_stats {
-  * @BSS_CHANGED_QOS: QoS for this association was enabled/disabled. Note
-  *	that it is only ever disabled for station mode.
-  * @BSS_CHANGED_IDLE: Idle changed for this BSS/interface.
-+ * @BSS_CHANGED_SSID: SSID changed for this BSS (AP mode)
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -181,6 +182,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_ARP_FILTER		= 1<<12,
- 	BSS_CHANGED_QOS			= 1<<13,
- 	BSS_CHANGED_IDLE		= 1<<14,
-+	BSS_CHANGED_SSID		= 1<<15,
+diff --git a/drivers/net/wireless/ath/carl9170/fwcmd.h b/drivers/net/wireless/ath/carl9170/fwcmd.h
+index 3680dfc7..30449d2 100644
+--- a/drivers/net/wireless/ath/carl9170/fwcmd.h
++++ b/drivers/net/wireless/ath/carl9170/fwcmd.h
+@@ -167,6 +167,7 @@ struct carl9170_rx_filter_cmd {
+ #define CARL9170_RX_FILTER_CTL_BACKR	0x20
+ #define CARL9170_RX_FILTER_MGMT		0x40
+ #define CARL9170_RX_FILTER_DATA		0x80
++#define CARL9170_RX_FILTER_EVERYTHING	(~0)
  
- 	/* when adding here, make sure to change ieee80211_reconfig */
- };
-@@ -243,6 +245,8 @@ enum ieee80211_bss_change {
-  * @idle: This interface is idle. There's also a global idle flag in the
-  *	hardware config which may be more appropriate depending on what
-  *	your driver/device needs to do.
-+ * @ssid_len: Length of @ssid in octets (in AP mode)
-+ * @ssid: SSID for this BSS (in AP mode)
-  */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -269,6 +273,8 @@ struct ieee80211_bss_conf {
- 	bool arp_filter_enabled;
- 	bool qos;
- 	bool idle;
-+	u8 ssid_len;
-+	u8 ssid[IEEE80211_MAX_SSID_LEN];
- };
+ struct carl9170_bcn_ctrl_cmd {
+ 	__le32		vif_id;
+diff --git a/drivers/net/wireless/ath/carl9170/fwdesc.h b/drivers/net/wireless/ath/carl9170/fwdesc.h
+index 71f3821..9210668 100644
+--- a/drivers/net/wireless/ath/carl9170/fwdesc.h
++++ b/drivers/net/wireless/ath/carl9170/fwdesc.h
+@@ -69,6 +69,9 @@ enum carl9170fw_feature_list {
+ 	/* Firmware RX filter | CARL9170_CMD_RX_FILTER */
+ 	CARL9170FW_RX_FILTER,
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 4bc8a92..a2a75e9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1172,6 +1172,13 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 		changed |= BSS_CHANGED_HT;
++	/* Wake up on WLAN */
++	CARL9170FW_WOL,
++
+ 	/* KEEP LAST */
+ 	__CARL9170FW_FEATURE_NUM
+ };
+@@ -78,6 +81,7 @@ enum carl9170fw_feature_list {
+ #define FIX_MAGIC	"FIX\0"
+ #define DBG_MAGIC	"DBG\0"
+ #define CHK_MAGIC	"CHK\0"
++#define TXSQ_MAGIC	"TXSQ"
+ #define LAST_MAGIC	"LAST"
+ 
+ #define CARL9170FW_SET_DAY(d) (((d) - 1) % 31)
+@@ -88,8 +92,10 @@ enum carl9170fw_feature_list {
+ #define CARL9170FW_GET_MONTH(m) ((((m) / 31) % 12) + 1)
+ #define CARL9170FW_GET_YEAR(y) ((y) / 372 + 10)
+ 
++#define CARL9170FW_MAGIC_SIZE			4
++
+ struct carl9170fw_desc_head {
+-	u8	magic[4];
++	u8	magic[CARL9170FW_MAGIC_SIZE];
+ 	__le16 length;
+ 	u8 min_ver;
+ 	u8 cur_ver;
+@@ -170,6 +176,16 @@ struct carl9170fw_chk_desc {
+ #define CARL9170FW_CHK_DESC_SIZE			\
+ 	(sizeof(struct carl9170fw_chk_desc))
+ 
++#define CARL9170FW_TXSQ_DESC_MIN_VER			1
++#define CARL9170FW_TXSQ_DESC_CUR_VER			1
++struct carl9170fw_txsq_desc {
++	struct carl9170fw_desc_head head;
++
++	__le32 seq_table_addr;
++} __packed;
++#define CARL9170FW_TXSQ_DESC_SIZE			\
++	(sizeof(struct carl9170fw_txsq_desc))
++
+ #define CARL9170FW_LAST_DESC_MIN_VER			1
+ #define CARL9170FW_LAST_DESC_CUR_VER			2
+ struct carl9170fw_last_desc {
+@@ -189,8 +205,8 @@ struct carl9170fw_last_desc {
  	}
  
-+	if (params->ssid_len > 0) {
-+		memcpy(sdata->vif.bss_conf.ssid, params->ssid,
-+		       params->ssid_len);
-+		sdata->vif.bss_conf.ssid_len = params->ssid_len;
-+		changed |= BSS_CHANGED_SSID;
-+	}
-+
- 	ieee80211_bss_info_change_notify(sdata, changed);
+ static inline void carl9170fw_fill_desc(struct carl9170fw_desc_head *head,
+-					 u8 magic[4], __le16 length,
+-					 u8 min_ver, u8 cur_ver)
++					 u8 magic[CARL9170FW_MAGIC_SIZE],
++					 __le16 length, u8 min_ver, u8 cur_ver)
+ {
+ 	head->magic[0] = magic[0];
+ 	head->magic[1] = magic[1];
+@@ -204,7 +220,7 @@ static inline void carl9170fw_fill_desc(struct carl9170fw_desc_head *head,
  
- 	return 0;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index cf68700..a2d2f73 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1212,10 +1212,15 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			changed |= BSS_CHANGED_ASSOC;
- 			ieee80211_bss_info_change_notify(sdata, changed);
- 			break;
-+		case NL80211_IFTYPE_AP:
-+			changed |= BSS_CHANGED_SSID |
-+				   BSS_CHANGED_BEACON |
-+				   BSS_CHANGED_BEACON_ENABLED;
-+			ieee80211_bss_info_change_notify(sdata, changed);
-+			break;
- 		case NL80211_IFTYPE_ADHOC:
- 			changed |= BSS_CHANGED_IBSS;
- 			/* fall through */
--		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_MESH_POINT:
- 			changed |= BSS_CHANGED_BEACON |
- 				   BSS_CHANGED_BEACON_ENABLED;
+ #define carl9170fw_for_each_hdr(desc, fw_desc)				\
+ 	for (desc = fw_desc;						\
+-	     memcmp(desc->magic, LAST_MAGIC, 4) &&			\
++	     memcmp(desc->magic, LAST_MAGIC, CARL9170FW_MAGIC_SIZE) &&	\
+ 	     le16_to_cpu(desc->length) >= CARL9170FW_DESC_HEAD_SIZE &&	\
+ 	     le16_to_cpu(desc->length) < CARL9170FW_DESC_MAX_LENGTH;	\
+ 	     desc = (void *)((unsigned long)desc + le16_to_cpu(desc->length)))
+@@ -218,8 +234,8 @@ static inline bool carl9170fw_supports(__le32 list, u8 feature)
+ }
+ 
+ static inline bool carl9170fw_desc_cmp(const struct carl9170fw_desc_head *head,
+-				       const u8 descid[4], u16 min_len,
+-				       u8 compatible_revision)
++				       const u8 descid[CARL9170FW_MAGIC_SIZE],
++				       u16 min_len, u8 compatible_revision)
+ {
+ 	if (descid[0] == head->magic[0] && descid[1] == head->magic[1] &&
+ 	    descid[2] == head->magic[2] && descid[3] == head->magic[3] &&
+diff --git a/drivers/net/wireless/ath/carl9170/hw.h b/drivers/net/wireless/ath/carl9170/hw.h
+index e85df6e..4e30762 100644
+--- a/drivers/net/wireless/ath/carl9170/hw.h
++++ b/drivers/net/wireless/ath/carl9170/hw.h
+@@ -463,6 +463,8 @@
+ 
+ #define	AR9170_PWR_REG_CHIP_REVISION		(AR9170_PWR_REG_BASE + 0x010)
+ #define AR9170_PWR_REG_PLL_ADDAC		(AR9170_PWR_REG_BASE + 0x014)
++#define		AR9170_PWR_PLL_ADDAC_DIV_S		2
++#define		AR9170_PWR_PLL_ADDAC_DIV		0xffc
+ #define	AR9170_PWR_REG_WATCH_DOG_MAGIC		(AR9170_PWR_REG_BASE + 0x020)
+ 
+ /* Faraday USB Controller */
+@@ -471,6 +473,9 @@
+ #define	AR9170_USB_REG_MAIN_CTRL		(AR9170_USB_REG_BASE + 0x000)
+ #define		AR9170_USB_MAIN_CTRL_REMOTE_WAKEUP	BIT(0)
+ #define		AR9170_USB_MAIN_CTRL_ENABLE_GLOBAL_INT	BIT(2)
++#define		AR9170_USB_MAIN_CTRL_GO_TO_SUSPEND	BIT(3)
++#define		AR9170_USB_MAIN_CTRL_RESET		BIT(4)
++#define		AR9170_USB_MAIN_CTRL_CHIP_ENABLE	BIT(5)
+ #define		AR9170_USB_MAIN_CTRL_HIGHSPEED		BIT(6)
+ 
+ #define	AR9170_USB_REG_DEVICE_ADDRESS		(AR9170_USB_REG_BASE + 0x001)
+@@ -499,6 +504,13 @@
+ #define	AR9170_USB_REG_INTR_GROUP		(AR9170_USB_REG_BASE + 0x020)
+ 
+ #define	AR9170_USB_REG_INTR_SOURCE_0		(AR9170_USB_REG_BASE + 0x021)
++#define		AR9170_USB_INTR_SRC0_SETUP		BIT(0)
++#define		AR9170_USB_INTR_SRC0_IN			BIT(1)
++#define		AR9170_USB_INTR_SRC0_OUT		BIT(2)
++#define		AR9170_USB_INTR_SRC0_FAIL		BIT(3) /* ??? */
++#define		AR9170_USB_INTR_SRC0_END		BIT(4) /* ??? */
++#define		AR9170_USB_INTR_SRC0_ABORT		BIT(7)
++
+ #define	AR9170_USB_REG_INTR_SOURCE_1		(AR9170_USB_REG_BASE + 0x022)
+ #define	AR9170_USB_REG_INTR_SOURCE_2		(AR9170_USB_REG_BASE + 0x023)
+ #define	AR9170_USB_REG_INTR_SOURCE_3		(AR9170_USB_REG_BASE + 0x024)
+@@ -506,6 +518,15 @@
+ #define	AR9170_USB_REG_INTR_SOURCE_5		(AR9170_USB_REG_BASE + 0x026)
+ #define	AR9170_USB_REG_INTR_SOURCE_6		(AR9170_USB_REG_BASE + 0x027)
+ #define	AR9170_USB_REG_INTR_SOURCE_7		(AR9170_USB_REG_BASE + 0x028)
++#define		AR9170_USB_INTR_SRC7_USB_RESET		BIT(1)
++#define		AR9170_USB_INTR_SRC7_USB_SUSPEND	BIT(2)
++#define		AR9170_USB_INTR_SRC7_USB_RESUME		BIT(3)
++#define		AR9170_USB_INTR_SRC7_ISO_SEQ_ERR	BIT(4)
++#define		AR9170_USB_INTR_SRC7_ISO_SEQ_ABORT	BIT(5)
++#define		AR9170_USB_INTR_SRC7_TX0BYTE		BIT(6)
++#define		AR9170_USB_INTR_SRC7_RX0BYTE		BIT(7)
++
++#define	AR9170_USB_REG_IDLE_COUNT		(AR9170_USB_REG_BASE + 0x02f)
+ 
+ #define	AR9170_USB_REG_EP_MAP			(AR9170_USB_REG_BASE + 0x030)
+ #define	AR9170_USB_REG_EP1_MAP			(AR9170_USB_REG_BASE + 0x030)
+@@ -581,6 +602,10 @@
+ 
+ #define	AR9170_USB_REG_MAX_AGG_UPLOAD		(AR9170_USB_REG_BASE + 0x110)
+ #define	AR9170_USB_REG_UPLOAD_TIME_CTL		(AR9170_USB_REG_BASE + 0x114)
++
++#define AR9170_USB_REG_WAKE_UP			(AR9170_USB_REG_BASE + 0x120)
++#define		AR9170_USB_WAKE_UP_WAKE			BIT(0)
++
+ #define	AR9170_USB_REG_CBUS_CTRL		(AR9170_USB_REG_BASE + 0x1f0)
+ #define		AR9170_USB_CBUS_CTRL_BUFFER_END		(BIT(1))
+ 
+diff --git a/drivers/net/wireless/ath/carl9170/version.h b/drivers/net/wireless/ath/carl9170/version.h
+index ee0f84f..15095c0 100644
+--- a/drivers/net/wireless/ath/carl9170/version.h
++++ b/drivers/net/wireless/ath/carl9170/version.h
+@@ -1,7 +1,7 @@
+ #ifndef __CARL9170_SHARED_VERSION_H
+ #define __CARL9170_SHARED_VERSION_H
+-#define CARL9170FW_VERSION_YEAR 10
+-#define CARL9170FW_VERSION_MONTH 10
+-#define CARL9170FW_VERSION_DAY 29
+-#define CARL9170FW_VERSION_GIT "1.9.0"
++#define CARL9170FW_VERSION_YEAR 11
++#define CARL9170FW_VERSION_MONTH 1
++#define CARL9170FW_VERSION_DAY 22
++#define CARL9170FW_VERSION_GIT "1.9.2"
+ #endif /* __CARL9170_SHARED_VERSION_H */
+diff --git a/drivers/net/wireless/ath/carl9170/wlan.h b/drivers/net/wireless/ath/carl9170/wlan.h
+index 24d63b5..9e1324b 100644
+--- a/drivers/net/wireless/ath/carl9170/wlan.h
++++ b/drivers/net/wireless/ath/carl9170/wlan.h
+@@ -251,7 +251,7 @@ struct carl9170_tx_superdesc {
+ 	u8 ampdu_commit_factor:1;
+ 	u8 ampdu_unused_bit:1;
+ 	u8 queue:2;
+-	u8 reserved:1;
++	u8 assign_seq:1;
+ 	u8 vif_id:3;
+ 	u8 fill_in_tsf:1;
+ 	u8 cab:1;
+@@ -299,6 +299,7 @@ struct _ar9170_tx_hwdesc {
+ 
+ #define CARL9170_TX_SUPER_MISC_QUEUE			0x3
+ #define CARL9170_TX_SUPER_MISC_QUEUE_S			0
++#define CARL9170_TX_SUPER_MISC_ASSIGN_SEQ		0x4
+ #define	CARL9170_TX_SUPER_MISC_VIF_ID			0x38
+ #define	CARL9170_TX_SUPER_MISC_VIF_ID_S			3
+ #define	CARL9170_TX_SUPER_MISC_FILL_IN_TSF		0x40
+@@ -413,6 +414,23 @@ enum ar9170_txq {
+ 	__AR9170_NUM_TXQ,
+ };
+ 
++/*
++ * This is an workaround for several undocumented bugs.
++ * Don't mess with the QoS/AC <-> HW Queue map, if you don't
++ * know what you are doing.
++ *
++ * Known problems [hardware]:
++ *  * The MAC does not aggregate frames on anything other
++ *    than the first HW queue.
++ *  * when an AMPDU is placed [in the first hw queue] and
++ *    additional frames are already queued on a different
++ *    hw queue, the MAC will ALWAYS freeze.
++ *
++ * In a nutshell: The hardware can either do QoS or
++ * Aggregation but not both at the same time. As a
++ * result, this makes the device pretty much useless
++ * for any serious 802.11n setup.
++ */
+ static const u8 ar9170_qmap[__AR9170_NUM_TXQ] = { 2, 1, 0, 3 };
+ 
+ #define	AR9170_TXQ_DEPTH			32
 -- 
-1.7.1
+1.7.2.3
 
