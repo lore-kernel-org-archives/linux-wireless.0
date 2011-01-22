@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:19788 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754841Ab1AKAuZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 19:50:25 -0500
-Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0434697023
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 09:50:23 +0900 (JST)
-Subject: [PATCH v2 4/4] iw: Add signal average to station dump information
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Date: Tue, 11 Jan 2011 09:51:23 +0900
-Message-ID: <20110111005123.10231.19628.stgit@localhost6.localdomain6>
-In-Reply-To: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
-References: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:47749 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755030Ab1AVASY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 19:18:24 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 11/14] iwlagn: Enable idle powersave mode in 1000 series
+Date: Fri, 21 Jan 2011 16:06:46 -0800
+Message-Id: <1295654809-5790-12-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print station signal average in station dump.
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+The iwlagn powersave algorithm uses the supports_idle parameter
+to tell the device to save power when it is not associated with
+an AP and is idle.
+
+Enable this feature for the 1000 series of devices.
+
+Reported-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- station.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/station.c b/station.c
-index be2301f..6581d50 100644
---- a/station.c
-+++ b/station.c
-@@ -107,6 +107,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 	if (sinfo[NL80211_STA_INFO_SIGNAL])
- 		printf("\n\tsignal:  \t%d dBm",
- 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
-+	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
-+		printf("\n\tsignal avg:\t%d dBm",
-+			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
- 
- 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
- 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index ba78bc8..127723e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -270,6 +270,7 @@ static struct iwl_base_params iwl1000_base_params = {
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+ 	.chain_noise_calib_by_driver = true,
++	.supports_idle = true,
+ };
+ static struct iwl_ht_params iwl1000_ht_params = {
+ 	.ht_greenfield_support = true,
+-- 
+1.7.0.4
 
