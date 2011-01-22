@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:15291 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753899Ab1ASJUc (ORCPT
+Received: from gerolde.archlinux.org ([66.211.214.132]:45067 "EHLO
+	archlinux.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750840Ab1AVX5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 04:20:32 -0500
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0962258831
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:20:31 +0900 (JST)
-Subject: [PATCH 5/8] ath5k: Add 802.11j 4.9GHz channels to allowed channels
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 19 Jan 2011 18:20:57 +0900
-Message-ID: <20110119092057.19628.9296.stgit@localhost6.localdomain6>
-In-Reply-To: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
+	Sat, 22 Jan 2011 18:57:41 -0500
+Message-ID: <4D3B6D0D.6070002@archlinux.org>
+Date: Sun, 23 Jan 2011 00:49:33 +0100
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: =?ISO-8859-15?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath9k prevents CPU from entering C4 state (kernel 2.6.37 regression)
+References: <4D3B4057.5000206@t-online.de> <201101222352.42913.chunkeey@googlemail.com>
+In-Reply-To: <201101222352.42913.chunkeey@googlemail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------enig75DAAE32130EB485389EDF5D"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the 802.11j (20MHz channel width) channels to the allowed channels. This
-still does not enable 802.11j in ath5k since these frequencies are out of the
-configured range. A later patch will deal with that.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig75DAAE32130EB485389EDF5D
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   19 +++++++++++++------
- 1 files changed, 13 insertions(+), 6 deletions(-)
+Am 22.01.2011 23:52, schrieb Christian Lamparter:
+> On Saturday 22 January 2011 21:38:47 Richard Sch=FCtz wrote:
+>> I noticed that from kernel 2.6.37 on (i've tested 2.6.38-rc2, too) ath=
+9k=20
+>> prevents my CPU (Intel Atom N450) from entering the C4 power state. It=
+=20
+>> only goes down to C2 (there's no C3) instead. In 2.6.36(.3) everything=
+=20
+>> is still fine. The CPU will only go down to C4 with 2.6.37 when the=20
+>> wireless interface is brought down.
+>=20
+> "ath9k: Fix a DMA latency issue for Intel Pinetrail platforms."
+> http://www.spinics.net/lists/linux-wireless/msg58264.html
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a28ad58..6900543 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -244,15 +244,21 @@ static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *re
- /*
-  * Returns true for the channel numbers used without all_channels modparam.
-  */
--static bool ath5k_is_standard_channel(short chan)
-+static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
- {
--	return ((chan <= 14) ||
--		/* UNII 1,2 */
--		((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
-+	if (band == IEEE80211_BAND_2GHZ && chan <= 14)
-+		return true;
-+
-+	return	/* UNII 1,2 */
-+		(((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
- 		/* midband */
- 		((chan & 3) == 0 && chan >= 100 && chan <= 140) ||
- 		/* UNII-3 */
--		((chan & 3) == 1 && chan >= 149 && chan <= 165));
-+		((chan & 3) == 1 && chan >= 149 && chan <= 165) ||
-+		/* 802.11j 5.030-5.080 GHz (20MHz) */
-+		(chan == 8 || chan == 12 || chan == 16) ||
-+		/* 802.11j 4.9GHz (20MHz) */
-+		(chan == 184 || chan == 188 || chan == 192 || chan == 196));
- }
- 
- static unsigned int
-@@ -291,7 +297,8 @@ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
- 		if (!ath5k_channel_ok(ah, freq, chfreq))
- 			continue;
- 
--		if (!modparam_all_channels && !ath5k_is_standard_channel(ch))
-+		if (!modparam_all_channels &&
-+		    !ath5k_is_standard_channel(ch, band))
- 			continue;
- 
- 		/* Write channel info and increment counter */
+I experience the same problem, and I do not have a Pinetrail. I run
+Intel Core i5-520M (Arrandale) with an AR9280 Rev 2.
 
+
+--------------enig75DAAE32130EB485389EDF5D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEAREIAAYFAk07bQ0ACgkQEda5KzHP/VD7TACgu8SzP19H92svXStIlcc2uQpM
+wroAoKhCyB0sYHZbXh+IH4/yIzvLZiHA
+=QZ92
+-----END PGP SIGNATURE-----
+
+--------------enig75DAAE32130EB485389EDF5D--
