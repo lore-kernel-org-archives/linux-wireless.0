@@ -1,200 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57351 "EHLO nbd.name"
+Received: from mga02.intel.com ([134.134.136.20]:47749 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751254Ab1ATWjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 17:39:18 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 3/4] ath9k: remove the bf->aphy field
-Date: Thu, 20 Jan 2011 23:39:13 +0100
-Message-Id: <1295563154-17556-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1295563154-17556-2-git-send-email-nbd@openwrt.org>
-References: <1295563154-17556-1-git-send-email-nbd@openwrt.org>
- <1295563154-17556-2-git-send-email-nbd@openwrt.org>
+	id S1754963Ab1AVASY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Jan 2011 19:18:24 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/14] iwlwifi: implement remain-on-channel
+Date: Fri, 21 Jan 2011 16:06:47 -0800
+Message-Id: <1295654809-5790-13-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |   38 +++++++++++++------------------
- 2 files changed, 17 insertions(+), 24 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 3caa54d..fe6a69c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -32,6 +32,7 @@
-  */
+For device supporting PAN/P2P, use the PAN
+context to implement the remain-on-channel
+operation using device offloads so that the
+filters in the device will be programmed
+correctly -- otherwise we cannot receive
+any probe request frames during off-channel
+periods.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    6 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   17 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    9 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   94 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    6 ++
+ 5 files changed, 130 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index 366340f..fa6cf2a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -305,7 +305,11 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 	cmd.slots[0].type = 0; /* BSS */
+ 	cmd.slots[1].type = 1; /* PAN */
  
- struct ath_node;
-+struct ath_wiphy;
+-	if (ctx_bss->vif && ctx_pan->vif) {
++	if (priv->_agn.hw_roc_channel) {
++		/* both contexts must be used for this to happen */
++		slot1 = priv->_agn.hw_roc_duration;
++		slot0 = 20;
++	} else if (ctx_bss->vif && ctx_pan->vif) {
+ 		int bcnint = ctx_pan->vif->bss_conf.beacon_int;
+ 		int dtim = ctx_pan->vif->bss_conf.dtim_period ?: 1;
  
- /* Macro to expand scalars to 64-bit objects */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index f693293..2a4ff83 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -156,6 +156,23 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	/* always get timestamp with Rx frame */
+ 	ctx->staging.flags |= RXON_FLG_TSF2HOST_MSK;
  
-@@ -233,7 +234,6 @@ struct ath_buf {
- 	bool bf_stale;
- 	u16 bf_flags;
- 	struct ath_buf_state bf_state;
--	struct ath_wiphy *aphy;
- };
++	if (ctx->ctxid == IWL_RXON_CTX_PAN && priv->_agn.hw_roc_channel) {
++		struct ieee80211_channel *chan = priv->_agn.hw_roc_channel;
++
++		iwl_set_rxon_channel(priv, chan, ctx);
++		iwl_set_flags_for_band(priv, ctx, chan->band, NULL);
++		ctx->staging.filter_flags |=
++			RXON_FILTER_ASSOC_MSK |
++			RXON_FILTER_PROMISC_MSK |
++			RXON_FILTER_CTL2HOST_MSK;
++		ctx->staging.dev_type = RXON_DEV_TYPE_P2P;
++		new_assoc = true;
++
++		if (memcmp(&ctx->staging, &ctx->active,
++			   sizeof(ctx->staging)) == 0)
++			return 0;
++	}
++
+ 	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
+ 	    !(ctx->staging.flags & RXON_FLG_BAND_24G_MSK))
+ 		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 24a11b8..266490d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -539,7 +539,14 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	unsigned long flags;
+ 	bool is_agg = false;
  
- struct ath_atx_tid {
-@@ -556,7 +556,6 @@ struct ath_ant_comb {
- #define PS_WAIT_FOR_TX_ACK        BIT(3)
- #define PS_BEACON_SYNC            BIT(4)
+-	if (info->control.vif)
++	/*
++	 * If the frame needs to go out off-channel, then
++	 * we'll have put the PAN context to that channel,
++	 * so make the frame go out there.
++	 */
++	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
++		ctx = &priv->contexts[IWL_RXON_CTX_PAN];
++	else if (info->control.vif)
+ 		ctx = iwl_rxon_ctx_from_vif(info->control.vif);
  
--struct ath_wiphy;
- struct ath_rate_table;
- 
- struct ath9k_vif_iter_data {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a7c3048..80dc0cc 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -57,8 +57,9 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 			     struct list_head *head);
- static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
--static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
--			     int nframes, int nbad, int txok, bool update_rc);
-+static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
-+			     struct ath_tx_status *ts, int nframes, int nbad,
-+			     int txok, bool update_rc);
- static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
- 			      int seqno);
- 
-@@ -297,7 +298,6 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
- 
- 	ATH_TXBUF_RESET(tbf);
- 
--	tbf->aphy = bf->aphy;
- 	tbf->bf_mpdu = bf->bf_mpdu;
- 	tbf->bf_buf_addr = bf->bf_buf_addr;
- 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
-@@ -345,7 +345,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	struct ath_node *an = NULL;
- 	struct sk_buff *skb;
- 	struct ieee80211_sta *sta;
--	struct ieee80211_hw *hw;
-+	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ath_atx_tid *tid = NULL;
-@@ -364,7 +364,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
--	hw = bf->aphy->hw;
- 
- 	memcpy(rates, tx_info->control.rates, sizeof(rates));
- 
-@@ -383,7 +382,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			    !bf->bf_stale || bf_next != NULL)
- 				list_move_tail(&bf->list, &bf_head);
- 
--			ath_tx_rc_status(bf, ts, 1, 1, 0, false);
-+			ath_tx_rc_status(sc, bf, ts, 1, 1, 0, false);
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
- 				0, 0);
- 
-@@ -489,10 +488,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
- 				memcpy(tx_info->control.rates, rates, sizeof(rates));
--				ath_tx_rc_status(bf, ts, nframes, nbad, txok, true);
-+				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, true);
- 				rc_update = false;
- 			} else {
--				ath_tx_rc_status(bf, ts, nframes, nbad, txok, false);
-+				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, false);
- 			}
- 
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
-@@ -516,7 +515,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 						bf->bf_state.bf_type |=
- 							BUF_XRETRY;
--						ath_tx_rc_status(bf, ts, nframes,
-+						ath_tx_rc_status(sc, bf, ts, nframes,
- 								nbad, 0, false);
- 						ath_tx_complete_buf(sc, bf, txq,
- 								    &bf_head,
-@@ -1667,7 +1666,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
- 
- 	ATH_TXBUF_RESET(bf);
- 
--	bf->aphy = aphy;
- 	bf->bf_flags = setup_tx_flags(skb);
- 	bf->bf_mpdu = skb;
- 
-@@ -1821,8 +1819,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- /*****************/
- 
- static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
--			    struct ath_wiphy *aphy, int tx_flags, int ftype,
--			    struct ath_txq *txq)
-+			    int tx_flags, int ftype, struct ath_txq *txq)
- {
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -1832,9 +1829,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 
- 	ath_dbg(common, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
- 
--	if (aphy)
--		hw = aphy->hw;
--
- 	if (tx_flags & ATH_TX_BAR)
- 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
- 
-@@ -1908,7 +1902,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 			complete(&sc->paprd_complete);
- 	} else {
- 		ath_debug_stat_tx(sc, bf, ts);
--		ath_tx_complete(sc, skb, bf->aphy, tx_flags,
-+		ath_tx_complete(sc, skb, tx_flags,
- 				bf->bf_state.bfs_ftype, txq);
+ 	spin_lock_irqsave(&priv->lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index dad9a63..51e5ea4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3208,6 +3208,8 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
+ 		hw->wiphy->interface_modes |= ctx->exclusive_interface_modes;
  	}
- 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
-@@ -1924,14 +1918,14 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+ 
++	hw->wiphy->max_remain_on_channel_duration = 1000;
++
+ 	hw->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY |
+ 			    WIPHY_FLAG_DISABLE_BEACON_HINTS;
+ 
+@@ -3726,6 +3728,95 @@ done:
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
  }
  
--static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
--			     int nframes, int nbad, int txok, bool update_rc)
-+static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
-+			     struct ath_tx_status *ts, int nframes, int nbad,
-+			     int txok, bool update_rc)
- {
- 	struct sk_buff *skb = bf->bf_mpdu;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hw *hw = bf->aphy->hw;
--	struct ath_softc *sc = bf->aphy->sc;
-+	struct ieee80211_hw *hw = sc->hw;
- 	struct ath_hw *ah = sc->sc_ah;
- 	u8 i, tx_rateindex;
++static void iwlagn_disable_roc(struct iwl_priv *priv)
++{
++	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_PAN];
++	struct ieee80211_channel *chan = ACCESS_ONCE(priv->hw->conf.channel);
++
++	lockdep_assert_held(&priv->mutex);
++
++	if (!ctx->is_active)
++		return;
++
++	ctx->staging.dev_type = RXON_DEV_TYPE_2STA;
++	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
++	iwl_set_rxon_channel(priv, chan, ctx);
++	iwl_set_flags_for_band(priv, ctx, chan->band, NULL);
++
++	priv->_agn.hw_roc_channel = NULL;
++
++	iwlagn_commit_rxon(priv, ctx);
++
++	ctx->is_active = false;
++}
++
++static void iwlagn_bg_roc_done(struct work_struct *work)
++{
++	struct iwl_priv *priv = container_of(work, struct iwl_priv,
++					     _agn.hw_roc_work.work);
++
++	mutex_lock(&priv->mutex);
++	ieee80211_remain_on_channel_expired(priv->hw);
++	iwlagn_disable_roc(priv);
++	mutex_unlock(&priv->mutex);
++}
++
++static int iwl_mac_remain_on_channel(struct ieee80211_hw *hw,
++				     struct ieee80211_channel *channel,
++				     enum nl80211_channel_type channel_type,
++				     int duration)
++{
++	struct iwl_priv *priv = hw->priv;
++	int err = 0;
++
++	if (!(priv->valid_contexts & BIT(IWL_RXON_CTX_PAN)))
++		return -EOPNOTSUPP;
++
++	if (!(priv->contexts[IWL_RXON_CTX_PAN].interface_modes &
++					BIT(NL80211_IFTYPE_P2P_CLIENT)))
++		return -EOPNOTSUPP;
++
++	mutex_lock(&priv->mutex);
++
++	if (priv->contexts[IWL_RXON_CTX_PAN].is_active ||
++	    test_bit(STATUS_SCAN_HW, &priv->status)) {
++		err = -EBUSY;
++		goto out;
++	}
++
++	priv->contexts[IWL_RXON_CTX_PAN].is_active = true;
++	priv->_agn.hw_roc_channel = channel;
++	priv->_agn.hw_roc_chantype = channel_type;
++	priv->_agn.hw_roc_duration = DIV_ROUND_UP(duration * 1000, 1024);
++	iwlagn_commit_rxon(priv, &priv->contexts[IWL_RXON_CTX_PAN]);
++	queue_delayed_work(priv->workqueue, &priv->_agn.hw_roc_work,
++			   msecs_to_jiffies(duration + 20));
++
++	msleep(20);
++	ieee80211_ready_on_channel(priv->hw);
++
++ out:
++	mutex_unlock(&priv->mutex);
++
++	return err;
++}
++
++static int iwl_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
++{
++	struct iwl_priv *priv = hw->priv;
++
++	if (!(priv->valid_contexts & BIT(IWL_RXON_CTX_PAN)))
++		return -EOPNOTSUPP;
++
++	cancel_delayed_work_sync(&priv->_agn.hw_roc_work);
++
++	mutex_lock(&priv->mutex);
++	iwlagn_disable_roc(priv);
++	mutex_unlock(&priv->mutex);
++
++	return 0;
++}
++
+ /*****************************************************************************
+  *
+  * driver setup and teardown
+@@ -3747,6 +3838,7 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ 	INIT_WORK(&priv->bt_runtime_config, iwl_bg_bt_runtime_config);
+ 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl_bg_init_alive_start);
+ 	INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
++	INIT_DELAYED_WORK(&priv->_agn.hw_roc_work, iwlagn_bg_roc_done);
  
-@@ -2067,7 +2061,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 			 */
- 			if (ts.ts_status & ATH9K_TXERR_XRETRY)
- 				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(bf, &ts, 1, txok ? 0 : 1, txok, true);
-+			ath_tx_rc_status(sc, bf, &ts, 1, txok ? 0 : 1, txok, true);
- 		}
+ 	iwl_setup_scan_deferred_work(priv);
  
- 		if (bf_isampdu(bf))
-@@ -2186,7 +2180,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		if (!bf_isampdu(bf)) {
- 			if (txs.ts_status & ATH9K_TXERR_XRETRY)
- 				bf->bf_state.bf_type |= BUF_XRETRY;
--			ath_tx_rc_status(bf, &txs, 1, txok ? 0 : 1, txok, true);
-+			ath_tx_rc_status(sc, bf, &txs, 1, txok ? 0 : 1, txok, true);
- 		}
+@@ -3915,6 +4007,8 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.channel_switch = iwlagn_mac_channel_switch,
+ 	.flush = iwlagn_mac_flush,
+ 	.tx_last_beacon = iwl_mac_tx_last_beacon,
++	.remain_on_channel = iwl_mac_remain_on_channel,
++	.cancel_remain_on_channel = iwl_mac_cancel_remain_on_channel,
+ };
+ #endif
  
- 		if (bf_isampdu(bf))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 6dd6508..6fa1383 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1488,6 +1488,12 @@ struct iwl_priv {
+ 			struct list_head notif_waits;
+ 			spinlock_t notif_wait_lock;
+ 			wait_queue_head_t notif_waitq;
++
++			/* remain-on-channel offload support */
++			struct ieee80211_channel *hw_roc_channel;
++			struct delayed_work hw_roc_work;
++			enum nl80211_channel_type hw_roc_chantype;
++			int hw_roc_duration;
+ 		} _agn;
+ #endif
+ 	};
 -- 
-1.7.3.2
+1.7.0.4
 
