@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33652 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017Ab1AYJlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 04:41:52 -0500
-Date: Tue, 25 Jan 2011 17:42:29 +0800
-From: Greg KH <gregkh@suse.de>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	rf@suse.de
-Subject: [PATCH] rt2x00: add device id for windy31 usb device
-Message-ID: <20110125094229.GA16055@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:50811 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab1AWAD5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jan 2011 19:03:57 -0500
+Received: by bwz15 with SMTP id 15so2636416bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jan 2011 16:03:56 -0800 (PST)
+Message-Id: <ffb8e21e6d549c2b229e7a4177586b7923805a96.1295740096.git.chunkeey@googlemail.com>
+In-Reply-To: <2137e711f16faed3f59698cbcb210a1e650dd34c.1295740096.git.chunkeey@googlemail.com>
+References: <2137e711f16faed3f59698cbcb210a1e650dd34c.1295740096.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 23 Jan 2011 00:10:01 +0100
+Subject: [PATCH 2/3] carl9170: enable wake-on-lan feature testing
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@suse.de>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/fw.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-This patch adds the device id for the windy31 USB device to the rt73usb
-driver.
+diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
+index 546b4e4..a4e5b44 100644
+--- a/drivers/net/wireless/ath/carl9170/fw.c
++++ b/drivers/net/wireless/ath/carl9170/fw.c
+@@ -264,6 +264,9 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
+ 			FIF_PROMISC_IN_BSS;
+ 	}
+ 
++	if (SUPP(CARL9170FW_WOL))
++		device_set_wakeup_enable(&ar->udev->dev, true);
++
+ 	ar->fw.vif_num = otus_desc->vif_num;
+ 	ar->fw.cmd_bufs = otus_desc->cmd_bufs;
+ 	ar->fw.address = le32_to_cpu(otus_desc->fw_address);
+-- 
+1.7.2.3
 
-Thanks to Ralf Flaxa for reporting this and providing testing and a
-sample device.
-
-Reported-by: Ralf Flaxa <rf@suse.de>
-Tested-by: Ralf Flaxa <rf@suse.de>
-Cc: stable <stable@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2446,6 +2446,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x04bb, 0x093d), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2671), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0812, 0x3101), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Qcom */
- 	{ USB_DEVICE(0x18e8, 0x6196), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x18e8, 0x6229), USB_DEVICE_DATA(&rt73usb_ops) },
