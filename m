@@ -1,125 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:58588 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343Ab1A3TLn (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54692 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260Ab1AVWww convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:11:43 -0500
-Message-ID: <4D45B7DC.3060303@davizone.at>
-Date: Sun, 30 Jan 2011 20:11:24 +0100
-From: David Gnedt <david.gnedt@davizone.at>
+	Sat, 22 Jan 2011 17:52:52 -0500
+Received: by fxm20 with SMTP id 20so2929658fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Jan 2011 14:52:51 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Richard =?iso-8859-15?q?Sch=FCtz?= <r.schtz@t-online.de>
+Subject: Re: ath9k prevents CPU from entering C4 state (kernel 2.6.37 regression)
+Date: Sat, 22 Jan 2011 23:52:42 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <4D3B4057.5000206@t-online.de>
+In-Reply-To: <4D3B4057.5000206@t-online.de>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 17/18] wl1251: enable tx path in monitor mode if necessary
- for packet injection
-References: <4D45A79A.1030102@davizone.at>
-In-Reply-To: <4D45A79A.1030102@davizone.at>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201101222352.42913.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If necessary enable the tx path in monitor mode for packet injection using
-the JOIN command with BSS_TYPE_STA_BSS and zero BSSID.
+On Saturday 22 January 2011 21:38:47 Richard Schütz wrote:
+> I noticed that from kernel 2.6.37 on (i've tested 2.6.38-rc2, too) ath9k 
+> prevents my CPU (Intel Atom N450) from entering the C4 power state. It 
+> only goes down to C2 (there's no C3) instead. In 2.6.36(.3) everything 
+> is still fine. The CPU will only go down to C4 with 2.6.37 when the 
+> wireless interface is brought down.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
-Sorry for the partly broken patches, I thought I configured my client the
-right way. I tried to stop the mails at my mailserver, but it was mostly
-already too late.
----
- drivers/net/wireless/wl1251/main.c   |    5 +++++
- drivers/net/wireless/wl1251/tx.c     |   17 +++++++++++++++++
- drivers/net/wireless/wl1251/wl1251.h |    1 +
- 3 files changed, 23 insertions(+), 0 deletions(-)
+"ath9k: Fix a DMA latency issue for Intel Pinetrail platforms."
+http://www.spinics.net/lists/linux-wireless/msg58264.html
 
-diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
-index c931a3a..bb2d40d 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -480,6 +480,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->rssi_thold = 0;
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
- 	wl->monitor_present = false;
-+	wl->joined = false;
- 
- 	wl1251_debugfs_reset(wl);
- 
-@@ -536,6 +537,7 @@ static void wl1251_op_remove_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&wl->mutex);
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 	wl->vif = NULL;
-+	memset(wl->bssid, 0, ETH_ALEN);
- 	mutex_unlock(&wl->mutex);
- }
- 
-@@ -618,6 +620,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		 * at firmware level.
- 		 */
- 		if (wl->vif == NULL) {
-+			wl->joined = false;
- 			ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
- 		} else {
- 			ret = wl1251_join(wl, wl->bss_type, wl->channel,
-@@ -1588,7 +1591,9 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	INIT_DELAYED_WORK(&wl->elp_work, wl1251_elp_work);
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
- 	wl->monitor_present = false;
-+	wl->joined = false;
- 	wl->scanning = false;
-+	wl->bss_type = MAX_BSS_TYPE;
- 	wl->default_key = 0;
- 	wl->listen_int = 1;
- 	wl->rx_counter = 0;
-diff --git a/drivers/net/wireless/wl1251/tx.c b/drivers/net/wireless/wl1251/tx.c
-index 3cc82fd..1de4ccb 100644
---- a/drivers/net/wireless/wl1251/tx.c
-+++ b/drivers/net/wireless/wl1251/tx.c
-@@ -28,6 +28,7 @@
- #include "tx.h"
- #include "ps.h"
- #include "io.h"
-+#include "event.h"
- 
- static bool wl1251_tx_double_buffer_busy(struct wl1251 *wl, u32 data_out_count)
- {
-@@ -298,6 +299,22 @@ static int wl1251_tx_frame(struct wl1251 *wl, struct sk_buff *skb)
- 		}
- 	}
- 
-+	/* Enable tx path in monitor mode for packet injection */
-+	if ((wl->vif == NULL) && !wl->joined) {
-+		ret = wl1251_cmd_join(wl, BSS_TYPE_STA_BSS, wl->channel,
-+				      wl->beacon_int, wl->dtim_period);
-+		if (ret < 0)
-+			wl1251_warning("join failed");
-+		else {
-+			ret = wl1251_event_wait(wl, JOIN_EVENT_COMPLETE_ID,
-+						100);
-+			if (ret < 0)
-+				wl1251_warning("join timeout");
-+			else
-+				wl->joined = true;
-+		}
-+	}
-+
- 	ret = wl1251_tx_path_status(wl);
- 	if (ret < 0)
- 		return ret;
-diff --git a/drivers/net/wireless/wl1251/wl1251.h b/drivers/net/wireless/wl1251/wl1251.h
-index 184ceff..fddafe2 100644
---- a/drivers/net/wireless/wl1251/wl1251.h
-+++ b/drivers/net/wireless/wl1251/wl1251.h
-@@ -303,6 +303,7 @@ struct wl1251 {
- 	u8 listen_int;
- 	int channel;
- 	bool monitor_present;
-+	bool joined;
- 
- 	void *target_mem_map;
- 	struct acx_data_path_params_resp *data_path;
--- 
-1.7.0.4
+the pm_qos value will be configurable with 2.6.38: 
 
+"ath9k: Make PM-QOS value as user configurable"
+http://www.spinics.net/lists/linux-wireless/msg61259.html
+
+"This will help our customers to configure the pm-qos value according
+to the effect in throughput due to the DMA latency problem which was
+observed in Intel Pinetrail platforms."
 
