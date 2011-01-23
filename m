@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32916 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014Ab1ALMbL (ORCPT
+Received: from w1.fi ([128.177.27.249]:48042 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751256Ab1AWRZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 07:31:11 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Pczr5-0001fC-2r
-	for linux-wireless@vger.kernel.org; Wed, 12 Jan 2011 13:31:11 +0100
-Message-Id: <20110112123132.021743908@sipsolutions.net>
-Date: Wed, 12 Jan 2011 13:31:01 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] mac80211: allow advertising correct maximum aggregate
- size
-References: <20110112123100.615900267@sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 23 Jan 2011 12:25:52 -0500
+Date: Sun, 23 Jan 2011 18:26:25 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/3] nl80211: allow passing SSID in nl80211_set_bss
+Message-ID: <20110123162625.GA1392@jm.kir.nu>
+References: <1295555306-20005-1-git-send-email-arik@wizery.com>
+ <1295556734.3693.53.camel@jlt3.sipsolutions.net>
+ <AANLkTinZwZbnzbT2UvOg7PgUsCRAR-+Hx+Je0zgoRYHd@mail.gmail.com>
+ <1295774590.3639.20.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1295774590.3639.20.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Jan 23, 2011 at 10:23:10AM +0100, Johannes Berg wrote:
+> Not really, except that I think that by itself it's insufficient. I
+> might add that depending on how the probe response thing works out in
+> the supplicant, it might make sense to add a capability flag that makes
+> the driver request this behaviour, since it would also disable
+> multi-SSID operation on a single BSSID (if that gets ever implemented)
+> for example since only a single probe request can be transmitted.
 
-Currently, mac80211 always advertises that it may send
-up to 64 subframes in an aggregate. This is fine, since
-it's the max, but might as well be set to zero instead
-since it doesn't have any information.
+Yes, it would be useful to allow user space to figure out whether the
+driver is generating Probe Response frames on it own (without having to
+guess this based on never seeing Probe Request frames or something
+similar).
 
-However, drivers might have that information, so allow
-them to set a variable giving it, which will then be
-used. The default of zero will be fine since to the
-peer that means we don't know and it will just use its
-own limit for the buffer size.
+> Also, P2P GO might be quite tricky with this, but I'm not exactly sure.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |    5 +++++
- net/mac80211/agg-tx.c  |    3 ++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+For the most basic functionality, it need a mechanism that allows the
+Probe Response template to be updated during the lifetime of the BSS.
+However, to fully comply with the P2P spec, whatever code is taking care
+of processing Probe Request frames would need to be able to
+conditionally include the P2P IE(s) from the template based on whether
+the Probe Request frame included a P2P IE. In addition, it would need to
+be able to check the Requested Device Type against the list of device
+types (both local and remote) in the group to determine whether to reply
+to the request.
 
---- wireless-testing.orig/include/net/mac80211.h	2011-01-12 13:25:40.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2011-01-12 13:26:56.000000000 +0100
-@@ -1147,6 +1147,10 @@ enum ieee80211_hw_flags {
-  * @napi_weight: weight used for NAPI polling.  You must specify an
-  *	appropriate value here if a napi_poll operation is provided
-  *	by your driver.
-+ *
-+ * @max_tx_aggregation_subframes: maximum number of subframes in an
-+ *	aggregate an HT driver will transmit, used by the peer as a
-+ *	hint to size its reorder buffer.
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -1165,6 +1169,7 @@ struct ieee80211_hw {
- 	u8 max_rates;
- 	u8 max_report_rates;
- 	u8 max_rate_tries;
-+	u8 max_tx_aggregation_subframes;
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/agg-tx.c	2011-01-12 13:27:01.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2011-01-12 13:27:20.000000000 +0100
-@@ -342,7 +342,8 @@ void ieee80211_tx_ba_session_handle_star
- 	/* send AddBA request */
- 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
- 				     tid_tx->dialog_token, start_seq_num,
--				     0x40, tid_tx->timeout);
-+				     local->hw.max_tx_aggregation_subframes,
-+				     tid_tx->timeout);
- }
- 
- int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
