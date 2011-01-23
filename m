@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:7406 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750960Ab1AYFXi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42685 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab1AWKMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 00:23:38 -0500
-Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0236763013
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 14:23:36 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 2/2] ath5k: correct endianness of frame duration
-Date: Tue, 25 Jan 2011 14:23:31 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com
-References: <1295929904-11806-1-git-send-email-me@bobcopeland.com> <1295929904-11806-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1295929904-11806-2-git-send-email-me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201101251423.32008.br1@einfach.org>
+	Sun, 23 Jan 2011 05:12:25 -0500
+Subject: Re: [PATCH] mac80211: use DECLARE_EVENT_CLASS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110121212447.GB7092@tuxdriver.com>
+References: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
+	 <20110121212447.GB7092@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 11:12:23 +0100
+Message-ID: <1295777543.3639.29.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue January 25 2011 13:31:44 Bob Copeland wrote:
-> The ath5k version of ieee80211_generic_frame_duration() returns
-> an __le16 for standard modes but a cpu-endian int for turbo/half/
-> quarter rates.  Make it always return cpu-endian values.
+On Fri, 2011-01-21 at 16:24 -0500, John W. Linville wrote:
+> On Wed, Jan 19, 2011 at 12:50:59PM +0100, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > For events that include only the local struct as
+> > their parameter, we can use DECLARE_EVENT_CLASS
+> > and save quite some binary size across segments
+> > as well lines of code.
+> > 
+> >    text	   data	    bss	    dec	    hex	filename
+> >  375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
+> >  367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
+> >   -8272   -1408       0   -9680   -25d0 delta
+> > 
+> > Some more tracepoints with identical arguments
+> > could be combined like this but for now this is
+> > the one that benefits most.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/pcu.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c
-> b/drivers/net/wireless/ath/ath5k/pcu.c index e5f2b96..a702817 100644
-> --- a/drivers/net/wireless/ath/ath5k/pcu.c
-> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
-> @@ -86,7 +86,7 @@ int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
->  	if (!ah->ah_bwmode) {
->  		dur = ieee80211_generic_frame_duration(sc->hw,
->  						NULL, len, rate);
-> -		return dur;
-> +		return le16_to_cpu(dur);
->  	}
-> 
->  	bitrate = rate->bitrate;
-> @@ -265,8 +265,6 @@ static inline void ath5k_hw_write_rate_duration(struct
-> ath5k_hw *ah) * what rate we should choose to TX ACKs. */
->  		tx_time = ath5k_hw_get_frame_duration(ah, 10, rate);
-> 
-> -		tx_time = le16_to_cpu(tx_time);
-> -
->  		ath5k_hw_reg_write(ah, tx_time, reg);
-> 
->  		if (!(rate->flags & IEEE80211_RATE_SHORT_PREAMBLE))
+> Is this patch complete?  It seems to break the build with undefined symbols...
 
-I wonder what effect this has in ath5k_hw_set_ifs_intervals() where 
-ack_tx_time was little endian before...
+Yes, I believe it is, I'll resend the version I just compile tested
+against wireless-testing.
 
-But the change makes sense.
+johannes
 
-Acked-by: Bruno Randolf <br1@einfach.org>
