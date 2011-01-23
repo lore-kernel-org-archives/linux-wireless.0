@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44232 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832Ab1AXHrG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33050 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184Ab1AWJXN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 02:47:06 -0500
-Received: by eye27 with SMTP id 27so1714209eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 23:47:04 -0800 (PST)
-Date: Mon, 24 Jan 2011 10:46:59 +0300
-From: Paul Fertser <fercerpav@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Thomas d'Otreppe" <tdotreppe@gmail.com>,
-	Richard Farina <sidhayn@gmail.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>
-Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via
-	wext when possible
-Message-ID: <20110124074659.GD25136@home.lan>
-References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com> <1295773599.3639.4.camel@jlt3.sipsolutions.net> <201101241010.38393.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201101241010.38393.br1@einfach.org>
+	Sun, 23 Jan 2011 04:23:13 -0500
+Subject: Re: [PATCH 1/3] nl80211: allow passing SSID in nl80211_set_bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTinZwZbnzbT2UvOg7PgUsCRAR-+Hx+Je0zgoRYHd@mail.gmail.com>
+References: <1295555306-20005-1-git-send-email-arik@wizery.com>
+	 <1295556734.3693.53.camel@jlt3.sipsolutions.net>
+	 <AANLkTinZwZbnzbT2UvOg7PgUsCRAR-+Hx+Je0zgoRYHd@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 10:23:10 +0100
+Message-ID: <1295774590.3639.20.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 24, 2011 at 10:10:38AM +0900, Bruno Randolf wrote:
-> On Sun January 23 2011 18:06:39 Johannes Berg wrote:
-> > On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
-> > > This makes it possible to retrieve the channel for the monitor interface
-> > > in cases when it can be determined unambigously. Tested with ath5k.
-> > 
-> > NAK.
-> > 
-> > http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
+On Fri, 2011-01-21 at 20:01 +0200, Arik Nemtsov wrote:
+> On Thu, Jan 20, 2011 at 22:52, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >
+> > As I also just commented on the corresponding hostapd patch, I'm not
+> > sure this is sufficient. If this is necessary for probe response
+> > offloading, I'm tempted to say that we should be honest about it and let
+> > userspace determine the entire probe response (which will contain the
+> > correct SSID) since it can be different from the beacon which presumably
+> > you're now using to generate probe responses.
+> >
 > 
-> > I don't think so -- I don't recall anyone ever asking before ;-)
+> Well the SSID is still needed in its pure form (i.e. not bundled up
+> inside some skb).
+
+Technically you can easily parse it out but I agree.
+
+> You're talking about adding another set_probe_resp() callback from
+> hostapd. That makes sense. I'll look into it.
 > 
-> I definetly want this functionality for my WLAN monitoring tool ("horst" - 
-> http://br1.einfach.org/horst). 
+> In the meanwhile are there any comments for this portion?
 
-You took the quote out of the context :), Johannes meant that nobody
-has asked him how exactly he would like to see this functionality
-implemented, and the in the linked mail he outlines his proposal.
+Not really, except that I think that by itself it's insufficient. I
+might add that depending on how the probe response thing works out in
+the supplicant, it might make sense to add a capability flag that makes
+the driver request this behaviour, since it would also disable
+multi-SSID operation on a single BSSID (if that gets ever implemented)
+for example since only a single probe request can be transmitted.
 
-Johannes, i know you're a busy man (no kidding, i understand you're
-doing serious work) and users should trust maintainers on their
-technical decisions, but i hope you can still spare a minute to
-explain me why my proposed way to use set_channel is wrong (as i'm yet
-to see any drawbacks). Working with real professionals like you is a
-great opportunity for me to learn and i appreciate it a lot.
+Also, P2P GO might be quite tricky with this, but I'm not exactly sure.
 
--- 
-Be free, use free (http://www.gnu.org/philosophy/free-sw.html) software!
-mailto:fercerpav@gmail.com
+johannes
+
