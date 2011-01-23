@@ -1,122 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:47845 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752559Ab1AYEPc (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40881 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329Ab1AWKCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 23:15:32 -0500
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-063698929
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 13:15:31 +0900 (JST)
-Subject: [PATCH 2/6] ath5k: Use local variable for capabilities
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 25 Jan 2011 13:15:28 +0900
-Message-ID: <20110125041528.6944.18770.stgit@localhost6.localdomain6>
-In-Reply-To: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
-References: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
+	Sun, 23 Jan 2011 05:02:36 -0500
+Received: by iyj18 with SMTP id 18so3065156iyj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 02:02:36 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19771.64642.436528.605150@gargle.gargle.HOWL>
+Date: Sun, 23 Jan 2011 15:31:38 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: [RFC/WIP 00/33] ath9k_htc AP mode
+In-Reply-To: <1295773884.3639.9.camel@jlt3.sipsolutions.net>
+References: <19768.62903.947245.576431@gargle.gargle.HOWL>
+	<201101212226.40435.chunkeey@googlemail.com>
+	<19770.18241.787715.680555@gargle.gargle.HOWL>
+	<19770.18332.859418.283909@gargle.gargle.HOWL>
+	<19770.20402.711305.279934@gargle.gargle.HOWL>
+	<1295773884.3639.9.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shorten some lines and make code more readable.
+Johannes Berg wrote:
+> On Sat, 2011-01-22 at 09:02 +0530, Sujith wrote:
+> 
+> > It does make it a bit neat to have such a mechanism. And for AP mode, I would think
+> > that it's kinda essential unless someone comes with an ingenious way of solving
+> > the PS race for drivers that don't set IEEE80211_HW_REPORTS_TX_ACK_STATUS. :-)
+> 
+> Well, you can handle the PS stuff in the device completely -- or do it
+> like iwlwifi does, where it doesn't rely on the ACK to detect the race,
+> but the firmware will reject TX frames to sleeping stations until the
+> driver tells it the station woke up.
+> 
+> How it works is like this:
+> 
+> STA AWAKE -> ASLEEP transition:
+>   - firmware marks station as asleep
+>   - firmware rejects TX frames for this station that are in queue
+>   - driver keeps track of # of such frames, and uses
+>     ieee80211_sta_block_awake() to block this station while it has
+>     frames in the queue
+>   - rejected frames are rejected to mac80211 and queued up
+> 
+> ASLEEP -> AWAKE:
+>   - due to ieee80211_sta_block_awake() wakeup is blocked until the
+>     queue has drained as well (if station very quick wakes up), then
+>     when both conditions are met,
+>   - driver tells device that this station woke up
+>   - mac80211 re-transmits all those frames
+>   - driver queues up all those frames
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/caps.c |   39 +++++++++++++++------------------
- 1 files changed, 18 insertions(+), 21 deletions(-)
+Thanks for the explanation, but ath9k_htc has deeper problems in AP mode. :)
 
-diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
-index 31cad80..39baee1 100644
---- a/drivers/net/wireless/ath/ath5k/caps.c
-+++ b/drivers/net/wireless/ath/ath5k/caps.c
-@@ -32,23 +32,24 @@
-  */
- int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
- {
-+	struct ath5k_capabilities *caps = &ah->ah_capabilities;
- 	u16 ee_header;
- 
- 	/* Capabilities stored in the EEPROM */
--	ee_header = ah->ah_capabilities.cap_eeprom.ee_header;
-+	ee_header = caps->cap_eeprom.ee_header;
- 
- 	if (ah->ah_version == AR5K_AR5210) {
- 		/*
- 		 * Set radio capabilities
- 		 * (The AR5110 only supports the middle 5GHz band)
- 		 */
--		ah->ah_capabilities.cap_range.range_5ghz_min = 5120;
--		ah->ah_capabilities.cap_range.range_5ghz_max = 5430;
--		ah->ah_capabilities.cap_range.range_2ghz_min = 0;
--		ah->ah_capabilities.cap_range.range_2ghz_max = 0;
-+		caps->cap_range.range_5ghz_min = 5120;
-+		caps->cap_range.range_5ghz_max = 5430;
-+		caps->cap_range.range_2ghz_min = 0;
-+		caps->cap_range.range_2ghz_max = 0;
- 
- 		/* Set supported modes */
--		__set_bit(AR5K_MODE_11A, ah->ah_capabilities.cap_mode);
-+		__set_bit(AR5K_MODE_11A, caps->cap_mode);
- 	} else {
- 		/*
- 		 * XXX The tranceiver supports frequencies from 4920 to 6100GHz
-@@ -67,12 +68,11 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
- 
- 		if (AR5K_EEPROM_HDR_11A(ee_header)) {
- 			/* 4920 */
--			ah->ah_capabilities.cap_range.range_5ghz_min = 5005;
--			ah->ah_capabilities.cap_range.range_5ghz_max = 6100;
-+			caps->cap_range.range_5ghz_min = 5005;
-+			caps->cap_range.range_5ghz_max = 6100;
- 
- 			/* Set supported modes */
--			__set_bit(AR5K_MODE_11A,
--					ah->ah_capabilities.cap_mode);
-+			__set_bit(AR5K_MODE_11A, caps->cap_mode);
- 		}
- 
- 		/* Enable  802.11b if a 2GHz capable radio (2111/5112) is
-@@ -81,32 +81,29 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
- 		    (AR5K_EEPROM_HDR_11G(ee_header) &&
- 		     ah->ah_version != AR5K_AR5211)) {
- 			/* 2312 */
--			ah->ah_capabilities.cap_range.range_2ghz_min = 2412;
--			ah->ah_capabilities.cap_range.range_2ghz_max = 2732;
-+			caps->cap_range.range_2ghz_min = 2412;
-+			caps->cap_range.range_2ghz_max = 2732;
- 
- 			if (AR5K_EEPROM_HDR_11B(ee_header))
--				__set_bit(AR5K_MODE_11B,
--						ah->ah_capabilities.cap_mode);
-+				__set_bit(AR5K_MODE_11B, caps->cap_mode);
- 
- 			if (AR5K_EEPROM_HDR_11G(ee_header) &&
- 			    ah->ah_version != AR5K_AR5211)
--				__set_bit(AR5K_MODE_11G,
--						ah->ah_capabilities.cap_mode);
-+				__set_bit(AR5K_MODE_11G, caps->cap_mode);
- 		}
- 	}
- 
- 	/* Set number of supported TX queues */
- 	if (ah->ah_version == AR5K_AR5210)
--		ah->ah_capabilities.cap_queues.q_tx_num =
--			AR5K_NUM_TX_QUEUES_NOQCU;
-+		caps->cap_queues.q_tx_num = AR5K_NUM_TX_QUEUES_NOQCU;
- 	else
--		ah->ah_capabilities.cap_queues.q_tx_num = AR5K_NUM_TX_QUEUES;
-+		caps->cap_queues.q_tx_num = AR5K_NUM_TX_QUEUES;
- 
- 	/* newer hardware has PHY error counters */
- 	if (ah->ah_mac_srev >= AR5K_SREV_AR5213A)
--		ah->ah_capabilities.cap_has_phyerr_counters = true;
-+		caps->cap_has_phyerr_counters = true;
- 	else
--		ah->ah_capabilities.cap_has_phyerr_counters = false;
-+		caps->cap_has_phyerr_counters = false;
- 
- 	return 0;
- }
+* The FW doesn't mark stations or add them to a filter list on receiving a
+  PS-enable frame from a station.
 
+* The host driver has no way of knowing if the FW failed to send out a frame,
+  so keeping track of pending frames is impossible. Am not sure if ATH9K_TXERR_FILT
+  is similar to TX_STATUS_FAIL_DEST_PS in iwlagn (I think not), so that can't be used
+  either.
+  
+Sujith
