@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47799 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991Ab1ADTpH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 14:45:07 -0500
-Date: Tue, 4 Jan 2011 14:43:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: Re: [PATCH v2 1/6] ath9k_htc: Fix warning on device removal
-Message-ID: <20110104194337.GB13239@tuxdriver.com>
-References: <19737.42640.829281.50449@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <19737.42640.829281.50449@gargle.gargle.HOWL>
+Received: from mail.perches.com ([173.55.12.10]:3272 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750886Ab1AWAYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Jan 2011 19:24:17 -0500
+Subject: Re: [PATCH 00/83] staging: ath6kl: Style cleanup
+From: Joe Perches <joe@perches.com>
+To: Greg KH <greg@kroah.com>
+Cc: Vipin Mehta <vmehta@atheros.com>,
+	Vipin Mehta <Vipin.Mehta@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+In-Reply-To: <20110121211625.GA15966@kroah.com>
+References: <1295637798-18355-1-git-send-email-vmehta@atheros.com>
+	 <20110121193830.GA17789@kroah.com> <20110121194840.GA18603@vmehta-desktop>
+	 <20110121195509.GB18700@kroah.com> <20110121200907.GA18651@vmehta-desktop>
+	 <20110121211625.GA15966@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 22 Jan 2011 16:24:15 -0800
+Message-ID: <1295742255.21754.3.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 28, 2010 at 02:27:52PM +0530, Sujith wrote:
-> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> 
-> The commit "ath9k_hw: warn if we cannot change the power to the chip"
-> introduced a new warning to indicate chip powerup failures, but this
-> is not required for devices that have been removed. Handle USB device
-> removal properly by checking for unplugged status.
-> 
-> For PCI devices, this warning will still be seen when the card is pulled
-> out, not sure how to check for card removal.
-> 
-> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Fri, 2011-01-21 at 13:16 -0800, Greg KH wrote:
+> I need this series against the proper branch, if I am going to be able
+> to apply them.
 
-This doesn't seem to apply cleanly?
+I am working on this major style rewrite of ath6kl right now.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Please do not apply new patches to ath6kl this upcoming week
+as it takes quite a bit of work to resync and validate 100+
+patches.
+
+thanks,  Joe
+
