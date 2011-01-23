@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:48564 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751311Ab1AJQCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 11:02:03 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0AG21at032577
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:02:01 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep33.itg.ti.com (8.13.7/8.13.7) with ESMTP id p0AG216Q020238
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:02:01 -0600 (CST)
-Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0AG218J009095
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 10:02:01 -0600 (CST)
-Received: from pimenta.emea.dhcp.ti.com (pimenta.emea.dhcp.ti.com
- [137.167.41.166])	by dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id
- p0AG1xSm026900	for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011
- 10:02:00 -0600
-From: <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] MAINTAINERS: update information for the wl12xx driver
-Date: Mon, 10 Jan 2011 18:02:10 +0200
-Message-ID: <1294675330-11691-1-git-send-email-coelho@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:45125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab1AWJSQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Jan 2011 04:18:16 -0500
+Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating
+ channel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
+References: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 10:18:13 +0100
+Message-ID: <1295774293.3639.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+On Fri, 2011-01-21 at 10:05 -0800, greearb@candelatech.com wrote:
 
-Update maintainer's email address, webpage and align with renaming of
-files.
+> + * @SCAN_LEFT_OPER_CHANNEL:  Set this flag if the scan process leaves the
+> + *      operating channel at any time.  If scanning ONLY the current operating
+> + *      channel this flag should not be set, and this will allow fewer
+> + *      offchannel changes.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- MAINTAINERS |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Why does this make sense? In the code below, you do
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ff19c30..92394cf 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6540,12 +6540,12 @@ S:	Maintained
- F:	drivers/net/wireless/wl1251/*
- 
- WL1271 WIRELESS DRIVER
--M:	Luciano Coelho <luciano.coelho@nokia.com>
-+M:	Luciano Coelho <coelho@ti.com>
- L:	linux-wireless@vger.kernel.org
--W:	http://wireless.kernel.org
-+W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
- S:	Maintained
--F:	drivers/net/wireless/wl12xx/wl1271*
-+F:	drivers/net/wireless/wl12xx/
- F:	include/linux/wl12xx.h
- 
- WL3501 WIRELESS PCMCIA CARD DRIVER
--- 
-1.7.1
+
+> -	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+> +	if ((local->oper_channel != local->hw.conf.channel) || was_hw_scan)
+> +		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+> +
+>  	if (!was_hw_scan) {
+>  		ieee80211_configure_filter(local);
+>  		drv_sw_scan_complete(local);
+> -		ieee80211_offchannel_return(local, true);
+> +		if (test_bit(SCAN_LEFT_OPER_CHANNEL, &local->scanning))
+> +			ieee80211_offchannel_return(local, true);
+
+so you could just as well use a local variable (the first if you add is
+exactly this test).
+
+>  static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
+>  						    unsigned long *next_delay)
+>  {
+> +	ieee80211_offchannel_stop_beaconing(local);
+> +
+
+Won't that confuse drivers that expect not to be beaconing between
+sw_scan_start and sw_scan_end?
+
+
+Also, are you sure the filter configuration works correctly this way? If
+you can, I'd like to look at a binary trace of the commands going to the
+device with this change: "trace-cmd record -e mac80211".
+
+
+johannes
 
