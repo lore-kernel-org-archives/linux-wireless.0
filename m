@@ -1,81 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:45751 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250Ab1AGU1E (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59784 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053Ab1AWVDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 15:27:04 -0500
-Received: by wwi17 with SMTP id 17so836414wwi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:27:02 -0800 (PST)
-Subject: Re: [ath9k-devel] [PATCH 1/3] ath9k: Decrease skb size to fit into
- one page.
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Ben Greear <greearb@candelatech.com>,
+	Sun, 23 Jan 2011 16:03:08 -0500
+Received: by fxm20 with SMTP id 20so3406598fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 13:03:07 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110107200913.GF21588@tux>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-	 <1294397880.3467.1.camel@jlt3.sipsolutions.net>
-	 <4D275CCC.90905@candelatech.com>  <20110107200913.GF21588@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 21:26:58 +0100
-Message-ID: <1294432018.2709.2.camel@edumazet-laptop>
-Mime-Version: 1.0
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 1/6] nl80211: allow passing SSID in nl80211_set_bss
+Date: Sun, 23 Jan 2011 23:02:54 +0200
+Message-Id: <1295816579-28925-2-git-send-email-arik@wizery.com>
+In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le vendredi 07 janvier 2011 à 12:09 -0800, Luis R. Rodriguez a écrit :
-> On Fri, Jan 07, 2011 at 10:34:52AM -0800, Ben Greear wrote:
-> > On 01/07/2011 02:58 AM, Johannes Berg wrote:
-> > > On Thu, 2011-01-06 at 16:46 -0800, greearb@candelatech.com wrote:
-> > >> From: Ben Greear<greearb@candelatech.com>
-> > >>
-> > >> Patch is from Eric Dumazet, as described here:
-> > >> https://patchwork.kernel.org/patch/104271/
-> > >>
-> > >> Reported-by: Michael Guntsche<mike@it-loops.com>
-> > >> Signed-off-by: Eric Dumazet<eric.dumazet@gmail.com>
-> > >> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> > >> ---
-> > >>
-> > >> NOTE:  This needs review by ath9k and/or other informed
-> > >> people.
-> > >
-> > > This doesn't make sense. It might help, but it'll probably lead to not
-> > > being able to receive all frames off the air.
-> > >
-> > > If this is an issue, ath9k should do paged RX like iwlwifi.
-> > 
-> > Ok, I backed this out..but now I'm back to getting buffer allocation
-> > failures (and this is on a system with 2GB RAM).
-> > 
-> > Seems it's coming from mac80211 instead of ath9k, at least most of
-> > the time (I'm using 60 stations, so it probably needs to make lots of
-> > copies in the rx path).  The traffic I'm generating/receiving is 1024 byte UDP
-> > payloads.
-> > 
-> > Does this mean I really received a packet that was 3872 bytes long,
-> > or is the skb_copy allocating/copying empty data?
-> 
-> Good question. The buffer we setup for DMA should be large since we
-> need to support AMSDU RX up to a certain bytes of RX data for the frame.
-> Harwdware should tell us the right size for the RX'd data and the skb
-> should be set with that size, respectively. Following this logic,
-> skb_copy() should only allocate on the order of the required skb->len.
-> 
-> Remember that trick we did to force the older memory leak issues by
-> forcing an skb_copy() on every RX'd frame and then just discarding that
-> buffer immediately? You can try to do the same and print the skb->len
-> there, just to check what's going on.
+wl12xx require knowledge of the real SSID when operating as AP
+with SSID hidden in beacon data. Allow passing the real SSID from
+usermode apart from beacon data.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ include/net/cfg80211.h |    5 +++++
+ net/wireless/nl80211.c |    8 ++++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-Using skb_copy() is wrong then, since it makes a copy (order-1
-allocations)
-
-It should use :
- skb_alloc( actual_size_of_frame  not the 3840 thing ...)
- copy(data)
-
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1322695..03b1b0c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -607,6 +607,9 @@ struct mpath_info {
+  * @ap_isolate: do not forward packets between connected stations
+  * @ht_opmode: HT Operation mode
+  * 	(u16 = opmode, -1 = do not change)
++ * @ssid_len: length of ssid string
++ *	(>0 = ssid_len, -1 = do not change)
++ * @ssid: SSID string (for AP mode). NULL termination not required.
+  */
+ struct bss_parameters {
+ 	int use_cts_prot;
+@@ -616,6 +619,8 @@ struct bss_parameters {
+ 	u8 basic_rates_len;
+ 	int ap_isolate;
+ 	int ht_opmode;
++	int ssid_len;
++	u8 *ssid;
+ };
+ 
+ /*
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9b62710..ce5453d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2576,6 +2576,7 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
+ 	params.use_short_slot_time = -1;
+ 	params.ap_isolate = -1;
+ 	params.ht_opmode = -1;
++	params.ssid_len = -1;
+ 
+ 	if (info->attrs[NL80211_ATTR_BSS_CTS_PROT])
+ 		params.use_cts_prot =
+@@ -2597,6 +2598,13 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_BSS_HT_OPMODE])
+ 		params.ht_opmode =
+ 			nla_get_u16(info->attrs[NL80211_ATTR_BSS_HT_OPMODE]);
++	if (info->attrs[NL80211_ATTR_SSID]) {
++		params.ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
++		params.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
++		if (params.ssid_len == 0 ||
++		    params.ssid_len > IEEE80211_MAX_SSID_LEN)
++			return -EINVAL;
++	}
+ 
+ 	if (!rdev->ops->change_bss)
+ 		return -EOPNOTSUPP;
+-- 
+1.7.1
 
