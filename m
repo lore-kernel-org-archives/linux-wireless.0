@@ -1,96 +1,324 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62114 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725Ab1AFQbX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285Ab1AWKMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 11:31:23 -0500
-Received: by iyi12 with SMTP id 12so15000567iyi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 08:31:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=-raYOK7p2e+3B2vRG2L+wJ6TApHj4LHd2NP53@mail.gmail.com>
-References: <AANLkTim0AM3=T=TMu79ZQi79+CKANamBcz620n2xm8bW@mail.gmail.com>
-	<201101041946.56978.helmut.schaa@googlemail.com>
-	<AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
-	<AANLkTi=KFG-7GPw2=6VTZqEceEcJM6OdWoTQaN_83NqP@mail.gmail.com>
-	<AANLkTikREOFV+WGWgo9yh9bTrz346kF0muKE8gs5N+km@mail.gmail.com>
-	<AANLkTikCcgEiqeJLDn0Pes_2=usj6ZXo7hhL48MBnH_-@mail.gmail.com>
-	<AANLkTin0W1_Tjr1zj0D0U+VeBpoGFRmB9iCdOfnMB-nR@mail.gmail.com>
-	<AANLkTimCsvR2zBfS+oCudhcUz68qPJhXM9-eu1L-FWHp@mail.gmail.com>
-	<AANLkTimdEcj4k09ZyHQTXnbaeNj4CCrAm=mRTw+R5j6L@mail.gmail.com>
-	<AANLkTimaWy33vYaM=bCPd0VooyR9QVw99YB1fSOj42Fo@mail.gmail.com>
-	<AANLkTi=-raYOK7p2e+3B2vRG2L+wJ6TApHj4LHd2NP53@mail.gmail.com>
-Date: Thu, 6 Jan 2011 08:31:22 -0800
-Message-ID: <AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
-Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
-From: Aleksandar Milivojevic <alex@milivojevic.org>
-To: Wolfgang Kufner <wolfgang.kufner@gmail.com>
-Cc: Luis Correia <buga@loide.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 23 Jan 2011 05:12:55 -0500
+Subject: [PATCH v2] mac80211: use DECLARE_EVENT_CLASS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110121212447.GB7092@tuxdriver.com>
+References: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
+	 <20110121212447.GB7092@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 11:12:53 +0100
+Message-ID: <1295777573.3639.30.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Playing with it a bit more this morning.  Looks like the connection
-from wireless adapter to my AP drops periodically.  Sometimes it
-recovers (sometimes after several attempts), sometimes it does not.
-Seems to be very random:
+From: Johannes Berg <johannes.berg@intel.com>
 
-# egrep 'authent|associat' /var/log/debug
-Jan  6 08:00:54 toporko kernel: [   47.570810] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:00:54 toporko kernel: [   47.571321] wlan0: authenticated
-Jan  6 08:00:56 toporko kernel: [   49.174175] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:00:56 toporko kernel: [   49.175536] wlan0: associated
-Jan  6 08:06:01 toporko kernel: [  354.230874] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:06:01 toporko kernel: [  354.231364] wlan0: authenticated
-Jan  6 08:06:01 toporko kernel: [  354.236066] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:06:01 toporko kernel: [  354.236865] wlan0: associated
-Jan  6 08:09:36 toporko kernel: [  569.868923] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:09:36 toporko kernel: [  569.869416] wlan0: authenticated
-Jan  6 08:09:36 toporko kernel: [  569.873736] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:09:36 toporko kernel: [  569.874507] wlan0: associated
-Jan  6 08:09:46 toporko kernel: [  579.233563] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:09:46 toporko kernel: [  579.235574] wlan0: authenticated
-Jan  6 08:09:46 toporko kernel: [  579.240737] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:09:46 toporko kernel: [  579.241518] wlan0: associated
-Jan  6 08:09:57 toporko kernel: [  590.830933] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:09:57 toporko kernel: [  590.831435] wlan0: authenticated
-Jan  6 08:09:57 toporko kernel: [  590.839102] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:09:57 toporko kernel: [  590.839881] wlan0: associated
-Jan  6 08:21:29 toporko kernel: [ 1282.823289] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:21:29 toporko kernel: [ 1282.823783] wlan0: authenticated
-Jan  6 08:21:29 toporko kernel: [ 1282.828990] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:21:29 toporko kernel: [ 1282.830132] wlan0: associated
-Jan  6 08:25:30 toporko kernel: [ 1523.433931] wlan0: authenticate
-with 00:1e:52:79:e9:ff (try 1)
-Jan  6 08:25:30 toporko kernel: [ 1523.434930] wlan0: authenticated
-Jan  6 08:25:30 toporko kernel: [ 1523.439868] wlan0: associate with
-00:1e:52:79:e9:ff (try 1)
-Jan  6 08:25:30 toporko kernel: [ 1523.440652] wlan0: associated
+For events that include only the local struct as
+their parameter, we can use DECLARE_EVENT_CLASS
+and save quite some binary size across segments
+as well lines of code.
 
-So far, it managed to re-connect every time.  Though, I'm rather sure
-if I leave it long enough, the last night's case of connection dropped
-completely would repeat sooner or later (even last night, there were
-some connect/disconnect events before connection was dropped
-permanently).
+   text	   data	    bss	    dec	    hex	filename
+ 375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
+ 367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
+  -8272   -1408       0   -9680   -25d0 delta
 
-The AP reports signal from wireless card between -70 and -75dB, noise
-at -96dB, and speed at 120mbps (with occasional drop to 45mbps).
-These numbers sound about OK for the location (on the other side of my
-apartment, few walls in between).  For comparison, if I position my
-MacBook at same location (right next to my Linux box), AP reports
-signal from its AirPort card at about -60dB and speed in about 100mbps
-range and no drops.
+Some more tracepoints with identical arguments
+could be combined like this but for now this is
+the one that benefits most.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/driver-trace.h |  197 ++++++--------------------------------------
+ 1 file changed, 28 insertions(+), 169 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/driver-trace.h	2011-01-23 10:57:48.000000000 +0100
++++ wireless-testing/net/mac80211/driver-trace.h	2011-01-23 10:57:56.000000000 +0100
+@@ -38,7 +38,7 @@ static inline void trace_ ## name(proto)
+  * Tracing for driver callbacks.
+  */
+ 
+-TRACE_EVENT(drv_return_void,
++DECLARE_EVENT_CLASS(local_only_evt,
+ 	TP_PROTO(struct ieee80211_local *local),
+ 	TP_ARGS(local),
+ 	TP_STRUCT__entry(
+@@ -50,6 +50,11 @@ TRACE_EVENT(drv_return_void,
+ 	TP_printk(LOCAL_PR_FMT, LOCAL_PR_ARG)
+ );
+ 
++DEFINE_EVENT(local_only_evt, drv_return_void,
++	TP_PROTO(struct ieee80211_local *local),
++	TP_ARGS(local)
++);
++
+ TRACE_EVENT(drv_return_int,
+ 	TP_PROTO(struct ieee80211_local *local, int ret),
+ 	TP_ARGS(local, ret),
+@@ -78,40 +83,14 @@ TRACE_EVENT(drv_return_u64,
+ 	TP_printk(LOCAL_PR_FMT " - %llu", LOCAL_PR_ARG, __entry->ret)
+ );
+ 
+-TRACE_EVENT(drv_start,
++DEFINE_EVENT(local_only_evt, drv_start,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+-TRACE_EVENT(drv_stop,
++DEFINE_EVENT(local_only_evt, drv_stop,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ TRACE_EVENT(drv_add_interface,
+@@ -439,40 +418,14 @@ TRACE_EVENT(drv_hw_scan,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_sw_scan_start,
++DEFINE_EVENT(local_only_evt, drv_sw_scan_start,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+-TRACE_EVENT(drv_sw_scan_complete,
++DEFINE_EVENT(local_only_evt, drv_sw_scan_complete,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ TRACE_EVENT(drv_get_stats,
+@@ -702,23 +655,9 @@ TRACE_EVENT(drv_conf_tx,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_get_tsf,
++DEFINE_EVENT(local_only_evt, drv_get_tsf,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT,
+-		LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ TRACE_EVENT(drv_set_tsf,
+@@ -742,41 +681,14 @@ TRACE_EVENT(drv_set_tsf,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_reset_tsf,
++DEFINE_EVENT(local_only_evt, drv_reset_tsf,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+-TRACE_EVENT(drv_tx_last_beacon,
++DEFINE_EVENT(local_only_evt, drv_tx_last_beacon,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT,
+-		LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ TRACE_EVENT(drv_ampdu_action,
+@@ -962,22 +874,9 @@ TRACE_EVENT(drv_remain_on_channel,
+ 	)
+ );
+ 
+-TRACE_EVENT(drv_cancel_remain_on_channel,
++DEFINE_EVENT(local_only_evt, drv_cancel_remain_on_channel,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ /*
+@@ -1072,23 +971,9 @@ TRACE_EVENT(api_stop_tx_ba_cb,
+ 	)
+ );
+ 
+-TRACE_EVENT(api_restart_hw,
++DEFINE_EVENT(local_only_evt, api_restart_hw,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT,
+-		LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ TRACE_EVENT(api_beacon_loss,
+@@ -1217,40 +1102,14 @@ TRACE_EVENT(api_chswitch_done,
+ 	)
+ );
+ 
+-TRACE_EVENT(api_ready_on_channel,
++DEFINE_EVENT(local_only_evt, api_ready_on_channel,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+-TRACE_EVENT(api_remain_on_channel_expired,
++DEFINE_EVENT(local_only_evt, api_remain_on_channel_expired,
+ 	TP_PROTO(struct ieee80211_local *local),
+-
+-	TP_ARGS(local),
+-
+-	TP_STRUCT__entry(
+-		LOCAL_ENTRY
+-	),
+-
+-	TP_fast_assign(
+-		LOCAL_ASSIGN;
+-	),
+-
+-	TP_printk(
+-		LOCAL_PR_FMT, LOCAL_PR_ARG
+-	)
++	TP_ARGS(local)
+ );
+ 
+ /*
+
+
