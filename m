@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60202 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752286Ab1A0TtC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51430 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329Ab1AWKFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 14:49:02 -0500
-Date: Thu, 27 Jan 2011 14:49:01 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Kevin Hilman <khilman@ti.com>
-cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	<linux-pm@lists.linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-In-Reply-To: <87hbcum9rh.fsf@ti.com>
-Message-ID: <Pine.LNX.4.44L0.1101271439020.2090-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Sun, 23 Jan 2011 05:05:05 -0500
+Subject: Re: [RFC/WIP 00/33] ath9k_htc AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <19771.64642.436528.605150@gargle.gargle.HOWL>
+References: <19768.62903.947245.576431@gargle.gargle.HOWL>
+	 <201101212226.40435.chunkeey@googlemail.com>
+	 <19770.18241.787715.680555@gargle.gargle.HOWL>
+	 <19770.18332.859418.283909@gargle.gargle.HOWL>
+	 <19770.20402.711305.279934@gargle.gargle.HOWL>
+	 <1295773884.3639.9.camel@jlt3.sipsolutions.net>
+	 <19771.64642.436528.605150@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 11:05:03 +0100
+Message-ID: <1295777103.3639.21.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 27 Jan 2011, Kevin Hilman wrote:
+On Sun, 2011-01-23 at 15:31 +0530, Sujith wrote:
 
-> > Calling the runtime_suspend method directly is the way to do it.
-> >
-> 
-> Do you mean the driver's runtime_suspend method, or the subsystem's
-> runtime_suspend method?
+> * The host driver has no way of knowing if the FW failed to send out a frame,
+>   so keeping track of pending frames is impossible. Am not sure if ATH9K_TXERR_FILT
+>   is similar to TX_STATUS_FAIL_DEST_PS in iwlagn (I think not), so that can't be used
+>   either.
 
-The subsystem's.  If the driver has a runtime_suspend method then the 
-subsystem's method will call it.
+I don't know, but I thought it was supposed to be? At least mac80211
+calls this "filtered" as well, which surely comes from Atheros
+terminology.
 
-> >> While this works, I'm not crazy about it since it requires the driver
-> >> know about the subsystem (in this case the bus) where the real PM work
-> >> is done.  IMO, it would be much more intuitive (and readable) if the
-> >> driver's suspend hooks could simply trigger a runtime suspend (either a
-> >> new one, or one already requested.)
-> >
-> > This isn't clear to me.  Isn't the driver registered on the bus in 
-> > question?  Can't the driver therefore call the bus's runtime_suspend 
-> > routine directly, instead of dereferencing the bus->pm->runtime_suspend 
-> > pointer?
-> 
-> Not sure what you mean by directly.  The platform_bus doesn't expose
-> its runtime PM methods since they can be customized at runtime, so they
-> have to be called via bus->pm.
-> 
-> Or do you mean using dev->driver instead of dev->bus?
-
-You're doing all of this for OMAP, right?  What is the subsystem's
-runtime_suspend routine?  Is it omap_pm_runtime_suspend()?
-
-If it is, then you can call omap_pm_runtime_suspend() directly instead
-of calling dev->bus->pm->runtime_suspend().
-
-Alan Stern
+johannes
 
