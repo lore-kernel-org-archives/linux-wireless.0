@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56125 "HELO
+Received: from external1.orbit-lab.org ([128.6.192.131]:58636 "HELO
 	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754746Ab1A2UCz (ORCPT
+	with SMTP id S1751073Ab1AWUCx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jan 2011 15:02:55 -0500
+	Sun, 23 Jan 2011 15:02:53 -0500
 Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 3BB195400F2
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Jan 2011 15:05:09 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-29 is baked
+	by external1.orbit-lab.org (Postfix) with ESMTP id 763D1540D99
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 15:04:54 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-23 is baked
 To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110129200254.3D53E40F97@repository3.orbit-lab.org>
-Date: Sat, 29 Jan 2011 15:02:54 -0500 (EST)
+Message-Id: <20110123200252.30F4240F97@repository3.orbit-lab.org>
+Date: Sun, 23 Jan 2011 15:02:52 -0500 (EST)
 From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
