@@ -1,78 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([60.250.210.242]:42962 "EHLO
-	rtits2.realtek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961Ab1AYEYV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44701 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391Ab1AWJGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 23:24:21 -0500
-From: =?gb2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net> <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net>
-Subject: [PATCH] fix_rtlwifi_rfkill_state_not_synchronous_with_true_rfstate_issue
-Date: Tue, 25 Jan 2011 12:10:09 +0800
-Message-ID: <301B5E6D9B3042F6ABB4C6479ACB875E@realsil.com.cn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-In-Reply-To: <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net>
+	Sun, 23 Jan 2011 04:06:42 -0500
+Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via
+ wext when possible
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Fertser <fercerpav@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas d'Otreppe <tdotreppe@gmail.com>,
+	Richard Farina <sidhayn@gmail.com>
+In-Reply-To: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
+References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 10:06:39 +0100
+Message-ID: <1295773599.3639.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 0bd7f0e28e5b6f4fe2a98aad7392c72d55420880 Mon Sep 17 00:00:00 2001
-From: zhaoming_li <chaoming_li@realsil.com.cn>
-Date: Tue, 25 Jan 2011 11:59:53 +0800
-Subject: [PATCH]
-fix_rtlwifi_rfkill_state_not_synchronous_with_true_rfstate_issue
+On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
+> This makes it possible to retrieve the channel for the monitor interface
+> in cases when it can be determined unambigously. Tested with ath5k.
 
----
- drivers/net/wireless/rtlwifi/base.c         |   13 ++++++++-----
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    2 +-
- 2 files changed, 9 insertions(+), 6 deletions(-)
+NAK.
 
-diff --git a/drivers/net/wireless/rtlwifi/base.c
-b/drivers/net/wireless/rtlwifi/base.c
-index cf0b73e..33323b4 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -251,15 +251,18 @@ void rtl_init_rfkill(struct ieee80211_hw *hw)
- 	bool blocked;
- 	u8 valid = 0;
- 
--	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
-+	/*1. set init state to on */
-+	rtlpriv->rfkill.rfkill_state = 1;
-+	wiphy_rfkill_set_hw_state(hw->wiphy, 0);
- 
--	/*set init state to that of switch */
--	rtlpriv->rfkill.rfkill_state = radio_state;
--	printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
--	       rtlpriv->rfkill.rfkill_state ? "on" : "off");
-+	/*2. check gpio for rf state */
-+	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
- 
-+	/*3. if valid, change state based on gpio */
- 	if (valid) {
- 		rtlpriv->rfkill.rfkill_state = radio_state;
-+		printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
-+				rtlpriv->rfkill.rfkill_state ? "on" :
-"off");
- 
- 		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
- 		wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 1c41a0c..cb2e01a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1943,7 +1943,7 @@ bool rtl92ce_gpio_radio_on_off_checking(struct
-ieee80211_hw *hw, u8 * valid)
- 	bool b_actuallyset = false;
- 	unsigned long flag;
- 
--	if ((rtlpci->up_first_time == 1) || (rtlpci->being_init_adapter))
-+	if (rtlpci->being_init_adapter)
- 		return false;
- 
- 	if (ppsc->b_swrf_processing)
--- 
-1.7.0.4
+http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
+
+johannes
 
