@@ -1,106 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47747 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:49503 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755033Ab1AVASY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 19:18:24 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/14] iwlwifi: replace minimum slot time constant
-Date: Fri, 21 Jan 2011 16:06:48 -0800
-Message-Id: <1295654809-5790-14-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751073Ab1AWSYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Jan 2011 13:24:14 -0500
+Subject: Re: [PATCH 04/14]  iwlagn: 2000 series devices support
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Bernhard Schmidt <bschmidt@techwires.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <201101231225.03056.bschmidt@techwires.net>
 References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1295654809-5790-5-git-send-email-wey-yi.w.guy@intel.com>
+	 <201101231225.03056.bschmidt@techwires.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 23 Jan 2011 10:12:27 -0800
+Message-ID: <1295806347.3591.59.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2011-01-23 at 03:25 -0800, Bernhard Schmidt wrote:
+> On Saturday 22 January 2011 01:06:39 Wey-Yi Guy wrote:
+> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > 
+> > Adding 2000 series devices supports, the 2000 series devices has
+> > many different SKUs which includes 1x1 and 2x2 devices,also with
+> > and without BT combo.
+> > 
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > [..]
+> > +
+> > +#define IWL_DEVICE_2030						\
+> > +	.fw_name_pre = IWL2030_FW_PRE,				\
+> > +	.ucode_api_max = IWL2030_UCODE_API_MAX,			\
+> > +	.ucode_api_min = IWL2030_UCODE_API_MIN,			\
+> > +	.eeprom_ver = EEPROM_2000_EEPROM_VERSION,		\
+> > +	.eeprom_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+> > +	.ops = &iwl2030_ops,					\
+> > +	.mod_params = &iwlagn_mod_params,			\
+> > +	.base_params = &iwl2030_base_params,			\
+> > +	.bt_params = &iwl2030_bt_params,			\
+> > +	.need_dc_calib = true,					\
+> > +	.need_temp_offset_calib = true,				\
+> > +	.led_mode = IWL_LED_RF_STATE,				\
+> > +	.adv_pm = true						\
+> > +
+> > +struct iwl_cfg iwl2030_2bgn_cfg = {
+> > +	.name = "2000 Series 2x2 BGN/BT",
+> > +	IWL_DEVICE_2000,
+> > +	.ht_params = &iwl2000_ht_params,
+> > +};
+> > +
+> > +struct iwl_cfg iwl2030_2bg_cfg = {
+> > +	.name = "2000 Series 2x2 BG/BT",
+> > +	IWL_DEVICE_2000,
+> > +};
+> 
+> Shouldn't these use the IWL_DEVICE_2030 macro?
+> 
+good catch, thank you very much, will submit separated patch to address
+it
 
-There are a number of places where the minimum
-slot time is hardcoded to 20 TU, add a new
-constant for that and use it everywhere.
+Wey
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |   14 +++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |    5 +++++
- 3 files changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index fa6cf2a..41543ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -308,7 +308,7 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
- 	if (priv->_agn.hw_roc_channel) {
- 		/* both contexts must be used for this to happen */
- 		slot1 = priv->_agn.hw_roc_duration;
--		slot0 = 20;
-+		slot0 = IWL_MIN_SLOT_TIME;
- 	} else if (ctx_bss->vif && ctx_pan->vif) {
- 		int bcnint = ctx_pan->vif->bss_conf.beacon_int;
- 		int dtim = ctx_pan->vif->bss_conf.dtim_period ?: 1;
-@@ -334,12 +334,12 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
- 		if (test_bit(STATUS_SCAN_HW, &priv->status) ||
- 		    (!ctx_bss->vif->bss_conf.idle &&
- 		     !ctx_bss->vif->bss_conf.assoc)) {
--			slot0 = dtim * bcnint * 3 - 20;
--			slot1 = 20;
-+			slot0 = dtim * bcnint * 3 - IWL_MIN_SLOT_TIME;
-+			slot1 = IWL_MIN_SLOT_TIME;
- 		} else if (!ctx_pan->vif->bss_conf.idle &&
- 			   !ctx_pan->vif->bss_conf.assoc) {
--			slot1 = bcnint * 3 - 20;
--			slot0 = 20;
-+			slot1 = bcnint * 3 - IWL_MIN_SLOT_TIME;
-+			slot0 = IWL_MIN_SLOT_TIME;
- 		}
- 	} else if (ctx_pan->vif) {
- 		slot0 = 0;
-@@ -348,8 +348,8 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
- 		slot1 = max_t(int, DEFAULT_BEACON_INTERVAL, slot1);
- 
- 		if (test_bit(STATUS_SCAN_HW, &priv->status)) {
--			slot0 = slot1 * 3 - 20;
--			slot1 = 20;
-+			slot0 = slot1 * 3 - IWL_MIN_SLOT_TIME;
-+			slot1 = IWL_MIN_SLOT_TIME;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 51e5ea4..02771ef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3792,7 +3792,7 @@ static int iwl_mac_remain_on_channel(struct ieee80211_hw *hw,
- 	queue_delayed_work(priv->workqueue, &priv->_agn.hw_roc_work,
- 			   msecs_to_jiffies(duration + 20));
- 
--	msleep(20);
-+	msleep(IWL_MIN_SLOT_TIME); /* TU is almost ms */
- 	ieee80211_ready_on_channel(priv->hw);
- 
-  out:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index abe2479..935b19e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -4370,6 +4370,11 @@ int iwl_agn_check_rxon_cmd(struct iwl_priv *priv);
-  * REPLY_WIPAN_PARAMS = 0xb2 (Commands and Notification)
-  */
- 
-+/*
-+ * Minimum slot time in TU
-+ */
-+#define IWL_MIN_SLOT_TIME	20
-+
- /**
-  * struct iwl_wipan_slot
-  * @width: Time in TU
--- 
-1.7.0.4
 
