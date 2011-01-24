@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59261 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751943Ab1ANO5v (ORCPT
+Received: from p3plsmtpa01-05.prod.phx3.secureserver.net ([72.167.82.85]:55794
+	"HELO p3plsmtpa01-05.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751384Ab1AXU6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 09:57:51 -0500
-Subject: RE: cfg80211 rfkill interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <2EFC2EC4C7011444989031FE55348CDA9549080E26@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <400C43189542CE41BC0A5B252FC90136952F059529@SJEXCHCCR02.corp.ad.broadcom.com>
-	 <1294688709.3583.25.camel@jlt3.sipsolutions.net>
-	 <2EFC2EC4C7011444989031FE55348CDA9549080E26@SJEXCHCCR02.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 14 Jan 2011 15:57:48 +0100
-Message-ID: <1295017068.3853.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 24 Jan 2011 15:58:39 -0500
+Message-ID: <38B8E33D2F114AFCAF7F0F4C591983BD@ChuckPC>
+From: "Chuck Crisler" <ccrisler@vgocom.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: problem calling the supplicant
+Date: Mon, 24 Jan 2011 15:57:55 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-01-14 at 06:54 -0800, Arend Van Spriel wrote:
+I have found a problem that is causing my communication with the supplicant 
+to get confused. I call the supplicant via wpa_ctrl_request(). Sometimes the 
+commands actually timeout. When that happens, the call to select() returns 0 
+which causes the wpa_ctrl_request to return -2. From then onward, the 
+response to all commands is the actual response to the previous command. 
+That causes my state machine to fail. What should I be doing when this 
+timeout situation occurs? It looks like I could simply make a subsequent 
+call into the ctrl_request with a NULL command (with length == 0) to get it 
+to execute the select() again, though I may want to modify 
+wpa_ctrl_request() to skip the send() if there is a NULL command. I know 
+that my missing response will ultimately be returned. Has anyone else seen 
+anything like this?
 
-> Thanks for you thoughts on this. Especially the last remark was reason
-> for me to verify several usage scenarios. I ran into a issue with
-> unloading the driver module while it was in blocked rfkill state and
-> polling was active. Turns out the call to ieee80211_unregister_hw
-> takes a loooong time before it returns and dmesg shows message from
-> unregister_netdevice which seems related about refcount not being
-> zero. This is only observed in this scenario. Any suggestion on how to
-> handle this?
-
-No, I can see no reason for this to happen?? rfkill doesn't take a
-netdev refcount.
-
-johannes
+Thank you,
+Chuck Crisler 
 
