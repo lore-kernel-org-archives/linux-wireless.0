@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alcalazamora.dti2.net ([81.24.162.8]:1912 "EHLO
-	alcalazamora.dti2.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757430Ab1ANNzw (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:5521 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196Ab1AXPvB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 08:55:52 -0500
-Received: from [172.16.16.6] ([81.24.161.20])
-	(authenticated user jorge@dti2.net)
-	by alcalazamora.dti2.net (alcalazamora.dti2.net [81.24.162.8])
-	(MDaemon PRO v11.0.2)
-	with ESMTP id md50013082267.msg
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 14:49:08 +0100
-Message-ID: <4D305453.6070307@dti2.net>
-Date: Fri, 14 Jan 2011 14:49:07 +0100
-From: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
+	Mon, 24 Jan 2011 10:51:01 -0500
+Received: from hpaq6.eem.corp.google.com (hpaq6.eem.corp.google.com [172.25.149.6])
+	by smtp-out.google.com with ESMTP id p0OFoxp8006299
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 07:51:00 -0800
+Received: from eyg24 (eyg24.prod.google.com [10.208.7.24])
+	by hpaq6.eem.corp.google.com with ESMTP id p0OForj5000900
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 07:50:54 -0800
+Received: by eyg24 with SMTP id 24so1990517eyg.10
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 07:50:53 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: No beacons generated when you bring ath9k AP interface down and
- up.
-References: <4D2FF7A4.3070106@candelatech.com> <20110114091226.GA32344@jm.kir.nu>
-In-Reply-To: <20110114091226.GA32344@jm.kir.nu>
+In-Reply-To: <1295868454.3639.0.camel@jlt3.sipsolutions.net>
+References: <1295867209-6156-1-git-send-email-aidapalapati@nvidia.com>
+	<1295868454.3639.0.camel@jlt3.sipsolutions.net>
+Date: Mon, 24 Jan 2011 07:50:36 -0800
+Message-ID: <AANLkTinmt7VcUAFL=GmZv46x8eC2THUEC-OhHGBCeSav@mail.gmail.com>
+Subject: Re: [PATCH 1/1] CHROMIUM: config: bluetooth: rfkill driver
+From: Olof Johansson <olofj@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: aidapalapati@nvidia.com, linville@tuxdriver.com, uraval@nvidia.com,
+	krakesh@nvidia.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Reply-To: jorge@dti2.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El 14/01/2011 10:12, Jouni Malinen escribió:
-> On Thu, Jan 13, 2011 at 11:13:40PM -0800, Ben Greear wrote:
->> If you have an ath9k AP interface running with hostapd, and you
->> run:  ip link set vap0 down; ip link set vap0 up;
->> then it will disable beaconing.
-> 
-> Yes. So what?
-> 
->> I'm not sure where the problem actually lies:  Should ath9k
->> start beaconing automatically on VAP interface add?  Is
->> it up to hostapd to detect the ifdown/ifup and re-set everything
->> up properly?  Or maybe it's just a very bad idea to bounce
->> a VAP interface with 'ip link set'?
-> 
-> I would say it is up to whoever decided to set the interface down to
-> restart hostapd.. There is a proposed patch for hostapd to do this
-> automatically, but I'm yet to fully understand why one would set the
-> interface down in the first place.
+On Mon, Jan 24, 2011 at 3:27 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-01-24 at 16:36 +0530, aidapalapati@nvidia.com wrote:
+>
+>> A new "rfkill" driver is added to control BT radio.
+>> A new kernel config variable CONFIG_BT_RFKILL needs to
+>> be configured to include this driver in the kernel.
+>>
+>> Three resources are expected by the driver.
+>> One Shutdown GPIO, One Reset Gpio and One reference Clock.
+>> if any/all of the resources can be defined by a platform.
+>
+> If that's a generic driver, why can it use
+>
+>> +             tegra_gpio_enable(bt_rfkill->gpio_reset);
+>
+> tegra_* functions?
 
-	I usually do it to influence routing from within quagga. Quagga have no
-provisions to restart another daemons on interface state change. This is just an
-example, I'm sure there are others valid use cases, so I really think that
-hostapd should restart beaconing/whatever in this case.
+Good catch, I had missed that when I did the initial once-over on the driver.
 
-	Regards,
-		Jorge
--- 
-==============================================================
-Jorge Boncompte - Ingenieria y Gestion de RED
-DTI2 - Desarrollo de la Tecnologia de las Comunicaciones
---------------------------------------------------------------
-C/ Abogado Enriquez Barrios, 5   14004 CORDOBA (SPAIN)
-Tlf: +34 957 761395 / FAX: +34 957 450380
-==============================================================
-- There is only so much duct tape you can put on something
-  before it just becomes a giant ball of duct tape.
-==============================================================
+Anantha, the tegra_gpio_enable should be moved to the board setup file
+and out of the driver itself.
 
+
+-Olof
