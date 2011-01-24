@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56009 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496Ab1AUDCr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:02:47 -0500
-Received: by mail-iy0-f174.google.com with SMTP id 18so1246881iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:02:47 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2623 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752742Ab1AXNqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 08:46:10 -0500
+To: "Jamie Kitson" <jamie@kitten-x.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>
+Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
+References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
+ <4D3B0390.5070108@broadcom.com>
+ <AANLkTinwPrar6ZBhSALBif8__4mHHsKuDYKsgr4FDqtu@mail.gmail.com>
+ <op.vptd4dqs3ri7v4@arend-laptop>
+ <AANLkTimk3qY87mP5oROnsVOGaPDV2-UAm7UrXST+1mms@mail.gmail.com>
+Date: Mon, 24 Jan 2011 14:45:56 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63273.407923.407455@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:32:01 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 19/33] ath9k_htc: Fix TBTT calculation for IBSS mode
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vpte6up33ri7v4@arend-laptop>
+In-Reply-To: <AANLkTimk3qY87mP5oROnsVOGaPDV2-UAm7UrXST+1mms@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Ok,
 
-The target beacon transmission time has to be synced with the HW
-TSF when configuring beacon timers in Adhoc mode. Failing to do this
-would cause erroneous beacon transmission, for example, on completion
-of a scan run to check for IBSS merges.
+On Mon, 24 Jan 2011 14:37:06 +0100, Jamie Kitson <jamie@kitten-x.com>  
+wrote:
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
+> Incidentally, and this is a bit anecdotal, but I don't seem to have
+> had a crash since I stopped booting with noapic. I will add noapic to
+> my boot options again and see if I can get a crash.
+>
+> Jamie
+>
+too quote a gremlin: feed me (with any debug experiences you may have).
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index b4431a9..0803c25 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -190,20 +190,31 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	enum ath9k_int imask = 0;
--	u32 nexttbtt, intval;
-+	u32 nexttbtt, intval, tsftu;
- 	__be32 htc_imask = 0;
- 	int ret;
- 	u8 cmd_rsp;
-+	u64 tsf;
- 
- 	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
- 	nexttbtt = intval;
-+
-+	/*
-+	 * Pull nexttbtt forward to reflect the current TSF.
-+	 */
-+	tsf = ath9k_hw_gettsf64(priv->ah);
-+	tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
-+	do {
-+		nexttbtt += intval;
-+	} while (nexttbtt < tsftu);
-+
- 	intval |= ATH9K_BEACON_ENA;
- 	if (priv->op_flags & OP_ENABLE_BEACON)
- 		imask |= ATH9K_INT_SWBA;
- 
--	ath_dbg(common, ATH_DBG_BEACON,
--		"IBSS Beacon config, intval: %d, imask: 0x%x\n",
--		bss_conf->beacon_interval, imask);
-+	ath_dbg(common, ATH_DBG_CONFIG,
-+		"IBSS Beacon config, intval: %d, nexttbtt: %u, imask: 0x%x\n",
-+		bss_conf->beacon_interval, nexttbtt, imask);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
+Gr. AvS
+
 -- 
-1.7.3.5
+Using Opera's revolutionary email client: http://www.opera.com/mail/
 
