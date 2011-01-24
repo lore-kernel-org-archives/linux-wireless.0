@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:53166 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932532Ab1AMLdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jan 2011 06:33:38 -0500
-Subject: Re: [PATCH] wl12xx: don't modify the global supported band
- structures
-From: Luciano Coelho <coelho@ti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "arik@wizery.com" <arik@wizery.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-In-Reply-To: <1294766718-2472-1-git-send-email-coelho@ti.com>
-References: <1294766718-2472-1-git-send-email-coelho@ti.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50182 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665Ab1AXLhz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 06:37:55 -0500
+Subject: Re: [PATCH v2 4/6] mac80211: Save probe response data for BSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1295816579-28925-5-git-send-email-arik@wizery.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	 <1295816579-28925-5-git-send-email-arik@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 13 Jan 2011 13:33:32 +0200
-Message-ID: <1294918412.2064.20.camel@pimenta>
-MIME-Version: 1.0
+Date: Mon, 24 Jan 2011 12:38:46 +0100
+Message-ID: <1295869126.3639.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-11 at 18:25 +0100, Coelho, Luciano wrote:
-> From: Luciano Coelho <coelho@ti.com>
-> 
-> When 11a is not supported, we were modifying the global structure that
-> contains the bands supported by the driver.  This causes problems when
-> having more one wl12xx device in the same system because they all use
-> the same global.  This also causes problems when the wl12xx_sdio
-> module is removed and the wl12xx module remains.
-> 
-> Fix this problem by copying the band structure into the wl12xx
-> instance.
-> 
-> Reported-by: Arik Nemtsov <arik@wizery.com>
-> Reported-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+On Sun, 2011-01-23 at 23:02 +0200, Arik Nemtsov wrote:
 
-Applied and pushed to the wl12xx tree.
+> +static int ieee80211_set_probe_resp(struct wiphy *wiphy,
+> +				    struct net_device *dev, u8 *resp,
+> +				    size_t resp_len)
+> +{
+> +	struct ieee80211_sub_if_data *sdata;
+> +	struct sk_buff *new, *old;
+> +
+> +	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	old = sdata->u.ap.probe_resp;
+> +
+> +	if (!resp || !resp_len)
+> +		return -EINVAL;
+> +
+> +	new = dev_alloc_skb(resp_len);
+> +	if (!new) {
+> +		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
+> +		       "response template\n", sdata->name);
+> +		return -ENOMEM;
 
--- 
-Cheers,
-Luca.
+I'd remove that message -- userspace already knows, and it's the only
+thing that really needs to?
+
+> +	}
+> +
+> +	memcpy(skb_put(new, resp_len), resp, resp_len);
+> +
+> +	rcu_assign_pointer(sdata->u.ap.probe_resp, new);
+> +	synchronize_rcu();
+> +
+> +	if (old)
+> +		dev_kfree_skb(old);
+
+Just a note -- I don't really expect you to implement this -- but I
+think since the skb's CB is not used otherwise, we could easily use
+call_rcu() to free it.
+
+johannes
 
