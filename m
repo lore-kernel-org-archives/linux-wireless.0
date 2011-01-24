@@ -1,90 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64017 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:59915 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752395Ab1AQNEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 08:04:33 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org, kernel@lists.fedoraproject.org
-Cc: Kyle McMartin <kmcmartin@redhat.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.34.y] hostap_cs: fix sleeping function called from invalid context
-Date: Mon, 17 Jan 2011 14:04:25 +0100
-Message-Id: <1295269465-4903-1-git-send-email-sgruszka@redhat.com>
+	id S1751342Ab1AXURL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 15:17:11 -0500
+Subject: Re: [PATCH v2] wl12xx: fix some endianess bugs
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1295168830-4637-1-git-send-email-eliad@wizery.com>
+References: <1295168830-4637-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 22:17:20 +0200
+Message-ID: <1295900240.2063.1.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 4e5518ca53be29c1ec3c00089c97bef36bfed515 upstream.
+On Sun, 2011-01-16 at 10:07 +0100, Eliad Peller wrote:
+> pointed out by sparse warnings:
+> 
+>   CHECK   drivers/net/wireless/wl12xx/cmd.c
+> drivers/net/wireless/wl12xx/cmd.c:987:20: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/wl12xx/cmd.c:987:20:    expected restricted __le16 [usertype] aging_period
+> drivers/net/wireless/wl12xx/cmd.c:987:20:    got int
+>   CHECK   drivers/net/wireless/wl12xx/tx.c
+> drivers/net/wireless/wl12xx/tx.c:197:2: warning: cast from restricted __le16
+> drivers/net/wireless/wl12xx/tx.c:197:2: warning: cast from restricted __le16
+> drivers/net/wireless/wl12xx/tx.c:197:2: warning: cast from restricted __le16
+>   CHECK   drivers/net/wireless/wl12xx/acx.c
+> drivers/net/wireless/wl12xx/acx.c:816:23: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/wl12xx/acx.c:816:23:    expected restricted __le32 [usertype] rate_policy_idx
+> drivers/net/wireless/wl12xx/acx.c:816:23:    got unsigned char [unsigned] [usertype] idx
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-pcmcia_request_irq() and pcmcia_enable_device() are intended
-to be called from process context (first function allocate memory
-with GFP_KERNEL, second take a mutex). We can not take spin lock
-and call them.
+Applied, thank you!
 
-It's safe to move spin lock after pcmcia_enable_device() as we
-still hold off IRQ until dev->base_addr is 0 and driver will
-not proceed with interrupts when is not ready.
-
-Patch resolves:
-https://bugzilla.redhat.com/show_bug.cgi?id=643758
-
-Reported-and-tested-by: rbugz@biobind.com
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/hostap/hostap_cs.c |   14 +++-----------
- 1 files changed, 3 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index f33e18e..116b5c6 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -638,12 +638,6 @@ static int prism2_config(struct pcmcia_device *link)
- 	link->dev_node = &hw_priv->node;
- 
- 	/*
--	 * Make sure the IRQ handler cannot proceed until at least
--	 * dev->base_addr is initialized.
--	 */
--	spin_lock_irqsave(&local->irq_init_lock, flags);
--
--	/*
- 	 * Allocate an interrupt line.  Note that this does not assign a
- 	 * handler to the interrupt, unless the 'Handler' member of the
- 	 * irq structure is initialized.
-@@ -653,7 +647,7 @@ static int prism2_config(struct pcmcia_device *link)
- 		link->irq.Handler = prism2_interrupt;
- 		ret = pcmcia_request_irq(link, &link->irq);
- 		if (ret)
--			goto failed_unlock;
-+			goto failed;
- 	}
- 
- 	/*
-@@ -663,11 +657,11 @@ static int prism2_config(struct pcmcia_device *link)
- 	 */
- 	ret = pcmcia_request_configuration(link, &link->conf);
- 	if (ret)
--		goto failed_unlock;
-+		goto failed;
- 
-+	spin_lock_irqsave(&local->irq_init_lock, flags);
- 	dev->irq = link->irq.AssignedIRQ;
- 	dev->base_addr = link->io.BasePort1;
--
- 	spin_unlock_irqrestore(&local->irq_init_lock, flags);
- 
- 	/* Finally, report what we've done */
-@@ -698,8 +692,6 @@ static int prism2_config(struct pcmcia_device *link)
- 	}
- 	return ret;
- 
-- failed_unlock:
--	 spin_unlock_irqrestore(&local->irq_init_lock, flags);
-  failed:
- 	kfree(hw_priv);
- 	prism2_release((u_long)link);
 -- 
-1.7.1
+Cheers,
+Luca.
 
