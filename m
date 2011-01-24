@@ -1,30 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:56034 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489Ab1AFVB3 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:54383 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426Ab1AXUT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 16:01:29 -0500
-Received: by iwn9 with SMTP id 9so16654135iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 13:01:28 -0800 (PST)
+	Mon, 24 Jan 2011 15:19:26 -0500
+Subject: Re: [PATCH v2] wl12xx: Add channel 14 to list of supported 2ghz
+ channels
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1295379592-6223-1-git-send-email-arik@wizery.com>
+References: <1295379592-6223-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 22:19:35 +0200
+Message-ID: <1295900375.2063.4.camel@pimenta>
 MIME-Version: 1.0
-In-Reply-To: <1294334212-20530-2-git-send-email-hauke@hauke-m.de>
-References: <1294334212-20530-1-git-send-email-hauke@hauke-m.de> <1294334212-20530-2-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 6 Jan 2011 13:01:08 -0800
-Message-ID: <AANLkTi=EPtvPYYFo4f=E_MHvNvpCwecpjnCjVnCy99Ht@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat-wireless: use backported kfifo
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 6, 2011 at 9:16 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Now compat contains a backport of the kfifo implementation and we do
-> not have to patch the driver to use the old interface.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Tue, 2011-01-18 at 20:39 +0100, Arik Nemtsov wrote:
+> Channel 14 is only supported in Japan (JP country code in).
+> The FW limits tranmissions to CCK only on this channel.
+> 
+> Tested in both STA and AP modes to work correctly.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Sweet! Applied and pushed, thanks!
+Applied to wl12xx.  Thank you!
 
-  Luis
+-- 
+Cheers,
+Luca.
+
