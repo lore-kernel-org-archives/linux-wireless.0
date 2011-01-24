@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44491 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299Ab1AaSoX (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:43344 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750831Ab1AXVfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:44:23 -0500
-Subject: Re: [PATCH] mac80211:  Recalculate channel-type on iface removal.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
+	Mon, 24 Jan 2011 16:35:11 -0500
+Received: by gwj20 with SMTP id 20so1444370gwj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 13:35:11 -0800 (PST)
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: brudley@broadcom.com, henryp@broadcom.com, dowan@broadcom.com,
+	rvossen@broadcom.com, arend@broadcom.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1296499072-6721-1-git-send-email-greearb@candelatech.com>
-References: <1296499072-6721-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 19:44:22 +0100
-Message-ID: <1296499462.3812.41.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Subject: [PATCH] brcm80211: fix error report string
+Date: Mon, 24 Jan 2011 19:35:46 -0200
+Message-Id: <1295904946-11983-1-git-send-email-padovan@profusion.mobi>
+In-Reply-To: <AANLkTi=GqWNd6yu0CeWAzt9ZRgCDkFRgwMExZiqEUr3Z@mail.gmail.com>
+References: <AANLkTi=GqWNd6yu0CeWAzt9ZRgCDkFRgwMExZiqEUr3Z@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 10:37 -0800, greearb@candelatech.com wrote:
+Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
+---
+ drivers/staging/brcm80211/sys/wlc_mac80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Also, use WARN_ON_ONCE instead of WARN_ON if user has
-> ht40- stations in conjunction with ht40+.  It's not
-> really a kernel bug, just a mis-configuration of the
-> user's wifi environment.
-
-But how did we end up here to start with -- shouldn't that have been
-rejected?
-
-johannes
+diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
+index 5eb41d6..a23dc5c 100644
+--- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
++++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
+@@ -6910,7 +6910,7 @@ prep_mac80211_status(struct wlc_info *wlc, d11rxhdr_t *rxh, struct sk_buff *p,
+ 		preamble = 0;
+ 		if (IS_CCK(rspec)) {
+ 			if (rxh->PhyRxStatus_0 & PRXS0_SHORTH)
+-				WL_ERROR("Short CCK\n");
++				WL_ERROR("%s: Short CCK\n", __func__);
+ 			rx_status->flag |= RX_FLAG_SHORTPRE;
+ 		} else if (IS_OFDM(rspec)) {
+ 			rx_status->flag |= RX_FLAG_SHORTPRE;
+-- 
+1.7.4.rc2
 
