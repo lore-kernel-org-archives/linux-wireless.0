@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:54759 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754889Ab1AVAMn (ORCPT
+Received: from 124-197-1-37.callplus.net.nz ([124.197.1.37]:60331 "EHLO
+	elm.torus.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab1AXU1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 19:12:43 -0500
-Received: by ewy5 with SMTP id 5so1227954ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 16:12:42 -0800 (PST)
-From: Paul Fertser <fercerpav@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Thomas d'Otreppe" <tdotreppe@gmail.com>,
-	Richard Farina <sidhayn@gmail.com>,
-	Paul Fertser <fercerpav@gmail.com>
-Subject: [RFC][PATCH] cfg80211: report monitor interface channel via wext when possible
-Date: Sat, 22 Jan 2011 03:11:38 +0300
-Message-Id: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
+	Mon, 24 Jan 2011 15:27:47 -0500
+Message-ID: <4D3DE0BE.8040900@davenport.net.nz>
+Date: Tue, 25 Jan 2011 09:27:42 +1300
+From: Hugh Davenport <hugh@davenport.net.nz>
+MIME-Version: 1.0
+To: ath5k-devel@lists.ath5k.org
+CC: linux-wireless@vger.kernel.org
+Subject: ath5k: issues with AHB support on ubiquiti bullet 2 (AR2315)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible to retrieve the channel for the monitor interface
-in cases when it can be determined unambigously. Tested with ath5k.
+Hey all,
 
-Signed-off-by: Paul Fertser <fercerpav@gmail.com>
----
- net/wireless/chan.c        |    5 +++--
- net/wireless/wext-compat.c |   12 ++++++++++++
- 2 files changed, 15 insertions(+), 2 deletions(-)
+I'm just letting you know that I have been having issues getting the the
+AHB support with the ath5k driver working (from compat-wireless 2011-01-05).
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 17cd0c0..869e764 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -81,6 +81,7 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 		      enum nl80211_channel_type channel_type)
- {
- 	struct ieee80211_channel *chan;
-+	struct wireless_dev *passed_wdev = wdev;
- 	int result;
- 
- 	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
-@@ -128,8 +129,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 	if (result)
- 		return result;
- 
--	if (wdev)
--		wdev->channel = chan;
-+	if (passed_wdev)
-+		passed_wdev->channel = chan;
- 
- 	return 0;
- }
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 3e5dbd4..aa637e6 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -819,6 +819,8 @@ int cfg80211_wext_giwfreq(struct net_device *dev,
- 			  struct iw_freq *freq, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	int result;
- 
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
-@@ -828,6 +830,16 @@ int cfg80211_wext_giwfreq(struct net_device *dev,
- 	default:
- 		if (!wdev->channel)
- 			return -EINVAL;
-+		/* The actual working channel might have been changed, verify it
-+		 * by re-setting pretending we want to set channel for a monitor
-+		 * interface */
-+		result = rdev->ops->set_channel(&rdev->wiphy, NULL,
-+						wdev->channel,
-+						NL80211_CHAN_NO_HT);
-+		if (result) {
-+			wdev->channel = NULL;
-+			return -EINVAL;
-+		}
- 		freq->m = wdev->channel->center_freq;
- 		freq->e = 6;
- 		return 0;
--- 
-1.7.2.2
+I'm testing it on an ubiquiti bullet 2 device which internally is a
+AR2315 WiSoC. I am using openwrt backfire with the mac80211 package
+patched to use a later version of compat-wireless (ie one with AHB
+support in ath5k). I had to modify some of the patches in openwrt so
+they applied cleanly, but don't think any affected the ath5k (and would
+cause the problem i have).
 
+Basically the issue is this. When I try to load the module as is in the
+source tree, the system hangs and module never loads (device restarts
+itself).
+
+I tried a bit of debugging (sorry about any newbie techniques here, im
+new to kernel debugging) by just printing and returning errors after
+every main function called. The problem seemed to be with the first time
+it called ath5k_hw_reg_write, which from my tracing seemed to be in th
+wisoc reset function in the following chain.
+
+ath5k_hw_reg_write (ath5k.h)
+ath5k_hw_wisoc_reset (reset.c)
+ath5k_hw_nic_wakeup (reset.c)
+ath5k_hw_init (attach.c)
+ath5k_init_softc (base.c)
+ath_ahb_probe (ahb.c)
+
+
+I then tried out a few things in the vain attempt to get it to load the
+module, one which seemed to work is taking out the ioremap_nocache call
+in ath_ahb_probe, and set mem to be res->start (on my system this is
+0xb0000000 (the same as what madwifi tells me as well)). With this /fix/
+the module now loads, gives the output below, but i can't bring the
+interface up (device crashes again).
+
+Atheros AR2315 chip found (MAC: 0x87, PHY: 0x48)
+
+
+continuing traces when bring interface up brings me to another
+ath5k_hw_reg_write call in the following chain
+
+ath5k_hw_reg_write (ath5k.h)
+ath5k_hw_start_rx_dma (dma.c)
+ath5k_rx_start (base.c)
+ath5k_reset (base.c)
+ath5k_init_hw (base.c)
+ath5k_start (mac80211-ops.c)
+
+
+I am sorry about the long email, but I thought the more info you guys
+have, the better.
+
+If you have any ideas I can try, any more testing you may need me to do,
+or anything that could help me get it working, let me know, and i'll do
+my best to get anything done asap.
+
+Cheers,
+
+Hugh Davenport
