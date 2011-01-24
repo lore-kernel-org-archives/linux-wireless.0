@@ -1,227 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:46776 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683Ab1A3STd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33770 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab1AXLq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 13:19:33 -0500
-Message-ID: <4D45A5C1.8050503@davizone.at>
-Date: Sun, 30 Jan 2011 18:54:09 +0100
-From: David Gnedt <david.gnedt@davizone.at>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 07/18] wl1251: implement connection quality monitoring
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 24 Jan 2011 06:46:59 -0500
+Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via
+ wext when possible
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Fertser <fercerpav@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Thomas d'Otreppe <tdotreppe@gmail.com>,
+	Richard Farina <sidhayn@gmail.com>
+In-Reply-To: <20110123094101.GB25136@home.lan>
+References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
+	 <1295773599.3639.4.camel@jlt3.sipsolutions.net>
+	 <20110123094101.GB25136@home.lan>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 12:47:50 +0100
+Message-ID: <1295869670.3639.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement connection quality monitoring similar to the wl1271 driver.
-It triggers ieee80211_cqm_rssi_notify with the corresponding event when
-RSSI drops blow RSSI threshold or rises again above the RSSI threshold.
-It should be noted that wl1251 doesn't support RSSI hysteresis, instead it
-uses RSSI averageing and delays events until a certain count of frames
-proved RSSI change.
+On Sun, 2011-01-23 at 12:41 +0300, Paul Fertser wrote:
+> On Sun, Jan 23, 2011 at 10:06:39AM +0100, Johannes Berg wrote:
+> > On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
+> > > This makes it possible to retrieve the channel for the monitor interface
+> > > in cases when it can be determined unambigously. Tested with ath5k.
+> > 
+> > NAK.
+> > 
+> > http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
+> 
+> If i understood your correctly, "somehow query oper_channel" means one
+> needs to extend cfg80211 API a little and add necessary code to
+> mac80211. And the result would be higher-level API depending on
+> mac80211 implementation details (which are going to be soon changed
+> anyway after introduction of the real multi-channel feature).
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
- drivers/net/wireless/wl1251/acx.c    |   25 +++++++++++++++++++
- drivers/net/wireless/wl1251/acx.h    |   45 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl1251/event.c  |   18 +++++++++++++
- drivers/net/wireless/wl1251/main.c   |   15 ++++++++++-
- drivers/net/wireless/wl1251/wl1251.h |    5 ++++
- 5 files changed, 107 insertions(+), 1 deletions(-)
+Not necessarily -- that's exactly why you'd want such a callback: in the
+case that mac80211 does get a multi-channel feature (and the feature is
+currently in use) this callback would either return both/all channels
+(which probably isn't very useful) or NULL to indicate that it doesn't
+have a single fixed channel. In that case, the monitor interface would
+still report an unknown channel -- which is really what's happening
+anyway since other interfaces will be hopping around.
 
-diff --git a/drivers/net/wireless/wl1251/acx.c b/drivers/net/wireless/wl1251/acx.c
-index f1e90e1..d43695a 100644
---- a/drivers/net/wireless/wl1251/acx.c
-+++ b/drivers/net/wireless/wl1251/acx.c
-@@ -811,6 +811,31 @@ out:
- 	return ret;
- }
- +int wl1251_acx_low_rssi(struct wl1251 *wl, s8 threshold, u8 weight,
-+			u8 depth, enum wl1251_acx_low_rssi_type type)
-+{
-+	struct acx_low_rssi *rssi;
-+	int ret;
-+
-+	wl1251_debug(DEBUG_ACX, "acx low rssi");
-+
-+	rssi = kzalloc(sizeof(*rssi), GFP_KERNEL);
-+	if (!rssi)
-+		return -ENOMEM;
-+
-+	rssi->threshold = threshold;
-+	rssi->weight = weight;
-+	rssi->depth = depth;
-+	rssi->type = type;
-+
-+	ret = wl1251_cmd_configure(wl, ACX_LOW_RSSI, rssi, sizeof(*rssi));
-+	if (ret < 0)
-+		wl1251_warning("failed to set low rssi threshold: %d", ret);
-+
-+	kfree(rssi);
-+	return ret;
-+}
-+
- int wl1251_acx_set_preamble(struct wl1251 *wl, enum acx_preamble_type preamble)
- {
- 	struct acx_preamble *acx;
-diff --git a/drivers/net/wireless/wl1251/acx.h b/drivers/net/wireless/wl1251/acx.h
-index 5a44c76..99ea80e 100644
---- a/drivers/net/wireless/wl1251/acx.h
-+++ b/drivers/net/wireless/wl1251/acx.h
-@@ -399,6 +399,49 @@ struct acx_rts_threshold {
- 	u8 pad[2];
- } __packed;
- +enum wl1251_acx_low_rssi_type {
-+	/*
-+	 * The event is a "Level" indication which keeps triggering
-+	 * as long as the average RSSI is below the threshold.
-+	 */
-+	WL1251_ACX_LOW_RSSI_TYPE_LEVEL = 0,
-+
-+	/*
-+	 * The event is an "Edge" indication which triggers
-+	 * only when the RSSI threshold is crossed from above.
-+	 */
-+	WL1251_ACX_LOW_RSSI_TYPE_EDGE = 1,
-+};
-+
-+struct acx_low_rssi {
-+	struct acx_header header;
-+
-+	/*
-+	 * The threshold (in dBm) below (or above after low rssi
-+	 * indication) which the firmware generates an interrupt to the
-+	 * host. This parameter is signed.
-+	 */
-+	s8 threshold;
-+
-+	/*
-+	 * The weight of the current RSSI sample, before adding the new
-+	 * sample, that is used to calculate the average RSSI.
-+	 */
-+	u8 weight;
-+
-+	/*
-+	 * The number of Beacons/Probe response frames that will be
-+	 * received before issuing the Low or Regained RSSI event.
-+	 */
-+	u8 depth;
-+
-+	/*
-+	 * Configures how the Low RSSI Event is triggered. Refer to
-+	 * enum wl1251_acx_low_rssi_type for more.
-+	 */
-+	u8 type;
-+} __packed;
-+
- struct acx_beacon_filter_option {
- 	struct acx_header header;
- @@ -1420,6 +1463,8 @@ int wl1251_acx_cca_threshold(struct wl1251 *wl);
- int wl1251_acx_bcn_dtim_options(struct wl1251 *wl);
- int wl1251_acx_aid(struct wl1251 *wl, u16 aid);
- int wl1251_acx_event_mbox_mask(struct wl1251 *wl, u32 event_mask);
-+int wl1251_acx_low_rssi(struct wl1251 *wl, s8 threshold, u8 weight,
-+			u8 depth, enum wl1251_acx_low_rssi_type type);
- int wl1251_acx_set_preamble(struct wl1251 *wl, enum acx_preamble_type preamble);
- int wl1251_acx_cts_protect(struct wl1251 *wl,
- 			    enum acx_ctsprotect_type ctsprotect);
-diff --git a/drivers/net/wireless/wl1251/event.c
-b/drivers/net/wireless/wl1251/event.c
-index 1f931e3..7428c9f 100644
---- a/drivers/net/wireless/wl1251/event.c
-+++ b/drivers/net/wireless/wl1251/event.c
-@@ -134,6 +134,24 @@ static int wl1251_event_process(struct wl1251 *wl, struct
-event_mailbox *mbox)
- 		}
- 	}
- +	if (wl->vif && wl->rssi_thold) {
-+		if (vector & ROAMING_TRIGGER_LOW_RSSI_EVENT_ID) {
-+			wl1251_debug(DEBUG_EVENT,
-+				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
-+			ieee80211_cqm_rssi_notify(wl->vif,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+				GFP_KERNEL);
-+		}
-+
-+		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
-+			wl1251_debug(DEBUG_EVENT,
-+				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
-+			ieee80211_cqm_rssi_notify(wl->vif,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+				GFP_KERNEL);
-+		}
-+	}
-+
- 	return 0;
- }
- diff --git a/drivers/net/wireless/wl1251/main.c
-b/drivers/net/wireless/wl1251/main.c
-index 591080a..c0a7fd5 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -504,6 +504,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->psm_entry_retry = 0;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
-+	wl->rssi_thold = 0;
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
-  	wl1251_debugfs_reset(wl);
-@@ -962,6 +963,16 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
- +	if (changed & BSS_CHANGED_CQM) {
-+		ret = wl1251_acx_low_rssi(wl, bss_conf->cqm_rssi_thold,
-+					  WL1251_DEFAULT_LOW_RSSI_WEIGHT,
-+					  WL1251_DEFAULT_LOW_RSSI_DEPTH,
-+					  WL1251_ACX_LOW_RSSI_TYPE_EDGE);
-+		if (ret < 0)
-+			goto out;
-+		wl->rssi_thold = bss_conf->cqm_rssi_thold;
-+	}
-+
- 	if (changed & BSS_CHANGED_BSSID) {
- 		memcpy(wl->bssid, bss_conf->bssid, ETH_ALEN);
- @@ -1401,7 +1412,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_BEACON_FILTER |
--		IEEE80211_HW_SUPPORTS_UAPSD;
-+		IEEE80211_HW_SUPPORTS_UAPSD |
-+		IEEE80211_HW_SUPPORTS_CQM_RSSI;
-  	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	wl->hw->wiphy->max_scan_ssids = 1;
-@@ -1482,6 +1494,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	wl->psm_entry_retry = 0;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
-+	wl->rssi_thold = 0;
- 	wl->beacon_int = WL1251_DEFAULT_BEACON_INT;
- 	wl->dtim_period = WL1251_DEFAULT_DTIM_PERIOD;
- 	wl->vif = NULL;
-diff --git a/drivers/net/wireless/wl1251/wl1251.h
-b/drivers/net/wireless/wl1251/wl1251.h
-index fc778a7..d2a289d 100644
---- a/drivers/net/wireless/wl1251/wl1251.h
-+++ b/drivers/net/wireless/wl1251/wl1251.h
-@@ -379,6 +379,8 @@ struct wl1251 {
- 	/* in dBm */
- 	int power_level;
- +	int rssi_thold;
-+
- 	struct wl1251_stats stats;
- 	struct wl1251_debugfs debugfs;
- @@ -444,4 +446,7 @@ void wl1251_disable_interrupts(struct wl1251 *wl);
- #define WL1251_PART_WORK_REG_START	REGISTERS_BASE
- #define WL1251_PART_WORK_REG_SIZE	REGISTERS_WORK_SIZE
- +#define WL1251_DEFAULT_LOW_RSSI_WEIGHT          10
-+#define WL1251_DEFAULT_LOW_RSSI_DEPTH           10
-+
- #endif
--- 
-1.7.0.4
+> What i propose should work with any cfg80211 driver where
+> set_channel() is properly implemented for monitor interfaces, and
+> mac80211 is certainly one of them. When in the first place one
+> requests set_channel() for a monitor that's not compatible with the
+> current configuration, it'll return an error, and so wdev->channel
+> would not be set at all. If it succeeded and then someone later wants
+> to verify the monitor channel, set_channel() is still the best
+> opportunity because it is this function that has all the checks to
+> verify the channel is still valid.
+> 
+> To sum up, i see no drawbacks in using set_channel() for that, it
+> doesn't add any implicit requirements, doesn't change semantics,
+> non-intrusive, doesn't break anything and works correctly every time.
 
+Yes, in some ways this makes sense, but I'm not convinced that
+semantically we really want it. It really relies on returning an error
+when the given channel cannot be assigned, which I guess we could, but
+it just feels wrong. I can't really give a good reason for it other than
+that.
+
+However, also consider this case: If you have a monitor and IBSS
+interface, the IBSS might -- rather infrequently -- hop channels. In
+this case, it might make sense to still return the channel when the
+monitor is queried, but you wouldn't be able to set it?
+
+Also, say you did this:
+ - add monitor, set to channel 5
+ - add IBSS, create network on channel 1
+ - observe packets on monitor iface received on channel 1
+ - remove IBSS interface
+ - query monitor channel -- now suddenly with your approach
+   the channel is reset to 5, when it was quite obviously 1
+   in the time between
+
+I think that'd be kinda confusing too.
+
+johannes
 
