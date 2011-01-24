@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54100 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab1AXUS0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 15:18:26 -0500
-Subject: Re: [PATCH] wl12xx: add missing MODULE_FIRMWARE statment for
- AP-mode FW
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1295255760-23759-1-git-send-email-arik@wizery.com>
-References: <1295255760-23759-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 22:18:35 +0200
-Message-ID: <1295900315.2063.3.camel@pimenta>
+Received: from mms2.broadcom.com ([216.31.210.18]:1114 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750831Ab1AXV57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 16:57:59 -0500
+From: "Brett Rudley" <brudley@broadcom.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Gustavo F. Padovan" <padovan@profusion.mobi>
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"vossen@broadcom.com" <vossen@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 24 Jan 2011 13:57:46 -0800
+Subject: RE: [PATCH] brcm80211: fix error report string
+Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE13CD6E8FB6@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <1295894723-28346-1-git-send-email-padovan@profusion.mobi>
+ <AANLkTi=GqWNd6yu0CeWAzt9ZRgCDkFRgwMExZiqEUr3Z@mail.gmail.com>
+In-Reply-To: <AANLkTi=GqWNd6yu0CeWAzt9ZRgCDkFRgwMExZiqEUr3Z@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 10:16 +0100, Arik Nemtsov wrote:
-> In wl12xx cards AP-mode requires a separate FW file. Add this file to
-> the module info.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-
-Applied, thanks!
-
--- 
-Cheers,
-Luca.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBSYWZhxYIgTWnFgmVja2kgW21h
+aWx0bzp6YWplYzVAZ21haWwuY29tXQ0KPiBTZW50OiBNb25kYXksIEphbnVhcnkgMjQsIDIwMTEg
+MToxNyBQTQ0KPiBUbzogR3VzdGF2byBGLiBQYWRvdmFuDQo+IENjOiBCcmV0dCBSdWRsZXk7IEhl
+bnJ5IFB0YXNpbnNraTsgRG93YW4gS2ltOyB2b3NzZW5AYnJvYWRjb20uY29tOyBBcmVuZA0KPiBW
+YW4gU3ByaWVsOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6
+IFtQQVRDSF0gYnJjbTgwMjExOiBmaXggZXJyb3IgcmVwb3J0IHN0cmluZw0KPiANCj4gMjAxMS8x
+LzI0IEd1c3Rhdm8gRi4gUGFkb3ZhbiA8cGFkb3ZhbkBwcm9mdXNpb24ubW9iaT46DQo+ID4gU2ln
+bmVkLW9mZi1ieTogR3VzdGF2byBGLiBQYWRvdmFuIDxwYWRvdmFuQHByb2Z1c2lvbi5tb2JpPg0K
+PiA+IC0tLQ0KPiA+IMKgZHJpdmVycy9zdGFnaW5nL2JyY204MDIxMS9zeXMvd2xjX21hYzgwMjEx
+LmMgfCDCoCDCoDIgKy0NCj4gPiDCoDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAx
+IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc3RhZ2luZy9icmNt
+ODAyMTEvc3lzL3dsY19tYWM4MDIxMS5jDQo+IGIvZHJpdmVycy9zdGFnaW5nL2JyY204MDIxMS9z
+eXMvd2xjX21hYzgwMjExLmMNCj4gPiBpbmRleCA1ZWI0MWQ2Li5lZTFiY2M1IDEwMDY0NA0KPiA+
+IC0tLSBhL2RyaXZlcnMvc3RhZ2luZy9icmNtODAyMTEvc3lzL3dsY19tYWM4MDIxMS5jDQo+ID4g
+KysrIGIvZHJpdmVycy9zdGFnaW5nL2JyY204MDIxMS9zeXMvd2xjX21hYzgwMjExLmMNCj4gPiBA
+QCAtNjkxMCw3ICs2OTEwLDcgQEAgcHJlcF9tYWM4MDIxMV9zdGF0dXMoc3RydWN0IHdsY19pbmZv
+ICp3bGMsDQo+IGQxMXJ4aGRyX3QgKnJ4aCwgc3RydWN0IHNrX2J1ZmYgKnAsDQo+ID4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqBwcmVhbWJsZSA9IDA7DQo+ID4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBpZiAoSVNfQ0NLKHJzcGVjKSkgew0KPiA+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgaWYgKHJ4aC0+UGh5UnhTdGF0dXNfMCAmIFBSWFMwX1NIT1JUSCkNCj4gPiAtIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIFdMX0VSUk9SKCJTaG9ydCBD
+Q0tcbiIpOw0KPiA+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgV0xfRVJST1IoIiVzOiBTaG9ydCBDQ0tcbiwgX19mdW5jX18iKTsNCj4gDQo+IEkgaGF2ZSBu
+byBpZGVhIGhvdyBXTF9FUlJPUiB3b3JrcywgYnV0IGFyZSB5b3Ugc3VyZSBvZiB0aGF0Pw0KPiAN
+Cj4gWW91IHdyb3RlOg0KPiAiJXM6IFNob3J0IENDS1xuLCBfX2Z1bmNfXyINCj4gDQo+IERpZG4n
+dCB5b3UgbWVhbjoNCj4gIiVzOiBTaG9ydCBDQ0tcbiIsIF9fZnVuY19fDQo+ID8NCj4gDQoNClJh
+ZmFsJ3Mgc3VnZ2VzdGlvbiBpcyBjb3JyZWN0LCB0aGUgcGF0Y2ggd2FzIGluY29ycmVjdC4NCihH
+b29kIGV5ZXMsIFJhZmFsKQ0KDQpCcmV0dA0KDQo+IC0tDQo+IFJhZmHFgg0KDQo=
 
