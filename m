@@ -1,169 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:53861 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751055Ab1ADXsl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53532 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691Ab1AXNKW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:48:41 -0500
-Subject: [RFC PATCH 06/17] zd1211rw: support setting BSSID for AP mode
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:48:36 +0200
-Message-ID: <20110104234836.25309.11362.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 24 Jan 2011 08:10:22 -0500
+Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jamie Kitson <jamie@kitten-x.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>
+In-Reply-To: <AANLkTimhBepRreUTfuzN2M=eVc3Bka0YWGk-ZbtX4DLt@mail.gmail.com>
+References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
+	 <4D3B0390.5070108@broadcom.com>
+	 <AANLkTinwPrar6ZBhSALBif8__4mHHsKuDYKsgr4FDqtu@mail.gmail.com>
+	 <AANLkTimhBepRreUTfuzN2M=eVc3Bka0YWGk-ZbtX4DLt@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 14:11:14 +0100
+Message-ID: <1295874674.3639.21.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_chip.c |   39 +++++++++++++++++++++++--------
- drivers/net/wireless/zd1211rw/zd_chip.h |    1 +
- drivers/net/wireless/zd1211rw/zd_mac.c  |   25 +++++++++++++++++++-
- drivers/net/wireless/zd1211rw/zd_mac.h  |    1 +
- 4 files changed, 55 insertions(+), 11 deletions(-)
+On Mon, 2011-01-24 at 13:08 +0000, Jamie Kitson wrote:
+> >> This may not be supported by this driver.
+> >
+> > Ok, how would I find out for sure?
+> 
+> I got this from the irc channel:
+> 
+> [12:55] <johill> JamieKitson: it doesn't, at least arend said that a
+> couple of days ago
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 8c05737..f1813a2 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -369,16 +369,12 @@ error:
- 	return r;
- }
- 
--/* MAC address: if custom mac addresses are to be used CR_MAC_ADDR_P1 and
-- *              CR_MAC_ADDR_P2 must be overwritten
-- */
--int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
-+static int zd_write_mac_addr_common(struct zd_chip *chip, const u8 *mac_addr,
-+				    const struct zd_ioreq32 *in_reqs,
-+				    const char *type)
- {
- 	int r;
--	struct zd_ioreq32 reqs[2] = {
--		[0] = { .addr = CR_MAC_ADDR_P1 },
--		[1] = { .addr = CR_MAC_ADDR_P2 },
--	};
-+	struct zd_ioreq32 reqs[2] = {in_reqs[0], in_reqs[1]};
- 
- 	if (mac_addr) {
- 		reqs[0].value = (mac_addr[3] << 24)
-@@ -387,9 +383,9 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
- 			      |  mac_addr[0];
- 		reqs[1].value = (mac_addr[5] <<  8)
- 			      |  mac_addr[4];
--		dev_dbg_f(zd_chip_dev(chip), "mac addr %pM\n", mac_addr);
-+		dev_dbg_f(zd_chip_dev(chip), "%s addr %pM\n", type, mac_addr);
- 	} else {
--		dev_dbg_f(zd_chip_dev(chip), "set NULL mac\n");
-+		dev_dbg_f(zd_chip_dev(chip), "set NULL %s\n", type);
- 	}
- 
- 	mutex_lock(&chip->mutex);
-@@ -398,6 +394,29 @@ int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
- 	return r;
- }
- 
-+/* MAC address: if custom mac addresses are to be used CR_MAC_ADDR_P1 and
-+ *              CR_MAC_ADDR_P2 must be overwritten
-+ */
-+int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr)
-+{
-+	static const struct zd_ioreq32 reqs[2] = {
-+		[0] = { .addr = CR_MAC_ADDR_P1 },
-+		[1] = { .addr = CR_MAC_ADDR_P2 },
-+	};
-+
-+	return zd_write_mac_addr_common(chip, mac_addr, reqs, "mac");
-+}
-+
-+int zd_write_bssid(struct zd_chip *chip, const u8 *bssid)
-+{
-+	static const struct zd_ioreq32 reqs[2] = {
-+		[0] = { .addr = CR_BSSID_P1 },
-+		[1] = { .addr = CR_BSSID_P2 },
-+	};
-+
-+	return zd_write_mac_addr_common(chip, bssid, reqs, "bssid");
-+}
-+
- int zd_read_regdomain(struct zd_chip *chip, u8 *regdomain)
- {
- 	int r;
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
-index f8bbf7d..7b0c58c 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.h
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.h
-@@ -881,6 +881,7 @@ static inline u8 _zd_chip_get_channel(struct zd_chip *chip)
- u8  zd_chip_get_channel(struct zd_chip *chip);
- int zd_read_regdomain(struct zd_chip *chip, u8 *regdomain);
- int zd_write_mac_addr(struct zd_chip *chip, const u8 *mac_addr);
-+int zd_write_bssid(struct zd_chip *chip, const u8 *bssid);
- int zd_chip_switch_radio_on(struct zd_chip *chip);
- int zd_chip_switch_radio_off(struct zd_chip *chip);
- int zd_chip_enable_int(struct zd_chip *chip);
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 9284643..0ef27db 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -231,6 +231,26 @@ static int set_rx_filter(struct zd_mac *mac)
- 	return zd_iowrite32(&mac->chip, CR_RX_FILTER, filter);
- }
- 
-+static int set_mac_and_bssid(struct zd_mac *mac)
-+{
-+	int r;
-+
-+	if (!mac->vif)
-+		return -1;
-+
-+	r = zd_write_mac_addr(&mac->chip, mac->vif->addr);
-+	if (r)
-+		return r;
-+
-+	/* Vendor driver after setting MAC either sets BSSID for AP or
-+	 * filter for other modes.
-+	 */
-+	if (mac->type != NL80211_IFTYPE_AP)
-+		return set_rx_filter(mac);
-+	else
-+		return zd_write_bssid(&mac->chip, mac->vif->addr);
-+}
-+
- static int set_mc_hash(struct zd_mac *mac)
- {
- 	struct zd_mc_hash hash;
-@@ -888,7 +908,9 @@ static int zd_op_add_interface(struct ieee80211_hw *hw,
- 		return -EOPNOTSUPP;
- 	}
- 
--	return zd_write_mac_addr(&mac->chip, vif->addr);
-+	mac->vif = vif;
-+
-+	return set_mac_and_bssid(mac);
- }
- 
- static void zd_op_remove_interface(struct ieee80211_hw *hw,
-@@ -896,6 +918,7 @@ static void zd_op_remove_interface(struct ieee80211_hw *hw,
- {
- 	struct zd_mac *mac = zd_hw_mac(hw);
- 	mac->type = NL80211_IFTYPE_UNSPECIFIED;
-+	mac->vif = NULL;
- 	zd_set_beacon_interval(&mac->chip, 0);
- 	zd_write_mac_addr(&mac->chip, NULL);
- }
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
-index ff7ef30..0ec6bde 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-@@ -172,6 +172,7 @@ struct zd_mac {
- 	spinlock_t lock;
- 	spinlock_t intr_lock;
- 	struct ieee80211_hw *hw;
-+	struct ieee80211_vif *vif;
- 	struct housekeeping housekeeping;
- 	struct work_struct set_rts_cts_work;
- 	struct work_struct process_intr;
+Well, I was referring to what you quoted above :-)
+
+johannes
 
