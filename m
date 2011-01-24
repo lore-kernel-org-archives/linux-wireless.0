@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:41997 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753665Ab1AaUGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 15:06:50 -0500
-Subject: Re: [PATCH v2 06/10] mac80211: add HW flag for disabling auto
- link-PS in AP mode
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1296475910.3812.27.camel@jlt3.sipsolutions.net>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
-	 <1296472589-26401-7-git-send-email-arik@wizery.com>
-	 <1296473043.3812.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTin9vOQJqDJezzBMjjRyGNDYGEwOwgT_aFk2NBYD@mail.gmail.com>
-	 <1296475910.3812.27.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 22:06:35 +0200
-Message-ID: <1296504395.3069.651.camel@pimenta>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52968 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751560Ab1AXLbM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 06:31:12 -0500
+Received: by fxm20 with SMTP id 20so3899436fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 03:31:11 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Survey data inconsistencies between drivers
+Date: Mon, 24 Jan 2011 12:29:49 +0100
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201101241229.50142.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 13:11 +0100, Johannes Berg wrote:
-> On Mon, 2011-01-31 at 13:49 +0200, Arik Nemtsov wrote:
-> > On Mon, Jan 31, 2011 at 13:24, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > > It'd be nicer if you could separate out mac80211 patches, but then
-> Luca
-> > > needs to hold off merging until John picked up the mac80211 patch.
-> > 
-> > Yea that would complicate matters a bit. Does the ordering of the
-> > patches bother you?
-> 
-> It just makes it more complicated for me to pick out the right thing
-> --
-> I almost missed that there was a mac80211 patch in this huge series. 
+Hi,
 
-Yes, I totally agree with Johannes.  I prefer that
-mac80211/cfg80211/whatever_other_stuff be sent as separate series, so
-that there's not confusions about who applies what.  If the patches are
-in the same series, I always need to ask John to either take them all or
-not.
+currently there are at least three different survey types implemented in
+different mac80211 drivers.
 
-The ideal is if you send mac80211 patches separated from wl12xx and
-mention the dependency on the wl12xx series, so I'm aware and wait for
-John's integration before taking the wl12xx stuff in.
+- ath9k always lists the survey data for all channels and always provides
+  accumulated busy time data. This has the advantage that a simple scan
+  followed   by a suvrey dump will give a nice overview of the different
+  channel utilization.
+- ath5k only lists the active channel but also accumlates the busy time
+  statistics.
+- rt2800 only lists the active channel and only returns relative busy time
+  values since the last read.
 
+>From a hw perspective all three drivers appear similar, there are some
+registers that are cleared on read and contain the busy times since the
+last read.
 
--- 
-Cheers,
-Luca.
+I really like the ath9k approach but implementing it in every driver
+sounds like a lot of redundancy.
 
+In order to have consistent survey data between drivers I'd propose the
+following approach:
+
+- The driver's get_survey callback only returns relative survey data for the
+  currently active channel. That means reading the current busy time statistics
+  from the hw and clearing the appropriate counters.
+- mac80211 would keep track of accumulating the gathered survey data.
+- mac80211 would read the survey data before each channel change and update
+  the approriate channel's survey data just as ath9k does right now.
+
+Any arguments against such a unification?
+
+Thanks,
+Helmut
