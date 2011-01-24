@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:33829 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751678Ab1AELwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 06:52:08 -0500
-Received: from zenon.in.qult.net ([192.168.128.3])
-	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <i@lri.fr>)
-	id 1PaRIs-0006vM-5i
-	for linux-wireless@vger.kernel.org; Wed, 05 Jan 2011 12:13:18 +0100
-Received: from ig by zenon.in.qult.net with local (Exim 4.72)
-	(envelope-from <i@lri.fr>)
-	id 1PaRIp-0006N0-08
-	for linux-wireless@vger.kernel.org; Wed, 05 Jan 2011 12:13:15 +0100
-Date: Wed, 5 Jan 2011 12:13:14 +0100
-From: Ignacy Gawedzki <i@lri.fr>
-To: linux-wireless@vger.kernel.org
-Subject: About clocks in the carl9170 firmware
-Message-ID: <20110105111314.GA23794@zenon.in.qult.net>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:33368 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751750Ab1AXBK2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 Jan 2011 20:10:28 -0500
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0627811424
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 10:10:26 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via wext when possible
+Date: Mon, 24 Jan 2011 10:10:38 +0900
+Cc: Paul Fertser <fercerpav@gmail.com>, linux-wireless@vger.kernel.org,
+	"Thomas d'Otreppe" <tdotreppe@gmail.com>,
+	Richard Farina <sidhayn@gmail.com>,
+	Maxim Levitsky <maximlevitsky@gmail.com>
+References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com> <1295773599.3639.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1295773599.3639.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201101241010.38393.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun January 23 2011 18:06:39 Johannes Berg wrote:
+> On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
+> > This makes it possible to retrieve the channel for the monitor interface
+> > in cases when it can be determined unambigously. Tested with ath5k.
+> 
+> NAK.
+> 
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
 
-A few months ago, Christian Lamparter suggested to me the use of
-get_clock_counter() in the carl9170 firmware code for time measurement
-purposes.
+> I don't think so -- I don't recall anyone ever asking before ;-)
 
-I just got back to that, after a long period of other things to do instead.
+I definetly want this functionality for my WLAN monitoring tool ("horst" - 
+http://br1.einfach.org/horst). A similar patch has also been discussed for 
+aircrack-ng in June 2010 (https://patchwork.kernel.org/patch/103589/).
 
-According to the results of a few tests I've been running yesterday, it looks
-that this clock is 44Mhz, not 40Mhz, nor 80Mhz.
+I understand your point of not wanting to report wrong information, esp when 
+we have multiple interfaces on different channels - but in most situations for 
+sniffers etc this is not the case, we just have one monitor interface or one 
+interface + one monitor interface, in which cases I believe we should be able 
+to report a channel.
 
-According to Christian, the clock source, as accessed through
-get_clock_counter() is stable and does not depend on calls to clock_set().
-This is further corroborated by the definition and use of the
-AR9170_TICKS_PER_MICROSECOND *constant* in timer.h.  But still, how comes that
-constant is 80 then?
+So just for the record: I want it, pretty please! :)
 
-I'm obviously missing something here.  I would be really thankful to anybody
-who could explain how these clocks/timers work and how they are supposed to be
-used.
-
-Thanks,
-
-Ignacy
-
--- 
-I have not lost my mind, it's backed up on disk somewhere.
+bruno
