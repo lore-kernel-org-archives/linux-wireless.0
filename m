@@ -1,53 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44566 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119Ab1ACHPe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 02:15:34 -0500
-Received: by iyi12 with SMTP id 12so11876159iyi.19
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Jan 2011 23:15:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=w+EEdROx5NCBEe2fLv6RM-7fGSoNEpQ-tBZYo@mail.gmail.com>
-References: <AANLkTi=w+EEdROx5NCBEe2fLv6RM-7fGSoNEpQ-tBZYo@mail.gmail.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sun, 2 Jan 2011 23:15:13 -0800
-Message-ID: <AANLkTind_8HzraBGxyA90ymQ_e3uJV+iykMNKzekRLA9@mail.gmail.com>
-Subject: Fwd: mac80211+iwlwifi bug with HT rates?
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:35352 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981Ab1AXSXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 13:23:22 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v4 4/5] ath9k: remove the bf->aphy field
+Date: Mon, 24 Jan 2011 19:23:17 +0100
+Message-Id: <1295893398-5124-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1295893398-5124-3-git-send-email-nbd@openwrt.org>
+References: <1295893398-5124-1-git-send-email-nbd@openwrt.org>
+ <1295893398-5124-2-git-send-email-nbd@openwrt.org>
+ <1295893398-5124-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-linux-wireless spam filter rejected our school's google appliance
-mail, trying again as plain text.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   38 +++++++++++++------------------
+ 2 files changed, 17 insertions(+), 24 deletions(-)
 
-Sorry,
-Dan
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 76e8c0c..dd708e9 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -32,6 +32,7 @@
+  */
+ 
+ struct ath_node;
++struct ath_wiphy;
+ 
+ /* Macro to expand scalars to 64-bit objects */
+ 
+@@ -234,7 +235,6 @@ struct ath_buf {
+ 	bool bf_stale;
+ 	u16 bf_flags;
+ 	struct ath_buf_state bf_state;
+-	struct ath_wiphy *aphy;
+ };
+ 
+ struct ath_atx_tid {
+@@ -564,7 +564,6 @@ struct ath_ant_comb {
+ #define PS_WAIT_FOR_TX_ACK        BIT(3)
+ #define PS_BEACON_SYNC            BIT(4)
+ 
+-struct ath_wiphy;
+ struct ath_rate_table;
+ 
+ struct ath9k_vif_iter_data {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index b4f4f4b..5fc4091 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -57,8 +57,9 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 			     struct list_head *head);
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
+-static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+-			     int nframes, int nbad, int txok, bool update_rc);
++static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
++			     struct ath_tx_status *ts, int nframes, int nbad,
++			     int txok, bool update_rc);
+ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 			      int seqno);
+ 
+@@ -297,7 +298,6 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 
+ 	ATH_TXBUF_RESET(tbf);
+ 
+-	tbf->aphy = bf->aphy;
+ 	tbf->bf_mpdu = bf->bf_mpdu;
+ 	tbf->bf_buf_addr = bf->bf_buf_addr;
+ 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
+@@ -345,7 +345,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_node *an = NULL;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_sta *sta;
+-	struct ieee80211_hw *hw;
++	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct ath_atx_tid *tid = NULL;
+@@ -364,7 +364,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 	tx_info = IEEE80211_SKB_CB(skb);
+-	hw = bf->aphy->hw;
+ 
+ 	memcpy(rates, tx_info->control.rates, sizeof(rates));
+ 
+@@ -383,7 +382,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			    !bf->bf_stale || bf_next != NULL)
+ 				list_move_tail(&bf->list, &bf_head);
+ 
+-			ath_tx_rc_status(bf, ts, 1, 1, 0, false);
++			ath_tx_rc_status(sc, bf, ts, 1, 1, 0, false);
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+ 				0, 0);
+ 
+@@ -489,10 +488,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
+ 				memcpy(tx_info->control.rates, rates, sizeof(rates));
+-				ath_tx_rc_status(bf, ts, nframes, nbad, txok, true);
++				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, true);
+ 				rc_update = false;
+ 			} else {
+-				ath_tx_rc_status(bf, ts, nframes, nbad, txok, false);
++				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok, false);
+ 			}
+ 
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+@@ -516,7 +515,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 						bf->bf_state.bf_type |=
+ 							BUF_XRETRY;
+-						ath_tx_rc_status(bf, ts, nframes,
++						ath_tx_rc_status(sc, bf, ts, nframes,
+ 								nbad, 0, false);
+ 						ath_tx_complete_buf(sc, bf, txq,
+ 								    &bf_head,
+@@ -1682,7 +1681,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
+ 
+ 	ATH_TXBUF_RESET(bf);
+ 
+-	bf->aphy = aphy;
+ 	bf->bf_flags = setup_tx_flags(skb);
+ 	bf->bf_mpdu = skb;
+ 
+@@ -1836,8 +1834,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ /*****************/
+ 
+ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+-			    struct ath_wiphy *aphy, int tx_flags, int ftype,
+-			    struct ath_txq *txq)
++			    int tx_flags, int ftype, struct ath_txq *txq)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+@@ -1847,9 +1844,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 	ath_dbg(common, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
+ 
+-	if (aphy)
+-		hw = aphy->hw;
+-
+ 	if (tx_flags & ATH_TX_BAR)
+ 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+ 
+@@ -1923,7 +1917,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 			complete(&sc->paprd_complete);
+ 	} else {
+ 		ath_debug_stat_tx(sc, bf, ts);
+-		ath_tx_complete(sc, skb, bf->aphy, tx_flags,
++		ath_tx_complete(sc, skb, tx_flags,
+ 				bf->bf_state.bfs_ftype, txq);
+ 	}
+ 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+@@ -1939,14 +1933,14 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+ }
+ 
+-static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+-			     int nframes, int nbad, int txok, bool update_rc)
++static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
++			     struct ath_tx_status *ts, int nframes, int nbad,
++			     int txok, bool update_rc)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hw *hw = bf->aphy->hw;
+-	struct ath_softc *sc = bf->aphy->sc;
++	struct ieee80211_hw *hw = sc->hw;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	u8 i, tx_rateindex;
+ 
+@@ -2085,7 +2079,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 			 */
+ 			if (ts.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			ath_tx_rc_status(bf, &ts, 1, txok ? 0 : 1, txok, true);
++			ath_tx_rc_status(sc, bf, &ts, 1, txok ? 0 : 1, txok, true);
+ 		}
+ 
+ 		if (bf_isampdu(bf))
+@@ -2233,7 +2227,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		if (!bf_isampdu(bf)) {
+ 			if (txs.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			ath_tx_rc_status(bf, &txs, 1, txok ? 0 : 1, txok, true);
++			ath_tx_rc_status(sc, bf, &txs, 1, txok ? 0 : 1, txok, true);
+ 		}
+ 
+ 		if (bf_isampdu(bf))
+-- 
+1.7.3.2
 
----------- Forwarded message ----------
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sun, Jan 2, 2011 at 11:13 PM
-Subject: mac80211+iwlwifi bug with HT rates?
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Cc: Swati Rallapalli <swati@cs.utexas.edu>
-
-
-I'm trying to track down an anomaly with a 3-stream 802.11n AP.
-iwlwifi is saying that a single antenna should be sufficient even when
-the AP supports 3 streams.  Here's what I've tracked down:
-Code in iwl-agn-rxon.c uses the ht_cap TX MCS parameters to determine
-how many streams the other side supports:
-<http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=blob;f=drivers/net/wireless/iwlwifi/iwl-agn-rxon.c;h=d33e4db7e56cab88abc3281d04adf32162b8020e;hb=HEAD#l470>
-Yet, it looks like mac80211 doesn't actually set those variables at
-all!  In net/mac80211/ht.c, when converting the IE to the Station HT
-cap:
-<http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=blob;f=net/mac80211/ht.c;h=75d679d75e63e92143d55a47601a1dfc1377ba03;hb=HEAD#l21>
-we first zero out the HT CAP (line 30) and then never actually set the
-ht_cap->mcs.tx_params variables at all.  Grep says that's the only use
-of mcs.tx_params in that directory, so I'm pretty confident mac80211
-just never does that.  Thus iwlwifi thinks it only needs to have 1 RX
-antenna enabled (though it defaults to a minimum of 2 when possible)
-and basically fails to receive 3 stream packets.
-Is this a bug in iwlwifi or mac80211?
-Thanks,
-Dan
