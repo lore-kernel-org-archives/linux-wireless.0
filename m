@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33037 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751953Ab1A0SyY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 13:54:24 -0500
-From: Kevin Hilman <khilman@ti.com>
-To: Vitaly Wool <vitalywool@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-References: <Pine.LNX.4.44L0.1012212032590.11252-100000@netrider.rowland.org>
-	<201012221329.40251.rjw@sisk.pl> <87k4hrtfcb.fsf@ti.com>
-	<AANLkTikH0aHQNzShAYQfPLPg4C_0HS_pWEqbJJ4aHZgm@mail.gmail.com>
-Date: Thu, 27 Jan 2011 10:54:19 -0800
-In-Reply-To: <AANLkTikH0aHQNzShAYQfPLPg4C_0HS_pWEqbJJ4aHZgm@mail.gmail.com>
-	(Vitaly Wool's message of "Thu, 27 Jan 2011 19:20:10 +0100")
-Message-ID: <87bp32npno.fsf@ti.com>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:48793 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192Ab1AXFmp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 00:42:45 -0500
+Received: by yib18 with SMTP id 18so1157797yib.19
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 21:42:44 -0800 (PST)
+Message-ID: <4D3D1179.3080102@lwfinger.net>
+Date: Sun, 23 Jan 2011 23:43:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	chaoming_li <chaoming_li@realsil.com.cn>
+Subject: Re: Question about rate control
+References: <4D3CF5E3.4060507@lwfinger.net>
+In-Reply-To: <4D3CF5E3.4060507@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vitaly Wool <vitalywool@gmail.com> writes:
+On 01/23/2011 09:45 PM, Larry Finger wrote:
+> I'm trying to use a special rate-control algorithm. ATM, this is necessary
+> because I don't know how to get the retry info from the firmware. This setup
+> worked fine with rtl8192ce using a fixed name compiled in the rate_control_ops
+> struct. The problem is that this code is also used by a new USB driver named
+> rtl8192cu that shares the rtlwifi module with the PCIe driver. When both are
+> loaded, the second gets a duplicate name warhing. To fix this, I have set up
+> code that generates a unique name, but it doesn't work. To help debug, I added a
+> printk to dump the name used in every call to ieee80211_rate_control_register().
+> The result of that printk is shown below. The 3rd value listed is my new one and
+> all looks OK; however, the selected rate control is "minstrel_ht", not my
+> special one.
+> 
+> ops->name: minstrel
+> ops->name: minstrel_ht
+> --snip--
+> ops->name: rtl-rc-0
+> ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+> 
+> Any thoughts on what might be wrong, or what values should be dumped for debugging?
 
-> Hi Kevin,
->
->> Therefore, what is ideally needed is the ability for A's suspend to
->> simply call pm_runtime_suspend() so the subsystem can do the work.
->> However, since runtime transitions are locked out by this time, that
->> doesn't work.  IOW, what is needed is a way for a system suspend to say
->> "please finish the runtime suspend that was already requested."
->>
->> What I've done to work around this in driver A is to manually check
->> pm_runtime_suspended() and directly call the subsystem's runtime
->> suspend/resume (patch below[1].  NOTE, I've used the _noirq methods to
->> ensure device A is available when device B needs it.)
->
-> suppose this driver runs on a platform that has runtime PM disabled.
-> How is it going to work then?
->
+I figured out my problem - I was not setting the rate_control_algorithm entry in
+struct ieee80211_hw correctly. All is fine now.
 
-Then pm_runtime_suspended() will be false, and the bus methods will
-suspend the device.
-
-Kevin
-
+Larry
