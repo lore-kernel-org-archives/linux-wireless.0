@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15293 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:41208 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753703Ab1A1PsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 10:48:06 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/8] iwlwifi: remove unneeded __packed
-Date: Fri, 28 Jan 2011 16:47:46 +0100
-Message-Id: <1296229671-3041-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+	id S1751388Ab1AXVKW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 16:10:22 -0500
+Received: from dlep36.itg.ti.com ([157.170.170.91])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0OLAMwN021540
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 15:10:22 -0600
+Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
+	by dlep36.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OLAMTl011295
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 15:10:22 -0600 (CST)
+Subject: Re: [PATCH v3  0/2] wl12xx: BA Initiator & receiver support
+From: Luciano Coelho <coelho@ti.com>
+To: "Levi, Shahar" <shahar_levi@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1295764043-29918-1-git-send-email-shahar_levi@ti.com>
+References: <1295764043-29918-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 23:05:20 +0200
+Message-ID: <1295903120.4430.1.camel@pimenta>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct iwl_queue is not part of firmware interface, so __packed is not
-needed. Remove it since is may affect performance.
+On Sun, 2011-01-23 at 07:27 +0100, Levi, Shahar wrote:
+> That series gather two patches:
+> [PATCH v7] wl12xx: BA initiator support
+> [PATCH v5] wl12xx: BA receiver support
+> 
+> Add 80211n BA initiator & receiver session support wl1271 driver.
+> BA initiator session management included in FW independently.
+> Include supported FW version auto detection mechanism.
+> 
+> Limitation:
+> - For now only one BA per direction is supported
+> 
+> Shahar Levi (2):
+>   wl12xx: BA initiator support
+>   wl12xx: BA receiver support
+> 
+>  drivers/net/wireless/wl12xx/acx.c    |   85 ++++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/wl12xx/acx.h    |   62 ++++++++++++++++++++++++-
+>  drivers/net/wireless/wl12xx/boot.c   |   24 ++++++++-
+>  drivers/net/wireless/wl12xx/conf.h   |    6 ++
+>  drivers/net/wireless/wl12xx/init.c   |   41 ++++++++++++++++
+>  drivers/net/wireless/wl12xx/main.c   |   72 +++++++++++++++++++++++++++--
+>  drivers/net/wireless/wl12xx/wl12xx.h |   16 ++++++-
+>  7 files changed, 296 insertions(+), 10 deletions(-)
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 6fa1383..b5f21e0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -138,7 +138,7 @@ struct iwl_queue {
- 				* space more than this */
- 	int high_mark;         /* high watermark, stop queue if free
- 				* space less than this */
--} __packed;
-+};
- 
- /* One for each TFD */
- struct iwl_tx_info {
+
 -- 
-1.7.1
+Cheers,
+Luca.
 
