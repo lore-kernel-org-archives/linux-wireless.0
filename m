@@ -1,78 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:43100 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751848Ab1AIQw2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 11:52:28 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 09 Jan 2011 08:52:11 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	<stable@kernel.org>, Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: [PATCH] ath9k: set hw opmode while changing interface type
-Date: Sun, 9 Jan 2011 22:21:28 +0530
-Message-ID: <1294591888-16625-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:36371 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129Ab1AXLed (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Jan 2011 06:34:33 -0500
+Subject: Re: [PATCH v2 2/6] nl80211: Pass probe response data to drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1295816579-28925-3-git-send-email-arik@wizery.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	 <1295816579-28925-3-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 12:35:24 +0100
+Message-ID: <1295868924.3639.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath9k: Add change_interface callback" is
-failed to set hw opmode while changing interface type
-on runtime. Not setting opmode fails to generate
-beacons on changing to AP mode.
+On Sun, 2011-01-23 at 23:02 +0200, Arik Nemtsov wrote:
+> Allow usermode to pass probe-response data. This data can be used as a
+> template probe-response offloading.
 
-Cc: stable@kernel.org
-Cc: Jouni Malinen <Jouni.Malinen@Atheros.com>
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |    4 ++++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+Why use a separate command for this, and not do it like the SSID? I also
+was under the impression you wanted both (which is somewhat redundant
+since you can parse the SSID out of the probe response), so shouldn't
+they both be required (or none, for compatibility)?
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 385ba03..efa573b 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -338,6 +338,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
- 			sc->beacon.bslot[avp->av_bslot] = NULL;
- 			sc->beacon.bslot_aphy[avp->av_bslot] = NULL;
- 			sc->nbcnvifs--;
-+			avp->av_bslot = -1;
- 		}
- 
- 		bf = avp->av_bcbuf;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f90a6ca..648a761 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1456,6 +1456,8 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int ret = 0;
- 
-@@ -1470,6 +1472,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 			ret = -ENOBUFS;
- 			goto out;
- 		}
-+		sc->sc_flags |= SC_OP_TSF_RESET;
- 		break;
- 	case NL80211_IFTYPE_STATION:
- 		/* Stop ANI */
-@@ -1488,6 +1491,7 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	vif->type = new_type;
- 	vif->p2p = p2p;
- 
-+	ah->opmode = avp->av_opmode = new_type;
- out:
- 	mutex_unlock(&sc->mutex);
- 	return ret;
--- 
-1.7.3.5
+Also, should cfg80211 pretend it knows the SSID/probe response when
+userspace didn't set it (from the beacon) so that mac80211 or the
+low-level drivers don't need to worry?
+
+johannes
+
 
