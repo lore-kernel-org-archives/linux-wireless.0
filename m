@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:55347 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752757Ab1ATUEi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50192 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665Ab1AXLkb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 15:04:38 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 70127540040
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 15:06:33 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-20 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110120200437.64CDE40F97@repository3.orbit-lab.org>
-Date: Thu, 20 Jan 2011 15:04:36 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 24 Jan 2011 06:40:31 -0500
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 Jan 2011 12:41:23 +0100
+Message-ID: <1295869283.3639.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   143a29f..fc5eb2b  history    -> origin/history
- + a3d484f...212a2fa master     -> origin/master  (forced update)
- * [new tag]         next-20110120 -> next-20110120
+On Sun, 2011-01-23 at 23:02 +0200, Arik Nemtsov wrote:
+> Support passing SSID and probe-response template to drivers.
+> This data can be used to offload the beacon -> probe-req -> probe-resp
+> process to HW.
 
-compat-wireless code metrics
+I still think you should add a wiphy flag and advertise it in nl80211 to
+advertise and request this behaviour. That will allow hostapd (and
+mac80211 in IBSS mode) to not reply to probe requests when they aren't
+filtered out by the device, and will allow hostapd/wpa_s to also
+restrict its operation to non-P2P etc. as Jouni pointed out. For P2P
+then that will have to be extended more I guess, and the firmware
+functionality be improved -- or even disabled.
 
-    783319 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1977 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1955 - % of crap code
+johannes
 
-Base tree: linux-next.git
-Base tree version: next-20110120
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
