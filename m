@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51696 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755032Ab1ASWaD (ORCPT
+Received: from mailout-eu.gmx.com ([213.165.64.42]:34335 "HELO
+	mailout-eu.gmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751492Ab1AYPLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 17:30:03 -0500
-Date: Wed, 19 Jan 2011 17:23:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ben Greear <greearb@candelatech.com>
+	Tue, 25 Jan 2011 10:11:37 -0500
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing rebased on 2.6.38-rc1
-Message-ID: <20110119222352.GA16160@tuxdriver.com>
-References: <20110119182236.GA2370@tuxdriver.com>
- <4D376309.9020300@candelatech.com>
+Content-Type: text/plain; charset="utf-8"
+Date: Tue, 25 Jan 2011 16:11:32 +0100
+From: "Josef Windorfer" <josefwindorfer@gmx.com>
+Message-ID: <20110125151134.139350@gmx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D376309.9020300@candelatech.com>
+Subject: Re: mini PCI express WLAN card
+To: "Dennis Borgmann" <dennis.borgmann@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 02:17:45PM -0800, Ben Greear wrote:
-> On 01/19/2011 10:22 AM, John W. Linville wrote:
-> >The wireless-testing tree has been rebased upon 2.6.38-rc1.
-> >Please updates your trees accordingly.
+Unfortunately, I don't know the chipset, but it's a 802.11n-card.
+
+I will buy this board and try to run the ath9k driver and post my experiences here! ;-)
+
+thanks.
+Greets Josef
+
+
+> ----- Original Message -----
+> From: Dennis Borgmann
+> Sent: 01/25/11 01:35 PM
+> To: Josef Windorfer
+> Subject: Re: mini PCI express WLAN card
 > 
-> Did you remove the 'wl' from the kernel name on purpose?
+> Hello Josef!
 > 
-> (Or did I screw that up locally somehow?)
+> Do you know the chipset, which is used in your card? As far as I can
+> see, it seems to be a 802.11n-card, which would mean, you need ath9k. As
+> soon as you know the chipset, check this page:
+> 
+> http://wireless.kernel.org/en/users/Drivers/ath9k#supported_chipsets
+> 
+> If yours is within this list, the device should work.
+> 
+> Kind regards,
+> Dennis Borgmann
+> 
+> Josef Windorfer schrieb:
+> > Hi all,
+> >
+> > I want to buy the mainboard ZOTAC G41-ITX with an mini PCI express WLAN card.
+> >
+> > I have only a few information about the card (from the manufacturer).
+> > It's an Atheros card with either AzureWave WiFi Modul AW NE771 or AzureWave WiFi AR5 B 91.
+> >
+> > Is there a driver support in linux available?
+> > I'm not realy successful by searching google.
+> >
+> > Thanks!
+> >
+> > Greets Josef
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >
 
-Arg...no...
-
-I'll fix it...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
