@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:52173 "EHLO bear.ext.ti.com"
+Received: from smtp.nokia.com ([147.243.1.48]:23084 "EHLO mgw-sa02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756198Ab1ALNFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 08:05:00 -0500
-Subject: Re: [PATCH 1/2] mac80211: add hw configuration for max ampdu
- buffer size
-From: Luciano Coelho <coelho@ti.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294837049.18570.63.camel@wimaxnb.nmp.nokia.com>
-References: <1294836052-16828-1-git-send-email-coelho@ti.com>
-	 <1294837049.18570.63.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 15:05:12 +0200
-Message-ID: <1294837512.2097.34.camel@pimenta>
-MIME-Version: 1.0
+	id S1753563Ab1AYKVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 05:21:35 -0500
+From: juuso.oikarinen@nokia.com
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Allow non-zero indexes for device specific pair-wise ciphers
+Date: Tue, 25 Jan 2011 12:21:22 +0200
+Message-Id: <1295950882-16785-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 13:57 +0100, Juuso Oikarinen wrote:
-> On Wed, 2011-01-12 at 14:40 +0200, ext coelho@ti.com wrote:
-> > From: Luciano Coelho <coelho@ti.com>
-> > 
-> > Some devices don't support the maximum AMDPU buffer size of 64, so we
-> > need to add an option to configure this in the hardware configuration.
-> > This value will be used in the ADDBA response instead of the value
-> > suggested in the request, if the latter is greater than the max
-> > supported.
-> > 
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> 
-> Tested-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Thanks a lot for testing this for me, Juuso! I owe you one beer...
-hrmmm... coke!
+Some vendor specific cipher suites require non-zero key indexes for pairwise
+keys, but as of currently, the cfg80211 does not allow it.
 
+As validating they cipher parameters for vendor specific cipher suites is the
+job of the driver or hardware/firmware, change the cfg80211 to allow also
+non-zero pairwise key indexes for vendor specific ciphers.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ net/wireless/util.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 4ed065d..6a750bc 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -167,12 +167,15 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 
+ 	/*
+ 	 * Disallow pairwise keys with non-zero index unless it's WEP
+-	 * (because current deployments use pairwise WEP keys with
+-	 * non-zero indizes but 802.11i clearly specifies to use zero)
++	 * or a vendor specific cipher (because current deployments use
++	 * pairwise WEP keys with non-zero indices and for vendor specific
++	 * ciphers this should be validated in the driver or hardware level
++	 * - but 802.11i clearly specifies to use zero)
+ 	 */
+ 	if (pairwise && key_idx &&
+-	    params->cipher != WLAN_CIPHER_SUITE_WEP40 &&
+-	    params->cipher != WLAN_CIPHER_SUITE_WEP104)
++	    ((params->cipher == WLAN_CIPHER_SUITE_TKIP) ||
++	     (params->cipher == WLAN_CIPHER_SUITE_CCMP) ||
++	     (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC)))
+ 		return -EINVAL;
+ 
+ 	switch (params->cipher) {
 -- 
-Cheers,
-Luca.
+1.7.1
 
