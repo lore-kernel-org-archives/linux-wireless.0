@@ -1,38 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36455 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930Ab1AGAJ7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 19:09:59 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 36so17989719wwa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:09:58 -0800 (PST)
-Subject: Re: [ath9k-devel] [ath9k] skbuff alloc of size 3872 failed
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Matt Turner <mattst88@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org,
-	Michael Guntsche <mike@it-loops.com>
-In-Reply-To: <AANLkTin1cpOwdwhHudcVhdckMgPpYcZGgRJkN+MpmrVm@mail.gmail.com>
-References: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
-	 <4D2655E6.3020304@candelatech.com>
-	 <AANLkTin1cpOwdwhHudcVhdckMgPpYcZGgRJkN+MpmrVm@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 01:09:55 +0100
-Message-ID: <1294358995.2704.16.camel@edumazet-laptop>
-Mime-Version: 1.0
+Received: from dell.nexicom.net ([216.168.96.13]:46463 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753367Ab1AYRwC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 12:52:02 -0500
+Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-36.nexicom.net [216.168.118.36])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p0PHpvrk007212
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 12:51:58 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 1A50298479
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 12:51:57 -0500 (EST)
+Message-ID: <4D3F0DBC.90302@lockie.ca>
+Date: Tue, 25 Jan 2011 12:51:56 -0500
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: LIBIPW
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le jeudi 06 janvier 2011 à 16:05 -0800, Luis R. Rodriguez a écrit :
+/usr/src/compat-wireless-2011-01-24 $ sudo make
+/usr/src/compat-wireless-2011-01-24/config.mk:202: "WARNING:
+CONFIG_CFG80211_WEXT will be deactivated or not working because kernel
+was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like
+iwconfig will not work. To activate it build your kernel e.g. with
+CONFIG_LIBIPW=m."
 
-> Eric, also please make sure you read and understand what using a SOB means:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/SubmittingPatches;h=689e2371095cc5dfea9927120009341f369159aa;hb=HEAD#l309
-> 
->   Luis
+$ sudo grep LIBIPW ../linux/.config
+''
 
-You must be kidding.
-
-
-
+What does LIBIPW depend on?
+I don't even see a choice to turn it on.
