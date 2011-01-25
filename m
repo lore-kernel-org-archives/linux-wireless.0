@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:37454 "HELO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751565Ab1AJTvt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 14:51:49 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 10 Jan 2011 11:51:11 -0800
-Subject: RE: [PATCH] mwifiex: remove linked list implementation
-Message-ID: <477F20668A386D41ADCC57781B1F704307F4D90EC5@SC-VEXCH1.marvell.com>
-References: <1294449014-15078-1-git-send-email-bzhao@marvell.com>
- <1294566437.5345.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1294566437.5345.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from cantor2.suse.de ([195.135.220.15]:46010 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753036Ab1AYLSv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 06:18:51 -0500
+Date: Tue, 25 Jan 2011 19:18:13 +0800
+From: Greg KH <gregkh@suse.de>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging: brcm80211: bugfix for softmac crash on multi
+ cpu configurations
+Message-ID: <20110125111813.GA14763@suse.de>
+References: <1295952716-16161-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1295952716-16161-1-git-send-email-rvossen@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
-ZW50OiBTdW5kYXksIEphbnVhcnkgMDksIDIwMTEgMTo0NyBBTQ0KPiBUbzogQmluZyBaaGFvDQo+
-IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEpvaG4gVy4gTGludmlsbGU7IEFt
-aXRrdW1hciBLYXJ3YXI7IEtpcmFuIERpdmVrYXI7IEZyYW5rIEh1YW5nDQo+IFN1YmplY3Q6IFJl
-OiBbUEFUQ0hdIG13aWZpZXg6IHJlbW92ZSBsaW5rZWQgbGlzdCBpbXBsZW1lbnRhdGlvbg0KPiAN
-Cj4gT24gRnJpLCAyMDExLTAxLTA3IGF0IDE3OjEwIC0wODAwLCBCaW5nIFpoYW8gd3JvdGU6DQo+
-IA0KPiA+ICsJdHhfYmFfdHNyX3RibCA9IChzdHJ1Y3QgbXdpZmlleF90eF9iYV9zdHJlYW1fdGJs
-ICopDQo+ID4gKwkJCQkJcHJpdi0+dHhfYmFfc3RyZWFtX3RibF9wdHIubmV4dDsNCj4gDQo+IERv
-bid0IGRvIHRoYXQuIEFsd2F5cyB1c2UgbGlzdF9maXJzdF9lbnRyeSgpIGV0YywgYmVjYXVzZSBv
-dGhlcndpc2UgdGhlDQo+IHN0cnVjdCBsaXN0X2hlYWQgbXVzdCBiZSB0aGUgZmlyc3QgbWVtYmVy
-IGluIHRoZSBzdHJ1Y3QsIHdoaWNoIGlzIHZlcnkNCj4gbm9uLWlkZW9tYXRpYyBhbmQgZXZlcnli
-b2R5IHdobyBpcyB1c2VkIHRvIHRoZSBrZXJuZWwgd2lsbCBnZXQgaXQgd3JvbmcNCj4gd2hlbiBt
-b2RpZnlpbmcgeW91ciBkcml2ZXIuDQo+IA0KPiBUcmVhdCBzdHJ1Y3QgbGlzdF9oZWFkIGFzIGNv
-bXBsZXRlbHkgb3BhcXVlIC0tIG5ldmVyIGxvb2sgaW50byBpdC4gVGhlcmUNCj4gYXJlIG1hY3Jv
-cyBmb3IgYW55IGtpbmQgb2YgbWFuaXB1bGF0aW9uIHdpdGggaXQuDQo+IA0KPiBBbHNvLCBhbGwg
-eW91ciBsb29wcyBhcmUgb3BlbiBjb2RlZCAtLSB1c2UgbGlzdF9mb3JfZWFjaF9lbnRyeSgpIGlu
-c3RlYWQNCj4gb2YgZG9pbmcgdGhhdCAoZXZlbiB0aGUgY29kZSBJIHF1b3RlZCBhYm92ZSBpcyBm
-cm9tIGFuIG9wZW4gY29kZWQgbG9vcCkNCg0KVGhhbmtzIGZvciB5b3VyIGNvbW1lbnRzLiBXZSB3
-aWxsIG1ha2UgY2hhbmdlcyBhbmQgcmVzZW5kIHRoZSBwYXRjaC4NCg0KUmVnYXJkcywNCg0KQmlu
-Zw0KDQo+IA0KPiBqb2hhbm5lcw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
-IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVsZXNzIiBpbg0KPiB0
-aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3Jl
-IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
-Lmh0bWwNCg==
+On Tue, Jan 25, 2011 at 11:51:56AM +0100, Roland Vossen wrote:
+> Solved a locking issue that resulted in driver crashes with the 43224 and 43225
+> chips. The problem has been reported on several fora. Root cause was two fold:
+> hardware was being manipulated by two unsynchronized threads, and a scan
+> operation could interfere with an ongoing dynamic calibration process. Fix was
+> to invoke a lock on wl_ops_config() operation and to set internal flags when a
+> scan operation is started and stopped.
+> 
+> Please add this to the staging-linus branch.
+
+Should this also go to the .37 stable kernel tree?
+
+thanks,
+
+greg k-h
