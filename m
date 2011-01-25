@@ -1,82 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59833 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34147 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766Ab1AFVzW (ORCPT
+	with ESMTP id S1752433Ab1AYKmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 16:55:22 -0500
-Subject: Re: [RFC PATCH 10/17] zd1211rw: implement beacon fetching and
- handling ieee80211_get_buffered_bc()
+	Tue, 25 Jan 2011 05:42:08 -0500
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-In-Reply-To: <201101062246.38932.chunkeey@googlemail.com>
-References: <20110104234745.25309.72030.stgit@fate.lan>
-	 <20110104234910.25309.19235.stgit@fate.lan>
-	 <201101062246.38932.chunkeey@googlemail.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1295950241.3650.3.camel@jlt3.sipsolutions.net>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	 <1295869283.3639.7.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+	 <1295950241.3650.3.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 Jan 2011 22:55:20 +0100
-Message-ID: <1294350920.25228.4.camel@jlt3.sipsolutions.net>
+Date: Tue, 25 Jan 2011 11:42:07 +0100
+Message-ID: <1295952127.3650.12.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-06 at 22:46 +0100, Christian Lamparter wrote:
-
-> Ideally, you should assign a proper sequence # to beacon frames too.
-> (802.11-2007 7.1.3.4.1)
+On Tue, 2011-01-25 at 11:10 +0100, Johannes Berg wrote:
+> On Mon, 2011-01-24 at 23:21 +0200, Arik Nemtsov wrote:
 > 
-> But as before, the long time between the upload and the actual beacon
-> xmit by the hardware make things really difficult. If you just call
-> "create_tx_desc_seq" right now, "theoretically" you have to buffer
-> all management and other Non-QoS data frames until the beacon was sent.
+> > Well a wiphy flag won't do here. Probe requests may be filtered in
+> > some modes (AP-mode) but needed in others (p2p?).
+> > I think flexibility is a nice added bonus here. A FW can decide to
+> > handle most standard probe-requests and simply not pass them up.
+> > Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
+> > 
+> > The current patches leave this policy in the hands of the driver/fw.
 > 
-> However, no one would do that :D. Either the hardware/firmware
-> controls the sequence counter or it's simply not implemented
-> (and nobody cares ;) ).
+> That is _very_ dangerous. If the user has older firmware that doesn't
+> know about WSC2, how would the user know not to configure WSC2 in
+> hostapd? That needs to be known to hostapd so it can verify this
+> situation. For P2P, we already know whether or not P2P is supported, but
+> that's rather vague in case there will ever be a revision of the P2P
+> spec with say different IEs.
+> 
+> Additionally, a "regular AP" (not P2P, not WSC) would still want to
+> reply to probe requests from WSC/P2P devices with the normal template.
+> 
+> IMHO it would be smarter to rework the firmware to only reply to probe
+> requests if the probe response is configured. Then, if WSC, P2P, or
+> similar technologies are in use on the interface, hostapd can simply
+> decide to not configure the probe response and have host-based
+> processing. Would that be a change you could still make?
 
-Yeah ... it turns out that nobody cares. It's probably easier/better to
-actually send beacons with seqno 0 instead of trying to hack around it.
 
+Of course, firmware can reply to non-p2p/non-wsc2 probe requests with a
+static probe response template.
 
+The question is how much knowledge you want to put into the firmware
+about those protocols. If you want to put all knowledge in there, then
+at least you need to indicate to hostapd which protocols the firmware
+knows not to reply to.
 
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index c47d7c0..f71ed31 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -225,6 +225,7 @@ struct ieee80211_if_ap {
->  	struct sk_buff_head ps_bc_buf;
->  	atomic_t num_sta_ps; /* number of stations in PS mode */
->  	int dtim_count;
-> +	bool dtim_bc_mc;
->  };
->  
->  struct ieee80211_if_wds {
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 5950e3a..26b688b 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -2178,6 +2178,8 @@ static void ieee80211_beacon_add_tim(struct ieee80211_if_ap *bss,
->  	if (bss->dtim_count == 0 && !skb_queue_empty(&bss->ps_bc_buf))
->  		aid0 = 1;
->  
-> +	bss->dtim_bc_mc = aid0 == 1;
-> +
->  	if (have_bits) {
->  		/* Find largest even number N1 so that bits numbered 1 through
->  		 * (N1 x 8) - 1 in the bitmap are 0 and number N2 so that bits
-> @@ -2540,7 +2542,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
->  	if (sdata->vif.type != NL80211_IFTYPE_AP || !beacon || !beacon->head)
->  		goto out;
->  
-> -	if (bss->dtim_count != 0)
-> +	if (bss->dtim_count != 0 || !bss->dtim_bc_mc)
->  		goto out; /* send buffered bc/mc only after DTIM beacon */
-
-Hmm, interesting. That makes some sense I guess. Luckily, I have
-hardware offload for this (extra queue) so I don't have to worry about
-it :-)
+Also, a way to turn off this behaviour would still be good for future
+protocol changes. If P2P changes in 3 years, I'm sure this firmware
+won't be updated to match since you'll be a few hardware generations
+ahead. Then, being able to turn off the offload completely would allow
+users to take advantage of new protocols without changing hardware. Of
+course, you may want to force users to buy new hardware that way -- but
+in that case we *still* need the advertisement of what's possible so
+users know right away that they need to buy new hardware and don't try
+to configure something that just fails in strange ways.
 
 johannes
 
