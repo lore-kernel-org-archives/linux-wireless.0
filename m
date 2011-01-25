@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579Ab1AaRk7 (ORCPT
+Received: from pdtms1.pdt.com ([207.18.22.4]:41172 "EHLO mail.pdt.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753919Ab1AYV0x convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 12:40:59 -0500
-Subject: Re: Why is wmm_param required for HT40- in mlme.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D46F2E2.3090905@candelatech.com>
-References: <4D44F94F.8040707@candelatech.com>
-	 <1296380208.3616.0.camel@jlt3.sipsolutions.net>
-	 <4D45A128.6060905@candelatech.com>
-	 <1296471791.3812.7.camel@jlt3.sipsolutions.net>
-	 <4D46F2E2.3090905@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 18:40:59 +0100
-Message-ID: <1296495659.3812.36.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 25 Jan 2011 16:26:53 -0500
+From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
+Subject: ?File list?
+Date: Tue, 25 Jan 2011 21:26:50 +0000
+Message-ID: <0826983CC0CB074798C42E77D8ACD07F06DA23@pdtms1.pdt.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 09:35 -0800, Ben Greear wrote:
 
-> > No, I got confused. 802.11n says an HT STA is a QoS STA (5.2.9), but in
-> > practice WMM is tested/certified instead of QoS.
-> 
-> So maybe we can remove that check for wmm_param, but put in a printk
-> to warn users that their AP is probably mis-configured?
+Is there any way to easily figure out what files have been added/modified to the Linux kernel/drivers
+to implement the wl1271 ?
 
-Yes, but there are hidden assumptions that WMM is available throughout
-the code that we need to hunt down first -- I'm sure there are some in
-the aggregation code for example since aggregation can only work when
-QoS/WMM is enabled.
+I know there is a directory ..net/wireless/wl12xx ....
+but I'm sure there are other files that were modified/added to maybe arch/arm, etc?
 
-johannes
+I know  you haven't heard from me lately... :-)
 
+I am "porting" wl1271 for i.MX233, on Linux 2.6.35...but wonder if I should get the latest/greatest
+of all your guys' hard work on the wl1271...
+
+Any ideas/suggestions?
+
+Thanks,
+
+Karen
