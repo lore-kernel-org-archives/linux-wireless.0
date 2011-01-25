@@ -1,24 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61707 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399Ab1AVCJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 21:09:38 -0500
-Subject: new iwlwifi 130 uCode available
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 21 Jan 2011 17:58:09 -0800
-Message-ID: <1295661489.3591.53.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mailout-eu.gmx.com ([213.165.64.42]:55607 "HELO
+	mailout-eu.gmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752627Ab1AYLoW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 06:44:22 -0500
+Content-Type: text/plain; charset="utf-8"
+Date: Tue, 25 Jan 2011 12:38:48 +0100
+From: "Josef Windorfer" <josefwindorfer@gmx.com>
+Message-ID: <20110125114419.139360@gmx.com>
+MIME-Version: 1.0
+Subject: mini PCI express WLAN card
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi all,
 
-Version 17.168.5.1 of uCode for Intel Intel@ 130 Series Wi-Fi Adapters
-is now available for download from
-http://intellinuxwireless.org/?n=Downloads
+I want to buy the mainboard ZOTAC G41-ITX with an mini PCI express WLAN card.
 
-Wey
+I have only a few information about the card (from the manufacturer).
+It's an Atheros card with either AzureWave WiFi Modul AW NE771 or AzureWave WiFi AR5 B 91.
 
+Is there a driver support in linux available?
+I'm not realy successful by searching google.
 
+Thanks!
+
+Greets Josef
