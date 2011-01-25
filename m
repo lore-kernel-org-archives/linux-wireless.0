@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:56767 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400Ab1A3TLh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41640 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949Ab1AYKMH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:11:37 -0500
-Message-ID: <4D45B7D5.2030408@davizone.at>
-Date: Sun, 30 Jan 2011 20:11:17 +0100
-From: David Gnedt <david.gnedt@davizone.at>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 15/18] wl1251: disable power saving in monitor mode
-References: <4D45A79E.7040801@davizone.at>
-In-Reply-To: <4D45A79E.7040801@davizone.at>
-Content-Type: text/plain; charset=ISO-8859-15
+	Tue, 25 Jan 2011 05:12:07 -0500
+Subject: Re: [PATCH v2 2/6] nl80211: Pass probe response data to drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTinJo7EV7zr=Z6oN3M2X3=gcv1W8G7cpbHPPNs=0@mail.gmail.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	 <1295816579-28925-3-git-send-email-arik@wizery.com>
+	 <1295868924.3639.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTinJo7EV7zr=Z6oN3M2X3=gcv1W8G7cpbHPPNs=0@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 Jan 2011 11:12:05 +0100
+Message-ID: <1295950325.3650.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Force power saving off while monitor interface is present.
+On Mon, 2011-01-24 at 22:47 +0200, Arik Nemtsov wrote:
+> On Mon, Jan 24, 2011 at 13:35, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Sun, 2011-01-23 at 23:02 +0200, Arik Nemtsov wrote:
+> >> Allow usermode to pass probe-response data. This data can be used as a
+> >> template probe-response offloading.
+> >
+> > Why use a separate command for this, and not do it like the SSID? I also
+> 
+> Its only relevant to AP-mode (at least for now) so bss_conf didn't
+> seem appropriate.
+> Also since its a dynamically allocated buffer it should be protected by RCU.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
-Sorry for the partly broken patches, I thought I configured my client the
-right way. I tried to stop the mails at my mailserver, but it was mostly
-already too late.
----
- drivers/net/wireless/wl1251/main.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+But all that is unrelated to the nl80211 API, no? Also the SSID already
+uses bss_conf too, and it's AP mode too...
 
-diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
-index d6ae6d5..edafa98 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -616,7 +616,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 			goto out_sleep;
- 	}
- 
--	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
-+	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested &&
-+	    !wl->monitor_present) {
- 		wl1251_debug(DEBUG_PSM, "psm enabled");
- 
- 		wl->psm_requested = true;
-@@ -632,8 +633,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
- 		if (ret < 0)
- 			goto out_sleep;
--	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
--		   wl->psm_requested) {
-+	} else if ((!(conf->flags & IEEE80211_CONF_PS) || wl->monitor_present)
-+		   && wl->psm_requested) {
- 		wl1251_debug(DEBUG_PSM, "psm disabled");
- 
- 		wl->psm_requested = false;
--- 
-1.7.0.4
+> About compatibility - good point there. Currently the probe response
+> template is set according to the beacon for compatibility. As for SSID
+> - with the current wl12xx we'll set an empty SSID when a
+> non-supporting hostapd is encountered. I'll fix that (in a v3). Other
+> than that, we should be able to operate with either one configured.
 
+Does that mean if you set an empty SSID it won't reply but pass them up?
+Then you could implement the behaviour I just asked for ...
+
+johannes
 
