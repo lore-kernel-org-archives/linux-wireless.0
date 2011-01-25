@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41737 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329Ab1ALUO0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 15:14:26 -0500
-Message-ID: <4D2E0B97.7000001@candelatech.com>
-Date: Wed, 12 Jan 2011 12:14:15 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:16093 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753599Ab1AYNxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 08:53:33 -0500
+Date: Tue, 25 Jan 2011 14:52:50 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, Bruno Randolf <br1@einfach.org>,
+	jirislaby@gmail.com, lrodriguez@atheros.com
+Subject: Re: [PATCH 1/2] ath5k: fix error handling in ath5k_hw_dma_stop
+Message-ID: <20110125135249.GA2610@redhat.com>
+References: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] ath9k: Handle interface changes properly
-References: <1294842652-7406-1-git-send-email-rmanoharan@atheros.com> <AANLkTi=S6TFk88cY27KFZ2q5mCykMMSn17LnH=V95MST@mail.gmail.com> <4D2E0653.7040606@openwrt.org>
-In-Reply-To: <4D2E0653.7040606@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2011 11:51 AM, Felix Fietkau wrote:
-> On 2011-01-12 10:06 AM, Björn Smedman wrote:
->> On Wed, Jan 12, 2011 at 3:30 PM, Rajkumar Manoharan
->> <rmanoharan@atheros.com> wrote:
->>> The commit ""ath9k: Add change_interface callback" was failed
->>> to update of hw opmode, ani and interrupt mask. This leads
->>> to break p2p functionality on ath9k. And the existing add and
->>> remove interface functions are not handling hw opmode and
->>> ANI properly.
->>>
->>> This patch combines the common code in interface callbacks
->>> and also takes care of multi-vif cases.
->>
->> How does your patch handle the race condition between the interface
->> change done in process context and the beacon tasklet triggered by
->> SWBA?
->>
->> Also, perhaps more applicable to the commit log than the patch, how
->> can opmode be properly handled in multi-vif cases? I mean let's say I
->> have two AP vifs and then change one into STA, is the opmode then STA?
->> Compare that to the case where I have two STA vifs and change one into
->> AP; so again I have one AP and one STA vif but this time opmode is AP,
->> right? I can see how I can be wrong about these examples but I can't
->> really see how the opmode concept can be properly handled in multi-vif
->> cases.
-> I think opmode should be handled as follows:
-> If there is at least one AP interface, opmode should be AP, regardless of what the other interfaces are set to.
-> If there is no AP vif, opmode can be set to the primary vif type.
+On Mon, Jan 24, 2011 at 11:31:43PM -0500, Bob Copeland wrote:
+> Review spotted a problem with the error handling in ath5k_hw_dma_stop:
+> a successful return from ath5k_hw_stop_tx_dma will be treated as
+> an error, so we always bail out of the loop after processing a single
+> active queue.  As a result, we may not actually stop some queues during
+> reset.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+> These two patches fix some buglets I found when reviewing some old code.
+> 
+>  drivers/net/wireless/ath/ath5k/dma.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+> index 0064be7..e828b98 100644
+> --- a/drivers/net/wireless/ath/ath5k/dma.c
+> +++ b/drivers/net/wireless/ath/ath5k/dma.c
+> @@ -838,7 +838,7 @@ int ath5k_hw_dma_stop(struct ath5k_hw *ah)
+>  	for (i = 0; i < qmax; i++) {
+>  		err = ath5k_hw_stop_tx_dma(ah, i);
+>  		/* -EINVAL -> queue inactive */
+> -		if (err != -EINVAL)
+> +		if (err && err != -EINVAL)
+>  			return err;
+>  	}
 
-This seems right...I think this is what we did in ath5k.
+Patch is good, but does not make code fully correct. When last queue
+is inactive, we return -EINVAL from ath5_hw_dma_stop(). So we need
+also:
 
-Just FYI:  With current ath9k code, I get almost zero packet throughput to the
-IP of the VAP device (ie, if it's serving DHCP) if I have a few STAs also
-created & associated with some other AP.  Removing the STA interfaces makes the VAP work fine.
-With or without the STAs on the VAP machine, vif to vif on vifs associated with the VAP work
-fine, so it's some sort of issue with passing the pkts up the stack.
+ 		if (err && err != -EINVAL)
+ 			return err;
++		err = 0;
+ 	}
 
-I haven't debugged this further.  I think ath5k doesn't have this problem,
-but I haven't tested that scenario recently.
+But perhaps, would be better just return 0 from 
+ath5k_hw_stop_tx_dma() when queue is inactive.
 
-Thanks,
-Ben
+I think that could fix "ath5k phy0: can't reset hardware (-5)"
+bugs reported in a few places, so patch should go to stable
+as well.
 
->
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Stanislaw
