@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:35796 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752516Ab1A0UPR (ORCPT
+Received: from rtits2.realtek.com ([60.250.210.242]:56810 "EHLO
+	rtits2.realtek.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025Ab1AYFJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 15:15:17 -0500
-From: Kevin Hilman <khilman@ti.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	<linux-pm@lists.linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-References: <Pine.LNX.4.44L0.1101271439020.2090-100000@iolanthe.rowland.org>
-Date: Thu, 27 Jan 2011 12:15:12 -0800
-In-Reply-To: <Pine.LNX.4.44L0.1101271439020.2090-100000@iolanthe.rowland.org>
-	(Alan Stern's message of "Thu, 27 Jan 2011 14:49:01 -0500 (EST)")
-Message-ID: <87tyguje7j.fsf@ti.com>
+	Tue, 25 Jan 2011 00:09:09 -0500
+From: =?gb2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>     <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net> <301B5E6D9B3042F6ABB4C6479ACB875E@realsil.com.cn>
+Subject: [PATCH] fix_rtlwifi_rfkill_state_not_synchronous_with_true_rfstate_issue
+Date: Tue, 25 Jan 2011 13:08:57 +0800
+Message-ID: <5D449C23195D46B388A79AE17932553E@realsil.com.cn>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="gb2312"
+In-Reply-To: <301B5E6D9B3042F6ABB4C6479ACB875E@realsil.com.cn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Stern <stern@rowland.harvard.edu> writes:
+Sorry for last patch have no description.
 
-> On Thu, 27 Jan 2011, Kevin Hilman wrote:
->
->> > Calling the runtime_suspend method directly is the way to do it.
->> >
->> 
->> Do you mean the driver's runtime_suspend method, or the subsystem's
->> runtime_suspend method?
->
-> The subsystem's.  If the driver has a runtime_suspend method then the 
-> subsystem's method will call it.
+1. when driver init, rfkill_state was setted, but because the flag valid may
+not be true, this will cause rfkill_state
+not synchronous with the true rf state, and will cause some issues when we
+do rfkill.
+and now in driver init we will set rfkill_state to rf_on, and at the same
+time 
+we tell rfkill to set rf_on also.
 
-Yes.  Thanks for the clarification.
+2. for rtl8192ce you can check GPIO any time, not only after up_first_time
+== true. so we delete rtlpci->up_first_time
+in rtl92ce_gpio_radio_on_off_checking.
 
->> >> While this works, I'm not crazy about it since it requires the driver
->> >> know about the subsystem (in this case the bus) where the real PM work
->> >> is done.  IMO, it would be much more intuitive (and readable) if the
->> >> driver's suspend hooks could simply trigger a runtime suspend (either a
->> >> new one, or one already requested.)
->> >
->> > This isn't clear to me.  Isn't the driver registered on the bus in 
->> > question?  Can't the driver therefore call the bus's runtime_suspend 
->> > routine directly, instead of dereferencing the bus->pm->runtime_suspend 
->> > pointer?
->> 
->> Not sure what you mean by directly.  The platform_bus doesn't expose
->> its runtime PM methods since they can be customized at runtime, so they
->> have to be called via bus->pm.
->> 
->> Or do you mean using dev->driver instead of dev->bus?
->
-> You're doing all of this for OMAP, right?  What is the subsystem's
-> runtime_suspend routine?  Is it omap_pm_runtime_suspend()?
+Signed-off-by: chaoming_li  <chaoming_li@realsil.com.cn>
 
-Yes.
+---
+ drivers/net/wireless/rtlwifi/base.c         |   13 ++++++++-----
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    2 +-
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-> If it is, then you can call omap_pm_runtime_suspend() directly instead
-> of calling dev->bus->pm->runtime_suspend().
-
-Personally, I prefer going through dev->bus as we try to avoid SoC
-specific calls in the driver.
-
-This same HW block might be re-used on non-OMAP SoCs (e.g. TI DaVinci)
-that would have different PM at the susbystem level.
-
-So, to summarize, as long as folks are OK with drivers directly calling
-the subsystem runtime PM callbacks, I'll go this route.
-
-Kevin
+diff --git a/drivers/net/wireless/rtlwifi/base.c
+b/drivers/net/wireless/rtlwifi/base.c
+index cf0b73e..33323b4 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -251,15 +251,18 @@ void rtl_init_rfkill(struct ieee80211_hw *hw)
+ 	bool blocked;
+ 	u8 valid = 0;
+ 
+-	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
++	/*1. set init state to on */
++	rtlpriv->rfkill.rfkill_state = 1;
++	wiphy_rfkill_set_hw_state(hw->wiphy, 0);
+ 
+-	/*set init state to that of switch */
+-	rtlpriv->rfkill.rfkill_state = radio_state;
+-	printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
+-	       rtlpriv->rfkill.rfkill_state ? "on" : "off");
++	/*2. check gpio for rf state */
++	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
+ 
++	/*3. if valid, change state based on gpio */
+ 	if (valid) {
+ 		rtlpriv->rfkill.rfkill_state = radio_state;
++		printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
++				rtlpriv->rfkill.rfkill_state ? "on" :
+"off");
+ 
+ 		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
+ 		wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 1c41a0c..cb2e01a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1943,7 +1943,7 @@ bool rtl92ce_gpio_radio_on_off_checking(struct
+ieee80211_hw *hw, u8 * valid)
+ 	bool b_actuallyset = false;
+ 	unsigned long flag;
+ 
+-	if ((rtlpci->up_first_time == 1) || (rtlpci->being_init_adapter))
++	if (rtlpci->being_init_adapter)
+ 		return false;
+ 
+ 	if (ppsc->b_swrf_processing)
+-- 
+1.7.0.4
 
