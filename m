@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56737 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755056Ab1ATLns (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 06:43:48 -0500
-Received: by bwz15 with SMTP id 15so441395bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 03:43:46 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: iwl4965: 11n broken
-Date: Thu, 20 Jan 2011 12:42:24 +0100
-Cc: "Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101201242.24680.helmut.schaa@googlemail.com>
+Received: from mga11.intel.com ([192.55.52.93]:2996 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751400Ab1AYO5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 09:57:33 -0500
+Subject: Re: [RFC] iwl3945: remove check_plcp_health
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+In-Reply-To: <20110125093507.GA6429@redhat.com>
+References: <20110125093507.GA6429@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 Jan 2011 06:56:03 -0800
+Message-ID: <1295967363.31035.1.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I've just updated my workstation to wireless-testing from last
-week (2.6.37-wl-default+). When associating to a 11n router the
-card only associates as 11g, the assoc request doesn't contain
-any HT IEs.
-
-The causing commit is:
-
-commit 21a5b3c6b19a8b8972ccdd55389be28a8b7c9180
-Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date:   Wed Nov 10 13:32:59 2010 -0800
-
-    iwlagn: use SKU information in the EEPROM
-    
-    EEPROM contain the SKU information for the device, use it.
-    
-    Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Tue, 2011-01-25 at 01:35 -0800, Stanislaw Gruszka wrote:
+> This patch helps some users currently complaining about iwl3945
+> performance.
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=654599
+> https://bugs.launchpad.net/ubuntu/maverick/+source/linux/+bug/621265/+index?comments=all
+> 
+> Patch does not helps all users, but they seems to be affected
+> by different bug or bugs.
+> 
+> Patch effectively reverts commit a29576a7844326c5223f4d4adbfd3f4d64173d4c
+> "iwl3945: add plcp error checking". It is minimal fix intended to
+> -stable posting. I will post cleaning up patch, if fix will be accepted.
+> 
+> ---
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
 
-Seems as if the device eeprom hasn't set EEPROM_SKU_CAP_11N_ENABLE and thus
-iwlagn thinks the device is not 11n capable.
+Agree, maybe I am wrong, but I don't think this plcp checking never
+being fully tested for 3945
+  
+Wey
 
-Ideas? Should we just revert the 4965 part of the patch and modify 
-iwl_eeprom_check_sku to allow overwriting the sku field? Do 4965 devices
-exists that are not 11n capable?
-
-Thanks,
-Helmut
