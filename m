@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59369 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953Ab1AEN5Q convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51475 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753610Ab1AYWBe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 08:57:16 -0500
-Received: by qwa26 with SMTP id 26so15670538qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 05:57:15 -0800 (PST)
+	Tue, 25 Jan 2011 17:01:34 -0500
+Message-ID: <4D3F4832.4080907@candelatech.com>
+Date: Tue, 25 Jan 2011 14:01:22 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20110105111314.GA23794@zenon.in.qult.net>
-References: <20110105111314.GA23794@zenon.in.qult.net>
-Date: Wed, 5 Jan 2011 08:57:14 -0500
-Message-ID: <AANLkTi=WQwx5hOxeGweFOLVtpss54NZsRyV0tkBqf4CP@mail.gmail.com>
-Subject: Re: About clocks in the carl9170 firmware
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: Ignacy Gawedzki <i@lri.fr>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH RESEND 09/11] ath9k: Try all queues when looking for next
+ packet to send.
+References: <1294643513-18820-1-git-send-email-greearb@candelatech.com> <1294643513-18820-10-git-send-email-greearb@candelatech.com> <20110125213710.GD2927@tuxdriver.com>
+In-Reply-To: <20110125213710.GD2927@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 5, 2011 at 6:13 AM, Ignacy Gawedzki <i@lri.fr> wrote:
-> Hi,
+On 01/25/2011 01:37 PM, John W. Linville wrote:
+> On Sun, Jan 09, 2011 at 11:11:51PM -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> There can be multiple struct ath_atx_ac entries for each
+>> txq, so if the first one doesn't have any packets to send
+>> now, try the rest of them.  This should help keep xmit
+>> going when using multiple stations, especially with AMPDU
+>> enabled.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
 >
-> A few months ago, Christian Lamparter suggested to me the use of
-> get_clock_counter() in the carl9170 firmware code for time measurement
-> purposes.
->
-> I just got back to that, after a long period of other things to do instead.
->
-> According to the results of a few tests I've been running yesterday, it looks
-> that this clock is 44Mhz, not 40Mhz, nor 80Mhz.
+> This one doesn't seem to apply any more.  Can I persuade you to rebase
+> and resubmit it?
 
-I have seen the same thing.  In 802.11g mode, that clock counter runs
-at 44MHz.  There are rumors that this changes with operating mode.
-Its easy to believe that it would run at 80MHz in turbo (40MHz
-channel-width) mode.  But, I haven't tested that, and can only say
-that I've seen that clock counter run at 44MHz as well.
+I think this is already taken care of, or at least the important
+parts.
 
-> According to Christian, the clock source, as accessed through
-> get_clock_counter() is stable and does not depend on calls to clock_set().
-> This is further corroborated by the definition and use of the
-> AR9170_TICKS_PER_MICROSECOND *constant* in timer.h.  But still, how comes that
-> constant is 80 then?
+Felix did some initial work in this area, and then I
+followed on with this one:
 
-Does anything in the firmware really rely on that constant being
-right?  I'm more familiar with ar9170usb and the open firmware for
-that, where the constants were also wrong, but nothing used them
-except for some delay functions, for which the accuracy wasn't
-critical.
+ath9k:  Try more than one queue when scheduling new aggregate.
 
-> I'm obviously missing something here.  I would be really thankful to anybody
-> who could explain how these clocks/timers work and how they are supposed to be
-> used.
->
-> Thanks,
->
-> Ignacy
 
--Brian
+The only ath9k patches I have in my queue that are not upstream
+are:
+
+(From Louis Rodriguez)
+ath9k: warn when we get a ATH9K_INT_TIM_TIMER and are idle
+
+and my:
+
+ath9k: Implement rx copy-break.
+
+Which appears DOA as folks seem to like paged-skbs instead.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
