@@ -1,134 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56009 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496Ab1AUDDF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40303 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954Ab1AYWAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:03:05 -0500
-Received: by mail-iy0-f174.google.com with SMTP id 18so1246881iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:03:05 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 25 Jan 2011 17:00:10 -0500
+Date: Tue, 25 Jan 2011 16:58:10 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: use DECLARE_EVENT_CLASS
+Message-ID: <20110125215810.GE2927@tuxdriver.com>
+References: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
+ <20110121212447.GB7092@tuxdriver.com>
+ <1295777573.3639.30.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63291.686899.214480@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:32:19 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 21/33] ath9k_htc: Configure the beacon queue
+In-Reply-To: <1295777573.3639.30.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Sun, Jan 23, 2011 at 11:12:53AM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> For events that include only the local struct as
+> their parameter, we can use DECLARE_EVENT_CLASS
+> and save quite some binary size across segments
+> as well lines of code.
+> 
+>    text	   data	    bss	    dec	    hex	filename
+>  375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
+>  367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
+>   -8272   -1408       0   -9680   -25d0 delta
+> 
+> Some more tracepoints with identical arguments
+> could be combined like this but for now this is
+> the one that benefits most.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Set operating parameters (cwmin, cwmax) for the beacon queue
-in AP mode.
+OK, so what am I doing wrong?
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   77 ++++++++++++++---------
- 1 files changed, 46 insertions(+), 31 deletions(-)
+Kernel: arch/x86/boot/bzImage is ready  (#11)
+  Building modules, stage 2.
+  MODPOST 2218 modules
+ERROR: "__tracepoint_drv_return_void" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_api_remain_on_channel_expired" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_get_tsf" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_tx_last_beacon" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_reset_tsf" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_stop" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_sw_scan_start" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_sw_scan_complete" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_api_restart_hw" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_api_ready_on_channel" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_cancel_remain_on_channel" [net/mac80211/mac80211.ko] undefined!
+ERROR: "__tracepoint_drv_start" [net/mac80211/mac80211.ko] undefined!
+WARNING: modpost: Found 5 section mismatch(es).
+To see full details build your kernel with:
+'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 64934cf..c480469 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -18,6 +18,50 @@
- 
- #define FUDGE 2
- 
-+void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
-+{
-+	struct ath_hw *ah = priv->ah;
-+	struct ath9k_tx_queue_info qi, qi_be;
-+
-+	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
-+	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
-+
-+	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
-+
-+	if (priv->ah->opmode == NL80211_IFTYPE_AP) {
-+		qi.tqi_aifs = 1;
-+		qi.tqi_cwmin = 0;
-+		qi.tqi_cwmax = 0;
-+	} else if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
-+		int qnum = priv->hwq_map[WME_AC_BE];
-+
-+		ath9k_hw_get_txq_props(ah, qnum, &qi_be);
-+
-+		qi.tqi_aifs = qi_be.tqi_aifs;
-+
-+		/*
-+		 * For WIFI Beacon Distribution
-+		 * Long slot time  : 2x cwmin
-+		 * Short slot time : 4x cwmin
-+		 */
-+		if (ah->slottime == ATH9K_SLOT_TIME_20)
-+			qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
-+		else
-+			qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
-+
-+		qi.tqi_cwmax = qi_be.tqi_cwmax;
-+
-+	}
-+
-+	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
-+		ath_err(ath9k_hw_common(ah),
-+			"Unable to update beacon queue %u!\n", priv->beaconq);
-+	} else {
-+		ath9k_hw_resettxqueue(ah, priv->beaconq);
-+	}
-+}
-+
-+
- static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 					struct htc_beacon_config *bss_conf)
- {
-@@ -178,6 +222,8 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 		bss_conf->beacon_interval, nexttbtt, imask,
- 		!!(intval & ATH9K_BEACON_RESET_TSF));
- 
-+	ath9k_htc_beaconq_config(priv);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
- 	priv->cur_beacon_conf.bmiss_cnt = 0;
-@@ -350,37 +396,6 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv)
- 	ath9k_htc_send_beacon(priv, slot);
- }
- 
--/* Currently, only for IBSS */
--void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
--{
--	struct ath_hw *ah = priv->ah;
--	struct ath9k_tx_queue_info qi, qi_be;
--	int qnum = priv->hwq_map[WME_AC_BE];
--
--	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
--	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
--
--	ath9k_hw_get_txq_props(ah, qnum, &qi_be);
--
--	qi.tqi_aifs = qi_be.tqi_aifs;
--	/* For WIFI Beacon Distribution
--	 * Long slot time  : 2x cwmin
--	 * Short slot time : 4x cwmin
--	 */
--	if (ah->slottime == ATH9K_SLOT_TIME_20)
--		qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
--	else
--		qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
--	qi.tqi_cwmax = qi_be.tqi_cwmax;
--
--	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
--		ath_err(ath9k_hw_common(ah),
--			"Unable to update beacon queue %u!\n", qnum);
--	} else {
--		ath9k_hw_resettxqueue(ah, priv->beaconq);
--	}
--}
--
- void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
- 			    struct ieee80211_vif *vif)
- {
+John
 -- 
-1.7.3.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
