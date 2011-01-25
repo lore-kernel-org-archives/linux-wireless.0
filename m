@@ -1,48 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:46172 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753573Ab1AaTAs convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401Ab1AYK2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 14:00:48 -0500
-Received: by qyk12 with SMTP id 12so6498973qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 11:00:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110131181725.GA11054@sig21.net>
-References: <201101311600.39486.IvDoorn@gmail.com>
-	<20110131181725.GA11054@sig21.net>
-Date: Mon, 31 Jan 2011 20:00:09 +0100
-Message-ID: <AANLkTin+cpLWKbX4YaLUUiR_UAKqSPFy-9Lt1cjK3wOs@mail.gmail.com>
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in
- powersave mode
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 25 Jan 2011 05:28:35 -0500
+Subject: Re: [PATCH] cfg80211: Allow non-zero indexes for device specific
+ pair-wise ciphers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: juuso.oikarinen@nokia.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1295950882-16785-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1295950882-16785-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 Jan 2011 11:28:30 +0100
+Message-ID: <1295951310.3650.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2011-01-25 at 12:21 +0200, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> 
+> Some vendor specific cipher suites require non-zero key indexes for pairwise
+> keys, but as of currently, the cfg80211 does not allow it.
 
->> +     if (test_bit(DRIVER_REQUIRE_PS_AUTOWAKE, &rt2x00dev->flags) &&
->> +         (ieee80211_flags & IEEE80211_CONF_CHANGE_PS) &&
->> +         (conf->flags & IEEE80211_CONF_PS))
->> +             queue_delayed_work(rt2x00dev->workqueue,
->> +                                &rt2x00dev->autowakeup_work,
->> +                                msecs_to_jiffies(rt2x00dev->beacon_int) - 1);
->> +
->
-> I have doubts about this part.  Doesn't this just catch
-> one beacon?  I'm not sure how often mac80211 calls the .config
-> op, I thought it is called once when going to sleep, and then the
-> hw/fw/driver is responsible to wakeup every n'th beacon
-> (according to the configured listen interval).
+Hmm, also -- does this mean that WAPI might use multiple pairwise keys?
+That's most definitely not supported at all in mac80211.
 
-Yes, I was also doubting about that. But is the listen_interval is TU, msecs,
-or the number of beacons?
+johannes
 
-> Also, I think rt2x00dev->beacon_int is in TUs, not msecs.
-
-Nope, it is in msecs :)
-
-Ivo
