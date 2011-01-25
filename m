@@ -1,164 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58492 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752185Ab1AJHMa (ORCPT
+Received: from smtp-out.google.com ([74.125.121.67]:50272 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab1AYADf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 02:12:30 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH RESEND 11/11] ath9k: Implement rx copy-break.
-Date: Sun,  9 Jan 2011 23:11:53 -0800
-Message-Id: <1294643513-18820-12-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
-References: <1294643513-18820-1-git-send-email-greearb@candelatech.com>
+	Mon, 24 Jan 2011 19:03:35 -0500
+Received: from kpbe20.cbf.corp.google.com (kpbe20.cbf.corp.google.com [172.25.105.84])
+	by smtp-out.google.com with ESMTP id p0P03Xd8028988
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:03:33 -0800
+Received: from iwn39 (iwn39.prod.google.com [10.241.68.103])
+	by kpbe20.cbf.corp.google.com with ESMTP id p0P02K4P020282
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:03:31 -0800
+Received: by iwn39 with SMTP id 39so4994430iwn.41
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 16:03:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110123072116.GA7170@vmraj-lnx.users.atheros.com>
+References: <1295452063-13828-1-git-send-email-rmanoharan@atheros.com>
+	<1295452063-13828-2-git-send-email-rmanoharan@atheros.com>
+	<AANLkTimSBJxY0f6G6BLcLbsDySvn6KZQu=Vdj134yZLD@mail.gmail.com>
+	<20110120075130.GA3431@vmraj-lnx.users.atheros.com>
+	<AANLkTim4d5xBBRnzWDoyZhJKriX3MByA-XbHsnTOW5+B@mail.gmail.com>
+	<20110123072116.GA7170@vmraj-lnx.users.atheros.com>
+Date: Mon, 24 Jan 2011 16:03:31 -0800
+Message-ID: <AANLkTimJB1QJ63f_=RPRuMXGnt95+y9LQzpAMmcEcLx2@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath9k: Fix power save usage count imbalance on deinit
+From: Paul Stewart <pstew@google.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This change doesn't regress the issue with scan-during-suspend.  The
+other regression you should test for is that the system really does
+continue to honor powersave after a suspend-resume cycle (verify
+null-functions and drop in power consumption).  You should be able to
+do that yourself, and I'd suggest testing for this case as well before
+committing any changes to powersave.
 
-This saves us constantly allocating large, multi-page
-skbs.  It should fix the order-1 allocation errors reported,
-and in a 60-vif scenario, this significantly decreases CPU
-utilization, and latency, and increases bandwidth.
+--
+Paul
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 b2497b8... ea2f67c... M	drivers/net/wireless/ath/ath9k/recv.c
- drivers/net/wireless/ath/ath9k/recv.c |   92 ++++++++++++++++++++++-----------
- 1 files changed, 61 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b2497b8..ea2f67c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -16,6 +16,7 @@
- 
- #include "ath9k.h"
- #include "ar9003_mac.h"
-+#include <linux/pci.h>
- 
- #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
- 
-@@ -1623,7 +1624,7 @@ div_comb_done:
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- {
- 	struct ath_buf *bf;
--	struct sk_buff *skb = NULL, *requeue_skb;
-+	struct sk_buff *skb = NULL, *requeue_skb = NULL;
- 	struct ieee80211_rx_status *rxs;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1634,7 +1635,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	 */
- 	struct ieee80211_hw *hw = NULL;
- 	struct ieee80211_hdr *hdr;
--	int retval;
-+	int retval, len;
-+	bool use_copybreak = true;
- 	bool decrypt_error = false;
- 	struct ath_rx_status rs;
- 	enum ath9k_rx_qtype qtype;
-@@ -1702,42 +1704,70 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
- 			rxs->mactime += 0x100000000ULL;
- 
--		/* Ensure we always have an skb to requeue once we are done
--		 * processing the current buffer's skb */
--		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
--
--		/* If there is no memory we ignore the current RX'd frame,
--		 * tell hardware it can give us a new frame using the old
--		 * skb and put it at the tail of the sc->rx.rxbuf list for
--		 * processing. */
--		if (!requeue_skb)
--			goto requeue;
--
--		/* Unmap the frame */
--		dma_unmap_single(sc->dev, bf->bf_buf_addr,
--				 common->rx_bufsize,
--				 dma_type);
-+		len = rs.rs_datalen + ah->caps.rx_status_len;
-+		if (use_copybreak) {
-+			skb = netdev_alloc_skb(NULL, len);
-+			if (!skb) {
-+				skb = bf->bf_mpdu;
-+				use_copybreak = false;
-+				goto non_copybreak;
-+			}
-+		} else {
-+non_copybreak:
-+			/* Ensure we always have an skb to requeue once we are
-+			 * done processing the current buffer's skb */
-+			requeue_skb = ath_rxbuf_alloc(common,
-+						      common->rx_bufsize,
-+						      GFP_ATOMIC);
-+
-+			/* If there is no memory we ignore the current RX'd
-+			 * frame, tell hardware it can give us a new frame
-+			 * using the old skb and put it at the tail of the
-+			 * sc->rx.rxbuf list for processing. */
-+			if (!requeue_skb)
-+				goto requeue;
-+
-+			/* Unmap the frame */
-+			dma_unmap_single(sc->dev, bf->bf_buf_addr,
-+					 common->rx_bufsize,
-+					 dma_type);
-+		}
- 
--		skb_put(skb, rs.rs_datalen + ah->caps.rx_status_len);
-+		skb_put(skb, len);
- 		if (ah->caps.rx_status_len)
- 			skb_pull(skb, ah->caps.rx_status_len);
- 
-+		if (use_copybreak) {
-+			struct pci_dev *pdev = to_pci_dev(sc->dev);
-+			pci_dma_sync_single_for_cpu(pdev, bf->bf_buf_addr,
-+						    len, PCI_DMA_FROMDEVICE);
-+			skb_copy_from_linear_data(bf->bf_mpdu, skb->data, len);
-+			pci_dma_sync_single_for_device(pdev, bf->bf_buf_addr,
-+						       len, PCI_DMA_FROMDEVICE);
-+			memcpy(skb->cb, bf->bf_mpdu->cb, sizeof(skb->cb));
-+			rxs =  IEEE80211_SKB_RXCB(skb);
-+		}
-+
- 		ath9k_rx_skb_postprocess(common, skb, &rs,
- 					 rxs, decrypt_error);
- 
--		/* We will now give hardware our shiny new allocated skb */
--		bf->bf_mpdu = requeue_skb;
--		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
--						 common->rx_bufsize,
--						 dma_type);
--		if (unlikely(dma_mapping_error(sc->dev,
--			  bf->bf_buf_addr))) {
--			dev_kfree_skb_any(requeue_skb);
--			bf->bf_mpdu = NULL;
--			bf->bf_buf_addr = 0;
--			ath_err(common, "dma_mapping_error() on RX\n");
--			ath_rx_send_to_mac80211(hw, sc, skb);
--			break;
-+		if (!use_copybreak) {
-+			/* We will now give hardware our shiny new allocated
-+			 * skb */
-+			bf->bf_mpdu = requeue_skb;
-+			bf->bf_buf_addr = dma_map_single(sc->dev,
-+							 requeue_skb->data,
-+							 common->rx_bufsize,
-+							 dma_type);
-+			if (unlikely(dma_mapping_error(sc->dev,
-+						       bf->bf_buf_addr))) {
-+				dev_kfree_skb_any(requeue_skb);
-+				bf->bf_mpdu = NULL;
-+				bf->bf_buf_addr = 0;
-+				ath_err(common, "dma_mapping_error() on RX\n");
-+				ath_rx_send_to_mac80211(hw, sc, skb);
-+				break;
-+			}
- 		}
- 
- 		/*
--- 
-1.7.2.3
-
+On Sat, Jan 22, 2011 at 11:21 PM, Rajkumar Manoharan
+<rmanoharan@atheros.com> wrote:
+> On Fri, Jan 21, 2011 at 04:32:20AM +0530, Luis R. Rodriguez wrote:
+>> On Wed, Jan 19, 2011 at 11:51 PM, Rajkumar Manoharan
+>> <rmanoharan@atheros.com> wrote:
+>> > On Thu, Jan 20, 2011 at 12:54:56AM +0530, Luis R. Rodriguez wrote:
+>> >> On Wed, Jan 19, 2011 at 7:47 AM, Rajkumar Manoharan
+>> >> <rmanoharan@atheros.com> wrote:
+>> >> > Upon unloading the driver, the ps_usecount is incremented
+>> >> > before configuring gpio registers in deinit_device.
+>> >> > But it is failed to restore the ps_usecount after that.
+>> >> > The problem is that the chip is moved to FULL SLEEP
+>> >> > by radio_disable when mac80211 is reporting as idle
+>> >> > though ps_usecount is not zero.
+>> >> >
+>> >> > This patch retores ps_usecount properly and ensures that
+>> >> > the chip is always moved to full sleep only if ps usage
+>> >> > counte is zero which helps in debugging. And also fixes
+>> >> > the following warning.
+>> >> >
+>> >> > ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
+>> >> > ath: Could not stop RX, we could be confusing the DMA engine when we
+>> >> > start RX up
+>> >> > ------------[ cut here ]------------
+>> >> > WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
+>> >> > ath_stoprecv+0xf4/0x100 [ath9k]()
+>> >> >
+>> >>
+>> >> Are you sure this hunk does not regress the suspend/resume case when
+>> >> using the new dbus API?
+>> >>
+>> > I verfied the suspend/resume case with AR9280 card. But I don't
+>> > understand how the new dbus API is related with this patch?
+>>
+>> Paul, if you get a chance to give this a spin before it gets merged
+>> it'd be appreciated.
+> Paul,
+> Did you get a chance to evaluate this patch? Shall we proceed further?
+>
+> --
+> Rajkumar
+>
