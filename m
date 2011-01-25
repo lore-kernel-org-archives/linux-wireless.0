@@ -1,130 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41674 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589Ab1A3MYZ (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:33509 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752559Ab1AYEPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:25 -0500
-Received: by eye27 with SMTP id 27so2146783eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:23 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/21] rt2x00: Introduce beacon_update_locked that requires caller locking
-Date: Sun, 30 Jan 2011 13:16:28 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201101301316.04044.IvDoorn@gmail.com>
-In-Reply-To: <201101301316.04044.IvDoorn@gmail.com>
+	Mon, 24 Jan 2011 23:15:37 -0500
+Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0848848934
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 13:15:35 +0900 (JST)
+Subject: [PATCH 3/6] ath: Add function to check if 4.9GHz channels are allowed
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 25 Jan 2011 13:15:33 +0900
+Message-ID: <20110125041533.6944.79709.stgit@localhost6.localdomain6>
+In-Reply-To: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
+References: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101301316.29086.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+This adds a helper function to ath/regd.c which can be asked if 4.9GHz channels
+are allowed for a given regulatory domain code. This keeps the knowledge of
+regdomains and defines like MKK9_MKKC in one place. I'm passing the regdomain
+code instead of the ath_regulatory structure because this needs to be called
+quite early in the driver inititalization where ath_regulatory is not available
+yet in ath5k.
 
-Introduce a beacon_update_locked function that does not acquire the
-according beacon mutex to allow beacon updates from atomic context. The
-caller has to take care of synchronization.
+I'm using MKK9_MKKC only because this is the regdomain in the 802.11j enabled
+sample cards we got from our vendor. I found some hints in HAL code that this
+is used by Atheros to indicate 4.9GHz channels support and that there might be
+other domain codes as well, but as I don't have any documentation I'm just
+putting in what I need right now. It can be extended later.
 
-No functional changes. Just preparation for beacon updates from tasklet
-context.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00lib.h   |   12 +++++++++++-
- drivers/net/wireless/rt2x00/rt2x00queue.c |   24 ++++++++++++++++--------
- 2 files changed, 27 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/regd.c |    7 +++++++
+ drivers/net/wireless/ath/regd.h |    1 +
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 6c6a8f1..2d94cba 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -157,7 +157,8 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 			       bool local);
- 
- /**
-- * rt2x00queue_update_beacon - Send new beacon from mac80211 to hardware
-+ * rt2x00queue_update_beacon - Send new beacon from mac80211
-+ *	to hardware. Handles locking by itself (mutex).
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
-  * @vif: Interface for which the beacon should be updated.
-  */
-@@ -165,6 +166,15 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 			      struct ieee80211_vif *vif);
- 
- /**
-+ * rt2x00queue_update_beacon_locked - Send new beacon from mac80211
-+ *	to hardware. Caller needs to ensure locking.
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @vif: Interface for which the beacon should be updated.
-+ */
-+int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
-+				     struct ieee80211_vif *vif);
-+
-+/**
-  * rt2x00queue_clear_beacon - Clear beacon in hardware
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
-  * @vif: Interface for which the beacon should be updated.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 24bcdb4..7d7fbe0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -593,8 +593,8 @@ int rt2x00queue_clear_beacon(struct rt2x00_dev *rt2x00dev,
- 	return 0;
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 2b14775..f828f29 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -158,6 +158,13 @@ ieee80211_regdomain *ath_world_regdomain(struct ath_regulatory *reg)
+ 	}
  }
  
--int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
--			      struct ieee80211_vif *vif)
-+int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
-+				     struct ieee80211_vif *vif)
- {
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
- 	struct skb_frame_desc *skbdesc;
-@@ -603,18 +603,14 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
- 
--	mutex_lock(&intf->beacon_skb_mutex);
--
- 	/*
- 	 * Clean up the beacon skb.
- 	 */
- 	rt2x00queue_free_skb(intf->beacon);
- 
- 	intf->beacon->skb = ieee80211_beacon_get(rt2x00dev->hw, vif);
--	if (!intf->beacon->skb) {
--		mutex_unlock(&intf->beacon_skb_mutex);
-+	if (!intf->beacon->skb)
- 		return -ENOMEM;
--	}
- 
- 	/*
- 	 * Copy all TX descriptor information into txdesc,
-@@ -635,9 +631,21 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	 */
- 	rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
- 
-+	return 0;
-+
-+}
-+
-+int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
-+			      struct ieee80211_vif *vif)
++bool ath_is_49ghz_allowed(u16 regdomain)
 +{
-+	struct rt2x00_intf *intf = vif_to_intf(vif);
-+	int ret;
++	/* possibly more */
++	return regdomain == MKK9_MKKC;
++}
++EXPORT_SYMBOL(ath_is_49ghz_allowed);
 +
-+	mutex_lock(&intf->beacon_skb_mutex);
-+	ret = rt2x00queue_update_beacon_locked(rt2x00dev, vif);
- 	mutex_unlock(&intf->beacon_skb_mutex);
+ /* Frequency is one where radar detection is required */
+ static bool ath_is_radar_freq(u16 center_freq)
+ {
+diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
+index 345dd97..172f63f 100644
+--- a/drivers/net/wireless/ath/regd.h
++++ b/drivers/net/wireless/ath/regd.h
+@@ -250,6 +250,7 @@ enum CountryCode {
+ };
  
--	return 0;
-+	return ret;
- }
- 
- void rt2x00queue_for_each_entry(struct data_queue *queue,
--- 
-1.7.2.3
+ bool ath_is_world_regd(struct ath_regulatory *reg);
++bool ath_is_49ghz_allowed(u16 redomain);
+ int ath_regd_init(struct ath_regulatory *reg, struct wiphy *wiphy,
+ 		  int (*reg_notifier)(struct wiphy *wiphy,
+ 		  struct regulatory_request *request));
 
