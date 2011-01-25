@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32991 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab1ARMLf (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2712 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998Ab1AYEcE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 07:11:35 -0500
-Subject: Re: [PATCH 4/5] mac80211: add primarily CAC support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-In-Reply-To: <201101181301.45021.bernhard.schmidt@saxnet.de>
-References: <201101171621.29863.bernhard.schmidt@saxnet.de>
-	 <20110117161133.8150D2084@mx.techwires.net>
-	 <1295347515.3563.10.camel@jlt3.sipsolutions.net>
-	 <201101181301.45021.bernhard.schmidt@saxnet.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Jan 2011 13:12:20 +0100
-Message-ID: <1295352740.3563.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 24 Jan 2011 23:32:04 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com,
+	Bruno Randolf <br1@einfach.org>, jirislaby@gmail.com,
+	lrodriguez@atheros.com, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] ath5k: fix error handling in ath5k_hw_dma_stop
+Date: Mon, 24 Jan 2011 23:31:43 -0500
+Message-Id: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-18 at 13:01 +0100, Bernhard Schmidt wrote:
+Review spotted a problem with the error handling in ath5k_hw_dma_stop:
+a successful return from ath5k_hw_stop_tx_dma will be treated as
+an error, so we always bail out of the loop after processing a single
+active queue.  As a result, we may not actually stop some queues during
+reset.
 
-> > > +	mutex_lock(&radar->mtx);
-> > 
-> > Clearly, you haven't even tested this code. I'm not sure why I'm even
-> > reviewing it.
-> 
-> Granted, I did only some basic tests with only a few predefined 
-> scenarios, not at all is just wrong. Anyways, I should have mentioned in 
-> 0/13 that preventing channel changes while in CAC should be considered 
-> and chan should be assigned to local variable then.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+These two patches fix some buglets I found when reviewing some old code.
 
-I was more referring to the fact that you're trying to lock a mutex in a
-timer -- so you can't have executed this code path ever?!
+ drivers/net/wireless/ath/ath5k/dma.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index 0064be7..e828b98 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -838,7 +838,7 @@ int ath5k_hw_dma_stop(struct ath5k_hw *ah)
+ 	for (i = 0; i < qmax; i++) {
+ 		err = ath5k_hw_stop_tx_dma(ah, i);
+ 		/* -EINVAL -> queue inactive */
+-		if (err != -EINVAL)
++		if (err && err != -EINVAL)
+ 			return err;
+ 	}
+ 
+-- 
+1.7.1.1
 
 
