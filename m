@@ -1,104 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34173 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753826Ab1AFRRA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 12:17:00 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: use backported kfifo
-Date: Thu,  6 Jan 2011 18:16:52 +0100
-Message-Id: <1294334212-20530-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1294334212-20530-1-git-send-email-hauke@hauke-m.de>
-References: <1294334212-20530-1-git-send-email-hauke@hauke-m.de>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:7406 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750960Ab1AYFXi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 00:23:38 -0500
+Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0236763013
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 14:23:36 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 2/2] ath5k: correct endianness of frame duration
+Date: Tue, 25 Jan 2011 14:23:31 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com
+References: <1295929904-11806-1-git-send-email-me@bobcopeland.com> <1295929904-11806-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1295929904-11806-2-git-send-email-me@bobcopeland.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201101251423.32008.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now compat contains a backport of the kfifo implementation and we do
-not have to patch the driver to use the old interface.
+On Tue January 25 2011 13:31:44 Bob Copeland wrote:
+> The ath5k version of ieee80211_generic_frame_duration() returns
+> an __le16 for standard modes but a cpu-endian int for turbo/half/
+> quarter rates.  Make it always return cpu-endian values.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/pcu.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c
+> b/drivers/net/wireless/ath/ath5k/pcu.c index e5f2b96..a702817 100644
+> --- a/drivers/net/wireless/ath/ath5k/pcu.c
+> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
+> @@ -86,7 +86,7 @@ int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
+>  	if (!ah->ah_bwmode) {
+>  		dur = ieee80211_generic_frame_duration(sc->hw,
+>  						NULL, len, rate);
+> -		return dur;
+> +		return le16_to_cpu(dur);
+>  	}
+> 
+>  	bitrate = rate->bitrate;
+> @@ -265,8 +265,6 @@ static inline void ath5k_hw_write_rate_duration(struct
+> ath5k_hw *ah) * what rate we should choose to TX ACKs. */
+>  		tx_time = ath5k_hw_get_frame_duration(ah, 10, rate);
+> 
+> -		tx_time = le16_to_cpu(tx_time);
+> -
+>  		ath5k_hw_reg_write(ah, tx_time, reg);
+> 
+>  		if (!(rate->flags & IEEE80211_RATE_SHORT_PREAMBLE))
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk              |    4 +++
- patches/19-kfifo.patch |   53 ------------------------------------------------
- 2 files changed, 4 insertions(+), 53 deletions(-)
- delete mode 100644 patches/19-kfifo.patch
+I wonder what effect this has in ath5k_hw_set_ifs_intervals() where 
+ack_tx_time was little endian before...
 
-diff --git a/config.mk b/config.mk
-index 1f95908..7a29d46 100644
---- a/config.mk
-+++ b/config.mk
-@@ -107,6 +107,10 @@ ifdef CONFIG_FW_LOADER
- endif #CONFIG_FW_LOADER
- endif #CONFIG_COMPAT_KERNEL_33
- 
-+ifdef CONFIG_COMPAT_KERNEL_36
-+CONFIG_COMPAT_KFIFO=m
-+endif #CONFIG_COMPAT_KERNEL_36
-+
- 
- # Wireless subsystem stuff
- CONFIG_MAC80211=m
-diff --git a/patches/19-kfifo.patch b/patches/19-kfifo.patch
-deleted file mode 100644
-index d9d25ee..0000000
---- a/patches/19-kfifo.patch
-+++ /dev/null
-@@ -1,53 +0,0 @@
--These parts of the new generic kernel FIFO implementation (kfifo) can
--not be backported easily with defines in the compat module.
--
----- a/drivers/net/wireless/libertas/dev.h
--+++ b/drivers/net/wireless/libertas/dev.h
--@@ -121,7 +121,11 @@ struct lbs_private {
-- 	u32 resp_len[2];
-- 
-- 	/* Events sent from hardware to driver */
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-- 	struct kfifo event_fifo;
--+#else
--+	struct kfifo *event_fifo;
--+#endif
-- 
-- 	/** thread to service interrupts */
-- 	struct task_struct *main_thread;
----- a/drivers/net/wireless/libertas/main.c
--+++ b/drivers/net/wireless/libertas/main.c
--@@ -753,8 +753,14 @@ static int lbs_init_adapter(struct lbs_p
-- 	priv->resp_len[0] = priv->resp_len[1] = 0;
-- 
-- 	/* Create the event FIFO */
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-- 	ret = kfifo_alloc(&priv->event_fifo, sizeof(u32) * 16, GFP_KERNEL);
-- 	if (ret) {
--+#else
--+	priv->event_fifo = kfifo_alloc(sizeof(u32) * 16, GFP_KERNEL, NULL);
--+	if (IS_ERR(priv->event_fifo)) {
--+		ret = -ENOMEM;
--+#endif
-- 		lbs_pr_err("Out of memory allocating event FIFO buffer\n");
-- 		goto out;
-- 	}
----- a/drivers/net/wireless/rt2x00/rt2x00dev.c
--+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
--@@ -808,10 +808,16 @@ static int rt2x00lib_probe_hw(struct rt2
-- 		 * queues gets reported before we've got a chance to handle
-- 		 * them) 24*4=384 tx status reports need to be cached.
-- 		 */
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-- 		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, 512,
-- 				     GFP_KERNEL);
-- 		if (status)
-- 			return status;
--+#else
--+		rt2x00dev->txstatus_fifo = kfifo_alloc(512, GFP_KERNEL, NULL);
--+		if (IS_ERR(rt2x00dev->txstatus_fifo))
--+			return PTR_ERR(rt2x00dev->txstatus_fifo);
--+#endif
-- 
-- 		/* tasklet for processing the tx status reports. */
-- 		if (rt2x00dev->ops->lib->txstatus_tasklet)
--- 
-1.7.1
+But the change makes sense.
 
+Acked-by: Bruno Randolf <br1@einfach.org>
