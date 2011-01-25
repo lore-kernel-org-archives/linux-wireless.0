@@ -1,99 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47310 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1AUDBw (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:40464 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753077Ab1AYM2a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:01:52 -0500
-Received: by iyj18 with SMTP id 18so1246469iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:52 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 25 Jan 2011 07:28:30 -0500
+Received: by pzk35 with SMTP id 35so854157pzk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 04:28:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63219.25077.245547@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:31:07 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 13/33] ath9k_htc: Allow AP interface to be created
+In-Reply-To: <1295929976-11858-2-git-send-email-me@bobcopeland.com>
+References: <1295929976-11858-1-git-send-email-me@bobcopeland.com>
+	<1295929976-11858-2-git-send-email-me@bobcopeland.com>
+Date: Tue, 25 Jan 2011 14:28:27 +0200
+Message-ID: <AANLkTi=i8N6ZTiZUvDASXws-FBgxYVw8Zy4=A7kQwNgs@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath5k: remove debug_dump_skb() functions
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Bruno Randolf <br1@einfach.org>, jirislaby@gmail.com,
+	lrodriguez@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+2011/1/25 Bob Copeland <me@bobcopeland.com>:
+> Now that rx and tx dumps go through the tracing infrastructure,
+> we no longer need to keep these routines around.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/debug.c |   20 --------------------
+>  drivers/net/wireless/ath/ath5k/debug.h |   10 ----------
+>  2 files changed, 0 insertions(+), 30 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+> index d2f84d7..0230f30 100644
+> --- a/drivers/net/wireless/ath/ath5k/debug.c
+> +++ b/drivers/net/wireless/ath/ath5k/debug.c
+> @@ -308,8 +308,6 @@ static const struct {
+>        { ATH5K_DEBUG_CALIBRATE, "calib",       "periodic calibration" },
+>        { ATH5K_DEBUG_TXPOWER,  "txpower",      "transmit power setting" },
+>        { ATH5K_DEBUG_LED,      "led",          "LED management" },
+> -       { ATH5K_DEBUG_DUMP_RX,  "dumprx",       "print received skb content" },
+> -       { ATH5K_DEBUG_DUMP_TX,  "dumptx",       "print transmit skb content" },
+>        { ATH5K_DEBUG_DUMPBANDS, "dumpbands",   "dump bands" },
+>        { ATH5K_DEBUG_DMA,      "dma",          "dma start/stop" },
+>        { ATH5K_DEBUG_ANI,      "ani",          "adaptive noise immunity" },
+> @@ -1036,24 +1034,6 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
+>  }
+>
+>  void
+> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
+> -                       struct sk_buff *skb, const char *prefix, int tx)
+> -{
+> -       char buf[16];
+> -
+> -       if (likely(!((tx && (sc->debug.level & ATH5K_DEBUG_DUMP_TX)) ||
+> -                    (!tx && (sc->debug.level & ATH5K_DEBUG_DUMP_RX)))))
+> -               return;
+> -
+> -       snprintf(buf, sizeof(buf), "%s %s", wiphy_name(sc->hw->wiphy), prefix);
+> -
+> -       print_hex_dump_bytes(buf, DUMP_PREFIX_NONE, skb->data,
+> -               min(200U, skb->len));
+> -
+> -       printk(KERN_DEBUG "\n");
+> -}
+> -
+> -void
+>  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf)
+>  {
+>        struct ath5k_desc *ds = bf->desc;
+> diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
+> index 3e34428..b0355ae 100644
+> --- a/drivers/net/wireless/ath/ath5k/debug.h
+> +++ b/drivers/net/wireless/ath/ath5k/debug.h
+> @@ -116,8 +116,6 @@ enum ath5k_debug_level {
+>        ATH5K_DEBUG_CALIBRATE   = 0x00000020,
+>        ATH5K_DEBUG_TXPOWER     = 0x00000040,
+>        ATH5K_DEBUG_LED         = 0x00000080,
+> -       ATH5K_DEBUG_DUMP_RX     = 0x00000100,
+> -       ATH5K_DEBUG_DUMP_TX     = 0x00000200,
+>        ATH5K_DEBUG_DUMPBANDS   = 0x00000400,
+>        ATH5K_DEBUG_DMA         = 0x00000800,
+>        ATH5K_DEBUG_ANI         = 0x00002000,
+> @@ -152,10 +150,6 @@ void
+>  ath5k_debug_dump_bands(struct ath5k_softc *sc);
+>
+>  void
+> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
+> -                       struct sk_buff *skb, const char *prefix, int tx);
+> -
+> -void
+>  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf);
+>
+>  #else /* no debugging */
+> @@ -182,10 +176,6 @@ static inline void
+>  ath5k_debug_dump_bands(struct ath5k_softc *sc) {}
+>
+>  static inline void
+> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
+> -                       struct sk_buff *skb, const char *prefix, int tx) {}
+> -
+> -static inline void
+>  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf) {}
+>
+>  #endif /* ifdef CONFIG_ATH5K_DEBUG */
+> --
+> 1.7.1.1
+>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |    8 ++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   11 +++++++++++
- 2 files changed, 19 insertions(+), 0 deletions(-)
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index f650439..378aba3 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -205,6 +205,7 @@ struct ath9k_htc_target_stats {
- } __packed;
- 
- #define ATH9K_HTC_MAX_VIF 2
-+#define ATH9K_HTC_MAX_BCN_VIF 2
- 
- #define INC_VIF(_priv, _type) do {		\
- 		switch (_type) {		\
-@@ -214,6 +215,9 @@ struct ath9k_htc_target_stats {
- 		case NL80211_IFTYPE_ADHOC:	\
- 			_priv->num_ibss_vif++;	\
- 			break;			\
-+		case NL80211_IFTYPE_AP:		\
-+			_priv->num_ap_vif++;	\
-+			break;			\
- 		default:			\
- 			break;			\
- 		}				\
-@@ -227,6 +231,9 @@ struct ath9k_htc_target_stats {
- 		case NL80211_IFTYPE_ADHOC:	\
- 			_priv->num_ibss_vif--;	\
- 			break;			\
-+		case NL80211_IFTYPE_AP:		\
-+			_priv->num_ap_vif--;	\
-+			break;			\
- 		default:			\
- 			break;			\
- 		}				\
-@@ -395,6 +402,7 @@ struct ath9k_htc_priv {
- 	u8 vif_sta_pos[ATH9K_HTC_MAX_VIF];
- 	u8 num_ibss_vif;
- 	u8 num_sta_vif;
-+	u8 num_ap_vif;
- 
- 	u16 op_flags;
- 	u16 curtxpow;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index f5333dc9..0694f2e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1202,6 +1202,14 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 		return -ENOBUFS;
- 	}
- 
-+	if (((vif->type == NL80211_IFTYPE_AP) ||
-+	     (vif->type == NL80211_IFTYPE_ADHOC)) &&
-+	    ((priv->num_ap_vif + priv->num_ibss_vif) >= ATH9K_HTC_MAX_BCN_VIF)) {
-+		ath_err(common, "Max. number of beaconing interfaces reached\n");
-+		mutex_unlock(&priv->mutex);
-+		return -ENOBUFS;
-+	}
-+
- 	ath9k_htc_ps_wakeup(priv);
- 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
- 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
-@@ -1213,6 +1221,9 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_ADHOC:
- 		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
- 		break;
-+	case NL80211_IFTYPE_AP:
-+		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
-+		break;
- 	default:
- 		ath_err(common,
- 			"Interface type %d not yet supported\n", vif->type);
+
+
 -- 
-1.7.3.5
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
