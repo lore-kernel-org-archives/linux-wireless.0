@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40987 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751711Ab1AEUEI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 15:04:08 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id B82B654080C
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Jan 2011 15:05:30 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-05 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110105200406.44EEA40F97@repository3.orbit-lab.org>
-Date: Wed,  5 Jan 2011 15:04:06 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mx1.redhat.com ([209.132.183.28]:33215 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517Ab1AYJfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 04:35:31 -0500
+Date: Tue, 25 Jan 2011 10:35:28 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: [RFC] iwl3945: remove check_plcp_health
+Message-ID: <20110125093507.GA6429@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   959f374..b616059  history    -> origin/history
- + 924c697...dcd2e87 master     -> origin/master  (forced update)
-   03ed6a3..989d873  stable     -> origin/stable
- * [new tag]         next-20110105 -> next-20110105
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+This patch helps some users currently complaining about iwl3945
+performance.
 
-compat-wireless code metrics
+https://bugzilla.redhat.com/show_bug.cgi?id=654599
+https://bugs.launchpad.net/ubuntu/maverick/+source/linux/+bug/621265/+index?comments=all
 
-    775083 - Total upstream lines of code being pulled
+Patch does not helps all users, but they seems to be affected
+by different bug or bugs.
+
+Patch effectively reverts commit a29576a7844326c5223f4d4adbfd3f4d64173d4c
+"iwl3945: add plcp error checking". It is minimal fix intended to
+-stable posting. I will post cleaning up patch, if fix will be accepted.
+
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 8cacb4e..eb916d7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2832,7 +2832,6 @@ static struct iwl_lib_ops iwl3945_lib = {
+ 	.config_ap = iwl3945_config_ap,
+ 	.manage_ibss_station = iwl3945_manage_ibss_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
+-	.check_plcp_health = iwl3945_good_plcp_health,
+ 
+ 	.debugfs_ops = {
+ 		.rx_stats_read = iwl3945_ucode_rx_stats_read,
+-- 
+1.7.1
+
