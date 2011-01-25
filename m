@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:45946 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753750Ab1A0XVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 18:21:54 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Kevin Hilman <khilman@ti.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-Date: Fri, 28 Jan 2011 00:21:14 +0100
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	"Ohad Ben-Cohen" <ohad@wizery.com>,
-	linux-pm@lists.linux-foundation.org,
+Received: from w1.fi ([128.177.27.249]:49873 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751356Ab1AYJlq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 04:41:46 -0500
+Date: Tue, 25 Jan 2011 11:41:30 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>
-References: <Pine.LNX.4.44L0.1101271439020.2090-100000@iolanthe.rowland.org> <87tyguje7j.fsf@ti.com>
-In-Reply-To: <87tyguje7j.fsf@ti.com>
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+Message-ID: <20110125094130.GA25962@jm.kir.nu>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <20110124094433.GA5487@jm.kir.nu>
+ <AANLkTimYZN5438DOGNOE9Ltny5M-qg-K1ShFKToRMyuw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101280021.14344.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimYZN5438DOGNOE9Ltny5M-qg-K1ShFKToRMyuw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, January 27, 2011, Kevin Hilman wrote:
-> Alan Stern <stern@rowland.harvard.edu> writes:
-> 
-> > On Thu, 27 Jan 2011, Kevin Hilman wrote:
-> >
-> >> > Calling the runtime_suspend method directly is the way to do it.
-> >> >
-> >> 
-> >> Do you mean the driver's runtime_suspend method, or the subsystem's
-> >> runtime_suspend method?
-> >
-> > The subsystem's.  If the driver has a runtime_suspend method then the 
-> > subsystem's method will call it.
-> 
-> Yes.  Thanks for the clarification.
-> 
-> >> >> While this works, I'm not crazy about it since it requires the driver
-> >> >> know about the subsystem (in this case the bus) where the real PM work
-> >> >> is done.  IMO, it would be much more intuitive (and readable) if the
-> >> >> driver's suspend hooks could simply trigger a runtime suspend (either a
-> >> >> new one, or one already requested.)
-> >> >
-> >> > This isn't clear to me.  Isn't the driver registered on the bus in 
-> >> > question?  Can't the driver therefore call the bus's runtime_suspend 
-> >> > routine directly, instead of dereferencing the bus->pm->runtime_suspend 
-> >> > pointer?
-> >> 
-> >> Not sure what you mean by directly.  The platform_bus doesn't expose
-> >> its runtime PM methods since they can be customized at runtime, so they
-> >> have to be called via bus->pm.
-> >> 
-> >> Or do you mean using dev->driver instead of dev->bus?
-> >
-> > You're doing all of this for OMAP, right?  What is the subsystem's
-> > runtime_suspend routine?  Is it omap_pm_runtime_suspend()?
-> 
-> Yes.
-> 
-> > If it is, then you can call omap_pm_runtime_suspend() directly instead
-> > of calling dev->bus->pm->runtime_suspend().
-> 
-> Personally, I prefer going through dev->bus as we try to avoid SoC
-> specific calls in the driver.
-> 
-> This same HW block might be re-used on non-OMAP SoCs (e.g. TI DaVinci)
-> that would have different PM at the susbystem level.
-> 
-> So, to summarize, as long as folks are OK with drivers directly calling
-> the subsystem runtime PM callbacks, I'll go this route.
+On Mon, Jan 24, 2011 at 11:16:43PM +0200, Arik Nemtsov wrote:
+> The SSID-as-attr not used for the probe-resp template. It is used by
+> FW to filter out which probe-reqs should be responded to when
+> operating with a hidden SSID.
 
-This is perfectly fine as long as you ensure that they won't be called
-concurrently through the runtime PM framework.
+OK, that would be useful to mention in nl80211.h comments and
+cfg80211.h, too, I'd guess.
 
-Thanks,
-Rafael
+> The wl12xx FW updates the timestamp and DA. I mentioned in the
+> documentation of ieee80211_proberesp_get (and various other parts)
+> that the DA should be set manually and that this should be used as a
+> template (which also implies timestamp should be set). If some part is
+> unclear can you point out a specific patch?
+
+DA should be pretty obvious. Timestamp is something that I hope is clear
+for whoever is implementing a driver, but it could be mentioned
+somewhere.
+
+> For WPS (without p2p), it appears the probe-resp doesn't depend on the
+> probe-req (in hostapd code).
+
+This is the case for WPS 1.0, but the protocol update in WSC 2.0 does
+introduce a dependency.
+
+> Perhaps we can start with these AP-mode only patches and expand the
+> functionality when it is needed for p2p?
+
+I'm fine with them if there is a capability flag that allows user space
+to know that the driver does not use user space -based Probe Request
+processing. With that, hostapd/wpa_supplicant can disable functionality
+like multi-SSID support, WPS 2.0, P2P until we get more complete
+capability information on what devices that process Probe Request frames
+internally can do.
+
+> Note that the current patch doesn't remove existing functionality - a
+> driver/FW operating in p2p mode can simply choose not to use the
+> template and just pass probe-requests up.
+
+Until now, I've been assuming that nl80211-based interface means that
+Probe Request frames are handled in user space. Since this set of
+patches makes it very obvious that that will not be the case, I do want
+to be able to figure that out in user space easily. All it really takes
+is to add a capability flag indicating whether user space -based Probe
+Request processing is used or not.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
