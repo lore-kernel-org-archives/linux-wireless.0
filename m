@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:41552 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815Ab1A3TKu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 14:10:50 -0500
-Message-ID: <4D45B7B2.40001@davizone.at>
-Date: Sun, 30 Jan 2011 20:10:42 +0100
-From: David Gnedt <david.gnedt@davizone.at>
+Received: from mms3.broadcom.com ([216.31.210.19]:2461 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708Ab1AYJHs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Jan 2011 04:07:48 -0500
+To: "Jamie Kitson" <jamie@kitten-x.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
+References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
+ <7A94256FD72B884D9E7C55586C3CBCEE13CD2B113F@SJEXCHCCR01.corp.ad.broadcom.com>
+ <AANLkTimkgrc19QCdeOhc+huTsrGCD_Y8cqHnz_dQjc5y@mail.gmail.com>
+ <AANLkTimERVKAz90zPa8e_gikAf3e4G8nwjHHYrK9qsFT@mail.gmail.com>
+ <AANLkTingheCkPNvc+8qM5oQh8NHPAX2h4Z6C1YZEFRBc@mail.gmail.com>
+ <AANLkTimmLbtQUDWZGChH9LzwNwv6ZXihTz4a+mZefm60@mail.gmail.com>
+ <4D3ACE90.5040707@broadcom.com>
+ <AANLkTi=YpOhbqCNZsLiY=24+HJiupe4zL0KW8ZOmFzjU@mail.gmail.com>
+Date: Tue, 25 Jan 2011 10:07:30 +0100
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
-References: <4D45A583.3060605@davizone.at>
-In-Reply-To: <4D45A583.3060605@davizone.at>
-Content-Type: text/plain; charset=ISO-8859-15
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vpuwyqyx3ri7v4@arend-laptop>
+In-Reply-To: <AANLkTi=YpOhbqCNZsLiY=24+HJiupe4zL0KW8ZOmFzjU@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch 01-03 fix some bugs.
-Patch 04-09 contain some feature ports from Maemo Fremantle and wl1271.
-Patch 10-18 implement (mainly) monitor mode and packet injection.
+Hi Jamie,
 
-Sorry for the partly broken patches, I thought I configured my client the
-right way. I tried to stop the mails at my mailserver, but it was mostly
-already too late.
+On Mon, 24 Jan 2011 22:40:35 +0100, Jamie Kitson <jamie@kitten-x.com>  
+wrote:
 
-David Gnedt (18):
-  wl1251: fix queue stopping/waking for TX path
-  wl1251: fix 4-byte TX buffer alignment
-  wl1251: fix scan behaviour while not associated
-  wl1251: add sysfs interface for bluetooth coexistence mode
-    configuration
-  wl1251: retry power save entry
-  wl1251: enable beacon early termination while in power-saving mode
-  wl1251: implement connection quality monitoring
-  wl1251: implement hardware ARP filtering
-  wl1251: enable adhoc mode
-  wl1251: split RX and TX data path initialisation
-  wl1251: configure hardware en-/decryption for monitor mode
-  wl1251: set rate index and preamble flag on received packets
-  wl1251: rework configure_filter() callback
-  wl1251: implement multicast address filtering
-  wl1251: disable power saving in monitor mode
-  wl1251: fix channel switching in monitor mode
-  wl1251: enable tx path in monitor mode if necessary for packet
-    injection
-  wl1251: disable retry and ACK policy for injected packets
+>> Could you also provide the panic trace?
+>
+> How/where do I find that?
+>
+> Thanks, Jamie
+>
+I actually found some screenshots you posted on ArchLinux forum so if  
+those are valid I am all set.
 
- drivers/net/wireless/wl1251/acx.c    |  150 ++++++++++++++--
- drivers/net/wireless/wl1251/acx.h    |  106 ++++++++++-
- drivers/net/wireless/wl1251/boot.c   |    3 +-
- drivers/net/wireless/wl1251/cmd.c    |   58 ++++--
- drivers/net/wireless/wl1251/cmd.h    |    8 +-
- drivers/net/wireless/wl1251/event.c  |   62 ++++++
- drivers/net/wireless/wl1251/event.h  |    7 +
- drivers/net/wireless/wl1251/init.c   |   19 +-
- drivers/net/wireless/wl1251/main.c   |  348 ++++++++++++++++++++++++++++------
- drivers/net/wireless/wl1251/ps.c     |   11 +
- drivers/net/wireless/wl1251/rx.c     |   48 +++++-
- drivers/net/wireless/wl1251/tx.c     |  101 ++++++----
- drivers/net/wireless/wl1251/wl1251.h |   26 ++-
- 13 files changed, 795 insertions(+), 152 deletions(-)
+Gr. AvS
 
+-- 
+Using Opera's revolutionary email client: http://www.opera.com/mail/
 
