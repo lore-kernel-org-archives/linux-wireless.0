@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52872 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572Ab1ALLMJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38996 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752999Ab1AYPPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 06:12:09 -0500
-Subject: Re: Mesh join/leave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: sbrown@cortland.com
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1294830560.2333.2.camel@mythtv.ewol.com>
-References: <1294780828.2383.0.camel@mythtv.ewol.com>
-	 <1294823034.3639.15.camel@jlt3.sipsolutions.net>
-	 <1294828087.16447.2.camel@mythtv.ewol.com>
-	 <1294829180.3639.19.camel@jlt3.sipsolutions.net>
-	 <1294830560.2333.2.camel@mythtv.ewol.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 12:12:48 +0100
-Message-ID: <1294830768.3639.20.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 25 Jan 2011 10:15:10 -0500
+Date: Tue, 25 Jan 2011 10:14:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: Re: [RFC] iwl3945: remove check_plcp_health
+Message-ID: <20110125151445.GA2927@tuxdriver.com>
+References: <20110125093507.GA6429@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110125093507.GA6429@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 06:09 -0500, Steve Brown wrote:
+On Tue, Jan 25, 2011 at 10:35:28AM +0100, Stanislaw Gruszka wrote:
+> This patch helps some users currently complaining about iwl3945
+> performance.
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=654599
+> https://bugs.launchpad.net/ubuntu/maverick/+source/linux/+bug/621265/+index?comments=all
+> 
+> Patch does not helps all users, but they seems to be affected
+> by different bug or bugs.
+> 
+> Patch effectively reverts commit a29576a7844326c5223f4d4adbfd3f4d64173d4c
+> "iwl3945: add plcp error checking". It is minimal fix intended to
+> -stable posting. I will post cleaning up patch, if fix will be accepted.
+> 
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index 8cacb4e..eb916d7 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -2832,7 +2832,6 @@ static struct iwl_lib_ops iwl3945_lib = {
+>  	.config_ap = iwl3945_config_ap,
+>  	.manage_ibss_station = iwl3945_manage_ibss_station,
+>  	.recover_from_tx_stall = iwl_bg_monitor_recover,
+> -	.check_plcp_health = iwl3945_good_plcp_health,
+>  
+>  	.debugfs_ops = {
+>  		.rx_stats_read = iwl3945_ucode_rx_stats_read,
 
-> > Of course maybe mac80211 should be doings omething like this too:
-> > 
-> > johannes
-> > 
-> > --- wireless-testing.orig/net/mac80211/tx.c	2011-01-12 11:44:52.000000000 +0100
-> > +++ wireless-testing/net/mac80211/tx.c	2011-01-12 11:45:52.000000000 +0100
-> > @@ -2299,6 +2299,11 @@ struct sk_buff *ieee80211_beacon_get_tim
-> >  		struct ieee80211_mgmt *mgmt;
-> >  		u8 *pos;
-> >  
-> > +#ifdef CONFIG_MAC80211_MESH
-> > +		if (!sdata->u.mesh.mesh_id_len)
-> > +			goto out;
-> > +#endif
-> > +
-> >  		/* headroom, head length, tail length and maximum TIM length */
-> >  		skb = dev_alloc_skb(local->tx_headroom + 400 +
-> >  				sdata->u.mesh.vendor_ie_len);
-> > 
-> > 
-> With the patch, leave/join stop and restart beaconing.
+Did you experiment with different values for
+IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF for iwl3945?
 
-Yeah but evidently ath9k isn't cleanly stopping beaconing, it's still
-attempting to beacon but doesn't get a beacon from mac80211 so can't
-send one.
+Should we simply revert commit a29576a7844326c5223f4d4adbfd3f4d64173d4c
+instead?
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
