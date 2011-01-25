@@ -1,96 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432Ab1AaLRA (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:6922 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751829Ab1AYKrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:17:00 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:59 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 08/10] wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
-Date: Mon, 31 Jan 2011 13:16:27 +0200
-Message-Id: <1296472589-26401-9-git-send-email-arik@wizery.com>
-In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
+	Tue, 25 Jan 2011 05:47:08 -0500
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0182472425
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 19:47:07 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 2/2] ath5k: correct endianness of frame duration
+Date: Tue, 25 Jan 2011 19:47:03 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com
+References: <1295929904-11806-1-git-send-email-me@bobcopeland.com> <201101251423.32008.br1@einfach.org> <20110125103803.GA2239@hash.localnet>
+In-Reply-To: <20110125103803.GA2239@hash.localnet>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101251947.03685.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove an active hlid when chip wakeup fails. In addition rename the
-involved functions.
+On Tue January 25 2011 19:38:03 Bob Copeland wrote:
+> On Tue, Jan 25, 2011 at 02:23:31PM +0900, Bruno Randolf wrote:
+> > > The ath5k version of ieee80211_generic_frame_duration() returns
+> > > an __le16 for standard modes but a cpu-endian int for turbo/half/
+> > > quarter rates.  Make it always return cpu-endian values.
+> > 
+> > I wonder what effect this has in ath5k_hw_set_ifs_intervals() where
+> > ack_tx_time was little endian before...
+> 
+> Good point, I didn't think about that.  My guess is EIFS would have
+> been much too large on big endian arches before the patch.  But then
+> EIFS resets after successful rx so maybe our many BE users (heh)
+> wouldn't have noticed except on very idle channels...
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+Allright, just the EIFS is affected - shouldn't be a big deal. Anyhow it's 
+correct now and was wrong before.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8d55c89..46eb499 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2621,7 +2621,7 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
- 
--static int wl1271_allocate_hlid(struct wl1271 *wl,
-+static int wl1271_allocate_sta(struct wl1271 *wl,
- 			     struct ieee80211_sta *sta,
- 			     u8 *hlid)
- {
-@@ -2642,10 +2642,13 @@ static int wl1271_allocate_hlid(struct wl1271 *wl,
- 	return 0;
- }
- 
--static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
-+static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
- {
- 	int id = hlid - WL1271_AP_STA_HLID_START;
- 
-+	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
-+		return;
-+
- 	__clear_bit(id, wl->ap_hlid_map);
- 	wl1271_tx_reset_link_queues(wl, hlid);
- }
-@@ -2668,13 +2671,13 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
- 
--	ret = wl1271_allocate_hlid(wl, sta, &hlid);
-+	ret = wl1271_allocate_sta(wl, sta, &hlid);
- 	if (ret < 0)
- 		goto out;
- 
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
--		goto out;
-+		goto out_free_sta;
- 
- 	ret = wl1271_cmd_add_sta(wl, sta, hlid);
- 	if (ret < 0)
-@@ -2683,6 +2686,10 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
-+out_free_sta:
-+	if (ret < 0)
-+		wl1271_free_sta(wl, hlid);
-+
- out:
- 	mutex_unlock(&wl->mutex);
- 	return ret;
-@@ -2719,7 +2726,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_sleep;
- 
--	wl1271_free_hlid(wl, wl_sta->hlid);
-+	wl1271_free_sta(wl, wl_sta->hlid);
- 
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
--- 
-1.7.1
+But you meant on a very busy channel, right?
 
+I'm on a BE board ;) I can try to see what difference it makes tomorrow.
+
+bruno
