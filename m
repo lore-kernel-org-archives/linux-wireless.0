@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58559 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753649Ab1AaUAS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35703 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017Ab1AYKKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 15:00:18 -0500
-Date: Mon, 31 Jan 2011 14:47:27 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mathias Krause <minipli@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
-Subject: Re: [PATCH] wl12xx: fix use after free
-Message-ID: <20110131194727.GA3065@tuxdriver.com>
-References: <1296383387-20151-1-git-send-email-minipli@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1296383387-20151-1-git-send-email-minipli@googlemail.com>
+	Tue, 25 Jan 2011 05:10:44 -0500
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	 <1295869283.3639.7.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 Jan 2011 11:10:41 +0100
+Message-ID: <1295950241.3650.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 30, 2011 at 11:29:47AM +0100, Mathias Krause wrote:
-> When DEBUG_SPI is included in the debug log level wl1271_spi_reset()
-> will dump the already freed memory instead of the SPI buffer.
-> 
-> This bug was spotted by the semantic patch tool coccinelle using the
-> script found at scripts/coccinelle/free/kfree.cocci.
-> 
-> More information about semantic patching is available at
-> http://coccinelle.lip6.fr/
-> 
-> Signed-off-by: Mathias Krause <minipli@googlemail.com>
+On Mon, 2011-01-24 at 23:21 +0200, Arik Nemtsov wrote:
 
-Luca, I'll go ahead and apply this one directly to wireless-2.6.
+> Well a wiphy flag won't do here. Probe requests may be filtered in
+> some modes (AP-mode) but needed in others (p2p?).
+> I think flexibility is a nice added bonus here. A FW can decide to
+> handle most standard probe-requests and simply not pass them up.
+> Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
+> 
+> The current patches leave this policy in the hands of the driver/fw.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+That is _very_ dangerous. If the user has older firmware that doesn't
+know about WSC2, how would the user know not to configure WSC2 in
+hostapd? That needs to be known to hostapd so it can verify this
+situation. For P2P, we already know whether or not P2P is supported, but
+that's rather vague in case there will ever be a revision of the P2P
+spec with say different IEs.
+
+Additionally, a "regular AP" (not P2P, not WSC) would still want to
+reply to probe requests from WSC/P2P devices with the normal template.
+
+IMHO it would be smarter to rework the firmware to only reply to probe
+requests if the probe response is configured. Then, if WSC, P2P, or
+similar technologies are in use on the interface, hostapd can simply
+decide to not configure the probe response and have host-based
+processing. Would that be a change you could still make?
+
+johannes
+
