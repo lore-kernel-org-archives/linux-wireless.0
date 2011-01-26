@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp228-pc.aruba.it ([62.149.157.228]:51650 "HELO
-	smtp2-pc.aruba.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S1754728Ab1ALWoH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56305 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab1AZIQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 17:44:07 -0500
-From: Michele Ballabio <barra_cuda@katamail.com>
-To: linux-kernel@vger.kernel.org
-Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
-Date: Wed, 12 Jan 2011 23:34:53 +0100
-Cc: bebarino@gmail.com, htd@fancy-poultry.org,
-	linux-wireless@vger.kernel.org, IvDoorn@gmail.com,
-	users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101122334.55039.barra_cuda@katamail.com>
+	Wed, 26 Jan 2011 03:16:37 -0500
+Subject: Re: [PATCH v2] mac80211: use DECLARE_EVENT_CLASS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110125215810.GE2927@tuxdriver.com>
+References: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
+	 <20110121212447.GB7092@tuxdriver.com>
+	 <1295777573.3639.30.camel@jlt3.sipsolutions.net>
+	 <20110125215810.GE2927@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 09:16:33 +0100
+Message-ID: <1296029793.3635.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01.01.2011, Stephen Boyd wrote: 
->On 01/01/11 02:28, Heinz Diehl wrote:
->> On 31.12.2010, Stephen Boyd wrote: 
->> 
->>> [ 9085.714105] BUG: unable to handle kernel NULL pointer dereference at
->>> 00000000000000a4
->>> [ 9085.714816] IP: [<ffffffffa0025458>] rt2x00lib_txdone+0x36/0x249
->>> [rt2x00lib]
->>> [ 9085.715017] PGD 215fd067 PUD 292f4067 PMD 0
->>> [ 9085.715017] Oops: 0000 [#1] SMP
->>> [ 9085.715017] last sysfs file:
->>> /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
->>> [ 9085.715017] CPU 1
->>> [ 9085.715017] Modules linked in: usb_storage thermal snd_seq_oss
->>> snd_seq_midi snd_seq_dummy snd_pcm_oss snd_mixer_oss snd_hrtimer
->>> snd_emu10k1_synth snd_emux_synth snd_seq_virmidi snd_seq_midi_event
->>> snd_seq_midi_emul snd_seq scsi_wait_scan powernow_k8 mperf i2c_i801 fuse
->>> fan snd_emu10k1 snd_rawmidi snd_ac97_codec ac97_bus snd_pcm
->>> snd_seq_device snd_timer snd_page_alloc snd_util_mem rt73usb crc_itu_t
->>> rt2x00usb snd_hwdep snd processor r8169 via82cxxx rt2x00lib soundcore
->>> mii button k8temp
->>> [ 9085.715017]
->>> [ 9085.715017] Pid: 11513, comm: kworker/1:0 Not tainted 2.6.37-rc7+ #27
->>> MS-7094/MS-7094
->> [....]
->> 
->> I'm not quite shure on this, but it reminds me on this bug here:
->> https://bugzilla.kernel.org/show_bug.cgi?id=24892
->> 
->
->I believe I had the latest net tree merged into 2.6.37-rc7 in which case
->the patch mentioned in that bugzilla would already be applied.
+On Tue, 2011-01-25 at 16:58 -0500, John W. Linville wrote:
+> On Sun, Jan 23, 2011 at 11:12:53AM +0100, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > For events that include only the local struct as
+> > their parameter, we can use DECLARE_EVENT_CLASS
+> > and save quite some binary size across segments
+> > as well lines of code.
+> > 
+> >    text	   data	    bss	    dec	    hex	filename
+> >  375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
+> >  367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
+> >   -8272   -1408       0   -9680   -25d0 delta
+> > 
+> > Some more tracepoints with identical arguments
+> > could be combined like this but for now this is
+> > the one that benefits most.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> OK, so what am I doing wrong?
+> 
+> Kernel: arch/x86/boot/bzImage is ready  (#11)
+>   Building modules, stage 2.
+>   MODPOST 2218 modules
+> ERROR: "__tracepoint_drv_return_void" [net/mac80211/mac80211.ko] undefined!
 
-I can confirm this bug is present in v2.6.37, and not in v2.6.36.
-It seems to trigger quite randomly, I think in less than 2-3 hours after
-the boot (sometimes in half an hour), and it leaves no trace in my log
-files.
+Oh, apparently that happens when you compile without the tracing in
+mac80211. How strange. I'll have to figure that out.
 
-As Stephen said, most of the times the screen shows later oopses triggered
-by this one, so it is not easy to identify it either.
+johannes
+
