@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:52131 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756198Ab1ALNEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 08:04:30 -0500
-Subject: Re: [PATCH 1/2] mac80211: add hw configuration for max ampdu
- buffer size
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
-In-Reply-To: <1294836406.3639.25.camel@jlt3.sipsolutions.net>
-References: <1294836052-16828-1-git-send-email-coelho@ti.com>
-	 <1294836406.3639.25.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 15:04:18 +0200
-Message-ID: <1294837458.2097.33.camel@pimenta>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:55324 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809Ab1AZGIr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 01:08:47 -0500
+Received: by yxt3 with SMTP id 3so2027333yxt.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 22:08:46 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20110125094130.GA25962@jm.kir.nu>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <20110124094433.GA5487@jm.kir.nu> <AANLkTimYZN5438DOGNOE9Ltny5M-qg-K1ShFKToRMyuw@mail.gmail.com>
+ <20110125094130.GA25962@jm.kir.nu>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 26 Jan 2011 08:08:31 +0200
+Message-ID: <AANLkTimybq=P+mJW36yYCyQeEq7SeACa8ZDewYsy2w38@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 13:46 +0100, Johannes Berg wrote:
-> On Wed, 2011-01-12 at 14:40 +0200, coelho@ti.com wrote:
-> > From: Luciano Coelho <coelho@ti.com>
-> > 
-> > Some devices don't support the maximum AMDPU buffer size of 64, so we
-> > need to add an option to configure this in the hardware configuration.
-> > This value will be used in the ADDBA response instead of the value
-> > suggested in the request, if the latter is greater than the max
-> > supported.
-> > 
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
-> >  include/net/mac80211.h |    4 ++++
-> >  net/mac80211/agg-rx.c  |    3 +++
-> >  net/mac80211/main.c    |    1 +
-> >  3 files changed, 8 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> > index 5b3fd5a..1341d82 100644
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -1143,6 +1143,9 @@ enum ieee80211_hw_flags {
-> >   * @napi_weight: weight used for NAPI polling.  You must specify an
-> >   *	appropriate value here if a napi_poll operation is provided
-> >   *	by your driver.
-> > + * @max_rx_aggregation_subframes: maximum buffer size (number of
-> > + *	sub-frames) to be used for A-MPDU block ack receiver
-> > + *	aggregation.
-> 
-> ... "This is only relevant if the device has restrictions on the number
-> of subframes, if it relies on mac80211 to do reordering it shouldn't be
-> set." maybe?
+On Tue, Jan 25, 2011 at 11:41, Jouni Malinen <j@w1.fi> wrote:
+> On Mon, Jan 24, 2011 at 11:16:43PM +0200, Arik Nemtsov wrote:
+>> The SSID-as-attr not used for the probe-resp template. It is used by
+>> FW to filter out which probe-reqs should be responded to when
+>> operating with a hidden SSID.
+>
+> OK, that would be useful to mention in nl80211.h comments and
+> cfg80211.h, too, I'd guess.
 
-Yes, this makes it clearer.  Thanks! I'll add it.
+Sure. I'll put in a few words.
 
--- 
-Cheers,
-Luca.
+>
+>> The wl12xx FW updates the timestamp and DA. I mentioned in the
+>> documentation of ieee80211_proberesp_get (and various other parts)
+>> that the DA should be set manually and that this should be used as a
+>> template (which also implies timestamp should be set). If some part is
+>> unclear can you point out a specific patch?
+>
+> DA should be pretty obvious. Timestamp is something that I hope is clear
+> for whoever is implementing a driver, but it could be mentioned
+> somewhere.
 
+Sure.
+
+>
+>> Perhaps we can start with these AP-mode only patches and expand the
+>> functionality when it is needed for p2p?
+>
+> I'm fine with them if there is a capability flag that allows user space
+> to know that the driver does not use user space -based Probe Request
+> processing. With that, hostapd/wpa_supplicant can disable functionality
+> like multi-SSID support, WPS 2.0, P2P until we get more complete
+> capability information on what devices that process Probe Request frames
+> internally can do.
+
+Makes sense. I'll look into it.
+
+Arik
