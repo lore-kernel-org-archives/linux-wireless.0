@@ -1,53 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:2435 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751444Ab1AORjc (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39003 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435Ab1AZRdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 12:39:32 -0500
-Message-ID: <4D31DBD2.9060909@gmail.com>
-Date: Sat, 15 Jan 2011 18:39:30 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 26 Jan 2011 12:33:24 -0500
+Received: by qwa26 with SMTP id 26so1152291qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 09:33:23 -0800 (PST)
+Message-ID: <4D405B09.9070900@lwfinger.net>
+Date: Wed, 26 Jan 2011 11:34:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "u2@whoplays.asia" <u2@whoplays.asia>
+To: =?GB2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>,
+	linville@tuxdriver.com
 CC: linux-wireless@vger.kernel.org
-Subject: Re: [Driver] NEC WL300NU-G
-References: <4D31C1F5.7080306@whoplays.asia>
-In-Reply-To: <4D31C1F5.7080306@whoplays.asia>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] fix_rtlwifi_rfkill_state_not_synchronous_with_true_rfstate_issue
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>     <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net> <301B5E6D9B3042F6ABB4C6479ACB875E@realsil.com.cn> <5D449C23195D46B388A79AE17932553E@realsil.com.cn>
+In-Reply-To: <5D449C23195D46B388A79AE17932553E@realsil.com.cn>
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/11 16:49, u2@whoplays.asia wrote:
-> hi,
+On 01/24/2011 11:08 PM, Àî³¯Ã÷ wrote:
+> Sorry for last patch have no description.
 > 
-> According to the list linuxwireless.org/en/users/Devices/USB, Wireless USB adapter NEC WL300NU-G[0x409:0x093f] is supported by ar9170usb.
+> 1. when driver init, rfkill_state was setted, but because the flag valid may
+> not be true, this will cause rfkill_state
+> not synchronous with the true rf state, and will cause some issues when we
+> do rfkill.
+> and now in driver init we will set rfkill_state to rf_on, and at the same
+> time 
+> we tell rfkill to set rf_on also.
 > 
-> But the one I bought via www.amazon.co.jp/NEC-Aterm-WL300NU-G-PA-WL300NU-G is [0x409:0x0249] and not detected by any drivers...
+> 2. for rtl8192ce you can check GPIO any time, not only after up_first_time
+> == true. so we delete rtlpci->up_first_time
+> in rtl92ce_gpio_radio_on_off_checking.
 > 
-> $ lsusb
-> Bus 007 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> Bus 006 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> Bus 004 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> Bus 002 Device 006: ID 0a5c:2101 Broadcom Corp. Bluetooth Controller
-> Bus 002 Device 005: ID 0853:0100 Topre Corporation HHKB Professional
-> Bus 002 Device 004: ID 0409:005a NEC Corp. HighSpeed Hub
-> Bus 002 Device 003: ID 0409:0249 NEC Corp.
-> Bus 002 Device 002: ID 2019:ab50 PLANEX GW-US54Mini2
-> Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> $ uname -a
-> Linux localhost 2.6.32-5-amd64 #1 SMP Wed Jan 12 03:40:32 UTC 2011 x86_64 GNU/Linux
-> 
-> Plz anyone describe me why this one has another vendor-productID, and will this one supported?
+> Signed-off-by: chaoming_li  <chaoming_li@realsil.com.cn>
 
-It looks like this device is supported in the latest ar9170usb driver. I can't really find in which kernel
-release support for this device has been added, but I'm almost certain that this was after 2.6.32 had been
-released (it is more likely that 2.6.34 is the first kernel release that supports your device).
+Chaoming,
 
-In other words, the kernel version that you are testing with is simply too old to support the device.
-I guess you need to upgrade to a later kernel version (or use compat-wireless).
+This patch was line wrapped by your mailer. I'm not sure what you need to do to
+allow longer lines, but we can discuss this offline.
 
----
-Gertjan.
+I still see a couple of problems with the code after this patch is applied. When
+the system is booted or when rtl8192ce is loaded, the log always shows the
+switch to be off, no matter the actual position. In addition, the status is not
+logged when the switch is moved.
+
+@John,
+
+ We will work out the points noted above and get a revised patch to you. I t
+will likely be part of some larger changes in rtlwifi that are needed to
+accommodate some new drivers that are nearly ready.
+
+Larry
+
+> 
+> ---
+>  drivers/net/wireless/rtlwifi/base.c         |   13 ++++++++-----
+>  drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    2 +-
+>  2 files changed, 9 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/base.c
+> b/drivers/net/wireless/rtlwifi/base.c
+> index cf0b73e..33323b4 100644
+> --- a/drivers/net/wireless/rtlwifi/base.c
+> +++ b/drivers/net/wireless/rtlwifi/base.c
+> @@ -251,15 +251,18 @@ void rtl_init_rfkill(struct ieee80211_hw *hw)
+>  	bool blocked;
+>  	u8 valid = 0;
+>  
+> -	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
+> +	/*1. set init state to on */
+> +	rtlpriv->rfkill.rfkill_state = 1;
+> +	wiphy_rfkill_set_hw_state(hw->wiphy, 0);
+>  
+> -	/*set init state to that of switch */
+> -	rtlpriv->rfkill.rfkill_state = radio_state;
+> -	printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
+> -	       rtlpriv->rfkill.rfkill_state ? "on" : "off");
+> +	/*2. check gpio for rf state */
+> +	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
+>  
+> +	/*3. if valid, change state based on gpio */
+>  	if (valid) {
+>  		rtlpriv->rfkill.rfkill_state = radio_state;
+> +		printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
+> +				rtlpriv->rfkill.rfkill_state ? "on" :
+> "off");
+>  
+>  		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
+>  		wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> index 1c41a0c..cb2e01a 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+> @@ -1943,7 +1943,7 @@ bool rtl92ce_gpio_radio_on_off_checking(struct
+> ieee80211_hw *hw, u8 * valid)
+>  	bool b_actuallyset = false;
+>  	unsigned long flag;
+>  
+> -	if ((rtlpci->up_first_time == 1) || (rtlpci->being_init_adapter))
+> +	if (rtlpci->being_init_adapter)
+>  		return false;
+>  
+>  	if (ppsc->b_swrf_processing)
+
