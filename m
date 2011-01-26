@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:50930 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751859Ab1AQSLx (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45545 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752647Ab1AZUDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 13:11:53 -0500
-Received: by ywl5 with SMTP id 5so1761953ywl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 10:11:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1295287108.3726.49.camel@jlt3.sipsolutions.net>
-References: <1295284675-30029-1-git-send-email-eliad@wizery.com>
-	<1295287108.3726.49.camel@jlt3.sipsolutions.net>
-Date: Mon, 17 Jan 2011 20:11:52 +0200
-Message-ID: <AANLkTikhz0p1SCP1Lm2qzR4TYdh3OH+vSzWBshfoG5-e@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: free firmware after booting the chip
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 26 Jan 2011 15:03:32 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 359135400F2
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 15:05:40 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-26 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110126200331.8DB8140F97@repository3.orbit-lab.org>
+Date: Wed, 26 Jan 2011 15:03:31 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-good point!
-does loading it on suspend makes sense, or i should abandon this patch?
 
-On Mon, Jan 17, 2011 at 7:58 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-01-17 at 19:17 +0200, Eliad Peller wrote:
->> There is no need to save the fw in memory after it has been
->> uploaded to the chip.
->
-> Are you sure it's not needed for resume? At which point userspace isn't
-> up so you can't load it.
->
-> johannes
->
->
+compat-wireless code metrics
+
+    782984 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1982 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1955 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20110121
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
