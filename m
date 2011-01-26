@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:47230 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751728Ab1AZOE5 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1635 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978Ab1AZBuZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 09:04:57 -0500
-Date: Wed, 26 Jan 2011 16:04:44 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
-Message-ID: <20110126140444.GA30373@jm.kir.nu>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
- <1295869283.3639.7.camel@jlt3.sipsolutions.net>
- <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+	Tue, 25 Jan 2011 20:50:25 -0500
+Date: Tue, 25 Jan 2011 20:50:34 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, Bruno Randolf <br1@einfach.org>,
+	jirislaby@gmail.com, lrodriguez@atheros.com
+Subject: Re: [PATCH 1/2] ath5k: fix error handling in ath5k_hw_dma_stop
+Message-ID: <20110126015034.GA8600@hash.localnet>
+References: <1295929904-11806-1-git-send-email-me@bobcopeland.com> <20110125135249.GA2610@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+In-Reply-To: <20110125135249.GA2610@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 24, 2011 at 11:21:44PM +0200, Arik Nemtsov wrote:
-> Well a wiphy flag won't do here. Probe requests may be filtered in
-> some modes (AP-mode) but needed in others (p2p?).
-> I think flexibility is a nice added bonus here. A FW can decide to
-> handle most standard probe-requests and simply not pass them up.
-> Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
+From: Bob Copeland <me@bobcopeland.com>
+Date: Mon, 24 Jan 2011 09:25:11 -0500
+Subject: [PATCH] ath5k: fix error handling in ath5k_hw_dma_stop
 
-Hmm.. So would the design be that upper layers (mac80211/hostapd) would
-not see the Probe Request frames that the firmware replies to? What
-would be criteria in selecting what is a "standard" and what is a
-"complicated" Probe Request?
+Review spotted a problem with the error handling in ath5k_hw_dma_stop:
+a successful return from ath5k_hw_stop_tx_dma will be treated as
+an error, so we always bail out of the loop after processing a single
+active queue.  As a result, we may not actually stop some queues during
+reset.
 
-One thing that came up when I was thinking about a bit more is that even
-with WPS 1.0, the Probe Request frames with WSC IE must be passed up to
-hostapd for PBC session overlap detection and to support external
-Registrars. So even if you could reply to those Probe Request frames in
-firmware, they would still need to be indicated to hostapd and hostapd
-(or something else in the system) would need to know that a duplicated
-response should not be sent. Similar needs for receiving Probe Request
-frames apply for P2P and potentially for some other protocols, too.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-What is the main point of replying to Probe Request frames in the
-firmware? Reduced latency? Reduced power consumption of the host CPU?
-Something else? The former could be achieved even if the frame were
-passed up; the latter would be difficult to achieve if WPS or P2P is
-enabled without implementing large part of the protocol in the
-firmware..
+> Patch is good, but does not make code fully correct. When last queue
+> is inactive, we return -EINVAL from ath5_hw_dma_stop(). So we need
+> also:
+> 
+>  		if (err && err != -EINVAL)
+>  			return err;
+> +		err = 0;
+>  	}
+
+> But perhaps, would be better just return 0 from 
+> ath5k_hw_stop_tx_dma() when queue is inactive.
+
+How about this version instead?  Although returning 0 in the inactive
+queue case would be ok, I'd like to keep the diff small since this
+seems to fix some reset problems people are now seeing in Linus's tree
+and if so I'd like to get it in 2.6.38.
+
+> I think that could fix "ath5k phy0: can't reset hardware (-5)"
+> bugs reported in a few places, so patch should go to stable
+> as well.
+
+I thought this was older code but it actually landed after 2.6.37
+so no need for stable CC.
+
+As a side note, we still quit when the first error is encountered.
+Maybe we should try stopping all of the queues anyway if one fails?
+On the other hand we could spend a lot of time polling the registers
+if the card is truly hosed, so I think this is best for now.
+
+ drivers/net/wireless/ath/ath5k/dma.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index 0064be7..21091c2 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -838,9 +838,9 @@ int ath5k_hw_dma_stop(struct ath5k_hw *ah)
+ 	for (i = 0; i < qmax; i++) {
+ 		err = ath5k_hw_stop_tx_dma(ah, i);
+ 		/* -EINVAL -> queue inactive */
+-		if (err != -EINVAL)
++		if (err && err != -EINVAL)
+ 			return err;
+ 	}
+ 
+-	return err;
++	return 0;
+ }
+-- 
+1.7.1.1
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Bob Copeland %% www.bobcopeland.com
+
