@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:60002 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754037Ab1AGSsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 13:48:16 -0500
-Subject: [PATCH] ssb: Ignore dangling ethernet cores on wireless devices
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Jan 2011 19:48:05 +0100
-Message-ID: <1294426085.18385.8.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56211 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752732Ab1AZRVs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 12:21:48 -0500
+Received: by iyj18 with SMTP id 18so575334iyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 09:21:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <19776.19422.571177.795197@gargle.gargle.HOWL>
+References: <19776.19422.571177.795197@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 Jan 2011 09:21:27 -0800
+Message-ID: <AANLkTi=881eHyZEHnjY_XkCGLnzNWz1iuUVoJQA_KkAB@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_hw: Fix INI fixup
+To: Sujith <m.sujith@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Sujith.Manoharan@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some Broadcom based wireless devices contain dangling ethernet cores.
-This triggers the ssb probing mechanism and tries to load the b44 driver
-on this core.
-Ignore the dangling core in the ssb core scanning code to avoid
-access to the core and failure of b44 probing.
+On Wed, Jan 26, 2011 at 8:29 AM, Sujith <m.sujith@gmail.com> wrote:
+> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+>
+> Commit "ath9k_hw: move AR9280 PCI EEPROM fix to eeprom_def.c"
+> changed the behavior of INI overriding which is needed only
+> for PCI cards. Revert to the original check.
+>
+> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+You leave me no option but to come out of e-mail reply slumber. What
+issues was this causing?
 
----
-
-Does not need to go into stable, because probing of that core
-doesn't hurt except for failure messages in the logs.
-
-Index: linux-2.6.37/drivers/ssb/scan.c
-===================================================================
---- linux-2.6.37.orig/drivers/ssb/scan.c	2011-01-07 15:35:10.518000002 +0100
-+++ linux-2.6.37/drivers/ssb/scan.c	2011-01-07 15:45:54.231998930 +0100
-@@ -420,6 +420,16 @@
- 			bus->pcicore.dev = dev;
- #endif /* CONFIG_SSB_DRIVER_PCICORE */
- 			break;
-+		case SSB_DEV_ETHERNET:
-+			if (bus->bustype == SSB_BUSTYPE_PCI) {
-+				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
-+				    (bus->host_pci->device & 0xFF00) == 0x4300) {
-+					/* This is a dangling ethernet core on a
-+					 * wireless device. Ignore it. */
-+					continue;
-+				}
-+			}
-+			break;
- 		default:
- 			break;
- 		}
-
--- 
-Greetings Michael.
-
+  Luis
