@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:37639 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753314Ab1AQLV0 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35531 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753338Ab1AZWIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 06:21:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <1295261783.24530.3.camel@maggie>
-References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com> <1295261783.24530.3.camel@maggie>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Mon, 17 Jan 2011 12:21:05 +0100
-Message-ID: <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
-Subject: Re: Merging SSB and HND/AI support
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 26 Jan 2011 17:08:39 -0500
+Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta
+ connection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <AANLkTikno8Aa3wKy1js62D3FLOZJUxPyuwYsQd+g8JBM@mail.gmail.com>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+	 <1295156534-4178-3-git-send-email-arik@wizery.com>
+	 <1296077594.3635.40.camel@jlt3.sipsolutions.net>
+	 <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
+	 <1296078857.3635.41.camel@jlt3.sipsolutions.net>
+	 <AANLkTikno8Aa3wKy1js62D3FLOZJUxPyuwYsQd+g8JBM@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 23:08:39 +0100
+Message-ID: <1296079719.3635.47.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 January 2011 11:56, Michael Büsch <mb@bu3sch.de> wrote:
-> On Mon, 2011-01-17 at 11:46 +0100, Jonas Gorski wrote:
->> a) Merge the HND/AI code into the current SSB code, or
->>
->> b) add the missing code for SoCs to brcm80211 and replace the SSB code with it.
->
-> Why can't we keep those two platforms separated?
-> Is there really a lot of shared code between SSB and HND/AI?
+On Thu, 2011-01-27 at 00:02 +0200, Arik Nemtsov wrote:
 
-Yes, as far as I understand the AI bus behaves mostly like a SSB bus
-except for places like enabling/disabling cores. E.g. the AI bus also
-has a common core, which has a bit for telling whether its a SSB or AI
-bus, and has the mostly the same registers as the SSB common cores (so
-most driver_chipcommon_* stuff also applies for the AI bus).
+> >> 2. The STA transmits something
+> >> 3. The AP FW deauths the STA
+> >> 4. hostapd adds the station, causing mac80211 to call add_sta(), which
+> >> causes the FW to add the sta
+> >>
+> >> Then we have an endless loop of sta add/remove..
+> >
+> > I'd wondered about that race condition before -- maybe hostapd should
+> > add the station before sending the assoc complete. The race also exists
+> > in practice with just mac80211, except it only leads to a dropped frame.
+> 
+> Well it can still get dropped here. This just prevents the FW from
+> de-authenticating the STA.
 
-> It's true that there's currently a lot of device functionality built
-> into ssb. Like pci bridge, mips core, extif, etc...
-> If you take all that code out, you're probably not left with anything.
+No I mean the incoming frame would be dropped:
 
-That's because most shared code isn't in brcm80211, but only found in
-the SDKs for the SoCs.
+ - sta sends assoc
+ - hostapd sends response
+ - when assoc response ACK is received, hostapd sets state to assoc
+ - incoming frame
+ - hostapd adds STA to mac80211
 
-> So why do we need to replace or merge SSB in the first place? Can't
-> it co-exist with HND/AI?
+then in this case mac80211 will pass the incoming frame up to hostapd,
+and not to the network stack, but hostapd knows that it's a good frame
+and won't kick out the station
 
-It probably can, but then the SSB code must be at least made AI aware
-so it doesn't try to attach itself if it finds one. Also I don't know
-if it is a good idea to let arch-specific code depend on code in
-staging.
+The only difference is that with your firmware the kicking out is done
+by the firmware, not hostapd, so it actually gets kicked out rather than
+the frame being dropped.
 
-Jonas
+So ... the race exists even without the firmware, it just has less
+severe consequences.
+
+If we add the station before the response frame's ACK is received, we
+still have the race, and we need to delete if we don't get the ACK. If
+we add the station before we send the assoc response we get rid of this
+race, but also have to delete if we don't get the ACK. I guess that case
+is actually nicer in some way since we would have allowed the station to
+connect, so if spurious data frames go up because we don't get an ACK
+from the station that's no big deal?
+
+johannes
+
