@@ -1,72 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54450 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab1A1RLx (ORCPT
+Received: from w1.fi ([128.177.27.249]:47351 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751039Ab1AZJh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 12:11:53 -0500
-Message-ID: <4D42F8D3.6090806@candelatech.com>
-Date: Fri, 28 Jan 2011 09:11:47 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 26 Jan 2011 04:37:58 -0500
+Date: Wed, 26 Jan 2011 11:37:00 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/6] ath: Fix WEP hardware encryption
+Message-ID: <20110126093700.GA11832@jm.kir.nu>
+References: <20110125041522.6944.22566.stgit@localhost6.localdomain6>
+ <20110125041549.6944.15800.stgit@localhost6.localdomain6>
+ <20110125183205.GA29410@jm.kir.nu>
+ <201101261138.53169.br1@einfach.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Multiple vifs and HT v/s non-HT.
-References: <4D41FACB.2010807@candelatech.com> <1296220663.5118.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296220663.5118.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201101261138.53169.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/28/2011 05:17 AM, Johannes Berg wrote:
-> On Thu, 2011-01-27 at 15:07 -0800, Ben Greear wrote:
->> We found something fun while playing with HT mode:
->>
->> We had some vifs associated with an AP with HT enabled,
->> and other VIFS to an AP with HT disabled.
->>
->> They managed to associate, but with slow rates and
->> for whatever reason, nothing is able to send traffic.
->> I would have expected one set or the other would
->> be able to send traffic.
->>
->> The ath9k hardware ended up in HT mode according to
->> ath9k debugfs wiphy file, but that was probably
->> just luck.
->>
->> I'm not too sure how to ensure this mixed-mode HT
->> scenario doesn't happen at this point...
->
-> So that patch you sent addressed this?
+On Wed, Jan 26, 2011 at 11:38:53AM +0900, Bruno Randolf wrote:
 
-Well, I could no longer (easily?) reproduce the problem,
-but to be honest, I don't see how my changes could have fixed
-the problem that I saw.  I still think that patch is useful
-and could fix other problems, however.
+> Even without my patch, WEP does not work with multiple vifs. 
 
-I ran 30 STAs w/out HT and 30 with all night, about 175kbps UDP tx + rx on
-each interface, and it ran OK.
+Are you sure about that? Why would there be any issues in using software
+crypto for decrypting WEP frames while everything else is done in
+hardware? I'm really interested in cases where only one of the vifs is
+using WEP, but this should work even with multiple WEP vifs. The key is
+in mac80211 using more details of the frame header in selecting which
+key to use than the hardware key cache.
 
-But, there may still be issues/races with initial setup and state transitions.
+> My patch just adds a special case for WEP, so it does not break anything for 
+> the other use cases. It improves the performance for the one vif case where 
+> WEP works right now.
 
-At the least, the set-channel-type method should do WARN_ON_ONCE
-instead of WARN_ON if you have HT40+ on some VIFs and HT40-
-on others.  I was also thinking that the first vif(s) to associate
-on a channel-type should win..and just fail to set the channel type
-to something invalid (ie, ht40- -> ht40+) in that case.  Otherwise,
-I think you would get endless flapping.
+As far as I can tell, it will break all multi-vif cases where at least
+one of the vifs is using WEP (which would be one of the only acceptable
+uses of WEP as a temporary upgrade path while providing more reasonable
+security on other vifs). As such, I would have to NAK this patch in its
+current form.
 
-Thanks,
-Ben
+To make this acceptable, the patch would need to handle a case where
+multiple vifs are added (which may happen either before or after the WEP
+keys would be set to default key indexes) and prevent the use of those
+key indexes (which would include removing the already configured keys in
+case of vif added after the WEP configuration on another vif).
 
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Another alternative could be to figure out whether some of the new key
+cache functionality could be used to avoid the problems in some cases,
+but that may not be feasible with all the hardware revisions supported
+by ath5k.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Jouni Malinen                                            PGP id EFC895FA
