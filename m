@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755468Ab1AaLQ5 (ORCPT
+Received: from w1.fi ([128.177.27.249]:50965 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751039Ab1AZJrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:16:57 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:56 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
+	Wed, 26 Jan 2011 04:47:14 -0500
+Date: Wed, 26 Jan 2011 11:46:08 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 07/10] wl12xx: AP-mode - support HW based link PS monitoring
-Date: Mon, 31 Jan 2011 13:16:26 +0200
-Message-Id: <1296472589-26401-8-git-send-email-arik@wizery.com>
-In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+Message-ID: <20110126094608.GB11832@jm.kir.nu>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <20110124094433.GA5487@jm.kir.nu>
+ <AANLkTimYZN5438DOGNOE9Ltny5M-qg-K1ShFKToRMyuw@mail.gmail.com>
+ <20110125094130.GA25962@jm.kir.nu>
+ <AANLkTimybq=P+mJW36yYCyQeEq7SeACa8ZDewYsy2w38@mail.gmail.com>
+ <AANLkTi=Ud-QPqxOx8xLUPA4UgoTCx+H78QWACpotMcX9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=Ud-QPqxOx8xLUPA4UgoTCx+H78QWACpotMcX9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating in AP mode the wl1271 hardware filters out null-data
-packets as well as management packets. This makes it impossible for
-mac80211 to monitor the PS mode by using the PM bit of incoming frames.
+On Wed, Jan 26, 2011 at 08:24:32AM +0200, Arik Nemtsov wrote:
+> Just to clear up - I don't want to disable p2p or wps support in
+> hostapd if probe-resp offloading is configured. The low level
+> driver/fw could realistically differentiate between regular and
+> non-support probe requests, and only handle the former.
+> The kind of capability flag you asked won't work with such a low lever
+> driver/fw combo. Is muti-ssid support currently implemented?
 
-Disable mac80211 automatic link PS-mode handling by supporting
-IEEE80211_HW_AP_LINK_PS in HW flags.
+You may not want to disable something, but I do want
+hostapd/wpa_supplicant to be able disable P2P or other features if it is
+not clear the the driver is unable to support them correctly. Knowing
+whether the driver is planning on using hostapd for processing Probe
+Request frames is a key for this and as such, I cannot support use of
+this functionality in hostapd/wpa_supplicant before that driver
+capability information is exposed to user space.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+How would the firmware be aware of new protocols that pop up every now
+and then? There does not seem to be any other way of doing this reliably
+apart from being able to advertise support for protocol specific needs
+like adding a P2P-Probe-Request-offload capability and
+P2P-Probe-Request-will-be-passed-up-but-everything-else-offloaded
+capability when support for P2P is added. Similar flags would then be
+needed for whatever new protocol comes up with silly Probe Request
+processing requirements.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2c6bde9..8d55c89 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3221,7 +3221,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_SUPPORTS_UAPSD |
- 		IEEE80211_HW_HAS_RATE_CONTROL |
- 		IEEE80211_HW_CONNECTION_MONITOR |
--		IEEE80211_HW_SUPPORTS_CQM_RSSI;
-+		IEEE80211_HW_SUPPORTS_CQM_RSSI |
-+		IEEE80211_HW_AP_LINK_PS;
- 
- 	wl->hw->wiphy->cipher_suites = cipher_suites;
- 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+Parts of multi-SSID support are in hostapd, but I do not think it is
+enabled at the moment.
+
+> How about a different solution - I'll just disable p2p IEs for the
+> probe-resp template for now. Let's assume the FW behaves correctly in
+> this case and passes up the probe-requests. The code for generating
+> the WPS IE for the probe-resp seems to not depend on the probe-req. Is
+> the feature of WPS 2.0 you mentioned currently implemented? If so this
+> can be disabled as well.
+
+Disable where? And how would hostapd/wpa_supplicant know that something
+is disabled? We cannot design a new driver interface that depends on an
+assumed hack in a firmware of one device. This needs to be usable by
+other drivers, too, and unless such assumptions are clearly documented
+(and not randomly changing) it will be difficult to see consistent
+behavior between different drivers and user space applications.
+
 -- 
-1.7.1
-
+Jouni Malinen                                            PGP id EFC895FA
