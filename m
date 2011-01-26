@@ -1,139 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34493 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756148Ab1AaQiE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50699 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677Ab1AZJEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 11:38:04 -0500
-Received: by bwz15 with SMTP id 15so5416800bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 08:38:02 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/4] wl12xx: mcp2.5 - add config_ps acx
-Date: Mon, 31 Jan 2011 18:38:16 +0200
-Message-Id: <1296491899-25440-2-git-send-email-eliad@wizery.com>
-In-Reply-To: <1296491899-25440-1-git-send-email-eliad@wizery.com>
-References: <1296491899-25440-1-git-send-email-eliad@wizery.com>
+	Wed, 26 Jan 2011 04:04:23 -0500
+Subject: Re: [PATCH 1/2] wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw
+ flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
+References: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1296030672.3635.13.camel@jlt3.sipsolutions.net>
+	 <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 10:04:19 +0100
+Message-ID: <1296032659.3635.29.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mcp2.5 uses this acx to configure the fw only once, rather than
-passing the params in every enter psm command.
+On Wed, 2011-01-26 at 11:02 +0200, Juuso Oikarinen wrote:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v1 -> v2: fix minor checkpatch issue
+> Well I guess I'm stating the obvious here. The effects of the flag are:
+> 
+> - It causes mac80211 to add the spectrum mgmt capability bit, list of
+> supported channels and TX power capability info into the assoc-req
+> - It causes mac80211 to process channel switch actions
+> - It causes mac80211 to process and react to TPC power constraint
+> elements sent out in beacons
+> - It causes mac80211 to respond to TPC report requests by the AP, albeit
+> currently only by refusing them.
 
- drivers/net/wireless/wl12xx/acx.c  |   30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/acx.h  |   11 +++++++++++
- drivers/net/wireless/wl12xx/conf.h |    8 ++++++++
- drivers/net/wireless/wl12xx/main.c |    1 +
- 4 files changed, 50 insertions(+), 0 deletions(-)
+Right. But all of this is generic, no? Except maybe TPC?
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index afdc601..84d94b2 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1476,3 +1476,33 @@ out:
- 	kfree(acx);
- 	return ret;
- }
-+
-+int wl1271_acx_config_ps(struct wl1271 *wl)
-+{
-+	struct wl1271_acx_config_ps *config_ps;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx config ps");
-+
-+	config_ps = kzalloc(sizeof(*config_ps), GFP_KERNEL);
-+	if (!config_ps) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	config_ps->exit_retries = wl->conf.conn.psm_exit_retries;
-+	config_ps->enter_retries = wl->conf.conn.psm_entry_retries;
-+	config_ps->null_data_rate = cpu_to_le32(wl->basic_rate);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_CONFIG_PS, config_ps,
-+				   sizeof(*config_ps));
-+
-+	if (ret < 0) {
-+		wl1271_warning("acx config ps failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(config_ps);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index c683801..af36b16 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1136,6 +1136,15 @@ struct wl1271_acx_max_tx_retry {
- 	u8 padding_1[2];
- } __packed;
- 
-+struct wl1271_acx_config_ps {
-+	struct acx_header header;
-+
-+	u8 exit_retries;
-+	u8 enter_retries;
-+	u8 padding[2];
-+	__le32 null_data_rate;
-+} __packed;
-+
- enum {
- 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
- 	ACX_MEM_CFG                 = 0x0003,
-@@ -1200,6 +1209,7 @@ enum {
- 	DOT11_RTS_THRESHOLD         = 0x1013,
- 	DOT11_GROUP_ADDRESS_TBL     = 0x1014,
- 	ACX_PM_CONFIG               = 0x1016,
-+	ACX_CONFIG_PS               = 0x1017,
- 
- 	MAX_DOT11_IE = DOT11_GROUP_ADDRESS_TBL,
- 
-@@ -1269,5 +1279,6 @@ int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
- 				       bool enable);
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
- int wl1271_acx_max_tx_retry(struct wl1271 *wl);
-+int wl1271_acx_config_ps(struct wl1271 *wl);
- 
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index fd1dac9..c81aecd 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -960,6 +960,14 @@ struct conf_conn_settings {
- 	u8 psm_entry_retries;
- 
- 	/*
-+	 * Specifies the maximum number of times to try PSM exit if it fails
-+	 * (if sending the appropriate null-func message fails.)
-+	 *
-+	 * Range 0 - 255
-+	 */
-+	u8 psm_exit_retries;
-+
-+	/*
- 	 * Specifies the maximum number of times to try transmit the PSM entry
- 	 * null-func frame for each PSM entry attempt
- 	 *
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dfab21e..ec82dd0 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -256,6 +256,7 @@ static struct conf_drv_settings default_conf = {
- 		.bet_enable                  = CONF_BET_MODE_ENABLE,
- 		.bet_max_consecutive         = 10,
- 		.psm_entry_retries           = 5,
-+		.psm_exit_retries            = 255,
- 		.psm_entry_nullfunc_retries  = 3,
- 		.psm_entry_hangover_period   = 1,
- 		.keep_alive_interval         = 55000,
--- 
-1.7.0.4
+> In addition to this, I plan to implement the TPC basic reporting,
+> including mac80211 stuff if required (I still need to learn some more on
+> the subject, specifically regarding the wl12xx chipset) and also I plan
+> to implement quieting, though it's likely that wont need mac80211
+> intervention with wl12xx at least.
+> 
+> AFAIK all these items are mandatory on the 5GHz band, at least in
+> Europe.
+> 
+> So I don't see how this flag could be removed. Unless you wan't to make
+> the above default behavior - but then adding for instance the spectrum
+> mgmt bit into the capabilities assumes all chipset will be able handle
+> all of the features?
+
+Yeah, I was thinking those should be default, and the actual TPC
+reporting would of course depend on hardware features? But then again
+maybe TPC itself isn't necessarily implemented by drivers since not all
+drivers implement setting the power correctly.
+
+johannes
 
