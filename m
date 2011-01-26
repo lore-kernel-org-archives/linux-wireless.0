@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3472 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754039Ab1A1Sob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 13:44:31 -0500
-Subject: fwd: .35 vs .37 suspend/resume corrected defect
-From: Joe Perches <joe@perches.com>
-To: "Leonardo L. P. da Mata" <barroca@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 Jan 2011 10:44:29 -0800
-Message-ID: <1296240269.2448.238.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:32939 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809Ab1AZGfm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 01:35:42 -0500
+Received: by gwj20 with SMTP id 20so16842gwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 22:35:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1295950241.3650.3.camel@jlt3.sipsolutions.net>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <1295869283.3639.7.camel@jlt3.sipsolutions.net> <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+ <1295950241.3650.3.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 26 Jan 2011 08:35:26 +0200
+Message-ID: <AANLkTikKM3sz5Y=+BNh9z6u-RuhUB81Y9BWavFnjKH7s@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leonardo.
+On Tue, Jan 25, 2011 at 12:10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2011-01-24 at 23:21 +0200, Arik Nemtsov wrote:
+>
+>> Well a wiphy flag won't do here. Probe requests may be filtered in
+>> some modes (AP-mode) but needed in others (p2p?).
+>> I think flexibility is a nice added bonus here. A FW can decide to
+>> handle most standard probe-requests and simply not pass them up.
+>> Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
+>>
+>> The current patches leave this policy in the hands of the driver/fw.
+>
+> That is _very_ dangerous. If the user has older firmware that doesn't
+> know about WSC2, how would the user know not to configure WSC2 in
+> hostapd? That needs to be known to hostapd so it can verify this
+> situation. For P2P, we already know whether or not P2P is supported, but
+> that's rather vague in case there will ever be a revision of the P2P
+> spec with say different IEs.
 
-This is very much more appropriate for the mailing lists.
-I'm forwarding your mail on to those lists.
+Well basically the FW should white-list probe-requests it knows about
+and pass up all the rest.
 
--------- Forwarded Message --------
-From: Leonardo  L. P. da Mata <barroca@gmail.com>
-[]
-I have a 2.6.35 kernel that is showing some errors like this
-(sorry, i don't have the exactly call trace, but is very similar to
-this one):
-[   93.344045] Call Trace:
-[   93.344051]  [<ffffffff8103aabb>] ? warn_slowpath_common+0x7b/0xc0
-[   93.344054]  [<ffffffff8103abb5>] ? warn_slowpath_fmt+0x45/0x50
-[   93.344057]  [<ffffffff813af93f>] ? ieee80211_work_work+0x2ef/0x13b0
-[   93.344061]  [<ffffffff811d362c>] ? string+0x4c/0xe0
-[   93.344064]  [<ffffffff81036c60>] ? default_wake_function+0x0/0x20
-[   93.344067]  [<ffffffff813b0a74>] ? ieee80211_work_purge+0x74/0xd0
-[   93.344070]  [<ffffffff813b1857>] ? ieee80211_stop+0x57/0x4e0
-[   93.344073]  [<ffffffff8133c44a>] ? dev_deactivate+0x1aa/0x1d0
-[   93.344077]  [<ffffffff81328551>] ? __dev_close+0x41/0x70
-[   93.344079]  [<ffffffff81328592>] ? dev_close+0x12/0x40
-[   93.344082]  [<ffffffff81328615>] ? rollback_registered_many+0x55/0x2c0
-[   93.344085]  [<ffffffff8132888e>] ? unregister_netdevice_many+0xe/0x70
-[   93.344088]  [<ffffffff813b0da4>] ? ieee80211_remove_interfaces+0xa4/0xe0
-[   93.344092]  [<ffffffff813a2536>] ? ieee80211_unregister_hw+0x46/0x100
-[   93.344097]  [<ffffffffa00dea29>] ? rt2x00lib_remove_dev+0xc9/0xd0 [rt2x00lib]
-[   93.344101]  [<ffffffffa0054136>] ? rt2x00usb_disconnect+0x36/0x80 [rt2x00usb]
-[   93.344111]  [<ffffffffa00a6254>] ? usb_unbind_interface+0xc4/0x120 [usbcore]
-[   93.344115]  [<ffffffff81282090>] ? __device_release_driver+0x60/0xd0
-[   93.344118]  [<ffffffff812821d5>] ? device_release_driver+0x25/0x40
-[   93.344126]  [<ffffffffa00a64dc>] ? usb_rebind_intf+0x1c/0x60 [usbcore]
-[   93.344133]  [<ffffffffa00a65bd>] ? do_unbind_rebind+0x7d/0xb0 [usbcore]
-[   93.344141]  [<ffffffffa00a66ce>] ? usb_resume+0xde/0x180 [usbcore]
-[   93.344144]  [<ffffffff81286ac2>] ? pm_op+0x1a2/0x1c0
-[   93.344147]  [<ffffffff81286cc8>] ? device_resume+0x88/0x130
-[   93.344151]  [<ffffffff81059740>] ? async_thread+0x0/0x260
-[   93.344153]  [<ffffffff81286d84>] ? async_resume+0x14/0x40
-[   93.344156]  [<ffffffff81059845>] ? async_thread+0x105/0x260
-[   93.344159]  [<ffffffff81036c60>] ? default_wake_function+0x0/0x20
-[   93.344162]  [<ffffffff81059740>] ? async_thread+0x0/0x260
-[   93.344165]  [<ffffffff81052afe>] ? kthread+0x8e/0xa0
-[   93.344168]  [<ffffffff81003b94>] ? kernel_thread_helper+0x4/0x10
-[   93.344171]  [<ffffffff81052a70>] ? kthread+0x0/0xa0
-[   93.344178]  [<ffffffff81003b90>] ? kernel_thread_helper+0x0/0x10
-[   93.344179] ---[ end trace 8223f2954477be04 ]---
+>
+> Additionally, a "regular AP" (not P2P, not WSC) would still want to
+> reply to probe requests from WSC/P2P devices with the normal template.
+>
+> IMHO it would be smarter to rework the firmware to only reply to probe
+> requests if the probe response is configured. Then, if WSC, P2P, or
+> similar technologies are in use on the interface, hostapd can simply
+> decide to not configure the probe response and have host-based
+> processing. Would that be a change you could still make?
 
+With the current set of patches the decision is left at the hands of
+the driver/fw. Hostapd currently doesn't have a way of toggling
+probe-resp offloading in the low level driver.
+This kind of plumbing is not needed in case the FW handles what it can
+and passes up unknown probe-requests.
 
-I have to ask you if your patches are the responsible for solving this
-bug on the kernel 2.6.37, because on the 37 the problem doesn't exist.
-BTW this is a problem related with suspend and resuming. One thing
-that i notice is that disabling the network and wifi modules, that
-problem does not work.
-
-Please, let me know if you think that this message is more useful on
-the mailing list.
-
--- 
-Leonardo Luiz Padovani da Mata
-barroca@gmail.com
-
-"May the force be with you, always"
-"Nerd Pride... eu tenho. Voce tem?"
-
-
+Arik
