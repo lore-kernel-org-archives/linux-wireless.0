@@ -1,109 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:39003 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab1AZRdY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47159 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677Ab1AZIo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 12:33:24 -0500
-Received: by qwa26 with SMTP id 26so1152291qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 09:33:23 -0800 (PST)
-Message-ID: <4D405B09.9070900@lwfinger.net>
-Date: Wed, 26 Jan 2011 11:34:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?GB2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>,
-	linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix_rtlwifi_rfkill_state_not_synchronous_with_true_rfstate_issue
-References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>     <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net> <301B5E6D9B3042F6ABB4C6479ACB875E@realsil.com.cn> <5D449C23195D46B388A79AE17932553E@realsil.com.cn>
-In-Reply-To: <5D449C23195D46B388A79AE17932553E@realsil.com.cn>
-Content-Type: text/plain; charset=GB2312
+	Wed, 26 Jan 2011 03:44:59 -0500
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTikKM3sz5Y=+BNh9z6u-RuhUB81Y9BWavFnjKH7s@mail.gmail.com>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	 <1295869283.3639.7.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+	 <1295950241.3650.3.camel@jlt3.sipsolutions.net>
+	 <AANLkTikKM3sz5Y=+BNh9z6u-RuhUB81Y9BWavFnjKH7s@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 09:44:57 +0100
+Message-ID: <1296031497.3635.27.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/24/2011 11:08 PM, Àî³¯Ã÷ wrote:
-> Sorry for last patch have no description.
+[let me take both your emails at once]
+
+> > That is _very_ dangerous. If the user has older firmware that doesn't
+> > know about WSC2, how would the user know not to configure WSC2 in
+> > hostapd? That needs to be known to hostapd so it can verify this
+> > situation. For P2P, we already know whether or not P2P is supported, but
+> > that's rather vague in case there will ever be a revision of the P2P
+> > spec with say different IEs.
 > 
-> 1. when driver init, rfkill_state was setted, but because the flag valid may
-> not be true, this will cause rfkill_state
-> not synchronous with the true rf state, and will cause some issues when we
-> do rfkill.
-> and now in driver init we will set rfkill_state to rf_on, and at the same
-> time 
-> we tell rfkill to set rf_on also.
+> Well basically the FW should white-list probe-requests it knows about
+> and pass up all the rest.
+
+Indeed. But we need to know what things the firmware knows about, so we
+can disable additional functionality automatically.
+
+> > IMHO it would be smarter to rework the firmware to only reply to probe
+> > requests if the probe response is configured. Then, if WSC, P2P, or
+> > similar technologies are in use on the interface, hostapd can simply
+> > decide to not configure the probe response and have host-based
+> > processing. Would that be a change you could still make?
 > 
-> 2. for rtl8192ce you can check GPIO any time, not only after up_first_time
-> == true. so we delete rtlpci->up_first_time
-> in rtl92ce_gpio_radio_on_off_checking.
-> 
-> Signed-off-by: chaoming_li  <chaoming_li@realsil.com.cn>
+> With the current set of patches the decision is left at the hands of
+> the driver/fw. Hostapd currently doesn't have a way of toggling
+> probe-resp offloading in the low level driver.
+> This kind of plumbing is not needed in case the FW handles what it can
+> and passes up unknown probe-requests.
 
-Chaoming,
+Well, it could trivially have this functionality by simply not setting
+the SSID/probe response frame -- older hostapd would "automatically" not
+use this feature, and you'd even have a good upgrade path -- the feature
+is only used for new hostapd, and then only when hostapd knows that it
+is possible to use the feature.
 
-This patch was line wrapped by your mailer. I'm not sure what you need to do to
-allow longer lines, but we can discuss this offline.
+> Its also conceivable that an old driver/fw won't work when some
+> protocol is changed/updated, even if hostapd supports it.
+> I'm not sure the probe-resp will be the culprit here..
 
-I still see a couple of problems with the code after this patch is applied. When
-the system is booted or when rtl8192ce is loaded, the log always shows the
-switch to be off, no matter the actual position. In addition, the status is not
-logged when the switch is moved.
+Indeed. But in such cases, we've dealt with it. But with a simple update
+like for example WSC 3.0 (which I don't think is being planned yet, but
+may eventually be written) your approach would certainly require a
+firmware update. I think that's a bit undesirable, but I'm not saying
+that you _need_ to change the firmware. I'm merely recommending that if
+the firmware doesn't know the SSID, it will pass up all probe requests.
+It has to have the "pass up" functionality already for P2P/WSC2, so that
+could trivially be extended to pass up when the driver sets a certain
+bit to request it always.
 
-@John,
 
- We will work out the points noted above and get a revised patch to you. I t
-will likely be part of some larger changes in rtlwifi that are needed to
-accommodate some new drivers that are nearly ready.
+It's been pointed out to me that maybe I'm not always communicating
+things effectively -- so let me try to write a summary of the entire
+thing again:
 
-Larry
+The way you're implementing this feature right now _relies_ on the
+firmware to do the right thing for all protocols. However,
+hostapd/wpa_supplicant have no way of knowing what protocols the
+firmware knows about, and they will almost certainly be extended for
+more protocols in the future. This I don't want to see -- I want you to
+advertise in nl80211 what protocols (including their versions) the
+firmware knows about, so that a future hostapd can automatically disable
+new protocols that the firmware doesn't know about.
 
-> 
-> ---
->  drivers/net/wireless/rtlwifi/base.c         |   13 ++++++++-----
->  drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    2 +-
->  2 files changed, 9 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/base.c
-> b/drivers/net/wireless/rtlwifi/base.c
-> index cf0b73e..33323b4 100644
-> --- a/drivers/net/wireless/rtlwifi/base.c
-> +++ b/drivers/net/wireless/rtlwifi/base.c
-> @@ -251,15 +251,18 @@ void rtl_init_rfkill(struct ieee80211_hw *hw)
->  	bool blocked;
->  	u8 valid = 0;
->  
-> -	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
-> +	/*1. set init state to on */
-> +	rtlpriv->rfkill.rfkill_state = 1;
-> +	wiphy_rfkill_set_hw_state(hw->wiphy, 0);
->  
-> -	/*set init state to that of switch */
-> -	rtlpriv->rfkill.rfkill_state = radio_state;
-> -	printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
-> -	       rtlpriv->rfkill.rfkill_state ? "on" : "off");
-> +	/*2. check gpio for rf state */
-> +	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
->  
-> +	/*3. if valid, change state based on gpio */
->  	if (valid) {
->  		rtlpriv->rfkill.rfkill_state = radio_state;
-> +		printk(KERN_INFO "rtlwifi: wireless switch is %s\n",
-> +				rtlpriv->rfkill.rfkill_state ? "on" :
-> "off");
->  
->  		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
->  		wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> index 1c41a0c..cb2e01a 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-> @@ -1943,7 +1943,7 @@ bool rtl92ce_gpio_radio_on_off_checking(struct
-> ieee80211_hw *hw, u8 * valid)
->  	bool b_actuallyset = false;
->  	unsigned long flag;
->  
-> -	if ((rtlpci->up_first_time == 1) || (rtlpci->being_init_adapter))
-> +	if (rtlpci->being_init_adapter)
->  		return false;
->  
->  	if (ppsc->b_swrf_processing)
+I'm also _recommending_ that you change the firmware implementation to
+guard against that and be more backward compatible: allow the driver to
+set a bit meaning "pass up all probe requests". Yes, that will destroy
+host power savings obtained by this feature if enabled, but will allow
+hostapd/wpa_s to implement new features and one could then actually at
+least test, if not use, them with the older device. You could also get
+rid of the beacon parsing code etc. and simply require that a modern
+hostapd that implements the offload be used for maximum power saving.
+
+johannes
+
 
