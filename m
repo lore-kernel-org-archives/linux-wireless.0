@@ -1,48 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:33204 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751197Ab1AXJoq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 04:44:46 -0500
-Date: Mon, 24 Jan 2011 11:44:33 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
-Message-ID: <20110124094433.GA5487@jm.kir.nu>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:53790 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753147Ab1AZVFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 16:05:33 -0500
+Subject: pull request: wl12xx 2011-01-26
+From: Luciano Coelho <coelho@ti.com>
+To: <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 23:05:20 +0200
+Message-ID: <1296075920.2302.45.camel@pimenta>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1295816579-28925-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 23, 2011 at 11:02:53PM +0200, Arik Nemtsov wrote:
-> Support passing SSID and probe-response template to drivers.
-> This data can be used to offload the beacon -> probe-req -> probe-resp
-> process to HW.
+Hi John,
 
-What is the expected driver behavior for passing the SSID as a separate
-attribute vs. passing the SSID as an IE within the Probe Response
-template? Is the SSID-as-attr ever used to fill in a Probe Response by
-the driver/firmware? Or is the driver/firmware only allowed to use the
-full Probe Response template (with DA and timestamp updated)? It would
-be useful to get this documented so that it is clear for people working
-with both a driver and user space applications that could use the new
-interface.
+This is my first pull request for 2.6.39.  It contains initial AP
+support, initial block-ack support for 11n, a bunch of bug fixes and
+other small improvements.
 
-We should also document the need for special Probe Request processing
-for WPS and P2P and have capability flags indicating whether the driver
-needs the SSID and/or Probe Response template and whether it supports
-various special rules for Probe Request processing (remove P2P IE from
-Probe Response template if Probe Request does not include it, do not
-reply to Probe Request if there is no match for Requested Device Type,
-do not reply if there is no match for P2P Device Address). hostapd (or
-wpa_supplicant AP mode) would then automatically disable use of P2P
-and/or WPS if the driver/firmware does not have necessary capabilities
-to implement this correctly.
+Please pull or let me know if there's any problem.  This tree is based
+on wireless-next/master.
+
+Thanks!
+
+The following changes since commit 97d9c3a354f9eb6b8bfe4bf672bdbe9ff76956e6:
+
+  ath5k: ath5k_setup_channels cleanup and whitespace (2011-01-25 16:39:06 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+
+Arik Nemtsov (20):
+      wl12xx: Add AP related configuration to conf_drv_settings
+      wl12xx: AP mode - AP specific CMD_CONFIGURE sub-commands
+      wl12xx: AP mode - add AP specific event
+      wl12xx: AP-mode high level commands
+      wl12xx: AP mode - workaround for FW bug on station remove
+      wl12xx: AP mode - init sequence
+      wl12xx: AP specific RX filter configuration
+      wl12xx: Add AP related definitions to HOST-FW interface
+      wl12xx: Configure AP on BSS info change
+      wl12xx: AP mode config in ieee80211_ops.config
+      wl12xx: AP mode - change filter config
+      wl12xx: AP mode - add STA add/remove ops
+      wl12xx: AP mode - changes in TX path
+      wl12xx: AP mode - record TX configuration settings
+      wl12xx: AP mode - encryption support
+      wl12xx: AP mode - fetch appropriate firmware for AP
+      wl12xx: Read MAC address from NVS file on HW startup
+      wl12xx: Enable AP-mode
+      wl12xx: add missing MODULE_FIRMWARE statment for AP-mode FW
+      wl12xx: Add channel 14 to list of supported 2ghz channels
+
+Dan Carpenter (1):
+      wl12xx: use after free in debug code
+
+Eliad Peller (6):
+      wl12xx: remove redundant debugfs_remove_recursive() call
+      wl12xx: fix some sparse warnings
+      wl12xx: don't join upon disassociation
+      wl12xx: fix some endianess bugs
+      wl12xx: wrong values are returned in gpio_power_write()
+      wl12xx: disable auto-arp
+
+Guy Eilam (1):
+      wl12xx: change debug_level module param sysfs permissions
+
+Juuso Oikarinen (2):
+      wl12xx: Cleanup PLT mode when module is removed
+      wl12xx: Increase scan channel dwell time for passive scans
+
+Levi, Shahar (2):
+      wl12xx: BA initiator support
+      wl12xx: BA receiver support
+
+Luciano Coelho (4):
+      MAINTAINERS: update information for the wl12xx driver
+      wl12xx: don't modify the global supported band structures
+      wl12xx: lock the RCU when accessing sta via ieee80211_find_sta()
+      wl12xx: add hw configuration for max supported AMDPU size
+
+ MAINTAINERS                                |    6 +-
+ drivers/net/wireless/wl12xx/acx.c          |  160 ++++-
+ drivers/net/wireless/wl12xx/acx.h          |   91 +++-
+ drivers/net/wireless/wl12xx/boot.c         |   35 +-
+ drivers/net/wireless/wl12xx/cmd.c          |  308 ++++++++-
+ drivers/net/wireless/wl12xx/cmd.h          |  147 ++++-
+ drivers/net/wireless/wl12xx/conf.h         |   76 ++-
+ drivers/net/wireless/wl12xx/debugfs.c      |   49 +-
+ drivers/net/wireless/wl12xx/event.c        |    7 +-
+ drivers/net/wireless/wl12xx/event.h        |    8 +-
+ drivers/net/wireless/wl12xx/init.c         |  387 ++++++++--
+ drivers/net/wireless/wl12xx/init.h         |    2 +-
+ drivers/net/wireless/wl12xx/main.c         | 1115 +++++++++++++++++++++-------
+ drivers/net/wireless/wl12xx/rx.c           |   14 +-
+ drivers/net/wireless/wl12xx/rx.h           |   11 +-
+ drivers/net/wireless/wl12xx/sdio.c         |    1 +
+ drivers/net/wireless/wl12xx/spi.c          |    3 +-
+ drivers/net/wireless/wl12xx/tx.c           |  105 +++-
+ drivers/net/wireless/wl12xx/tx.h           |   10 +-
+ drivers/net/wireless/wl12xx/wl12xx.h       |   88 ++-
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |   11 +-
+ 21 files changed, 2175 insertions(+), 459 deletions(-)
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Cheers,
+Luca.
+
