@@ -1,157 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35353 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753971Ab1AXSXX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 13:23:23 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v4 1/5] ath9k: clean up the code that wakes the mac80211 queues
-Date: Mon, 24 Jan 2011 19:23:14 +0100
-Message-Id: <1295893398-5124-1-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:49930 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097Ab1AZJWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 04:22:46 -0500
+Subject: Re: [PATCH 1/2] wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw
+ flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1296033436.18570.391.camel@wimaxnb.nmp.nokia.com>
+References: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1296030672.3635.13.camel@jlt3.sipsolutions.net>
+	 <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
+	 <1296032659.3635.29.camel@jlt3.sipsolutions.net>
+	 <1296033436.18570.391.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 10:22:36 +0100
+Message-ID: <1296033756.3635.30.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of spreading ath_wake_mac80211_queue() calls over multiple places
-in the tx path that process the tx queue for completion, call it only
-where the pending frames counter gets decremented, eliminating some
-redundant checks.
-To prevent queue draining from waking the queues prematurely (e.g. during
-a hardware reset), reset the queue stop state when draining all queues,
-as the caller in main.c will run ieee80211_wake_queues(hw) anyway.
+On Wed, 2011-01-26 at 11:17 +0200, Juuso Oikarinen wrote:
+> On Wed, 2011-01-26 at 10:04 +0100, ext Johannes Berg wrote:
+> > On Wed, 2011-01-26 at 11:02 +0200, Juuso Oikarinen wrote:
+> > 
+> > > Well I guess I'm stating the obvious here. The effects of the flag are:
+> > > 
+> > > - It causes mac80211 to add the spectrum mgmt capability bit, list of
+> > > supported channels and TX power capability info into the assoc-req
+> > > - It causes mac80211 to process channel switch actions
+> > > - It causes mac80211 to process and react to TPC power constraint
+> > > elements sent out in beacons
+> > > - It causes mac80211 to respond to TPC report requests by the AP, albeit
+> > > currently only by refusing them.
+> > 
+> > Right. But all of this is generic, no? Except maybe TPC?
+> > 
+> > > In addition to this, I plan to implement the TPC basic reporting,
+> > > including mac80211 stuff if required (I still need to learn some more on
+> > > the subject, specifically regarding the wl12xx chipset) and also I plan
+> > > to implement quieting, though it's likely that wont need mac80211
+> > > intervention with wl12xx at least.
+> > > 
+> > > AFAIK all these items are mandatory on the 5GHz band, at least in
+> > > Europe.
+> > > 
+> > > So I don't see how this flag could be removed. Unless you wan't to make
+> > > the above default behavior - but then adding for instance the spectrum
+> > > mgmt bit into the capabilities assumes all chipset will be able handle
+> > > all of the features?
+> > 
+> > Yeah, I was thinking those should be default, and the actual TPC
+> > reporting would of course depend on hardware features? But then again
+> > maybe TPC itself isn't necessarily implemented by drivers since not all
+> > drivers implement setting the power correctly.
+> 
+> This *is* mandatory stuff, so in that perspective I guess it would make
+> sense to remove the flag and make all of this default behavior. Indeed
+> the mac80211 could be made to refuse the TCP basic reports unless the
+> driver provides a call-back for that or sth like that.
+> 
+> Also, I guess it would be a valid assumption all drivers supporting the
+> 5GHz band would also support setting the TX power - otherwise they will
+> possibly violate regulations anyway - whether they say they state or not
+> they have the specturm mgmt capability makes little difference.
+> 
+> As I mentioned, I plan to implement basic reporting once I find out how
+> to do that - so I will be reviewing this functionality some more later.
+> Maybe, if you like, I can consider removing the flag at that point?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +
- drivers/net/wireless/ath/ath9k/xmit.c |   39 +++++++++++++-------------------
- 2 files changed, 18 insertions(+), 23 deletions(-)
+Sure, makes sense, thanks for looking.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index facff10..7d7b48f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -295,6 +295,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	}
- 
-  ps_restore:
-+	ieee80211_wake_queues(hw);
-+
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	ath9k_ps_restore(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index adec862..10eaaf9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1209,8 +1209,17 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 		ath_err(common, "Failed to stop TX DMA!\n");
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
--		if (ATH_TXQ_SETUP(sc, i))
--			ath_draintxq(sc, &sc->tx.txq[i], retry_tx);
-+		if (!ATH_TXQ_SETUP(sc, i))
-+			continue;
-+
-+		/*
-+		 * The caller will resume queues with ieee80211_wake_queues.
-+		 * Mark the queue as not stopped to prevent ath_tx_complete
-+		 * from waking the queue too early.
-+		 */
-+		txq = &sc->tx.txq[i];
-+		txq->stopped = false;
-+		ath_draintxq(sc, txq, retry_tx);
- 	}
- 
- 	return !npend;
-@@ -1878,6 +1887,11 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 			spin_lock_bh(&txq->axq_lock);
- 			if (WARN_ON(--txq->pending_frames < 0))
- 				txq->pending_frames = 0;
-+
-+			if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
-+				if (ath_mac80211_start_queue(sc, q))
-+					txq->stopped = 0;
-+			}
- 			spin_unlock_bh(&txq->axq_lock);
- 		}
- 
-@@ -1987,18 +2001,6 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 	tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
- }
- 
--/* Has no locking.  Must hold spin_lock_bh(&txq->axq_lock)
-- * before calling this.
-- */
--static void __ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
--{
--	if (txq->mac80211_qnum >= 0 &&
--	    txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
--		if (ath_mac80211_start_queue(sc, txq->mac80211_qnum))
--			txq->stopped = 0;
--	}
--}
--
- static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -2009,7 +2011,6 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 	struct ath_tx_status ts;
- 	int txok;
- 	int status;
--	int qnum;
- 
- 	ath_dbg(common, ATH_DBG_QUEUE, "tx queue %d (%x), link %p\n",
- 		txq->axq_qnum, ath9k_hw_gettxbuf(sc->sc_ah, txq->axq_qnum),
-@@ -2091,8 +2092,6 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 			ath_tx_rc_status(bf, &ts, 1, txok ? 0 : 1, txok, true);
- 		}
- 
--		qnum = skb_get_queue_mapping(bf->bf_mpdu);
--
- 		if (bf_isampdu(bf))
- 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &ts, txok,
- 					     true);
-@@ -2100,7 +2099,6 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, txok, 0);
- 
- 		spin_lock_bh(&txq->axq_lock);
--		__ath_wake_mac80211_queue(sc, txq);
- 
- 		if (sc->sc_flags & SC_OP_TXAGGR)
- 			ath_txq_schedule(sc, txq);
-@@ -2156,7 +2154,6 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
- 						txq->pending_frames,
- 						list_empty(&txq->axq_acq),
- 						txq->stopped);
--					__ath_wake_mac80211_queue(sc, txq);
- 					ath_txq_schedule(sc, txq);
- 				}
- 			}
-@@ -2198,7 +2195,6 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 	struct list_head bf_head;
- 	int status;
- 	int txok;
--	int qnum;
- 
- 	for (;;) {
- 		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&txs);
-@@ -2244,8 +2240,6 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 			ath_tx_rc_status(bf, &txs, 1, txok ? 0 : 1, txok, true);
- 		}
- 
--		qnum = skb_get_queue_mapping(bf->bf_mpdu);
--
- 		if (bf_isampdu(bf))
- 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &txs,
- 					     txok, true);
-@@ -2254,7 +2248,6 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 					    &txs, txok, 0);
- 
- 		spin_lock_bh(&txq->axq_lock);
--		__ath_wake_mac80211_queue(sc, txq);
- 
- 		if (!list_empty(&txq->txq_fifo_pending)) {
- 			INIT_LIST_HEAD(&bf_head);
--- 
-1.7.3.2
+johannes
 
