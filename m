@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:52048 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754195Ab1AaVFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 16:05:06 -0500
-Date: Mon, 31 Jan 2011 22:05:02 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while
- in powersave mode
-Message-ID: <20110131210502.GA15042@sig21.net>
-References: <201101311600.39486.IvDoorn@gmail.com>
- <20110131181725.GA11054@sig21.net>
- <AANLkTin+cpLWKbX4YaLUUiR_UAKqSPFy-9Lt1cjK3wOs@mail.gmail.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:42003 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428Ab1AZT2x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 14:28:53 -0500
+Received: by qyj19 with SMTP id 19so6103246qyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 11:28:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTin+cpLWKbX4YaLUUiR_UAKqSPFy-9Lt1cjK3wOs@mail.gmail.com>
+In-Reply-To: <AANLkTinx1Tpp10ToiVB-VuGt01iwDFhWrmw0Tf3o9BVu@mail.gmail.com>
+References: <1295929904-11806-1-git-send-email-me@bobcopeland.com>
+	<20110125135249.GA2610@redhat.com>
+	<20110126015034.GA8600@hash.localnet>
+	<AANLkTinx1Tpp10ToiVB-VuGt01iwDFhWrmw0Tf3o9BVu@mail.gmail.com>
+Date: Wed, 26 Jan 2011 14:28:52 -0500
+Message-ID: <AANLkTi=2csN2V0tBFSVfXJsvg7UDh9U-i9fStJS6Gv_T@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath5k: fix error handling in ath5k_hw_dma_stop
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Bruno Randolf <br1@einfach.org>,
+	jirislaby@gmail.com, lrodriguez@atheros.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Jan 26, 2011 at 12:06 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2011/1/26 Bob Copeland <me@bobcopeland.com>:
+>>
+>> As a side note, we still quit when the first error is encountered.
+>> Maybe we should try stopping all of the queues anyway if one fails?
+>> On the other hand we could spend a lot of time polling the registers
+>> if the card is truly hosed, so I think this is best for now.
+>
+> It's better to continue with hw reset if a queue fails to stop, it
+> usually means the dma unit needs reset.
 
-On Mon, Jan 31, 2011 at 08:00:09PM +0100, Ivo Van Doorn wrote:
-> 
-> > Also, I think rt2x00dev->beacon_int is in TUs, not msecs.
-> 
-> Nope, it is in msecs :)
+Yeah, I thought that may be the case.  So the code as it stands plus
+this patch from the thread will do what we want -- continue reset as
+soon as any queue exhibits problems.
 
-Please forgive my insistence, but I'm not content with your answer ;-/
-
-rt2x00lib_config_erp() passes it to rt2800_config_erp()
-which writes beacon_int * 16 to BCN_TIME_CFG_BEACON_INTERVAL,
-which is dcoumented as "in unit of 1/16 TU".
-
-
-Johannes
+-- 
+Bob Copeland %% www.bobcopeland.com
