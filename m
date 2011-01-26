@@ -1,290 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41674 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753802Ab1A3MYj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:39 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so2146783eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:38 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/21] rt2x00: Convert rt2400pci interrupt handling to use tasklets
-Date: Sun, 30 Jan 2011 13:20:05 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201101301316.04044.IvDoorn@gmail.com> <201101301319.08812.IvDoorn@gmail.com> <201101301319.38761.IvDoorn@gmail.com>
-In-Reply-To: <201101301319.38761.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101301320.06167.IvDoorn@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:59118 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752705Ab1AZQfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 11:35:09 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Pi8Kn-0001Qf-3O
+	for linux-wireless@vger.kernel.org; Wed, 26 Jan 2011 17:35:05 +0100
+Received: from san_juan-143-68.umh.es ([san_juan-143-68.umh.es])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 17:35:05 +0100
+Received: from baldo.ath9k by san_juan-143-68.umh.es with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 17:35:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Baldomero Coll <baldo.ath9k@gmail.com>
+Subject: Re: [RFC] mac80211: support for IEEE80211N in IBSS
+Date: Wed, 26 Jan 2011 16:31:54 +0000 (UTC)
+Message-ID: <loom.20110126T172928-834@post.gmane.org>
+References: <201101191438.01161.alexander.simon@saxnet.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Hello,
 
-Fix interrupt processing on slow machines by using individual tasklets
-for each different device interrupt. This ensures that while a RX or TX
-status tasklet is scheduled only the according device interrupt is
-masked and other interrupts such as TBTT can still be processed.
+I've already test this patch, but I'm not pretty sure if I'm doing something 
+wrong.
+I've applied the patch on the compact-wireless-2-.6.37-4.tar.bz2. 
 
-Also, this allows us to use tasklet_hi_schedule for TBTT processing
-which is required to not send out beacons with a wrong DTIM count (due
-to delayed periodic beacon updates). Furthermore, this improves the
-latency between the TBTT and sending out buffered multi- and broadcast
-traffic.
+When I create the ibss network and set the channel 1 HT20 It seems that all is 
+going right.
 
-As a nice bonus, the interrupt handling overhead should be much lower.
+How could i know if the wireless interface is really configured in HT mode?
+I have transmitted a large file between two laptops and It's not possible to 
+appreciate performance differences with the simple channel 1.
 
-Compile-tested only.
+Baldo
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |  154 +++++++++++++++++++++++--------
- 1 files changed, 115 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index cb28e1b..b324917 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -645,6 +645,11 @@ static void rt2400pci_start_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, RXCSR0, reg);
- 		break;
- 	case QID_BEACON:
-+		/*
-+		 * Allow the tbtt tasklet to be scheduled.
-+		 */
-+		tasklet_enable(&rt2x00dev->tbtt_tasklet);
-+
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
- 		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
-@@ -706,6 +711,11 @@ static void rt2400pci_stop_queue(struct data_queue *queue)
- 		rt2x00_set_field32(&reg, CSR14_TBCN, 0);
- 		rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 		rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-+
-+		/*
-+		 * Wait for possibly running tbtt tasklets.
-+		 */
-+		tasklet_disable(&rt2x00dev->tbtt_tasklet);
- 		break;
- 	default:
- 		break;
-@@ -964,6 +974,7 @@ static void rt2400pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	int mask = (state == STATE_RADIO_IRQ_OFF) ||
- 		   (state == STATE_RADIO_IRQ_OFF_ISR);
- 	u32 reg;
-+	unsigned long flags;
- 
- 	/*
- 	 * When interrupts are being enabled, the interrupt registers
-@@ -972,12 +983,20 @@ static void rt2400pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	if (state == STATE_RADIO_IRQ_ON) {
- 		rt2x00pci_register_read(rt2x00dev, CSR7, &reg);
- 		rt2x00pci_register_write(rt2x00dev, CSR7, reg);
-+
-+		/*
-+		 * Enable tasklets.
-+		 */
-+		tasklet_enable(&rt2x00dev->txstatus_tasklet);
-+		tasklet_enable(&rt2x00dev->rxdone_tasklet);
- 	}
- 
- 	/*
- 	 * Only toggle the interrupts bits we are going to use.
- 	 * Non-checked interrupt bits are disabled by default.
- 	 */
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-+
- 	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
- 	rt2x00_set_field32(&reg, CSR8_TBCN_EXPIRE, mask);
- 	rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, mask);
-@@ -985,6 +1004,17 @@ static void rt2400pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, mask);
- 	rt2x00_set_field32(&reg, CSR8_RXDONE, mask);
- 	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
-+
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+
-+	if (state == STATE_RADIO_IRQ_OFF) {
-+		/*
-+		 * Ensure that all tasklets are finished before
-+		 * disabling the interrupts.
-+		 */
-+		tasklet_disable(&rt2x00dev->txstatus_tasklet);
-+		tasklet_disable(&rt2x00dev->rxdone_tasklet);
-+	}
- }
- 
- static int rt2400pci_enable_radio(struct rt2x00_dev *rt2x00dev)
-@@ -1285,57 +1315,71 @@ static void rt2400pci_txdone(struct rt2x00_dev *rt2x00dev,
- 	}
- }
- 
--static irqreturn_t rt2400pci_interrupt_thread(int irq, void *dev_instance)
-+static void rt2400pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
-+				       struct rt2x00_field32 irq_field)
- {
--	struct rt2x00_dev *rt2x00dev = dev_instance;
--	u32 reg = rt2x00dev->irqvalue[0];
-+	unsigned long flags;
-+	u32 reg;
- 
- 	/*
--	 * Handle interrupts, walk through all bits
--	 * and run the tasks, the bits are checked in order of
--	 * priority.
-+	 * Enable a single interrupt. The interrupt mask register
-+	 * access needs locking.
- 	 */
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
- 
--	/*
--	 * 1 - Beacon timer expired interrupt.
--	 */
--	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
--		rt2x00lib_beacondone(rt2x00dev);
-+	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
-+	rt2x00_set_field32(&reg, irq_field, 0);
-+	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	/*
--	 * 2 - Rx ring done interrupt.
--	 */
--	if (rt2x00_get_field32(reg, CSR7_RXDONE))
--		rt2x00pci_rxdone(rt2x00dev);
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+}
- 
--	/*
--	 * 3 - Atim ring transmit done interrupt.
--	 */
--	if (rt2x00_get_field32(reg, CSR7_TXDONE_ATIMRING))
--		rt2400pci_txdone(rt2x00dev, QID_ATIM);
-+static void rt2400pci_txstatus_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	u32 reg;
-+	unsigned long flags;
- 
- 	/*
--	 * 4 - Priority ring transmit done interrupt.
-+	 * Handle all tx queues.
- 	 */
--	if (rt2x00_get_field32(reg, CSR7_TXDONE_PRIORING))
--		rt2400pci_txdone(rt2x00dev, QID_AC_VO);
-+	rt2400pci_txdone(rt2x00dev, QID_ATIM);
-+	rt2400pci_txdone(rt2x00dev, QID_AC_VO);
-+	rt2400pci_txdone(rt2x00dev, QID_AC_VI);
- 
- 	/*
--	 * 5 - Tx ring transmit done interrupt.
-+	 * Enable all TXDONE interrupts again.
- 	 */
--	if (rt2x00_get_field32(reg, CSR7_TXDONE_TXRING))
--		rt2400pci_txdone(rt2x00dev, QID_AC_VI);
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
- 
--	/* Enable interrupts again. */
--	rt2x00dev->ops->lib->set_device_state(rt2x00dev,
--					      STATE_RADIO_IRQ_ON_ISR);
--	return IRQ_HANDLED;
-+	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
-+	rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
-+	rt2x00_set_field32(&reg, CSR8_TXDONE_ATIMRING, 0);
-+	rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
-+	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
-+
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+}
-+
-+static void rt2400pci_tbtt_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	rt2x00lib_beacondone(rt2x00dev);
-+	rt2400pci_enable_interrupt(rt2x00dev, CSR8_TBCN_EXPIRE);
-+}
-+
-+static void rt2400pci_rxdone_tasklet(unsigned long data)
-+{
-+	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
-+	rt2x00pci_rxdone(rt2x00dev);
-+	rt2400pci_enable_interrupt(rt2x00dev, CSR8_RXDONE);
- }
- 
- static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
- {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
--	u32 reg;
-+	u32 reg, mask;
-+	unsigned long flags;
- 
- 	/*
- 	 * Get the interrupt sources & saved to local variable.
-@@ -1350,14 +1394,44 @@ static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return IRQ_HANDLED;
- 
--	/* Store irqvalues for use in the interrupt thread. */
--	rt2x00dev->irqvalue[0] = reg;
-+	mask = reg;
-+
-+	/*
-+	 * Schedule tasklets for interrupt handling.
-+	 */
-+	if (rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))
-+		tasklet_hi_schedule(&rt2x00dev->tbtt_tasklet);
-+
-+	if (rt2x00_get_field32(reg, CSR7_RXDONE))
-+		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
-+
-+	if (rt2x00_get_field32(reg, CSR7_TXDONE_ATIMRING) ||
-+	    rt2x00_get_field32(reg, CSR7_TXDONE_PRIORING) ||
-+	    rt2x00_get_field32(reg, CSR7_TXDONE_TXRING)) {
-+		tasklet_schedule(&rt2x00dev->txstatus_tasklet);
-+		/*
-+		 * Mask out all txdone interrupts.
-+		 */
-+		rt2x00_set_field32(&mask, CSR8_TXDONE_TXRING, 1);
-+		rt2x00_set_field32(&mask, CSR8_TXDONE_ATIMRING, 1);
-+		rt2x00_set_field32(&mask, CSR8_TXDONE_PRIORING, 1);
-+	}
- 
--	/* Disable interrupts, will be enabled again in the interrupt thread. */
--	rt2x00dev->ops->lib->set_device_state(rt2x00dev,
--					      STATE_RADIO_IRQ_OFF_ISR);
-+	/*
-+	 * Disable all interrupts for which a tasklet was scheduled right now,
-+	 * the tasklet will reenable the appropriate interrupts.
-+	 */
-+	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
- 
--	return IRQ_WAKE_THREAD;
-+	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
-+	reg |= mask;
-+	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
-+
-+	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-+
-+
-+
-+	return IRQ_HANDLED;
- }
- 
- /*
-@@ -1651,7 +1725,9 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
- 
- static const struct rt2x00lib_ops rt2400pci_rt2x00_ops = {
- 	.irq_handler		= rt2400pci_interrupt,
--	.irq_handler_thread	= rt2400pci_interrupt_thread,
-+	.txstatus_tasklet	= rt2400pci_txstatus_tasklet,
-+	.tbtt_tasklet		= rt2400pci_tbtt_tasklet,
-+	.rxdone_tasklet		= rt2400pci_rxdone_tasklet,
- 	.probe_hw		= rt2400pci_probe_hw,
- 	.initialize		= rt2x00pci_initialize,
- 	.uninitialize		= rt2x00pci_uninitialize,
--- 
-1.7.2.3
+
 
