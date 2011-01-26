@@ -1,91 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:54229 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753065Ab1ASP4g convert rfc822-to-8bit (ORCPT
+Received: from w1.fi ([128.177.27.249]:47230 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751728Ab1AZOE5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 10:56:36 -0500
-Received: by pva4 with SMTP id 4so172180pva.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 07:56:36 -0800 (PST)
+	Wed, 26 Jan 2011 09:04:57 -0500
+Date: Wed, 26 Jan 2011 16:04:44 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+Message-ID: <20110126140444.GA30373@jm.kir.nu>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <1295869283.3639.7.camel@jlt3.sipsolutions.net>
+ <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110119092108.19628.43971.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092108.19628.43971.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 17:56:36 +0200
-Message-ID: <AANLkTikOXqGhViqPkh7jssMUVGGDe+Xa38H0JuMJgTLC@mail.gmail.com>
-Subject: Re: [PATCH 7/8] ath5k: Remove unused sc->curmode
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/19 Bruno Randolf <br1@einfach.org>:
-> sc->curmode is set but never used. Remove it and the helper function. Also the
-> ath5k_rate_update which is refered to in the comment does not exist (any more?)
-> so we don't need to setup the band in that place.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   18 ------------------
->  drivers/net/wireless/ath/ath5k/base.h |    1 -
->  2 files changed, 0 insertions(+), 19 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 6900543..a00cc11 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -439,18 +439,6 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
->        return ath5k_reset(sc, chan, true);
->  }
->
-> -static void
-> -ath5k_setcurmode(struct ath5k_softc *sc, unsigned int mode)
-> -{
-> -       sc->curmode = mode;
-> -
-> -       if (mode == AR5K_MODE_11A) {
-> -               sc->curband = &sc->sbands[IEEE80211_BAND_5GHZ];
-> -       } else {
-> -               sc->curband = &sc->sbands[IEEE80211_BAND_2GHZ];
-> -       }
-> -}
-> -
->  struct ath_vif_iter_data {
->        const u8        *hw_macaddr;
->        u8              mask[ETH_ALEN];
-> @@ -2776,12 +2764,6 @@ ath5k_init(struct ieee80211_hw *hw)
->                goto err;
->        }
->
-> -       /* NB: setup here so ath5k_rate_update is happy */
-> -       if (test_bit(AR5K_MODE_11A, ah->ah_modes))
-> -               ath5k_setcurmode(sc, AR5K_MODE_11A);
-> -       else
-> -               ath5k_setcurmode(sc, AR5K_MODE_11B);
-> -
->        /*
->         * Allocate tx+rx descriptors and populate the lists.
->         */
-> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-> index 6d51147..58660e4 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.h
-> +++ b/drivers/net/wireless/ath/ath5k/base.h
-> @@ -202,7 +202,6 @@ struct ath5k_softc {
->  #define ATH_STAT_STARTED       4               /* opened & irqs enabled */
->
->        unsigned int            filter_flags;   /* HW flags, AR5K_RX_FILTER_* */
-> -       unsigned int            curmode;        /* current phy mode */
->        struct ieee80211_channel *curchan;      /* current h/w channel */
->
->        u16                     nvifs;
->
+On Mon, Jan 24, 2011 at 11:21:44PM +0200, Arik Nemtsov wrote:
+> Well a wiphy flag won't do here. Probe requests may be filtered in
+> some modes (AP-mode) but needed in others (p2p?).
+> I think flexibility is a nice added bonus here. A FW can decide to
+> handle most standard probe-requests and simply not pass them up.
+> Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
 
+Hmm.. So would the design be that upper layers (mac80211/hostapd) would
+not see the Probe Request frames that the firmware replies to? What
+would be criteria in selecting what is a "standard" and what is a
+"complicated" Probe Request?
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+One thing that came up when I was thinking about a bit more is that even
+with WPS 1.0, the Probe Request frames with WSC IE must be passed up to
+hostapd for PBC session overlap detection and to support external
+Registrars. So even if you could reply to those Probe Request frames in
+firmware, they would still need to be indicated to hostapd and hostapd
+(or something else in the system) would need to know that a duplicated
+response should not be sent. Similar needs for receiving Probe Request
+frames apply for P2P and potentially for some other protocols, too.
 
+What is the main point of replying to Probe Request frames in the
+firmware? Reduced latency? Reduced power consumption of the host CPU?
+Something else? The former could be achieved even if the frame were
+passed up; the latter would be difficult to achieve if WPS or P2P is
+enabled without implementing large part of the protocol in the
+firmware..
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Jouni Malinen                                            PGP id EFC895FA
