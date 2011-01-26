@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:60099 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342Ab1AXUQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 15:16:46 -0500
-Received: from dlep36.itg.ti.com ([157.170.170.91])
-	by arroyo.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0OKGkVA010445
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 14:16:46 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep36.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OKGj7N015498
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 14:16:45 -0600 (CST)
-Received: from dlee73.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OKGj5U023766
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 14:16:45 -0600 (CST)
-Received: from [172.24.64.12] (h64-12.vpn.ti.com [172.24.64.12])	by
- dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OKGiVs001588	for
- <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 14:16:44 -0600
-Subject: Re: [PATCH v2] wl12xx: add hw configuration for max supported
- AMDPU size
-From: Luciano Coelho <coelho@ti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294838823-444-1-git-send-email-coelho@ti.com>
-References: <1294838823-444-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 22:16:56 +0200
-Message-ID: <1295900216.2063.0.camel@pimenta>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48919 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752943Ab1AZQac (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 11:30:32 -0500
+Received: by mail-iw0-f174.google.com with SMTP id 9so1035708iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 08:30:31 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19776.19422.571177.795197@gargle.gargle.HOWL>
+Date: Wed, 26 Jan 2011 21:59:18 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH] ath9k_hw: Fix INI fixup
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 14:27 +0100, Coelho, Luciano wrote:
-> From: Luciano Coelho <coelho@ti.com>
-> 
-> The wl12xx chips do the AMDPU aggregation work in the firmware, but it
-> supports a maximum of 8 frames per block.  Configure the mac80211 hw
-> structure accordingly.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> Tested-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Applied to wl12xx.
+Commit "ath9k_hw: move AR9280 PCI EEPROM fix to eeprom_def.c"
+changed the behavior of INI overriding which is needed only
+for PCI cards. Revert to the original check.
 
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index c9318ff..fccd87d 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -247,9 +247,9 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
+ 	}
+ 
+ 	/* Enable fixup for AR_AN_TOP2 if necessary */
+-	if (AR_SREV_9280_20_OR_LATER(ah) &&
+-	    (eep->baseEepHeader.version & 0xff) > 0x0a &&
+-	    eep->baseEepHeader.pwdclkind == 0)
++	if ((ah->hw_version.devid == AR9280_DEVID_PCI) &&
++	    ((eep->baseEepHeader.version & 0xff) > 0x0a) &&
++	    (eep->baseEepHeader.pwdclkind == 0))
+ 		ah->need_an_top2_fixup = 1;
+ 
+ 	if ((common->bus_ops->ath_bus_type == ATH_USB) &&
 -- 
-Cheers,
-Luca.
+1.7.3.5
 
