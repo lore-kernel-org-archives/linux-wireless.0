@@ -1,239 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38309 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753871Ab1AZR34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 12:29:56 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH] ath9k: use split rx buffers to get rid of order-1 skb allocations
-Date: Wed, 26 Jan 2011 18:23:27 +0100
-Message-Id: <1296062607-97934-1-git-send-email-nbd@openwrt.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:54311 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736Ab1AZSU4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 13:20:56 -0500
+Received: by ywe10 with SMTP id 10so242284ywe.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 10:20:55 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19776.26010.426561.683442@gargle.gargle.HOWL>
+Date: Wed, 26 Jan 2011 23:49:06 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH] ath9k_hw: Add RX filters
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this change, less CPU time is spent trying to look for consecutive
-pages for rx skbs. This also reduces the socket memory required for IP/UDP
-reassembly.
-Only two buffers per frame are supported. Frames spanning more buffers
-will be dropped, but the buffer size is enough to handle the required
-AMSDU size.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+The HW has separate filter masks for compressed/uncompressed
+BlockAcks and BlockAckRequests. Add them.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/main.c  |    5 ++
- drivers/net/wireless/ath/ath9k/recv.c  |   88 +++++++++++++++++++++++---------
- 3 files changed, 71 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath9k/mac.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index eb89ecd..37c188c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -311,6 +311,8 @@ struct ath_rx {
- 	struct ath_descdma rxdma;
- 	struct ath_buf *rx_bufptr;
- 	struct ath_rx_edma rx_edma[ATH9K_RX_QUEUE_MAX];
-+
-+	struct sk_buff *frag;
- };
- 
- int ath_startrecv(struct ath_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9157dbc..e912e63 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1294,6 +1294,11 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	} else
- 		sc->rx.rxlink = NULL;
- 
-+	if (sc->rx.frag) {
-+		dev_kfree_skb_any(sc->rx.frag);
-+		sc->rx.frag = NULL;
-+	}
-+
- 	/* disable HAL and put h/w to sleep */
- 	ath9k_hw_disable(ah);
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b2b12a2..daf171d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -209,11 +209,6 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
- 	int error = 0, i;
- 	u32 size;
- 
--
--	common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN +
--				     ah->caps.rx_status_len,
--				     min(common->cachelsz, (u16)64));
--
- 	ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
- 				    ah->caps.rx_status_len);
- 
-@@ -300,12 +295,12 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	sc->sc_flags &= ~SC_OP_RXFLUSH;
- 	spin_lock_init(&sc->rx.rxbuflock);
- 
-+	common->rx_bufsize = IEEE80211_MAX_MPDU_LEN / 2 +
-+			     sc->sc_ah->caps.rx_status_len;
-+
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
- 		return ath_rx_edma_init(sc, nbufs);
- 	} else {
--		common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
--				min(common->cachelsz, (u16)64));
--
- 		ath_dbg(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
- 			common->cachelsz, common->rx_bufsize);
- 
-@@ -815,15 +810,9 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	if (rx_stats->rs_datalen > (common->rx_bufsize - rx_status_len))
- 		return false;
- 
--	/*
--	 * rs_more indicates chained descriptors which can be used
--	 * to link buffers together for a sort of scatter-gather
--	 * operation.
--	 * reject the frame, we don't support scatter-gather yet and
--	 * the frame is probably corrupt anyway
--	 */
-+	/* Only use error bits from the last fragment */
- 	if (rx_stats->rs_more)
--		return false;
-+		return true;
- 
- 	/*
- 	 * The rx_stats->rs_status will not be set until the end of the
-@@ -981,6 +970,10 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 	if (!ath9k_rx_accept(common, hdr, rx_status, rx_stats, decrypt_error))
- 		return -EINVAL;
- 
-+	/* Only use status info from the last fragment */
-+	if (rx_stats->rs_more)
-+		return 0;
-+
- 	ath9k_process_rssi(common, hw, hdr, rx_stats);
- 
- 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
-@@ -1582,7 +1575,7 @@ div_comb_done:
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- {
- 	struct ath_buf *bf;
--	struct sk_buff *skb = NULL, *requeue_skb;
-+	struct sk_buff *skb = NULL, *requeue_skb, *hdr_skb;
- 	struct ieee80211_rx_status *rxs;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1633,8 +1626,17 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (!skb)
- 			continue;
- 
--		hdr = (struct ieee80211_hdr *) (skb->data + rx_status_len);
--		rxs =  IEEE80211_SKB_RXCB(skb);
-+		/*
-+		 * Take frame header from the first fragment and RX status from
-+		 * the last one.
-+		 */
-+		if (sc->rx.frag)
-+			hdr_skb = sc->rx.frag;
-+		else
-+			hdr_skb = skb;
-+
-+		hdr = (struct ieee80211_hdr *) (hdr_skb->data + rx_status_len);
-+		rxs = IEEE80211_SKB_RXCB(hdr_skb);
- 
- 		ath_debug_stat_rx(sc, &rs);
- 
-@@ -1643,12 +1645,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		 * chain it back at the queue without processing it.
- 		 */
- 		if (flush)
--			goto requeue;
-+			goto requeue_drop_frag;
- 
- 		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
- 						 rxs, &decrypt_error);
- 		if (retval)
--			goto requeue;
-+			goto requeue_drop_frag;
- 
- 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
- 		if (rs.rs_tstamp > tsf_lower &&
-@@ -1668,7 +1670,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		 * skb and put it at the tail of the sc->rx.rxbuf list for
- 		 * processing. */
- 		if (!requeue_skb)
--			goto requeue;
-+			goto requeue_drop_frag;
- 
- 		/* Unmap the frame */
- 		dma_unmap_single(sc->dev, bf->bf_buf_addr,
-@@ -1679,8 +1681,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (ah->caps.rx_status_len)
- 			skb_pull(skb, ah->caps.rx_status_len);
- 
--		ath9k_rx_skb_postprocess(common, skb, &rs,
--					 rxs, decrypt_error);
-+		if (!rs.rs_more)
-+			ath9k_rx_skb_postprocess(common, hdr_skb, &rs,
-+						 rxs, decrypt_error);
- 
- 		/* We will now give hardware our shiny new allocated skb */
- 		bf->bf_mpdu = requeue_skb;
-@@ -1697,6 +1700,38 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			break;
- 		}
- 
-+		if (rs.rs_more) {
-+			/*
-+			 * rs_more indicates chained descriptors which can be
-+			 * used to link buffers together for a sort of
-+			 * scatter-gather operation.
-+			 */
-+			if (sc->rx.frag) {
-+				/* too many fragments - cannot handle frame */
-+				dev_kfree_skb_any(sc->rx.frag);
-+				dev_kfree_skb_any(skb);
-+				skb = NULL;
-+			}
-+			sc->rx.frag = skb;
-+			goto requeue;
-+		}
-+
-+		if (sc->rx.frag) {
-+			int space = skb->len - skb_tailroom(hdr_skb);
-+
-+			sc->rx.frag = NULL;
-+
-+			if (pskb_expand_head(hdr_skb, 0, space, GFP_ATOMIC) < 0) {
-+				dev_kfree_skb(skb);
-+				goto requeue_drop_frag;
-+			}
-+
-+			skb_copy_from_linear_data(skb, skb_put(hdr_skb, skb->len),
-+						  skb->len);
-+			dev_kfree_skb_any(skb);
-+			skb = hdr_skb;
-+		}
-+
- 		/*
- 		 * change the default rx antenna if rx diversity chooses the
- 		 * other antenna 3 times in a row.
-@@ -1722,6 +1757,11 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 
- 		ieee80211_rx(hw, skb);
- 
-+requeue_drop_frag:
-+		if (sc->rx.frag) {
-+			dev_kfree_skb_any(sc->rx.frag);
-+			sc->rx.frag = NULL;
-+		}
- requeue:
- 		if (edma) {
- 			list_add_tail(&bf->list, &sc->rx.rxbuf);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 7512f97..04d58ae 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -639,6 +639,8 @@ enum ath9k_rx_filter {
+ 	ATH9K_RX_FILTER_PHYERR = 0x00000100,
+ 	ATH9K_RX_FILTER_MYBEACON = 0x00000200,
+ 	ATH9K_RX_FILTER_COMP_BAR = 0x00000400,
++	ATH9K_RX_FILTER_COMP_BA = 0x00000800,
++	ATH9K_RX_FILTER_UNCOMP_BA_BAR = 0x00001000,
+ 	ATH9K_RX_FILTER_PSPOLL = 0x00004000,
+ 	ATH9K_RX_FILTER_PHYRADAR = 0x00002000,
+ 	ATH9K_RX_FILTER_MCAST_BCAST_ALL = 0x00008000,
 -- 
-1.7.3.2
+1.7.3.5
 
