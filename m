@@ -1,104 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:17707 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752994Ab1ASJVn (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58863 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097Ab1AZR2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 04:21:43 -0500
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0969248902
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 18:21:42 +0900 (JST)
-Subject: [PATCH] RFC: ath5k: Enable 802.11j 4.9GHz frequencies
-To: linux-wireless@vger.kernel.org
-From: Bruno Randolf <br1@einfach.org>
-Cc: bob@bobcopeland.com, lrodriguez@atheros.com, bprodoehl@gmail.com,
-	mickflemm@gmail.com
-Date: Wed, 19 Jan 2011 18:22:08 +0900
-Message-ID: <20110119092208.19777.47542.stgit@localhost6.localdomain6>
+	Wed, 26 Jan 2011 12:28:36 -0500
+Message-ID: <4D4059BE.4020701@candelatech.com>
+Date: Wed, 26 Jan 2011 09:28:30 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating channel.
+References: <1295633142-7437-1-git-send-email-greearb@candelatech.com>	 <1295774293.3639.15.camel@jlt3.sipsolutions.net>	 <4D3DF93B.1030702@candelatech.com> <1296055323.3635.34.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296055323.3635.34.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RFC:
+On 01/26/2011 07:22 AM, Johannes Berg wrote:
+> On Mon, 2011-01-24 at 14:12 -0800, Ben Greear wrote:
+>> On 01/23/2011 01:18 AM, Johannes Berg wrote:
+>>
+>>> Also, are you sure the filter configuration works correctly this way? If
+>>> you can, I'd like to look at a binary trace of the commands going to the
+>>> device with this change: "trace-cmd record -e mac80211".
+>>
+>> I uploaded two trace files.  One that scans the single operating
+>> channel, and a second that scans all channels.  This is with my -v2
+>> patch applied, using ath9k as the driver.  There are two virtual
+>> STA interfaces configured on this system for this test.
+>>
+>>
+>> http://www.candelatech.com/~greearb/trace-scan-all.dat.bz2
+>> http://www.candelatech.com/~greearb/trace-scan-one.dat.bz2
+>>
+>> Please let me know what you think.
+>
+> Thanks. I don't think the -one one really is just a single scan? But
+> anyway, looking at it now.
 
-This enables 4.9GHz frequencies in ath5k if the regdomain is set to MKK9_MKKC
-(0xfe).
+No, sorry..it's probably several scans and other things..but it should
+not scan more than one (operating) channel.
 
-I have added a helper function to common ath/regd.c since we know about
-MKK9_MKKC there, however in the place where i'm using the function we don't
-have an ath_regulatory structure yet, so i'm passing the regdomain code as u16.
+Also, I'm seeing problems where sometimes wpa_supplicant doesn't
+see scan results when scanning a single operating channel.  I think this is
+probably a bug in my mac80211 patch.  I plan to look at that in
+detail today.
 
-I'm using MKK9_MKKC only because this is the regdomain in the 802.11j enabled
-sample cards we got from our vendor. I'm not sure if this is commonly used or
-if there are other domain codes which indicate 802.11j support for Atheros
-hardware (allthough some comments in the HAL suggest that). Also I don't know
-if this is common between ath9k and ath5k.
+Thanks,
+Ben
 
-Could someone from Atheros shed some light on this? Other comments?
----
- drivers/net/wireless/ath/ath5k/caps.c |   13 ++++++++-----
- drivers/net/wireless/ath/regd.c       |    6 ++++++
- drivers/net/wireless/ath/regd.h       |    1 +
- 3 files changed, 15 insertions(+), 5 deletions(-)
+>
+> johannes
 
-diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
-index 31cad80..52fa808 100644
---- a/drivers/net/wireless/ath/ath5k/caps.c
-+++ b/drivers/net/wireless/ath/ath5k/caps.c
-@@ -56,9 +56,8 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
- 		 * XXX current ieee80211 implementation because the IEEE
- 		 * XXX channel mapping does not support negative channel
- 		 * XXX numbers (2312MHz is channel -19). Of course, this
--		 * XXX doesn't matter because these channels are out of range
--		 * XXX but some regulation domains like MKK (Japan) will
--		 * XXX support frequencies somewhere around 4.8GHz.
-+		 * XXX doesn't matter because these channels are out of the
-+		 * XXX legal range.
- 		 */
- 
- 		/*
-@@ -66,8 +65,12 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
- 		 */
- 
- 		if (AR5K_EEPROM_HDR_11A(ee_header)) {
--			/* 4920 */
--			ah->ah_capabilities.cap_range.range_5ghz_min = 5005;
-+			if (ath_is_11j_regd(
-+			      ah->ah_capabilities.cap_eeprom.ee_regdomain))
-+				/* 802.11j enabled card */
-+				ah->ah_capabilities.cap_range.range_5ghz_min = 4920; /* 4910? */
-+			else
-+				ah->ah_capabilities.cap_range.range_5ghz_min = 5005;
- 			ah->ah_capabilities.cap_range.range_5ghz_max = 6100;
- 
- 			/* Set supported modes */
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 2b14775..8d60089 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -158,6 +158,12 @@ ieee80211_regdomain *ath_world_regdomain(struct ath_regulatory *reg)
- 	}
- }
- 
-+bool ath_is_11j_regd(u16 regdomain)
-+{
-+	return regdomain == MKK9_MKKC;
-+}
-+EXPORT_SYMBOL(ath_is_11j_regd);
-+
- /* Frequency is one where radar detection is required */
- static bool ath_is_radar_freq(u16 center_freq)
- {
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 345dd97..18d9acb 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -250,6 +250,7 @@ enum CountryCode {
- };
- 
- bool ath_is_world_regd(struct ath_regulatory *reg);
-+bool ath_is_11j_regd(u16 redomain);
- int ath_regd_init(struct ath_regulatory *reg, struct wiphy *wiphy,
- 		  int (*reg_notifier)(struct wiphy *wiphy,
- 		  struct regulatory_request *request));
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
