@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27765 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753703Ab1A1PsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 10:48:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/8] iwl3945: set STATUS_READY before commit_rxon
-Date: Fri, 28 Jan 2011 16:47:45 +0100
-Message-Id: <1296229671-3041-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:40499 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021Ab1AZWCx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 17:02:53 -0500
+Received: by qwa26 with SMTP id 26so1435872qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 14:02:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1296078857.3635.41.camel@jlt3.sipsolutions.net>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+ <1295156534-4178-3-git-send-email-arik@wizery.com> <1296077594.3635.40.camel@jlt3.sipsolutions.net>
+ <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com> <1296078857.3635.41.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 27 Jan 2011 00:02:37 +0200
+Message-ID: <AANLkTikno8Aa3wKy1js62D3FLOZJUxPyuwYsQd+g8JBM@mail.gmail.com>
+Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta connection
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar change as we already do for agn, need to avoid
-"Error setting Tx power (-5)" message when loading module.
+On Wed, Jan 26, 2011 at 23:54, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2011-01-26 at 23:44 +0200, Arik Nemtsov wrote:
+>
+>> Well no it doesn't do that. But the FW takes some time to know its
+>> authenticated.
+>> The flow is this:
+>>
+>> 1. hostapd sends auth complete (the FW doesn't know anything about this)
+>
+> you mean assoc, right?
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Yea you're right. It's getting late I guess :)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 9c986f2..55837d6 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2535,13 +2535,14 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
- 	/* Configure Bluetooth device coexistence support */
- 	priv->cfg->ops->hcmd->send_bt_config(priv);
- 
-+	set_bit(STATUS_READY, &priv->status);
-+
- 	/* Configure the adapter for unassociated operation */
- 	iwl3945_commit_rxon(priv, ctx);
- 
- 	iwl3945_reg_txpower_periodic(priv);
- 
- 	IWL_DEBUG_INFO(priv, "ALIVE processing complete.\n");
--	set_bit(STATUS_READY, &priv->status);
- 	wake_up_interruptible(&priv->wait_command_queue);
- 
- 	return;
--- 
-1.7.1
+>
+>> 2. The STA transmits something
+>> 3. The AP FW deauths the STA
+>> 4. hostapd adds the station, causing mac80211 to call add_sta(), which
+>> causes the FW to add the sta
+>>
+>> Then we have an endless loop of sta add/remove..
+>
+> I'd wondered about that race condition before -- maybe hostapd should
+> add the station before sending the assoc complete. The race also exists
+> in practice with just mac80211, except it only leads to a dropped frame.
+>
 
+Well it can still get dropped here. This just prevents the FW from
+de-authenticating the STA.
+
+Arik
