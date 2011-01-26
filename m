@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47850 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418Ab1AJUL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 15:11:26 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: David Miller <davem@davemloft.net>
-Subject: Re: 2.6.37-rc8: Reported regressions from 2.6.36
-Date: Mon, 10 Jan 2011 21:11:06 +0100
-Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com,
-	florian@mickler.org, akpm@linux-foundation.org,
-	torvalds@linux-foundation.org, kernel-testers@vger.kernel.org,
-	netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
-References: <96DQe4a_2tH.A.cFB.l27GNB@chimera> <20110110.000813.173856001.davem@davemloft.net>
-In-Reply-To: <20110110.000813.173856001.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101102111.07266.rjw@sisk.pl>
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:37481 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615Ab1AZT5V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 14:57:21 -0500
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH wireless-2.6] MAINTAINERS: update information for the wl12xx driver
+Date: Wed, 26 Jan 2011 21:46:29 +0200
+Message-Id: <1296071189-761-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, January 10, 2011, David Miller wrote:
-> From: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
-> > Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
-> > Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
-> > Date		: 2010-12-08 21:09 (22 days old)
-> > Message-ID	: <4CFFF3F3.90100@goop.org>
-> > References	: http://marc.info/?l=linux-kernel&m=129184256629712&w=2
-> 
-> This bug is intended to be fixed by:
-> 
-> commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
-> Author: David S. Miller <davem@davemloft.net>
-> Date:   Wed Jan 5 15:38:53 2011 -0800
-> 
->     af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
->     
->     unix_release() can asynchornously set socket->sk to NULL, and
->     it does so without holding the unix_state_lock() on "other"
->     during stream connects.
->     
->     However, the reverse mapping, sk->sk_socket, is only transitioned
->     to NULL under the unix_state_lock().
->     
->     Therefore make the security hooks follow the reverse mapping instead
->     of the forward mapping.
->     
->     Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
->     Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
->     Signed-off-by: David S. Miller <davem@davemloft.net>
-> 
+Update maintainer's email address, webpage and align with renaming of
+files.
 
-OK, thanks for the info, closing.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ MAINTAINERS |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Rafael
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c9ec9d8..a5deb42 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6612,12 +6612,12 @@ S:	Maintained
+ F:	drivers/net/wireless/wl1251/*
+ 
+ WL1271 WIRELESS DRIVER
+-M:	Luciano Coelho <luciano.coelho@nokia.com>
++M:	Luciano Coelho <coelho@ti.com>
+ L:	linux-wireless@vger.kernel.org
+-W:	http://wireless.kernel.org
++W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+ S:	Maintained
+-F:	drivers/net/wireless/wl12xx/wl1271*
++F:	drivers/net/wireless/wl12xx/
+ F:	include/linux/wl12xx.h
+ 
+ WL3501 WIRELESS PCMCIA CARD DRIVER
+-- 
+1.7.1
+
