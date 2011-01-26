@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41674 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753972Ab1A3MYu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42503 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab1AZPWG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:50 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so2146783eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:50 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 16/21] rt2x00: trivial: add \n to WARNING message
-Date: Sun, 30 Jan 2011 13:22:22 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201101301316.04044.IvDoorn@gmail.com> <201101301321.42168.IvDoorn@gmail.com> <201101301322.04131.IvDoorn@gmail.com>
-In-Reply-To: <201101301322.04131.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101301322.23247.IvDoorn@gmail.com>
+	Wed, 26 Jan 2011 10:22:06 -0500
+Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating
+ channel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4D3DF93B.1030702@candelatech.com>
+References: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
+	 <1295774293.3639.15.camel@jlt3.sipsolutions.net>
+	 <4D3DF93B.1030702@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 16:22:03 +0100
+Message-ID: <1296055323.3635.34.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Stezenbach <js@sig21.net>
+On Mon, 2011-01-24 at 14:12 -0800, Ben Greear wrote:
+> On 01/23/2011 01:18 AM, Johannes Berg wrote:
+> 
+> > Also, are you sure the filter configuration works correctly this way? If
+> > you can, I'd like to look at a binary trace of the commands going to the
+> > device with this change: "trace-cmd record -e mac80211".
+> 
+> I uploaded two trace files.  One that scans the single operating
+> channel, and a second that scans all channels.  This is with my -v2
+> patch applied, using ath9k as the driver.  There are two virtual
+> STA interfaces configured on this system for this test.
+> 
+> 
+> http://www.candelatech.com/~greearb/trace-scan-all.dat.bz2
+> http://www.candelatech.com/~greearb/trace-scan-one.dat.bz2
+> 
+> Please let me know what you think.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks. I don't think the -one one really is just a single scan? But
+anyway, looking at it now.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 7d7fbe0..fa17c83 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -913,7 +913,7 @@ void rt2x00queue_flush_queue(struct data_queue *queue, bool drop)
- 	 * The queue flush has failed...
- 	 */
- 	if (unlikely(!rt2x00queue_empty(queue)))
--		WARNING(queue->rt2x00dev, "Queue %d failed to flush", queue->qid);
-+		WARNING(queue->rt2x00dev, "Queue %d failed to flush\n", queue->qid);
- 
- 	/*
- 	 * Restore the queue to the previous status
--- 
-1.7.2.3
+johannes
 
