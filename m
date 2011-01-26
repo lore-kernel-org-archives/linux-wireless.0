@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:32210 "EHLO mail.atheros.com"
+Received: from smtp.nokia.com ([147.243.128.26]:40444 "EHLO mgw-da02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754421Ab1ALBqg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 20:46:36 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 17:46:18 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Jack Lee <jack.lee@atheros.com>,
-	Carl Huang <carl.huang@atheros.com>,
-	David Quan <david.quan@atheros.com>,
-	Nael Atallah <nael.atallah@atheros.com>,
-	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
-Subject: [PATCH] ath9k_hw: disable PLL / Clkreq for ASPM for AR9003
-Date: Tue, 11 Jan 2011 17:46:31 -0800
-Message-ID: <1294796791-2521-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752485Ab1AZJCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 04:02:45 -0500
+Subject: Re: [PATCH 1/2] wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw
+ flag
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1296030672.3635.13.camel@jlt3.sipsolutions.net>
+References: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1296030672.3635.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 11:02:17 +0200
+Message-ID: <1296032537.18570.384.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This changes the PCIE PHY programming for better interoperability
-with ASPM states. Without this AR9003 chipsets will hang when
-using ASPM. This reproducible against an Apple Airport Extreme AP
-by simply pinging it.
+On Wed, 2011-01-26 at 09:31 +0100, ext Johannes Berg wrote:
+> On Wed, 2011-01-26 at 10:29 +0200, juuso.oikarinen@nokia.com wrote:
+> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > 
+> > +		IEEE80211_HW_SPECTRUM_MGMT;
+> 
+> I once had a patch to remove this flag completely since it has very
+> little effect at all on mac80211. Can I convince you to review the flag
+> use in mac80211 and tell me why you think it is, or not, present?
+> 
+> johannes
 
-Cc: stable@kernel.org
-Cc: Jack Lee <jack.lee@atheros.com>
-Cc: Carl Huang <carl.huang@atheros.com>
-Cc: David Quan <david.quan@atheros.com>
-Cc: Nael Atallah <nael.atallah@atheros.com>
-Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Well I guess I'm stating the obvious here. The effects of the flag are:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 6137634..06fb2c8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -146,8 +146,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		/* Sleep Setting */
- 
- 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--				ar9300PciePhy_clkreq_enable_L1_2p2,
--				ARRAY_SIZE(ar9300PciePhy_clkreq_enable_L1_2p2),
-+				ar9300PciePhy_pll_on_clkreq_disable_L1_2p2,
-+				ARRAY_SIZE(ar9300PciePhy_pll_on_clkreq_disable_L1_2p2),
- 				2);
- 
- 		/* Fast clock modal settings */
--- 
-1.7.3.2.90.gd4c43
+- It causes mac80211 to add the spectrum mgmt capability bit, list of
+supported channels and TX power capability info into the assoc-req
+- It causes mac80211 to process channel switch actions
+- It causes mac80211 to process and react to TPC power constraint
+elements sent out in beacons
+- It causes mac80211 to respond to TPC report requests by the AP, albeit
+currently only by refusing them.
+
+In addition to this, I plan to implement the TPC basic reporting,
+including mac80211 stuff if required (I still need to learn some more on
+the subject, specifically regarding the wl12xx chipset) and also I plan
+to implement quieting, though it's likely that wont need mac80211
+intervention with wl12xx at least.
+
+AFAIK all these items are mandatory on the 5GHz band, at least in
+Europe.
+
+So I don't see how this flag could be removed. Unless you wan't to make
+the above default behavior - but then adding for instance the spectrum
+mgmt bit into the capabilities assumes all chipset will be able handle
+all of the features?
+
+-Juuso
+
+-Juuso
 
