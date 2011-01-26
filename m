@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:50207 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501Ab1A0RT5 convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:51089 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809Ab1AZGjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 12:19:57 -0500
-Received: by vws16 with SMTP id 16so861249vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 09:19:56 -0800 (PST)
+	Wed, 26 Jan 2011 01:39:08 -0500
+Received: by gyb11 with SMTP id 11so16635gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 22:39:07 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
-References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
-	<AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
-Date: Thu, 27 Jan 2011 18:19:56 +0100
-Message-ID: <AANLkTikqR=aX+icFSKxkMNCZdbEgPmKR--gAPePgW6vM@mail.gmail.com>
-Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Brian Prodoehl <bprodoehl@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1295952127.3650.12.camel@jlt3.sipsolutions.net>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <1295869283.3639.7.camel@jlt3.sipsolutions.net> <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+ <1295950241.3650.3.camel@jlt3.sipsolutions.net> <1295952127.3650.12.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 26 Jan 2011 08:38:52 +0200
+Message-ID: <AANLkTikF3Ru_25Tzcntrma3_spgURV-pfTr=t8RHereK@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 27 stycznia 2011 17:48 użytkownik Brian Prodoehl
-<bprodoehl@gmail.com> napisał:
-> 2011/1/27 Rafał Miłecki <zajec5@gmail.com>:
->> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
->> inserted into PC.  Unfortunately after inserting my Broadcom card to
->> it, it is not detected in "lspci" at all.
+On Tue, Jan 25, 2011 at 12:42, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2011-01-25 at 11:10 +0100, Johannes Berg wrote:
+>> On Mon, 2011-01-24 at 23:21 +0200, Arik Nemtsov wrote:
 >>
->> My WiFi card used to work in "native" slot inside notebook. So if
->> anything is broken, that would be PCIe x1 slot on motherboard or
->> adapter itself. I've tested V and GND pins in my PCIe x1 slot, all
->> work fine. I'll try get some other WiFi cards, to test my adapter
->> tomorrow.
+>> > Well a wiphy flag won't do here. Probe requests may be filtered in
+>> > some modes (AP-mode) but needed in others (p2p?).
+>> > I think flexibility is a nice added bonus here. A FW can decide to
+>> > handle most standard probe-requests and simply not pass them up.
+>> > Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
+>> >
+>> > The current patches leave this policy in the hands of the driver/fw.
 >>
->> However, maybe you have heard about some problems with such a
->> adapters? Can there be sth preventing my card from being detected,
->> visible?
+>> That is _very_ dangerous. If the user has older firmware that doesn't
+>> know about WSC2, how would the user know not to configure WSC2 in
+>> hostapd? That needs to be known to hostapd so it can verify this
+>> situation. For P2P, we already know whether or not P2P is supported, but
+>> that's rather vague in case there will ever be a revision of the P2P
+>> spec with say different IEs.
 >>
->> --
->> Rafał
+>> Additionally, a "regular AP" (not P2P, not WSC) would still want to
+>> reply to probe requests from WSC/P2P devices with the normal template.
+>>
+>> IMHO it would be smarter to rework the firmware to only reply to probe
+>> requests if the probe response is configured. Then, if WSC, P2P, or
+>> similar technologies are in use on the interface, hostapd can simply
+>> decide to not configure the probe response and have host-based
+>> processing. Would that be a change you could still make?
 >
-> I haven't tested that sort of thing with PCI-Express, but I had bad
-> results with Atheros AR5414-based modules in Mini-PCI to PCI adapters
-> like this:
 >
-> http://www.dealextreme.com/p/mini-pci-to-pci-adapter-with-antenna-9307
+> Of course, firmware can reply to non-p2p/non-wsc2 probe requests with a
+> static probe response template.
 >
-> The system either wouldn't boot, or it would boot and the wireless
-> card wouldn't show up in lspci, so I gave up on it.
+> The question is how much knowledge you want to put into the firmware
+> about those protocols. If you want to put all knowledge in there, then
+> at least you need to indicate to hostapd which protocols the firmware
+> knows not to reply to.
+>
+> Also, a way to turn off this behaviour would still be good for future
+> protocol changes. If P2P changes in 3 years, I'm sure this firmware
+> won't be updated to match since you'll be a few hardware generations
+> ahead. Then, being able to turn off the offload completely would allow
+> users to take advantage of new protocols without changing hardware. Of
+> course, you may want to force users to buy new hardware that way -- but
+> in that case we *still* need the advertisement of what's possible so
+> users know right away that they need to buy new hardware and don't try
+> to configure something that just fails in strange ways.
+>
 
-That are not good news :(
+Like I said in a previous email - I think a white list (or black list)
+of IEs in FW is the way to go here. Not all probe-responses should be
+offloaded.
 
-What I've bought is following adapter:
-http://allegro.pl/adapter-wifi-mini-pci-e-na-pci-e-3-anteny-kp13-i1429732145.html
+Its also conceivable that an old driver/fw won't work when some
+protocol is changed/updated, even if hostapd supports it.
+I'm not sure the probe-resp will be the culprit here..
 
-(Maybe) interesting part is that it contains LED near antennas which
-doesn't light for me. After tracking GND line of this LED I can see it
-going to mini PCIe slot. So maybe it's not critical, maybe it would
-light if my WiFi card worked?
-
--- 
-Rafał
+Arik
