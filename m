@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33520 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591Ab1AJQFD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34742 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469Ab1AZVyQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 11:05:03 -0500
-Received: by eye27 with SMTP id 27so8611506eye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 08:05:02 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Subject: Re: 5GHz 802.11n USB Adapter
-Date: Mon, 10 Jan 2011 17:03:45 +0100
-Cc: Jason Andryuk <jandryuk@gmail.com>, linux-wireless@vger.kernel.org
-References: <AANLkTimj11OJRbjO2GBn=C36D7UDUURvguERS5XYoJ7W@mail.gmail.com> <201101082132.22947.helmut.schaa@googlemail.com> <87mxn9fl6m.fsf@purkki.adurom.net>
-In-Reply-To: <87mxn9fl6m.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101101703.45802.helmut.schaa@googlemail.com>
+	Wed, 26 Jan 2011 16:54:16 -0500
+Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta
+ connection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+	 <1295156534-4178-3-git-send-email-arik@wizery.com>
+	 <1296077594.3635.40.camel@jlt3.sipsolutions.net>
+	 <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 Jan 2011 22:54:17 +0100
+Message-ID: <1296078857.3635.41.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 10. Januar 2011 schrieb Kalle Valo:
-> Helmut Schaa <helmut.schaa@googlemail.com> writes:
-> 
-> > Am Samstag, 8. Januar 2011 schrieb Jason Andryuk:
-> >> Are there any limitations for rt2800usb devices?  The wiki is short on
-> >> information as is rt2x00.serialmonkey.com.  Does rt2800usb support AP
-> >> mode like rt2800pci?
-> >
-> > rt2800usb does not support bc- and mc- buffering (rt2800pci does). Hence,
-> > powersaving stations might experience problems when using rt2800usb in AP
-> > mode.
-> 
-> If some hardware models don't support broadcast/multicast buffering in
-> that case the driver shouldn't allow AP mode, at least not in mainline
-> kernels. We shouldn't break the standarnd knowingly.
-> 
-> From a quick grep it looks like rt2800usb enables AP mode. Is that the
-> case or did I misunderstood something?
+On Wed, 2011-01-26 at 23:44 +0200, Arik Nemtsov wrote:
 
-You're right, rt2800usb enables AP mode despite the lack of proper
-mc- and bc buffering.
+> Well no it doesn't do that. But the FW takes some time to know its
+> authenticated.
+> The flow is this:
+> 
+> 1. hostapd sends auth complete (the FW doesn't know anything about this)
 
-Helmut
+you mean assoc, right?
+
+> 2. The STA transmits something
+> 3. The AP FW deauths the STA
+> 4. hostapd adds the station, causing mac80211 to call add_sta(), which
+> causes the FW to add the sta
+> 
+> Then we have an endless loop of sta add/remove..
+
+I'd wondered about that race condition before -- maybe hostapd should
+add the station before sending the assoc complete. The race also exists
+in practice with just mac80211, except it only leads to a dropped frame.
+
+johannes
+
