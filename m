@@ -1,194 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54121 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846Ab1AIPcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 10:32:35 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: update patches in enable-older-kernels
-Date: Sun,  9 Jan 2011 16:32:20 +0100
-Message-Id: <1294587141-11353-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
-References: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
+Received: from dell.nexicom.net ([216.168.96.13]:43996 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753661Ab1AZTej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Jan 2011 14:34:39 -0500
+Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-36.nexicom.net [216.168.118.36])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p0QJYYxK005437
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 14:34:35 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 71A42984A8
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 14:34:34 -0500 (EST)
+Message-ID: <4D40774A.608@lockie.ca>
+Date: Wed, 26 Jan 2011 14:34:34 -0500
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: no CONFIG_WIRELESS_EXT
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* enable-2.6.24.patch does not make any sense as we already support kernel 2.6.24
-* Update the other patches to apply again.
+I installed compat-wireless-2011-01-25 and iwlist doesn't work but iw does.
+The warning dmesg shows is "cfg80211: wext will not work because kernel
+was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface,
+like iwconfig will not work." which is fine BUT my kernel is compiled with
+CONFIG_WIRELESS=y
+CONFIG_WIRELESS_EXT_SYSFS=y
+and those are the only 2 'WIRELESS' anything.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- enable-older-kernels/enable-2.6.21.patch |   26 +++++++++++++-------------
- enable-older-kernels/enable-2.6.22.patch |   26 +++++++++++++-------------
- enable-older-kernels/enable-2.6.23.patch |   20 +++++++++-----------
- enable-older-kernels/enable-2.6.24.patch |   28 ----------------------------
- 4 files changed, 35 insertions(+), 65 deletions(-)
- delete mode 100644 enable-older-kernels/enable-2.6.24.patch
-
-diff --git a/enable-older-kernels/enable-2.6.21.patch b/enable-older-kernels/enable-2.6.21.patch
-index bb6e33d..2c16809 100644
---- a/enable-older-kernels/enable-2.6.21.patch
-+++ b/enable-older-kernels/enable-2.6.21.patch
-@@ -1,26 +1,26 @@
----- a/config.mk	2010-01-11 10:27:53.000000000 -0800
--+++ b/config.mk	2010-01-11 10:32:49.000000000 -0800
--@@ -26,8 +26,8 @@
-+--- a/config.mk
-++++ b/config.mk
-+@@ -25,9 +25,9 @@
-  COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-  $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-  
---ifdef CONFIG_COMPAT_KERNEL_25
---$(error "ERROR: compat-wireless by default supports kernels >= 2.6.25, try enabling only one driver though")
--+ifdef CONFIG_COMPAT_WIRELESS_21
--+$(error "ERROR: compat-wireless for selected driver requires a kernel >= 2.6.21")
-- endif
-+-ifdef CONFIG_COMPAT_KERNEL_24
-+-$(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
-+-endif #CONFIG_COMPAT_KERNEL_24
-++ifdef CONFIG_COMPAT_KERNEL_21
-++$(error "ERROR: compat-wireless by default supports kernels >= 2.6.21, try enabling only one driver though")
-++endif #CONFIG_COMPAT_KERNEL_21
-  
-  ifeq ($(CONFIG_CFG80211),y)
--diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
--index 6c7cae7..bb2ea6d 100755
-+ $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
- --- a/scripts/gen-compat-autoconf.sh
- +++ b/scripts/gen-compat-autoconf.sh
- @@ -11,7 +11,7 @@
-  
-  # This indicates which is the oldest kernel we support
-  # Update this if you are adding support for older kernels.
---OLDEST_KERNEL_SUPPORTED="2.6.25"
-+-OLDEST_KERNEL_SUPPORTED="2.6.24"
- +OLDEST_KERNEL_SUPPORTED="2.6.21"
-- COMPAT_RELEASE="compat-release"
-- KERNEL_RELEASE="git-describe"
-+ COMPAT_RELEASE="compat_version"
-+ KERNEL_RELEASE="compat_base_tree_version"
-  MULT_DEP_FILE=".compat_pivot_dep"
-diff --git a/enable-older-kernels/enable-2.6.22.patch b/enable-older-kernels/enable-2.6.22.patch
-index 3acfcec..92150e9 100644
---- a/enable-older-kernels/enable-2.6.22.patch
-+++ b/enable-older-kernels/enable-2.6.22.patch
-@@ -1,26 +1,26 @@
----- a/config.mk	2010-01-11 10:27:53.000000000 -0800
--+++ b/config.mk	2010-01-11 10:32:49.000000000 -0800
--@@ -26,8 +26,8 @@
-+--- a/config.mk
-++++ b/config.mk
-+@@ -25,9 +25,9 @@
-  COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-  $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-  
---ifdef CONFIG_COMPAT_KERNEL_25
---$(error "ERROR: compat-wireless by default supports kernels >= 2.6.25, try enabling only one driver though")
--+ifdef CONFIG_COMPAT_WIRELESS_22
--+$(error "ERROR: compat-wireless for selected driver requires a kernel >= 2.6.22")
-- endif
-+-ifdef CONFIG_COMPAT_KERNEL_24
-+-$(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
-+-endif #CONFIG_COMPAT_KERNEL_24
-++ifdef CONFIG_COMPAT_KERNEL_22
-++$(error "ERROR: compat-wireless by default supports kernels >= 2.6.22, try enabling only one driver though")
-++endif #CONFIG_COMPAT_KERNEL_22
-  
-  ifeq ($(CONFIG_CFG80211),y)
--diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
--index 6c7cae7..bb2ea6d 100755
-+ $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
- --- a/scripts/gen-compat-autoconf.sh
- +++ b/scripts/gen-compat-autoconf.sh
- @@ -11,7 +11,7 @@
-  
-  # This indicates which is the oldest kernel we support
-  # Update this if you are adding support for older kernels.
---OLDEST_KERNEL_SUPPORTED="2.6.25"
-+-OLDEST_KERNEL_SUPPORTED="2.6.24"
- +OLDEST_KERNEL_SUPPORTED="2.6.22"
-- COMPAT_RELEASE="compat-release"
-- KERNEL_RELEASE="git-describe"
-+ COMPAT_RELEASE="compat_version"
-+ KERNEL_RELEASE="compat_base_tree_version"
-  MULT_DEP_FILE=".compat_pivot_dep"
-diff --git a/enable-older-kernels/enable-2.6.23.patch b/enable-older-kernels/enable-2.6.23.patch
-index 948d249..6266c17 100644
---- a/enable-older-kernels/enable-2.6.23.patch
-+++ b/enable-older-kernels/enable-2.6.23.patch
-@@ -1,27 +1,25 @@
--diff --git a/config.mk b/config.mk
--index 777ebd3..2ad11fc 100644
- --- a/config.mk
- +++ b/config.mk
--@@ -25,8 +25,8 @@ KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2
-+@@ -25,9 +25,9 @@
-  COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-  $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-  
---ifdef CONFIG_COMPAT_KERNEL_25
---$(error "ERROR: compat-wireless by default supports kernels >= 2.6.25, try enabling only one driver though")
--+ifdef CONFIG_COMPAT_WIRELESS_23
--+$(error "ERROR: compat-wireless for selected driver requires a kernel >= 2.6.23")
-- endif
-+-ifdef CONFIG_COMPAT_KERNEL_24
-+-$(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
-+-endif #CONFIG_COMPAT_KERNEL_24
-++ifdef CONFIG_COMPAT_KERNEL_23
-++$(error "ERROR: compat-wireless by default supports kernels >= 2.6.23, try enabling only one driver though")
-++endif #CONFIG_COMPAT_KERNEL_23
-  
-  ifeq ($(CONFIG_CFG80211),y)
--diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
--index 1e3002e..64dac69 100755
-+ $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
- --- a/scripts/gen-compat-autoconf.sh
- +++ b/scripts/gen-compat-autoconf.sh
- @@ -11,7 +11,7 @@
-  
-  # This indicates which is the oldest kernel we support
-  # Update this if you are adding support for older kernels.
---OLDEST_KERNEL_SUPPORTED="2.6.25"
-+-OLDEST_KERNEL_SUPPORTED="2.6.24"
- +OLDEST_KERNEL_SUPPORTED="2.6.23"
-  COMPAT_RELEASE="compat_version"
-  KERNEL_RELEASE="compat_base_tree_version"
-diff --git a/enable-older-kernels/enable-2.6.24.patch b/enable-older-kernels/enable-2.6.24.patch
-deleted file mode 100644
-index e1e0cfc..0000000
---- a/enable-older-kernels/enable-2.6.24.patch
-+++ /dev/null
-@@ -1,28 +0,0 @@
--diff --git a/config.mk b/config.mk
--index 777ebd3..2ad11fc 100644
----- a/config.mk
--+++ b/config.mk
--@@ -25,8 +25,8 @@ KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2
-- COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-- $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-- 
---ifdef CONFIG_COMPAT_KERNEL_25
---$(error "ERROR: compat-wireless by default supports kernels >= 2.6.25, try enabling only one driver though")
--+ifdef CONFIG_COMPAT_WIRELESS_24
--+$(error "ERROR: compat-wireless for selected driver requires a kernel >= 2.6.24")
-- endif
-- 
-- ifeq ($(CONFIG_CFG80211),y)
--diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
--index 1e3002e..0f0e415 100755
----- a/scripts/gen-compat-autoconf.sh
--+++ b/scripts/gen-compat-autoconf.sh
--@@ -11,7 +11,7 @@
-- 
-- # This indicates which is the oldest kernel we support
-- # Update this if you are adding support for older kernels.
---OLDEST_KERNEL_SUPPORTED="2.6.25"
--+OLDEST_KERNEL_SUPPORTED="2.6.24"
-- COMPAT_RELEASE="compat_version"
-- KERNEL_RELEASE="compat_base_tree_version"
-- MULT_DEP_FILE=".compat_pivot_dep"
--- 
-1.7.1
-
+I have kernel 2.6.36.3.
