@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54194 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751564Ab1AIUCu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 15:02:50 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 85F63540C36
-	for <linux-wireless@vger.kernel.org>; Sun,  9 Jan 2011 15:04:22 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-09 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110109200249.B014240F97@repository3.orbit-lab.org>
-Date: Sun,  9 Jan 2011 15:02:49 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49302 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753386Ab1A0WJr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 17:09:47 -0500
+Message-ID: <4D41ED24.9010005@hauke-m.de>
+Date: Thu, 27 Jan 2011 23:09:40 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: James <bjlockie@lockie.ca>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: did compat-wireless-2011-01-27 crash dhcpcd?
+References: <4D41DAF1.6080204@lockie.ca>
+In-Reply-To: <4D41DAF1.6080204@lockie.ca>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/27/2011 09:52 PM, James wrote:
+> cfg80211: Calling CRDA to update world regulatory domain
+> Compat-wireless backport release: compat-wireless-2011-01-06-3-g8db1608
+> Backport based on linux-next.git next-20110121
+> ath9k 0000:02:09.0: PCI INT A -> Link[LNKB] -> GSI 17 (level, low) -> IRQ 17
+> ath: EEPROM regdomain: 0x10
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: CO
+> ath: Regpair used: 0x10
+> ieee80211 phy0: Selected rate control algorithm 'ath9k_rate_control'
 
-compat-wireless code metrics
 
-    782479 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1990 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1957 - % of crap code
+> cfg80211: wext will not work because kernel was compiled with
+> CONFIG_WIRELESS_EXT=n. Tools using wext interface, like iwconfig will
+> not work.
 
-Base tree: linux-next.git
-Base tree version: next-20110107
-compat-wireless release: compat-wireless-2011-01-06-pc
+WEXT is deactivated in compat-wireless because CONFIG_WIRELESS_EXT=y was
+not set in your kernel config and iwconfig does not work without wext.
+
+See: http://www.spinics.net/lists/linux-wireless/msg63449.html
+
+Hauke
