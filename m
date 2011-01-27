@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:12861 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753888Ab1AGF7e (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49023 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734Ab1A0RQP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 00:59:34 -0500
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0815499971
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Jan 2011 14:59:33 +0900 (JST)
-Subject: [PATCH 2/4] iw: Add channel busy time to survey
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Date: Fri, 07 Jan 2011 15:00:31 +0900
-Message-ID: <20110107060031.21507.10327.stgit@localhost6.localdomain6>
-In-Reply-To: <20110107060025.21507.11061.stgit@localhost6.localdomain6>
-References: <20110107060025.21507.11061.stgit@localhost6.localdomain6>
+	Thu, 27 Jan 2011 12:16:15 -0500
+Received: by qwa26 with SMTP id 26so2340220qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 09:16:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4D41A275.2070704@lwfinger.net>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+	<4D41A275.2070704@lwfinger.net>
+Date: Thu, 27 Jan 2011 18:16:14 +0100
+Message-ID: <AANLkTim8s-JM7sj48+puT9gnKzwsRS8sLtpW6VXx7NiU@mail.gmail.com>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Print channel busy time in survey dump.
+W dniu 27 stycznia 2011 17:51 użytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisał:
+> On 01/27/2011 10:37 AM, Rafał Miłecki wrote:
+>> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
+>> inserted into PC.  Unfortunately after inserting my Broadcom card to
+>> it, it is not detected in "lspci" at all.
+>>
+>> My WiFi card used to work in "native" slot inside notebook. So if
+>> anything is broken, that would be PCIe x1 slot on motherboard or
+>> adapter itself. I've tested V and GND pins in my PCIe x1 slot, all
+>> work fine. I'll try get some other WiFi cards, to test my adapter
+>> tomorrow.
+>>
+>> However, maybe you have heard about some problems with such a
+>> adapters? Can there be sth preventing my card from being detected,
+>> visible?
+>
+> Does the adapter show up as a new bridge in lspci or in dmesg?
 
-This patch comes from OpenWRT. Original author: Felix Fietkau.
-Fixed up for unsigned values.
+No difference in lspci or dmesg. I've even tried lspci with every -A.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- survey.c |   19 +++++++++++++++++--
- 1 files changed, 17 insertions(+), 2 deletions(-)
+I guess this adapter mostly reroutes pins, probably won't be visible
+as separated bridge itself.
 
-diff --git a/survey.c b/survey.c
-index 83c54b3..e71d21b 100644
---- a/survey.c
-+++ b/survey.c
-@@ -44,12 +44,27 @@ static int print_survey_handler(struct nl_msg *msg, void *arg)
- 	}
- 
- 	if (sinfo[NL80211_SURVEY_INFO_FREQUENCY])
--		printf("\tfrequency:\t%u MHz%s\n",
-+		printf("\tfrequency:\t\t\t%u MHz%s\n",
- 			nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]),
- 			sinfo[NL80211_SURVEY_INFO_IN_USE] ? " [in use]" : "");
- 	if (sinfo[NL80211_SURVEY_INFO_NOISE])
--		printf("\tnoise:\t\t%d dBm\n",
-+		printf("\tnoise:\t\t\t\t%d dBm\n",
- 			(int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]));
-+	if (sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME])
-+		printf("\tchannel active time:\t\t%llu ms\n",
-+			(uint64_t)nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME]));
-+	if (sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY])
-+		printf("\tchannel busy time:\t\t%llu ms\n",
-+			(uint64_t)nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY]));
-+	if (sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_EXT_BUSY])
-+		printf("\textension channel busy time:\t%llu ms\n",
-+			(uint64_t)nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_EXT_BUSY]));
-+	if (sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_RX])
-+		printf("\tchannel receive time:\t\t%llu ms\n",
-+			(uint64_t)nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_RX]));
-+	if (sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
-+		printf("\tchannel transmit time:\t\t%llu ms\n",
-+			(uint64_t)nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX]));
- 	return NL_SKIP;
- }
- 
-
+-- 
+Rafał
