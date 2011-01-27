@@ -1,127 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:33588 "HELO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753476Ab1ARDKr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 22:10:47 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 17 Jan 2011 19:07:39 -0800
-Subject: RE: [PATCH] mwifiex: remove duplicated NULL checks
-Message-ID: <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
-References: <1295033760-31108-1-git-send-email-bzhao@marvell.com>
- <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com>
-In-Reply-To: <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.atheros.com ([12.19.149.2]:10256 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753726Ab1A0JPk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 04:15:40 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 01:15:21 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <vnatarajan@atheros.com>
+Subject: [PATCH 3/5] ath9k_hw: DDR_PLL and BB_PLL need correct setting.
+Date: Thu, 27 Jan 2011 14:45:09 +0530
+Message-ID: <1296119711-4024-3-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1296119711-4024-2-git-send-email-vnatarajan@atheros.com>
+References: <1296119711-4024-1-git-send-email-vnatarajan@atheros.com>
+ <1296119711-4024-2-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+Updates from the analog team for AR9485 chipsets to set
+DDR_PLL2 and DDR_PLL3. Also program the BB_PLL ki
+and kd value.
 
-> -----Original Message-----
-> From: Julian Calaby [mailto:julian.calaby@gmail.com]
-> Sent: Friday, January 14, 2011 6:59 PM
-> To: Bing Zhao
-> Cc: linux-wireless@vger.kernel.org; John W. Linville; Johannes Berg; Amitkumar Karwar; Kiran Divekar;
-> Frank Huang
-> Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
-> 
-> On Sat, Jan 15, 2011 at 06:36, Bing Zhao <bzhao@marvell.com> wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> >
-> > Some functions have unnecessory NULL check for an input parameter
-> > because the caller to those functions is already checking the parameter
-> > for NULL before calling them.
-> 
-> It may be more readable and efficient to eliminate the NULL checks in
-> the callers - and adjust the code to inform the callers of the case
-> where the pointer passed is null and make the callers to properly
-> handle this case.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |   26 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/reg.h |   11 +++++++++++
+ 2 files changed, 36 insertions(+), 1 deletions(-)
 
-Thank you very much for your comments.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index baa2977..63edbc1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -684,13 +684,37 @@ unsigned long ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ar9003_get_pll_sqsum_dvc);
+ 
++#define DPLL2_KD_VAL            0x3D
++#define DPLL2_KI_VAL            0x06
++#define DPLL3_PHASE_SHIFT_VAL   0x1
++
+ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      struct ath9k_channel *chan)
+ {
+ 	u32 pll;
+ 
+-	if (AR_SREV_9485(ah))
++	if (AR_SREV_9485(ah)) {
+ 		REG_WRITE(ah, AR_RTC_PLL_CONTROL2, 0x886666);
++		REG_WRITE(ah, AR_CH0_DDR_DPLL2, 0x19e82f01);
++
++		REG_RMW_FIELD(ah, AR_CH0_DDR_DPLL3,
++			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
++
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
++		udelay(100);
++
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL2, 0x886666);
++
++		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
++			      AR_CH0_DPLL2_KD, DPLL2_KD_VAL);
++		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL2,
++			      AR_CH0_DPLL2_KI, DPLL2_KI_VAL);
++
++		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
++			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x142c);
++		udelay(110);
++	}
+ 
+ 	pll = ath9k_hw_compute_pll_control(ah, chan);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 264aea7..b262e98 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1083,6 +1083,17 @@ enum {
+ #define AR_ENT_OTP		  0x40d8
+ #define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
+ #define AR_ENT_OTP_MPSD		0x00800000
++#define AR_CH0_BB_DPLL2          0x16184
++#define AR_CH0_BB_DPLL3          0x16188
++#define AR_CH0_DDR_DPLL2         0x16244
++#define AR_CH0_DDR_DPLL3         0x16248
++#define AR_CH0_DPLL2_KD              0x03F80000
++#define AR_CH0_DPLL2_KD_S            19
++#define AR_CH0_DPLL2_KI              0x3C000000
++#define AR_CH0_DPLL2_KI_S            26
++#define AR_CH0_DPLL3_PHASE_SHIFT     0x3F800000
++#define AR_CH0_DPLL3_PHASE_SHIFT_S   23
++#define AR_PHY_CCA_NOM_VAL_2GHZ      -118
+ 
+ #define AR_RTC_9300_PLL_DIV          0x000003ff
+ #define AR_RTC_9300_PLL_DIV_S        0
+-- 
+1.6.3.3
 
-There are still some cases that the NULL check needs to be done at the first place. For example,
-
-
-/* the caller function */
-enum mwifiex_status mwifiex_prepare_cmd(struct mwifiex_private *priv,
-                u16 cmd_no, u16 cmd_action, u32 cmd_oid,
-		    void *ioctl_buf, void *data_buf)
-
-	......
-
-      cmd_node = mwifiex_get_cmd_node(adapter);
-
-      if (cmd_node == NULL) {
-              PRINTM(MERROR, "PREP_CMD: No free cmd node\n");
-              ret = MWIFIEX_STATUS_FAILURE;
-              goto done;
-      }
-	/*
-	  Here the cmd_node is allocated and the NULL check is preformed
-        immediately. If the pointer is NULL then the error code is
-	  returned for proper handling.
-	*/
-
-
-	/*
-	  Now cmd_node is passed to the callee as a parameter
- 	*/
-      mwifiex_init_cmd_node(priv, cmd_node, cmd_oid, ioctl_buf,
-                              data_buf);
-
-	......
-}
-
-/* the callee function */
-static void mwifiex_init_cmd_node(struct mwifiex_private *priv,
-                      struct cmd_ctrl_node *cmd_node,
-                      u32 cmd_oid, void *ioctl_buf, void *data_buf)
-{
-      ENTER();
-
--	if (cmd_node == NULL) {
--		LEAVE();
--		return;
--	}
--
-	/*
-	  Here it is redundant to check it again since the cmd_node
-        has already been validated by the caller. 
-	*/
-
-      cmd_node->priv = priv;
-      cmd_node->cmd_oid = cmd_oid;
-      cmd_node->ioctl_buf = ioctl_buf;
-
-	......
-}
-
-> 
-> This should also make the driver more robust as failures can be passed
-> up the stack to places that can deal with them more effectively than
-> just printing a message.
-
-I could have misunderstood your point, however. If so, could you please explain a little bit more on how you would make the changes based on above example?
-
-Thanks in advance for your help!
-
-Bing
-
-> 
-> Thanks,
-> 
-> --
-> 
-> Julian Calaby
-> 
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
