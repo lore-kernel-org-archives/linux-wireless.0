@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.resortinternet.net ([65.114.208.136]:42873 "EHLO
-	smtp.resortinternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754680Ab1AKAVL (ORCPT
+Received: from w1.fi ([128.177.27.249]:36311 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754424Ab1A0AUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 19:21:11 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 2/4] ath9k: fix initial sequence number after starting an ampdu session
-Date: Mon, 10 Jan 2011 17:05:48 -0700
-Message-Id: <1294704350-50621-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1294704350-50621-1-git-send-email-nbd@openwrt.org>
-References: <1294704350-50621-1-git-send-email-nbd@openwrt.org>
+	Wed, 26 Jan 2011 19:20:43 -0500
+Date: Thu, 27 Jan 2011 02:20:34 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta
+ connection
+Message-ID: <20110127002034.GA18234@jm.kir.nu>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+ <1295156534-4178-3-git-send-email-arik@wizery.com>
+ <1296077594.3635.40.camel@jlt3.sipsolutions.net>
+ <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
+ <1296078857.3635.41.camel@jlt3.sipsolutions.net>
+ <AANLkTikno8Aa3wKy1js62D3FLOZJUxPyuwYsQd+g8JBM@mail.gmail.com>
+ <1296079719.3635.47.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1296079719.3635.47.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-txtid->seq_start may not always be up to date, when there is HT non-AMPDU
-traffic just before starting an AMPDU session. Relying on txtid->seq_next
-is better, since it is also used to generate the sequence numbers for
-all QoS data frames.
+On Wed, Jan 26, 2011 at 11:08:39PM +0100, Johannes Berg wrote:
+> If we add the station before the response frame's ACK is received, we
+> still have the race, and we need to delete if we don't get the ACK. If
+> we add the station before we send the assoc response we get rid of this
+> race, but also have to delete if we don't get the ACK. I guess that case
+> is actually nicer in some way since we would have allowed the station to
+> connect, so if spurious data frames go up because we don't get an ACK
+> from the station that's no big deal?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>From the correctness view point, the STA entry would need to be enabled
+(added/marked associated) at the moment the ACK frame is received. Since
+we do some internal processing between kernel and user space, there is
+obviously some latency involved. The most correct mechanism would be to
+make hostapd add a not-associated-STA entry before sending association
+response with status code 0 and request mac80211 to mark it associated
+automatically on TX status report (showing success) from the driver.
+However, for practical purposes, that may be too complex and doing what
+you describe above is likely good enough.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 1adfebc..6ddba4b 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -856,7 +856,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 
- 	txtid->state |= AGGR_ADDBA_PROGRESS;
- 	txtid->paused = true;
--	*ssn = txtid->seq_start;
-+	*ssn = txtid->seq_start = txtid->seq_next;
- 
- 	return 0;
- }
 -- 
-1.7.3.2
-
+Jouni Malinen                                            PGP id EFC895FA
