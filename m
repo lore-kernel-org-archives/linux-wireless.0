@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:51451 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab1AEQUh (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:63997 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240Ab1A0OjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 11:20:37 -0500
-Received: by pxi15 with SMTP id 15so2776531pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 08:20:36 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 27 Jan 2011 09:39:20 -0500
+Received: by vws16 with SMTP id 16so737828vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 06:39:19 -0800 (PST)
+Message-ID: <4D4183BD.3060609@lwfinger.net>
+Date: Thu, 27 Jan 2011 08:39:57 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19748.39483.90936.674269@gargle.gargle.HOWL>
-Date: Wed, 5 Jan 2011 21:50:11 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sujith <m.sujith@gmail.com>, Jouni.Malinen@atheros.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] cfg80211: Add HT BSS attributes
-In-Reply-To: <1294243338.3590.11.camel@jlt3.sipsolutions.net>
-References: <19748.37551.23627.698571@gargle.gargle.HOWL>
-	<1294243338.3590.11.camel@jlt3.sipsolutions.net>
+To: raghunathan.kailasanathan@wipro.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: unable to put RTL8192SU in master mode
+References: <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D579@BLR-SJP-MB02.wipro.com>
+In-Reply-To: <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D579@BLR-SJP-MB02.wipro.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2011-01-05 at 21:17 +0530, Sujith wrote:
-> > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> > 
-> > Add two new per-BSS attributes to allow configuration of
-> > HT capabilites and operational parameters by hostapd.
-> 
-> Looks fine, but
-> 
-> > @@ -2597,6 +2597,12 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
-> >  	if (info->attrs[NL80211_ATTR_BSS_HT_OPMODE])
-> >  		params.ht_opmode =
-> >  			nla_get_u16(info->attrs[NL80211_ATTR_BSS_HT_OPMODE]);
-> > +	if (info->attrs[NL80211_ATTR_BSS_HT_CAPAB])
-> > +		params.ht_capab =
-> > +			nla_get_u16(info->attrs[NL80211_ATTR_BSS_HT_CAPAB]);
-> > +	if (info->attrs[NL80211_ATTR_BSS_HT_PARAM])
-> > +		params.ht_param =
-> > +			nla_get_u8(info->attrs[NL80211_ATTR_BSS_HT_PARAM]);
-> >  
-> >  	if (!rdev->ops->change_bss)
-> >  		return -EOPNOTSUPP;
-> 
-> This appears to be missing a -1 initialisation?
+On 01/27/2011 07:31 AM, raghunathan.kailasanathan@wipro.com wrote:
+> Hi folks,
+> I have a USB dongle with realtek 8192SU wireless chipset and am using the 8712u linux driver.
 
-Will fix.
+The driver from the Realtek web site is named 8712u, and the one in the kernel
+staging tree (2.6.37 and later) is called r8712u. Which one are you using? They
+are not the same.
 
-Sujith
+> Since this driver is not mac80211 compliant I am using iwconfig to change the mode to "master". Though this
+> command successfully changes the mode I am unable to connect to this AP from another station, even using
+> unsecured method. It does not even show up in the station scan list.  Are there some other params I need to 
+> set using iwconfig ?
+> 
+> Or is the 8712u driver not supporting master mode "sufficiently" enough ?...in which case is some latest
+> driver available for this thing?
+
+Master mode with r8712u has not been tested. The driver I started with has a
+configuration parameter that enables "AP mode". I kept that in, but I do not
+know if it works.
+
+Larry
+
