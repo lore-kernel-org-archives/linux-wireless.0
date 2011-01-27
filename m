@@ -1,156 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:10046 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752167Ab1AGUW1 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50704 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291Ab1A0IVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 15:22:27 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 12:22:09 -0800
-Date: Fri, 7 Jan 2011 12:22:24 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Aleksandar Milivojevic <alex@milivojevic.org>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Wolfgang Kufner <wolfgang.kufner@gmail.com>,
-	Luis Correia <buga@loide.net>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [rt2x00-users] Linksys WUSB600N v1 disconnecting from AP
-Message-ID: <20110107202224.GI21588@tux>
-References: <AANLkTik0uZBVOCnA__UHZLDtw+NNWqK-sEBf1XnyYGYV@mail.gmail.com>
- <AANLkTin8JO4UHUYLufSmPhRw0ZndDdjTpueSOHNQbDiZ@mail.gmail.com>
- <20110107024432.GC20431@tux>
- <201101071111.17423.helmut.schaa@googlemail.com>
- <AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTi=cxggOG6xkVQqJ9S+ieg8LD43TSVEYAJW7YFrk@mail.gmail.com>
+	Thu, 27 Jan 2011 03:21:30 -0500
+Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta
+ connection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+In-Reply-To: <20110127002034.GA18234@jm.kir.nu>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+	 <1295156534-4178-3-git-send-email-arik@wizery.com>
+	 <1296077594.3635.40.camel@jlt3.sipsolutions.net>
+	 <AANLkTinwt64DRvMT5E5+o9a4co0LzdxJ+c1c9DUOWOZe@mail.gmail.com>
+	 <1296078857.3635.41.camel@jlt3.sipsolutions.net>
+	 <AANLkTikno8Aa3wKy1js62D3FLOZJUxPyuwYsQd+g8JBM@mail.gmail.com>
+	 <1296079719.3635.47.camel@jlt3.sipsolutions.net>
+	 <20110127002034.GA18234@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Jan 2011 09:21:25 +0100
+Message-ID: <1296116485.3622.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 07, 2011 at 11:46:48AM -0800, Aleksandar Milivojevic wrote:
-> On Fri, Jan 7, 2011 at 2:11 AM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Am Freitag, 7. Januar 2011 schrieb Luis R. Rodriguez:
-> >> On Thu, Jan 06, 2011 at 08:31:22AM -0800, Aleksandar Milivojevic wrote:
-> >> > Playing with it a bit more this morning.  Looks like the connection
-> >> > from wireless adapter to my AP drops periodically.  Sometimes it
-> >> > recovers (sometimes after several attempts), sometimes it does not.
-> >> > Seems to be very random:
-> >> >
-> >> > # egrep 'authent|associat' /var/log/debug
-> >> > Jan  6 08:00:54 toporko kernel: [   47.570810] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:00:54 toporko kernel: [   47.571321] wlan0: authenticated
-> >> > Jan  6 08:00:56 toporko kernel: [   49.174175] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:00:56 toporko kernel: [   49.175536] wlan0: associated
-> >> > Jan  6 08:06:01 toporko kernel: [  354.230874] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:06:01 toporko kernel: [  354.231364] wlan0: authenticated
-> >> > Jan  6 08:06:01 toporko kernel: [  354.236066] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:06:01 toporko kernel: [  354.236865] wlan0: associated
-> >> > Jan  6 08:09:36 toporko kernel: [  569.868923] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:09:36 toporko kernel: [  569.869416] wlan0: authenticated
-> >> > Jan  6 08:09:36 toporko kernel: [  569.873736] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:09:36 toporko kernel: [  569.874507] wlan0: associated
-> >> > Jan  6 08:09:46 toporko kernel: [  579.233563] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:09:46 toporko kernel: [  579.235574] wlan0: authenticated
-> >> > Jan  6 08:09:46 toporko kernel: [  579.240737] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:09:46 toporko kernel: [  579.241518] wlan0: associated
-> >> > Jan  6 08:09:57 toporko kernel: [  590.830933] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:09:57 toporko kernel: [  590.831435] wlan0: authenticated
-> >> > Jan  6 08:09:57 toporko kernel: [  590.839102] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:09:57 toporko kernel: [  590.839881] wlan0: associated
-> >> > Jan  6 08:21:29 toporko kernel: [ 1282.823289] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:21:29 toporko kernel: [ 1282.823783] wlan0: authenticated
-> >> > Jan  6 08:21:29 toporko kernel: [ 1282.828990] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:21:29 toporko kernel: [ 1282.830132] wlan0: associated
-> >> > Jan  6 08:25:30 toporko kernel: [ 1523.433931] wlan0: authenticate
-> >> > with 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:25:30 toporko kernel: [ 1523.434930] wlan0: authenticated
-> >> > Jan  6 08:25:30 toporko kernel: [ 1523.439868] wlan0: associate with
-> >> > 00:1e:52:79:e9:ff (try 1)
-> >> > Jan  6 08:25:30 toporko kernel: [ 1523.440652] wlan0: associated
-> >> >
-> >> > So far, it managed to re-connect every time.  Though, I'm rather sure
-> >> > if I leave it long enough, the last night's case of connection dropped
-> >> > completely would repeat sooner or later (even last night, there were
-> >> > some connect/disconnect events before connection was dropped
-> >> > permanently).
-> >> >
-> >> > The AP reports signal from wireless card between -70 and -75dB, noise
-> >> > at -96dB, and speed at 120mbps (with occasional drop to 45mbps).
-> >> > These numbers sound about OK for the location (on the other side of my
-> >> > apartment, few walls in between).  For comparison, if I position my
-> >> > MacBook at same location (right next to my Linux box), AP reports
-> >> > signal from its AirPort card at about -60dB and speed in about 100mbps
-> >> > range and no drops.
-> >>
-> >> The Linux regulatory code only relies on the Country IE from the AP you
-> >> decide to associate to, that's it. Then, as for all the regulatory stuff
-> >> popping out once you are associated, its happening because as I see it
-> >> you are being disconnected from the AP. The Linux regulatory code will
-> >> reset the regulatory settings after you disconnect from an AP.
-> >>
-> >> The disconnect issues should not be regularory related from what I see.
-> >> Seems like a general disconnect issue with your driver.
-> >
-> > Sounds reasonable. Thanks for the update Luis. So, it's more likely a
-> > rt2x00 or mac80211 issue.
+On Thu, 2011-01-27 at 02:20 +0200, Jouni Malinen wrote:
+> On Wed, Jan 26, 2011 at 11:08:39PM +0100, Johannes Berg wrote:
+> > If we add the station before the response frame's ACK is received, we
+> > still have the race, and we need to delete if we don't get the ACK. If
+> > we add the station before we send the assoc response we get rid of this
+> > race, but also have to delete if we don't get the ACK. I guess that case
+> > is actually nicer in some way since we would have allowed the station to
+> > connect, so if spurious data frames go up because we don't get an ACK
+> > from the station that's no big deal?
 > 
-> I'd put my vote there too, probably hitting some corner case or
-> something specific to either WUSB600N or Airport Extreme or
-> combination of the two.  I'd be glad to help debug the issue, and if
-> you need any info just give me a shout what to do, what to try out,
-> and/or what to look for.
-> 
-> There was huge improvement in rt2x00 regarding support for Linksys
-> WUSB600N over the last half a year or so.  Until several months ago,
-> using rt2x00 driver, I wasn't able to connect to my AP at all (I would
-> see the list of networks, but would not be able to connect to any of
-> them).  The version from 2.6.35 kernel would connect for short period
-> of time, but speed was abysmal (in order of few kB/sec), and
-> connection would be completely dropped within minutes.  With the
-> latest version of driver (compiled from comapt-wireless tarball), I'm
-> getting good transfer speeds, and connection to my AP is mostly up
-> (there's some flapping every few minutes, as you can see from logs).
-> In the last two days, there was only one occurrence where connection
-> to my AP was dropped and driver failed to re-connect.
+> From the correctness view point, the STA entry would need to be enabled
+> (added/marked associated) at the moment the ACK frame is received. Since
+> we do some internal processing between kernel and user space, there is
+> obviously some latency involved. The most correct mechanism would be to
+> make hostapd add a not-associated-STA entry before sending association
+> response with status code 0 and request mac80211 to mark it associated
+> automatically on TX status report (showing success) from the driver.
+> However, for practical purposes, that may be too complex and doing what
+> you describe above is likely good enough.
 
-You may want to try checing the 'iw event -t' output while the issue happens.
-Maybe it is due to a roaming issue, if you are using a large BSS and roam
-in between you may want to try using wpa_supplicant with nl80211 and use
-the new bgscan module from wpa_supplicant to trigger you to only switch
-based on triggered events from nl80211 like signal rssi changes.
+It's possible to do that as well -- but do we want to change any of
+this? It might be good, but it's mostly a hostapd change I think?
 
-Here is an example supplicant conf that uses the bgscan module:
+johannes
 
-# WPA-PSK/TKIP
-
-ctrl_interface=/var/run/wpa_supplicant
-
-network={
-        ssid="my-corp-cool-bss"
-        bgscan="simple:30:-45:300"
-        key_mgmt=WPA-PSK
-        proto=RSN
-        pairwise=CCMP
-        group=CCMP
-        psk="foobar_is_great"
-}
-
-No Linux distributions today uses this other than ChromeOS, but they should
-all change to use it.
-
-  Luis
