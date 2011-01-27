@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:58065 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753562Ab1AXSo7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58510 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017Ab1A0Nek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 13:44:59 -0500
-Received: by ywe10 with SMTP id 10so1008480ywe.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 10:44:58 -0800 (PST)
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: brudley@broadcom.com, henryp@broadcom.com, dowan@broadcom.com,
-	vossen@broadcom.com, arend@broadcom.com
+	Thu, 27 Jan 2011 08:34:40 -0500
+Subject: Re: Question on power-save
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] brcm80211: fix error report string
-Date: Mon, 24 Jan 2011 16:45:23 -0200
-Message-Id: <1295894723-28346-1-git-send-email-padovan@profusion.mobi>
+In-Reply-To: <4D40C122.9020402@candelatech.com>
+References: <4D40C122.9020402@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Jan 2011 14:34:38 +0100
+Message-ID: <1296135278.3622.38.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
----
- drivers/staging/brcm80211/sys/wlc_mac80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Wed, 2011-01-26 at 16:49 -0800, Ben Greear wrote:
+> I was looking at this ps_enable method:
+> 
+> static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
 
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index 5eb41d6..ee1bcc5 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -6910,7 +6910,7 @@ prep_mac80211_status(struct wlc_info *wlc, d11rxhdr_t *rxh, struct sk_buff *p,
- 		preamble = 0;
- 		if (IS_CCK(rspec)) {
- 			if (rxh->PhyRxStatus_0 & PRXS0_SHORTH)
--				WL_ERROR("Short CCK\n");
-+				WL_ERROR("%s: Short CCK\n, __func__");
- 			rx_status->flag |= RX_FLAG_SHORTPRE;
- 		} else if (IS_OFDM(rspec)) {
- 			rx_status->flag |= RX_FLAG_SHORTPRE;
--- 
-1.7.4.rc2
+If you read the comment in front of the function, is it clearer?
+
+Yes, it disables PS locally, but it tells the AP we've gone to PS.
+
+johannes
 
