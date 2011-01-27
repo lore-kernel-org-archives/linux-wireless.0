@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44701 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391Ab1AWJGm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37179 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab1A0VPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 04:06:42 -0500
-Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via
- wext when possible
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Fertser <fercerpav@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas d'Otreppe <tdotreppe@gmail.com>,
-	Richard Farina <sidhayn@gmail.com>
-In-Reply-To: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
-References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 23 Jan 2011 10:06:39 +0100
-Message-ID: <1295773599.3639.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 27 Jan 2011 16:15:12 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1PiZBP-0000wN-70
+	for linux-wireless@vger.kernel.org; Thu, 27 Jan 2011 16:15:11 -0500
+Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p0RL9sXJ029024
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 16:09:54 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id p0RL9rsI029023
+	for linux-wireless@vger.kernel.org; Thu, 27 Jan 2011 16:09:53 -0500
+Date: Thu, 27 Jan 2011 16:09:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-next-2.6 rebased from
+ b4e69ac670d71b5748dc81e536b2cb103489badd
+Message-ID: <20110127210953.GB2271@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
-> This makes it possible to retrieve the channel for the monitor interface
-> in cases when it can be determined unambigously. Tested with ath5k.
+I rebased wireless-next-2.6 to drop a patch that I should have merged
+through the fixes track.  I just merged it yesterday, so if you haven't
+pulled in the last day or so (i.e. you don't have anything beyond
+commit b4e69ac670d71b5748dc81e536b2cb103489badd) you should be fine.
 
-NAK.
+Otherwise, I apologize for the inconvenience to Gustavo, Luca, Wey-yi,
+and whomever else might be following wireless-next-2.6 directly.
 
-http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
