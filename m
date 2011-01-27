@@ -1,71 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f66.google.com ([209.85.161.66]:62918 "EHLO
-	mail-fx0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893Ab1AJWj6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 17:39:58 -0500
-Received: by fxm14 with SMTP id 14so5890960fxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 14:39:57 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Chris Pechard <chrispechard@yahoo.com>
-Subject: Re: carl9170: RX and TX interrupt callback ?
-Date: Mon, 10 Jan 2011 23:39:39 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20101201211128.GC16125@vigoh> <907295.15255.qm@web120203.mail.ne1.yahoo.com>
-In-Reply-To: <907295.15255.qm@web120203.mail.ne1.yahoo.com>
+Received: from dell.nexicom.net ([216.168.96.13]:57344 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751707Ab1A0Rib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 12:38:31 -0500
+Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-36.nexicom.net [216.168.118.36])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p0RHcMIk009114
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 12:38:25 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id 36B0098517
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 12:38:22 -0500 (EST)
+Message-ID: <4D41AD8E.5040500@lockie.ca>
+Date: Thu, 27 Jan 2011 12:38:22 -0500
+From: James <bjlockie@lockie.ca>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101102339.39965.chunkeey@googlemail.com>
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Unspecified failure
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 January 2011 22:24:18 Chris Pechard wrote:
-> I am trying to do time measurement using carl9170 firmware side. There was some 
-> interesting previous thread about clock to be used and location of the probe in 
-> the code. My goal is to get a precise time from the moment a packet has been 
-> transmitted (timestamp when the packet has been transmitted) and the arrival of 
-> the next received packet (time when a packet has been fully received). Looking 
-> though the code, there is a loop in src/main.c handling the TX/RX interrupt by 
-> reading the AR9170_MAC_REG_INT_CTRL register and checking the 
-> AR9170_MAC_INT_TXC/RXC bits. Pending on task to be performed in the loop, it 
-> could take tens of microseconds to go through one iteration which affects the 
-> measurement and resulting in having RXC timestamp smaller than TXC timestamp 
-> which is clearly an issue!
-are you sure, you put the right code in the right place :-D .
-I've posted code for the same idea a while ago [on this mailing-list] and I
-can't remember anything that weird.
- 
-> My current workaround is to add many check to AR9170_MAC_REG_INT_CTRL in the 
-> main loop to reduce the detection latency which at least gave me better results 
-> (TXC time < RXC time ) but somehow it does not seem AR9170_MAC_REG_INT_CTRL 
-> register is refreshed right away when a packet is received or transmitted. I 
-> would like to know if there is any way to attach a callback function  to the RXC 
-> or TXC interrupt so that we get immediate notification  instead of depending on 
-> a polling method.
-Oh it is, or it should be easy to get an interrupt event from the MAC processor.
-You just have to look through the SH2 platform docs [which are freely available
-from Reneas] and setup the interrupt controller accordingly.
+How can I find out what the "Unspecified failure" is?
 
-If you're stuck and need advice on the f/irq topic, you should definitely ask
-Stephen Chen <Stephen.Chen@atheros.com> for assistance. As he's one of the
-few persons who know how it works. I certainly can't...
 
-Good Luck!
-> If not, is there any way to minimize delays between the time 
-> a packet is sent/received and the TXC/RXC bit flag raised in the register?
-Don't forget the 802.11 is working against you.
-CSMA/CA with R/S/D/P/E/IFS, [random] backoff, dynamic ACK delays and 
-so much more can really spoil the day, if you are not aware that it's
-there. 
+$ sudo iw --debug dev wlan1 connect -w "test"     
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE
+---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 164
+    .nlmsg_type = 18 <0x12>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 0
+    .nlmsg_pid = 0
+  [PAYLOAD] 148 octets
+    21 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 !.................
+    00 00 0c 00 2d 00 08 00 00 00 74 65 73 74 74 00 2c 00 ....-.....testt.,.
+    08 00 00 00 6c 09 00 00 08 00 01 00 71 09 00 00 08 00 ....l.......q.....
+    02 00 76 09 00 00 08 00 03 00 7b 09 00 00 08 00 04 00 ..v.......{.......
+    80 09 00 00 08 00 05 00 85 09 00 00 08 00 06 00 8a 09 ..................
+    00 00 08 00 07 00 8f 09 00 00 08 00 08 00 94 09 00 00 ..................
+    08 00 09 00 99 09 00 00 08 00 0a 00 9e 09 00 00 08 00 ..................
+    0b 00 a3 09 00 00 08 00 0c 00 a8 09 00 00 08 00 0d 00 ..................
+    b4 09 00 00                                           ....
+---------------------------  END NETLINK MESSAGE  
+---------------------------
+-- Error: Invalid message: type=0x12 length=164 flags=<> sequence-nr=0 pid=0
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE
+---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 36
+    .nlmsg_type = 2 <ERROR>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 1296149664
+    .nlmsg_pid = 2927
+  [ERRORMSG] 20 octets
+    .error = 0 "Success"
+  [ORIGINAL MESSAGE] 16 octets
+    .nlmsg_len = 16
+    .nlmsg_type = 18 <0x12>
+    .nlmsg_flags = 5 <REQUEST,ACK>
+    .nlmsg_seq = 1296149664
+    .nlmsg_pid = 2927
+---------------------------  END NETLINK MESSAGE  
+---------------------------
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE
+---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 164
+    .nlmsg_type = 18 <0x12>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 0
+    .nlmsg_pid = 0
+  [PAYLOAD] 148 octets
+    22 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 ".................
+    00 00 0c 00 2d 00 08 00 00 00 74 65 73 74 74 00 2c 00 ....-.....testt.,.
+    08 00 00 00 6c 09 00 00 08 00 01 00 71 09 00 00 08 00 ....l.......q.....
+    02 00 76 09 00 00 08 00 03 00 7b 09 00 00 08 00 04 00 ..v.......{.......
+    80 09 00 00 08 00 05 00 85 09 00 00 08 00 06 00 8a 09 ..................
+    00 00 08 00 07 00 8f 09 00 00 08 00 08 00 94 09 00 00 ..................
+    08 00 09 00 99 09 00 00 08 00 0a 00 9e 09 00 00 08 00 ..................
+    0b 00 a3 09 00 00 08 00 0c 00 a8 09 00 00 08 00 0d 00 ..................
+    b4 09 00 00                                           ....
+---------------------------  END NETLINK MESSAGE  
+---------------------------
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE
+---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 52
+    .nlmsg_type = 18 <0x12>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 0
+    .nlmsg_pid = 0
+  [PAYLOAD] 36 octets
+    25 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 %.................
+    00 00 04 00 41 00 0a 00 06 00 00 18 3f b6 7d 69 00 00 ....A.......?.}i..
+---------------------------  END NETLINK MESSAGE  
+---------------------------
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE
+---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 56
+    .nlmsg_type = 18 <0x12>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 0
+    .nlmsg_pid = 0
+  [PAYLOAD] 40 octets
+    2e 01 00 00 08 00 01 00 00 00 00 00 08 00 03 00 03 00 ..................
+    00 00 0a 00 06 00 00 18 3f b6 7d 69 00 00 06 00 48 00 ........?.}i....H.
+    01 00 00 00                                           ....
+---------------------------  END NETLINK MESSAGE  
+---------------------------
+wlan1 (phy #0): failed to connect to 00:18:3f:b6:7d:69, status: 1:
+Unspecified failure
 
-Furthermore, have you tried to contact the people behind similar projects?
-	Ignacy Gawedzki <i@lri.fr>
-	David H. Lynch Jr. <dhlii@dlasys.net>
-
-Especially David, since it seems that he's done with it.
-
-Best Regards,
-	Chr
-
-PS.: you could also go a different route with OpenFWWF.
