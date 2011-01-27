@@ -1,87 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:59483 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131Ab1AQRUd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 12:20:33 -0500
-Received: by wyb28 with SMTP id 28so5317387wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 09:18:52 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: free firmware after booting the chip
-Date: Mon, 17 Jan 2011 19:17:55 +0200
-Message-Id: <1295284675-30029-1-git-send-email-eliad@wizery.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:45929 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751734Ab1A0XMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 18:12:17 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+Date: Fri, 28 Jan 2011 00:11:50 +0100
+Cc: Kevin Hilman <khilman@ti.com>, "Ohad Ben-Cohen" <ohad@wizery.com>,
+	linux-pm@lists.linux-foundation.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>
+References: <Pine.LNX.4.44L0.1101271158530.2090-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1101271158530.2090-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101280011.50602.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to save the fw in memory after it has been
-uploaded to the chip.
+On Thursday, January 27, 2011, Alan Stern wrote:
+> On Wed, 26 Jan 2011, Kevin Hilman wrote:
+> 
+> > >> Consider this instead:  Since A is required to be functional before B
+> > >> can be used, A must be registered before B and hence B gets suspended
+> > >> before A.  Therefore during the prepare phase we can runtime-resume A
+> > >> and leave it powered up; when B needs to suspend, it won't matter that
+> > >> the runtime-PM calls are ineffective.
+> > >
+> > > We don't really need to do that, because the runtime resume _is_ functional
+> > > during system suspend.
+> 
+> Not asynchronous runtime resume, because the workqueue is frozen.  But 
+> that's not the issue here.
+> 
+> > >  The only thing missing is a ->suspend() callback for A
+> > > (and a corresponding ->resume() callback to make sure A will be available to
+> > > B during system resume).
+> > >
+> > 
+> > OK, I'm finally back to debugging this problem and looking for a final
+> > solution.
+> > 
+> > I agree that what is needed is ->suspend() and ->resume() callbacks for
+> > A, but the question remains how to implement them.
+> > 
+> > In my case, A doesn't need runtime callbacks, but *does* require that
+> > the subsystem callbacks are called because the subsystem actually does
+> > all the real PM work.  On OMAP, the device PM code (clock mgmt, device
+> > low-power states, etc.) is common for all on-chip devices, so is handled
+> > in common code at the subsystem level (in this case, platform_bus.)
+> > 
+> > Therefore, what is ideally needed is the ability for A's suspend to
+> > simply call pm_runtime_suspend() so the subsystem can do the work.
+> > However, since runtime transitions are locked out by this time, that
+> > doesn't work.  IOW, what is needed is a way for a system suspend to say
+> > "please finish the runtime suspend that was already requested."
+> 
+> Calling the runtime_suspend method directly is the way to do it.
+> 
+> > What I've done to work around this in driver A is to manually check
+> > pm_runtime_suspended() and directly call the subsystem's runtime
+> > suspend/resume (patch below[1].  NOTE, I've used the _noirq methods to
+> > ensure device A is available when device B needs it.)
+> 
+> Hmm.  The pm_runtime_suspended() check may not be needed (if A were
+> suspended already then B would have encountered problems).  But
+> including it doesn't hurt.
+> 
+> Using the _noirq method isn't a good idea, unless you know for certain 
+> that the runtime_suspend handler doesn't need to sleep.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+That requirement is long gone, because timer interrupts are still enabled
+when the _noirq() callbacks are run.  The _noirq part means that the driver's
+own interrupt handler is guaranteed not to run concurrently with the routines
+(unless this also is a timer interrupt, that is).
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8a35491..e1944b1 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -691,7 +691,6 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	vfree(wl->fw);
- 	wl->fw_len = fw->size;
- 	wl->fw = vmalloc(wl->fw_len);
- 
-@@ -891,7 +890,7 @@ int wl1271_plt_start(struct wl1271 *wl)
- 		wl->state = WL1271_STATE_PLT;
- 		wl1271_notice("firmware booted in PLT mode (%s)",
- 			      wl->chip.fw_ver);
--		goto out;
-+		goto out_free_fw;
- 
- irq_disable:
- 		wl1271_disable_interrupts(wl);
-@@ -911,6 +910,9 @@ power_off:
- 
- 	wl1271_error("firmware boot in PLT mode failed despite %d retries",
- 		     WL1271_BOOT_RETRIES);
-+out_free_fw:
-+	vfree(wl->fw);
-+	wl->fw = NULL;
- out:
- 	mutex_unlock(&wl->mutex);
- 
-@@ -1126,7 +1128,7 @@ power_off:
- 	if (!booted) {
- 		wl1271_error("firmware boot failed despite %d retries",
- 			     WL1271_BOOT_RETRIES);
--		goto out;
-+		goto out_free_fw;
- 	}
- 
- 	wl->vif = vif;
-@@ -1148,6 +1150,9 @@ power_off:
- 	wl1271_debug(DEBUG_MAC80211, "11a is %ssupported",
- 		     wl->enable_11a ? "" : "not ");
- 
-+out_free_fw:
-+	vfree(wl->fw);
-+	wl->fw = NULL;
- out:
- 	mutex_unlock(&wl->mutex);
- 
-@@ -3300,8 +3305,6 @@ int wl1271_free_hw(struct wl1271 *wl)
- 
- 	wl1271_debugfs_exit(wl);
- 
--	vfree(wl->fw);
--	wl->fw = NULL;
- 	kfree(wl->nvs);
- 	wl->nvs = NULL;
- 
--- 
-1.7.0.4
-
+Rafael
