@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:41044 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753127Ab1ARBGJ (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:60202 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752286Ab1A0TtC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 20:06:09 -0500
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0768152766
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 10:06:07 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Brian Prodoehl <bprodoehl@gmail.com>
-Subject: Re: [PATCH 2] cfg80211: Extend channel to frequency mapping for 802.11j
-Date: Tue, 18 Jan 2011 10:06:17 +0900
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	gwingerde@gmail.com, dcbw@redhat.com,
-	linux-wireless@vger.kernel.org
-References: <20110117043728.8024.13541.stgit@localhost6.localdomain6> <AANLkTinx+wFDFnDrxrBS5T=RqvZgRLxFOeeibrLxorde@mail.gmail.com>
-In-Reply-To: <AANLkTinx+wFDFnDrxrBS5T=RqvZgRLxFOeeibrLxorde@mail.gmail.com>
+	Thu, 27 Jan 2011 14:49:02 -0500
+Date: Thu, 27 Jan 2011 14:49:01 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Kevin Hilman <khilman@ti.com>
+cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	<linux-pm@lists.linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>
+Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
+In-Reply-To: <87hbcum9rh.fsf@ti.com>
+Message-ID: <Pine.LNX.4.44L0.1101271439020.2090-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101181006.17322.br1@einfach.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue January 18 2011 05:17:31 Brian Prodoehl wrote:
-> Yeah, looks good.  Is it worth noting that none of the drivers
-> actually support the 802.11j channels yet?  
+On Thu, 27 Jan 2011, Kevin Hilman wrote:
 
-I am already using it locally in ath5k. I have it working in 4.9GHz, but i'm 
-not exactly sure in which cases i can enable the 4.9GHz channels. I will send 
-patches after the mac80211 part got merged.
-
-> Not sure of the format of
-> follow-up s-o-b's, so here goes...
+> > Calling the runtime_suspend method directly is the way to do it.
+> >
 > 
-> Signed-off-by: Brian Prodoehl <bprodoehl@gmail.com>
+> Do you mean the driver's runtime_suspend method, or the subsystem's
+> runtime_suspend method?
 
-Not sure, either, but i hope John will pick it up. Thanks!
+The subsystem's.  If the driver has a runtime_suspend method then the 
+subsystem's method will call it.
 
-bruno
+> >> While this works, I'm not crazy about it since it requires the driver
+> >> know about the subsystem (in this case the bus) where the real PM work
+> >> is done.  IMO, it would be much more intuitive (and readable) if the
+> >> driver's suspend hooks could simply trigger a runtime suspend (either a
+> >> new one, or one already requested.)
+> >
+> > This isn't clear to me.  Isn't the driver registered on the bus in 
+> > question?  Can't the driver therefore call the bus's runtime_suspend 
+> > routine directly, instead of dereferencing the bus->pm->runtime_suspend 
+> > pointer?
+> 
+> Not sure what you mean by directly.  The platform_bus doesn't expose
+> its runtime PM methods since they can be customized at runtime, so they
+> have to be called via bus->pm.
+> 
+> Or do you mean using dev->driver instead of dev->bus?
+
+You're doing all of this for OMAP, right?  What is the subsystem's
+runtime_suspend routine?  Is it omap_pm_runtime_suspend()?
+
+If it is, then you can call omap_pm_runtime_suspend() directly instead
+of calling dev->bus->pm->runtime_suspend().
+
+Alan Stern
+
