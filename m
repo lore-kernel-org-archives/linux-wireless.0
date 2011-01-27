@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40986 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856Ab1AUDAC (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:40156 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734Ab1A0Qsj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:00:02 -0500
-Received: by mail-iy0-f174.google.com with SMTP id 18so1245111iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:00:02 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 27 Jan 2011 11:48:39 -0500
+Received: by vws16 with SMTP id 16so835983vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 08:48:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63108.720163.333915@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:29:16 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 02/33] ath9k_htc: Unify target capability updation
+In-Reply-To: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+Date: Thu, 27 Jan 2011 11:48:38 -0500
+Message-ID: <AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+2011/1/27 Rafał Miłecki <zajec5@gmail.com>:
+> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
+> inserted into PC.  Unfortunately after inserting my Broadcom card to
+> it, it is not detected in "lspci" at all.
+>
+> My WiFi card used to work in "native" slot inside notebook. So if
+> anything is broken, that would be PCIe x1 slot on motherboard or
+> adapter itself. I've tested V and GND pins in my PCIe x1 slot, all
+> work fine. I'll try get some other WiFi cards, to test my adapter
+> tomorrow.
+>
+> However, maybe you have heard about some problems with such a
+> adapters? Can there be sth preventing my card from being detected,
+> visible?
+>
+> --
+> Rafał
 
-Update capabilites on the target once, when
-start() is called, there is no need for redundant
-updation on adding an interface.
+I haven't tested that sort of thing with PCI-Express, but I had bad
+results with Atheros AR5414-based modules in Mini-PCI to PCI adapters
+like this:
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   19 +++++--------------
- 1 files changed, 5 insertions(+), 14 deletions(-)
+http://www.dealextreme.com/p/mini-pci-to-pci-adapter-with-antenna-9307
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index e8e512a..c960330 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -327,15 +327,6 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
- 
- 	priv->sta_slot |= (1 << sta_idx);
- 	priv->nstations++;
--
--	/*
--	 * Set chainmask etc. on the target.
--	 */
--	ret = ath9k_htc_update_cap_target(priv);
--	if (ret)
--		ath_dbg(common, ATH_DBG_CONFIG,
--			"Failed to update capability in target\n");
--
- 	priv->vif_sta_pos[priv->mon_vif_idx] = sta_idx;
- 	priv->ah->is_monitoring = true;
- 
-@@ -1058,6 +1049,11 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
- 
- 	ath9k_host_rx_init(priv);
- 
-+	ret = ath9k_htc_update_cap_target(priv);
-+	if (ret)
-+		ath_dbg(common, ATH_DBG_CONFIG,
-+			"Failed to update capability in target\n");
-+
- 	priv->op_flags &= ~OP_INVALID;
- 	htc_start(priv->htc);
- 
-@@ -1180,11 +1176,6 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out;
- 
--	ret = ath9k_htc_update_cap_target(priv);
--	if (ret)
--		ath_dbg(common, ATH_DBG_CONFIG,
--			"Failed to update capability in target\n");
--
- 	priv->ah->opmode = vif->type;
- 	priv->vif_slot |= (1 << avp->index);
- 	priv->vif = vif;
--- 
-1.7.3.5
+The system either wouldn't boot, or it would boot and the wireless
+card wouldn't show up in lspci, so I gave up on it.
 
+-Brian
