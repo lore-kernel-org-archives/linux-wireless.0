@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755329Ab1AaLYF (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:53887 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752680Ab1A0UDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:24:05 -0500
-Subject: Re: [PATCH v2 06/10] mac80211: add HW flag for disabling auto
- link-PS in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1296472589-26401-7-git-send-email-arik@wizery.com>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
-	 <1296472589-26401-7-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 12:24:03 +0100
-Message-ID: <1296473043.3812.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 27 Jan 2011 15:03:49 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 6AF27540C36
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 15:05:58 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110127200347.A429840F97@repository3.orbit-lab.org>
+Date: Thu, 27 Jan 2011 15:03:47 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It'd be nicer if you could separate out mac80211 patches, but then Luca
-needs to hold off merging until John picked up the mac80211 patch.
 
-> + * @IEEE80211_HW_AP_LINK_PS: When operating in AP mode the device
-> + *	autonomously manages the PS status of connected stations. When
-> + *	this flag is set mac80211 will not trigger PS mode for connected
-> + *	stations based on the PM bit of incoming frames.
-> + *	Use ieee80211_start_ps()/ieee8021_end_ps() to manually configure
-> + *	the PS mode of connected stations.
+compat-wireless code metrics
 
-You just renamed it.
+    782984 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1982 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1955 - % of crap code
 
-Also, come to think of it, the ieee80211_sta_block_awake will not be
-effective I think? Or will it?
-
-johannes
-
+Base tree: linux-next.git
+Base tree version: next-20110121
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
