@@ -1,65 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f66.google.com ([209.85.214.66]:47007 "EHLO
-	mail-bw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441Ab1AJTSx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 14:18:53 -0500
-Received: by bwz7 with SMTP id 7so7270059bwz.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 11:18:51 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Locking problem reported for mainline
-Date: Mon, 10 Jan 2011 20:18:35 +0100
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <4D2A9309.7000500@lwfinger.net> <201101101913.17311.chunkeey@googlemail.com> <4D2B59EA.4000200@lwfinger.net>
-In-Reply-To: <4D2B59EA.4000200@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:10254 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753532Ab1A0JPX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 04:15:23 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 01:15:03 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <vnatarajan@atheros.com>
+Subject: [PATCH 1/5] ath9k_hw: Add a function to read sqsum_dvc.
+Date: Thu, 27 Jan 2011 14:45:07 +0530
+Message-ID: <1296119711-4024-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101102018.35232.chunkeey@googlemail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 January 2011 20:11:38 Larry Finger wrote:
-> On 01/10/2011 12:13 PM, Christian Lamparter wrote:
-> > Does this patch help?
-> > 
-> > ---
-> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> > index a6701ed..8f13a83 100644
-> > --- a/net/mac80211/rx.c
-> > +++ b/net/mac80211/rx.c
-> 
-> Did not compile. In ieee80211_release_reorder_frame at lines 552 and 554, rx is
-> not defined.
-> 
-Oops,
+Add a function to observe the delta VC of BB_PLL.
+For a good chip, the sqsum_dvc is below 2000.
 
-you are right. Fixed the copy&paste error, so this one should compile.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a6701ed..936b932 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -549,7 +549,9 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
- 	tid_agg_rx->reorder_buf[index] = NULL;
- 	status = IEEE80211_SKB_RXCB(skb);
- 	status->rx_flags |= IEEE80211_RX_DEFERRED_RELEASE;
--	skb_queue_tail(&local->rx_skb_queue, skb);
-+	spin_lock(&local->rx_skb_queue.lock);
-+	__skb_queue_tail(&local->rx_skb_queue, skb);
-+	spin_unlock(&local->rx_skb_queue.lock);
- 
- no_frame:
- 	tid_agg_rx->head_seq_num = seq_inc(tid_agg_rx->head_seq_num);
-@@ -780,7 +782,9 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
- 		return;
- 
-  dont_reorder:
--	skb_queue_tail(&local->rx_skb_queue, skb);
-+	spin_lock(&local->rx_skb_queue.lock);
-+	__skb_queue_tail(&local->rx_skb_queue, skb);
-+	spin_unlock(&local->rx_skb_queue.lock);
+ drivers/net/wireless/ath/ath9k/hw.c  |   13 +++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h  |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h |    6 ++++++
+ 3 files changed, 20 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4615fd9..baa2977 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -671,6 +671,19 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
+ 	REGWRITE_BUFFER_FLUSH(ah);
  }
  
- static ieee80211_rx_result debug_noinline
++unsigned long ar9003_get_pll_sqsum_dvc(struct ath_hw *ah)
++{
++		REG_WRITE(ah, PLL3, (REG_READ(ah, PLL3) & ~(PLL3_DO_MEAS_MASK)));
++		udelay(100);
++		REG_WRITE(ah, PLL3, (REG_READ(ah, PLL3) | PLL3_DO_MEAS_MASK));
++
++		while ((REG_READ(ah, PLL4) & PLL4_MEAS_DONE) == 0)
++			udelay(100);
++
++		return (REG_READ(ah, PLL3) & SQSUM_DVC_MASK) >> 3;
++}
++EXPORT_SYMBOL(ar9003_get_pll_sqsum_dvc);
++
+ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      struct ath9k_channel *chan)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index ad8c2c7..ef79f4c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -929,6 +929,7 @@ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
+ void ath9k_hw_reset_tsf(struct ath_hw *ah);
+ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting);
+ void ath9k_hw_init_global_settings(struct ath_hw *ah);
++unsigned long ar9003_get_pll_sqsum_dvc(struct ath_hw *ah);
+ void ath9k_hw_set11nmac2040(struct ath_hw *ah);
+ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
+ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 4df5659..264aea7 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1129,6 +1129,12 @@ enum {
+ #define AR_RTC_PLL_CLKSEL       0x00000300
+ #define AR_RTC_PLL_CLKSEL_S     8
+ 
++#define PLL3 0x16188
++#define PLL3_DO_MEAS_MASK 0x40000000
++#define PLL4 0x1618c
++#define PLL4_MEAS_DONE    0x8
++#define SQSUM_DVC_MASK 0x007ffff8
++
+ #define AR_RTC_RESET \
+ 	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0040) : 0x7040)
+ #define AR_RTC_RESET_EN		(0x00000001)
+-- 
+1.6.3.3
+
