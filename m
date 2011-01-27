@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54808 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753457Ab1ASTZQ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46445 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753364Ab1A0Nzw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 14:25:16 -0500
-Received: by iwn9 with SMTP id 9so1189908iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 11:25:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1295452063-13828-2-git-send-email-rmanoharan@atheros.com>
-References: <1295452063-13828-1-git-send-email-rmanoharan@atheros.com> <1295452063-13828-2-git-send-email-rmanoharan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 19 Jan 2011 11:24:56 -0800
-Message-ID: <AANLkTimSBJxY0f6G6BLcLbsDySvn6KZQu=Vdj134yZLD@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath9k: Fix power save usage count imbalance on deinit
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 27 Jan 2011 08:55:52 -0500
+Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating
+ channel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4D406A48.7060503@candelatech.com>
+References: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
+	 <1296056188.3635.36.camel@jlt3.sipsolutions.net>
+	 <4D406A48.7060503@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Jan 2011 14:55:51 +0100
+Message-ID: <1296136551.3622.57.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 7:47 AM, Rajkumar Manoharan
-<rmanoharan@atheros.com> wrote:
-> Upon unloading the driver, the ps_usecount is incremented
-> before configuring gpio registers in deinit_device.
-> But it is failed to restore the ps_usecount after that.
-> The problem is that the chip is moved to FULL SLEEP
-> by radio_disable when mac80211 is reporting as idle
-> though ps_usecount is not zero.
->
-> This patch retores ps_usecount properly and ensures that
-> the chip is always moved to full sleep only if ps usage
-> counte is zero which helps in debugging. And also fixes
-> the following warning.
->
-> ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
-> ath: Could not stop RX, we could be confusing the DMA engine when we
-> start RX up
-> ------------[ cut here ]------------
-> WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
-> ath_stoprecv+0xf4/0x100 [ath9k]()
->
-> Cc: stable@kernel.org
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/init.c |    2 ++
->  drivers/net/wireless/ath/ath9k/main.c |    2 --
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 767d8b8..b38c874 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -824,6 +824,8 @@ void ath9k_deinit_device(struct ath_softc *sc)
->        wiphy_rfkill_stop_polling(sc->hw->wiphy);
->        ath_deinit_leds(sc);
->
-> +       ath9k_ps_restore(sc);
-> +
->        for (i = 0; i < sc->num_sec_wiphy; i++) {
->                struct ath_wiphy *aphy = sc->sec_wiphy[i];
->                if (aphy == NULL)
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index c03184e..aff1c72 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -966,8 +966,6 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
->
->        spin_unlock_bh(&sc->sc_pcu_lock);
->        ath9k_ps_restore(sc);
-> -
-> -       ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
+On Wed, 2011-01-26 at 10:39 -0800, Ben Greear wrote:
 
-Are you sure this hunk does not regress the suspend/resume case when
-using the new dbus API?
+> The offchannel_stop_beaconing doesn't actually change
+> state, it just calls
+> 
+>   	ieee80211_bss_info_change_notify(
+> 				sdata, BSS_CHANGED_BEACON_ENABLED);
+> 
+> That method will disable beaconing if SCAN_SW_SCANNING is set,
+> regardless of current channel.
+> 
+> So, if that work.c logic is happening during a scan, we
+> will always disable scanning, but if we are not SW scanning,
+> then that offchannel_stop_beaconing won't actually do
+> anything useful.
 
-  Luis
+
+> My first inclination is to add another check in bss_info_change_notify
+> to test if we are really off-channel:
+> 
+> 		if (local->quiescing || !ieee80211_sdata_running(sdata) ||
+> 		    (test_bit(SCAN_SW_SCANNING, &local->scanning) &&
+> 		     test_bit(SCAN_OFF_CHANNEL, &local->scanning)) {
+> 			sdata->vif.bss_conf.enable_beacon = false;
+> 
+> And either set the SCAN_OFF_CHANNEL flag before calling offchannel_stop_beaconing,
+> or perhaps set that flag in offchannel_stop_beaconing.  The first might be
+> less risky, but that leaves the work.c logic funky in my opinion, since if
+> we are not actually scanning, beacons will still be enabled.
+
+Yes, I'm a bit concerned about that too -- that bit really shouldn't be
+in the scan bits, and then we can set it in offchannel_stop_beaconing or
+whatever the combination ends up being called.
+
+> I could use some suggestions on how to proceed.  I am overly tempted to
+> start changing everything in sight, but that is likely to cause all sorts
+> of bugs, subtle and otherwise....
+
+:)
+
+I've long been tempted to rewrite scanning in terms of off-channel work
+items ... Not really sure what to do.
+
+johannes
+
