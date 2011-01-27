@@ -1,43 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:32972 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388Ab1AXWMQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 17:12:16 -0500
-Message-ID: <4D3DF93B.1030702@candelatech.com>
-Date: Mon, 24 Jan 2011 14:12:11 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:60036 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754529Ab1A0LmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 06:42:04 -0500
+Subject: Re: [PATCH 07/10] wl12xx: AP-mode - support HW based link PS
+ monitoring
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1295156534-4178-8-git-send-email-arik@wizery.com>
+References: <1295156534-4178-1-git-send-email-arik@wizery.com>
+	 <1295156534-4178-8-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Jan 2011 13:41:57 +0200
+Message-ID: <1296128517.5263.137.camel@pimenta>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating channel.
-References: <1295633142-7437-1-git-send-email-greearb@candelatech.com> <1295774293.3639.15.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295774293.3639.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2011 01:18 AM, Johannes Berg wrote:
+On Sun, 2011-01-16 at 06:42 +0100, Arik Nemtsov wrote:
+> When operating in AP mode the wl1271 hardware filters our null-data
+> packets as well as management packets. This makes it impossible for
+> mac80211 to monitor the PS mode by using the PM bit of incoming frames.
 
-> Also, are you sure the filter configuration works correctly this way? If
-> you can, I'd like to look at a binary trace of the commands going to the
-> device with this change: "trace-cmd record -e mac80211".
-
-I uploaded two trace files.  One that scans the single operating
-channel, and a second that scans all channels.  This is with my -v2
-patch applied, using ath9k as the driver.  There are two virtual
-STA interfaces configured on this system for this test.
-
-
-http://www.candelatech.com/~greearb/trace-scan-all.dat.bz2
-http://www.candelatech.com/~greearb/trace-scan-one.dat.bz2
-
-Please let me know what you think.
-
-Thanks,
-Ben
+s/our/out/ here too.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Luca.
 
