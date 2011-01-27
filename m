@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65238 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010Ab1AWVDH (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:50207 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501Ab1A0RT5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 16:03:07 -0500
-Received: by fxm20 with SMTP id 20so3406578fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 13:03:05 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 0/6] Probe-resp offloading support
-Date: Sun, 23 Jan 2011 23:02:53 +0200
-Message-Id: <1295816579-28925-1-git-send-email-arik@wizery.com>
+	Thu, 27 Jan 2011 12:19:57 -0500
+Received: by vws16 with SMTP id 16so861249vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 09:19:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+	<AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
+Date: Thu, 27 Jan 2011 18:19:56 +0100
+Message-ID: <AANLkTikqR=aX+icFSKxkMNCZdbEgPmKR--gAPePgW6vM@mail.gmail.com>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Brian Prodoehl <bprodoehl@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support passing SSID and probe-response template to drivers.
-This data can be used to offload the beacon -> probe-req -> probe-resp
-process to HW.
+W dniu 27 stycznia 2011 17:48 użytkownik Brian Prodoehl
+<bprodoehl@gmail.com> napisał:
+> 2011/1/27 Rafał Miłecki <zajec5@gmail.com>:
+>> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
+>> inserted into PC.  Unfortunately after inserting my Broadcom card to
+>> it, it is not detected in "lspci" at all.
+>>
+>> My WiFi card used to work in "native" slot inside notebook. So if
+>> anything is broken, that would be PCIe x1 slot on motherboard or
+>> adapter itself. I've tested V and GND pins in my PCIe x1 slot, all
+>> work fine. I'll try get some other WiFi cards, to test my adapter
+>> tomorrow.
+>>
+>> However, maybe you have heard about some problems with such a
+>> adapters? Can there be sth preventing my card from being detected,
+>> visible?
+>>
+>> --
+>> Rafał
+>
+> I haven't tested that sort of thing with PCI-Express, but I had bad
+> results with Atheros AR5414-based modules in Mini-PCI to PCI adapters
+> like this:
+>
+> http://www.dealextreme.com/p/mini-pci-to-pci-adapter-with-antenna-9307
+>
+> The system either wouldn't boot, or it would boot and the wireless
+> card wouldn't show up in lspci, so I gave up on it.
 
-v1->v2: Add probe response template configuration
+That are not good news :(
 
-Arik Nemtsov (6):
-  nl80211: allow passing SSID in nl80211_set_bss
-  nl80211: Pass probe response data to drivers
-  mac80211: add SSID for AP mode with change notification
-  mac80211: Save probe response data for BSS
-  wl12xx: AP mode - support hidden SSID
-  wl12xx: configure probe-resp template according to notification
+What I've bought is following adapter:
+http://allegro.pl/adapter-wifi-mini-pci-e-na-pci-e-3-anteny-kp13-i1429732145.html
 
- drivers/net/wireless/wl12xx/cmd.c  |   23 +++++++++-----------
- drivers/net/wireless/wl12xx/main.c |   32 +++++++++++++++++++++++++++-
- include/linux/nl80211.h            |    9 ++++++++
- include/net/cfg80211.h             |    8 +++++++
- include/net/mac80211.h             |   21 ++++++++++++++++++
- net/mac80211/cfg.c                 |   40 ++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h         |    1 +
- net/mac80211/iface.c               |    5 +++-
- net/mac80211/tx.c                  |   31 +++++++++++++++++++++++++++
- net/mac80211/util.c                |    8 ++++++-
- net/wireless/nl80211.c             |   40 ++++++++++++++++++++++++++++++++++++
- 11 files changed, 202 insertions(+), 16 deletions(-)
+(Maybe) interesting part is that it contains LED near antennas which
+doesn't light for me. After tracking GND line of this LED I can see it
+going to mini PCIe slot. So maybe it's not critical, maybe it would
+light if my WiFi card worked?
 
+-- 
+Rafał
