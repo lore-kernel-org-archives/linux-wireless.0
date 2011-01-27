@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:57154 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751220Ab1A1N5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 08:57:37 -0500
-From: Julia Lawall <julia@diku.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] net/wireless/nl80211.c: Avoid call to genlmsg_cancel
-Date: Fri, 28 Jan 2011 15:17:11 +0100
-Message-Id: <1296224232-8115-1-git-send-email-julia@diku.dk>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:21573 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753755Ab1A0JTn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Jan 2011 04:19:43 -0500
+Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0300419980
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 18:19:41 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: Re: [PATCH 6/6] ath: Fix WEP hardware encryption
+Date: Thu, 27 Jan 2011 18:19:31 +0900
+Cc: Jouni Malinen <j@w1.fi>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <20110125041522.6944.22566.stgit@localhost6.localdomain6> <201101261936.02831.br1@einfach.org> <20110127055105.GA23779@vasanth-laptop>
+In-Reply-To: <20110127055105.GA23779@vasanth-laptop>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101271819.31727.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-genlmsg_cancel subtracts some constants from its second argument before
-calling nlmsg_cancel.  nlmsg_cancel then calls nlmsg_trim on the same
-arguments.  nlmsg_trim tests for NULL before doing any computation, but a
-NULL second argument to genlmsg_cancel is no longer NULL due to the initial
-subtraction.  Nothing else happens in this execution, so the call to
-genlmsg_cancel is simply unnecessary in this case.
+On Thu January 27 2011 14:51:05 Vasanthakumar Thiagarajan wrote:
+> On Wed, Jan 26, 2011 at 04:06:02PM +0530, Bruno Randolf wrote:
+> > On Wed January 26 2011 18:37:00 Jouni Malinen wrote:
+> > > On Wed, Jan 26, 2011 at 11:38:53AM +0900, Bruno Randolf wrote:
+> > > > Even without my patch, WEP does not work with multiple vifs.
+> > > 
+> > > Are you sure about that?
+> > 
+> > Yes, I'm sure. Please test it yourself, if you don't believe me. :)
+> > I'm using ath5k, not ath9k, BTW.
+> 
+> Using a key cache entry without seeing it's availability would
+> certainly break multi vif operation with WEP in at least one
+> interface. Did you test the following
+> 
+> 1. Associate sta vif1 with TKIP and
+> 2. Bring up ap vif2 with WEP and configure the key at index 1.
+> 
+> With your patch, the AP wep key would probably override the GTK of STA
+> interface.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+Ok, right. I have to admit that i did not think about this case and just about 
+multiple AP interfaces. So please just drop my patch for now.
 
-// <smpl>
-@@
-expression data;
-@@
-
-if (data == NULL) { ...
-* genlmsg_cancel(..., data);
-  ...
-  return ...;
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- net/wireless/nl80211.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9b62710..864ddfb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2718,7 +2718,7 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
- 			     NL80211_CMD_GET_MESH_CONFIG);
- 	if (!hdr)
--		goto nla_put_failure;
-+		goto out;
- 	pinfoattr = nla_nest_start(msg, NL80211_ATTR_MESH_CONFIG);
- 	if (!pinfoattr)
- 		goto nla_put_failure;
-@@ -2759,6 +2759,7 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 
-  nla_put_failure:
- 	genlmsg_cancel(msg, hdr);
-+ out:
- 	nlmsg_free(msg);
- 	return -ENOBUFS;
- }
-@@ -2954,7 +2955,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
- 			     NL80211_CMD_GET_REG);
- 	if (!hdr)
--		goto nla_put_failure;
-+		goto put_failure;
- 
- 	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2,
- 		cfg80211_regdomain->alpha2);
-@@ -3001,6 +3002,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 
- nla_put_failure:
- 	genlmsg_cancel(msg, hdr);
-+put_failure:
- 	nlmsg_free(msg);
- 	err = -EMSGSIZE;
- out:
-
+bruno
