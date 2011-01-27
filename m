@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:48218 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753919Ab1A3MYp (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:46574 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813Ab1A0ROq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 07:24:45 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so2118506ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:44 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/21] rt2x00: Correct initial value of US_CYC_CNT register for pcie interface
-Date: Sun, 30 Jan 2011 13:21:22 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201101301316.04044.IvDoorn@gmail.com> <201101301320.29903.IvDoorn@gmail.com> <201101301320.53735.IvDoorn@gmail.com>
-In-Reply-To: <201101301320.53735.IvDoorn@gmail.com>
+	Thu, 27 Jan 2011 12:14:46 -0500
+Received: by qwa26 with SMTP id 26so2338672qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 09:14:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201101301321.23510.IvDoorn@gmail.com>
+In-Reply-To: <20110127164717.7220.qmail@stuge.se>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+	<20110127164717.7220.qmail@stuge.se>
+Date: Thu, 27 Jan 2011 18:14:34 +0100
+Message-ID: <AANLkTim_m43Dbv8chF4i0i7XeQyAuqSeOjGZ4dRZ8aaC@mail.gmail.com>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: RA-Jay Hung <jay_hung@ralinktech.com>
+W dniu 27 stycznia 2011 17:47 użytkownik Peter Stuge <peter@stuge.se> napisał:
+> Rafał Miłecki wrote:
+>> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
+>> inserted into PC.  Unfortunately after inserting my Broadcom card to
+>> it, it is not detected in "lspci" at all.
+>
+> Tried the various -A options?
+>
+> linux-sysfs
+> linux-proc
+> intel-conf1
+> intel-conf2
 
-CLOCK CYCLE: Clock cycle count in 1us
-PCI:0x21, PCIE:0x7d, USB:0x1e
+Yes. First three don't differ, last one gives garbage.
 
-Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    4 ++++
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++++
- 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index c7e615c..ec8159c 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -372,8 +372,12 @@
- 
- /*
-  * US_CYC_CNT
-+ * BT_MODE_EN: Bluetooth mode enable
-+ * CLOCK CYCLE: Clock cycle count in 1us.
-+ * PCI:0x21, PCIE:0x7d, USB:0x1e
-  */
- #define US_CYC_CNT			0x02a4
-+#define US_CYC_CNT_BT_MODE_EN		FIELD32(0x00000100)
- #define US_CYC_CNT_CLOCK_CYCLE		FIELD32(0x000000ff)
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 4753fb1..4c34fce 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2207,6 +2207,10 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 		rt2800_register_read(rt2x00dev, US_CYC_CNT, &reg);
- 		rt2x00_set_field32(&reg, US_CYC_CNT_CLOCK_CYCLE, 30);
- 		rt2800_register_write(rt2x00dev, US_CYC_CNT, reg);
-+	} else if (rt2x00_is_pcie(rt2x00dev)) {
-+		rt2800_register_read(rt2x00dev, US_CYC_CNT, &reg);
-+		rt2x00_set_field32(&reg, US_CYC_CNT_CLOCK_CYCLE, 125);
-+		rt2800_register_write(rt2x00dev, US_CYC_CNT, reg);
- 	}
- 
- 	rt2800_register_read(rt2x00dev, HT_FBK_CFG0, &reg);
+> The BIOS could be causing trouble. If intel-conf1 doesn't work then
+> try inserting any working PCIe card into the slot, note the bus:slot
+> it gets, and finally reboot with the wifi card and run:
+>
+> lspci -A intel-conf1 -s bus:slot
+
+Thanks, I'll try that when I get any PCIe card.
+
 -- 
-1.7.2.3
-
+Rafał
