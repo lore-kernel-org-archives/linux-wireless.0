@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:38398 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab1ARD0g (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48027 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753561Ab1A0Atl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 22:26:36 -0500
-Received: by iyj18 with SMTP id 18so5274791iyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Jan 2011 19:26:35 -0800 (PST)
+	Wed, 26 Jan 2011 19:49:41 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p0R0ncaB014313
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 16:49:39 -0800
+Message-ID: <4D40C122.9020402@candelatech.com>
+Date: Wed, 26 Jan 2011 16:49:38 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
-References: <1295033760-31108-1-git-send-email-bzhao@marvell.com>
- <AANLkTi=BMTLa36FXW7nNHKu8=PgPCJC517vsmDDNZcYj@mail.gmail.com> <477F20668A386D41ADCC57781B1F704307F4E1BA0D@SC-VEXCH1.marvell.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 18 Jan 2011 14:26:15 +1100
-Message-ID: <AANLkTi=UfKkYcX6CF9bQ84+anr74DKS-tXuH61NASObf@mail.gmail.com>
-Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: Question on power-save
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 18, 2011 at 14:07, Bing Zhao <bzhao@marvell.com> wrote:
-> Hi Julian,
->
->> -----Original Message-----
->> From: Julian Calaby [mailto:julian.calaby@gmail.com]
->> Sent: Friday, January 14, 2011 6:59 PM
->> To: Bing Zhao
->> Cc: linux-wireless@vger.kernel.org; John W. Linville; Johannes Berg; Amitkumar Karwar; Kiran Divekar;
->> Frank Huang
->> Subject: Re: [PATCH] mwifiex: remove duplicated NULL checks
->>
->> On Sat, Jan 15, 2011 at 06:36, Bing Zhao <bzhao@marvell.com> wrote:
->> > From: Amitkumar Karwar <akarwar@marvell.com>
->> >
->> > Some functions have unnecessory NULL check for an input parameter
->> > because the caller to those functions is already checking the parameter
->> > for NULL before calling them.
->>
->> It may be more readable and efficient to eliminate the NULL checks in
->> the callers - and adjust the code to inform the callers of the case
->> where the pointer passed is null and make the callers to properly
->> handle this case.
->
-> Thank you very much for your comments.
->
-> There are still some cases that the NULL check needs to be done at the first place. For example,
->
-[snip]
+I was looking at this ps_enable method:
 
-In this case, dropping the null check is the right thing to do, given
-that you can guarantee that all callers of mwiflex_init_cmd_node()
-will check that the pointer isn't null before calling it.
+static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+{
+	struct ieee80211_local *local = sdata->local;
+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
 
->> This should also make the driver more robust as failures can be passed
->> up the stack to places that can deal with them more effectively than
->> just printing a message.
->
-> I could have misunderstood your point, however. If so, could you please explain a little bit more on how you would make the changes based on above example?
+	local->offchannel_ps_enabled = false;
 
-I was referring more to that fact that functions that appear to do
-things, e.g. mwifiex_init_cmd_node(), don't return anything - hence if
-something fails within them, e.g. being passed a null pointer, they
-can't notify their caller, e.g. mwifiex_prepare_cmd() that something
-has gone wrong.
+	/* FIXME: what to do when local->pspolling is true? */
 
-That said, I haven't looked at the code except through your patches,
-so I can't say if this is a scenario that actually could happen, and
-whether this added functionality is worthwhile.
+	del_timer_sync(&local->dynamic_ps_timer);
+	del_timer_sync(&ifmgd->bcn_mon_timer);
+	del_timer_sync(&ifmgd->conn_mon_timer);
+
+	cancel_work_sync(&local->dynamic_ps_enable_work);
+
+	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+		local->offchannel_ps_enabled = true;
+		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+	}
+
+I must be missing something, but it appears that the code above _disables_
+power-save instead of enables it?
 
 Thanks,
+Ben
 
 -- 
-Julian Calaby
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
