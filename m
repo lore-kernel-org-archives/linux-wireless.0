@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:42096 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756708Ab1AaW7P (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:38009 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754732Ab1A1E1B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:59:15 -0500
-Message-ID: <4D473EBC.5040006@davizone.at>
-Date: Mon, 31 Jan 2011 23:59:08 +0100
-From: David Gnedt <david.gnedt@davizone.at>
+	Thu, 27 Jan 2011 23:27:01 -0500
+Received: by yib18 with SMTP id 18so902340yib.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Jan 2011 20:27:00 -0800 (PST)
+Message-ID: <4D4245B7.1010906@lwfinger.net>
+Date: Thu, 27 Jan 2011 22:27:35 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 15/18] wl1251: disable power saving in monitor mode
-References: <4D45A79E.7040801@davizone.at> <4D45B7D5.2030408@davizone.at> <87ei7tdqbt.fsf@purkki.adurom.net>
-In-Reply-To: <87ei7tdqbt.fsf@purkki.adurom.net>
+To: raghunathan.kailasanathan@wipro.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: unable to put RTL8192SU in master mode
+References: <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D579@BLR-SJP-MB02.wipro.com> <4D4183BD.3060609@lwfinger.net> <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D5E7@BLR-SJP-MB02.wipro.com>
+In-Reply-To: <6D6CA94E9F944C45ABD35E9F7E1CAE619BBF56D5E7@BLR-SJP-MB02.wipro.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 2011-01-31 16:51, schrieb Kalle Valo:
-> David Gnedt <david.gnedt@davizone.at> writes:
+On 01/27/2011 10:05 PM, raghunathan.kailasanathan@wipro.com wrote:
+>
 > 
->> Force power saving off while monitor interface is present.
+> Thanks Larry. I am using the 8712u, so it should be the realtek one. I am on
+> a older kernel (2.6.27) hence using the staging one would require some backporting 
+> effort.
 > 
-> Again, why? 
-> 
-> Maybe to avoid dropping frames when associated? That would make sense.
-> But on the other hand someone might want to have power save enabled
-> when using monitor mode, for example when debugging power save related
-> issues.
-> 
-> Nevertheless, I think mac80211 is the correct place to do this, not
-> the driver.
+> BTW what are the key differences between both ? 
 
-Yeah, my thought was to avoid dropping frames when associated.
-I am going to drop that patch in v2.
+Only that r8712u works on 64-bit systems. In addition, it was cleaned up for
+kernel inclusion. My starting source was a beta version that never got released.
+
+Because it does not use mac80211, backporting might not be that difficult.
+
+Larry
+
