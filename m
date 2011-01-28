@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35671 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404Ab1AMNZL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jan 2011 08:25:11 -0500
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: Re: BUG in rt2x00lib_txdone() with 2.6.37-rc8
-Date: Thu, 13 Jan 2011 14:23:51 +0100
-Cc: Ingo Brunberg <ingo_brunberg@web.de>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <m31v4hkmkf.fsf@ingo.homenetwork>
-In-Reply-To: <m31v4hkmkf.fsf@ingo.homenetwork>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101131423.51640.helmut.schaa@googlemail.com>
+Received: from mga02.intel.com ([134.134.136.20]:35989 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590Ab1A1QWW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 11:22:22 -0500
+Subject: Re: [PATCH 6/8] iwl3945: do not use agn specific IWL_RATE_COUNT
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1296229671-3041-6-git-send-email-sgruszka@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+	 <1296229671-3041-6-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Jan 2011 08:20:48 -0800
+Message-ID: <1296231648.7388.16.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Stanislaw,
 
-Am Donnerstag, 13. Januar 2011 schrieb Ingo Brunberg:
-> I also suffer from this bug with 2.6.37. The first time the following
-> trace made it into my logs. Hopefully it might help.
-
-Thanks for the trace!
-
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000090
-> IP: [<ffffffffa00983e4>] rt2x00lib_txdone+0x31/0x259 [rt2x00lib]
-> PGD a7011067 PUD ab9b2067 PMD 0 
-> Oops: 0000 [#1] SMP 
-> last sysfs file: /sys/devices/pci0000:00/0000:00:13.2/usb2/2-3/2-3.4/2-3.4:1.0/firmware/2-3.4:1.0/loading
-> CPU 3 
-> Modules linked in: aes_generic af_packet w83627ehf hwmon_vid ipv6 fbcon font bitblit softcursor dm_mod arc4 ecb crypto_blkcipher cryptomgr aead crypto_algapi rt73usb rt2x00usb rt2x00lib mac80211 cfg80211 usbhid hid radeon snd_hda_codec_realtek ttm r8169 drm_kms_helper sr_mod drm cdrom firewire_ohci snd_hda_intel i2c_piix4 bitrev 8250_pnp processor snd_hda_codec ohci_hcd thermal_sys ehci_hcd usbcore crc32 8250 i2c_algo_bit firewire_core i2c_core sg pata_atiixp crc_itu_t rtc button k10temp evdev hwmon snd_pcm snd_timer cfbcopyarea cfbimgblt snd floppy cfbfillrect serial_core mii nls_base soundcore snd_page_alloc
+On Fri, 2011-01-28 at 07:47 -0800, Stanislaw Gruszka wrote:
+> Only use IWL_RATE_COUNT_3945 in 3945 code.
 > 
-> Pid: 3069, comm: kworker/3:0 Not tainted 2.6.37 #1 M3A785GXH/128M/To Be Filled By O.E.M.
-> RIP: 0010:[<ffffffffa00983e4>]  [<ffffffffa00983e4>] rt2x00lib_txdone+0x31/0x259 [rt2x00lib]
-> RSP: 0018:ffff880094ad3d30  EFLAGS: 00010286
-> RAX: 0000000000000030 RBX: ffff88011df79980 RCX: 0000000000000014
-> RDX: 0000000000000101 RSI: ffff880094ad3d90 RDI: 0000000000000000
-> RBP: ffff88011ec37af8 R08: 0000000000000002 R09: ffffffff00000002
-> R10: 0000000000000286 R11: 0000000000000000 R12: 0000000000000000
-> R13: 0000000000000028 R14: ffff880094ad3d90 R15: ffff88011df79c10
-> FS:  00007fc5bad23710(0000) GS:ffff8800cfd80000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> CR2: 0000000000000090 CR3: 00000000ab985000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process kworker/3:0 (pid: 3069, threadinfo ffff880094ad2000, task ffff88011ff08b20)
-> Stack:
-> ffff88011fc7e420 0000000000011000 0000000000000030 0000000000004000
-> ffff88011ec37af8 ffff88011dcb3af0 ffff88011df79980 ffff88011dcb3b40
-> ffff88011dcb3b40 0000000000000003 ffff88011df79c10 ffffffffa009862e
-> Call Trace:
-> [<ffffffffa009862e>] ? rt2x00lib_txdone_noinfo+0x22/0x27 [rt2x00lib]
-> [<ffffffffa0016316>] ? rt2x00usb_work_txdone+0x3e/0x6d [rt2x00usb]
-> [<ffffffffa0016a0d>] ? rt2x00usb_watchdog+0x69/0xe0 [rt2x00usb]
-> [<ffffffffa009aed9>] ? rt2x00link_watchdog+0x0/0x4a [rt2x00lib]
-> [<ffffffffa009af00>] ? rt2x00link_watchdog+0x27/0x4a [rt2x00lib]
-> [<ffffffff8104256e>] ? process_one_work+0x20e/0x34e
-> [<ffffffff81042a45>] ? worker_thread+0x1c9/0x340
-> [<ffffffff8102612e>] ? __wake_up_common+0x41/0x78
-> [<ffffffff8104287c>] ? worker_thread+0x0/0x340
-> [<ffffffff8104287c>] ? worker_thread+0x0/0x340
-> [<ffffffff810455a9>] ? kthread+0x7a/0x82
-> [<ffffffff81002cd4>] ? kernel_thread_helper+0x4/0x10
-> [<ffffffff8104552f>] ? kthread+0x0/0x82
-> [<ffffffff81002cd0>] ? kernel_thread_helper+0x0/0x10
-> Code: f6 41 55 41 54 55 48 89 fd 53 48 83 ec 28 4c 8b 67 10 48 8b 47 08 48 8b 18 49 8d 44 24 30 4c 89 e7 4d 8d 6c 24 28 48 89 44 24 10 <41> 8b 94 24 90 00 00 00 66 89 54 24 1e e8 1b 16 14 00 48 89 ef 
-> RIP  [<ffffffffa00983e4>] rt2x00lib_txdone+0x31/0x259 [rt2x00lib]
-> RSP <ffff880094ad3d30>
-> CR2: 0000000000000090
-> ---[ end trace 2c6843a38ee68ff0 ]---
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c     |    5 ++---
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    1 +
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+>  3 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index 294221b..58213e7 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -762,8 +762,7 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl_priv *priv,
+>  
+>  	/* We need to figure out how to get the sta->supp_rates while
+>  	 * in this running context */
+> -	rate_mask = IWL_RATES_MASK;
+> -
+> +	rate_mask = IWL_RATES_MASK_3945;
+>  
+>  	/* Set retry limit on DATA packets and Probe Responses*/
+>  	if (ieee80211_is_probe_resp(fc))
+> @@ -1650,7 +1649,7 @@ static int iwl3945_hw_reg_comp_txpower_temp(struct iwl_priv *priv)
+>  							      ref_temp);
+>  
+>  		/* set tx power value for all rates, OFDM and CCK */
+> -		for (rate_index = 0; rate_index < IWL_RATE_COUNT;
+> +		for (rate_index = 0; rate_index < IWL_RATE_COUNT_3945;
+>  		     rate_index++) {
+>  			int power_idx =
+>  			    ch_info->power_info[rate_index].base_power_index;
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+> index 75e50d3..184828c 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+> @@ -213,6 +213,7 @@ enum {
+>  	 IWL_CCK_BASIC_RATES_MASK)
+>  
+>  #define IWL_RATES_MASK ((1 << IWL_RATE_COUNT) - 1)
+> +#define IWL_RATES_MASK_3945 ((1 << IWL_RATE_COUNT_3945) - 1)
+>  
 
-Just a shot in the dark but since the stack trace shows the newly added
-watchdog this might be the result of a race between a regular txdone work
-(mac80211 workqueue) vs the watchdog work (global workqueue).
+Why define 3945 in agn header file?
+I understand iwl-agn-rs.h is include in iwl-dev.h, which is not the
+right thing to do. but specify 3945 in agn header file make it even more
+confuse.
 
-I guess the following situation could happen:
-A regular tx done work calls rt2x00lib_txdone which first sets entry->skb to
-NULL, calls the driver specific clear_entry and afterwards increases
-Q_INDEX_DONE. If the watchdog work calls rt2x00lib_txdone on a different CPU
-inbetween the skb might be NULL and cause the above oops.
 
-Ivo, does that sound reasonable?
+Wey
 
-Helmut
