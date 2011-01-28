@@ -1,33 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54540 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753650Ab1ASLTS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 06:19:18 -0500
-Received: by qwa26 with SMTP id 26so706450qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 03:19:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110119092113.19628.33322.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092113.19628.33322.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 06:19:17 -0500
-Message-ID: <AANLkTikLXdfG-QOJFcdN0yJSspVCr419OyVZQ_LBvQtP@mail.gmail.com>
-Subject: Re: [PATCH 8/8] ath5k: Remove redundant sc->curband
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:46370 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590Ab1A1PsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 10:48:03 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/8] iwlwifi: do not set tx power when channel is changing
+Date: Fri, 28 Jan 2011 16:47:44 +0100
+Message-Id: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 4:21 AM, Bruno Randolf <br1@einfach.org> wrote:
-> Remove sc->curband because the band is already stored in the current channel.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+Mac80211 can request for tx power and channel change in one ->config
+call. If that happens, *_send_tx_power functions will try to setup tx
+power for old channel, what can be not correct because we already change
+the band. I.e  error  "Failed to get channel info for channel 140 [0]",
+can be printed frequently when operating in software scanning mode.
 
-Nice cleanup series!
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 ++---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   13 ++++++++++---
+ 4 files changed, 14 insertions(+), 8 deletions(-)
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 1d9dcd7..294221b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1890,7 +1890,7 @@ int iwl3945_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 
+ 	/* If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames */
+-	rc = priv->cfg->ops->lib->send_tx_power(priv);
++	rc = iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 	if (rc) {
+ 		IWL_ERR(priv, "Error setting Tx power (%d).\n", rc);
+ 		return rc;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 313e92e..7c14eb3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1571,7 +1571,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *c
+ 
+ 	/* If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames */
+-	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 2a4ff83..6c2adc5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -316,10 +316,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	 * If we issue a new RXON command which required a tune then we must
+ 	 * send a new TXPOWER command or we won't be able to Tx any frames.
+ 	 *
+-	 * FIXME: which RXON requires a tune? Can we optimise this out in
+-	 *        some cases?
++	 * It's expected we set power here if channel is changing.
+ 	 */
+-	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	ret = iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
+ 		return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index a46ad60..92724cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1162,6 +1162,8 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ {
+ 	int ret;
+ 	s8 prev_tx_power;
++	bool defer;
++	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 
+ 	lockdep_assert_held(&priv->mutex);
+ 
+@@ -1189,10 +1191,15 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 	if (!iwl_is_ready_rf(priv))
+ 		return -EIO;
+ 
+-	/* scan complete use tx_power_next, need to be updated */
++	/* scan complete and commit_rxon use tx_power_next value,
++	 * it always need to be updated for newest request */
+ 	priv->tx_power_next = tx_power;
+-	if (test_bit(STATUS_SCANNING, &priv->status) && !force) {
+-		IWL_DEBUG_INFO(priv, "Deferring tx power set while scanning\n");
++
++	/* do not set tx power when scanning or channel changing */
++	defer = test_bit(STATUS_SCANNING, &priv->status) ||
++		memcmp(&ctx->active, &ctx->staging, sizeof(ctx->staging));
++	if (defer && !force) {
++		IWL_DEBUG_INFO(priv, "Deferring tx power set\n");
+ 		return 0;
+ 	}
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.1
+
