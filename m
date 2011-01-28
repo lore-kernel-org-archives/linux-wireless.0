@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:48274 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab1ALKnp (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:54934 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752793Ab1A1TuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 05:43:45 -0500
-Received: by yxt3 with SMTP id 3so158742yxt.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Jan 2011 02:43:44 -0800 (PST)
-Subject: Re: Mesh join/leave
-From: Steve Brown <sbrown@cortland.com>
-Reply-To: sbrown@cortland.com
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294823034.3639.15.camel@jlt3.sipsolutions.net>
-References: <1294780828.2383.0.camel@mythtv.ewol.com>
-	 <1294823034.3639.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 05:43:37 -0500
-Message-ID: <1294829017.2347.2.camel@mythtv.ewol.com>
-Mime-Version: 1.0
+	Fri, 28 Jan 2011 14:50:17 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH]drivers:wireless:acx.h change initate to initiate
+Date: Fri, 28 Jan 2011 11:50:04 -0800
+Message-Id: <1296244204-3890-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 10:03 +0100, Johannes Berg wrote:
-> On Tue, 2011-01-11 at 16:20 -0500, Steve Brown wrote:
-> > In testing this, the command "iw mesh0 mesh leave" doesn't stop
-> > beaconing. Beaconing continues with a null mesh id.
-> > 
-> > Is this the intended behavior?
-> 
-> No, it's not -- what driver are you using?
-> 
-> johannes
-> 
-The ath5k driver behaves differently. On "leave" it stops beaconing and
-on "join", starts back up.
+Not sure if this is a typo or not. if it is then feel free to take this.
 
-Steve
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
+---
+ drivers/net/wireless/wl12xx/acx.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 7bd8e4d..c56088b 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -987,7 +987,7 @@ struct wl1271_acx_ht_capabilities {
+ 	 *         Note, driver will still leave space for HT control in packets
+ 	 *         regardless of the value of this field. FW will be responsible
+ 	 *         to drop the HT field from any frame when this Bit set to 0.
+-	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
++	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initiate RD.
+ 	 *         Exact policy setting for this feature is TBD.
+ 	 *         Note, this bit can only be set to 1 if bit 3 is set to 1.
+ 	 */
+-- 
+1.6.5.GIT
 
