@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:56773 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055Ab1ADXst (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35929 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836Ab1A1GJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:48:49 -0500
-Subject: [RFC PATCH 07/17] zd1211rw: fix ack_pending in filter_ack causing
-	tx-packet ordering problem on monitor
+	Fri, 28 Jan 2011 01:09:14 -0500
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:48:45 +0200
-Message-ID: <20110104234845.25309.78285.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Be more careful when changing channels.
+Date: Thu, 27 Jan 2011 22:09:07 -0800
+Message-Id: <1296194947-12017-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For reasons not very clear yet to me, filter_ack leaves matching tx-packet
-pending with 'ack_pending'. This causes tx-packet to be passed back to upper
-layer after next packet has been transfered and tx-packets might end up
-coming come out of monitor interface in wrong order vs. rx.
+From: Ben Greear <greearb@candelatech.com>
 
-Because of this when enable AP-mode, hostapd monitor interface would get
-packets in wrong order causing problems in WPA association.
+If we cannot set the channel type, set the channel back to the
+original.
 
-So don't use mac->ack_pending when in AP-mode.
+Don't update the driver hardware if nothing actually changed.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+:100644 100644 9bf2193... 3e5a75b... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |   20 +++++++++++++++++---
+ 1 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 0ef27db..9dde27a 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -799,6 +799,13 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9bf2193..3e5a75b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1223,10 +1223,16 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_sub_if_data *sdata = NULL;
++	struct ieee80211_channel *old_oper;
++	enum nl80211_channel_type old_oper_type;
++	enum nl80211_channel_type old_vif_oper_type = NL80211_CHAN_NO_HT;
  
- 		mac->ack_pending = 1;
- 		mac->ack_signal = stats->signal;
+ 	if (netdev)
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
+ 
++	if (sdata)
++		old_vif_oper_type == sdata->vif.bss_conf.channel_type;
 +
-+		/* Prevent pending tx-packet on AP-mode */
-+		if (mac->type == NL80211_IFTYPE_AP) {
-+			skb = __skb_dequeue(q);
-+			zd_mac_tx_status(hw, skb, mac->ack_signal, NULL);
-+			mac->ack_pending = 0;
-+		}
+ 	switch (ieee80211_get_channel_mode(local, NULL)) {
+ 	case CHAN_MODE_HOPPING:
+ 		return -EBUSY;
+@@ -1240,13 +1246,21 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
+ 		break;
  	}
  
- 	spin_unlock_irqrestore(&q->lock, flags);
++	old_oper = local->oper_channel;
+ 	local->oper_channel = chan;
+ 
+-	if (!ieee80211_set_channel_type(local, sdata, channel_type))
++	old_oper_type = local->_oper_channel_type;
++	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
++		local->oper_channel = old_oper;
+ 		return -EBUSY;
++	}
++
++	if ((old_oper != local->oper_channel) ||
++	    (old_oper_type != local->_oper_channel_type))
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+-	if (sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR)
++	if ((sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR) &&
++	    old_vif_oper_type != sdata->vif.bss_conf.channel_type)
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
+ 
+ 	return 0;
+-- 
+1.7.2.3
 
