@@ -1,61 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48812 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756207Ab1AaRaf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 12:30:35 -0500
-Message-ID: <4D46F1B4.1020504@candelatech.com>
-Date: Mon, 31 Jan 2011 09:30:28 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v3] mac80211:  Optimize scans on current operating channel.
-References: <1296074238-4012-1-git-send-email-greearb@candelatech.com>	 <1296136347.3622.55.camel@jlt3.sipsolutions.net>	 <4D41BA91.30608@candelatech.com>	 <1296220846.5118.1.camel@jlt3.sipsolutions.net>	 <4D431778.1000604@candelatech.com> <1296482183.3812.29.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296482183.3812.29.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:62584 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753858Ab1A1QZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 11:25:11 -0500
+Subject: Re: [PATCH 7/8] iwlagn: remove
+ CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+	 <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Jan 2011 08:23:37 -0800
+Message-ID: <1296231817.7388.18.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2011 05:56 AM, Johannes Berg wrote:
->
->>> However -- I was thinking of something else, not data packets. While
->>> scanning, all received beacons will be handed to the scan code. But if
->>> the mlme code isn't told to stop looking for them, it'll still expect to
->>> see the beacons.
->>
->> Currently, it seems mlme timers are stopped when we start scanning,
->> and then started when scanning is complete.
->
-> Ok, I wasn't quite sure about that part -- whether it happened when
-> going off-channel or when starting scan. If it happened while going
-> off-channel this would've been problematic here.
->
->> However, I don't see any similar effort in the work_work() method
->> when it goes off-channel.
->>
->> Should we move the timer pause&  restart logic into the offchannel_stop_vifs
->> and offchannel_return methods?
->
-> Well, sort of no, and sort of yes -- both will disrupt that code in a
-> sense, but even scanning on the same channel will disrupt it due to the
-> beacon diversion, unless we copy the beacons and give them to both sides
-> (scan and mlme)?
+Stanislaw,
 
-Seems to me both sides should get them.  I'll try to figure out how to
-do that properly today.
+On Fri, 2011-01-28 at 07:47 -0800, Stanislaw Gruszka wrote:
+> This option practically do not change object files size, and only add
+> complication for users wanted to play with experimental firmware.
+> Someone who want to use or stop to use experimental firmware can
+> simply add or remove proper ucode files in /lib/firmware
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/Kconfig   |    6 ------
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    2 --
+>  2 files changed, 0 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+> index e1e3b1c..4a5c51f 100644
+> --- a/drivers/net/wireless/iwlwifi/Kconfig
+> +++ b/drivers/net/wireless/iwlwifi/Kconfig
+> @@ -43,12 +43,6 @@ config IWLWIFI_DEBUGFS
+>  	  is a low-impact option that allows getting insight into the
+>  	  driver's state at runtime.
+>  
+> -config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+> -        bool "Experimental uCode support"
+> -        depends on IWLWIFI && IWLWIFI_DEBUG
+> -        ---help---
+> -	  Enable use of experimental ucode for testing and debugging.
+> -
+>  config IWLWIFI_DEVICE_TRACING
+>  	bool "iwlwifi device access tracing"
+>  	depends on IWLWIFI
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index eb16647..23bf006 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -1610,11 +1610,9 @@ static int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
+>  	char tag[8];
+>  
+>  	if (first) {
+> -#ifdef CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+>  		priv->fw_index = UCODE_EXPERIMENTAL_INDEX;
+>  		strcpy(tag, UCODE_EXPERIMENTAL_TAG);
+>  	} else if (priv->fw_index == UCODE_EXPERIMENTAL_INDEX) {
+> -#endif
+>  		priv->fw_index = priv->cfg->ucode_api_max;
+>  		sprintf(tag, "%d", priv->fw_index);
+>  	} else {
 
-But, if work_work() takes us off-channel often enough, wouldn't that
-cause undue beacon loss and/or timed-out tx acks?  Are there any guarantees
-about how often and how long work_work() can take us off-channel?
+The whole reason has it in Kconfig file is to have user not remove the
+experimental uCode from /lib/firmware and not use it.
 
-Thanks,
-Ben
+Also put it in Kconfig file, so it is easy for user to see they are
+using experimental option. Agree?
 
->
-> johannes
+Wey
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
