@@ -1,32 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56975 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751573Ab1ARKkI (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35934 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135Ab1A1GJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 05:40:08 -0500
-Subject: Re: [PATCH 1/5] mac80211: add DFS related channel flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-In-Reply-To: <20110117161133.66B54207E@mx.techwires.net>
-References: <201101171621.29863.bernhard.schmidt@saxnet.de>
-	 <20110117161133.66B54207E@mx.techwires.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Jan 2011 11:40:53 +0100
-Message-ID: <1295347253.3563.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 28 Jan 2011 01:09:43 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Add sdata state and flags to debugfs.
+Date: Thu, 27 Jan 2011 22:09:34 -0800
+Message-Id: <1296194974-12082-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 09:31 +0100, Bernhard Schmidt wrote:
-> Before a radar channel can be used, a full CAC has be done, the
-> IEEE80211_CHAN_RADAR_CLEAR flags indicates that this has been done. If either
-> during CAC or in-service monitoring interference is detected, the channel is
-> added to NOL and marked with IEEE80211_CHAN_RADAR_INTERFERENCE.
+From: Ben Greear <greearb@candelatech.com>
 
-Also, this is not mac80211, it's cfg80211.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 2dabdf7... 872adb8... M	net/mac80211/debugfs_netdev.c
+ net/mac80211/debugfs_netdev.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 2dabdf7..872adb8 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -81,6 +81,8 @@ static ssize_t ieee80211_if_fmt_##name(					\
+ 		IEEE80211_IF_FMT(name, field, "%d\n")
+ #define IEEE80211_IF_FMT_HEX(name, field)				\
+ 		IEEE80211_IF_FMT(name, field, "%#x\n")
++#define IEEE80211_IF_FMT_LHEX(name, field)				\
++		IEEE80211_IF_FMT(name, field, "%#lx\n")
+ #define IEEE80211_IF_FMT_SIZE(name, field)				\
+ 		IEEE80211_IF_FMT(name, field, "%zd\n")
+ 
+@@ -145,6 +147,8 @@ IEEE80211_IF_FILE(rc_rateidx_mask_2ghz, rc_rateidx_mask[IEEE80211_BAND_2GHZ],
+ 		  HEX);
+ IEEE80211_IF_FILE(rc_rateidx_mask_5ghz, rc_rateidx_mask[IEEE80211_BAND_5GHZ],
+ 		  HEX);
++IEEE80211_IF_FILE(flags, flags, HEX);
++IEEE80211_IF_FILE(state, state, LHEX);
+ 
+ /* STA attributes */
+ IEEE80211_IF_FILE(bssid, u.mgd.bssid, MAC);
+@@ -283,6 +287,8 @@ IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
+ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 
+@@ -296,6 +302,8 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 
+@@ -307,6 +315,8 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ static void add_wds_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 
+@@ -316,12 +326,16 @@ static void add_wds_files(struct ieee80211_sub_if_data *sdata)
+ static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ }
+ 
+ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+ {
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
+ }
+ 
+ #ifdef CONFIG_MAC80211_MESH
+-- 
+1.7.2.3
 
