@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40477 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:38560 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718Ab1AZIbQ (ORCPT
+	with ESMTP id S1750869Ab1A1J2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 03:31:16 -0500
-Subject: Re: [PATCH 1/2] wl12xx: Enable the IEEE80211_HW_SPECTRUM_MGMT hw
- flag
+	Fri, 28 Jan 2011 04:28:40 -0500
+Subject: Re: [PATCH] mac80211:  Be more careful when changing channels.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: juuso.oikarinen@nokia.com
-Cc: coelho@ti.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
-References: <1296030565-23778-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1296030565-23778-2-git-send-email-juuso.oikarinen@nokia.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1296194947-12017-1-git-send-email-greearb@candelatech.com>
+References: <1296194947-12017-1-git-send-email-greearb@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Jan 2011 09:31:11 +0100
-Message-ID: <1296030672.3635.13.camel@jlt3.sipsolutions.net>
+Date: Fri, 28 Jan 2011 10:28:37 +0100
+Message-ID: <1296206917.4550.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-26 at 10:29 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, 2011-01-27 at 22:09 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> It's mandatory to support this along with 11a.
+> If we cannot set the channel type, set the channel back to the
+> original.
 > 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  drivers/net/wireless/wl12xx/main.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index dfab21e..bc09812 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -3215,7 +3215,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
->  		IEEE80211_HW_SUPPORTS_UAPSD |
->  		IEEE80211_HW_HAS_RATE_CONTROL |
->  		IEEE80211_HW_CONNECTION_MONITOR |
-> -		IEEE80211_HW_SUPPORTS_CQM_RSSI;
-> +		IEEE80211_HW_SUPPORTS_CQM_RSSI |
-> +		IEEE80211_HW_SPECTRUM_MGMT;
+> Don't update the driver hardware if nothing actually changed.
 
-I once had a patch to remove this flag completely since it has very
-little effect at all on mac80211. Can I convince you to review the flag
-use in mac80211 and tell me why you think it is, or not, present?
+Good catch.
+
+
+> +	old_oper = local->oper_channel;
+>  	local->oper_channel = chan;
+>  
+> -	if (!ieee80211_set_channel_type(local, sdata, channel_type))
+> +	old_oper_type = local->_oper_channel_type;
+> +	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
+> +		local->oper_channel = old_oper;
+>  		return -EBUSY;
+> +	}
+> +
+> +	if ((old_oper != local->oper_channel) ||
+> +	    (old_oper_type != local->_oper_channel_type))
+> +		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+>  
+> -	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+> -	if (sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR)
+> +	if ((sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR) &&
+> +	    old_vif_oper_type != sdata->vif.bss_conf.channel_type)
+>  		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
+
+But why the complicated code? Couldn't you just swap the
+set_channel_type() and oper_channel = chan around? set_channel_type()
+doesn't need oper_channel set.
 
 johannes
 
