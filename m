@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756230Ab1AaVnq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 16:43:46 -0500
-Subject: Re: Review of EN 301 893 1.5.1 and 1.6.1 changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Michael Green <Michael.Green@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wireless-regdb@lists.infradead.org,
-	Kathy Giori <Kathy.Giori@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <AANLkTi=b-Tm7r1eODgAQqpQJuimD0+dQkHFB4YV06kES@mail.gmail.com>
-References: <AANLkTim3CG+aN9QGhGOfBD9+BSYsgQW_ACC0o+k9H-rt@mail.gmail.com>
-	 <AANLkTinuFzBMMLd08Zpkf8iGBO-YdM2Ni-KtNCNxuUbT@mail.gmail.com>
-	 <AANLkTi=b-Tm7r1eODgAQqpQJuimD0+dQkHFB4YV06kES@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:40397 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753964Ab1A1QFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 11:05:55 -0500
+Subject: Re: [PATCH 2/8] iwl3945: set STATUS_READY before commit_rxon
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1296229671-3041-2-git-send-email-sgruszka@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+	 <1296229671-3041-2-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 31 Jan 2011 22:43:45 +0100
-Message-ID: <1296510225.3812.50.camel@jlt3.sipsolutions.net>
+Date: Fri, 28 Jan 2011 08:04:21 -0800
+Message-ID: <1296230661.7388.5.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note: this email is on a public list. If you can't tell that from the Cc
-line of the email, I'm not sure you should be working in this field. If
-you think I'm mocking you, maybe I am :P
+Stanislaw,
 
-On Mon, 2011-01-31 at 13:33 -0800, Luis R. Rodriguez wrote:
-> FYI - European conformance spec for 5 GHz Radio LANs has some slight
-> modifications which Johannes has pointed out which we have reviewed
-> today in consideration for our new DFS design. The skinny is that our
-> implementation of using 3 regions are OK and we will move forward with
-> that.
+On Fri, 2011-01-28 at 07:47 -0800, Stanislaw Gruszka wrote:
+> Similar change as we already do for agn, need to avoid
+> "Error setting Tx power (-5)" message when loading module.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
 
-I just fear that will not allow us to keep manoeuvring effectively in
-the future, because then we need to change all the implementations,
-potentially old ones, rather than just updating the database.
+good catch, miss that
 
-I wasn't so much thinking of the pulse patterns though as the other
-timings like the airtime allowed to use before moving onto a new
-channel.
-
-johannes
+Wey
 
