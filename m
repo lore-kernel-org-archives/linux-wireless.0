@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pdtms1.pdt.com ([207.18.22.4]:33080 "EHLO mail.pdt.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932195Ab1ACQGJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 11:06:09 -0500
-From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wl1271 status/update
-Date: Mon, 3 Jan 2011 16:02:20 +0000
-Message-ID: <0826983CC0CB074798C42E77D8ACD07F0616CB@pdtms1.pdt.com>
+Received: from xenotime.net ([72.52.115.56]:33729 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754690Ab1A1QtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 11:49:09 -0500
+Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-wireless@vger.kernel.org>; Fri, 28 Jan 2011 08:49:06 -0800
+Date: Fri, 28 Jan 2011 08:49:06 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: James <bjlockie@lockie.ca>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: enable CONFIG_WIRELESS_EXT
+Message-Id: <20110128084906.53c7c555.rdunlap@xenotime.net>
+In-Reply-To: <4D42E9C0.2050809@lockie.ca>
+References: <4D41DAF1.6080204@lockie.ca>
+	<4D41ED24.9010005@hauke-m.de>
+	<4D41FDF7.3040805@lockie.ca>
+	<AANLkTimG_46nLNAurBGfDEPdZwnUmKE3GPFOMWxC0UX0@mail.gmail.com>
+	<4D42E9C0.2050809@lockie.ca>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 28 Jan 2011 11:07:28 -0500 James wrote:
 
-Hi Luca, and all of you working on the wl1271 driver..
+> On 01/27/11 18:39, Brian Prodoehl wrote:
+> > How are you trying to bring up the interface, in order to use dhcpcd
+> > on it?  Anyways, I would say that, yes, you do need
+> > CONFIG_WIRELESS_EXT.
+> >
+> > -Brian
+> >
+> I had to enable Device Drivers->Network device support->Wireless
+> LAN->Intel PRO/Wireless 2100 Network Connection  to get
+> CONFIG_WIRELESS_EXT=y
+> I propose there should be a new obvious kernel option to enable
+> CONFIG_WIRELESS_EXT.
 
-I'm quite confused as to the status of it...
-I've never used these emailings before and have not
-done any porting of drivers to linux.......
-I sent an email to Luca and this mailing list a few weeks ago
-and lots has been happening with wl1271..but i'm not sure
-what to do with all the information...
 
-talk has been about compat-wireless, etc..
+What wireless driver are you using?
 
-Could someone please tell me what I should/need to do
-to get the wl1271 driver into our android?  it is based on 2.2 android
-and 2.6.31 linux(ubuntu) for the imx233....
-
-Sorry to be such a pain. All of you are so smart!!!!!!!!
-And I appreciate ANY help/information to get me going......
-Thanks!
-Karen
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
