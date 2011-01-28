@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46055 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3010 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752861Ab1AUVvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 16:51:42 -0500
-Subject: Re: [PATCH 1/3] libertas_spi: Use workqueue in hw_host_to_card
-From: Dan Williams <dcbw@redhat.com>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Colin McCabe <colin@cozybit.com>
-Date: Fri, 21 Jan 2011 15:52:19 -0600
-In-Reply-To: <201101212324.29978.anarsoul@gmail.com>
-References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
-	 <1295642690-16646-2-git-send-email-anarsoul@gmail.com>
-	 <201101212222.37667.marek.vasut@gmail.com>
-	 <201101212324.29978.anarsoul@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1295646740.1473.0.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1755021Ab1A1PsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 10:48:12 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 7/8] iwlagn: remove CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+Date: Fri, 28 Jan 2011 16:47:50 +0100
+Message-Id: <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-01-21 at 23:24 +0200, Vasily Khoruzhick wrote:
-> On Friday 21 January 2011 23:22:37 Marek Vasut wrote:
-> > On Friday 21 January 2011 21:44:48 Vasily Khoruzhick wrote:
-> > > Use workqueue to perform SPI xfers, it's necessary to fix
-> > > nasty "BUG: scheduling while atomic", because
-> > > spu_write() calls spi_sync() and spi_sync() may sleep, but
-> > > hw_host_to_card() callback can be called from atomic context.
-> > > Remove kthread completely, workqueue now does its job.
-> > > Restore intermediate buffers which were removed in commit
-> > > 86c34fe89e9cad9e1ba4d1a8bbf98259035f4caf that introduced
-> > > mentioned bug.
-> > 
-> > I have two questions:
-> > 
-> > 1) Why not leave kthread there? ie. why switch to workqueue
-> 
-> Because it's not easy to ensure that kthread did its job in suspend handler,
-> and to make if_spi.c look similar to if_sdio.c.
-> 
-> > 2) This should be split into two patches I guess -- a) revert the change b)
-> > convert to workqueue -- so they can be (N)ACKed separatedly
-> 
-> Actually just reverting commit does not make driver work (it will fail on 
-> rmmod), and it can impact on future bisect (if it'll be necessary). But if 
-> it's requirement - ok.
+This option practically do not change object files size, and only add
+complication for users wanted to play with experimental firmware.
+Someone who want to use or stop to use experimental firmware can
+simply add or remove proper ucode files in /lib/firmware
 
-I'll disagree with Marek; I don't think it's a hard requirement as long
-as there's a good reason.  And if the driver doesn't work by reverting,
-then you're right bisect is broken and that sucks.  I don't have a
-problem with the "mega" patch (given that it's not really that large).
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig   |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 --
+ 2 files changed, 0 insertions(+), 8 deletions(-)
 
-Dan
-
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index e1e3b1c..4a5c51f 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -43,12 +43,6 @@ config IWLWIFI_DEBUGFS
+ 	  is a low-impact option that allows getting insight into the
+ 	  driver's state at runtime.
+ 
+-config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+-        bool "Experimental uCode support"
+-        depends on IWLWIFI && IWLWIFI_DEBUG
+-        ---help---
+-	  Enable use of experimental ucode for testing and debugging.
+-
+ config IWLWIFI_DEVICE_TRACING
+ 	bool "iwlwifi device access tracing"
+ 	depends on IWLWIFI
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index eb16647..23bf006 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1610,11 +1610,9 @@ static int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
+ 	char tag[8];
+ 
+ 	if (first) {
+-#ifdef CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+ 		priv->fw_index = UCODE_EXPERIMENTAL_INDEX;
+ 		strcpy(tag, UCODE_EXPERIMENTAL_TAG);
+ 	} else if (priv->fw_index == UCODE_EXPERIMENTAL_INDEX) {
+-#endif
+ 		priv->fw_index = priv->cfg->ucode_api_max;
+ 		sprintf(tag, "%d", priv->fw_index);
+ 	} else {
+-- 
+1.7.1
 
