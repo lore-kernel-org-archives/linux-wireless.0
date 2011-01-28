@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54109 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961Ab1AIPcb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 10:32:31 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: make NEXT_TREE configurable.
-Date: Sun,  9 Jan 2011 16:32:19 +0100
-Message-Id: <1294587141-11353-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
-References: <1294587141-11353-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:31407 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753386Ab1A1QQY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 11:16:24 -0500
+Date: Fri, 28 Jan 2011 17:16:12 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Brian Prodoehl <bprodoehl@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+Message-ID: <20110128161612.GC2452@redhat.com>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+ <AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
+ <AANLkTikqR=aX+icFSKxkMNCZdbEgPmKR--gAPePgW6vM@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTikqR=aX+icFSKxkMNCZdbEgPmKR--gAPePgW6vM@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was assumed that the linux next tree is at ~/linux-next . Now the
-directory can be set with NEXT_TREE like the other variables.
+On Thu, Jan 27, 2011 at 06:19:56PM +0100, Rafał Miłecki wrote:
+> W dniu 27 stycznia 2011 17:48 użytkownik Brian Prodoehl
+> <bprodoehl@gmail.com> napisał:
+> > 2011/1/27 Rafał Miłecki <zajec5@gmail.com>:
+> >> I've received mini PCIe adapter to PCIe x1 slot to test notebook cards
+> >> inserted into PC.  Unfortunately after inserting my Broadcom card to
+> >> it, it is not detected in "lspci" at all.
+> >>
+> >> My WiFi card used to work in "native" slot inside notebook. So if
+> >> anything is broken, that would be PCIe x1 slot on motherboard or
+> >> adapter itself. I've tested V and GND pins in my PCIe x1 slot, all
+> >> work fine. I'll try get some other WiFi cards, to test my adapter
+> >> tomorrow.
+> >>
+> >> However, maybe you have heard about some problems with such a
+> >> adapters? Can there be sth preventing my card from being detected,
+> >> visible?
+> >>
+> >> --
+> >> Rafał
+> >
+> > I haven't tested that sort of thing with PCI-Express, but I had bad
+> > results with Atheros AR5414-based modules in Mini-PCI to PCI adapters
+> > like this:
+> >
+> > http://www.dealextreme.com/p/mini-pci-to-pci-adapter-with-antenna-9307
+> >
+> > The system either wouldn't boot, or it would boot and the wireless
+> > card wouldn't show up in lspci, so I gave up on it.
+> 
+> That are not good news :(
+> 
+> What I've bought is following adapter:
+> http://allegro.pl/adapter-wifi-mini-pci-e-na-pci-e-3-anteny-kp13-i1429732145.html
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
+I'm using adapters form http://www.hwtools.net/ , they work pretty well for me,
+but they are also quite expensive.
 
-This should also go into stable.
-
- scripts/admin-update.sh |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
-
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index f23c33c..bf8e080 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -426,6 +426,23 @@ export WSTABLE="
- 
- # Stable pending, if -n was passed
- if [[ "$GET_STABLE_PENDING" = y ]]; then
-+
-+	if [ -z $NEXT_TREE ]; then
-+		NEXT_TREE="/home/$USER/linux-next/"
-+		if [ ! -d $NEXT_TREE ]; then
-+			echo "Please tell me where your linux-next git tree is."
-+			echo "You can do this by exporting its location as follows:"
-+			echo
-+			echo "  export NEXT_TREE=/home/$USER/linux-next/"
-+			echo
-+			echo "If you do not have one you can clone the repository:"
-+			echo "  git clone git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
-+			exit 1
-+		fi
-+	else
-+		echo "You said to use git tree at: $NEXT_TREE for linux-next"
-+	fi
-+
- 	LAST_DIR=$PWD
- 	cd $GIT_TREE
- 	if [ -f localversion* ]; then
-@@ -436,11 +453,6 @@ if [[ "$GET_STABLE_PENDING" = y ]]; then
- 	# we now assume you are using a stable tree
- 	cd $GIT_TREE
- 	LAST_STABLE_UPDATE=$(git describe --abbrev=0)
--	NEXT_TREE="/home/$USER/linux-next/"
--	if [ ! -d $NEXT_TREE ]; then
--		echo -e "You are expected to have $NEXT_TREE directory when using -s"
--		exit 1
--	fi
- 	cd $NEXT_TREE
- 	PENDING_STABLE_DIR="pending-stable/"
- 
--- 
-1.7.1
-
+Stanislaw  
