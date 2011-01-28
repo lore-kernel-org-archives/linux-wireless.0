@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47398 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339Ab1ANTMS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 14:12:18 -0500
-Message-ID: <4D30A00A.4040005@candelatech.com>
-Date: Fri, 14 Jan 2011 11:12:10 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: sbrown@cortland.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [RFC 1/2] ath9k:  Fix up hardware mode and beacons with multiple
- vifs.
-References: <1295026029-21130-1-git-send-email-greearb@candelatech.com> <1295031482.3703.16.camel@mythtv.ewol.com>
-In-Reply-To: <1295031482.3703.16.camel@mythtv.ewol.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:27765 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753703Ab1A1PsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 10:48:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/8] iwl3945: set STATUS_READY before commit_rxon
+Date: Fri, 28 Jan 2011 16:47:45 +0100
+Message-Id: <1296229671-3041-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/14/2011 10:58 AM, Steve Brown wrote:
-> On Fri, 2011-01-14 at 09:27 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> When using a mixture of AP and Station interfaces,
->> the hardware mode was using the type of the
->> last VIF registered.  Instead, we should keep track
->> of the number of different types of vifs and set the
->> mode accordingly.
->>
->> In addtion, use the vif type instead of hardware opmode
->> when dealing with beacons.
->>
->> Attempt to move some of the common setup code into smaller
->> methods so we can re-use it when changing vif mode as
->> well as adding/deleting vifs.
->>
->> This needs review.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->> :100644 100644 3108699... a2da259... M	drivers/net/wireless/ath/ath9k/ath9k.h
->> :100644 100644 385ba03... 8de591e... M	drivers/net/wireless/ath/ath9k/beacon.c
->> :100644 100644 0452580... 1a65e53... M	drivers/net/wireless/ath/ath9k/main.c
->> :100644 100644 ea2f67c... 9a2b4a8... M	drivers/net/wireless/ath/ath9k/recv.c
->>   drivers/net/wireless/ath/ath9k/ath9k.h  |   10 +-
->>   drivers/net/wireless/ath/ath9k/beacon.c |   14 +-
->>   drivers/net/wireless/ath/ath9k/main.c   |  263 ++++++++++++++++++++++---------
->>   drivers/net/wireless/ath/ath9k/recv.c   |   17 ++-
->>   4 files changed, 214 insertions(+), 90 deletions(-)
->>
->
-> It would be really useful to have both an AP and MESH vif. With the mesh
-> and ap vif's bridged, a station connected to the ap could ping outside
-> the mesh. Currently, if you add the mesh vif and then the ap vif, it
-> sort of works. The other way around, the mesh interval value causes
-> beacons to be sent only for the vif associated with slot 0.
->
-> Is it possible to consider this case as you overhaul ath9k beaconing?
+Similar change as we already do for agn, need to avoid
+"Error setting Tx power (-5)" message when loading module.
 
-Perhaps someone else would be better.  I have no way to test mesh
-right now, and still do not understand this code too well.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Hopefully the vif-counting work would help with dealing with
-your scenario, however...
-
-Also, could you try with my patch(es)?  Part of the problem with the old
-code is that if you added mesh second, you would not be in AP mode anymore.
-I think that part will be fixed now.  There may be other issues remaining,
-however.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 9c986f2..55837d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2535,13 +2535,14 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
+ 	/* Configure Bluetooth device coexistence support */
+ 	priv->cfg->ops->hcmd->send_bt_config(priv);
+ 
++	set_bit(STATUS_READY, &priv->status);
++
+ 	/* Configure the adapter for unassociated operation */
+ 	iwl3945_commit_rxon(priv, ctx);
+ 
+ 	iwl3945_reg_txpower_periodic(priv);
+ 
+ 	IWL_DEBUG_INFO(priv, "ALIVE processing complete.\n");
+-	set_bit(STATUS_READY, &priv->status);
+ 	wake_up_interruptible(&priv->wait_command_queue);
+ 
+ 	return;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
