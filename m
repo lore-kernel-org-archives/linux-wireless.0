@@ -1,114 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55040 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706Ab1AJK2x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 05:28:53 -0500
-Received: by fxm20 with SMTP id 20so18677090fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 02:28:52 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] rt2x00: Fix radio off hang issue for PCIE interface
-Date: Mon, 10 Jan 2011 11:27:43 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201101101127.45155.IvDoorn@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:14034 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755021Ab1A1PsO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 10:48:14 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 8/8] iwlwifi: introduce iwl_bt_statistics
+Date: Fri, 28 Jan 2011 16:47:51 +0100
+Message-Id: <1296229671-3041-8-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: RA-Jay Hung <jay_hung@ralinktech.com>
+We use priv->cfg->bt_params && priv->cfg->bt_params->bt_statistics
+conditional in few places, merge it into one function.
 
-PCI/PCIE radio off behavior is different from SOC/USB.
-They mainly use MCU command to disable DMA, TX/RX and enter power saving mode.
-
-Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    6 -----
- drivers/net/wireless/rt2x00/rt2800pci.c |   36 ++++++++----------------------
- 2 files changed, 10 insertions(+), 32 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |    9 +++------
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   12 ++++--------
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c      |   15 +++++----------
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-core.h        |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    2 +-
+ 6 files changed, 19 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 54917a2..e2a528d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2810,10 +2810,7 @@ void rt2800_disable_radio(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
- 	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
- 
- 	/* Wait for DMA, ignore error */
-@@ -2823,9 +2820,6 @@ void rt2800_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_TX, 0);
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_ENABLE_RX, 0);
- 	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
--
--	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0);
--	rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0);
- }
- EXPORT_SYMBOL_GPL(rt2800_disable_radio);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index aa97971..bfc2fc5 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -475,39 +475,23 @@ static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
- 
- static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
- {
--	u32 reg;
--
--	rt2800_disable_radio(rt2x00dev);
--
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001280);
--
--	rt2800_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX0, 1);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX1, 1);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX2, 1);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX3, 1);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX4, 1);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX5, 1);
--	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DRX_IDX0, 1);
--	rt2800_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
--
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
--	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
-+	if (rt2x00_is_soc(rt2x00dev)) {
-+		rt2800_disable_radio(rt2x00dev);
-+		rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0);
-+		rt2800_register_write(rt2x00dev, TX_PIN_CFG, 0);
-+	}
- }
- 
- static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
- 			       enum dev_state state)
- {
--	/*
--	 * Always put the device to sleep (even when we intend to wakeup!)
--	 * if the device is booting and wasn't asleep it will return
--	 * failure when attempting to wakeup.
--	 */
--	rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
--
- 	if (state == STATE_AWAKE) {
--		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0);
-+		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
- 		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
-+	} else if (state == STATE_SLEEP) {
-+		rt2800_register_write(rt2x00dev, H2M_MAILBOX_STATUS, 0xffffffff);
-+		rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, 0xffffffff);
-+		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
+index d16bb5e..9006293 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
+@@ -631,8 +631,7 @@ void iwl_sensitivity_calibration(struct iwl_priv *priv, void *resp)
  	}
  
- 	return 0;
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		rx_info = &(((struct iwl_bt_notif_statistics *)resp)->
+ 			      rx.general.common);
+ 		ofdm = &(((struct iwl_bt_notif_statistics *)resp)->rx.ofdm);
+@@ -897,8 +896,7 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv, void *stat_resp)
+ 	}
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		rx_info = &(((struct iwl_bt_notif_statistics *)stat_resp)->
+ 			      rx.general.common);
+ 	} else {
+@@ -913,8 +911,7 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv, void *stat_resp)
+ 
+ 	rxon_band24 = !!(ctx->staging.flags & RXON_FLG_BAND_24G_MSK);
+ 	rxon_chnum = le16_to_cpu(ctx->staging.channel);
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		stat_band24 = !!(((struct iwl_bt_notif_statistics *)
+ 				 stat_resp)->flag &
+ 				 STATISTICS_REPLY_FLG_BAND_24G_MSK);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+index a6dbd89..b500aaa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+@@ -39,8 +39,7 @@ static int iwl_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
+ 	int p = 0;
+ 	u32 flag;
+ 
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics)
++	if (iwl_bt_statistics(priv))
+ 		flag = le32_to_cpu(priv->_agn.statistics_bt.flag);
+ 	else
+ 		flag = le32_to_cpu(priv->_agn.statistics.flag);
+@@ -89,8 +88,7 @@ ssize_t iwl_ucode_rx_stats_read(struct file *file, char __user *user_buf,
+ 	 * the last statistics notification from uCode
+ 	 * might not reflect the current uCode activity
+ 	 */
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		ofdm = &priv->_agn.statistics_bt.rx.ofdm;
+ 		cck = &priv->_agn.statistics_bt.rx.cck;
+ 		general = &priv->_agn.statistics_bt.rx.general.common;
+@@ -536,8 +534,7 @@ ssize_t iwl_ucode_tx_stats_read(struct file *file,
+ 	  * the last statistics notification from uCode
+ 	  * might not reflect the current uCode activity
+ 	  */
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		tx = &priv->_agn.statistics_bt.tx;
+ 		accum_tx = &priv->_agn.accum_statistics_bt.tx;
+ 		delta_tx = &priv->_agn.delta_statistics_bt.tx;
+@@ -737,8 +734,7 @@ ssize_t iwl_ucode_general_stats_read(struct file *file, char __user *user_buf,
+ 	  * the last statistics notification from uCode
+ 	  * might not reflect the current uCode activity
+ 	  */
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		general = &priv->_agn.statistics_bt.general.common;
+ 		dbg = &priv->_agn.statistics_bt.general.common.dbg;
+ 		div = &priv->_agn.statistics_bt.general.common.div;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index bbd40b7..b192ca8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -73,8 +73,7 @@ static void iwl_rx_calc_noise(struct iwl_priv *priv)
+ 	int bcn_silence_a, bcn_silence_b, bcn_silence_c;
+ 	int last_rx_noise;
+ 
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics)
++	if (iwl_bt_statistics(priv))
+ 		rx_info = &(priv->_agn.statistics_bt.rx.general.common);
+ 	else
+ 		rx_info = &(priv->_agn.statistics.rx.general);
+@@ -125,8 +124,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+ 	struct statistics_general_common *general, *accum_general;
+ 	struct statistics_tx *tx, *accum_tx;
+ 
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		prev_stats = (__le32 *)&priv->_agn.statistics_bt;
+ 		accum_stats = (u32 *)&priv->_agn.accum_statistics_bt;
+ 		size = sizeof(struct iwl_bt_notif_statistics);
+@@ -207,8 +205,7 @@ bool iwl_good_plcp_health(struct iwl_priv *priv,
+ 		struct statistics_rx_phy *ofdm;
+ 		struct statistics_rx_ht_phy *ofdm_ht;
+ 
+-		if (priv->cfg->bt_params &&
+-		    priv->cfg->bt_params->bt_statistics) {
++		if (iwl_bt_statistics(priv)) {
+ 			ofdm = &pkt->u.stats_bt.rx.ofdm;
+ 			ofdm_ht = &pkt->u.stats_bt.rx.ofdm_ht;
+ 			combined_plcp_delta =
+@@ -265,8 +262,7 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 	int change;
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics) {
++	if (iwl_bt_statistics(priv)) {
+ 		IWL_DEBUG_RX(priv,
+ 			     "Statistics notification received (%d vs %d).\n",
+ 			     (int)sizeof(struct iwl_bt_notif_statistics),
+@@ -304,8 +300,7 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 
+ 	iwl_recover_from_statistics(priv, pkt);
+ 
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->bt_statistics)
++	if (iwl_bt_statistics(priv))
+ 		memcpy(&priv->_agn.statistics_bt, &pkt->u.stats_bt,
+ 			sizeof(priv->_agn.statistics_bt));
+ 	else
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 23bf006..9b5c3f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3075,8 +3075,7 @@ static void iwl_bg_run_time_calib_work(struct work_struct *work)
+ 	}
+ 
+ 	if (priv->start_calib) {
+-		if (priv->cfg->bt_params &&
+-		    priv->cfg->bt_params->bt_statistics) {
++		if (iwl_bt_statistics(priv)) {
+ 			iwl_chain_noise_calibration(priv,
+ 					(void *)&priv->_agn.statistics_bt);
+ 			iwl_sensitivity_calibration(priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 705711a..c83fcc6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -747,6 +747,11 @@ static inline bool iwl_advanced_bt_coexist(struct iwl_priv *priv)
+ 	       priv->cfg->bt_params->advanced_bt_coexist;
+ }
+ 
++static inline bool iwl_bt_statistics(struct iwl_priv *priv)
++{
++	return priv->cfg->bt_params && priv->cfg->bt_params->bt_statistics;
++}
++
+ extern bool bt_coex_active;
+ extern bool bt_siso_mode;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index bde16ac..bdcb742 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1765,7 +1765,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 		DEBUGFS_ADD_FILE(chain_noise, dir_debug, S_IRUSR);
+ 	if (priv->cfg->base_params->ucode_tracing)
+ 		DEBUGFS_ADD_FILE(ucode_tracing, dir_debug, S_IWUSR | S_IRUSR);
+-	if (priv->cfg->bt_params && priv->cfg->bt_params->bt_statistics)
++	if (iwl_bt_statistics(priv))
+ 		DEBUGFS_ADD_FILE(ucode_bt_stats, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(reply_tx_error, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(rxon_flags, dir_debug, S_IWUSR);
 -- 
-1.7.2.3
+1.7.1
 
