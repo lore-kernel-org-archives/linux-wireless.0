@@ -1,147 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62109 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073Ab1AUVWA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58454 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751874Ab1A1NY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 16:22:00 -0500
-Received: by fxm20 with SMTP id 20so2230649fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Jan 2011 13:21:59 -0800 (PST)
-From: Marek Vasut <marek.vasut@gmail.com>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Subject: Re: [PATCH 3/3] libertas_spi: Add support for suspend/resume
-Date: Fri, 21 Jan 2011 22:25:02 +0100
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Colin McCabe <colin@cozybit.com>
-References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com> <1295642690-16646-4-git-send-email-anarsoul@gmail.com>
-In-Reply-To: <1295642690-16646-4-git-send-email-anarsoul@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-6"
-Message-Id: <201101212225.02775.marek.vasut@gmail.com>
+	Fri, 28 Jan 2011 08:24:29 -0500
+Subject: Re: [RFC v3] mac80211:  Optimize scans on current operating
+ channel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4D41A895.4060304@candelatech.com>
+References: <1296074238-4012-1-git-send-email-greearb@candelatech.com>
+	 <1296136347.3622.55.camel@jlt3.sipsolutions.net>
+	 <4D41A895.4060304@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Jan 2011 14:24:27 +0100
+Message-ID: <1296221067.5118.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 21 January 2011 21:44:50 Vasily Khoruzhick wrote:
-> Add support for suspend/resume in if_spi.
+On Thu, 2011-01-27 at 09:17 -0800, Ben Greear wrote:
 
-Isn't there some pin to put the card asleep ? I think these LBS ones have it.
+> >> +	if (local->scan_channel) {
+> >> +		chan = local->scan_channel;
+> >> +		channel_type = NL80211_CHAN_NO_HT;
+> >> +	} else if (local->tmp_channel) {
+> >> +		chan = scan_chan = local->tmp_channel;
+> >> +		channel_type = local->tmp_channel_type;
+> >> +	} else {
+> >> +		chan = local->oper_channel;
+> >> +		channel_type = local->_oper_channel_type;
+> >> +	}
+> >
+> > Don't understand -- why not return true in the else branch?
+> 
+> Because the hardware might not actually be set to the oper_channel.
+> The idea is that you configure the mac80211 state as you want it, and then
+> use this method to figure out if you really need to make hardware
+> changes.
 
-Also, do you need to do this via workqueue ? Can't you just do it in the resume 
-handler?
+Oh. Wouldn't it make more sense to stick that into the _config()
+function then and return something there? Hmm. I kinda start to
+understand I guess.
 
-Cheers
+> >> +	if (chan != local->oper_channel ||
+> >> +	    channel_type != local->_oper_channel_type)
+> >> +		return false;
+> >> +
+> >> +	/* Check current hardware-config against oper_channel. */
+> >> +	if ((local->oper_channel != local->hw.conf.channel) ||
+> >> +	    (local->_oper_channel_type != local->hw.conf.channel_type))
+> >> +		return false;
+> >
+> > That's confusing, and kinda racy IIRC?
 > 
-> Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
-> ---
->  drivers/net/wireless/libertas/if_spi.c |   55
-> ++++++++++++++++++++++++++++++++ 1 files changed, 55 insertions(+), 0
-> deletions(-)
+> This method should be locked such that the hardware conf
+> cannot be changed while it is being called.  I can double
+> check that this is true.
+
+Not all of this is always properly locked unfortunately. Not sure about
+this case though.
+
+> >> -	if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+> >> -		skip = 1;
+> >> +
+> >> +	if (chan != local->hw.conf.channel)
+> >> +		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+> >> +			skip = 1;
+> >
+> > Why doesn't that test the bit? Or does this only cause setting it?
 > 
-> diff --git a/drivers/net/wireless/libertas/if_spi.c
-> b/drivers/net/wireless/libertas/if_spi.c index f6c2cd6..772da3a 100644
-> --- a/drivers/net/wireless/libertas/if_spi.c
-> +++ b/drivers/net/wireless/libertas/if_spi.c
-> @@ -57,6 +57,7 @@ struct if_spi_card {
->  	/* Handles all SPI communication (except for FW load) */
->  	struct workqueue_struct		*workqueue;
->  	struct work_struct		packet_work;
-> +	struct work_struct		resume_work;
+> Which bit?
+
+Err. Not sure, maybe I got confused.
+
+> > Also, won't this do some weird things like not stop, but try to start
+> > stations again?
 > 
->  	u8				cmd_buffer[IF_SPI_CMD_BUF_SIZE];
-> 
-> @@ -1057,6 +1058,24 @@ out:
->  	return err;
->  }
-> 
-> +static void if_spi_resume_worker(struct work_struct *work)
-> +{
-> +	struct if_spi_card *card;
-> +
-> +	card = container_of(work, struct if_spi_card, resume_work);
-> +
-> +	if (card->pdata->setup)
-> +		card->pdata->setup(card->spi);
-> +
-> +	/* Init card ... */
-> +	if_spi_init_card(card);
-> +
-> +	enable_irq(card->spi->irq);
-> +
-> +	/* And resume it ... */
-> +	lbs_resume(card->priv);
-> +}
-> +
->  static int __devinit if_spi_probe(struct spi_device *spi)
->  {
->  	struct if_spi_card *card;
-> @@ -1107,6 +1126,7 @@ static int __devinit if_spi_probe(struct spi_device
-> *spi) goto free_card;
->  	}
->  	card->priv = priv;
-> +	priv->setup_fw_on_resume = 1;
->  	priv->card = card;
->  	priv->hw_host_to_card = if_spi_host_to_card;
->  	priv->enter_deep_sleep = NULL;
-> @@ -1117,6 +1137,7 @@ static int __devinit if_spi_probe(struct spi_device
-> *spi) /* Initialize interrupt handling stuff. */
->  	card->workqueue = create_workqueue("libertas_spi");
->  	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
-> +	INIT_WORK(&card->resume_work, if_spi_resume_worker);
-> 
->  	err = request_irq(spi->irq, if_spi_host_interrupt,
->  			IRQF_TRIGGER_FALLING, "libertas_spi", card);
-> @@ -1161,6 +1182,8 @@ static int __devexit libertas_spi_remove(struct
-> spi_device *spi) lbs_deb_spi("libertas_spi_remove\n");
->  	lbs_deb_enter(LBS_DEB_SPI);
-> 
-> +	cancel_work_sync(&card->resume_work);
-> +
->  	lbs_stop_card(priv);
->  	lbs_remove_card(priv); /* will call free_netdev */
-> 
-> @@ -1174,6 +1197,37 @@ static int __devexit libertas_spi_remove(struct
-> spi_device *spi) return 0;
->  }
-> 
-> +static int if_spi_suspend(struct device *dev)
-> +{
-> +	struct spi_device *spi = to_spi_device(dev);
-> +	struct if_spi_card *card = spi_get_drvdata(spi);
-> +
-> +	lbs_suspend(card->priv);
-> +	flush_workqueue(card->workqueue);
-> +	disable_irq(spi->irq);
-> +
-> +	if (card->pdata->teardown)
-> +		card->pdata->teardown(spi);
-> +
-> +	return 0;
-> +}
-> +
-> +static int if_spi_resume(struct device *dev)
-> +{
-> +	struct spi_device *spi = to_spi_device(dev);
-> +	struct if_spi_card *card = spi_get_drvdata(spi);
-> +
-> +	/* Schedule delayed work */
-> +	schedule_work(&card->resume_work);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct dev_pm_ops if_spi_pm_ops = {
-> +	.suspend	= if_spi_suspend,
-> +	.resume		= if_spi_resume,
-> +};
-> +
->  static struct spi_driver libertas_spi_driver = {
->  	.probe	= if_spi_probe,
->  	.remove = __devexit_p(libertas_spi_remove),
-> @@ -1181,6 +1235,7 @@ static struct spi_driver libertas_spi_driver = {
->  		.name	= "libertas_spi",
->  		.bus	= &spi_bus_type,
->  		.owner	= THIS_MODULE,
-> +		.pm	= &if_spi_pm_ops,
->  	},
->  };
+> I was thinking that should be harmless.  As far as I can tell, current
+> code would never actually stop beaconing in this method but might try
+> to start it later, so it must not cause too much trouble.
+
+Yeah, maybe you're right and it doesn't matter, but I think it'd be
+nicer to always nest the calls. I see you've done that already.
+
+> Thanks for the review...I'll go over everything and try to repost
+> something that incorporates your ideas.
+
+Thanks for your patience with this! It's quite tricky I guess...
+
+johannes
+
