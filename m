@@ -1,94 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:55477 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756290Ab1AaUdD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 15:33:03 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so5919962wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 12:33:03 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 6/8] wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
-Date: Mon, 31 Jan 2011 22:32:29 +0200
-Message-Id: <1296505951-29644-7-git-send-email-arik@wizery.com>
-In-Reply-To: <1296505951-29644-1-git-send-email-arik@wizery.com>
-References: <1296505951-29644-1-git-send-email-arik@wizery.com>
+Received: from mga01.intel.com ([192.55.52.88]:6026 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793Ab1A1Qk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 11:40:26 -0500
+Subject: Re: [PATCH 1/8] iwlwifi: do not set tx power when channel is
+ changing
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110128162714.GD2452@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+	 <1296230595.7388.4.camel@wwguy-ubuntu>  <20110128162714.GD2452@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Jan 2011 08:38:53 -0800
+Message-ID: <1296232733.7388.21.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove an active hlid when chip wakeup fails. In addition rename the
-involved functions.
+On Fri, 2011-01-28 at 08:27 -0800, Stanislaw Gruszka wrote:
+> Hi
+> 
+> On Fri, Jan 28, 2011 at 08:03:15AM -0800, wwguy wrote:
+> > On Fri, 2011-01-28 at 07:47 -0800, Stanislaw Gruszka wrote:
+> > > Mac80211 can request for tx power and channel change in one ->config
+> > > call. If that happens, *_send_tx_power functions will try to setup tx
+> > > power for old channel, what can be not correct because we already change
+> > > the band. I.e  error  "Failed to get channel info for channel 140 [0]",
+> > > can be printed frequently when operating in software scanning mode.
+> > > 
+> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > ---
+> > 
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8d55c89..46eb499 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2621,7 +2621,7 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
- 
--static int wl1271_allocate_hlid(struct wl1271 *wl,
-+static int wl1271_allocate_sta(struct wl1271 *wl,
- 			     struct ieee80211_sta *sta,
- 			     u8 *hlid)
- {
-@@ -2642,10 +2642,13 @@ static int wl1271_allocate_hlid(struct wl1271 *wl,
- 	return 0;
- }
- 
--static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
-+static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
- {
- 	int id = hlid - WL1271_AP_STA_HLID_START;
- 
-+	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
-+		return;
-+
- 	__clear_bit(id, wl->ap_hlid_map);
- 	wl1271_tx_reset_link_queues(wl, hlid);
- }
-@@ -2668,13 +2671,13 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
- 
--	ret = wl1271_allocate_hlid(wl, sta, &hlid);
-+	ret = wl1271_allocate_sta(wl, sta, &hlid);
- 	if (ret < 0)
- 		goto out;
- 
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
--		goto out;
-+		goto out_free_sta;
- 
- 	ret = wl1271_cmd_add_sta(wl, sta, hlid);
- 	if (ret < 0)
-@@ -2683,6 +2686,10 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
-+out_free_sta:
-+	if (ret < 0)
-+		wl1271_free_sta(wl, hlid);
-+
- out:
- 	mutex_unlock(&wl->mutex);
- 	return ret;
-@@ -2719,7 +2726,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_sleep;
- 
--	wl1271_free_hlid(wl, wl_sta->hlid);
-+	wl1271_free_sta(wl, wl_sta->hlid);
- 
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
--- 
-1.7.1
+Wey
 
