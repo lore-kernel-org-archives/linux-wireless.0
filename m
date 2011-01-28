@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3010 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755021Ab1A1PsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 10:48:12 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 7/8] iwlagn: remove CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
-Date: Fri, 28 Jan 2011 16:47:50 +0100
-Message-Id: <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
-References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48038 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752454Ab1A1OUQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 09:20:16 -0500
+Subject: Re: [PATCH 1/2] net/wireless/nl80211.c: Avoid call to
+ genlmsg_cancel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julia Lawall <julia@diku.dk>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.1101281515410.8546@pc-004.diku.dk>
+References: <1296224232-8115-1-git-send-email-julia@diku.dk>
+	 <1296223267.5118.7.camel@jlt3.sipsolutions.net>
+	 <Pine.LNX.4.64.1101281515410.8546@pc-004.diku.dk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 Jan 2011 15:20:05 +0100
+Message-ID: <1296224405.5118.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This option practically do not change object files size, and only add
-complication for users wanted to play with experimental firmware.
-Someone who want to use or stop to use experimental firmware can
-simply add or remove proper ucode files in /lib/firmware
+On Fri, 2011-01-28 at 15:16 +0100, Julia Lawall wrote:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/Kconfig   |    6 ------
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 --
- 2 files changed, 0 insertions(+), 8 deletions(-)
+> > But why did you call the label differently? :)
+> 
+> Because out is already used in this case, and I didn't want to change all 
+> of the other occurrences of nla_put_failure.  It's a bit sloppy though, 
+> because this code is the actual nla_put_failure.  I can change it if you 
+> prefer.
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index e1e3b1c..4a5c51f 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -43,12 +43,6 @@ config IWLWIFI_DEBUGFS
- 	  is a low-impact option that allows getting insight into the
- 	  driver's state at runtime.
- 
--config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
--        bool "Experimental uCode support"
--        depends on IWLWIFI && IWLWIFI_DEBUG
--        ---help---
--	  Enable use of experimental ucode for testing and debugging.
--
- config IWLWIFI_DEVICE_TRACING
- 	bool "iwlwifi device access tracing"
- 	depends on IWLWIFI
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index eb16647..23bf006 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1610,11 +1610,9 @@ static int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
- 	char tag[8];
- 
- 	if (first) {
--#ifdef CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
- 		priv->fw_index = UCODE_EXPERIMENTAL_INDEX;
- 		strcpy(tag, UCODE_EXPERIMENTAL_TAG);
- 	} else if (priv->fw_index == UCODE_EXPERIMENTAL_INDEX) {
--#endif
- 		priv->fw_index = priv->cfg->ucode_api_max;
- 		sprintf(tag, "%d", priv->fw_index);
- 	} else {
--- 
-1.7.1
+Oh, and I could've seen that from the patch itself too, I just missed
+it, sorry.
+
+johannes
 
