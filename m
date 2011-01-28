@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p3plsmtpa01-05.prod.phx3.secureserver.net ([72.167.82.85]:55794
-	"HELO p3plsmtpa01-05.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751384Ab1AXU6j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 15:58:39 -0500
-Message-ID: <38B8E33D2F114AFCAF7F0F4C591983BD@ChuckPC>
-From: "Chuck Crisler" <ccrisler@vgocom.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: problem calling the supplicant
-Date: Mon, 24 Jan 2011 15:57:55 -0500
+Received: from mgw2.diku.dk ([130.225.96.92]:56218 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751278Ab1A1OQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 09:16:58 -0500
+Date: Fri, 28 Jan 2011 15:16:53 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] net/wireless/nl80211.c: Avoid call to genlmsg_cancel
+In-Reply-To: <1296223267.5118.7.camel@jlt3.sipsolutions.net>
+Message-ID: <Pine.LNX.4.64.1101281515410.8546@pc-004.diku.dk>
+References: <1296224232-8115-1-git-send-email-julia@diku.dk>
+ <1296223267.5118.7.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have found a problem that is causing my communication with the supplicant 
-to get confused. I call the supplicant via wpa_ctrl_request(). Sometimes the 
-commands actually timeout. When that happens, the call to select() returns 0 
-which causes the wpa_ctrl_request to return -2. From then onward, the 
-response to all commands is the actual response to the previous command. 
-That causes my state machine to fail. What should I be doing when this 
-timeout situation occurs? It looks like I could simply make a subsequent 
-call into the ctrl_request with a NULL command (with length == 0) to get it 
-to execute the select() again, though I may want to modify 
-wpa_ctrl_request() to skip the send() if there is a NULL command. I know 
-that my missing response will ultimately be returned. Has anyone else seen 
-anything like this?
+On Fri, 28 Jan 2011, Johannes Berg wrote:
 
-Thank you,
-Chuck Crisler 
+> On Fri, 2011-01-28 at 15:17 +0100, Julia Lawall wrote:
+> 
+> > diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> > index 9b62710..864ddfb 100644
+> > --- a/net/wireless/nl80211.c
+> > +++ b/net/wireless/nl80211.c
+> > @@ -2718,7 +2718,7 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+> >  	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
+> >  			     NL80211_CMD_GET_MESH_CONFIG);
+> >  	if (!hdr)
+> > -		goto nla_put_failure;
+> > +		goto out;
+> 
+> 
+> > @@ -2954,7 +2955,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+> >  	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
+> >  			     NL80211_CMD_GET_REG);
+> >  	if (!hdr)
+> > -		goto nla_put_failure;
+> > +		goto put_failure;
+> >  
+> >  	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2,
+> >  		cfg80211_regdomain->alpha2);
+> 
+> Seems fine. Actually, since the message is freed anyhow, the call to
+> genlmsg_cancel is *completely* unnecessary, I just put it in to make it
+> nest better and not rely on it not having side effects.
+> 
+> But why did you call the label differently? :)
 
+Because out is already used in this case, and I didn't want to change all 
+of the other occurrences of nla_put_failure.  It's a bit sloppy though, 
+because this code is the actual nla_put_failure.  I can change it if you 
+prefer.
+
+julia
