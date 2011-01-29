@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:41208 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751388Ab1AXVKW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 16:10:22 -0500
-Received: from dlep36.itg.ti.com ([157.170.170.91])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id p0OLAMwN021540
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 15:10:22 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep36.itg.ti.com (8.13.8/8.13.8) with ESMTP id p0OLAMTl011295
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 15:10:22 -0600 (CST)
-Subject: Re: [PATCH v3  0/2] wl12xx: BA Initiator & receiver support
-From: Luciano Coelho <coelho@ti.com>
-To: "Levi, Shahar" <shahar_levi@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1295764043-29918-1-git-send-email-shahar_levi@ti.com>
-References: <1295764043-29918-1-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 23:05:20 +0200
-Message-ID: <1295903120.4430.1.camel@pimenta>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:37122 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133Ab1A2Asv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:48:51 -0500
+Received: by iwn9 with SMTP id 9so3643309iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Jan 2011 16:48:50 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <4D4362BF.7050208@candelatech.com>
+References: <4D4345A8.6060806@candelatech.com> <4D435D76.2040703@candelatech.com>
+ <AANLkTimji+Y0KfDCzWDX63KfOjRFzxgKbVAq6HhMcw20@mail.gmail.com> <4D4362BF.7050208@candelatech.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Fri, 28 Jan 2011 16:48:30 -0800
+Message-ID: <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
+Subject: Re: hti->control_chan is 15??
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-01-23 at 07:27 +0100, Levi, Shahar wrote:
-> That series gather two patches:
-> [PATCH v7] wl12xx: BA initiator support
-> [PATCH v5] wl12xx: BA receiver support
-> 
-> Add 80211n BA initiator & receiver session support wl1271 driver.
-> BA initiator session management included in FW independently.
-> Include supported FW version auto detection mechanism.
-> 
-> Limitation:
-> - For now only one BA per direction is supported
-> 
-> Shahar Levi (2):
->   wl12xx: BA initiator support
->   wl12xx: BA receiver support
-> 
->  drivers/net/wireless/wl12xx/acx.c    |   85 ++++++++++++++++++++++++++++++++++
->  drivers/net/wireless/wl12xx/acx.h    |   62 ++++++++++++++++++++++++-
->  drivers/net/wireless/wl12xx/boot.c   |   24 ++++++++-
->  drivers/net/wireless/wl12xx/conf.h   |    6 ++
->  drivers/net/wireless/wl12xx/init.c   |   41 ++++++++++++++++
->  drivers/net/wireless/wl12xx/main.c   |   72 +++++++++++++++++++++++++++--
->  drivers/net/wireless/wl12xx/wl12xx.h |   16 ++++++-
->  7 files changed, 296 insertions(+), 10 deletions(-)
+On Fri, Jan 28, 2011 at 4:43 PM, Ben Greear <greearb@candelatech.com> wrote:
+> My AP is an off-the-shelf Netgear:
+> WNDR3700
+>
+> It's only rate configuration option is '300Mbps', which appears to
+> turn on HT40.
+>
+> It is configured for channel 10 (for the packet capture) and actually
+> passes traffic there.  It's just this HT Info thing with (primary-channel ==
+> (real_channel + 4))
+> that seems wrong.  Note that when I had the channel set to 11, it was
+> reporting
+> 15 for the primary channel in the HT info.
+>
+> Looks like a bug in that AP to me...but would be nice if there were a way to
+> work around it, in case others have similar issues.
 
-Applied, thanks!
+Set it to channel 6, then?
 
+Yeah, I played with Netgear's APs (and D-Link's) for about 3 hours
+before I put them down and never picked them up again.  Performance,
+configuration, reliability, etc., were horrible.  I've found that
+Apple APs work well, but really hostapd offers the best flexibility by
+far.
 
--- 
-Cheers,
-Luca.
-
+Dan
