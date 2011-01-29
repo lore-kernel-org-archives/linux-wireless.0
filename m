@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33770 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554Ab1AXLq7 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55291 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753732Ab1A2A6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 06:46:59 -0500
-Subject: Re: [RFC][PATCH] cfg80211: report monitor interface channel via
- wext when possible
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Fertser <fercerpav@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Thomas d'Otreppe <tdotreppe@gmail.com>,
-	Richard Farina <sidhayn@gmail.com>
-In-Reply-To: <20110123094101.GB25136@home.lan>
-References: <1295655098-17534-1-git-send-email-fercerpav@gmail.com>
-	 <1295773599.3639.4.camel@jlt3.sipsolutions.net>
-	 <20110123094101.GB25136@home.lan>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 12:47:50 +0100
-Message-ID: <1295869670.3639.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 28 Jan 2011 19:58:35 -0500
+Message-ID: <4D436634.3070506@candelatech.com>
+Date: Fri, 28 Jan 2011 16:58:28 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: hti->control_chan is 15??
+References: <4D4345A8.6060806@candelatech.com> <4D435D76.2040703@candelatech.com> <AANLkTimji+Y0KfDCzWDX63KfOjRFzxgKbVAq6HhMcw20@mail.gmail.com> <4D4362BF.7050208@candelatech.com> <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
+In-Reply-To: <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-01-23 at 12:41 +0300, Paul Fertser wrote:
-> On Sun, Jan 23, 2011 at 10:06:39AM +0100, Johannes Berg wrote:
-> > On Sat, 2011-01-22 at 03:11 +0300, Paul Fertser wrote:
-> > > This makes it possible to retrieve the channel for the monitor interface
-> > > in cases when it can be determined unambigously. Tested with ath5k.
-> > 
-> > NAK.
-> > 
-> > http://article.gmane.org/gmane.linux.kernel.wireless.general/61860
-> 
-> If i understood your correctly, "somehow query oper_channel" means one
-> needs to extend cfg80211 API a little and add necessary code to
-> mac80211. And the result would be higher-level API depending on
-> mac80211 implementation details (which are going to be soon changed
-> anyway after introduction of the real multi-channel feature).
+On 01/28/2011 04:48 PM, Daniel Halperin wrote:
+> On Fri, Jan 28, 2011 at 4:43 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> My AP is an off-the-shelf Netgear:
+>> WNDR3700
+>>
+>> It's only rate configuration option is '300Mbps', which appears to
+>> turn on HT40.
+>>
+>> It is configured for channel 10 (for the packet capture) and actually
+>> passes traffic there.  It's just this HT Info thing with (primary-channel ==
+>> (real_channel + 4))
+>> that seems wrong.  Note that when I had the channel set to 11, it was
+>> reporting
+>> 15 for the primary channel in the HT info.
+>>
+>> Looks like a bug in that AP to me...but would be nice if there were a way to
+>> work around it, in case others have similar issues.
+>
+> Set it to channel 6, then?
 
-Not necessarily -- that's exactly why you'd want such a callback: in the
-case that mac80211 does get a multi-channel feature (and the feature is
-currently in use) this callback would either return both/all channels
-(which probably isn't very useful) or NULL to indicate that it doesn't
-have a single fixed channel. In that case, the monitor interface would
-still report an unknown channel -- which is really what's happening
-anyway since other interfaces will be hopping around.
+It will still fail the control_chan test and so HT will not be enabled.
 
-> What i propose should work with any cfg80211 driver where
-> set_channel() is properly implemented for monitor interfaces, and
-> mac80211 is certainly one of them. When in the first place one
-> requests set_channel() for a monitor that's not compatible with the
-> current configuration, it'll return an error, and so wdev->channel
-> would not be set at all. If it succeeded and then someone later wants
-> to verify the monitor channel, set_channel() is still the best
-> opportunity because it is this function that has all the checks to
-> verify the channel is still valid.
-> 
-> To sum up, i see no drawbacks in using set_channel() for that, it
-> doesn't add any implicit requirements, doesn't change semantics,
-> non-intrusive, doesn't break anything and works correctly every time.
+That's the symptom I've been chasing all day...just turns out that
+the cause, for once, appears to not be my system :)
 
-Yes, in some ways this makes sense, but I'm not convinced that
-semantically we really want it. It really relies on returning an error
-when the given channel cannot be assigned, which I guess we could, but
-it just feels wrong. I can't really give a good reason for it other than
-that.
+I'll look into adding a hack to allow HT to be enabled
+if the channel is off-by-4.
 
-However, also consider this case: If you have a monitor and IBSS
-interface, the IBSS might -- rather infrequently -- hop channels. In
-this case, it might make sense to still return the channel when the
-monitor is queried, but you wouldn't be able to set it?
+Thanks,
+Ben
 
-Also, say you did this:
- - add monitor, set to channel 5
- - add IBSS, create network on channel 1
- - observe packets on monitor iface received on channel 1
- - remove IBSS interface
- - query monitor channel -- now suddenly with your approach
-   the channel is reset to 5, when it was quite obviously 1
-   in the time between
-
-I think that'd be kinda confusing too.
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
