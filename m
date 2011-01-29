@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pdtms1.pdt.com ([207.18.22.4]:50372 "EHLO mail.pdt.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753500Ab1AJQoQ convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:36121 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908Ab1A2Jhk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 11:44:16 -0500
-From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-Subject: What pieces are needed for wl1271..what directories, files,
- configs, etc..
-Date: Mon, 10 Jan 2011 16:44:13 +0000
-Message-ID: <0826983CC0CB074798C42E77D8ACD07F067DE7@pdtms1.pdt.com>
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 29 Jan 2011 04:37:40 -0500
+Received: by qyk12 with SMTP id 12so4470193qyk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Jan 2011 01:37:39 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20110128161612.GC2452@redhat.com>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+	<AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
+	<AANLkTikqR=aX+icFSKxkMNCZdbEgPmKR--gAPePgW6vM@mail.gmail.com>
+	<20110128161612.GC2452@redhat.com>
+Date: Sat, 29 Jan 2011 10:37:38 +0100
+Message-ID: <AANLkTimPoG2wEY-XOpfW99qpK6ohe5k3wR6XjtSYCH4L@mail.gmail.com>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Brian Prodoehl <bprodoehl@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 28 stycznia 2011 17:16 użytkownik Stanislaw Gruszka
+<sgruszka@redhat.com> napisał:
+> On Thu, Jan 27, 2011 at 06:19:56PM +0100, Rafał Miłecki wrote:
+>> What I've bought is following adapter:
+>> http://allegro.pl/adapter-wifi-mini-pci-e-na-pci-e-3-anteny-kp13-i1429732145.html
+>
+> I'm using adapters form http://www.hwtools.net/ , they work pretty well for me,
+> but they are also quite expensive.
 
-Hello all wireless gurus!!
-
-I've been watching the linux-wireless mailings on the wl1271...........
-
-I've been trying to figure out how to get the wl1271 working with
-imx233 processor...
-
-I think we are moving to Linux 2.6.35 and android gingerbread (2.3)...
-
-I"m very confused as to what files/configs/etc..need to be grabbed to get my task going.......
-
-I see spi, sdio...not sure where all changes are made for the wl1271...i'm assuming
-not just in the ...net/wireless/wl1271 directory.......... i have firmware too...........(.bins..)
-
-I'm quite confused about the chip and how each part will work (BT, WLAN, and FM)...
-Do you have any documentation..(for dummies, that would be me!)
-that would help me understand about the chip..how it communicates to the processor,
-how it does it's job with respect to BT, WLAN, and FM, etc..
-
-I have NO idea where to begin.......I've been googling and reading and I have downloaded
-your wl12xx git........
-
-If you can help me AT ALL to get me up to speed/ to start, what i need to do to connect
-the wl1271 to the imx233....if not imx233..that whatever you have........
-
-I would greatly appreciate ANY help, guidance, advice.........all this is VERY new to me..
-
-I also have to figure out how to use the chip for ANT+.......?????????
-
-THANK YOU THANK YOU THANK YOU THANK YOU THANK YOU
-
-Karen
+Yeah, they have adapters few times more expensive than my one :(
 
 
+Yesterday my friend was nice (and brave :P) enough to let me open his
+notebook and test my card in it. Card was detected just fine in his
+Windows 7.
 
+Today I managed to test my adapter (with my Broadcom card inside) in
+some other PC with PCI Express x1. It was detected again! Motherboard
+in this PC is: Asus/Pegatron IPMTB-TK.
+
+
+So:
+1) My Broadcom card is fine
+2) My adapted is fine
+
+There must be problem with my motherboard/BIOS/PCI Express x1 slot.
+
+I'm much happier now when I know I don't need to return that adapters
+(I bought 2) :)
+
+-- 
+Rafał
