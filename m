@@ -1,278 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33907 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468Ab1AJGSI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 01:18:08 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] ath9k:  Restart xmit logic in xmit watchdog.
-Date: Sun,  9 Jan 2011 22:18:01 -0800
-Message-Id: <1294640281-14000-1-git-send-email-greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:56208 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752402Ab1A2NeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Jan 2011 08:34:23 -0500
+Message-ID: <4D441756.5010702@openwrt.org>
+Date: Sat, 29 Jan 2011 14:34:14 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: hti->control_chan is 15??
+References: <4D4345A8.6060806@candelatech.com> <4D435D76.2040703@candelatech.com> <AANLkTimji+Y0KfDCzWDX63KfOjRFzxgKbVAq6HhMcw20@mail.gmail.com> <4D4362BF.7050208@candelatech.com> <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
+In-Reply-To: <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 2011-01-29 1:48 AM, Daniel Halperin wrote:
+> On Fri, Jan 28, 2011 at 4:43 PM, Ben Greear <greearb@candelatech.com> wrote:
+>> My AP is an off-the-shelf Netgear:
+>> WNDR3700
+>>
+>> It's only rate configuration option is '300Mbps', which appears to
+>> turn on HT40.
+>>
+>> It is configured for channel 10 (for the packet capture) and actually
+>> passes traffic there.  It's just this HT Info thing with (primary-channel ==
+>> (real_channel + 4))
+>> that seems wrong.  Note that when I had the channel set to 11, it was
+>> reporting
+>> 15 for the primary channel in the HT info.
+>>
+>> Looks like a bug in that AP to me...but would be nice if there were a way to
+>> work around it, in case others have similar issues.
+> 
+> Set it to channel 6, then?
+> 
+> Yeah, I played with Netgear's APs (and D-Link's) for about 3 hours
+> before I put them down and never picked them up again.  Performance,
+> configuration, reliability, etc., were horrible.  I've found that
+> Apple APs work well, but really hostapd offers the best flexibility by
+> far.
+I think the hardware quality of the WNDR3700 is pretty good. I'm using
+it at home regularly (running OpenWrt of course).
 
-The system can get into a state where the xmit queue
-is stopped, but there are no packets pending, so
-the queue will not be restarted.
-
-Add logic to the xmit watchdog to attempt to restart
-the xmit logic if this situation is detected.
-
-Example 'dmesg' output:
-
-ath: txq: f4e723e0 axq_qnum: 2, mac80211_qnum: 2 axq_link: f4e996c8 pending frames: 1 axq_acq empty: 1 stopped: 0 axq_depth: 0  Attempting to restart tx logic.
-
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v1 -> v2:  Add mac80211_qnum to ath_txq structure for
- easy mapping from txq back to mac80211-qnum.  Clean up
- wake-queue logic to make use of this.  Add some comments
- to try to make the queue logic more easily understood.
- Fix typo in printk message.
-
-:100644 100644 93209d6... 35f17fc... M	drivers/net/wireless/ath/ath9k/ath9k.h
-:100644 100644 9e009cc... b0cb792... M	drivers/net/wireless/ath/ath9k/debug.c
-:100644 100644 59c01ca... 5279653... M	drivers/net/wireless/ath/ath9k/init.c
-:100644 100644 d9a4144... 14eeac4... M	drivers/net/wireless/ath/ath9k/xmit.c
- drivers/net/wireless/ath/ath9k/ath9k.h |    9 +++-
- drivers/net/wireless/ath/ath9k/debug.c |    4 +-
- drivers/net/wireless/ath/ath9k/init.c  |    5 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |   79 ++++++++++++++++++++++----------
- 4 files changed, 68 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 93209d6..35f17fc 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -184,7 +184,8 @@ enum ATH_AGGR_STATUS {
- 
- #define ATH_TXFIFO_DEPTH 8
- struct ath_txq {
--	u32 axq_qnum;
-+	int mac80211_qnum; /* mac80211 queue number, -1 means not mac80211 Q */
-+	u32 axq_qnum; /* ath9k hardware queue number */
- 	u32 *axq_link;
- 	struct list_head axq_q;
- 	spinlock_t axq_lock;
-@@ -281,6 +282,11 @@ struct ath_tx_control {
- #define ATH_TX_XRETRY       0x02
- #define ATH_TX_BAR          0x04
- 
-+/**
-+ * @txq_map:  Index is mac80211 queue number.  This is
-+ *  not necessarily the same as the hardware queue number
-+ *  (axq_qnum).
-+ */
- struct ath_tx {
- 	u16 seq_no;
- 	u32 txqsetup;
-@@ -630,6 +636,7 @@ struct ath_softc {
- 	struct ath9k_debug debug;
- 	spinlock_t nodes_lock;
- 	struct list_head nodes; /* basically, stations */
-+	unsigned int tx_complete_poll_work_seen;
- #endif
- 	struct ath_beacon_config cur_beacon_conf;
- 	struct delayed_work tx_complete_work;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 9e009cc..b0cb792 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -629,9 +629,11 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	if (buf == NULL)
- 		return -ENOMEM;
- 
--	len += sprintf(buf, "Num-Tx-Queues: %i  tx-queues-setup: 0x%x\n"
-+	len += sprintf(buf, "Num-Tx-Queues: %i  tx-queues-setup: 0x%x"
-+		       " poll-work-seen: %u\n"
- 		       "%30s %10s%10s%10s\n\n",
- 		       ATH9K_NUM_TX_QUEUES, sc->tx.txqsetup,
-+		       sc->tx_complete_poll_work_seen,
- 		       "BE", "BK", "VI", "VO");
- 
- 	PR("MPDUs Queued:    ", queued);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 59c01ca..5279653 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -442,9 +442,10 @@ static int ath9k_init_queues(struct ath_softc *sc)
- 	sc->config.cabqReadytime = ATH_CABQ_READY_TIME;
- 	ath_cabq_update(sc);
- 
--	for (i = 0; i < WME_NUM_AC; i++)
-+	for (i = 0; i < WME_NUM_AC; i++) {
- 		sc->tx.txq_map[i] = ath_txq_setup(sc, ATH9K_TX_QUEUE_DATA, i);
--
-+		sc->tx.txq_map[i]->mac80211_qnum = i;
-+	}
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d9a4144..14eeac4 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -953,7 +953,7 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
- 		[WME_AC_VI] = ATH_TXQ_AC_VI,
- 		[WME_AC_VO] = ATH_TXQ_AC_VO,
- 	};
--	int qnum, i;
-+	int axq_qnum, i;
- 
- 	memset(&qi, 0, sizeof(qi));
- 	qi.tqi_subtype = subtype_txq_to_hwq[subtype];
-@@ -987,24 +987,25 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
- 			qi.tqi_qflags = TXQ_FLAG_TXEOLINT_ENABLE |
- 					TXQ_FLAG_TXDESCINT_ENABLE;
- 	}
--	qnum = ath9k_hw_setuptxqueue(ah, qtype, &qi);
--	if (qnum == -1) {
-+	axq_qnum = ath9k_hw_setuptxqueue(ah, qtype, &qi);
-+	if (axq_qnum == -1) {
- 		/*
- 		 * NB: don't print a message, this happens
- 		 * normally on parts with too few tx queues
- 		 */
- 		return NULL;
- 	}
--	if (qnum >= ARRAY_SIZE(sc->tx.txq)) {
-+	if (axq_qnum >= ARRAY_SIZE(sc->tx.txq)) {
- 		ath_err(common, "qnum %u out of range, max %zu!\n",
--			qnum, ARRAY_SIZE(sc->tx.txq));
--		ath9k_hw_releasetxqueue(ah, qnum);
-+			axq_qnum, ARRAY_SIZE(sc->tx.txq));
-+		ath9k_hw_releasetxqueue(ah, axq_qnum);
- 		return NULL;
- 	}
--	if (!ATH_TXQ_SETUP(sc, qnum)) {
--		struct ath_txq *txq = &sc->tx.txq[qnum];
-+	if (!ATH_TXQ_SETUP(sc, axq_qnum)) {
-+		struct ath_txq *txq = &sc->tx.txq[axq_qnum];
- 
--		txq->axq_qnum = qnum;
-+		txq->axq_qnum = axq_qnum;
-+		txq->mac80211_qnum = -1;
- 		txq->axq_link = NULL;
- 		INIT_LIST_HEAD(&txq->axq_q);
- 		INIT_LIST_HEAD(&txq->axq_acq);
-@@ -1012,14 +1013,14 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
- 		txq->axq_depth = 0;
- 		txq->axq_ampdu_depth = 0;
- 		txq->axq_tx_inprogress = false;
--		sc->tx.txqsetup |= 1<<qnum;
-+		sc->tx.txqsetup |= 1<<axq_qnum;
- 
- 		txq->txq_headidx = txq->txq_tailidx = 0;
- 		for (i = 0; i < ATH_TXFIFO_DEPTH; i++)
- 			INIT_LIST_HEAD(&txq->txq_fifo[i]);
- 		INIT_LIST_HEAD(&txq->txq_fifo_pending);
- 	}
--	return &sc->tx.txq[qnum];
-+	return &sc->tx.txq[axq_qnum];
- }
- 
- int ath_txq_update(struct ath_softc *sc, int qnum,
-@@ -1988,17 +1989,16 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 	tx_info->status.rates[tx_rateindex].count = ts->ts_longretry + 1;
- }
- 
--static void ath_wake_mac80211_queue(struct ath_softc *sc, int qnum)
-+/* Has no locking.  Must hold spin_lock_bh(&txq->axq_lock)
-+ * before calling this.
-+ */
-+static void __ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
- {
--	struct ath_txq *txq;
--
--	txq = sc->tx.txq_map[qnum];
--	spin_lock_bh(&txq->axq_lock);
--	if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
--		if (ath_mac80211_start_queue(sc, qnum))
-+	if (txq->mac80211_qnum >= 0 &&
-+	    txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
-+		if (ath_mac80211_start_queue(sc, txq->mac80211_qnum))
- 			txq->stopped = 0;
- 	}
--	spin_unlock_bh(&txq->axq_lock);
- }
- 
- static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
-@@ -2101,10 +2101,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		else
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, txok, 0);
- 
--		if (txq == sc->tx.txq_map[qnum])
--			ath_wake_mac80211_queue(sc, qnum);
--
- 		spin_lock_bh(&txq->axq_lock);
-+		__ath_wake_mac80211_queue(sc, txq);
-+
- 		if (sc->sc_flags & SC_OP_TXAGGR)
- 			ath_txq_schedule(sc, txq);
- 		spin_unlock_bh(&txq->axq_lock);
-@@ -2119,6 +2118,9 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
- 	int i;
- 	bool needreset = false;
- 	unsigned long timeout = msecs_to_jiffies(ATH_TX_COMPLETE_POLL_INT);
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+	sc->tx_complete_poll_work_seen++;
-+#endif
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++)
- 		if (ATH_TXQ_SETUP(sc, i)) {
-@@ -2137,6 +2139,34 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
- 					txq->axq_tx_inprogress = true;
- 					txq->start_tx_timer = jiffies;
- 				}
-+			} else {
-+				/* If the queue has pending buffers, then it
-+				 * should be doing tx work (and have axq_depth).
-+				 * Shouldn't get to this state I think..but
-+				 * we do.
-+				 */
-+				if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) &&
-+				    (txq->pending_frames > 0 ||
-+				     !list_empty(&txq->axq_acq) ||
-+				     txq->stopped)) {
-+					ath_err(ath9k_hw_common(sc->sc_ah),
-+						"txq: %p axq_qnum: %u,"
-+						" mac80211_qnum: %i"
-+						" axq_link: %p"
-+						" pending frames: %i"
-+						" axq_acq empty: %i"
-+						" stopped: %i"
-+						" axq_depth: 0  Attempting to"
-+						" restart tx logic.\n",
-+						txq, txq->axq_qnum,
-+						txq->mac80211_qnum,
-+						txq->axq_link,
-+						txq->pending_frames,
-+						list_empty(&txq->axq_acq),
-+						txq->stopped);
-+					__ath_wake_mac80211_queue(sc, txq);
-+					ath_txq_schedule(sc, txq);
-+				}
- 			}
- 			spin_unlock_bh(&txq->axq_lock);
- 		}
-@@ -2232,10 +2262,9 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head,
- 					    &txs, txok, 0);
- 
--		if (txq == sc->tx.txq_map[qnum])
--			ath_wake_mac80211_queue(sc, qnum);
--
- 		spin_lock_bh(&txq->axq_lock);
-+		__ath_wake_mac80211_queue(sc, txq);
-+
- 		if (!list_empty(&txq->txq_fifo_pending)) {
- 			INIT_LIST_HEAD(&bf_head);
- 			bf = list_first_entry(&txq->txq_fifo_pending,
--- 
-1.7.2.3
-
+- Felix
