@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42615 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755363Ab1AKLwN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 06:52:13 -0500
-Date: Tue, 11 Jan 2011 13:52:07 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Andy Pyles <andy.pyles@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: packet injection not working on rt2800usb, ath9k
-Message-ID: <20110111115207.GA28619@jm.kir.nu>
-References: <AANLkTi=2N5A0ZBoULj3d0Bp_GeWQouHGFA_LRWWu1k22@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48655 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752683Ab1A3ScZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 13:32:25 -0500
+Message-ID: <4D45AEB1.3010207@hauke-m.de>
+Date: Sun, 30 Jan 2011 19:32:17 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=2N5A0ZBoULj3d0Bp_GeWQouHGFA_LRWWu1k22@mail.gmail.com>
+To: Larry.Finger@lwfinger.net
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	george0505 <george0505@realtek.com>,
+	'Zhaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: [RFC/RFT 1/8] rtlwifi: Prepare core for addition of USB driver
+References: <1296411100-5675-1-git-send-email-Larry.Finger@lwfinger.net> <1296411100-5675-2-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1296411100-5675-2-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 10, 2011 at 06:08:13PM -0500, Andy Pyles wrote:
-> I'm using linux-wireless snapshot from December, 2010 with the
-> following driver: rt2800usb
+On 01/30/2011 07:11 PM, Larry.Finger@lwfinger.net wrote:
+> From: Larry Finger <Larry.Finger@lwfinger.net>
 > 
-> The linux-wireless snapshot for ath9k is from last summer ( July)
+> With this patch, the core driver now has the capability of handling
+> USB devices.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: george0505 <george0505@realtek.com>
+> Cc: 'Zhaoming_Li' <chaoming_li@realsil.com.cn>
+> ---
+>  drivers/net/wireless/rtlwifi/Makefile |    3 +-
+>  drivers/net/wireless/rtlwifi/debug.h  |    1 +
+>  drivers/net/wireless/rtlwifi/usb.c    | 1050 +++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/rtlwifi/usb.h    |  164 +++++
+>  4 files changed, 1217 insertions(+), 1 deletions(-)
+>  create mode 100644 drivers/net/wireless/rtlwifi/usb.c
+>  create mode 100644 drivers/net/wireless/rtlwifi/usb.h
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+> index 2a7a438..efbff2f 100644
+> --- a/drivers/net/wireless/rtlwifi/Makefile
+> +++ b/drivers/net/wireless/rtlwifi/Makefile
+> @@ -8,6 +8,7 @@ rtlwifi-objs	:=		\
+>  		pci.o		\
+>  		ps.o		\
+>  		rc.o		\
+> -		regd.o
+> +		regd.o		\
+> +		usb.o
+.....
+Now rtlwifi depends on usb (which is missing in KConfig), also when
+using the PCIe chip RTL8192CE. Would it not be better to have one
+interface independent core of rtlwifi as a module and one extra module
+for usb and one for pcie support? I have not looked into the source code
+if it is easily possible to do so.
 
-> Question: Is this operation supported on these two devices? If not,
-> what device can you recommend a device where this does work?
-
-I do not know about rt2800usb, but monitor mode and packet injection
-works with ath9k. I'm not sure how packetspammer is doing this, but at
-least use of Linux packet socket and simple radiotap header works fine
-in my tests. In addition, it could be useful to update your ath9k driver
-to make sure you are running with all the latest fixes.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Hauke
