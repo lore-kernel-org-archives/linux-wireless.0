@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60078 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903Ab1ARMBr (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:50631 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788Ab1A3MIv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 07:01:47 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 20so7110367fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 04:01:46 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 4/5] mac80211: add primarily CAC support
-Date: Tue, 18 Jan 2011 13:01:44 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201101171621.29863.bernhard.schmidt@saxnet.de> <20110117161133.8150D2084@mx.techwires.net> <1295347515.3563.10.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295347515.3563.10.camel@jlt3.sipsolutions.net>
+	Sun, 30 Jan 2011 07:08:51 -0500
+Received: by qyj19 with SMTP id 19so2415670qyj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:08:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101181301.45021.bernhard.schmidt@saxnet.de>
+In-Reply-To: <AANLkTimPoG2wEY-XOpfW99qpK6ohe5k3wR6XjtSYCH4L@mail.gmail.com>
+References: <AANLkTinrAgtjz-3Mv0ik9x6sRRvnvUQZn4jQX97mG7it@mail.gmail.com>
+	<AANLkTinhxNK9a6E2iGdFnvQuk-j7W=Pax7WirH08E5eQ@mail.gmail.com>
+	<AANLkTikqR=aX+icFSKxkMNCZdbEgPmKR--gAPePgW6vM@mail.gmail.com>
+	<20110128161612.GC2452@redhat.com>
+	<AANLkTimPoG2wEY-XOpfW99qpK6ohe5k3wR6XjtSYCH4L@mail.gmail.com>
+Date: Sun, 30 Jan 2011 13:08:50 +0100
+Message-ID: <AANLkTin4S8ZceiRKJ2i01HuiWRxb7gDPa_1SkGonforo@mail.gmail.com>
+Subject: Re: Mini PCIeWiFi card not detected in non-mini adapter
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Brian Prodoehl <bprodoehl@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, January 18, 2011 11:45:15 Johannes Berg wrote:
-> On Mon, 2011-01-17 at 11:24 +0100, Bernhard Schmidt wrote:
-> > ---
-> > 
-> >  net/mac80211/radar.c |   65
-> >  ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  net/mac80211/radar.h |    4 +++
-> >  2 files changed, 69 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/mac80211/radar.c b/net/mac80211/radar.c
-> > index e90b8bf..afb2ae1 100644
-> > --- a/net/mac80211/radar.c
-> > +++ b/net/mac80211/radar.c
-> > @@ -15,6 +15,66 @@
-> > 
-> >  #include "driver-ops.h"
-> >  #include "radar.h"
-> > 
-> > +static void cac_timer(unsigned long data)
-> > +{
-> > +	struct ieee80211_local *local = (void *) data;
-> > +	struct ieee80211_radar *radar = &local->radar;
-> > +	struct ieee80211_channel *chan;
-> > +
-> > +	printk(KERN_INFO "CAC done\n");
-> > +
-> > +	chan = local->oper_channel;
-> > +	mutex_lock(&radar->mtx);
-> 
-> Clearly, you haven't even tested this code. I'm not sure why I'm even
-> reviewing it.
+I write everything down, in case someone in future would hit similar issue.
 
-Granted, I did only some basic tests with only a few predefined 
-scenarios, not at all is just wrong. Anyways, I should have mentioned in 
-0/13 that preventing channel changes while in CAC should be considered 
-and chan should be assigned to local variable then.
+W dniu 29 stycznia 2011 10:37 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> W dniu 28 stycznia 2011 17:16 użytkownik Stanislaw Gruszka
+> <sgruszka@redhat.com> napisał:
+>> On Thu, Jan 27, 2011 at 06:19:56PM +0100, Rafał Miłecki wrote:
+>>> What I've bought is following adapter:
+>>> http://allegro.pl/adapter-wifi-mini-pci-e-na-pci-e-3-anteny-kp13-i1429732145.html
+>>
+>> I'm using adapters form http://www.hwtools.net/ , they work pretty well for me,
+>> but they are also quite expensive.
+>
+> Yeah, they have adapters few times more expensive than my one :(
+>
+>
+> Yesterday my friend was nice (and brave :P) enough to let me open his
+> notebook and test my card in it. Card was detected just fine in his
+> Windows 7.
+>
+> Today I managed to test my adapter (with my Broadcom card inside) in
+> some other PC with PCI Express x1. It was detected again! Motherboard
+> in this PC is: Asus/Pegatron IPMTB-TK.
+>
+>
+> So:
+> 1) My Broadcom card is fine
+> 2) My adapted is fine
+>
+> There must be problem with my motherboard/BIOS/PCI Express x1 slot.
+>
+> I'm much happier now when I know I don't need to return that adapters
+> (I bought 2) :)
+
+I've used openSUSE LiveCD on Asus/Pegatron IPMTB-TK and I still was
+able to see my WiFi card (using adapter).
+
+Then thanks for MSDNAA I've tried Windows XP on my problematic
+P5V02-MX motherboard. Windows XP also could not detect my WiFI card!
+
+So there is nothing from with Linux+adapter, the problem in directly
+related to my P5V02-MX motherboard.
 
 -- 
-Best regards,
-
-Dipl.-Inf. (FH) Bernhard Schmidt (software development)
-
-saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
-Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
-managing director: Steffen Dreise - county court Chemnitz - HRB 23017
-http://www.saxnet.de
+Rafał
