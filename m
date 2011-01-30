@@ -1,73 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45767 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab1AGBFY (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:51246 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343Ab1A3TLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 20:05:24 -0500
-Received: by fxm20 with SMTP id 20so16554858fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 17:05:23 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: greearb@candelatech.com
-Subject: Re: [PATCH 1/3] ath9k: Decrease skb size to fit into one page.
-Date: Fri, 7 Jan 2011 02:04:59 +0100
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Eric Dumazet <eric.dumazet@gmail.com>
-References: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1294361165-15308-1-git-send-email-greearb@candelatech.com>
+	Sun, 30 Jan 2011 14:11:40 -0500
+Message-ID: <4D45B7D9.5060109@davizone.at>
+Date: Sun, 30 Jan 2011 20:11:21 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201101070205.00886.chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 16/18] wl1251: fix channel switching in monitor mode
+References: <4D45A7A0.5010408@davizone.at>
+In-Reply-To: <4D45A7A0.5010408@davizone.at>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 January 2011 01:46:03 greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Patch is from Eric Dumazet, as described here:
-> https://patchwork.kernel.org/patch/104271/
-> 
-> Reported-by: Michael Guntsche <mike@it-loops.com>
-> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> NOTE:  This needs review by ath9k and/or other informed
-> people.
+Use the ENABLE_RX command for channel switching when no interface is present
+(monitor mode only).
+The advantage of ENABLE_RX is that it leaves the tx data path disabled in
+firmware, whereas the usual JOIN command seems to transmit some frames at
+firmware level.
 
-Does the hardware support vector-i/o for rx (like for instance iwlagn)?
-Else, this change would break A-MSDU rx - which is a mandatory feature
-(although, not very popular) of 802.11n - 
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+Sorry for the partly broken patches, I thought I configured my client the
+right way. I tried to stop the mails at my mailserver, but it was mostly
+already too late.
+---
+ drivers/net/wireless/wl1251/main.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
 
-See for example 802.11n-2009 9.7c:
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index edafa98..c931a3a 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -610,8 +610,19 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (channel != wl->channel) {
+ 		wl->channel = channel;
+ 
+-		ret = wl1251_join(wl, wl->bss_type, wl->channel,
+-				  wl->beacon_int, wl->dtim_period);
++		/*
++		 * Use ENABLE_RX command for channel switching when no
++		 * interface is present (monitor mode only).
++		 * This leaves the tx path disabled in firmware, whereas
++		 * the usual JOIN command seems to transmit some frames
++		 * at firmware level.
++		 */
++		if (wl->vif == NULL) {
++			ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
++		} else {
++			ret = wl1251_join(wl, wl->bss_type, wl->channel,
++					  wl->beacon_int, wl->dtim_period);
++		}
+ 		if (ret < 0)
+ 			goto out_sleep;
+ 	}
+-- 
+1.7.0.4
 
-"Support for the reception of an A-MSDU, where [...], is mandatory for
-an HT STA"
 
-And 7.1.2 "The maximum frame body size is determined by the maximum
-MSDU size (2304 octets) OR the maximum A-MSDU (3839 or 7935 octets,
-depending upon the STA's capability), plus any overhead from security
-encapsulation.
-
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index b2497b8..270661d 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -230,11 +230,11 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
->  	int error = 0, i;
->  	u32 size;
->  
-> -
-> -	common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN +
-> -				     ah->caps.rx_status_len,
-> -				     min(common->cachelsz, (u16)64));
-> -
-> +	size = roundup(IEEE80211_MAX_MPDU_LEN + ah->caps.rx_status_len,
-> +		       min(common->cachelsz, (u16)64));
-> +	common->rx_bufsize = max_t(u32, size,
-> +				   SKB_MAX_ORDER(NET_SKB_PAD
-> +						 + common->cachelsz, 0));
->  	ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
->  				    ah->caps.rx_status_len);
->  
-> 
