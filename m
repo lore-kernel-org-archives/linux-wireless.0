@@ -1,44 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:34460 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911Ab1A0WS2 (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:40136 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751523Ab1A3TL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 17:18:28 -0500
+	Sun, 30 Jan 2011 14:11:28 -0500
+Message-ID: <4D45B7CE.7070705@davizone.at>
+Date: Sun, 30 Jan 2011 20:11:10 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-In-Reply-To: <87tyguje7j.fsf@ti.com>
-References: <Pine.LNX.4.44L0.1101271439020.2090-100000@iolanthe.rowland.org>
-	<87tyguje7j.fsf@ti.com>
-Date: Thu, 27 Jan 2011 23:18:27 +0100
-Message-ID: <AANLkTinbHx1XtxpWDr+UCUBo6xRCs=zT1AD_y2kXo0cL@mail.gmail.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-From: Vitaly Wool <vitalywool@gmail.com>
-To: Kevin Hilman <khilman@ti.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 12/18] wl1251: set rate index and preamble flag on received
+ packets
+References: <4D45A5E7.1040202@davizone.at>
+In-Reply-To: <4D45A5E7.1040202@davizone.at>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 27, 2011 at 9:15 PM, Kevin Hilman <khilman@ti.com> wrote:
->
->> If it is, then you can call omap_pm_runtime_suspend() directly instead
->> of calling dev->bus->pm->runtime_suspend().
->
-> Personally, I prefer going through dev->bus as we try to avoid SoC
-> specific calls in the driver.
->
-> This same HW block might be re-used on non-OMAP SoCs (e.g. TI DaVinci)
-> that would have different PM at the susbystem level.
->
-> So, to summarize, as long as folks are OK with drivers directly calling
-> the subsystem runtime PM callbacks, I'll go this route.
+Set the rate index rate_idx and preamble flag RX_FLAG_SHORTPRE on received
+packets.
 
-I personally think it's okay for the moment. Generally speaking, SD
-bus driver might not have runtime PM support so it's better to have
-this explicitly called and not compiling for other platforms rather
-than have it compiling but working not the way it's expected to.
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+Sorry for the partly broken patches, I thought I configured my client the
+right way. I tried to stop the mails at my mailserver, but it was mostly
+already too late.
+---
+ drivers/net/wireless/wl1251/rx.c |   46 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 45 insertions(+), 1 deletions(-)
 
-~Vitaly
+diff --git a/drivers/net/wireless/wl1251/rx.c b/drivers/net/wireless/wl1251/rx.c
+index 99308af..c9396b5 100644
+--- a/drivers/net/wireless/wl1251/rx.c
++++ b/drivers/net/wireless/wl1251/rx.c
+@@ -96,8 +96,52 @@ static void wl1251_rx_status(struct wl1251 *wl,
+ 	if (unlikely(!(desc->flags & RX_DESC_VALID_FCS)))
+ 		status->flag |= RX_FLAG_FAILED_FCS_CRC;
+ 
++	switch (desc->rate) {
++		/* skip 1 and 12 Mbps because they have same value 0x0a */
++	case RATE_2MBPS:
++		status->rate_idx = 1;
++		break;
++	case RATE_5_5MBPS:
++		status->rate_idx = 2;
++		break;
++	case RATE_11MBPS:
++		status->rate_idx = 3;
++		break;
++	case RATE_6MBPS:
++		status->rate_idx = 4;
++		break;
++	case RATE_9MBPS:
++		status->rate_idx = 5;
++		break;
++	case RATE_18MBPS:
++		status->rate_idx = 7;
++		break;
++	case RATE_24MBPS:
++		status->rate_idx = 8;
++		break;
++	case RATE_36MBPS:
++		status->rate_idx = 9;
++		break;
++	case RATE_48MBPS:
++		status->rate_idx = 10;
++		break;
++	case RATE_54MBPS:
++		status->rate_idx = 11;
++		break;
++	}
++
++	/* for 1 and 12 Mbps we have to check the modulation */
++	if (desc->rate == RATE_1MBPS) {
++		if (!(desc->mod_pre & OFDM_RATE_BIT))
++			/* CCK -> RATE_1MBPS */
++			status->rate_idx = 0;
++		else
++			/* OFDM -> RATE_12MBPS */
++			status->rate_idx = 6;
++	}
+ 
+-	/* FIXME: set status->rate_idx */
++	if (desc->mod_pre & SHORT_PREAMBLE_BIT)
++		status->flag |= RX_FLAG_SHORTPRE;
+ }
+ 
+ static void wl1251_rx_body(struct wl1251 *wl,
+-- 
+1.7.0.4
+
+
