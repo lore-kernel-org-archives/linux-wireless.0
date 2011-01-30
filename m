@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:58636 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751073Ab1AWUCx (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:57740 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700Ab1A3STd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 15:02:53 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 763D1540D99
-	for <linux-wireless@vger.kernel.org>; Sun, 23 Jan 2011 15:04:54 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-23 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110123200252.30F4240F97@repository3.orbit-lab.org>
-Date: Sun, 23 Jan 2011 15:02:52 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 30 Jan 2011 13:19:33 -0500
+Message-ID: <4D45A7A0.5010408@davizone.at>
+Date: Sun, 30 Jan 2011 19:02:08 +0100
+From: David Gnedt <david.gnedt@davizone.at>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 16/18] wl1251: fix channel switching in monitor mode
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Use the ENABLE_RX command for channel switching when no interface is present
+(monitor mode only).
+The advantage of ENABLE_RX is that it leaves the tx data path disabled in
+firmware, whereas the usual JOIN command seems to transmit some frames at
+firmware level.
 
-compat-wireless code metrics
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+ drivers/net/wireless/wl1251/main.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
 
-    782984 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1982 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1955 - % of crap code
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index edafa98..c931a3a 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -610,8 +610,19 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (channel != wl->channel) {
+ 		wl->channel = channel;
+ 
+-		ret = wl1251_join(wl, wl->bss_type, wl->channel,
+-				  wl->beacon_int, wl->dtim_period);
++		/*
++		 * Use ENABLE_RX command for channel switching when no
++		 * interface is present (monitor mode only).
++		 * This leaves the tx path disabled in firmware, whereas
++		 * the usual JOIN command seems to transmit some frames
++		 * at firmware level.
++		 */
++		if (wl->vif == NULL) {
++			ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
++		} else {
++			ret = wl1251_join(wl, wl->bss_type, wl->channel,
++					  wl->beacon_int, wl->dtim_period);
++		}
+ 		if (ret < 0)
+ 			goto out_sleep;
+ 	}
+-- 
+1.7.0.4
 
-Base tree: linux-next.git
-Base tree version: next-20110121
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
+
