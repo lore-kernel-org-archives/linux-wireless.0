@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:43083 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118Ab1AGAd7 (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:39937 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752846Ab1A3STf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 19:33:59 -0500
-Received: by pxi15 with SMTP id 15so2993961pxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:33:59 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sun, 30 Jan 2011 13:19:35 -0500
+Message-ID: <4D45A79E.7040801@davizone.at>
+Date: Sun, 30 Jan 2011 19:02:06 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19750.24410.495583.789895@gargle.gargle.HOWL>
-Date: Fri, 7 Jan 2011 06:03:30 +0530
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC v2] cfg80211: Add HT BSS attributes
-In-Reply-To: <19749.37051.292861.996698@gargle.gargle.HOWL>
-References: <19749.32067.311517.479374@gargle.gargle.HOWL>
-	<19749.37051.292861.996698@gargle.gargle.HOWL>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 15/18] wl1251: disable power saving in monitor mode
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Resend to list).
+Force power saving off while monitor interface is present.
 
-Sujith wrote:
-> Sujith wrote:
-> > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> > 
-> > Add two new per-BSS attributes to allow configuration of
-> > HT capabilites and operational parameters by hostapd.
-> 
-> Ok, looks like this is not needed after all.
-> When operating in AP mode, an associated station's HT caps is
-> notified to the driver through sta_add() anyway.
-> 
-> The main motive for this patch was that ath9k_htc required the
-> HT params of the current BSS and it turns out that the firmware
-> doesn't do anything with the information. :)
-> 
-> Sujith
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+ drivers/net/wireless/wl1251/main.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index d6ae6d5..edafa98 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -616,7 +616,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto out_sleep;
+ 	}
+ 
+-	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
++	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested &&
++	    !wl->monitor_present) {
+ 		wl1251_debug(DEBUG_PSM, "psm enabled");
+ 
+ 		wl->psm_requested = true;
+@@ -632,8 +633,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
+ 		if (ret < 0)
+ 			goto out_sleep;
+-	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+-		   wl->psm_requested) {
++	} else if ((!(conf->flags & IEEE80211_CONF_PS) || wl->monitor_present)
++		   && wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm disabled");
+ 
+ 		wl->psm_requested = false;
+-- 
+1.7.0.4
+
+
