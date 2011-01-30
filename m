@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:48884 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756666Ab1AaW6T (ORCPT
+Received: from lider.pardus.org.tr ([193.140.100.216]:57436 "EHLO
+	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab1A3TJo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:58:19 -0500
-Message-ID: <4D473E83.1050703@davizone.at>
-Date: Mon, 31 Jan 2011 23:58:11 +0100
-From: David Gnedt <david.gnedt@davizone.at>
+	Sun, 30 Jan 2011 14:09:44 -0500
+Message-ID: <4D45B776.4000403@pardus.org.tr>
+Date: Sun, 30 Jan 2011 21:09:42 +0200
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 04/18] wl1251: add sysfs interface for bluetooth coexistence
- mode configuration
-References: <4D45A5A5.5090909@davizone.at> <87mxmhdrdz.fsf@purkki.adurom.net>
-In-Reply-To: <87mxmhdrdz.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org, platform-driver-x86@vger.kernel.org
+Subject: Re: Rfkill always soft/hard blocked upon boot
+References: <4D455DC1.6010909@pardus.org.tr> <4D45B338.8010802@lwfinger.net>
+In-Reply-To: <4D45B338.8010802@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 2011-01-31 16:28, schrieb Kalle Valo:
-> Sorry, but this was an awful hack in the fremantle kernel and I really
-> would not like to see this in the upstream driver. We should do better
-> than that :) And besides, who would use it? The only user I know is
-> maemo's wlancond and maemo is dead and buried anyway. RIP
-> 
-> I'm not saying that we don't need this, I just want to understand
-> where we need this. And also sysfs is not the best choise imho, maybe
-> debugfs is better?
+On 30.01.2011 20:51, Larry Finger wrote:
 
-I understand that you don't like this patch upstream, but I also think that it
-is a very useful feature to switch btcoex on/off. Moreover I think 3 states
-aren't needed at all, but we should at least be able to disable it completely.
-Maybe we could also detect if bt is enabled/disabled in kernel and switch the
-btcoex automatically?
-By the way, how is this problem solved in other drivers?
+> The nature of that Fn-F2 key depends on how the motherboard manufacturer coded
+> their BIOS. Most do it as a toggle and use some WMI (Windows Management
+> Interface) code to initialize it on boot up. As this no-name laptop is unlikely
+> to have a WMI driver the way that name brands do, it probably generates a
+> keystroke. That is easy to check - Use CTRL-ALT-F1 to switch to a console, log
+> in, and issue the command "showkey". Is a keycode returned when Fn-F2 is pressed?
 
->> It should be noted that this driver always enabled bt-coexistence before
->> and enabled bt-coexistence directly affects the receiving performance,
->> rendering it unusable in some low-signal situations. Especially monitor
->> mode is affected very badly with bt-coexistence enabled.
-> 
-> Yes, btcoex is very tricky to get right. Also one problem is that
-> wl1251's btcoex implementation significantly increases power
-> consumption.
+Hmm I've got it. So maybe taking look at the ACPI tables/WMI block can 
+reveal a way to initialize the toggle? I'm not really experienced in 
+these things but I'll take a look out of curiosity.
 
-One more point to make it switchable.
+Thanks!
+
+
+-- 
+Pardus Linux
+http://www.pardus.org.tr/eng
