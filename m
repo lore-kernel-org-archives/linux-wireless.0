@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59709 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752035Ab1AOLID (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:56767 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400Ab1A3TLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Jan 2011 06:08:03 -0500
-Date: Sat, 15 Jan 2011 13:07:51 +0200
-From: Jouni Malinen <j@w1.fi>
-To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
-Cc: sbrown@cortland.com, greearb@candelatech.com,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and
- beacons with multiple vifs.
-Message-ID: <20110115110751.GA7035@jm.kir.nu>
-References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
- <AANLkTi=WTUiy1DYNhE12_KZp8QFUrWebY2Cpzud5P0b3@mail.gmail.com>
- <1295052936.2253.5.camel@mythtv.ewol.com>
- <AANLkTi=_qAB6aVEbsTBUfpVwTg4GbLsAYbyP0PA2n+NO@mail.gmail.com>
+	Sun, 30 Jan 2011 14:11:37 -0500
+Message-ID: <4D45B7D5.2030408@davizone.at>
+Date: Sun, 30 Jan 2011 20:11:17 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTi=_qAB6aVEbsTBUfpVwTg4GbLsAYbyP0PA2n+NO@mail.gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 15/18] wl1251: disable power saving in monitor mode
+References: <4D45A79E.7040801@davizone.at>
+In-Reply-To: <4D45A79E.7040801@davizone.at>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 15, 2011 at 02:20:00AM +0100, Björn Smedman wrote:
-> 2011/1/15 Steve Brown <sbrown@cortland.com>:
-> > For instance, an ap vif has a ~100ms interval and a mesh vif has a
-> > ~1000ms interval. I don't see how to avoid a per vif interval.
-> 
-> I agree. We should fix ath9k so it works correctly even if beacon
-> interval is different for different vifs (within some reasonable
-> limits).
+Force power saving off while monitor interface is present.
 
-Yes, up to a limit. Handling something like 100 TU on one vif and 1000
-TU on another is fine, but something like 100 TU and 103 TU would need
-to be forced to use the same interval. I've been thinking of adding some
-kind of mechanism for the driver to override Beacon interval in such
-cases (which would need to go back all the way to user space to hostapd
-in case of AP mode).
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+Sorry for the partly broken patches, I thought I configured my client the
+right way. I tried to stop the mails at my mailserver, but it was mostly
+already too late.
+---
+ drivers/net/wireless/wl1251/main.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index d6ae6d5..edafa98 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -616,7 +616,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto out_sleep;
+ 	}
+ 
+-	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
++	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested &&
++	    !wl->monitor_present) {
+ 		wl1251_debug(DEBUG_PSM, "psm enabled");
+ 
+ 		wl->psm_requested = true;
+@@ -632,8 +633,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
+ 		if (ret < 0)
+ 			goto out_sleep;
+-	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+-		   wl->psm_requested) {
++	} else if ((!(conf->flags & IEEE80211_CONF_PS) || wl->monitor_present)
++		   && wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm disabled");
+ 
+ 		wl->psm_requested = false;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.4
+
+
