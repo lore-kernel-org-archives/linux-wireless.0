@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60078 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733Ab1ARMBM (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54722 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750704Ab1A3FiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 07:01:12 -0500
-Received: by fxm20 with SMTP id 20so7110367fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 04:01:11 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 4/5] mac80211: add primarily CAC support
-Date: Tue, 18 Jan 2011 13:00:44 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201101171621.29863.bernhard.schmidt@saxnet.de> <20110117161133.8150D2084@mx.techwires.net> <1295347692.3563.11.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295347692.3563.11.camel@jlt3.sipsolutions.net>
+	Sun, 30 Jan 2011 00:38:24 -0500
+Received: from [71.112.48.101] (pool-71-112-48-101.sttlwa.dsl-w.verizon.net [71.112.48.101])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p0U5cNTj011453
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Jan 2011 21:38:24 -0800
+Message-ID: <4D44F94F.8040707@candelatech.com>
+Date: Sat, 29 Jan 2011 21:38:23 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101181301.09899.bernhard.schmidt@saxnet.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Why is wmm_param required for HT40- in mlme.c
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, January 18, 2011 11:48:12 Johannes Berg wrote:
-> I don't get this at all. How's the driver supported to report
-> anything?!
+I tried to set up hostapd to do HT40-, but for whatever reason,
+it's not sending any wmm_param options, so the stations will not
+associate with HT40- enabled due to the check below.
 
-ieee80211_radar_interference()
+Is it really *reqired* that wmm_param exist to enable HT mode?
+
+ From mlme.c:
+	if (elems.ht_info_elem && elems.wmm_param &&
+	    (sdata->local->hw.queues >= 4) &&
+	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
+		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
+					       cbss->bssid, ap_ht_cap_flags);
+
+Thanks,
+Ben
 
 -- 
-Best regards,
-
-Dipl.-Inf. (FH) Bernhard Schmidt (software development)
-
-saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
-Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
-managing director: Steffen Dreise - county court Chemnitz - HRB 23017
-http://www.saxnet.de
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
