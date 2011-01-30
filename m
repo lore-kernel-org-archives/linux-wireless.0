@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50950 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755331Ab1ALMkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 07:40:39 -0500
-From: <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: juuso.oikarinen@nokia.com
-Subject: [PATCH 2/2] wl12xx: add hw configuration for max supported AMDPU size
-Date: Wed, 12 Jan 2011 14:40:52 +0200
-Message-ID: <1294836052-16828-2-git-send-email-coelho@ti.com>
-In-Reply-To: <1294836052-16828-1-git-send-email-coelho@ti.com>
-References: <1294836052-16828-1-git-send-email-coelho@ti.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:49325 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400Ab1A3LZM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 06:25:12 -0500
+Received: by gxk9 with SMTP id 9so1635323gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 03:25:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110126140444.GA30373@jm.kir.nu>
+References: <1295816579-28925-1-git-send-email-arik@wizery.com>
+ <1295869283.3639.7.camel@jlt3.sipsolutions.net> <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
+ <20110126140444.GA30373@jm.kir.nu>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 30 Jan 2011 13:24:56 +0200
+Message-ID: <AANLkTi=AWanc8+JK7hQnRMpPEC+2hK0aTn0xenru7Ryw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
+To: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+Hey Jouni, Johannes,
 
-The wl12xx chips do the AMDPU aggregation work in the firmware, but it
-supports a maximum of 8 frames per block.  Configure the mac80211 hw
-structure accordingly.
+After discussing this with the wl12xx FW guys, it seems that:
+- WPS2 and P2P special cases are currently not handled in FW - the
+default template is always returned for probe requests
+- The AP currently always responds to a probe request
+- The AP currently never passes up probe requests
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+In light of this new info, this might be a possible solution:
+- Implement a capability flag for
+ap-supports-offloading-of-basic-probe-reqs. With "basic" I mean WPS1/2
+and P2P IEs are not included.
+- Hostapd will configure a probe-resp template only when it supports
+probe-resp offloading (currently when WPS and P2P are off) and the
+driver supports it (using the capability flag).
+- Support a "pass and and don't reply to probe requests" mode in FW
+(this will take some time to implement).
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 67732ea..463d6bf 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3178,6 +3178,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 
- 	wl->hw->sta_data_size = sizeof(struct wl1271_station);
- 
-+	wl->hw->max_rx_aggregation_subframes = 8;
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
--- 
-1.7.1
+For now the wl12xx driver must operate in a "compatibility" mode,
+since the FW doesn't support passing-up probe requests. When the
+probe-resp template is not available we will use the beacon template,
+as currently used now. There are currently no plans for intelligent
+filtering of probe requests in FW - its all or nothing.
 
+Should hostapd reply to probe requests when offloading is configured?
+This is a moot point for wl12xx since probe-requests are not passed
+up. Do you have a preference here?
+
+I'd appreciate your comments on this.
+
+Arik
