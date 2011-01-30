@@ -1,69 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40518 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1AUDBL (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41674 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583Ab1A3MY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:01:11 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so1249489iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:11 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sun, 30 Jan 2011 07:24:29 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so2146783eye.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:29 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/21] rt2x00: Introduce tasklets for interrupt handling
+Date: Sun, 30 Jan 2011 13:17:52 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201101301316.04044.IvDoorn@gmail.com> <201101301316.53532.IvDoorn@gmail.com> <201101301317.30813.IvDoorn@gmail.com>
+In-Reply-To: <201101301317.30813.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63177.228707.769008@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:30:25 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 09/33] ath9k_htc: Use VIF from the packet's control data
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101301317.53313.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-There is no need to use a locally stored reference.
+No functional changes, just preparation for moving interrupt handling to
+tasklets. The tasklets are disabled by default. Drivers making use of
+them need to enable the tasklets when the device state is set to IRQ_ON.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h    |   13 +++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   21 +++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 6ddcf93..04d8248 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -232,6 +232,7 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
- void ath9k_tx_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-+	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
-@@ -243,12 +244,16 @@ void ath9k_tx_tasklet(unsigned long data)
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		fc = hdr->frame_control;
- 		tx_info = IEEE80211_SKB_CB(skb);
-+		vif = tx_info->control.vif;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 985982b..6965131 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -520,6 +520,10 @@ struct rt2x00lib_ops {
+ 	 * TX status tasklet handler.
+ 	 */
+ 	void (*txstatus_tasklet) (unsigned long data);
++	void (*pretbtt_tasklet) (unsigned long data);
++	void (*tbtt_tasklet) (unsigned long data);
++	void (*rxdone_tasklet) (unsigned long data);
++	void (*autowake_tasklet) (unsigned long data);
  
- 		memset(&tx_info->status, 0, sizeof(tx_info->status));
- 
-+		if (!vif)
-+			goto send_mac80211;
+ 	/*
+ 	 * Device init handlers.
+@@ -905,6 +909,15 @@ struct rt2x00_dev {
+ 	 * Tasklet for processing tx status reports (rt2800pci).
+ 	 */
+ 	struct tasklet_struct txstatus_tasklet;
++	struct tasklet_struct pretbtt_tasklet;
++	struct tasklet_struct tbtt_tasklet;
++	struct tasklet_struct rxdone_tasklet;
++	struct tasklet_struct autowake_tasklet;
 +
- 		rcu_read_lock();
++	/*
++	 * Protect the interrupt mask register.
++	 */
++	spinlock_t irqmask_lock;
+ };
  
--		sta = ieee80211_find_sta(priv->vif, hdr->addr1);
-+		sta = ieee80211_find_sta(vif, hdr->addr1);
- 		if (!sta) {
- 			rcu_read_unlock();
- 			ieee80211_tx_status(priv->hw, skb);
-@@ -278,6 +283,7 @@ void ath9k_tx_tasklet(unsigned long data)
- 
- 		rcu_read_unlock();
- 
-+	send_mac80211:
- 		/* Send status to mac80211 */
- 		ieee80211_tx_status(priv->hw, skb);
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 50b379a..7d4dece 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -831,6 +831,26 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
  	}
+ 
+ 	/*
++	 * Initialize tasklets if used by the driver. Tasklets are
++	 * disabled until the interrupts are turned on. The driver
++	 * has to handle that.
++	 */
++#define RT2X00_TASKLET_INIT(taskletname) \
++	if (rt2x00dev->ops->lib->taskletname) { \
++		tasklet_init(&rt2x00dev->taskletname, \
++			     rt2x00dev->ops->lib->taskletname, \
++			     (unsigned long)rt2x00dev); \
++		tasklet_disable(&rt2x00dev->taskletname); \
++	}
++
++	RT2X00_TASKLET_INIT(pretbtt_tasklet);
++	RT2X00_TASKLET_INIT(tbtt_tasklet);
++	RT2X00_TASKLET_INIT(rxdone_tasklet);
++	RT2X00_TASKLET_INIT(autowake_tasklet);
++
++#undef RT2X00_TASKLET_INIT
++
++	/*
+ 	 * Register HW.
+ 	 */
+ 	status = ieee80211_register_hw(rt2x00dev->hw);
+@@ -958,6 +978,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval = -ENOMEM;
+ 
++	spin_lock_init(&rt2x00dev->irqmask_lock);
+ 	mutex_init(&rt2x00dev->csr_mutex);
+ 
+ 	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
 -- 
-1.7.3.5
+1.7.2.3
 
