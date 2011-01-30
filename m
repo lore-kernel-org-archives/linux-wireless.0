@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:60551 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754322Ab1AaVxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 16:53:20 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/11] iwlagn: use 2030 macro for 2030 devices
-Date: Mon, 31 Jan 2011 13:40:45 -0800
-Message-Id: <1296510047-24576-10-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1296510047-24576-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1296510047-24576-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:51087 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754573Ab1A3UDV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 15:03:21 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id DC1245400F2
+	for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 15:05:36 -0500 (EST)
+Subject: Compat-wireless release for 2011-01-30 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110130200319.C852240F97@repository3.orbit-lab.org>
+Date: Sun, 30 Jan 2011 15:03:19 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For 2030 series of devices, 2030 macro need to be used.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-2000.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 8d637e7..3c5dd36 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -462,13 +462,13 @@ struct iwl_cfg iwl2000_2bg_cfg = {
- 
- struct iwl_cfg iwl2030_2bgn_cfg = {
- 	.name = "2000 Series 2x2 BGN/BT",
--	IWL_DEVICE_2000,
-+	IWL_DEVICE_2030,
- 	.ht_params = &iwl2000_ht_params,
- };
- 
- struct iwl_cfg iwl2030_2bg_cfg = {
- 	.name = "2000 Series 2x2 BG/BT",
--	IWL_DEVICE_2000,
-+	IWL_DEVICE_2030,
- };
- 
- #define IWL_DEVICE_6035						\
--- 
-1.7.0.4
+    782984 - Total upstream lines of code being pulled
+      2103 - backport code changes
+      1843 - backport code additions
+       260 - backport code deletions
+      7279 - backport from compat module
+      9382 - total backport code
+    1.1982 - % of code consists of backport work
+      1531 - Crap changes not yet posted
+      1488 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.1955 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20110121
+compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
