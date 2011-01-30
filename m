@@ -1,74 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42585 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab1AIAUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Jan 2011 19:20:54 -0500
-Message-ID: <4D28FF57.9040706@openwrt.org>
-Date: Sat, 08 Jan 2011 17:20:39 -0700
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.platinumzone24.at ([88.198.159.93]:47340 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094Ab1A3TLW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 14:11:22 -0500
+Message-ID: <4D45B7CA.7060701@davizone.at>
+Date: Sun, 30 Jan 2011 20:11:06 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k:  Implement rx copy-break.
-References: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1294500800-29191-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 10/18] wl1251: split RX and TX data path initialisation
+References: <4D45A5D6.6020506@davizone.at>
+In-Reply-To: <4D45A5D6.6020506@davizone.at>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-08 8:33 AM, greearb@candelatech.com wrote:
-> From: Ben Greear<greearb@candelatech.com>
->
-> This saves us constantly allocating large, multi-page
-> skbs.  It should fix the order-1 allocation errors reported,
-> and in a 60-vif scenario, this significantly decreases CPU
-> utilization, and latency, and increases bandwidth.
->
-> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> ---
-> :100644 100644 b2497b8... ea2f67c... M	drivers/net/wireless/ath/ath9k/recv.c
->   drivers/net/wireless/ath/ath9k/recv.c |   92 ++++++++++++++++++++++-----------
->   1 files changed, 61 insertions(+), 31 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index b2497b8..ea2f67c 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -1702,42 +1704,70 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->   		    unlikely(tsf_lower - rs.rs_tstamp>  0x10000000))
->   			rxs->mactime += 0x100000000ULL;
->
-> -		/* Ensure we always have an skb to requeue once we are done
-> -		 * processing the current buffer's skb */
-> -		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
-> -
-> -		/* If there is no memory we ignore the current RX'd frame,
-> -		 * tell hardware it can give us a new frame using the old
-> -		 * skb and put it at the tail of the sc->rx.rxbuf list for
-> -		 * processing. */
-> -		if (!requeue_skb)
-> -			goto requeue;
-> -
-> -		/* Unmap the frame */
-> -		dma_unmap_single(sc->dev, bf->bf_buf_addr,
-> -				 common->rx_bufsize,
-> -				 dma_type);
-> +		len = rs.rs_datalen + ah->caps.rx_status_len;
-> +		if (use_copybreak) {
-> +			skb = netdev_alloc_skb(NULL, len);
-> +			if (!skb) {
-> +				skb = bf->bf_mpdu;
-> +				use_copybreak = false;
-> +				goto non_copybreak;
-> +			}
-> +		} else {
-I think this should be dependent on packet size, maybe even based on the 
-architecture. Especially on embedded hardware, copying large frames is 
-probably quite a bit more expensive than allocating large buffers. Cache 
-sizes are small, memory access takes several cycles, especially during 
-concurrent DMA.
-Once I'm back home, I could try a few packet size threshold to find a 
-sweet spot for the typical MIPS hardware that I'm playing with. I expect 
-a visible performance regression from this patch when applied as-is.
+Split up data path initialisation into RX and TX data path initialisation
+functions. This change is required for channel switching in monitor mode.
 
-- Felix
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+Sorry for the partly broken patches, I thought I configured my client the
+right way. I tried to stop the mails at my mailserver, but it was mostly
+already too late.
+---
+ drivers/net/wireless/wl1251/cmd.c  |   37 +++++++++++++++++++++++++++++------
+ drivers/net/wireless/wl1251/cmd.h  |    3 +-
+ drivers/net/wireless/wl1251/init.c |    9 ++++++-
+ 3 files changed, 39 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/wl1251/cmd.c b/drivers/net/wireless/wl1251/cmd.c
+index 4e4987d..886da13 100644
+--- a/drivers/net/wireless/wl1251/cmd.c
++++ b/drivers/net/wireless/wl1251/cmd.c
+@@ -203,11 +203,11 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
++int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable)
+ {
+ 	struct cmd_enabledisable_path *cmd;
+ 	int ret;
+-	u16 cmd_rx, cmd_tx;
++	u16 cmd_rx;
+ 
+ 	wl1251_debug(DEBUG_CMD, "cmd data path");
+ 
+@@ -219,13 +219,10 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
+ 
+ 	cmd->channel = channel;
+ 
+-	if (enable) {
++	if (enable)
+ 		cmd_rx = CMD_ENABLE_RX;
+-		cmd_tx = CMD_ENABLE_TX;
+-	} else {
++	else
+ 		cmd_rx = CMD_DISABLE_RX;
+-		cmd_tx = CMD_DISABLE_TX;
+-	}
+ 
+ 	ret = wl1251_cmd_send(wl, cmd_rx, cmd, sizeof(*cmd));
+ 	if (ret < 0) {
+@@ -237,6 +234,32 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
+ 	wl1251_debug(DEBUG_BOOT, "rx %s cmd channel %d",
+ 		     enable ? "start" : "stop", channel);
+ 
++out:
++	kfree(cmd);
++	return ret;
++}
++
++int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable)
++{
++	struct cmd_enabledisable_path *cmd;
++	int ret;
++	u16 cmd_tx;
++
++	wl1251_debug(DEBUG_CMD, "cmd data path");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	cmd->channel = channel;
++
++	if (enable)
++		cmd_tx = CMD_ENABLE_TX;
++	else
++		cmd_tx = CMD_DISABLE_TX;
++
+ 	ret = wl1251_cmd_send(wl, cmd_tx, cmd, sizeof(*cmd));
+ 	if (ret < 0) {
+ 		wl1251_error("tx %s cmd for channel %d failed",
+diff --git a/drivers/net/wireless/wl1251/cmd.h b/drivers/net/wireless/wl1251/cmd.h
+index c4ed9cd..48bef36 100644
+--- a/drivers/net/wireless/wl1251/cmd.h
++++ b/drivers/net/wireless/wl1251/cmd.h
+@@ -35,7 +35,8 @@ int wl1251_cmd_interrogate(struct wl1251 *wl, u16 id, void *buf, size_t len);
+ int wl1251_cmd_configure(struct wl1251 *wl, u16 id, void *buf, size_t len);
+ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
+ 		   void *bitmap, u16 bitmap_len, u8 bitmap_control);
+-int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable);
++int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable);
++int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable);
+ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 		    u16 beacon_interval, u8 dtim_interval);
+ int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
+diff --git a/drivers/net/wireless/wl1251/init.c b/drivers/net/wireless/wl1251/init.c
+index a6ad223..424ce01 100644
+--- a/drivers/net/wireless/wl1251/init.c
++++ b/drivers/net/wireless/wl1251/init.c
+@@ -390,8 +390,13 @@ int wl1251_hw_init(struct wl1251 *wl)
+ 	if (ret < 0)
+ 		goto out_free_data_path;
+ 
+-	/* Enable data path */
+-	ret = wl1251_cmd_data_path(wl, wl->channel, 1);
++	/* Enable rx data path */
++	ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
++	if (ret < 0)
++		goto out_free_data_path;
++
++	/* Enable tx data path */
++	ret = wl1251_cmd_data_path_tx(wl, wl->channel, 1);
+ 	if (ret < 0)
+ 		goto out_free_data_path;
+ 
+-- 
+1.7.0.4
+
+
