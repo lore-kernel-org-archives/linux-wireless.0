@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:48919 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848Ab1AZQaW (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:48218 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753598Ab1A3MY0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 11:30:22 -0500
-Received: by iwn9 with SMTP id 9so1035708iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 08:30:21 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sun, 30 Jan 2011 07:24:26 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so2118506ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:25 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/21] rt2x00: Limit beacon updates in bss_info_changed to USB devices
+Date: Sun, 30 Jan 2011 13:16:52 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201101301316.04044.IvDoorn@gmail.com> <201101301316.29086.IvDoorn@gmail.com>
+In-Reply-To: <201101301316.29086.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19776.19409.340115.964169@gargle.gargle.HOWL>
-Date: Wed, 26 Jan 2011 21:59:05 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH] ath9k_hw: Fix opmode initialization
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101301316.53532.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Commit "ath9k_hw: Relocate Opmode initialization"
-moved the opmode initialization before the STA_ID1 register
-was programmed with defaults. This changed the original
-behaviour because the re-programming code doesn't take into
-account the existing value in the register. Both ath9k and ath9k_htc
-were not affected by this change because the opmode is
-re-initialized after every reset, when RX is started.
+Currently there are two places that trigger a beacon update on PCI
+devices. The bss_info_changed callback and the periodic update
+triggered by the TBTT or PRETBTT interrupt.
 
-Revert to the original behavior, except keep it outside the
-REGWRITE block. This would help remove extraneous opmode calls
-in the driver core.
+Since the next TBTT or PRETBTT interrupt will periodically fetch an
+updated beacon remove the update_beacon call in the bss_info_changed
+callback for PCI devices.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+In the worst case it will take one beacon interval longer to fetch
+the new beacon then before. For devices that have a PRETBTT interrupt
+there should be no change at all.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4615fd9..c340851 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1349,8 +1349,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_spur_mitigate_freq(ah, chan);
- 	ah->eep_ops->set_board_values(ah, chan);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 7d33167..6a66021 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -617,9 +617,10 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 				      bss_conf->bssid);
  
--	ath9k_hw_set_operating_mode(ah, ah->opmode);
--
- 	ENABLE_REGWRITE_BUFFER(ah);
+ 	/*
+-	 * Update the beacon.
++	 * Update the beacon. This is only required on USB devices. PCI
++	 * devices fetch beacons periodically.
+ 	 */
+-	if (changes & BSS_CHANGED_BEACON)
++	if (changes & BSS_CHANGED_BEACON && rt2x00_is_usb(rt2x00dev))
+ 		rt2x00queue_update_beacon(rt2x00dev, vif);
  
- 	REG_WRITE(ah, AR_STA_ID0, get_unaligned_le32(common->macaddr));
-@@ -1368,6 +1366,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
- 
-+	ath9k_hw_set_operating_mode(ah, ah->opmode);
-+
- 	r = ath9k_hw_rf_set_freq(ah, chan);
- 	if (r)
- 		return r;
+ 	/*
 -- 
-1.7.3.5
+1.7.2.3
 
