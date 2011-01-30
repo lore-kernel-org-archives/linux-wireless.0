@@ -1,40 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46448 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754499Ab1A0N4q (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53755 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845Ab1A3Reh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Jan 2011 08:56:46 -0500
-Subject: Re: [PATCH v2] mac80211:  Optimize scans on current operating
- channel.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D406396.2090407@candelatech.com>
-References: <1295633142-7437-1-git-send-email-greearb@candelatech.com>
-	 <1296056188.3635.36.camel@jlt3.sipsolutions.net>
-	 <4D406396.2090407@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 Jan 2011 14:56:45 +0100
-Message-ID: <1296136605.3622.58.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 30 Jan 2011 12:34:37 -0500
+Message-ID: <4D45A128.6060905@candelatech.com>
+Date: Sun, 30 Jan 2011 09:34:32 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Why is wmm_param required for HT40- in mlme.c
+References: <4D44F94F.8040707@candelatech.com> <1296380208.3616.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296380208.3616.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-26 at 10:10 -0800, Ben Greear wrote:
+On 01/30/2011 01:36 AM, Johannes Berg wrote:
+> On Sat, 2011-01-29 at 21:38 -0800, Ben Greear wrote:
+>> I tried to set up hostapd to do HT40-, but for whatever reason,
+>> it's not sending any wmm_param options, so the stations will not
+>> associate with HT40- enabled due to the check below.
+>>
+>> Is it really *reqired* that wmm_param exist to enable HT mode?
+>>
+>>   From mlme.c:
+>> 	if (elems.ht_info_elem&&  elems.wmm_param&&
+>> 	(sdata->local->hw.queues>= 4)&&
+>> 	!(ifmgd->flags&  IEEE80211_STA_DISABLE_11N))
+>> 		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
+>> 					       cbss->bssid, ap_ht_cap_flags);
+>
+> 802.11n-2009 says it is required.
 
-> > However, I guess it'd also be nice to also address the TODO in work.c
-> > and move the "don't do so much if not really off-channel" logic into
-> > that function? You must run into that when trying to associate on one
-> > vif and the others get stopped etc. unnecessarily to do that.
-> 
-> I think you are right about this, but due to the tricky nature
-> of this code, maybe save that for a second patch?
+Do you know the pertinent section, or some keywords to search for?  I'm
+unable to find anything useful.
 
-Yeah, I think that might be good -- but maybe prepare in your current
-version by not having the offchannel bit in the scan?
+Also, from looking at utils.c, it seems that this wmm_param is
+a vendor specific Microsoft thing?  I don't see anywhere else that
+wmm_param is assigned...
 
-In fact -- I'm not even sure why you have two off-channel bits there,
-but please reply to my comments on v3 rather than here.
+		case WLAN_EID_VENDOR_SPECIFIC:
+			if (elen >= 4 && pos[0] == 0x00 && pos[1] == 0x50 &&
+			    pos[2] == 0xf2) {
+				/* Microsoft OUI (00:50:F2) */
 
-johannes
+				if (calc_crc)
+					crc = crc32_be(crc, pos - 2, elen + 2);
 
+				if (pos[3] == 1) {
+					/* OUI Type 1 - WPA IE */
+					elems->wpa = pos;
+					elems->wpa_len = elen;
+				} else if (elen >= 5 && pos[3] == 2) {
+					/* OUI Type 2 - WMM IE */
+					if (pos[4] == 0) {
+						elems->wmm_info = pos;
+						elems->wmm_info_len = elen;
+					} else if (pos[4] == 1) {
+						elems->wmm_param = pos;
+						elems->wmm_param_len = elen;
+					}
+				}
+			}
+			break;
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
