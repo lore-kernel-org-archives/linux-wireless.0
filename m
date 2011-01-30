@@ -1,81 +1,308 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:51089 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809Ab1AZGjI (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41674 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583Ab1A3MYd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 01:39:08 -0500
-Received: by gyb11 with SMTP id 11so16635gyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 22:39:07 -0800 (PST)
+	Sun, 30 Jan 2011 07:24:33 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so2146783eye.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:33 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 07/21] rt2x00: Convert rt2800pci to use tasklets
+Date: Sun, 30 Jan 2011 13:18:38 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201101301316.04044.IvDoorn@gmail.com> <201101301317.53313.IvDoorn@gmail.com> <201101301318.14610.IvDoorn@gmail.com>
+In-Reply-To: <201101301318.14610.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1295952127.3650.12.camel@jlt3.sipsolutions.net>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
- <1295869283.3639.7.camel@jlt3.sipsolutions.net> <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
- <1295950241.3650.3.camel@jlt3.sipsolutions.net> <1295952127.3650.12.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 26 Jan 2011 08:38:52 +0200
-Message-ID: <AANLkTikF3Ru_25Tzcntrma3_spgURV-pfTr=t8RHereK@mail.gmail.com>
-Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101301318.39263.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 25, 2011 at 12:42, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-01-25 at 11:10 +0100, Johannes Berg wrote:
->> On Mon, 2011-01-24 at 23:21 +0200, Arik Nemtsov wrote:
->>
->> > Well a wiphy flag won't do here. Probe requests may be filtered in
->> > some modes (AP-mode) but needed in others (p2p?).
->> > I think flexibility is a nice added bonus here. A FW can decide to
->> > handle most standard probe-requests and simply not pass them up.
->> > Others ("complicated" ones) it can pass up to hostapd and expect it to reply.
->> >
->> > The current patches leave this policy in the hands of the driver/fw.
->>
->> That is _very_ dangerous. If the user has older firmware that doesn't
->> know about WSC2, how would the user know not to configure WSC2 in
->> hostapd? That needs to be known to hostapd so it can verify this
->> situation. For P2P, we already know whether or not P2P is supported, but
->> that's rather vague in case there will ever be a revision of the P2P
->> spec with say different IEs.
->>
->> Additionally, a "regular AP" (not P2P, not WSC) would still want to
->> reply to probe requests from WSC/P2P devices with the normal template.
->>
->> IMHO it would be smarter to rework the firmware to only reply to probe
->> requests if the probe response is configured. Then, if WSC, P2P, or
->> similar technologies are in use on the interface, hostapd can simply
->> decide to not configure the probe response and have host-based
->> processing. Would that be a change you could still make?
->
->
-> Of course, firmware can reply to non-p2p/non-wsc2 probe requests with a
-> static probe response template.
->
-> The question is how much knowledge you want to put into the firmware
-> about those protocols. If you want to put all knowledge in there, then
-> at least you need to indicate to hostapd which protocols the firmware
-> knows not to reply to.
->
-> Also, a way to turn off this behaviour would still be good for future
-> protocol changes. If P2P changes in 3 years, I'm sure this firmware
-> won't be updated to match since you'll be a few hardware generations
-> ahead. Then, being able to turn off the offload completely would allow
-> users to take advantage of new protocols without changing hardware. Of
-> course, you may want to force users to buy new hardware that way -- but
-> in that case we *still* need the advertisement of what's possible so
-> users know right away that they need to buy new hardware and don't try
-> to configure something that just fails in strange ways.
->
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Like I said in a previous email - I think a white list (or black list)
-of IEs in FW is the way to go here. Not all probe-responses should be
-offloaded.
+Fix interrupt processing on slow machines by using individual tasklets
+for each different device interrupt. This ensures that while a RX or TX
+status tasklet is scheduled only the according device interrupt is
+masked and other interrupts such as TBTT can still be processed.
 
-Its also conceivable that an old driver/fw won't work when some
-protocol is changed/updated, even if hostapd supports it.
-I'm not sure the probe-resp will be the culprit here..
+Also, this allows us to use tasklet_hi_schedule for TBTT and PRETBTT
+processing which is required to not send out beacons with a wrong DTIM
+count (due to delayed periodic beacon updates). Furthermore, this
+improves the latency between the TBTT and sending out buffered multi-
+and broadcast traffic.
 
-Arik
+As a nice bonus, the interrupt handling overhead is reduced such that
+rt2800pci gains around 25% more throuhput on a rt3052 MIPS board.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |  173 ++++++++++++++++++++-----------
+ 1 files changed, 114 insertions(+), 59 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index e4d97ad..31483c7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -200,6 +200,13 @@ static void rt2800pci_start_queue(struct data_queue *queue)
+ 		rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
+ 		break;
+ 	case QID_BEACON:
++		/*
++		 * Allow beacon tasklets to be scheduled for periodic
++		 * beacon updates.
++		 */
++		tasklet_enable(&rt2x00dev->tbtt_tasklet);
++		tasklet_enable(&rt2x00dev->pretbtt_tasklet);
++
+ 		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
+@@ -258,6 +265,12 @@ static void rt2800pci_stop_queue(struct data_queue *queue)
+ 		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
+ 		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER, 0);
+ 		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
++
++		/*
++		 * Wait for tbtt tasklets to finish.
++		 */
++		tasklet_disable(&rt2x00dev->tbtt_tasklet);
++		tasklet_disable(&rt2x00dev->pretbtt_tasklet);
+ 		break;
+ 	default:
+ 		break;
+@@ -408,6 +421,7 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	int mask = (state == STATE_RADIO_IRQ_ON) ||
+ 		   (state == STATE_RADIO_IRQ_ON_ISR);
+ 	u32 reg;
++	unsigned long flags;
+ 
+ 	/*
+ 	 * When interrupts are being enabled, the interrupt registers
+@@ -417,10 +431,16 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
+ 		rt2800_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+ 
++		/*
++		 * Enable tasklets. The beacon related tasklets are
++		 * enabled when the beacon queue is started.
++		 */
+ 		tasklet_enable(&rt2x00dev->txstatus_tasklet);
+-	} else if (state == STATE_RADIO_IRQ_OFF)
+-		tasklet_disable(&rt2x00dev->txstatus_tasklet);
++		tasklet_enable(&rt2x00dev->rxdone_tasklet);
++		tasklet_enable(&rt2x00dev->autowake_tasklet);
++	}
+ 
++	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
+ 	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
+@@ -441,6 +461,17 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
+ 	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
++
++	if (state == STATE_RADIO_IRQ_OFF) {
++		/*
++		 * Ensure that all tasklets are finished before
++		 * disabling the interrupts.
++		 */
++		tasklet_disable(&rt2x00dev->txstatus_tasklet);
++		tasklet_disable(&rt2x00dev->rxdone_tasklet);
++		tasklet_disable(&rt2x00dev->autowake_tasklet);
++	}
+ }
+ 
+ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
+@@ -721,45 +752,60 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	}
+ }
+ 
+-static void rt2800pci_txstatus_tasklet(unsigned long data)
+-{
+-	rt2800pci_txdone((struct rt2x00_dev *)data);
+-}
+-
+-static irqreturn_t rt2800pci_interrupt_thread(int irq, void *dev_instance)
++static void rt2800pci_enable_interrupt(struct rt2x00_dev *rt2x00dev,
++				       struct rt2x00_field32 irq_field)
+ {
+-	struct rt2x00_dev *rt2x00dev = dev_instance;
+-	u32 reg = rt2x00dev->irqvalue[0];
++	unsigned long flags;
++	u32 reg;
+ 
+ 	/*
+-	 * 1 - Pre TBTT interrupt.
++	 * Enable a single interrupt. The interrupt mask register
++	 * access needs locking.
+ 	 */
+-	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_PRE_TBTT))
+-		rt2x00lib_pretbtt(rt2x00dev);
++	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
++	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
++	rt2x00_set_field32(&reg, irq_field, 1);
++	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
++}
+ 
+-	/*
+-	 * 2 - Beacondone interrupt.
+-	 */
+-	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TBTT))
+-		rt2x00lib_beacondone(rt2x00dev);
++static void rt2800pci_txstatus_tasklet(unsigned long data)
++{
++	rt2800pci_txdone((struct rt2x00_dev *)data);
+ 
+ 	/*
+-	 * 3 - Rx ring done interrupt.
++	 * No need to enable the tx status interrupt here as we always
++	 * leave it enabled to minimize the possibility of a tx status
++	 * register overflow. See comment in interrupt handler.
+ 	 */
+-	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_RX_DONE))
+-		rt2x00pci_rxdone(rt2x00dev);
++}
+ 
+-	/*
+-	 * 4 - Auto wakeup interrupt.
+-	 */
+-	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AUTO_WAKEUP))
+-		rt2800pci_wakeup(rt2x00dev);
++static void rt2800pci_pretbtt_tasklet(unsigned long data)
++{
++	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
++	rt2x00lib_pretbtt(rt2x00dev);
++	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_PRE_TBTT);
++}
+ 
+-	/* Enable interrupts again. */
+-	rt2x00dev->ops->lib->set_device_state(rt2x00dev,
+-					      STATE_RADIO_IRQ_ON_ISR);
++static void rt2800pci_tbtt_tasklet(unsigned long data)
++{
++	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
++	rt2x00lib_beacondone(rt2x00dev);
++	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_TBTT);
++}
+ 
+-	return IRQ_HANDLED;
++static void rt2800pci_rxdone_tasklet(unsigned long data)
++{
++	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
++	rt2x00pci_rxdone(rt2x00dev);
++	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_RX_DONE);
++}
++
++static void rt2800pci_autowake_tasklet(unsigned long data)
++{
++	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
++	rt2800pci_wakeup(rt2x00dev);
++	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_AUTO_WAKEUP);
+ }
+ 
+ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+@@ -805,8 +851,8 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ {
+ 	struct rt2x00_dev *rt2x00dev = dev_instance;
+-	u32 reg;
+-	irqreturn_t ret = IRQ_HANDLED;
++	u32 reg, mask;
++	unsigned long flags;
+ 
+ 	/* Read status and ACK all interrupts */
+ 	rt2800_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
+@@ -818,38 +864,44 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return IRQ_HANDLED;
+ 
+-	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS))
+-		rt2800pci_txstatus_interrupt(rt2x00dev);
++	/*
++	 * Since INT_MASK_CSR and INT_SOURCE_CSR use the same bits
++	 * for interrupts and interrupt masks we can just use the value of
++	 * INT_SOURCE_CSR to create the interrupt mask.
++	 */
++	mask = ~reg;
+ 
+-	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_PRE_TBTT) ||
+-	    rt2x00_get_field32(reg, INT_SOURCE_CSR_TBTT) ||
+-	    rt2x00_get_field32(reg, INT_SOURCE_CSR_RX_DONE) ||
+-	    rt2x00_get_field32(reg, INT_SOURCE_CSR_AUTO_WAKEUP)) {
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
++		rt2800pci_txstatus_interrupt(rt2x00dev);
+ 		/*
+-		 * All other interrupts are handled in the interrupt thread.
+-		 * Store irqvalue for use in the interrupt thread.
++		 * Never disable the TX_FIFO_STATUS interrupt.
+ 		 */
+-		rt2x00dev->irqvalue[0] = reg;
++		rt2x00_set_field32(&mask, INT_MASK_CSR_TX_FIFO_STATUS, 1);
++	}
+ 
+-		/*
+-		 * Disable interrupts, will be enabled again in the
+-		 * interrupt thread.
+-		*/
+-		rt2x00dev->ops->lib->set_device_state(rt2x00dev,
+-						      STATE_RADIO_IRQ_OFF_ISR);
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_PRE_TBTT))
++		tasklet_hi_schedule(&rt2x00dev->pretbtt_tasklet);
+ 
+-		/*
+-		 * Leave the TX_FIFO_STATUS interrupt enabled to not lose any
+-		 * tx status reports.
+-		 */
+-		rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+-		rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, 1);
+-		rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TBTT))
++		tasklet_hi_schedule(&rt2x00dev->tbtt_tasklet);
+ 
+-		ret = IRQ_WAKE_THREAD;
+-	}
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_RX_DONE))
++		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
+ 
+-	return ret;
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AUTO_WAKEUP))
++		tasklet_schedule(&rt2x00dev->autowake_tasklet);
++
++	/*
++	 * Disable all interrupts for which a tasklet was scheduled right now,
++	 * the tasklet will reenable the appropriate interrupts.
++	 */
++	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
++	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
++	reg &= mask;
++	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
++	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
++
++	return IRQ_HANDLED;
+ }
+ 
+ /*
+@@ -964,8 +1016,11 @@ static const struct rt2800_ops rt2800pci_rt2800_ops = {
+ 
+ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+ 	.irq_handler		= rt2800pci_interrupt,
+-	.irq_handler_thread	= rt2800pci_interrupt_thread,
+-	.txstatus_tasklet       = rt2800pci_txstatus_tasklet,
++	.txstatus_tasklet	= rt2800pci_txstatus_tasklet,
++	.pretbtt_tasklet	= rt2800pci_pretbtt_tasklet,
++	.tbtt_tasklet		= rt2800pci_tbtt_tasklet,
++	.rxdone_tasklet		= rt2800pci_rxdone_tasklet,
++	.autowake_tasklet	= rt2800pci_autowake_tasklet,
+ 	.probe_hw		= rt2800pci_probe_hw,
+ 	.get_firmware_name	= rt2800pci_get_firmware_name,
+ 	.check_firmware		= rt2800_check_firmware,
+-- 
+1.7.2.3
+
