@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36860 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755305Ab1AaLUc (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:34480 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815Ab1A3TK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:20:32 -0500
-Received: by fxm20 with SMTP id 20so5468799fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:20:31 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 04/10] mac80211: do not calc frame duration when using HW rate-control
-Date: Mon, 31 Jan 2011 13:16:23 +0200
-Message-Id: <1296472589-26401-5-git-send-email-arik@wizery.com>
-In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
-References: <1296472589-26401-1-git-send-email-arik@wizery.com>
+	Sun, 30 Jan 2011 14:10:57 -0500
+Message-ID: <4D45B7B8.1060607@davizone.at>
+Date: Sun, 30 Jan 2011 20:10:48 +0100
+From: David Gnedt <david.gnedt@davizone.at>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 02/18] wl1251: fix 4-byte TX buffer alignment
+References: <4D45A591.6040600@davizone.at>
+In-Reply-To: <4D45A591.6040600@davizone.at>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When rate-control is performed in HW, we cannot calculate frame
-duration as we do not have the skb transmission rate in SW.
+This implements TX buffer alignment for cloned or too small skb by
+copying and replacing the original skb.
+Recent changes in wireless-testing seems to make this really necessary.
 
-ieee80211_tx_h_calculate_duration() should only be called when
-ieee80211_tx_h_rate_ctrl() has been called before to initialize data
-in skb->cb. This doesn't happen for drivers with HW rate-control.
-
-Fixes the following warning when operating in AP-mode
-in a driver with HW rate-control.
-
-WARNING: at net/mac80211/tx.c:57 ieee80211_duration+0x54/0x1d8 [mac80211]()
-Modules linked in: wl1271_sdio wl1271 firmware_class crc7 mac80211 cfg80211
-[<c0046090>] (unwind_backtrace+0x0/0x124) from [<c0064c10>] (warn_slowpath_common+0x4c/0x64)
-[<c0064c10>] (warn_slowpath_common+0x4c/0x64) from [<c0064c40>] (warn_slowpath_null+0x18/0x1c)
-[<c0064c40>] (warn_slowpath_null+0x18/0x1c) from [<bf040e34>] (ieee80211_duration+0x54/0x1d8 [mac80211])
-[<bf040e34>] (ieee80211_duration+0x54/0x1d8 [mac80211]) from [<bf04200c>] (invoke_tx_handlers+0xfa0/0x1088 [mac80211])
-[<bf04200c>] (invoke_tx_handlers+0xfa0/0x1088 [mac80211]) from [<bf042178>] (ieee80211_tx+0x84/0x248 [mac80211])
-[<bf042178>] (ieee80211_tx+0x84/0x248 [mac80211]) from [<bf042f44>] (ieee80211_tx_pending+0x12c/0x278 [mac80211])
-[<bf042f44>] (ieee80211_tx_pending+0x12c/0x278 [mac80211]) from [<c0069a9c>] (tasklet_action+0x68/0xbc)
-[<c0069a9c>] (tasklet_action+0x68/0xbc) from [<c006a044>] (__do_softirq+0x84/0x114)
-[<c006a044>] (__do_softirq+0x84/0x114) from [<c006a1b8>] (do_softirq+0x48/0x54)
-[<c006a1b8>] (do_softirq+0x48/0x54) from [<c006a4f8>] (local_bh_enable+0x98/0xcc)
-[<c006a4f8>] (local_bh_enable+0x98/0xcc) from [<bf074e60>] (wl1271_rx+0x2e8/0x3a4 [wl1271])
-[<bf074e60>] (wl1271_rx+0x2e8/0x3a4 [wl1271]) from [<bf071ae4>] (wl1271_irq_work+0x230/0x310 [wl1271])
-[<bf071ae4>] (wl1271_irq_work+0x230/0x310 [wl1271]) from [<c0076864>] (process_one_work+0x208/0x350)
-[<c0076864>] (process_one_work+0x208/0x350) from [<c0076e14>] (worker_thread+0x1cc/0x300)
-[<c0076e14>] (worker_thread+0x1cc/0x300) from [<c007bb88>] (kthread+0x84/0x8c)
-[<c007bb88>] (kthread+0x84/0x8c) from [<c0041494>] (kernel_thread_exit+0x0/0x8)
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 ---
- net/mac80211/tx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Sorry for the partly broken patches, I thought I configured my client the
+right way. I tried to stop the mails at my mailserver, but it was mostly
+already too late.
+---
+ drivers/net/wireless/wl1251/tx.c |   26 ++++++++++++++++++++------
+ 1 files changed, 20 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e46c801..8c477a9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1394,7 +1394,8 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
- 	/* handlers after fragment must be aware of tx info fragmentation! */
- 	CALL_TXH(ieee80211_tx_h_stats);
- 	CALL_TXH(ieee80211_tx_h_encrypt);
--	CALL_TXH(ieee80211_tx_h_calculate_duration);
-+	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
-+		CALL_TXH(ieee80211_tx_h_calculate_duration);
- #undef CALL_TXH
+diff --git a/drivers/net/wireless/wl1251/tx.c b/drivers/net/wireless/wl1251/tx.c
+index 10112de..28121c5 100644
+--- a/drivers/net/wireless/wl1251/tx.c
++++ b/drivers/net/wireless/wl1251/tx.c
+@@ -213,16 +213,30 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
+ 		wl1251_debug(DEBUG_TX, "skb offset %d", offset);
  
-  txh_done:
+ 		/* check whether the current skb can be used */
+-		if (!skb_cloned(skb) && (skb_tailroom(skb) >= offset)) {
+-			unsigned char *src = skb->data;
++		if (skb_cloned(skb) || (skb_tailroom(skb) < offset)) {
++			struct sk_buff *newskb = skb_copy_expand(skb, 0, 3,
++								 GFP_KERNEL);
++
++			if (unlikely(newskb == NULL)) {
++				wl1251_error("Can't allocate skb!");
++				return -EINVAL;
++			}
++
++			tx_hdr = (struct tx_double_buffer_desc *) newskb->data;
++
++			dev_kfree_skb_any(skb);
++			wl->tx_frames[tx_hdr->id] = skb = newskb;
+ 
+-			/* align the buffer on a 4-byte boundary */
++			offset = (4 - (long)skb->data) & 0x03;
++			wl1251_debug(DEBUG_TX, "new skb offset %d", offset);
++		}
++
++		/* align the buffer on a 4-byte boundary */
++		if (offset) {
++			unsigned char *src = skb->data;
+ 			skb_reserve(skb, offset);
+ 			memmove(skb->data, src, skb->len);
+ 			tx_hdr = (struct tx_double_buffer_desc *) skb->data;
+-		} else {
+-			wl1251_info("No handler, fixme!");
+-			return -EINVAL;
+ 		}
+ 	}
+ 
 -- 
-1.7.1
+1.7.0.4
+
 
