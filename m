@@ -1,109 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57449 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756626Ab1AaWHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 17:07:12 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: adapt chamhes in brcm80211
-Date: Mon, 31 Jan 2011 23:06:43 +0100
-Message-Id: <1296511604-16921-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
-References: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.platinumzone24.at ([88.198.159.93]:38603 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752771Ab1A3STf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 13:19:35 -0500
+Message-ID: <4D45A5AD.4010402@davizone.at>
+Date: Sun, 30 Jan 2011 18:53:49 +0100
+From: David Gnedt <david.gnedt@davizone.at>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 05/18] wl1251: retry power save entry
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Port of the power save entry retry code from wl1251 driver version included
+in the Maemo Fremantle kernel.
+This tries to enable power save mode up to 3 times before failing.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 ---
- config.mk                              |    4 +-
- patches/35-fix-makefile-includes.patch |   42 ++++++++++++++++----------------
- 2 files changed, 23 insertions(+), 23 deletions(-)
+ drivers/net/wireless/wl1251/boot.c   |    3 +-
+ drivers/net/wireless/wl1251/event.c  |   44 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl1251/event.h  |    7 +++++
+ drivers/net/wireless/wl1251/main.c   |    2 +
+ drivers/net/wireless/wl1251/wl1251.h |    3 ++
+ 5 files changed, 58 insertions(+), 1 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 7a29d46..d8712e8 100644
---- a/config.mk
-+++ b/config.mk
-@@ -538,7 +538,7 @@ CONFIG_BT_MRVL_SDIO=m
- ifneq ($(CONFIG_COMPAT_STAGING),)
- 
- CONFIG_BRCM80211=m
--CONFIG_BRCM80211_PCI=y
-+CONFIG_BRCMSMAC=y
- 
- ifdef CONFIG_WIRELESS_EXT
- CONFIG_ATH6KL_CFG80211=y
-@@ -553,7 +553,7 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
- CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
- CONFIG_ATH6K_LEGACY=m
- 
--# It is not possible to compile CONFIG_BRCM80211 and CONFIG_BRCMFMAC as
-+# It is not possible to compile CONFIG_BRCMSMAC and CONFIG_BRCMFMAC as
- # module at the same time
- # CONFIG_BRCMFMAC=y
- 
-diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
-index c80e11f..2142da2 100644
---- a/patches/35-fix-makefile-includes.patch
-+++ b/patches/35-fix-makefile-includes.patch
-@@ -18,26 +18,9 @@ path the make process will search in the kernel tree for the headers.
-  
- -ccflags-y += -Idrivers/net/wireless/rtl818x
- +ccflags-y += -I$(obj)/..
----- a/drivers/staging/brcm80211/Makefile
--+++ b/drivers/staging/brcm80211/Makefile
--@@ -24,10 +24,10 @@ ccflags-y :=					\
-- 	-DDBAND					\
-- 	-DBCMDMA32				\
-- 	-DBCMNVRAMR				\
---	-Idrivers/staging/brcm80211/sys		\
---	-Idrivers/staging/brcm80211/phy		\
---	-Idrivers/staging/brcm80211/util	\
---	-Idrivers/staging/brcm80211/include
--+	-I$(obj)/sys		\
--+	-I$(obj)/phy		\
--+	-I$(obj)/util	\
--+	-I$(obj)/include
-- 
-- PCI_CFLAGS := -DWLC_LOW
-- 
- --- a/drivers/staging/brcm80211/brcmfmac/Makefile
- +++ b/drivers/staging/brcm80211/brcmfmac/Makefile
--@@ -33,9 +33,9 @@ ccflags-y :=			\
-+@@ -32,9 +32,9 @@ ccflags-y :=			\
-  	-DPKT_FILTER_SUPPORT	\
-  	-DSHOW_EVENTS		\
-  	-DTOE			\
-@@ -45,8 +28,25 @@ path the make process will search in the kernel tree for the headers.
- -	-Idrivers/staging/brcm80211/include		\
- -	-Idrivers/staging/brcm80211/util
- +	-I$(obj)		\
--+	-I$(obj)/../include		\
-++	-I$(obj)/../include	\
- +	-I$(obj)/../util
-  
-- DHDOFILES = dhd_linux.o ../util/linux_osl.o ../util/bcmutils.o dhd_common.o dhd_custom_gpio.o	\
-- 	wl_iw.o wl_cfg80211.o ../util/siutils.o ../util/sbutils.o ../util/aiutils.o ../util/hndpmu.o ../util/bcmwifi.o dhd_sdio.o	\
-+ DHDOFILES = \
-+ 	wl_cfg80211.o \
-+--- a/drivers/staging/brcm80211/brcmsmac/Makefile
-++++ b/drivers/staging/brcm80211/brcmsmac/Makefile
-+@@ -24,10 +24,10 @@ ccflags-y :=					\
-+ 	-DDBAND					\
-+ 	-DBCMDMA32				\
-+ 	-DBCMNVRAMR				\
-+-	-Idrivers/staging/brcm80211/brcmsmac \
-+-	-Idrivers/staging/brcm80211/brcmsmac/phy \
-+-	-Idrivers/staging/brcm80211/util \
-+-	-Idrivers/staging/brcm80211/include
-++	-I$(obj)				\
-++	-I$(obj)/phy				\
-++	-I$(obj)/../util			\
-++	-I$(obj)/../include
-+ 
-+ BRCMSMAC_OFILES := \
-+ 	wl_mac80211.o \
--- 
-1.7.1
+diff --git a/drivers/net/wireless/wl1251/boot.c b/drivers/net/wireless/wl1251/boot.c
+index d729daf..2ff2a00 100644
+--- a/drivers/net/wireless/wl1251/boot.c
++++ b/drivers/net/wireless/wl1251/boot.c
+@@ -299,7 +299,8 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
+ 		ROAMING_TRIGGER_LOW_RSSI_EVENT_ID |
+ 		ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID |
+ 		REGAINED_BSS_EVENT_ID | BT_PTA_SENSE_EVENT_ID |
+-		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID;
++		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID |
++		PS_REPORT_EVENT_ID;
+  	ret = wl1251_event_unmask(wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl1251/event.c
+b/drivers/net/wireless/wl1251/event.c
+index 712372e..1f931e3 100644
+--- a/drivers/net/wireless/wl1251/event.c
++++ b/drivers/net/wireless/wl1251/event.c
+@@ -42,6 +42,43 @@ static int wl1251_event_scan_complete(struct wl1251 *wl,
+ 	return 0;
+ }
+ +#define WL1251_PSM_ENTRY_RETRIES  3
++static int wl1251_event_ps_report(struct wl1251 *wl,
++				  struct event_mailbox *mbox)
++{
++	int ret = 0;
++
++	wl1251_debug(DEBUG_EVENT, "ps status: %x", mbox->ps_status);
++
++	switch (mbox->ps_status) {
++	case EVENT_ENTER_POWER_SAVE_FAIL:
++		wl1251_debug(DEBUG_PSM, "PSM entry failed");
++
++		if (!wl->psm) {
++			/* remain in active mode */
++			wl->psm_entry_retry = 0;
++			break;
++		}
++
++		if (wl->psm_entry_retry < WL1251_PSM_ENTRY_RETRIES) {
++			wl->psm_entry_retry++;
++			ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		} else {
++			wl1251_error("Power save entry failed, giving up");
++			wl->psm_entry_retry = 0;
++		}
++		break;
++	case EVENT_ENTER_POWER_SAVE_SUCCESS:
++	case EVENT_EXIT_POWER_SAVE_FAIL:
++	case EVENT_EXIT_POWER_SAVE_SUCCESS:
++	default:
++		wl->psm_entry_retry = 0;
++		break;
++	}
++
++	return 0;
++}
++
+ static void wl1251_event_mbox_dump(struct event_mailbox *mbox)
+ {
+ 	wl1251_debug(DEBUG_EVENT, "MBOX DUMP:");
+@@ -75,6 +112,13 @@ static int wl1251_event_process(struct wl1251 *wl, struct
+event_mailbox *mbox)
+ 		}
+ 	}
+ +	if (vector & PS_REPORT_EVENT_ID) {
++		wl1251_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
++		ret = wl1251_event_ps_report(wl, mbox);
++		if (ret < 0)
++			return ret;
++	}
++
+ 	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID && wl->psm) {
+ 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
+ diff --git a/drivers/net/wireless/wl1251/event.h
+b/drivers/net/wireless/wl1251/event.h
+index 30eb5d1..88570a5 100644
+--- a/drivers/net/wireless/wl1251/event.h
++++ b/drivers/net/wireless/wl1251/event.h
+@@ -112,6 +112,13 @@ struct event_mailbox {
+ 	u8 padding[19];
+ } __packed;
+ +enum {
++	EVENT_ENTER_POWER_SAVE_FAIL = 0,
++	EVENT_ENTER_POWER_SAVE_SUCCESS,
++	EVENT_EXIT_POWER_SAVE_FAIL,
++	EVENT_EXIT_POWER_SAVE_SUCCESS,
++};
++
+ int wl1251_event_unmask(struct wl1251 *wl);
+ void wl1251_event_mbox_config(struct wl1251 *wl);
+ int wl1251_event_handle(struct wl1251 *wl, u8 mbox);
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index 86f3136..591080a 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -501,6 +501,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
+ 	wl->next_tx_complete = 0;
+ 	wl->elp = false;
+ 	wl->psm = 0;
++	wl->psm_entry_retry = 0;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
+ 	wl->channel = WL1251_DEFAULT_CHANNEL;
+@@ -1478,6 +1479,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+ 	wl->elp = false;
+ 	wl->psm = 0;
+ 	wl->psm_requested = false;
++	wl->psm_entry_retry = 0;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
+ 	wl->beacon_int = WL1251_DEFAULT_BEACON_INT;
+diff --git a/drivers/net/wireless/wl1251/wl1251.h
+b/drivers/net/wireless/wl1251/wl1251.h
+index 2877023..04e8f7c 100644
+--- a/drivers/net/wireless/wl1251/wl1251.h
++++ b/drivers/net/wireless/wl1251/wl1251.h
+@@ -370,6 +370,9 @@ struct wl1251 {
+ 	/* PSM mode requested */
+ 	bool psm_requested;
+ +	/* retry counter for PSM entries */
++	u8 psm_entry_retry;
++
+ 	u16 beacon_int;
+ 	u8 dtim_period;
+ -- 1.7.0.4
+
 
