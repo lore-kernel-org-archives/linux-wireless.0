@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38827 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752193Ab1A2NvS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jan 2011 08:51:18 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	lrodriguez@atheros.com
-Subject: [PATCH] cfg80211: fix maximum tx power handling
-Date: Sat, 29 Jan 2011 14:51:12 +0100
-Message-Id: <1296309072-47452-1-git-send-email-nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46413 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023Ab1A3RBJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 12:01:09 -0500
+Received: by fxm20 with SMTP id 20so4877344fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 09:01:08 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 30 Jan 2011 12:01:08 -0500
+Message-ID: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
+From: Mark Mentovai <mark@moxienet.com>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When setting a new regulatory domain after the initial one had been set by
-the driver, the original maximum power is overwritten with the new regulatory
-power value. This is wrong because chan->orig_mpwr is supposed to contain the
-hardware tx power limit.
-Because of this, the displayed tx power is often much higher than what the
-hardware is actually capable of using.
+Felix Fietkau wrote:
+> When setting a new regulatory domain after the initial one had
+> been set by the driver, the original maximum power is
+> overwritten with the new regulatory power value. This is wrong
+> because chan->orig_mpwr is supposed to contain the hardware tx
+> power limit.
 
-Fix this by always using chan->orig_mpwr as a maximum and never overwriting
-it in the regulatory handling code.
+I don’t think this is correct. In the existing code, chan->orig_mpwr
+contains the channel’s maximum power in the driver’s requested
+regulatory domain. There isn’t currently any field that’s used to
+track the hardware limit.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- net/wireless/reg.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+The comment in net/wireless/reg.c explains the use of the orig_* fields:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c565689..2eb6eca 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -838,6 +838,12 @@ static void handle_channel(struct wiphy *wiphy,
- 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
- 		bw_flags = IEEE80211_CHAN_NO_HT40;
- 
-+	if (chan->orig_mpwr)
-+		chan->max_power = min(chan->orig_mpwr,
-+			(int) MBM_TO_DBM(power_rule->max_eirp));
-+	else
-+		chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
-+
- 	if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 	    request_wiphy && request_wiphy == wiphy &&
- 	    request_wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
-@@ -850,19 +856,12 @@ static void handle_channel(struct wiphy *wiphy,
- 			map_regdom_flags(reg_rule->flags) | bw_flags;
- 		chan->max_antenna_gain = chan->orig_mag =
- 			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
--		chan->max_power = chan->orig_mpwr =
--			(int) MBM_TO_DBM(power_rule->max_eirp);
- 		return;
- 	}
- 
- 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
- 	chan->max_antenna_gain = min(chan->orig_mag,
- 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
--	if (chan->orig_mpwr)
--		chan->max_power = min(chan->orig_mpwr,
--			(int) MBM_TO_DBM(power_rule->max_eirp));
--	else
--		chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
- }
- 
- static void handle_band(struct wiphy *wiphy,
--- 
-1.7.3.2
+		/*
+		 * This gaurantees the driver's requested regulatory domain
+		 * will always be used as a base for further regulatory
+		 * settings
+		 */
 
+orig_flags and orig_mag track the values of flags and max_antenna_gain
+for the driver’s requested regulatory domain in the same way that
+orig_mpwr tracks max_power.
+
+Your patch permits max_power to exceed the power level permitted in
+the regulatory domain specified by the driver itself. This is contrary
+to the design of the wireless regulatory framework. Values derived
+from a driver hint must never be exceeded.
+
+Your patch also doesn’t work properly for me using the ath9k driver.
+With your patch, I wind up with an artificial power limit of 20dBm
+across the board, although the hardware limit is actually 25dBm on the
+AR9223 I’m testing with. This stems from the fact that ath9k doesn’t
+know how to properly compute the hardware limit.
+ath9k_init_txpower_limits is implemented on top of
+ath9k_hw_set_txpowerlimit, which uses a channel’s current max_power
+value as a basis for its computation. This means that it will either
+use the hard-coded initial value of 20dBm from CHAN2G and CHAN5G in
+drivers/net/wireless/ath/ath9k/init.c, or it will use world regulatory
+domain values (also 20dBm) set by ath_regd_init_wiphy calling
+wiphy_apply_custom_regulatory.
+
+I don’t know if other drivers currently know how to properly compute
+hardware power limits. I suspect that some (most?) also don’t.
+
+I certainly like the idea of providing better feedback of the
+effective power level, or even the power level limit, back to users.
+This patch seems to artificially limit the effective power level in
+some cases, while allowing a value in excess of what would be
+appropriate in others.
