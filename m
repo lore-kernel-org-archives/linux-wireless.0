@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49085 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712Ab1AXVr6 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:37843 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807Ab1A3SLd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 16:47:58 -0500
-Received: by iyj18 with SMTP id 18so4426891iyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jan 2011 13:47:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <op.vpte6up33ri7v4@arend-laptop>
-References: <AANLkTikam0zcxe00UCT4BDQMmrJcPKf1Hbt6=PBokpga@mail.gmail.com>
- <4D3B0390.5070108@broadcom.com> <AANLkTinwPrar6ZBhSALBif8__4mHHsKuDYKsgr4FDqtu@mail.gmail.com>
- <op.vptd4dqs3ri7v4@arend-laptop> <AANLkTimk3qY87mP5oROnsVOGaPDV2-UAm7UrXST+1mms@mail.gmail.com>
- <op.vpte6up33ri7v4@arend-laptop>
-From: Jamie Kitson <jamie@kitten-x.com>
-Date: Mon, 24 Jan 2011 21:47:37 +0000
-Message-ID: <AANLkTikB9=xKS0jX7Rz9qLOctaY+Rxv-9HH3p=Ydza85@mail.gmail.com>
-Subject: Re: Kernel Panic wlc_mac80211.c Line 6093
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 30 Jan 2011 13:11:33 -0500
+Received: by iwn9 with SMTP id 9so4705242iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 10:11:32 -0800 (PST)
+From: Larry.Finger@lwfinger.net
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [RFC/RFT 0/8] rtl8192cu: Initial upload for comments
+Date: Sun, 30 Jan 2011 12:11:32 -0600
+Message-Id: <1296411100-5675-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> too quote a gremlin: feed me (with any debug experiences you may have).
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-Well for some reason when I got home today my machine crashed every
-time it was bringing the wireless interface up until I disabled the
-brcm80211 module, even without the noapic option. The crash looks a
-little different:
+The following patches will install a new driver (rtl8192cu) for the Realtek
+RTL8192CU and the RTL8188CU devices. The material in each of the patches is
+as follows:
 
-http://farm6.static.flickr.com/5216/5385766744_632eb67670_b.jpg
+[1/8]: Add the necessary parts to rtlwifi to support USB devices.
+[2-8/8] The source code for the new driver and the changes to rtlwifi's
+        Makefile and Kconfig.
 
-Did you notice that someone on that Arch thread suggested that it
-might be solved by using n mode only on the wireless router?
+The choice of files to be placed in parts 2 through 6 was made to keep
+any one patch from being too large. All the patches pass checkpatch and
+sparse tests with no errors.
 
-https://bbs.archlinux.org/viewtopic.php?pid=882237#p882237
+This driver is intended for 2.6.39.
 
-Jamie
+
+
