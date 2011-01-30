@@ -1,67 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40303 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954Ab1AYWAK (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:48218 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753919Ab1A3MYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 17:00:10 -0500
-Date: Tue, 25 Jan 2011 16:58:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: use DECLARE_EVENT_CLASS
-Message-ID: <20110125215810.GE2927@tuxdriver.com>
-References: <1295437859.4685.4.camel@jlt3.sipsolutions.net>
- <20110121212447.GB7092@tuxdriver.com>
- <1295777573.3639.30.camel@jlt3.sipsolutions.net>
+	Sun, 30 Jan 2011 07:24:45 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 5so2118506ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 04:24:44 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 13/21] rt2x00: Correct initial value of US_CYC_CNT register for pcie interface
+Date: Sun, 30 Jan 2011 13:21:22 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201101301316.04044.IvDoorn@gmail.com> <201101301320.29903.IvDoorn@gmail.com> <201101301320.53735.IvDoorn@gmail.com>
+In-Reply-To: <201101301320.53735.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1295777573.3639.30.camel@jlt3.sipsolutions.net>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201101301321.23510.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 23, 2011 at 11:12:53AM +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> For events that include only the local struct as
-> their parameter, we can use DECLARE_EVENT_CLASS
-> and save quite some binary size across segments
-> as well lines of code.
-> 
->    text	   data	    bss	    dec	    hex	filename
->  375745	  19296	    916	 395957	  60ab5	mac80211.ko.before
->  367473	  17888	    916	 386277	  5e4e5	mac80211.ko.after
->   -8272   -1408       0   -9680   -25d0 delta
-> 
-> Some more tracepoints with identical arguments
-> could be combined like this but for now this is
-> the one that benefits most.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+From: RA-Jay Hung <jay_hung@ralinktech.com>
 
-OK, so what am I doing wrong?
+CLOCK CYCLE: Clock cycle count in 1us
+PCI:0x21, PCIE:0x7d, USB:0x1e
 
-Kernel: arch/x86/boot/bzImage is ready  (#11)
-  Building modules, stage 2.
-  MODPOST 2218 modules
-ERROR: "__tracepoint_drv_return_void" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_api_remain_on_channel_expired" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_get_tsf" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_tx_last_beacon" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_reset_tsf" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_stop" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_sw_scan_start" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_sw_scan_complete" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_api_restart_hw" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_api_ready_on_channel" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_cancel_remain_on_channel" [net/mac80211/mac80211.ko] undefined!
-ERROR: "__tracepoint_drv_start" [net/mac80211/mac80211.ko] undefined!
-WARNING: modpost: Found 5 section mismatch(es).
-To see full details build your kernel with:
-'make CONFIG_DEBUG_SECTION_MISMATCH=y'
-make[1]: *** [__modpost] Error 1
-make: *** [modules] Error 2
+Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    4 ++++
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index c7e615c..ec8159c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -372,8 +372,12 @@
+ 
+ /*
+  * US_CYC_CNT
++ * BT_MODE_EN: Bluetooth mode enable
++ * CLOCK CYCLE: Clock cycle count in 1us.
++ * PCI:0x21, PCIE:0x7d, USB:0x1e
+  */
+ #define US_CYC_CNT			0x02a4
++#define US_CYC_CNT_BT_MODE_EN		FIELD32(0x00000100)
+ #define US_CYC_CNT_CLOCK_CYCLE		FIELD32(0x000000ff)
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 4753fb1..4c34fce 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2207,6 +2207,10 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_read(rt2x00dev, US_CYC_CNT, &reg);
+ 		rt2x00_set_field32(&reg, US_CYC_CNT_CLOCK_CYCLE, 30);
+ 		rt2800_register_write(rt2x00dev, US_CYC_CNT, reg);
++	} else if (rt2x00_is_pcie(rt2x00dev)) {
++		rt2800_register_read(rt2x00dev, US_CYC_CNT, &reg);
++		rt2x00_set_field32(&reg, US_CYC_CNT_CLOCK_CYCLE, 125);
++		rt2800_register_write(rt2x00dev, US_CYC_CNT, reg);
+ 	}
+ 
+ 	rt2800_register_read(rt2x00dev, HT_FBK_CFG0, &reg);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.3
+
