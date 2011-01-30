@@ -1,119 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40518 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1AUDBl (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:57983 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815Ab1A3TLA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:01:41 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so1249489iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:41 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sun, 30 Jan 2011 14:11:00 -0500
+Message-ID: <4D45B7BA.9080402@davizone.at>
+Date: Sun, 30 Jan 2011 20:10:50 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63207.715708.508332@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:30:55 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 12/33] ath9k_htc: Maintain individual counters for interfaces
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: [PATCH 03/18] wl1251: fix scan behaviour while not associated
+References: <4D45A598.20709@davizone.at>
+In-Reply-To: <4D45A598.20709@davizone.at>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+With a dissacociated card I often encoutered very long scan delays.
 
-This is required for allowing only one IBSS interface to be
-configured.
+My guess is that it has something to do with the cards DTIM handling and
+another firmware bug mentioned in the TI WLAN driver, which is described as
+the card may never end scanning if the channel is overloaded because it
+can't send probe requests. I think the firmware somehow also tries to
+receive DTIM messages when the BSSID is not set. Therefore most of the time
+it waits for DTIM messages and can't do scanning work.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Anyway we can workaround this misbehaviour by setting the HIGH_PRIORITY
+bit for scans in disassociated state.
+
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |   28 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   14 ++++++++++-
- 2 files changed, 40 insertions(+), 2 deletions(-)
+Sorry for the partly broken patches, I thought I configured my client the
+right way. I tried to stop the mails at my mailserver, but it was mostly
+already too late.
+---
+ drivers/net/wireless/wl1251/cmd.c  |   12 +++++++++++-
+ drivers/net/wireless/wl1251/cmd.h  |    5 +++++
+ drivers/net/wireless/wl1251/main.c |    1 +
+ 3 files changed, 17 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 6a09ad4..f650439 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -206,6 +206,32 @@ struct ath9k_htc_target_stats {
+diff --git a/drivers/net/wireless/wl1251/cmd.c b/drivers/net/wireless/wl1251/cmd.c
+index 0ade4bd..4e4987d 100644
+--- a/drivers/net/wireless/wl1251/cmd.c
++++ b/drivers/net/wireless/wl1251/cmd.c
+@@ -419,7 +419,10 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
+ 	struct wl1251_cmd_scan *cmd;
+ 	int i, ret = 0;
  
- #define ATH9K_HTC_MAX_VIF 2
- 
-+#define INC_VIF(_priv, _type) do {		\
-+		switch (_type) {		\
-+		case NL80211_IFTYPE_STATION:	\
-+			_priv->num_sta_vif++;	\
-+			break;			\
-+		case NL80211_IFTYPE_ADHOC:	\
-+			_priv->num_ibss_vif++;	\
-+			break;			\
-+		default:			\
-+			break;			\
-+		}				\
-+	} while (0)
+-	wl1251_debug(DEBUG_CMD, "cmd scan");
++	wl1251_debug(DEBUG_CMD, "cmd scan channels %d ssid(%d) '%s'",
++		     n_channels, ssid_len, ssid);
 +
-+#define DEC_VIF(_priv, _type) do {		\
-+		switch (_type) {		\
-+		case NL80211_IFTYPE_STATION:	\
-+			_priv->num_sta_vif--;	\
-+			break;			\
-+		case NL80211_IFTYPE_ADHOC:	\
-+			_priv->num_ibss_vif--;	\
-+			break;			\
-+		default:			\
-+			break;			\
-+		}				\
-+	} while (0)
-+
- struct ath9k_htc_vif {
- 	u8 index;
- 	u16 seq_no;
-@@ -367,6 +393,8 @@ struct ath9k_htc_priv {
- 	u8 mon_vif_idx;
- 	u8 sta_slot;
- 	u8 vif_sta_pos[ATH9K_HTC_MAX_VIF];
-+	u8 num_ibss_vif;
-+	u8 num_sta_vif;
++	WARN_ON(n_channels > SCAN_MAX_NUM_OF_CHANNELS);
  
- 	u16 op_flags;
- 	u16 curtxpow;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index b6c8363..f5333dc9 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1191,9 +1191,15 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&priv->mutex);
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	if (!cmd)
+@@ -430,6 +433,13 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
+ 						    CFG_RX_MGMT_EN |
+ 						    CFG_RX_BCN_EN);
+ 	cmd->params.scan_options = 0;
++	/*
++	 * Use high priority scan when not associated to prevent fw issue
++	 * causing never-ending scans (sometimes 20+ minutes).
++	 * Note: This bug may be caused by the fw's DTIM handling.
++	 */
++	if (is_zero_ether_addr(wl->bssid))
++		cmd->params.scan_options |= WL1251_SCAN_OPT_PRIORITY_HIGH;
+ 	cmd->params.num_channels = n_channels;
+ 	cmd->params.num_probe_requests = n_probes;
+ 	cmd->params.tx_rate = cpu_to_le16(1 << 1); /* 2 Mbps */
+diff --git a/drivers/net/wireless/wl1251/cmd.h b/drivers/net/wireless/wl1251/cmd.h
+index e5c74c6..c4ed9cd 100644
+--- a/drivers/net/wireless/wl1251/cmd.h
++++ b/drivers/net/wireless/wl1251/cmd.h
+@@ -167,6 +167,11 @@ struct cmd_read_write_memory {
+ #define CMDMBOX_HEADER_LEN 4
+ #define CMDMBOX_INFO_ELEM_HEADER_LEN 4
  
- 	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
--		ret = -ENOBUFS;
- 		mutex_unlock(&priv->mutex);
--		return ret;
-+		return -ENOBUFS;
-+	}
++#define WL1251_SCAN_OPT_PASSIVE		1
++#define WL1251_SCAN_OPT_5GHZ_BAND	2
++#define WL1251_SCAN_OPT_TRIGGERD_SCAN	4
++#define WL1251_SCAN_OPT_PRIORITY_HIGH	8
 +
-+	if (priv->num_ibss_vif ||
-+	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
-+		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
-+		mutex_unlock(&priv->mutex);
-+		return -ENOBUFS;
+ #define WL1251_SCAN_MIN_DURATION 30000
+ #define WL1251_SCAN_MAX_DURATION 60000
+ 
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index 012e1a4..2c95b90 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -906,6 +906,7 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
+ 	ret = wl1251_cmd_scan(wl, ssid, ssid_len, req->channels,
+ 			      req->n_channels, WL1251_SCAN_NUM_PROBES);
+ 	if (ret < 0) {
++		wl1251_debug(DEBUG_SCAN, "scan failed %d", ret);
+ 		wl->scanning = false;
+ 		goto out_sleep;
  	}
- 
- 	ath9k_htc_ps_wakeup(priv);
-@@ -1238,6 +1244,8 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	priv->nvifs++;
- 	priv->vif = vif;
- 
-+	INC_VIF(priv, vif->type);
-+
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
- 
-@@ -1271,6 +1279,8 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 	ath9k_htc_remove_station(priv, vif, NULL);
- 	priv->vif = NULL;
- 
-+	DEC_VIF(priv, vif->type);
-+
- 	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface at idx: %d\n", avp->index);
- 
- 	ath9k_htc_ps_restore(priv);
 -- 
-1.7.3.5
+1.7.0.4
+
 
