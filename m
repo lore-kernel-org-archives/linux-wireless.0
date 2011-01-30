@@ -1,109 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:27183 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751741Ab1AYFYa (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:62020 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503Ab1A3Sux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Jan 2011 00:24:30 -0500
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0760363069
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Jan 2011 14:24:29 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 2/2] ath5k: remove debug_dump_skb() functions
-Date: Tue, 25 Jan 2011 14:24:28 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, jirislaby@gmail.com, lrodriguez@atheros.com
-References: <1295929976-11858-1-git-send-email-me@bobcopeland.com> <1295929976-11858-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1295929976-11858-2-git-send-email-me@bobcopeland.com>
+	Sun, 30 Jan 2011 13:50:53 -0500
+Message-ID: <4D45B338.8010802@lwfinger.net>
+Date: Sun, 30 Jan 2011 12:51:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201101251424.28139.br1@einfach.org>
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+CC: linux-wireless@vger.kernel.org, platform-driver-x86@vger.kernel.org
+Subject: Re: Rfkill always soft/hard blocked upon boot
+References: <4D455DC1.6010909@pardus.org.tr>
+In-Reply-To: <4D455DC1.6010909@pardus.org.tr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue January 25 2011 13:32:56 Bob Copeland wrote:
-> Now that rx and tx dumps go through the tracing infrastructure,
-> we no longer need to keep these routines around.
+On 01/30/2011 06:46 AM, Ozan Çağlayan wrote:
+> Hi,
 > 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/debug.c |   20 --------------------
->  drivers/net/wireless/ath/ath5k/debug.h |   10 ----------
->  2 files changed, 0 insertions(+), 30 deletions(-)
+> How to fix or debug the $subject? You always have to press Fn+F2 to hard
+> unblock the rfkill after every boot on a local brand laptop.
 > 
-> diff --git a/drivers/net/wireless/ath/ath5k/debug.c
-> b/drivers/net/wireless/ath/ath5k/debug.c index d2f84d7..0230f30 100644
-> --- a/drivers/net/wireless/ath/ath5k/debug.c
-> +++ b/drivers/net/wireless/ath/ath5k/debug.c
-> @@ -308,8 +308,6 @@ static const struct {
->  	{ ATH5K_DEBUG_CALIBRATE, "calib",	"periodic calibration" },
->  	{ ATH5K_DEBUG_TXPOWER,	"txpower",	"transmit power setting" },
->  	{ ATH5K_DEBUG_LED,	"led",		"LED management" },
-> -	{ ATH5K_DEBUG_DUMP_RX,	"dumprx",	"print received skb content" },
-> -	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
->  	{ ATH5K_DEBUG_DUMPBANDS, "dumpbands",	"dump bands" },
->  	{ ATH5K_DEBUG_DMA,	"dma",		"dma start/stop" },
->  	{ ATH5K_DEBUG_ANI,	"ani",		"adaptive noise immunity" },
-> @@ -1036,24 +1034,6 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc,
-> struct ath5k_hw *ah) }
+> If the rfkill switch is really a switch which can be toggled on/off,
+> this makes sense. If you keep it Off, it will come as blocked. But it
+> seems that on this machine Fn+F2 controls the hard block state.
 > 
->  void
-> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> -			struct sk_buff *skb, const char *prefix, int tx)
-> -{
-> -	char buf[16];
-> -
-> -	if (likely(!((tx && (sc->debug.level & ATH5K_DEBUG_DUMP_TX)) ||
-> -		     (!tx && (sc->debug.level & ATH5K_DEBUG_DUMP_RX)))))
-> -		return;
-> -
-> -	snprintf(buf, sizeof(buf), "%s %s", wiphy_name(sc->hw->wiphy), prefix);
-> -
-> -	print_hex_dump_bytes(buf, DUMP_PREFIX_NONE, skb->data,
-> -		min(200U, skb->len));
-> -
-> -	printk(KERN_DEBUG "\n");
-> -}
-> -
-> -void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf)
->  {
->  	struct ath5k_desc *ds = bf->desc;
-> diff --git a/drivers/net/wireless/ath/ath5k/debug.h
-> b/drivers/net/wireless/ath/ath5k/debug.h index 3e34428..b0355ae 100644
-> --- a/drivers/net/wireless/ath/ath5k/debug.h
-> +++ b/drivers/net/wireless/ath/ath5k/debug.h
-> @@ -116,8 +116,6 @@ enum ath5k_debug_level {
->  	ATH5K_DEBUG_CALIBRATE	= 0x00000020,
->  	ATH5K_DEBUG_TXPOWER	= 0x00000040,
->  	ATH5K_DEBUG_LED		= 0x00000080,
-> -	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
-> -	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
->  	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
->  	ATH5K_DEBUG_DMA		= 0x00000800,
->  	ATH5K_DEBUG_ANI		= 0x00002000,
-> @@ -152,10 +150,6 @@ void
->  ath5k_debug_dump_bands(struct ath5k_softc *sc);
+> It should either be saved in somewhere (I've read that there is a
+> persistent knob for rfkill drivers in sysfs which tells whether the
+> state is kept in a non-volatile space across boots or not) or all soft
+> and this kind of Fn+Fx hard blocks should be explicitly disabled by
+> kernel during boots.
 > 
->  void
-> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> -			struct sk_buff *skb, const char *prefix, int tx);
-> -
-> -void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf);
+> I don't have direct access to the machine but the owner will help if you
+> need any output, etc.
 > 
->  #else /* no debugging */
-> @@ -182,10 +176,6 @@ static inline void
->  ath5k_debug_dump_bands(struct ath5k_softc *sc) {}
+> After booting:
 > 
->  static inline void
-> -ath5k_debug_dump_skb(struct ath5k_softc *sc,
-> -			struct sk_buff *skb, const char *prefix, int tx) {}
-> -
-> -static inline void
->  ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf) {}
+> 0: hci0: Bluetooth
+>         Soft blocked: no
+>         Hard blocked: no
+> 1: phy0: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: yes
 > 
->  #endif /* ifdef CONFIG_ATH5K_DEBUG */
+> After pressing Fn+F2:
+> 0: phy0: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: no
+> 1: hci0: Bluetooth
+>         Soft blocked: no
+>         Hard blocked: no
+> 
+> 03:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless
+> Network Adapter (PCI-Express) (rev 01)
+>         Subsystem: Device 1a3b:1089
+>         Flags: bus master, fast devsel, latency 0, IRQ 17
+>         Memory at f1d00000 (64-bit, non-prefetchable) [size=64K]
+>         Capabilities: [40] Power Management version 3
+>         Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+>         Capabilities: [60] Express Legacy Endpoint, MSI 00
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [140] Virtual Channel
+>         Capabilities: [160] Device Serial Number 00-15-17-ff-ff-24-14-12
+>         Capabilities: [170] Power Budgeting <?>
+>         Kernel driver in use: ath9k
+>         Kernel modules: ath9k
+> 
+> This is on 2.6.37. I'm waiting for the dmesg output.
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+The nature of that Fn-F2 key depends on how the motherboard manufacturer coded
+their BIOS. Most do it as a toggle and use some WMI (Windows Management
+Interface) code to initialize it on boot up. As this no-name laptop is unlikely
+to have a WMI driver the way that name brands do, it probably generates a
+keystroke. That is easy to check - Use CTRL-ALT-F1 to switch to a console, log
+in, and issue the command "showkey". Is a keycode returned when Fn-F2 is pressed?
+
+If the button does generate a key event, then adding a command to generate this
+key in a script that is executed after bootup should solve the problem. I don't
+know the command you need, but I'm sure someone will. Where to put that command
+will depend on your distro.
+
+Larry
