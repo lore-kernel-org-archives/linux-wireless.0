@@ -1,121 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34561 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751923Ab1ANSGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 13:06:05 -0500
-Message-ID: <4D309086.7070703@openwrt.org>
-Date: Fri, 14 Jan 2011 19:05:58 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:40732 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754224Ab1A3XI5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Jan 2011 18:08:57 -0500
+Received: by qwa26 with SMTP id 26so4918303qwa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 15:08:57 -0800 (PST)
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [ath9k-devel] [RFC 1/2] ath9k: Fix up hardware mode and beacons
- with multiple vifs.
-References: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1295026029-21130-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4D45B7DF.1030703@davizone.at>
+References: <4D45A7BD.705@davizone.at> <4D45B7DF.1030703@davizone.at>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 31 Jan 2011 00:08:35 +0100
+Message-ID: <AANLkTik5nkCT6Xbg0SF4oggCXiQjn4EybDq_RKmjPko+@mail.gmail.com>
+Subject: Re: [PATCH 18/18] wl1251: disable retry and ACK policy for injected packets
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-14 6:27 PM, greearb@candelatech.com wrote:
-> From: Ben Greear<greearb@candelatech.com>
+On Sun, Jan 30, 2011 at 8:11 PM, David Gnedt <david.gnedt@davizone.at> wrote:
+> Set the retry limit to 0 and disable the ACK policy for injected packets.
 >
-> When using a mixture of AP and Station interfaces,
-> the hardware mode was using the type of the
-> last VIF registered.  Instead, we should keep track
-> of the number of different types of vifs and set the
-> mode accordingly.
->
-> In addtion, use the vif type instead of hardware opmode
-> when dealing with beacons.
->
-> Attempt to move some of the common setup code into smaller
-> methods so we can re-use it when changing vif mode as
-> well as adding/deleting vifs.
->
-> This needs review.
->
-> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 > ---
-> :100644 100644 3108699... a2da259... M	drivers/net/wireless/ath/ath9k/ath9k.h
-> :100644 100644 385ba03... 8de591e... M	drivers/net/wireless/ath/ath9k/beacon.c
-> :100644 100644 0452580... 1a65e53... M	drivers/net/wireless/ath/ath9k/main.c
-> :100644 100644 ea2f67c... 9a2b4a8... M	drivers/net/wireless/ath/ath9k/recv.c
->   drivers/net/wireless/ath/ath9k/ath9k.h  |   10 +-
->   drivers/net/wireless/ath/ath9k/beacon.c |   14 +-
->   drivers/net/wireless/ath/ath9k/main.c   |  263 ++++++++++++++++++++++---------
->   drivers/net/wireless/ath/ath9k/recv.c   |   17 ++-
->   4 files changed, 214 insertions(+), 90 deletions(-)
+> Sorry for the partly broken patches, I thought I configured my client the
+> right way. I tried to stop the mails at my mailserver, but it was mostly
+> already too late.
+> ---
+>  drivers/net/wireless/wl1251/acx.c |    8 +++++++-
+>  drivers/net/wireless/wl1251/tx.c  |    7 ++++++-
+>  2 files changed, 13 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 3108699..a2da259 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -607,10 +607,15 @@ struct ath_softc {
->   	u32 sc_flags; /* SC_OP_* */
->   	u16 ps_flags; /* PS_* */
->   	u16 curtxpow;
-> -	u8 nbcnvifs;
-> -	u16 nvifs;
->   	bool ps_enabled;
->   	bool ps_idle;
-> +	short nbcnvifs;
-> +	short nvifs;
-> +	short naps; /* number of APs */
-> +	short nmeshes;
-> +	short nstations;
-> +	short nwds;
-> +	short nadhocs;
->   	unsigned long ps_usecount;
+> diff --git a/drivers/net/wireless/wl1251/acx.c b/drivers/net/wireless/wl1251/acx.c
+> index 38d33f0..435ed08 100644
+> --- a/drivers/net/wireless/wl1251/acx.c
+> +++ b/drivers/net/wireless/wl1251/acx.c
+> @@ -947,12 +947,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
+>        }
 >
->   	struct ath_config config;
-Do we really need all those counters? Wouldn't it be better to iterate 
-over active interfaces instead?
+>        /* configure one default (one-size-fits-all) rate class */
+> -       acx->rate_class_cnt = 1;
+> +       acx->rate_class_cnt = 2;
+>        acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
+>        acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
+>        acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
+>        acx->rate_class[0].aflags = 0;
+>
+> +       /* no-retry rate class */
+> +       acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
+> +       acx->rate_class[1].short_retry_limit = 0;
+> +       acx->rate_class[1].long_retry_limit = 0;
+> +       acx->rate_class[1].aflags = 0;
+> +
+>        ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+>        if (ret < 0) {
+>                wl1251_warning("Setting of rate policies failed: %d", ret);
+> diff --git a/drivers/net/wireless/wl1251/tx.c b/drivers/net/wireless/wl1251/tx.c
+> index 1de4ccb..e559bc4 100644
+> --- a/drivers/net/wireless/wl1251/tx.c
+> +++ b/drivers/net/wireless/wl1251/tx.c
+> @@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
+>        /* 802.11 packets */
+>        tx_hdr->control.packet_type = 0;
+>
+> -       if (control->flags & IEEE80211_TX_CTL_NO_ACK)
+> +       /* Also disable retry and ACK policy for injected packets */
+> +       if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
+> +           (control->flags & IEEE80211_TX_CTL_INJECTED)) {
+> +               tx_hdr->control.rate_policy = 1;
+>                tx_hdr->control.ack_policy = 1;
+> +       }
+>
+>        tx_hdr->control.tx_complete = 1;
+>
+> @@ -414,6 +418,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
+>        info = IEEE80211_SKB_CB(skb);
+>
+>        if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+> +           !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+>            (result->status == TX_SUCCESS))
+>                info->flags |= IEEE80211_TX_STAT_ACK;
+>
+> --
+> 1.7.0.4
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index ea2f67c..9a2b4a8 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -589,8 +589,14 @@ static void ath_rx_ps_beacon(struct ath_softc *sc, struct sk_buff *skb)
->   		return;
->
->   	mgmt = (struct ieee80211_mgmt *)skb->data;
-> -	if (memcmp(common->curbssid, mgmt->bssid, ETH_ALEN) != 0)
-> +	if (memcmp(common->curbssid, mgmt->bssid, ETH_ALEN) != 0) {
-> +		/* TODO:  This doesn't work well if you have stations
-> +		 * associated to two different APs because curbssid
-> +		 * is just the last AP that any of the stations associated
-> +		 * with.
-> +		 */
->   		return; /* not from our current AP */
-> +	}
->
->   	sc->ps_flags&= ~PS_WAIT_FOR_BEACON;
->
-> @@ -980,13 +986,20 @@ static void ath9k_process_rssi(struct ath_common *common,
->   	int last_rssi;
->   	__le16 fc;
->
-> +	/* TODO:  Maybe need to accept this if we have STA vifs active?? */
->   	if (ah->opmode != NL80211_IFTYPE_STATION)
->   		return;
->
->   	fc = hdr->frame_control;
->   	if (!ieee80211_is_beacon(fc) ||
-> -	    compare_ether_addr(hdr->addr3, common->curbssid))
-> +	    compare_ether_addr(hdr->addr3, common->curbssid)) {
-> +		/* TODO:  This doesn't work well if you have stations
-> +		 * associated to two different APs because curbssid
-> +		 * is just the last AP that any of the stations associated
-> +		 * with.
-> +		 */
->   		return;
-> +	}
->
->   	if (rx_stats->rs_rssi != ATH9K_RSSI_BAD&&  !rx_stats->rs_moreaggr)
->   		ATH_RSSI_LPF(aphy->last_rssi, rx_stats->rs_rssi);
-Checking for the STA opmode is correct, this code should not be used for 
-STA+AP. For the multi-STA case, it may make sense to process the RSSI 
-average per vif and using the minimum for ANI.
+Hi,
 
-- Felix
+Unfortunately this is not the right thing to do - something like this
+should be done in mac80211, but triggered by radiotap (sometimes, it
+makes sense to inject packets and expect ACKs). See the list for
+earlier discussions about the TX Flags field, and
+patches.aircrack-ng.org for a proof-of-concept implementation.
+
+--Gábor
