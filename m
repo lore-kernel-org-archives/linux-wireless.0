@@ -1,96 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25592 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756163Ab1BYPiG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 10:38:06 -0500
-Subject: Re: [PATCH 2/2] iwlagn: fix iwlagn_check_needed_chains
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	Swati Rallapalli <swati@cs.utexas.edu>
-In-Reply-To: <20110225112620.515442527@sipsolutions.net>
-References: <20110225112409.977212647@sipsolutions.net>
-	 <20110225112620.515442527@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Feb 2011 07:36:06 -0800
-Message-ID: <1298648166.2603.11.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail.platinumzone24.at ([88.198.159.93]:35431 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756670Ab1AaXAq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 18:00:46 -0500
+Message-ID: <4D473F16.4010102@davizone.at>
+Date: Tue, 01 Feb 2011 00:00:38 +0100
+From: David Gnedt <david.gnedt@davizone.at>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 17/18] wl1251: enable tx path in monitor mode if necessary
+ for packet injection
+References: <4D45A79A.1030102@davizone.at> <4D45B7DC.3060303@davizone.at> <8762t5dptt.fsf@purkki.adurom.net>
+In-Reply-To: <8762t5dptt.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-On Fri, 2011-02-25 at 03:24 -0800, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+Am 2011-01-31 17:02, schrieb Kalle Valo:
+> David Gnedt <david.gnedt@davizone.at> writes:
 > 
-> This function was intended to calculate the
-> number of RX chains needed, but could only
-> work where the AP's streams were asymmetric,
-> i.e. 2 TX and 3 RX or similar. In the case
-> where IEEE80211_HT_MCS_TX_RX_DIFF was not
-> set, this function would calculate the wrong
-> information.
+>> If necessary enable the tx path in monitor mode for packet injection using
+>> the JOIN command with BSS_TYPE_STA_BSS and zero BSSID.
 > 
-> Additionally, mac80211 didn't pass through
-> the required values at all, so it couldn't
-> work anyway.
+> Ok, this answers my question, you send TX_ENABLE command during the
+> first frame transmission. I have to admit that it sounds a bit
+> hackish. I would prefer to keep the driver as simple as possible,
+> makes it easier to maintain it that way.
 > 
-> Rewrite the logic in this function and add
-> appropriate comments to make it readable.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   58 +++++++++++++++++++---------
->  1 file changed, 41 insertions(+), 17 deletions(-)
-> 
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c	2011-02-25 11:03:37.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c	2011-02-25 12:21:18.000000000 +0100
-> @@ -471,6 +471,7 @@ static void iwlagn_check_needed_chains(s
->  	struct iwl_rxon_context *tmp;
->  	struct ieee80211_sta *sta;
->  	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
-> +	struct ieee80211_sta_ht_cap *ht_cap;
->  	bool need_multiple;
->  
->  	lockdep_assert_held(&priv->mutex);
-> @@ -479,23 +480,7 @@ static void iwlagn_check_needed_chains(s
->  	case NL80211_IFTYPE_STATION:
->  		rcu_read_lock();
->  		sta = ieee80211_find_sta(vif, bss_conf->bssid);
-> -		if (sta) {
-> -			struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-> -			int maxstreams;
-> -
-> -			maxstreams = (ht_cap->mcs.tx_params &
-> -				      IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK)
-> -					>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
-> -			maxstreams += 1;
-> -
-> -			need_multiple = true;
-> -
-> -			if ((ht_cap->mcs.rx_mask[1] == 0) &&
-> -			    (ht_cap->mcs.rx_mask[2] == 0))
-> -				need_multiple = false;
-> -			if (maxstreams <= 1)
-> -				need_multiple = false;
-> -		} else {
-> +		if (!sta) {
->  			/*
->  			 * If at all, this can only happen through a race
->  			 * when the AP disconnects us while we're still
-> @@ -503,7 +488,46 @@ static void iwlagn_check_needed_chains(s
->  			 * will soon tell us about that.
->  			 */
->  			need_multiple = false;
-> +			rcu_read_unlock();
-> +			break;
+> I would like to step back and first look at the problem you are trying
+> to solve and maybe there's a way we can fix the join command. Was it
+> something to do with firmware sending extra frames? Unfortunately TI
+> firmwares are notorious for that.
 
-why unlock and break here instead stay do it later like before?
+Yeah, you are right, but I don't think the JOIN command can be fixed. Even if we
+use it with a zero BSSID and zero SSID, it sends some frames. Then there are not
+much parameters left, which can influence it's behaviour.
 
-Wey
+All in all I think the JOIN command was only meant to be used when you really
+want to associate.
 
+It would be really unpleasant if the firmware keeps sending frames while channel
+hopping (through user-space software) in monitor mode.
+That's why I use RX_ENABLE to switch channels in monitor mode, but that again
+results in a disabled TX path. My testing showed that it also can't be enabled
+again with TX_ENABLE, only a JOIN command enables the TX path again.
 
+By the way, I only split up RX_ENABLE and TX_ENABLE to reduce the amount of
+firmware commands sent.
 
+So summing up, I think the JOIN command is the only command which enables the TX
+path, but with the drawback of also transmitting some extra frames.
 
+Nevertheless I am going to experiment with the JOIN command again, maybe I have
+overlooked something.
