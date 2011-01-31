@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:1841 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753751Ab1AJVIe (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:48861 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754943Ab1AaSuh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 16:08:34 -0500
-Message-ID: <4D2B7550.5000008@gmail.com>
-Date: Mon, 10 Jan 2011 22:08:32 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Mon, 31 Jan 2011 13:50:37 -0500
+Subject: [PATCH 22/22] zd1211rw: add useful debug output
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 31 Jan 2011 20:50:31 +0200
+Message-ID: <20110131185031.10044.29389.stgit@fate.lan>
+In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
+References: <20110131184657.10044.98610.stgit@fate.lan>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: eric.dumazet@gmail.com, torvalds@linux-foundation.org,
-	alex.arnautu96@gmail.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel 2.6.37-rc5 rc7 Oops
-References: <AANLkTinCD5Jf-dEUpv7hu4YKrxS0DGqqqBU94iCJ8602@mail.gmail.com>	<AANLkTinJAEW-xAiEKnfxo1+3FiGwFXFii5Rh6d8tAtB-@mail.gmail.com>	<1293652965.7150.13.camel@edumazet-laptop> <20110110.000650.124002380.davem@davemloft.net>
-In-Reply-To: <20110110.000650.124002380.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/11 09:06, David Miller wrote:
-> From: Eric Dumazet <eric.dumazet@gmail.com>
-> Date: Wed, 29 Dec 2010 21:02:45 +0100
-> 
->> Le mercredi 29 décembre 2010 à 11:23 -0800, Linus Torvalds a écrit :
->>> On Wed, Dec 29, 2010 at 4:26 AM, Alex Arnautu <alex.arnautu96@gmail.com> wrote:
->>>>
->>>> I get an oops with 2.6.37-rc5 and 2.6.37-rc7-git1.
->>>> http://www.fotoshack.us/fotos/19044P271210_15.14_[01].jpg
->>>
->>> Hmm. Davem added to the list of people involved. This _may_ be fixed
->>> by the "always clone skbs" commit in -rc8 (commit 173021072), but
->>> David can make a better judgment call.
->>>
->>
->> Very unlikely, as commit 173021072 only fix a bug in case mirred is
->> used.
-> 
-> This should be taken to the wireless list (now CC:'d) as the rt2xxx
-> driver and the wireless stack are both in that backtrace.
-
-Hmmm, the jpg images of the oops don't seem to be available anymore
-(a 404 not found is returned on the URL.
-Does anybody still have the backtrace? Otherwise it will be very hard to look
-into this.
-
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-Gertjan.
+ drivers/net/wireless/zd1211rw/zd_usb.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 5cedfea..4e6c06a 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -411,8 +411,10 @@ static void int_urb_complete(struct urb *urb)
+ 	case -ENOENT:
+ 	case -ECONNRESET:
+ 	case -EPIPE:
++		dev_dbg_f(urb_dev(urb), "urb %p error %d\n", urb, urb->status);
+ 		return;
+ 	default:
++		dev_dbg_f(urb_dev(urb), "urb %p error %d\n", urb, urb->status);
+ 		goto resubmit;
+ 	}
+ 
+@@ -613,6 +615,7 @@ static void handle_rx_packet(struct zd_usb *usb, const u8 *buffer,
+ 
+ static void rx_urb_complete(struct urb *urb)
+ {
++	int r;
+ 	struct zd_usb *usb;
+ 	struct zd_usb_rx *rx;
+ 	const u8 *buffer;
+@@ -627,6 +630,7 @@ static void rx_urb_complete(struct urb *urb)
+ 	case -ENOENT:
+ 	case -ECONNRESET:
+ 	case -EPIPE:
++		dev_dbg_f(urb_dev(urb), "urb %p error %d\n", urb, urb->status);
+ 		return;
+ 	default:
+ 		dev_dbg_f(urb_dev(urb), "urb %p error %d\n", urb, urb->status);
+@@ -668,7 +672,9 @@ static void rx_urb_complete(struct urb *urb)
+ 	}
+ 
+ resubmit:
+-	usb_submit_urb(urb, GFP_ATOMIC);
++	r = usb_submit_urb(urb, GFP_ATOMIC);
++	if (r)
++		dev_dbg_f(urb_dev(urb), "urb %p resubmit error %d\n", urb, r);
+ }
+ 
+ static struct urb *alloc_rx_urb(struct zd_usb *usb)
+@@ -1001,6 +1007,7 @@ int zd_usb_tx(struct zd_usb *usb, struct sk_buff *skb)
+ 
+ 	r = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (r) {
++		dev_dbg_f(zd_usb_dev(usb), "error submit urb %p %d\n", urb, r);
+ 		usb_unanchor_urb(urb);
+ 		skb_unlink(skb, &tx->submitted_skbs);
+ 		goto error;
+
