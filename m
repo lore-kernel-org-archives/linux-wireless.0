@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37509 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757381Ab1AMUNh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34824 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab1AaMKc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Jan 2011 15:13:37 -0500
-Message-ID: <4D2F5CEE.2000108@candelatech.com>
-Date: Thu, 13 Jan 2011 12:13:34 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: hostap@lists.shmoo.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Question on deauth, reason 4, for hostapd.
-References: <4D2F56DB.50507@candelatech.com>
-In-Reply-To: <4D2F56DB.50507@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 31 Jan 2011 07:10:32 -0500
+Subject: Re: [PATCH] iwlwifi: correct frequency settings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1296475295-5420-1-git-send-email-sgruszka@redhat.com>
+References: <1296475295-5420-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 13:10:26 +0100
+Message-ID: <1296475826.3812.24.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/13/2011 11:47 AM, Ben Greear wrote:
-> I'm trying to figure out why my stations sometimes deauth for
-> reason 4 (which I understand to mean 'inactivity').
->
-> I instrumented the hostapd logs a bit, and I see this the output
-> below. Basically, there appears to be no inactivity problems, and
-> as far as I can tell, hostapd isn't forcing the deauth, but is rather
-> dealing with it from somewhere else.
+On Mon, 2011-01-31 at 13:01 +0100, Stanislaw Gruszka wrote:
+> After commit 59eb21a6504731fc16db4cf9463065dd61093e08
+> "cfg80211: Extend channel to frequency mapping for 802.11j"
+> we use uninitialized sband->band when assign channel frequencies, what
+> results that 5GHz channels have erroneous (zero) center_freq value.
+> 
+> Patch fixes problem and simplifies code a bit.
 
-Ahh, seems the client side is giving up.
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-sta6: detected beacon loss from AP - sending probe request
-sta7: detected beacon loss from AP - sending probe request
-sta8: detected beacon loss from AP - sending probe request
-ieee80211 wiphy0: sta10: No ack for nullfunc frame to AP 00:99:99:99:99:01, try 1
-net_ratelimit: 200 callbacks suppressed
-wlan0: detected beacon loss from AP - sending probe request
-sta0: detected beacon loss from AP - sending probe request
-sta1: detected beacon loss from AP - sending probe request
-sta2: detected beacon loss from AP - sending probe request
-sta3: detected beacon loss from AP - sending probe request
-sta4: detected beacon loss from AP - sending probe request
-sta5: detected beacon loss from AP - sending probe request
-sta6: detected beacon loss from AP - sending probe request
-sta7: detected beacon loss from AP - sending probe request
-sta8: detected beacon loss from AP - sending probe request
-ieee80211 wiphy0: sta10: Failed to send nullfunc to AP 00:99:99:99:99:01 after 500ms, disconnecting.
-ieee80211 wiphy0: Removed STA 00:99:99:99:99:01
-ieee80211 wiphy0: Destroyed STA 00:99:99:99:99:01
-start_sw_scan: running-other-vifs: 0  running-station-vifs: 70, associated-stations: 69 scanning current channel: 2437 MHz
-sta10: authenticate with 00:99:99:99:99:01 (try 1)
-sta10: authenticated
-sta10: associate with 00:99:99:99:99:01 (try 1)
-sta10: RX ReassocResp from 00:99:99:99:99:01 (capab=0x411 status=0 aid=60)
-sta10: associated
-ieee80211 wiphy0: Allocated STA 00:99:99:99:99:01
-ieee80211 wiphy0: Inserted STA 00:99:99:99:99:01
-net_ratelimit: 76 callbacks suppressed
-wlan0: detected beacon loss from AP - sending probe request
-sta0: detected beacon loss from AP - sending probe request
+Thanks!
 
-Thanks,
-Ben
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++------
+>  1 files changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+> index 92724cb..4ad8938 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -219,16 +219,12 @@ int iwlcore_init_geos(struct iwl_priv *priv)
+>  		if (!is_channel_valid(ch))
+>  			continue;
+>  
+> -		if (is_channel_a_band(ch))
+> -			sband =  &priv->bands[IEEE80211_BAND_5GHZ];
+> -		else
+> -			sband =  &priv->bands[IEEE80211_BAND_2GHZ];
+> +		sband =  &priv->bands[ch->band];
+>  
+>  		geo_ch = &sband->channels[sband->n_channels++];
+>  
+>  		geo_ch->center_freq =
+> -				ieee80211_channel_to_frequency(ch->channel,
+> -							       sband->band);
+> +			ieee80211_channel_to_frequency(ch->channel, ch->band);
+>  		geo_ch->max_power = ch->max_power_avg;
+>  		geo_ch->max_antenna_gain = 0xff;
+>  		geo_ch->hw_value = ch->channel;
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
