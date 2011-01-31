@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.3eti.com ([65.220.88.141]:32157 "EHLO webmail.3eti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754757Ab1AGR6R convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755468Ab1AaLQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 12:58:17 -0500
-From: Chaoxing Lin <CLin@3eti.com>
-To: 'Ben Greear' <greearb@candelatech.com>
-CC: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: RE: hostapd hangs on quit, multi-BSSID scenario
-Date: Fri, 7 Jan 2011 17:58:30 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D9E@RockMX01.rock.corp>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05715D85@RockMX01.rock.corp>
- <4D275236.4040202@candelatech.com>
-In-Reply-To: <4D275236.4040202@candelatech.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 31 Jan 2011 06:16:57 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:56 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 07/10] wl12xx: AP-mode - support HW based link PS monitoring
+Date: Mon, 31 Jan 2011 13:16:26 +0200
+Message-Id: <1296472589-26401-8-git-send-email-arik@wizery.com>
+In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1. I don't know how to use GDB. Consider me entry level developer.
-2. It should not be related the change I made on ath9k. The reasons are
-	a. My change is simple, linux/drivers/net/wireless/ath/ath9k/ath9k.h: change ATH_BCBUF from 4 to 12
-	b. Without my change, driver accepts up to 3 extra BSSID. But hostapd still hangs on quit. Hostapd quits well if there only one extra BSSID.
+When operating in AP mode the wl1271 hardware filters out null-data
+packets as well as management packets. This makes it impossible for
+mac80211 to monitor the PS mode by using the PM bit of incoming frames.
 
-This problem is 100% reproducible. I guess it would be quite easy for the original hostapd developer to fix it.
+Disable mac80211 automatic link PS-mode handling by supporting
+IEEE80211_HW_AP_LINK_PS in HW flags.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
------Original Message-----
-From: Ben Greear [mailto:greearb@candelatech.com] 
-Sent: Friday, January 07, 2011 12:50 PM
-To: Chaoxing Lin
-Cc: 'linux-wireless@vger.kernel.org'
-Subject: Re: hostapd hangs on quit, multi-BSSID scenario
-
-On 01/07/2011 09:44 AM, Chaoxing Lin wrote:
-> Gentlemen,
->
->   When I run hostapd with 8+1 BSSID over one radio (ath9160), it runs well. All 9 BSS accepts clients.
-> But when I "Ctrl + C" or "killall hostapd", hostapd daemon can NOT gracefully shut down. It hangs forever. I have to "Ctrl + C" again. Then it quits and print message like "
->
-> I am running latest (as of 01/06/2011) hostapd, latest stable kernel (2.6.37) with one number change in ath9k to allow more than 12 virtual BSS over one radio.
->
-> Below is my hostapd-conf and console screenshot. If someone can fix this bug, please help.
-
-Maybe attach gdb to hostapd and see where it hangs?
-
-Also, what change did you make to ath9k?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 2c6bde9..8d55c89 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3221,7 +3221,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_SUPPORTS_UAPSD |
+ 		IEEE80211_HW_HAS_RATE_CONTROL |
+ 		IEEE80211_HW_CONNECTION_MONITOR |
+-		IEEE80211_HW_SUPPORTS_CQM_RSSI;
++		IEEE80211_HW_SUPPORTS_CQM_RSSI |
++		IEEE80211_HW_AP_LINK_PS;
+ 
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
