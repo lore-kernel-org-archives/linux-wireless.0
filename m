@@ -1,50 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36725 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704Ab1A3G6K (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:43101 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755820Ab1AaSsk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 01:58:10 -0500
-Received: by yxt3 with SMTP id 3so1588998yxt.19
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Jan 2011 22:58:09 -0800 (PST)
+	Mon, 31 Jan 2011 13:48:40 -0500
+Subject: [PATCH 10/22] zd1211rw: implement beacon fetching and handling
+	ieee80211_get_buffered_bc()
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 31 Jan 2011 20:48:35 +0200
+Message-ID: <20110131184835.10044.72951.stgit@fate.lan>
+In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
+References: <20110131184657.10044.98610.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <1296124403.3622.2.camel@jlt3.sipsolutions.net>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
- <1295156534-4178-6-git-send-email-arik@wizery.com> <1296121901.5263.116.camel@pimenta>
- <1296124403.3622.2.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 30 Jan 2011 08:57:54 +0200
-Message-ID: <AANLkTik1r-6k3NhNnAOgX7WuvfhREgbYHUvnL_sR7nvy@mail.gmail.com>
-Subject: Re: [PATCH 05/10] wl12xx: report invalid TX rate when returning
- non-TX-ed skbs
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <coelho@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 27, 2011 at 12:33, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-01-27 at 11:51 +0200, Luciano Coelho wrote:
->> On Sun, 2011-01-16 at 06:42 +0100, Arik Nemtsov wrote:
->> > Report a TX rate idx of -1 when returning untransmitted skbs to mac80211
->> > using ieee80211_tx_status(). Otherwise mac80211 tries to use the
->> > returned (essentially garbage) status.
->> >
->> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> > ---
->>
->> Is this a documented way of doing it or it just happens to work?
->
-> I think the more expected way would be to set the TX counts to 0?
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   39 +++++++++++++++++++++++++++++---
+ 1 files changed, 35 insertions(+), 4 deletions(-)
 
-Good catch. I'll set the rates[0].count = 0.
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 1bd275b..49ab3c3 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -938,6 +938,34 @@ static int zd_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
+ }
+ 
++static void zd_beacon_done(struct zd_mac *mac)
++{
++	struct sk_buff *skb, *beacon;
++
++	if (!mac->vif || mac->vif->type != NL80211_IFTYPE_AP)
++		return;
++
++	/*
++	 * Send out buffered broad- and multicast frames.
++	 */
++	while (!ieee80211_queue_stopped(mac->hw, 0)) {
++		skb = ieee80211_get_buffered_bc(mac->hw, mac->vif);
++		if (!skb)
++			break;
++		zd_op_tx(mac->hw, skb);
++	}
++
++	/*
++	 * Fetch next beacon so that tim_count is updated.
++	 */
++	beacon = ieee80211_beacon_get(mac->hw, mac->vif);
++	if (!beacon)
++		return;
++
++	zd_mac_config_beacon(mac->hw, beacon);
++	kfree_skb(beacon);
++}
++
+ static void zd_process_intr(struct work_struct *work)
+ {
+ 	u16 int_status;
+@@ -948,10 +976,12 @@ static void zd_process_intr(struct work_struct *work)
+ 	int_status = le16_to_cpu(*(__le16 *)(mac->intr_buffer + 4));
+ 	spin_unlock_irqrestore(&mac->lock, flags);
+ 
+-	if (int_status & INT_CFG_NEXT_BCN)
+-		dev_dbg_f_limit(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
+-	else
++	if (int_status & INT_CFG_NEXT_BCN) {
++		/*dev_dbg_f_limit(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");*/
++		zd_beacon_done(mac);
++	} else {
+ 		dev_dbg_f(zd_mac_dev(mac), "Unsupported interrupt\n");
++	}
+ 
+ 	zd_chip_enable_hwint(&mac->chip);
+ }
+@@ -1135,7 +1165,8 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
+ 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &mac->band;
+ 
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+-		    IEEE80211_HW_SIGNAL_UNSPEC;
++		    IEEE80211_HW_SIGNAL_UNSPEC |
++		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING;
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_MESH_POINT) |
 
-The original patch was to avoid this problematic line in ieee80211_tx_status:
-
-		if ((local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) &&
-		    (rates_idx != -1))
-			sta->last_tx_rate = info->status.rates[rates_idx];
-
-If rates[0].idx is invalid this will be a bad deref.
-
-Arik
