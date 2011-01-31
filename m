@@ -1,84 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:55413 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055Ab1ADXsQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Jan 2011 18:48:16 -0500
-Subject: [RFC PATCH 03/17] zd1211rw: fix beacon interval setup
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Date: Wed, 05 Jan 2011 01:48:11 +0200
-Message-ID: <20110104234811.25309.34778.stgit@fate.lan>
-In-Reply-To: <20110104234745.25309.72030.stgit@fate.lan>
-References: <20110104234745.25309.72030.stgit@fate.lan>
+Received: from purkki.adurom.net ([80.68.90.206]:57257 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756045Ab1AaQCJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 11:02:09 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 17/18] wl1251: enable tx path in monitor mode if necessary for packet injection
+References: <4D45A79A.1030102@davizone.at> <4D45B7DC.3060303@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 31 Jan 2011 18:02:06 +0200
+In-Reply-To: <4D45B7DC.3060303@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 20\:11\:24 +0100")
+Message-ID: <8762t5dptt.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vendor driver uses CR_BNC_INTERVAL at various places, one is HW_EnableBeacon()
-that combinies beacon interval with BSS-type flag and DTIM value in upper
-16bit of u32. The other one is HW_UpdateBcnInterval() that set_aw_pt_bi()
-appears to be based on. HW_UpdateBcnInterval() takes interval argument as u16
-and uses that for calculations, set_aw_pt_bi() uses u32 value that has flags
-and dtim in upper part. This clearly seems wrong. Also HW_UpdateBcnInterval()
-updates only lower 16bit part of CR_BNC_INTERVAL. So make set_aw_pt_bi() do
-calculations on only lower u16 part of s->beacon_interval.
+David Gnedt <david.gnedt@davizone.at> writes:
 
-Also set 32bit beacon interval register before reading values from device,
-as HW_EnableBeacon() on vendor driver does. This is required to make beacon
-work on AP-mode, simply reading and then writing updated values is not enough
-at least with zd1211b.
+> If necessary enable the tx path in monitor mode for packet injection using
+> the JOIN command with BSS_TYPE_STA_BSS and zero BSSID.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_chip.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+Ok, this answers my question, you send TX_ENABLE command during the
+first frame transmission. I have to admit that it sounds a bit
+hackish. I would prefer to keep the driver as simple as possible,
+makes it easier to maintain it that way.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 6effe18..8c05737 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -848,11 +848,12 @@ static int get_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
- static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
- {
- 	struct zd_ioreq32 reqs[3];
-+	u16 b_interval = s->beacon_interval & 0xffff;
- 
--	if (s->beacon_interval <= 5)
--		s->beacon_interval = 5;
--	if (s->pre_tbtt < 4 || s->pre_tbtt >= s->beacon_interval)
--		s->pre_tbtt = s->beacon_interval - 1;
-+	if (b_interval <= 5)
-+		b_interval = 5;
-+	if (s->pre_tbtt < 4 || s->pre_tbtt >= b_interval)
-+		s->pre_tbtt = b_interval - 1;
- 	if (s->atim_wnd_period >= s->pre_tbtt)
- 		s->atim_wnd_period = s->pre_tbtt - 1;
- 
-@@ -861,7 +862,7 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
- 	reqs[1].addr = CR_PRE_TBTT;
- 	reqs[1].value = s->pre_tbtt;
- 	reqs[2].addr = CR_BCN_INTERVAL;
--	reqs[2].value = s->beacon_interval;
-+	reqs[2].value = (s->beacon_interval & ~0xffff) | b_interval;
- 
- 	return zd_iowrite32a_locked(chip, reqs, ARRAY_SIZE(reqs));
- }
-@@ -873,10 +874,13 @@ static int set_beacon_interval(struct zd_chip *chip, u32 interval)
- 	struct aw_pt_bi s;
- 
- 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
-+
-+	r = zd_iowrite32_locked(chip, interval, CR_BCN_INTERVAL);
-+	if (r)
-+		return r;
- 	r = get_aw_pt_bi(chip, &s);
- 	if (r)
- 		return r;
--	s.beacon_interval = interval;
- 	return set_aw_pt_bi(chip, &s);
- }
- 
+I would like to step back and first look at the problem you are trying
+to solve and maybe there's a way we can fix the join command. Was it
+something to do with firmware sending extra frames? Unfortunately TI
+firmwares are notorious for that.
 
+-- 
+Kalle Valo
