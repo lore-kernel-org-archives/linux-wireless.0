@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from grimli.r00tworld.net ([83.169.44.195]:57360 "EHLO
-	mail.r00tworld.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752582Ab1A3KgH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756230Ab1AaVnq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 05:36:07 -0500
-From: Mathias Krause <minipli@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@adurom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Mathias Krause <minipli@googlemail.com>
-Subject: [PATCH] wl12xx: fix use after free
-Date: Sun, 30 Jan 2011 11:29:47 +0100
-Message-Id: <1296383387-20151-1-git-send-email-minipli@googlemail.com>
+	Mon, 31 Jan 2011 16:43:46 -0500
+Subject: Re: Review of EN 301 893 1.5.1 and 1.6.1 changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Green <Michael.Green@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wireless-regdb@lists.infradead.org,
+	Kathy Giori <Kathy.Giori@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTi=b-Tm7r1eODgAQqpQJuimD0+dQkHFB4YV06kES@mail.gmail.com>
+References: <AANLkTim3CG+aN9QGhGOfBD9+BSYsgQW_ACC0o+k9H-rt@mail.gmail.com>
+	 <AANLkTinuFzBMMLd08Zpkf8iGBO-YdM2Ni-KtNCNxuUbT@mail.gmail.com>
+	 <AANLkTi=b-Tm7r1eODgAQqpQJuimD0+dQkHFB4YV06kES@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 22:43:45 +0100
+Message-ID: <1296510225.3812.50.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When DEBUG_SPI is included in the debug log level wl1271_spi_reset()
-will dump the already freed memory instead of the SPI buffer.
+Note: this email is on a public list. If you can't tell that from the Cc
+line of the email, I'm not sure you should be working in this field. If
+you think I'm mocking you, maybe I am :P
 
-This bug was spotted by the semantic patch tool coccinelle using the
-script found at scripts/coccinelle/free/kfree.cocci.
+On Mon, 2011-01-31 at 13:33 -0800, Luis R. Rodriguez wrote:
+> FYI - European conformance spec for 5 GHz Radio LANs has some slight
+> modifications which Johannes has pointed out which we have reviewed
+> today in consideration for our new DFS design. The skinny is that our
+> implementation of using 3 regions are OK and we will move forward with
+> that.
 
-More information about semantic patching is available at
-http://coccinelle.lip6.fr/
+I just fear that will not allow us to keep manoeuvring effectively in
+the future, because then we need to change all the implementations,
+potentially old ones, rather than just updating the database.
 
-Signed-off-by: Mathias Krause <minipli@googlemail.com>
----
- drivers/net/wireless/wl12xx/spi.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+I wasn't so much thinking of the pulse patterns though as the other
+timings like the airtime allowed to use before moving onto a new
+channel.
 
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 4671491..7145ea5 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -110,9 +110,8 @@ static void wl1271_spi_reset(struct wl1271 *wl)
- 	spi_message_add_tail(&t, &m);
- 
- 	spi_sync(wl_to_spi(wl), &m);
--	kfree(cmd);
--
- 	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
-+	kfree(cmd);
- }
- 
- static void wl1271_spi_init(struct wl1271 *wl)
--- 
-1.5.6.5
+johannes
 
