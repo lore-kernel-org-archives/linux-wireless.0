@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:51854 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753626Ab1ATLZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 06:25:06 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PfsdU-000537-To
-	for linux-wireless@vger.kernel.org; Thu, 20 Jan 2011 12:25:05 +0100
-Received: from 145.90.70.115.static.exetel.com.au ([115.70.90.145])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 12:25:04 +0100
-Received: from conflatulence by 145.90.70.115.static.exetel.com.au with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 12:25:04 +0100
+Received: from mail.candelatech.com ([208.74.158.172]:50134 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753604Ab1AaTaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 14:30:13 -0500
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-From: zach <conflatulence@gmail.com>
-Subject: Re: [PATCH] Kernel Panic on Associate with brcm80211.
-Date: Thu, 20 Jan 2011 11:21:26 +0000 (UTC)
-Message-ID: <loom.20110120T120235-29@post.gmane.org>
-References: <4D334D00.4030604@mythicnet.org> <4D3521FD.9020001@mythicnet.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] mac80211:  Recalculate channel-type on iface removal.
+Date: Mon, 31 Jan 2011 11:30:09 -0800
+Message-Id: <1296502209-32533-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ilya Kogan <ikogan@...> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> 
-> I'm going to admit I'm fairly new to this but after some reading, I 
-> couldn't quite understand why there is an assertion ensuring that the 
-> sk_buff being sent is not cloned. I was going to see what exploded if I 
-> removed it and to my surprise...nothing did. In fact, except for a few
-> 
-> [12014.013409] wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 
-> 382/256 dur 3562/1504
-> 
-> things seem to work fine. I'll be doing some more testing with this over 
-> the next couple of days. What obvious thing does this break horribly?
-> 
+When a vif goes away, it could cause the super-chan
+to be recalculated differently, so do that calculation
+on iface removal.
 
-Hi, I think I had the same panic on emachines em350 with BCM4313 using Fedora 14
-and kernel 2.6.38-rc1. Network manager applet shows little blue dots going round
-and then panic. Applying your change solved it. Thanks!
-Photo of panic
-http://picasaweb.google.com/lh/photo/hWEO_uFGNO-jAKjqhyJvkLevz6n8KX8fvZ44UIlA3yw?feat=directlink
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v2:  Just deal with channel-change calc, not the WARN_ON_ONCE
+  stuff.  Will get that later in separate patch.
 
-config http://pastebin.com/9z8AmJ3E
+:100644 100644 605c222... abf5f8e... M	net/mac80211/iface.c
+ net/mac80211/iface.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-zach
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 605c222..abf5f8e 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -382,6 +382,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	struct sk_buff *skb, *tmp;
+ 	u32 hw_reconf_flags = 0;
+ 	int i;
++	enum nl80211_channel_type orig_ct;
+ 
+ 	if (local->scan_sdata == sdata)
+ 		ieee80211_scan_cancel(local);
+@@ -542,8 +543,14 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		hw_reconf_flags = 0;
+ 	}
+ 
++	/* Re-calculate channel-type, in case there are multiple vifs
++	 * on different channel types.
++	 */
++	orig_ct = local->_oper_channel_type;
++	ieee80211_set_channel_type(local, NULL, NL80211_CHAN_NO_HT);
++
+ 	/* do after stop to avoid reconfiguring when we stop anyway */
+-	if (hw_reconf_flags)
++	if (hw_reconf_flags || (orig_ct != local->_oper_channel_type))
+ 		ieee80211_hw_config(local, hw_reconf_flags);
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-- 
+1.7.2.3
 
