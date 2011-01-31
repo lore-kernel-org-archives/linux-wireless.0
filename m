@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43552 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938Ab1AQRkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 12:40:12 -0500
-Message-ID: <4D347EF7.10004@openwrt.org>
-Date: Mon, 17 Jan 2011 18:40:07 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] mac80211: drop non-auth 3-addr data frames when running
- as a 4-addr station
-References: <1295098708-99081-1-git-send-email-nbd@openwrt.org> <1295274050.3726.11.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295274050.3726.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:34818 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754954Ab1AaMJL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 07:09:11 -0500
+Subject: Re: [RFC] mac80211: deauthenticate STAs before suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110131114717.GA2919@jm.kir.nu>
+References: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
+	 <1296473261.3812.12.camel@jlt3.sipsolutions.net>
+	 <20110131113835.GA14176@vmraj-lnx.users.atheros.com>
+	 <20110131114717.GA2919@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 13:09:08 +0100
+Message-ID: <1296475748.3812.22.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-17 3:20 PM, Johannes Berg wrote:
-> On Sat, 2011-01-15 at 14:38 +0100, Felix Fietkau wrote:
->>  When running as a 4-addr station against an AP that has the 4-addr VLAN
->>  interface and the main 3-addr AP interface bridged together, sometimes
->>  frames originating from the station were looping back from the 3-addr AP
->>  interface, causing the bridge code to emit warnings about receiving frames
->>  with its own source address.
->>  I'm not sure why this is happening yet, but I think it's a good idea to
->>  drop all frames (except 802.1x/EAP frames) that do not match the configured
->>  addressing mode, including 4-address frames sent to a 3-address station.
->>  User test reports indicate that the problem goes away with this patch.
->>
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>  ---
->>   net/mac80211/rx.c |    8 ++++++--
->>   1 files changed, 6 insertions(+), 2 deletions(-)
->>
->>  diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->>  index a6701ed..54e3108 100644
->>  --- a/net/mac80211/rx.c
->>  +++ b/net/mac80211/rx.c
->>  @@ -1561,9 +1561,13 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->>   	sdata->vif.type == NL80211_IFTYPE_AP_VLAN&&  !sdata->u.vlan.sta)
->>   		return -1;
->>
->>  +	if (!ieee80211_802_1x_port_control(rx)&&
->
-> I think you need a different check there. This just checks the STA is
-> authorized.
-You're right. I'll fix and resend.
+On Mon, 2011-01-31 at 13:47 +0200, Jouni Malinen wrote:
+> On Mon, Jan 31, 2011 at 05:08:35PM +0530, Rajkumar Manoharan wrote:
+> > On Mon, Jan 31, 2011 at 04:57:41PM +0530, Johannes Berg wrote:
+> > > Is that a big problem? We actually had this intentionally, and we go to
+> > > PS before going to sleep, so if the sleep is very short then we will not
+> > > be disconnected. Also, it's much easier this way to implement WoWLAN.
+> > I looked it as a problem ;) And if we use NM/supplicant, obviously the STA
+> > got disconnected. So just to align with that I sent the RFC.
+> 
+> While this may behave differently if NM is running (wpa_supplicant
+> should not be being the disconnection on suspend), the comment about
+> Wake-on-WLAN is something that should be considered here. I would expect
+> there to be some interest in being able to support it and forcing a
+> disconnection on suspend would make that impossible. In addition,
+> extended PS mode from 802.11v will make it even more desirable to be
+> able to sleep for extended periods of time without dropping the
+> association for some use cases. If we force a disconnection here, we
+> would need to have a flag for disabling that if there is any chance of
+> the association being of use for something else after the resume or if
+> Wake-on-WLAN is enabled.
 
-- Felix
+I just don't see why we need the additional complexity of disabling it
+and then re-enabling it conditionally when we want WoWL or 11v extended
+PS?
+
+IOW, I'd rather leave it as is. It seems there isn't really a problem,
+but rather a perceived inconsistency that is being "fixed"?
+
+johannes
+
