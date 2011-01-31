@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59671 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751388Ab1AEXVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Jan 2011 18:21:50 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Jan 2011 15:21:32 -0800
-Date: Wed, 5 Jan 2011 15:21:48 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH 1/4] compat-wireless: fix power managemnet backport
-Message-ID: <20110105232148.GG10391@tux>
-References: <1293891981-22151-1-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1293891981-22151-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:38144 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755554Ab1AaL1n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 06:27:43 -0500
+Subject: Re: [RFC] mac80211: deauthenticate STAs before suspend
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
+References: <1296468391-12268-1-git-send-email-rmanoharan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 12:27:41 +0100
+Message-ID: <1296473261.3812.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 01, 2011 at 06:26:18AM -0800, Hauke Mehrtens wrote:
-> Include backported power management support under the same condition as
-> the new one is integrated.
-> 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Mon, 2011-01-31 at 15:36 +0530, Rajkumar Manoharan wrote:
+> The STA is not deauthenticated before the system goes to sleep,
+> when the vif was configured by iw/iwconfig. This holds the AP
+> resources unnecessarily, till the STA entry got expired in AP.
 
-Applied and pushed all, thanks!
+Is that a big problem? We actually had this intentionally, and we go to
+PS before going to sleep, so if the sleep is very short then we will not
+be disconnected. Also, it's much easier this way to implement WoWLAN.
 
-  Luis
+> So before going to sleep ensure that all stations
+> got deauthenticated.
+
+Also your text and subject and code is really confusing -- I thought you
+wanted to deauthenticate stations that are associated to mac80211 acting
+as an AP.
+
+johannes
+
