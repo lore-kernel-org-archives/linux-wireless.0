@@ -1,240 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:49640 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627Ab1AGMx0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Jan 2011 07:53:26 -0500
-Received: by qwa26 with SMTP id 26so17750565qwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Jan 2011 04:53:25 -0800 (PST)
+Received: from bar.sig21.net ([80.81.252.164]:42748 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756084Ab1AaPye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 10:54:34 -0500
+Date: Mon, 31 Jan 2011 16:54:20 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [RFC] rt2x00: Add autowakeup timer for
+ receiving beacons while in powersave mode
+Message-ID: <20110131155420.GA7552@sig21.net>
+References: <201101311600.39486.IvDoorn@gmail.com>
+ <1296487362.3812.33.camel@jlt3.sipsolutions.net>
+ <AANLkTikzz0b+2N1ktVLz_CFZUBKzwrPF5y6xYLvmknbS@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikfUb+-Phy4nwdr-Vsf2Sg8dxO7-YepbqnfwyYt@mail.gmail.com>
-References: <20110107052600.18730.98168.stgit@localhost6.localdomain6>
-	<AANLkTikfUb+-Phy4nwdr-Vsf2Sg8dxO7-YepbqnfwyYt@mail.gmail.com>
-Date: Fri, 7 Jan 2011 07:53:25 -0500
-Message-ID: <AANLkTimesMqYthXLSU2RBF=9=5bDXv3QtnOZapCjCquG@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: Extend channel to frequency mapping for 802.11j
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikzz0b+2N1ktVLz_CFZUBKzwrPF5y6xYLvmknbS@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 7, 2011 at 7:45 AM, Brian Prodoehl <bprodoehl@gmail.com> wrote:
-> On Fri, Jan 7, 2011 at 12:26 AM, Bruno Randolf <br1@einfach.org> wrote:
->> Extend channel to frequency mapping for 802.11j Japan 4.9GHz band, according to
->> IEEE802.11 section 17.3.8.3.2 and Annex J. Because there are now overlapping
->> channel numbers in the 2GHz and 5GHz band we can't map from channel to
->> frequency without knowing the band. This is no problem as in most contexts we
->> know the band. In places where we don't know the band (and WEXT compatibility)
->> we assume the 2GHz band for channels below 14.
->>
->> This patch does not implement all channel to frequency mappings defined in
->> 802.11, it's just an extension for 802.11j 20MHz channels. 5MHz and 10MHz
->> channels as well as 802.11y channels have been omitted.
->>
->> Signed-off-by: Bruno Randolf <br1@einfach.org>
->> ---
->>  include/net/cfg80211.h     |    3 ++-
->>  net/mac80211/ibss.c        |    3 ++-
->>  net/mac80211/mesh.c        |    2 +-
->>  net/mac80211/mlme.c        |    8 +++++---
->>  net/mac80211/scan.c        |    3 ++-
->>  net/wireless/reg.c         |    6 +++---
->>  net/wireless/util.c        |   36 ++++++++++++++++++++++--------------
->>  net/wireless/wext-compat.c |    5 ++++-
->>  8 files changed, 41 insertions(+), 25 deletions(-)
->>
->> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->> index bcc9f44..cfaac36 100644
->> --- a/include/net/cfg80211.h
->> +++ b/include/net/cfg80211.h
->> @@ -1788,8 +1788,9 @@ static inline void *wdev_priv(struct wireless_dev *wdev)
->>  /**
->>  * ieee80211_channel_to_frequency - convert channel number to frequency
->>  * @chan: channel number
->> + * @band: band, necessary due to channel number overlap
->>  */
->> -extern int ieee80211_channel_to_frequency(int chan);
->> +extern int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band);
->>
->>  /**
->>  * ieee80211_frequency_to_channel - convert frequency to channel number
->> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
->> index 53c7077..775fb63 100644
->> --- a/net/mac80211/ibss.c
->> +++ b/net/mac80211/ibss.c
->> @@ -270,7 +270,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->>        enum ieee80211_band band = rx_status->band;
->>
->>        if (elems->ds_params && elems->ds_params_len == 1)
->> -               freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
->> +               freq = ieee80211_channel_to_frequency(elems->ds_params[0],
->> +                                                     band);
->>        else
->>                freq = rx_status->freq;
->>
->> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->> index ca3af46..1430cdc 100644
->> --- a/net/mac80211/mesh.c
->> +++ b/net/mac80211/mesh.c
->> @@ -574,7 +574,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
->>                               &elems);
->>
->>        if (elems.ds_params && elems.ds_params_len == 1)
->> -               freq = ieee80211_channel_to_frequency(elems.ds_params[0]);
->> +               freq = ieee80211_channel_to_frequency(elems.ds_params[0], band);
->>        else
->>                freq = rx_status->freq;
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 45fbb9e..33bd6d4 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -176,7 +176,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
->>
->>        /* check that channel matches the right operating channel */
->>        if (local->hw.conf.channel->center_freq !=
->> -           ieee80211_channel_to_frequency(hti->control_chan))
->> +           ieee80211_channel_to_frequency(hti->control_chan, sband->band))
->>                enable_ht = false;
->>
->>        if (enable_ht) {
->> @@ -429,7 +429,8 @@ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
->>                container_of((void *)bss, struct cfg80211_bss, priv);
->>        struct ieee80211_channel *new_ch;
->>        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
->> -       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num);
->> +       int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num,
->> +                                                     cbss->channel->band);
->>
->>        ASSERT_MGD_MTX(ifmgd);
->>
->> @@ -1519,7 +1520,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->>        }
->>
->>        if (elems->ds_params && elems->ds_params_len == 1)
->> -               freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
->> +               freq = ieee80211_channel_to_frequency(elems->ds_params[0],
->> +                                                     rx_status->band);
->>        else
->>                freq = rx_status->freq;
->>
->> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
->> index fb274db..1ef73be 100644
->> --- a/net/mac80211/scan.c
->> +++ b/net/mac80211/scan.c
->> @@ -196,7 +196,8 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
->>        ieee802_11_parse_elems(elements, skb->len - baselen, &elems);
->>
->>        if (elems.ds_params && elems.ds_params_len == 1)
->> -               freq = ieee80211_channel_to_frequency(elems.ds_params[0]);
->> +               freq = ieee80211_channel_to_frequency(elems.ds_params[0],
->> +                                                     rx_status->band);
->>        else
->>                freq = rx_status->freq;
->>
->> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> index 37693b6..c565689 100644
->> --- a/net/wireless/reg.c
->> +++ b/net/wireless/reg.c
->> @@ -1801,9 +1801,9 @@ void regulatory_hint_disconnect(void)
->>
->>  static bool freq_is_chan_12_13_14(u16 freq)
->>  {
->> -       if (freq == ieee80211_channel_to_frequency(12) ||
->> -           freq == ieee80211_channel_to_frequency(13) ||
->> -           freq == ieee80211_channel_to_frequency(14))
->> +       if (freq == ieee80211_channel_to_frequency(12, IEEE80211_BAND_2GHZ) ||
->> +           freq == ieee80211_channel_to_frequency(13, IEEE80211_BAND_2GHZ) ||
->> +           freq == ieee80211_channel_to_frequency(14, IEEE80211_BAND_2GHZ))
->>                return true;
->>        return false;
->>  }
->> diff --git a/net/wireless/util.c b/net/wireless/util.c
->> index 7620ae2..4ed065d 100644
->> --- a/net/wireless/util.c
->> +++ b/net/wireless/util.c
->> @@ -29,29 +29,37 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
->>  }
->>  EXPORT_SYMBOL(ieee80211_get_response_rate);
->>
->> -int ieee80211_channel_to_frequency(int chan)
->> +int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
->>  {
->> -       if (chan < 14)
->> -               return 2407 + chan * 5;
->> -
->> -       if (chan == 14)
->> -               return 2484;
->> -
->> -       /* FIXME: 802.11j 17.3.8.3.2 */
->> -       return (chan + 1000) * 5;
->> +       /* see 802.11 17.3.8.3.2 and Annex J
->> +        * there are overlapping channel numbers in 5GHz and 2GHz bands */
->> +       if (band == IEEE80211_BAND_5GHZ) {
->> +               if (chan >= 182 && chan <= 196)
->> +                       return 4000 + chan * 5;
->> +               else
->> +                       return 5000 + chan * 5;
->> +       } else { /* IEEE80211_BAND_2GHZ */
->> +               if (chan == 14)
->> +                       return 2484;
->> +               else if (chan < 14)
->> +                       return 2407 + chan * 5;
->> +               else
->> +                       return 0; /* not supported */
->> +       }
->>  }
->>  EXPORT_SYMBOL(ieee80211_channel_to_frequency);
->>
->>  int ieee80211_frequency_to_channel(int freq)
->>  {
->> +       /* see 802.11 17.3.8.3.2 and Annex J */
->>        if (freq == 2484)
->>                return 14;
->> -
->> -       if (freq < 2484)
->> +       else if (freq < 2484)
->>                return (freq - 2407) / 5;
->> -
->> -       /* FIXME: 802.11j 17.3.8.3.2 */
->> -       return freq/5 - 1000;
->> +       else if (freq >= 4910 && freq <= 4980)
->> +               return (freq - 4000) / 5;
->> +       else
->> +               return (freq - 5000) / 5;
->>  }
->>  EXPORT_SYMBOL(ieee80211_frequency_to_channel);
->>
->> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
->> index 3e5dbd4..7f1f4ec 100644
->> --- a/net/wireless/wext-compat.c
->> +++ b/net/wireless/wext-compat.c
->> @@ -267,9 +267,12 @@ int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq)
->>         * -EINVAL for impossible things.
->>         */
->>        if (freq->e == 0) {
->> +               enum ieee80211_band band = IEEE80211_BAND_2GHZ;
->>                if (freq->m < 0)
->>                        return 0;
->> -               return ieee80211_channel_to_frequency(freq->m);
->> +               if (freq->m > 14)
->> +                       band = IEEE80211_BAND_5GHZ;
->> +               return ieee80211_channel_to_frequency(freq->m, band);
->>        } else {
->>                int i, div = 1000000;
->>                for (i = 0; i < freq->e; i++)
->
->
-> Do all drivers still build with this patch?  I applied the previous
-> RFC version of this patch to a late-December cut of compat-wireless,
-> and had to touch the receive-handling code in a half-dozen or so
-> drivers due to the API changes.
->
-> -Brian
+On Mon, Jan 31, 2011 at 04:38:16PM +0100, Ivo Van Doorn wrote:
+> >>
+> >> TODO: Split out mac80211 changes into a separate patch. We also need
+> >> to know if we need this check in mac80211 or in the driver. Personally I think the
+> >> check belongs in mac80211, but at this time that work has been deferred to the drivers.
+> >> However this means that a lot of logic is needed in the driver to check if the correct IE
+> >> is available, and then check the value, while mac80211 will obtains that exact IE anyway
+> >> during RX processing anyway...
+> >
+> > Hmm. I've always said that there's no efficient way to do this in
+> > mac80211. If you do it close to the beacon, unexpected latency means
+> > that we miss -- this can be severe if something else is happening in the
+> > system, especially with USB devices. If you do it early before the
+> > beacon, then you don't save much power. As a consequence, I don't really
+> > like this in mac80211.
+> >
+> > However, it seems you only added "stay awake after beacon" code to
+> > mac80211 that checks the TIM. Assuming the device actually stays awake
+> > for multicast traffic by itself that seems like an option, though I
+> > wouldn't wait for the next beacon before going to sleep again --
+> > wouldn't that happen with the timer anyway?
+> 
+> The timer is needed to automatically wake the device up in time to receive
+> the beacon. When the beacon is received all the driver needs to know if the
+> device should go back to sleep again for the next beacon period.
+> 
+> This is a similar behavior as carl9170 driver, which currently checks for
+> pending Mcast/Bcast frames in the RX path just before the frame is send
+> to mac80211.
 
-Ah, I see.  All the driver changes I needed were because
-ieee80211_channel_to_frequency() changed with the RFC patch, and this
-patch keeps ieee80211_channel_to_frequency() the same.  Good stuff.
+FWIW, this bc/mc check is also on the mac80211 TODO list:
+http://wireless.kernel.org/en/developers/todo-list#power_saving
+
+
+Johannes
