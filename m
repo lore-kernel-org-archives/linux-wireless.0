@@ -1,222 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59200 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab1AQTzB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab1AaPWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 14:55:01 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4 2/2] ath9k:  Add 'misc' file to debugfs, fix queue indexes.
-Date: Mon, 17 Jan 2011 11:54:50 -0800
-Message-Id: <1295294090-18952-1-git-send-email-greearb@candelatech.com>
+	Mon, 31 Jan 2011 10:22:45 -0500
+Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while
+ in powersave mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+In-Reply-To: <201101311600.39486.IvDoorn@gmail.com>
+References: <201101311600.39486.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 16:22:42 +0100
+Message-ID: <1296487362.3812.33.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, 2011-01-31 at 16:00 +0100, Ivo van Doorn wrote:
+> Add a delayed work structure which can be used to wakeup the device
+> just before a beacon from the AP is expected. This then allows the device
+> to receive the beacon, check if there are pending broadcast or multicast frames.
+> 
+> TODO: Split out mac80211 changes into a separate patch. We also need
+> to know if we need this check in mac80211 or in the driver. Personally I think the
+> check belongs in mac80211, but at this time that work has been deferred to the drivers.
+> However this means that a lot of logic is needed in the driver to check if the correct IE
+> is available, and then check the value, while mac80211 will obtains that exact IE anyway
+> during RX processing anyway...
 
-Add a misc file to show hardware op-mode, irq setup,
-number of various types of VIFs and more.
+Hmm. I've always said that there's no efficient way to do this in
+mac80211. If you do it close to the beacon, unexpected latency means
+that we miss -- this can be severe if something else is happening in the
+system, especially with USB devices. If you do it early before the
+beacon, then you don't save much power. As a consequence, I don't really
+like this in mac80211.
 
-Also, previous patches were using the wrong xmit queue
-indexes.  Change to use the internal ath9k indexes instead
-of the mac80211 queue indexes.
+However, it seems you only added "stay awake after beacon" code to
+mac80211 that checks the TIM. Assuming the device actually stays awake
+for multicast traffic by itself that seems like an option, though I
+wouldn't wait for the next beacon before going to sleep again --
+wouldn't that happen with the timer anyway?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-
-v4:  Update to use iterator to gather vif stats.  Print
-   calculated bssid mask as well.  (Forgot to refresh patch
-   last time, so patch didn't actually match description.)
-
-
-:100644 100644 b0cb792... f0c80ec... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |  137 +++++++++++++++++++++++++++++---
- 1 files changed, 125 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index b0cb792..f0c80ec 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -595,10 +595,10 @@ static const struct file_operations fops_wiphy = {
- do {									\
- 	len += snprintf(buf + len, size - len,				\
- 			"%s%13u%11u%10u%10u\n", str,			\
--			(unsigned int)(sc->tx.txq[WME_AC_BE].elem),	\
--			(unsigned int)(sc->tx.txq[WME_AC_BK].elem),	\
--			(unsigned int)(sc->tx.txq[WME_AC_VI].elem),	\
--			(unsigned int)(sc->tx.txq[WME_AC_VO].elem));	\
-+			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_BE].elem),	\
-+			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_BK].elem),	\
-+			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_VI].elem),	\
-+			(unsigned int)(sc->tx.txq[ATH_TXQ_AC_VO].elem));	\
- 	if (len >= size)						\
- 		goto done;						\
- } while(0)
-@@ -607,10 +607,10 @@ do {									\
- do {									\
- 	len += snprintf(buf + len, size - len,				\
- 			"%s%13i%11i%10i%10i\n", str,			\
--			list_empty(&sc->tx.txq[WME_AC_BE].elem),	\
--			list_empty(&sc->tx.txq[WME_AC_BK].elem),	\
--			list_empty(&sc->tx.txq[WME_AC_VI].elem),	\
--			list_empty(&sc->tx.txq[WME_AC_VO].elem));	\
-+			list_empty(&sc->tx.txq[ATH_TXQ_AC_BE].elem),	\
-+			list_empty(&sc->tx.txq[ATH_TXQ_AC_BK].elem),	\
-+			list_empty(&sc->tx.txq[ATH_TXQ_AC_VI].elem),	\
-+			list_empty(&sc->tx.txq[ATH_TXQ_AC_VO].elem));	\
- 	if (len >= size)						\
- 		goto done;						\
- } while (0)
-@@ -657,10 +657,10 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	PR("hw-tx-proc-desc: ", txprocdesc);
- 	len += snprintf(buf + len, size - len,
- 			"%s%11p%11p%10p%10p\n", "txq-memory-address:",
--			&(sc->tx.txq[WME_AC_BE]),
--			&(sc->tx.txq[WME_AC_BK]),
--			&(sc->tx.txq[WME_AC_VI]),
--			&(sc->tx.txq[WME_AC_VO]));
-+			&(sc->tx.txq[ATH_TXQ_AC_BE]),
-+			&(sc->tx.txq[ATH_TXQ_AC_BK]),
-+			&(sc->tx.txq[ATH_TXQ_AC_VI]),
-+			&(sc->tx.txq[ATH_TXQ_AC_VO]));
- 	if (len >= size)
- 		goto done;
- 
-@@ -777,6 +777,108 @@ done:
- 	return retval;
- }
- 
-+static ssize_t read_file_misc(struct file *file, char __user *user_buf,
-+			      size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ieee80211_hw *hw = sc->hw;
-+	char *buf;
-+	unsigned int len = 0, size = 8000;
-+	ssize_t retval = 0;
-+	const char *tmp;
-+	unsigned int reg;
-+	struct ath9k_vif_iter_data iter_data;
-+
-+	ath9k_calculate_iter_data(hw, NULL, &iter_data);
-+	
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	switch (sc->sc_ah->opmode) {
-+	case  NL80211_IFTYPE_ADHOC:
-+		tmp = "ADHOC";
-+		break;
-+	case  NL80211_IFTYPE_MESH_POINT:
-+		tmp = "MESH";
-+		break;
-+	case  NL80211_IFTYPE_AP:
-+		tmp = "AP";
-+		break;
-+	case  NL80211_IFTYPE_STATION:
-+		tmp = "STATION";
-+		break;
-+	default:
-+		tmp = "???";
-+		break;
-+	}
-+
-+	len += snprintf(buf + len, size - len,
-+			"curbssid: %pM\n"
-+			"OP-Mode: %s(%i)\n"
-+			"Beacon-Timer-Register: 0x%x\n",
-+			common->curbssid,
-+			tmp, (int)(sc->sc_ah->opmode),
-+			REG_READ(ah, AR_BEACON_PERIOD));
-+
-+	reg = REG_READ(ah, AR_TIMER_MODE);
-+	len += snprintf(buf + len, size - len, "Timer-Mode-Register: 0x%x (",
-+			reg);
-+	if (reg & AR_TBTT_TIMER_EN)
-+		len += snprintf(buf + len, size - len, "TBTT ");
-+	if (reg & AR_DBA_TIMER_EN)
-+		len += snprintf(buf + len, size - len, "DBA ");
-+	if (reg & AR_SWBA_TIMER_EN)
-+		len += snprintf(buf + len, size - len, "SWBA ");
-+	if (reg & AR_HCF_TIMER_EN)
-+		len += snprintf(buf + len, size - len, "HCF ");
-+	if (reg & AR_TIM_TIMER_EN)
-+		len += snprintf(buf + len, size - len, "TIM ");
-+	if (reg & AR_DTIM_TIMER_EN)
-+		len += snprintf(buf + len, size - len, "DTIM ");
-+	len += snprintf(buf + len, size - len, ")\n");
-+
-+	reg = sc->sc_ah->imask;
-+	len += snprintf(buf + len, size - len, "imask: 0x%x (", reg);
-+	if (reg & ATH9K_INT_SWBA)
-+		len += snprintf(buf + len, size - len, "SWBA ");
-+	if (reg & ATH9K_INT_BMISS)
-+		len += snprintf(buf + len, size - len, "BMISS ");
-+	if (reg & ATH9K_INT_CST)
-+		len += snprintf(buf + len, size - len, "CST ");
-+	if (reg & ATH9K_INT_RX)
-+		len += snprintf(buf + len, size - len, "RX ");
-+	if (reg & ATH9K_INT_RXHP)
-+		len += snprintf(buf + len, size - len, "RXHP ");
-+	if (reg & ATH9K_INT_RXLP)
-+		len += snprintf(buf + len, size - len, "RXLP ");
-+	if (reg & ATH9K_INT_BB_WATCHDOG)
-+		len += snprintf(buf + len, size - len, "BB_WATCHDOG ");
-+	/* there are other IRQs if one wanted to add them. */
-+	len += snprintf(buf + len, size - len, ")\n");
-+
-+	len += snprintf(buf + len, size - len,
-+			"VIF Counts: AP: %i STA: %i MESH: %i WDS: %i"
-+			" ADHOC: %i OTHER: %i nvifs: %hi beacon-vifs: %hi\n",
-+			iter_data.naps, iter_data.nstations, iter_data.nmeshes,
-+			iter_data.nwds, iter_data.nadhocs, iter_data.nothers,
-+			sc->nvifs, sc->nbcnvifs);
-+
-+	len += snprintf(buf + len, size - len,
-+			"Calculated-BSSID-Mask: %pM\n",
-+			iter_data.mask);
-+
-+	if (len > size)
-+		len = size;
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
- void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
- 		       struct ath_tx_status *ts)
- {
-@@ -822,6 +924,13 @@ static const struct file_operations fops_stations = {
- 	.llseek = default_llseek,
- };
- 
-+static const struct file_operations fops_misc = {
-+	.read = read_file_misc,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 			      size_t count, loff_t *ppos)
- {
-@@ -1063,6 +1172,10 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			sc, &fops_stations))
- 		goto err;
- 
-+	if (!debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy,
-+			sc, &fops_misc))
-+		goto err;
-+
- 	if (!debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy,
- 			sc, &fops_recv))
- 		goto err;
--- 
-1.7.2.3
+johannes
 
