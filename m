@@ -1,90 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50126 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862Ab1AUGHG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Jan 2011 01:07:06 -0500
-Date: Fri, 21 Jan 2011 07:06:55 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [RFC] ath9k: fix race conditions when stop device
-Message-ID: <20110121060638.GA3017@redhat.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:44266 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299Ab1AaSnY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:43:24 -0500
+Received: by qyj19 with SMTP id 19so3741780qyj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 10:43:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com>
+References: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 31 Jan 2011 10:43:02 -0800
+Message-ID: <AANLkTimbtr8zKf6Nj0GmTccKU2u2ubTkL3a5BVSGfUK0@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Fix memory leak due to failed PAPRD frames
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do not kill any scheduled tasklets when stopping device, that may
-cause usage of resources after free. Moreover we enable interrupts
-in tasklet function, so we could potentially end with interrupts
-enabled when driver is not ready to receive them.
+On Sun, Jan 30, 2011 at 11:55 PM, Mohammed Shafi Shajakhan
+<mshajakhan@atheros.com> wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>
+> free the skb's when the Tx of PAPRD frames fails and also add a debug
+> message indicating that.
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-I think patch could fix Ben's kernel crash from:
-http://marc.info/?l=linux-wireless&m=129438358921501&w=2
+Is this a stable fix?
 
-RFC for now as I'm not quite familiar with ath9k. If get confirmation
-patch is correct, I will repost and cc to -stable.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    5 -----
- drivers/net/wireless/ath/ath9k/main.c |    9 +++++++++
- 2 files changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 767d8b8..b3254a3 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -598,8 +598,6 @@ err_btcoex:
- err_queues:
- 	ath9k_hw_deinit(ah);
- err_hw:
--	tasklet_kill(&sc->intr_tq);
--	tasklet_kill(&sc->bcon_tasklet);
- 
- 	kfree(ah);
- 	sc->sc_ah = NULL;
-@@ -807,9 +805,6 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
- 
- 	ath9k_hw_deinit(sc->sc_ah);
- 
--	tasklet_kill(&sc->intr_tq);
--	tasklet_kill(&sc->bcon_tasklet);
--
- 	kfree(sc->sc_ah);
- 	sc->sc_ah = NULL;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c03184e..42cfd96 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1320,6 +1320,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
-+	/* prevent tasklets to enable interrupts once we disable them */
-+	ah->imask &= ~ATH9K_INT_GLOBAL;
-+
- 	/* make sure h/w will not generate any interrupt
- 	 * before setting the invalid flag. */
- 	ath9k_hw_disable_interrupts(ah);
-@@ -1337,6 +1340,12 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
-+	/* we can now sync irq and kill any running tasklets, since we already
-+	 * disabled interrupts and not holding a spin lock */
-+	synchronize_irq(sc->irq);
-+	tasklet_kill(&sc->intr_tq);
-+	tasklet_kill(&sc->bcon_tasklet);
-+
- 	ath9k_ps_restore(sc);
- 
- 	sc->ps_idle = true;
--- 
-1.7.1
-
+ Luis
