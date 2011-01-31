@@ -1,82 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:43545 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752106Ab1ASPzH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 10:55:07 -0500
-Received: by pwj3 with SMTP id 3so179397pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 07:55:07 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:14651 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751528Ab1AaSSd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:18:33 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 10:18:14 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 1/5] ath9k_htc: cancel ani work in ath9k_htc_stop
+Date: Mon, 31 Jan 2011 23:47:42 +0530
+Message-ID: <1296497866-3189-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20110119092057.19628.9296.stgit@localhost6.localdomain6>
-References: <20110119091949.19628.28309.stgit@localhost6.localdomain6>
-	<20110119092057.19628.9296.stgit@localhost6.localdomain6>
-Date: Wed, 19 Jan 2011 17:55:06 +0200
-Message-ID: <AANLkTinevrF_1H-L++3o20VnHo2PQXPktQY+VPa76Nvp@mail.gmail.com>
-Subject: Re: [PATCH 5/8] ath5k: Add 802.11j 4.9GHz channels to allowed channels
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/1/19 Bruno Randolf <br1@einfach.org>:
-> Add the 802.11j (20MHz channel width) channels to the allowed channels. This
-> still does not enable 802.11j in ath5k since these frequencies are out of the
-> configured range. A later patch will deal with that.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   19 +++++++++++++------
->  1 files changed, 13 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a28ad58..6900543 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -244,15 +244,21 @@ static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *re
->  /*
->  * Returns true for the channel numbers used without all_channels modparam.
->  */
-> -static bool ath5k_is_standard_channel(short chan)
-> +static bool ath5k_is_standard_channel(short chan, enum ieee80211_band band)
->  {
-> -       return ((chan <= 14) ||
-> -               /* UNII 1,2 */
-> -               ((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
-> +       if (band == IEEE80211_BAND_2GHZ && chan <= 14)
-> +               return true;
-> +
-> +       return  /* UNII 1,2 */
-> +               (((chan & 3) == 0 && chan >= 36 && chan <= 64) ||
->                /* midband */
->                ((chan & 3) == 0 && chan >= 100 && chan <= 140) ||
->                /* UNII-3 */
-> -               ((chan & 3) == 1 && chan >= 149 && chan <= 165));
-> +               ((chan & 3) == 1 && chan >= 149 && chan <= 165) ||
-> +               /* 802.11j 5.030-5.080 GHz (20MHz) */
-> +               (chan == 8 || chan == 12 || chan == 16) ||
-> +               /* 802.11j 4.9GHz (20MHz) */
-> +               (chan == 184 || chan == 188 || chan == 192 || chan == 196));
->  }
->
->  static unsigned int
-> @@ -291,7 +297,8 @@ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
->                if (!ath5k_channel_ok(ah, freq, chfreq))
->                        continue;
->
-> -               if (!modparam_all_channels && !ath5k_is_standard_channel(ch))
-> +               if (!modparam_all_channels &&
-> +                   !ath5k_is_standard_channel(ch, band))
->                        continue;
->
->                /* Write channel info and increment counter */
->
+ani work is cancelled in dissaoctiation. But in some cases
+during suspend, deauthention never be called. So we failed
+to stop ani work which was identified by the following
+warning.
 
+Call Trace:
+ [<ffffffffa0454a1d>] ieee80211_can_queue_work.clone.17+0x2d/0x40 [mac80211]
+ [<ffffffffa0454a60>] ieee80211_queue_delayed_work+0x30/0x60 [mac80211]
+ [<ffffffffa0567f82>] ath9k_ani_work+0x142/0x250 [ath9k_htc]
+ [<ffffffff81073c70>] async_run_entry_fn+0x0/0x180
+ [<ffffffffa0567e40>] ath9k_ani_work+0x0/0x250 [ath9k_htc]
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index a702089..0526c25 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1052,6 +1052,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+ 	cancel_work_sync(&priv->fatal_work);
+ 	cancel_work_sync(&priv->ps_work);
+ 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
++	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	ath9k_led_stop_brightness(priv);
+ 
+ 	mutex_lock(&priv->mutex);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.3.5
+
