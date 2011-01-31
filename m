@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754783Ab1AaLQh (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:55383 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755721Ab1AaSsV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 06:16:37 -0500
-Received: by fxm20 with SMTP id 20so5465134fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:36 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 00/10] wl12xx: AP-mode per link PSM
-Date: Mon, 31 Jan 2011 13:16:19 +0200
-Message-Id: <1296472589-26401-1-git-send-email-arik@wizery.com>
+	Mon, 31 Jan 2011 13:48:21 -0500
+Subject: [PATCH 08/22] zd1211rw: fix ack_pending in filter_ack causing
+	tx-packet ordering problem on monitor
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 31 Jan 2011 20:48:16 +0200
+Message-ID: <20110131184816.10044.26884.stgit@fate.lan>
+In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
+References: <20110131184657.10044.98610.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset introduces per-link PSM for AP-mode. The PS status of each
-link is updated from FW.
-The wl12xx concept of PSM is different from the mac80211 one - some data
-must remain in FW for a link in PSM since the TIM is updated automatically
-by FW. An exported function to manually toggle PSM in mac80211 is added
-to bridge this gap.
+For reasons not very clear yet to me, filter_ack leaves matching tx-packet
+pending with 'ack_pending'. This causes tx-packet to be passed back to upper
+layer after next packet has been transfered and tx-packets might end up
+coming come out of monitor interface in wrong order vs. rx.
 
-We set up a skb-queue per link which allows for a cleaner link
-disconnection and prepares the code for regulating each link separately.
+Because of this when enable AP-mode, hostapd monitor interface would get
+packets in wrong order causing problems in WPA association.
 
-v1->2: Changed mac80211 PS state change exported functions
+So don't use mac->ack_pending when in AP-mode.
 
-A few other AP-mode related small bug fixes and enchancements are included.
-Arik Nemtsov (10):
-  wl12xx: fix potential race condition with TX queue watermark
-  wl12xx: AP-mode - fix race condition on sta connection
-  wl12xx: AP-mode - TX queue per link in AC
-  mac80211: do not calc frame duration when using HW rate-control
-  wl12xx: report invalid TX rate when returning non-TX-ed skbs
-  mac80211: add HW flag for disabling auto link-PS in AP mode
-  wl12xx: AP-mode - support HW based link PS monitoring
-  wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
-  wl12xx: AP-mode - count free FW TX blocks per link
-  wl12xx: AP-mode - management of links in PS-mode
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/wl12xx/acx.c    |   25 ++++
- drivers/net/wireless/wl12xx/acx.h    |    9 ++
- drivers/net/wireless/wl12xx/main.c   |  125 +++++++++++++++---
- drivers/net/wireless/wl12xx/ps.c     |   78 +++++++++++
- drivers/net/wireless/wl12xx/ps.h     |    2 +
- drivers/net/wireless/wl12xx/tx.c     |  235 +++++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/tx.h     |    3 +
- drivers/net/wireless/wl12xx/wl12xx.h |   37 ++++++
- include/net/mac80211.h               |   54 ++++++++-
- net/mac80211/rx.c                    |   27 ++++-
- net/mac80211/sta_info.c              |    3 +-
- net/mac80211/status.c                |    4 +
- net/mac80211/tx.c                    |    3 +-
- 13 files changed, 543 insertions(+), 62 deletions(-)
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index ab0d1b9..84ac95e 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -799,6 +799,13 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
+ 
+ 		mac->ack_pending = 1;
+ 		mac->ack_signal = stats->signal;
++
++		/* Prevent pending tx-packet on AP-mode */
++		if (mac->type == NL80211_IFTYPE_AP) {
++			skb = __skb_dequeue(q);
++			zd_mac_tx_status(hw, skb, mac->ack_signal, NULL);
++			mac->ack_pending = 0;
++		}
+ 	}
+ 
+ 	spin_unlock_irqrestore(&q->lock, flags);
 
