@@ -1,138 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1397 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752988Ab1ALR7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Jan 2011 12:59:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] staging: brcm80211: fix suspend/resume issue in
- brcmsmac
-Date: Wed, 12 Jan 2011 18:59:27 +0100
-Message-ID: <1294855167-3718-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755432Ab1AaLRA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 06:17:00 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:59 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 08/10] wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
+Date: Mon, 31 Jan 2011 13:16:27 +0200
+Message-Id: <1296472589-26401-9-git-send-email-arik@wizery.com>
+In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PCI PM suspend callback took down the interface and resume brought
-it back up. In the mac80211 context this is done in subsequent calls.
-Rework implementation so that suspend only stores config, and sets
-PCI power state. The resume return to full power state (D0), restores
-the config, and brings hardware back up. Full bringup is done by
-subsequent mac80211 calls.
+Remove an active hlid when chip wakeup fails. In addition rename the
+involved functions.
 
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |   28 ++++++++++++---------
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.h |    4 +--
- 2 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index c2663bd..8f11409 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -179,7 +179,6 @@ static void wl_ops_stop(struct ieee80211_hw *hw)
- 	struct wl_info *wl = hw->priv;
- 	ASSERT(wl);
- 	WL_LOCK(wl);
--	wl_down(wl);
- 	ieee80211_stop_queues(hw);
- 	WL_UNLOCK(wl);
- 
-@@ -216,6 +215,14 @@ wl_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- static void
- wl_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-+	struct wl_info *wl;
-+
-+	wl = HW_TO_WL(hw);
-+
-+	/* put driver in down state */
-+	WL_LOCK(wl);
-+	wl_down(wl);
-+	WL_UNLOCK(wl);
- 	return;
- }
- 
-@@ -1059,7 +1066,6 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8d55c89..46eb499 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2621,7 +2621,7 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
  	return 0;
  }
  
--#ifdef LINUXSTA_PS
- static int wl_suspend(struct pci_dev *pdev, pm_message_t state)
+-static int wl1271_allocate_hlid(struct wl1271 *wl,
++static int wl1271_allocate_sta(struct wl1271 *wl,
+ 			     struct ieee80211_sta *sta,
+ 			     u8 *hlid)
  {
- 	struct wl_info *wl;
-@@ -1074,11 +1080,12 @@ static int wl_suspend(struct pci_dev *pdev, pm_message_t state)
- 		return -ENODEV;
- 	}
- 
-+	/* only need to flag hw is down for proper resume */
- 	WL_LOCK(wl);
--	wl_down(wl);
- 	wl->pub->hw_up = false;
- 	WL_UNLOCK(wl);
--	pci_save_state(pdev, wl->pci_psstate);
-+
-+	pci_save_state(pdev);
- 	pci_disable_device(pdev);
- 	return pci_set_power_state(pdev, PCI_D3hot);
+@@ -2642,10 +2642,13 @@ static int wl1271_allocate_hlid(struct wl1271 *wl,
+ 	return 0;
  }
-@@ -1102,7 +1109,7 @@ static int wl_resume(struct pci_dev *pdev)
- 	if (err)
- 		return err;
  
--	pci_restore_state(pdev, wl->pci_psstate);
-+	pci_restore_state(pdev);
- 
- 	err = pci_enable_device(pdev);
- 	if (err)
-@@ -1114,13 +1121,12 @@ static int wl_resume(struct pci_dev *pdev)
- 	if ((val & 0x0000ff00) != 0)
- 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 
--	WL_LOCK(wl);
--	err = wl_up(wl);
--	WL_UNLOCK(wl);
--
-+	/*
-+	*  done. driver will be put in up state
-+	*  in wl_ops_add_interface() call.
-+	*/
- 	return err;
- }
--#endif				/* LINUXSTA_PS */
- 
- static void wl_remove(struct pci_dev *pdev)
+-static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
++static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
  {
-@@ -1155,10 +1161,8 @@ static void wl_remove(struct pci_dev *pdev)
- static struct pci_driver wl_pci_driver = {
- 	.name  = KBUILD_MODNAME,
- 	.probe = wl_pci_probe,
--#ifdef LINUXSTA_PS
- 	.suspend = wl_suspend,
- 	.resume  = wl_resume,
--#endif				/* LINUXSTA_PS */
- 	.remove   = __devexit_p(wl_remove),
- 	.id_table = wl_id_table,
- };
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-index 070fa94..f6b7354 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-@@ -67,9 +67,7 @@ struct wl_info {
- 	struct wl_timer *timers;	/* timer cleanup queue */
- 	struct tasklet_struct tasklet;	/* dpc tasklet */
- 	bool resched;		/* dpc needs to be and is rescheduled */
--#ifdef LINUXSTA_PS
--	u32 pci_psstate[16];	/* pci ps-state save/restore */
--#endif
+ 	int id = hlid - WL1271_AP_STA_HLID_START;
+ 
++	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
++		return;
 +
- 	/* RPC, handle, lock, txq, workitem */
- 	uint stats_id;		/* the current set of stats */
- 	/* ping-pong stats counters updated by Linux watchdog */
+ 	__clear_bit(id, wl->ap_hlid_map);
+ 	wl1271_tx_reset_link_queues(wl, hlid);
+ }
+@@ -2668,13 +2671,13 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
+ 
+-	ret = wl1271_allocate_hlid(wl, sta, &hlid);
++	ret = wl1271_allocate_sta(wl, sta, &hlid);
+ 	if (ret < 0)
+ 		goto out;
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+-		goto out;
++		goto out_free_sta;
+ 
+ 	ret = wl1271_cmd_add_sta(wl, sta, hlid);
+ 	if (ret < 0)
+@@ -2683,6 +2686,10 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
+ 
++out_free_sta:
++	if (ret < 0)
++		wl1271_free_sta(wl, hlid);
++
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 	return ret;
+@@ -2719,7 +2726,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out_sleep;
+ 
+-	wl1271_free_hlid(wl, wl_sta->hlid);
++	wl1271_free_sta(wl, wl_sta->hlid);
+ 
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
 -- 
 1.7.1
-
 
