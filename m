@@ -1,86 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53760 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100Ab1AROzu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 09:55:50 -0500
-Subject: Re: [PATCH v2] mac80211: drop non-auth 3-addr data frames when
- running as a 4-addr station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1295362128-2294-1-git-send-email-nbd@openwrt.org>
-References: <1295362128-2294-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 Jan 2011 15:55:47 +0100
-Message-ID: <1295362547.3563.22.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:37758 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752550Ab1AaPI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 10:08:29 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
+References: <4D45A583.3060605@davizone.at> <4D45B7B2.40001@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 31 Jan 2011 17:08:27 +0200
+In-Reply-To: <4D45B7B2.40001@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 20\:10\:42 +0100")
+Message-ID: <87r5btdsb8.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-18 at 15:48 +0100, Felix Fietkau wrote:
-> When running as a 4-addr station against an AP that has the 4-addr VLAN
-> interface and the main 3-addr AP interface bridged together, sometimes
-> frames originating from the station were looping back from the 3-addr AP
-> interface, causing the bridge code to emit warnings about receiving frames
-> with its own source address.
-> I'm not sure why this is happening yet, but I think it's a good idea to
-> drop all frames (except 802.1x/EAP frames) that do not match the configured
-> addressing mode, including 4-address frames sent to a 3-address station.
-> User test reports indicate that the problem goes away with this patch.
+Hi David,
 
-This looks better, thanks. But did they really test _this_ patch? :)
+David Gnedt <david.gnedt@davizone.at> writes:
 
-johannes
+> Patch 01-03 fix some bugs.
+> Patch 04-09 contain some feature ports from Maemo Fremantle and wl1271.
+> Patch 10-18 implement (mainly) monitor mode and packet injection.
 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  net/mac80211/rx.c |   25 ++++++++++++++++++++++---
->  1 files changed, 22 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a6701ed..1236710 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1556,17 +1556,36 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
->  {
->  	struct ieee80211_sub_if_data *sdata = rx->sdata;
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-> +	bool check_port_control = false;
-> +	struct ethhdr *ehdr;
-> +	int ret;
->  
->  	if (ieee80211_has_a4(hdr->frame_control) &&
->  	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->u.vlan.sta)
->  		return -1;
->  
-> +	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-> +	    !!sdata->u.mgd.use_4addr != !!ieee80211_has_a4(hdr->frame_control)) {
-> +
-> +		if (!sdata->u.mgd.use_4addr)
-> +			return -1;
-> +		else
-> +			check_port_control = true;
-> +	}
-> +
->  	if (is_multicast_ether_addr(hdr->addr1) &&
-> -	    ((sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->u.vlan.sta) ||
-> -	     (sdata->vif.type == NL80211_IFTYPE_STATION && sdata->u.mgd.use_4addr)))
-> +	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN && sdata->u.vlan.sta)
->  		return -1;
->  
-> -	return ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
-> +	ret = ieee80211_data_to_8023(rx->skb, sdata->vif.addr, sdata->vif.type);
-> +	if (ret < 0 || !check_port_control)
-> +		return ret;
-> +
-> +	ehdr = (struct ethhdr *) rx->skb->data;
-> +	if (ehdr->h_proto != rx->sdata->control_port_protocol)
-> +		return -1;
-> +
-> +	return 0;
->  }
->  
->  /*
+How did you test the patches? For example, what hardware did you use
+etc.
 
+About the code from fremantle kernels. Few weeks ago nokia sent me
+privately the original patches from their internal git tree, I gave
+some comments and never heard back. So, in theory I should have all
+the fremantle patches somewhere in my email archives. I would just
+need to clean them up and send them here. I'll go over your patches
+and let's see what we should do.
 
+> Sorry for the partly broken patches, I thought I configured my client the
+> right way. I tried to stop the mails at my mailserver, but it was mostly
+> already too late.
+
+No problem. But whenever you resend your patchset, please add a
+revision to them, otherwise it's impossible to know which patch is
+which. Good way is to use tag "[PATCH v2]" or similar.
+
+-- 
+Kalle Valo
