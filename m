@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:54410 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930Ab1AGAF4 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36860 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755305Ab1AaLUc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Jan 2011 19:05:56 -0500
-Received: by iyi12 with SMTP id 12so15346750iyi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Jan 2011 16:05:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D2655E6.3020304@candelatech.com>
-References: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com> <4D2655E6.3020304@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 6 Jan 2011 16:05:35 -0800
-Message-ID: <AANLkTin1cpOwdwhHudcVhdckMgPpYcZGgRJkN+MpmrVm@mail.gmail.com>
-Subject: Re: [ath9k-devel] [ath9k] skbuff alloc of size 3872 failed
-To: Ben Greear <greearb@candelatech.com>
-Cc: Matt Turner <mattst88@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Michael Guntsche <mike@it-loops.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 31 Jan 2011 06:20:32 -0500
+Received: by fxm20 with SMTP id 20so5468799fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:20:31 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 04/10] mac80211: do not calc frame duration when using HW rate-control
+Date: Mon, 31 Jan 2011 13:16:23 +0200
+Message-Id: <1296472589-26401-5-git-send-email-arik@wizery.com>
+In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 6, 2011 at 3:53 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 12/22/2010 11:22 AM, Matt Turner wrote:
->> With the ath9k driver, I get "skbuff alloc of size 3872 failed"
->>
->> I hit this again today after not using wireless for quite sometime. It
->> looks like it was originally reported against 2.6.35-rc1. Eric Dumazet
->> provided a patch which fixed the issue, but apparently it's still not
->> upstream. Why is this?
->>
->> If it is suitable for upstream inclusion, please take my Tested-by:
->> Matt Turner<mattst88@gmail.com>
->>
->> https://patchwork.kernel.org/patch/104271/
->
-> I applied this patch and it seems to work fine, but there
-> were some questions by Eric in the patchwork thread that should probably
-> be answered by ath9k folks.
->
-> For instance:
->
-> IEEE80211_MAX_MPDU_LEN being 3840 + somebits is suspect, since it doesnt
-> match 802.11 specs.
->
-> It should be more close of 2304 + MAC header (32bytes) + FCS (4 bytes) ?
->
->
-> Eric:  If the patch is fine as is, and if you are too busy to
-> submit it, I can do so with your Signed-off-by if you want.
+When rate-control is performed in HW, we cannot calculate frame
+duration as we do not have the skb transmission rate in SW.
 
-Eric, also please make sure you read and understand what using a SOB means:
+ieee80211_tx_h_calculate_duration() should only be called when
+ieee80211_tx_h_rate_ctrl() has been called before to initialize data
+in skb->cb. This doesn't happen for drivers with HW rate-control.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/SubmittingPatches;h=689e2371095cc5dfea9927120009341f369159aa;hb=HEAD#l309
+Fixes the following warning when operating in AP-mode
+in a driver with HW rate-control.
 
-  Luis
+WARNING: at net/mac80211/tx.c:57 ieee80211_duration+0x54/0x1d8 [mac80211]()
+Modules linked in: wl1271_sdio wl1271 firmware_class crc7 mac80211 cfg80211
+[<c0046090>] (unwind_backtrace+0x0/0x124) from [<c0064c10>] (warn_slowpath_common+0x4c/0x64)
+[<c0064c10>] (warn_slowpath_common+0x4c/0x64) from [<c0064c40>] (warn_slowpath_null+0x18/0x1c)
+[<c0064c40>] (warn_slowpath_null+0x18/0x1c) from [<bf040e34>] (ieee80211_duration+0x54/0x1d8 [mac80211])
+[<bf040e34>] (ieee80211_duration+0x54/0x1d8 [mac80211]) from [<bf04200c>] (invoke_tx_handlers+0xfa0/0x1088 [mac80211])
+[<bf04200c>] (invoke_tx_handlers+0xfa0/0x1088 [mac80211]) from [<bf042178>] (ieee80211_tx+0x84/0x248 [mac80211])
+[<bf042178>] (ieee80211_tx+0x84/0x248 [mac80211]) from [<bf042f44>] (ieee80211_tx_pending+0x12c/0x278 [mac80211])
+[<bf042f44>] (ieee80211_tx_pending+0x12c/0x278 [mac80211]) from [<c0069a9c>] (tasklet_action+0x68/0xbc)
+[<c0069a9c>] (tasklet_action+0x68/0xbc) from [<c006a044>] (__do_softirq+0x84/0x114)
+[<c006a044>] (__do_softirq+0x84/0x114) from [<c006a1b8>] (do_softirq+0x48/0x54)
+[<c006a1b8>] (do_softirq+0x48/0x54) from [<c006a4f8>] (local_bh_enable+0x98/0xcc)
+[<c006a4f8>] (local_bh_enable+0x98/0xcc) from [<bf074e60>] (wl1271_rx+0x2e8/0x3a4 [wl1271])
+[<bf074e60>] (wl1271_rx+0x2e8/0x3a4 [wl1271]) from [<bf071ae4>] (wl1271_irq_work+0x230/0x310 [wl1271])
+[<bf071ae4>] (wl1271_irq_work+0x230/0x310 [wl1271]) from [<c0076864>] (process_one_work+0x208/0x350)
+[<c0076864>] (process_one_work+0x208/0x350) from [<c0076e14>] (worker_thread+0x1cc/0x300)
+[<c0076e14>] (worker_thread+0x1cc/0x300) from [<c007bb88>] (kthread+0x84/0x8c)
+[<c007bb88>] (kthread+0x84/0x8c) from [<c0041494>] (kernel_thread_exit+0x0/0x8)
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/tx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e46c801..8c477a9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1394,7 +1394,8 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 	/* handlers after fragment must be aware of tx info fragmentation! */
+ 	CALL_TXH(ieee80211_tx_h_stats);
+ 	CALL_TXH(ieee80211_tx_h_encrypt);
+-	CALL_TXH(ieee80211_tx_h_calculate_duration);
++	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
++		CALL_TXH(ieee80211_tx_h_calculate_duration);
+ #undef CALL_TXH
+ 
+  txh_done:
+-- 
+1.7.1
+
