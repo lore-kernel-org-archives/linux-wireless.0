@@ -1,301 +1,351 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:33103 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756358Ab1ALANa (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755453Ab1AaLQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 19:13:30 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mon, 31 Jan 2011 06:16:44 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:16:43 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: remove some crypto definitions
-Date: Tue, 11 Jan 2011 16:14:25 -0800
-Message-Id: <1294791265-24020-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1294791265-24020-1-git-send-email-bzhao@marvell.com>
-References: <1294791265-24020-1-git-send-email-bzhao@marvell.com>
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 03/10] wl12xx: AP-mode - TX queue per link in AC
+Date: Mon, 31 Jan 2011 13:16:22 +0200
+Message-Id: <1296472589-26401-4-git-send-email-arik@wizery.com>
+In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+When operating in AP-mode we require a per link tx-queue.
+This allows us to implement HW assisted PS mode for links,
+as well as regulate per-link FW TX blocks consumption.
+Split each link into ACs to support future QoS for AP-mode.
 
-Use corresponding macros defined in include/linux/ieee80211.h
+AC queues are emptied in priority and per-link queues are
+scheduled in a simple round-robin fashion.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/mwifiex/11n.c           |    6 +++---
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   16 ++++++++--------
- drivers/net/wireless/mwifiex/11n_rxreorder.h |    7 -------
- drivers/net/wireless/mwifiex/fw.h            |    5 +----
- drivers/net/wireless/mwifiex/ioctl.h         |    6 ++----
- drivers/net/wireless/mwifiex/main.h          |   14 --------------
- drivers/net/wireless/mwifiex/sta_cmd.c       |   19 ++++++-------------
- drivers/net/wireless/mwifiex/sta_ioctl.c     |    2 +-
- 8 files changed, 21 insertions(+), 54 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   17 ++++-
+ drivers/net/wireless/wl12xx/tx.c     |  130 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/wl12xx/tx.h     |    3 +
+ drivers/net/wireless/wl12xx/wl12xx.h |   14 ++++
+ 4 files changed, 151 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index e4a0314..b1fd5a9 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -624,7 +624,7 @@ mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
- 			& SSN_MASK);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index cf11bda..2c6bde9 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -966,6 +966,7 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ieee80211_sta *sta = txinfo->control.sta;
+ 	unsigned long flags;
+ 	int q;
++	u8 hlid = 0;
  
- 	tid = (le16_to_cpu(add_ba_rsp->block_ack_param_set)
--		& BLOCKACKPARAM_TID_MASK)
-+		& IEEE80211_ADDBA_PARAM_TID_MASK)
- 		>> BLOCKACKPARAM_TID_POS;
- 	if (le16_to_cpu(add_ba_rsp->status_code) == BA_RESULT_SUCCESS) {
- 		tx_ba_tbl = mwifiex_11n_get_tx_ba_stream_tbl(priv,
-@@ -1329,9 +1329,9 @@ mwifiex_send_delba(struct mwifiex_private *priv, int tid, u8 *peer_mac,
- 
- 	del_ba_param_set = le16_to_cpu(delba.del_ba_param_set);
- 	if (initiator)
--		DELBA_INITIATOR(del_ba_param_set);
-+		del_ba_param_set |= IEEE80211_DELBA_PARAM_INITIATOR_MASK;
- 	else
--		DELBA_RECIPIENT(del_ba_param_set);
-+		del_ba_param_set &= ~IEEE80211_DELBA_PARAM_INITIATOR_MASK;
- 
- 	memcpy(&delba.peer_mac_addr, peer_mac, MWIFIEX_MAC_ADDR_LENGTH);
- 
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index dcfcb99..e783a2e 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -415,21 +415,21 @@ mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
- 	add_ba_rsp->ssn = cmd_addba_req->ssn;
- 
- 	block_ack_param_set = le16_to_cpu(cmd_addba_req->block_ack_param_set);
--	tid = (block_ack_param_set & BLOCKACKPARAM_TID_MASK)
-+	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
- 		>> BLOCKACKPARAM_TID_POS;
- 	if (priv->addba_reject[tid])
- 		add_ba_rsp->status_code =
--			cpu_to_le16(ADDBA_RSP_STATUS_DECLINED);
-+			cpu_to_le16(WLAN_STATUS_REQUEST_DECLINED);
- 	else
- 		add_ba_rsp->status_code = cpu_to_le16(ADDBA_RSP_STATUS_ACCEPT);
--	block_ack_param_set &= ~BLOCKACKPARAM_WINSIZE_MASK;
-+	block_ack_param_set &= ~IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK;
- 	/* We donot support AMSDU inside AMPDU, hence reset the bit */
- 	block_ack_param_set &= ~BLOCKACKPARAM_AMSDU_SUPP_MASK;
- 	block_ack_param_set |= (priv->add_ba_param.rx_win_size <<
- 					     BLOCKACKPARAM_WINSIZE_POS);
- 	add_ba_rsp->block_ack_param_set = cpu_to_le16(block_ack_param_set);
- 	win_size = (le16_to_cpu(add_ba_rsp->block_ack_param_set)
--					& BLOCKACKPARAM_WINSIZE_MASK)
-+					& IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK)
- 					>> BLOCKACKPARAM_WINSIZE_POS;
- 	cmd_addba_req->block_ack_param_set = cpu_to_le16(block_ack_param_set);
- 
-@@ -668,15 +668,15 @@ mwifiex_ret_11n_addba_resp(struct mwifiex_private *priv,
- 
- 	block_ack_param_set = le16_to_cpu(add_ba_rsp->block_ack_param_set);
- 
--	tid = (block_ack_param_set & BLOCKACKPARAM_TID_MASK)
-+	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
- 		>> BLOCKACKPARAM_TID_POS;
  	/*
- 	 * Check if we had rejected the ADDBA, if yes then do not create
- 	 * the stream
- 	 */
- 	if (le16_to_cpu(add_ba_rsp->status_code) == BA_RESULT_SUCCESS) {
--		win_size =
--			(block_ack_param_set & BLOCKACKPARAM_WINSIZE_MASK)
-+		win_size = (block_ack_param_set &
-+			IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK)
- 			>> BLOCKACKPARAM_WINSIZE_POS;
+ 	 * peek into the rates configured in the STA entry.
+@@ -1010,7 +1011,13 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
- 		PRINTM(MCMND,
-@@ -733,7 +733,7 @@ mwifiex_11n_ba_stream_timeout(struct mwifiex_private *priv,
- 		cpu_to_le16((u16) event->tid << DELBA_TID_POS);
- 	delba.del_ba_param_set |= cpu_to_le16(
- 		(u16) event->origninator << DELBA_INITIATOR_POS);
--	delba.reason_code = cpu_to_le16(REASON_CODE_STA_TIMEOUT);
-+	delba.reason_code = cpu_to_le16(WLAN_REASON_QSTA_TIMEOUT);
- 	mwifiex_prepare_cmd(priv, HostCmd_CMD_11N_DELBA, 0, 0, NULL, &delba);
+ 	/* queue the packet */
+ 	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+-	skb_queue_tail(&wl->tx_queue[q], skb);
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		hlid = wl1271_tx_get_hlid(skb);
++		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
++		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
++	} else {
++		skb_queue_tail(&wl->tx_queue[q], skb);
++	}
  
- 	LEAVE();
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-index e9b82cd..fb5c695 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
-@@ -26,22 +26,15 @@
- #define MAX_TID_VALUE			(2 << 11)
- #define TWOPOW11			(2 << 10)
+ 	/*
+ 	 * The chip specific setup must run before the first TX packet -
+@@ -2640,6 +2647,7 @@ static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
+ 	int id = hlid - WL1271_AP_STA_HLID_START;
  
--#define BLOCKACKPARAM_TID_MASK		0x3C
- #define BLOCKACKPARAM_TID_POS		2
--#define BLOCKACKPARAM_WINSIZE_MASK	0xffc0
- #define BLOCKACKPARAM_AMSDU_SUPP_MASK	0x1
- #define BLOCKACKPARAM_WINSIZE_POS	6
- #define DELBA_TID_POS			12
- #define DELBA_INITIATOR_POS		11
--#define REASON_CODE_STA_DONT_WANT	37
--#define REASON_CODE_STA_TIMEOUT		39
- #define TYPE_DELBA_SENT			1
- #define TYPE_DELBA_RECEIVE		2
--#define DELBA_INITIATOR(paramset)	(paramset = (paramset | (1 << 11)))
--#define DELBA_RECIPIENT(paramset)	(paramset = (paramset & ~(1 << 11)))
- #define IMMEDIATE_BLOCK_ACK		0x2
- 
--#define ADDBA_RSP_STATUS_DECLINED  37
- #define ADDBA_RSP_STATUS_REJECT 1
- #define ADDBA_RSP_STATUS_ACCEPT 0
- 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index d2c39c7..32652a2 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -93,9 +93,6 @@ enum KEY_INFO_AES {
- 	KEY_INFO_AES_ENABLED = 0x04
- };
- 
--#define WPA_AES_KEY_LEN                 16
--#define WPA_TKIP_KEY_LEN                32
--
- #define WAPI_KEY_LEN			50
- 
- enum KEY_INFO_WAPI {
-@@ -468,7 +465,7 @@ struct mwifiex_event_wep_icv_err {
- 	u8 src_mac_addr[MWIFIEX_MAC_ADDR_LENGTH];
- 	u8 wep_key_index;
- 	u8 wep_key_length;
--	u8 key[MAX_WEP_KEY_SIZE];
-+	u8 key[WLAN_KEY_LEN_WEP104];
- };
- 
- struct mwifiex_802_11_fixed_ies {
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 5ed613d..f71a09c 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -448,9 +448,7 @@ enum {
- 
- #define MWIFIEX_KEY_INDEX_UNICAST	0x40000000
- #define MWIFIEX_MAX_KEY_LENGTH		32
--#define PN_SIZE				16
--#define MAX_WEP_KEY_SIZE		13
--#define MIN_WEP_KEY_SIZE		5
-+#define WAPI_RXPN_LEN			16
- #define MWIFIEX_MIN_PASSPHRASE_LENGTH	8
- #define MWIFIEX_MAX_PASSPHRASE_LENGTH	63
- #define MWIFIEX_MAX_PMK_LENGTH		32
-@@ -463,7 +461,7 @@ struct mwifiex_ds_encrypt_key {
- 	u8 key_material[MWIFIEX_MAX_KEY_LENGTH];
- 	u8 mac_addr[MWIFIEX_MAC_ADDR_LENGTH];
- 	u32 is_wapi_key;
--	u8 pn[PN_SIZE];
-+	u8 wapi_rxpn[WAPI_RXPN_LEN];
- };
- 
- struct mwifiex_passphrase {
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 5b1d557..eb17ced 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -137,20 +137,6 @@ struct mwifiex_drv_mode {
- 
- #define MWIFIEX_MIN_SSID_LENGTH					1
- 
--#define MWIFIEX_KEY_INDEX_UNICAST        0x40000000
--
--#define MWIFIEX_MAX_KEY_LENGTH           32
--
--#define MWIFIEX_MIN_PASSPHRASE_LENGTH    8
--
--#define MWIFIEX_MAX_PASSPHRASE_LENGTH    63
--
--#define MWIFIEX_MAX_PMK_LENGTH           32
--
--#define MAX_WEP_KEY_SIZE        13
--
--#define MIN_WEP_KEY_SIZE        5
--
- #define MAX_CHANNEL_BAND_BG     14
- 
- #define MAX_FREQUENCY_BAND_BG   2484
-diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
-index 9a87a2a..4d9abb9 100644
---- a/drivers/net/wireless/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmd.c
-@@ -539,9 +539,7 @@ mwifiex_cmd_802_11_deauthenticate(struct mwifiex_private *priv,
- 	       deauth->mac_addr[3], deauth->mac_addr[4],
- 	       deauth->mac_addr[5]);
- 
--/** Reason code 3 = Station is leaving */
--#define REASON_CODE_STA_LEAVING 3
--	deauth->reason_code = cpu_to_le16(REASON_CODE_STA_LEAVING);
-+	deauth->reason_code = cpu_to_le16(WLAN_REASON_DEAUTH_LEAVING);
- 
- 	LEAVE();
- 	return MWIFIEX_STATUS_SUCCESS;
-@@ -567,11 +565,6 @@ mwifiex_cmd_802_11_ad_hoc_stop(struct mwifiex_private *priv,
- 	return MWIFIEX_STATUS_SUCCESS;
+ 	__clear_bit(id, wl->ap_hlid_map);
++	wl1271_tx_reset_link_queues(wl, hlid);
  }
  
--/** Length of WEP 40 bit key */
--#define WEP_40_BIT_LEN  5
--/** Length of WEP 104 bit key */
--#define WEP_104_BIT_LEN 13
--
- /*
-  * This function sets WEP key(s) to key parameter TLV(s).
-  *
-@@ -591,8 +584,8 @@ mwifiex_set_keyparamset_wep(struct mwifiex_private *priv,
+ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+@@ -3265,7 +3273,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	struct ieee80211_hw *hw;
+ 	struct platform_device *plat_dev = NULL;
+ 	struct wl1271 *wl;
+-	int i, ret;
++	int i, j, ret;
+ 	unsigned int order;
  
- 	/* Multi-key_param_set TLV is supported */
- 	for (i = 0; i < NUM_WEP_KEYS; i++) {
--		if ((priv->wep_key[i].key_length == WEP_40_BIT_LEN) ||
--		    (priv->wep_key[i].key_length == WEP_104_BIT_LEN)) {
-+		if ((priv->wep_key[i].key_length == WLAN_KEY_LEN_WEP40) ||
-+		    (priv->wep_key[i].key_length == WLAN_KEY_LEN_WEP104)) {
- 			key_param_set->type =
- 				cpu_to_le16(TLV_TYPE_KEY_MATERIAL);
- /** Key_param_set WEP fixed length */
-@@ -735,7 +728,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 		       enc_key->key_material,
- 		       enc_key->key_len);
- 		memcpy(&key_material->key_param_set.key[2 + enc_key->key_len],
--		       enc_key->pn, PN_SIZE);
-+		       enc_key->wapi_rxpn, WAPI_RXPN_LEN);
- 		key_material->key_param_set.length =
- 			cpu_to_le16(WAPI_KEY_LEN + KEYPARAMSET_FIXED_LEN);
+ 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1271_ops);
+@@ -3293,6 +3301,10 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	for (i = 0; i < NUM_TX_QUEUES; i++)
+ 		skb_queue_head_init(&wl->tx_queue[i]);
  
-@@ -747,7 +740,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 				    sizeof(key_material->action) + S_DS_GEN);
- 		goto done;
++	for (i = 0; i < NUM_TX_QUEUES; i++)
++		for (j = 0; j < AP_MAX_LINKS; j++)
++			skb_queue_head_init(&wl->links[j].tx_queue[i]);
++
+ 	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
+ 	INIT_DELAYED_WORK(&wl->pspoll_work, wl1271_pspoll_work);
+ 	INIT_WORK(&wl->irq_work, wl1271_irq_work);
+@@ -3319,6 +3331,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->bss_type = MAX_BSS_TYPE;
+ 	wl->set_bss_type = MAX_BSS_TYPE;
+ 	wl->fw_bss_type = MAX_BSS_TYPE;
++	wl->last_tx_hlid = 0;
+ 
+ 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 820f455..c658821 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -86,6 +86,27 @@ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
+ 		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
+ }
+ 
++u8 wl1271_tx_get_hlid(struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
++
++	if (control->control.sta) {
++		struct wl1271_station *wl_sta;
++
++		wl_sta = (struct wl1271_station *)
++				control->control.sta->drv_priv;
++		return wl_sta->hlid;
++	} else {
++		struct ieee80211_hdr *hdr;
++
++		hdr = (struct ieee80211_hdr *)skb->data;
++		if (ieee80211_is_mgmt(hdr->frame_control))
++			return WL1271_AP_GLOBAL_HLID;
++		else
++			return WL1271_AP_BROADCAST_HLID;
++	}
++}
++
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 				u32 buf_offset)
+ {
+@@ -298,7 +319,7 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
+ 	return enabled_rates;
+ }
+ 
+-static void handle_tx_low_watermark(struct wl1271 *wl)
++void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
+ {
+ 	unsigned long flags;
+ 
+@@ -312,7 +333,7 @@ static void handle_tx_low_watermark(struct wl1271 *wl)
  	}
--	if (enc_key->key_len == WPA_AES_KEY_LEN) {
-+	if (enc_key->key_len == WLAN_KEY_LEN_CCMP) {
- 		PRINTM(MCMND, "WPA_AES\n");
- 		key_material->key_param_set.key_type_id =
- 			cpu_to_le16(KEY_TYPE_ID_AES);
-@@ -765,7 +758,7 @@ mwifiex_cmd_802_11_key_material(struct mwifiex_private *priv,
- 		else		/* AES group key: multicast */
- 			key_material->key_param_set.key_info |=
- 				cpu_to_le16(KEY_INFO_AES_MCAST);
--	} else if (enc_key->key_len == WPA_TKIP_KEY_LEN) {
-+	} else if (enc_key->key_len == WLAN_KEY_LEN_TKIP) {
- 		PRINTM(MCMND, "WPA_TKIP\n");
- 		key_material->key_param_set.key_type_id =
- 			cpu_to_le16(KEY_TYPE_ID_TKIP);
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 35df4c9..04a6154 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -3611,7 +3611,7 @@ mwifiex_sec_ioctl_encrypt_key(struct mwifiex_adapter *adapter,
- 		if (sec->param.encrypt_key.is_wapi_key)
- 			status = mwifiex_sec_ioctl_set_wapi_key(adapter,
- 								ioctl_req);
--		else if (sec->param.encrypt_key.key_len > MAX_WEP_KEY_SIZE)
-+		else if (sec->param.encrypt_key.key_len > WLAN_KEY_LEN_WEP104)
- 			status = mwifiex_sec_ioctl_set_wpa_key(adapter,
- 							       ioctl_req);
- 		else
+ }
+ 
+-static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
++static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
+@@ -338,12 +359,69 @@ out:
+ 	return skb;
+ }
+ 
++static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
++{
++	struct sk_buff *skb = NULL;
++	unsigned long flags;
++	int i, h, start_hlid;
++
++	/* start from the link after the last one */
++	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
++
++	/* dequeue according to AC, round robin on each link */
++	for (i = 0; i < AP_MAX_LINKS; i++) {
++		h = (start_hlid + i) % AP_MAX_LINKS;
++
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
++		if (skb)
++			goto out;
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
++		if (skb)
++			goto out;
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
++		if (skb)
++			goto out;
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
++		if (skb)
++			goto out;
++	}
++
++out:
++	if (skb) {
++		wl->last_tx_hlid = h;
++		spin_lock_irqsave(&wl->wl_lock, flags);
++		wl->tx_queue_count--;
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
++	} else {
++		wl->last_tx_hlid = 0;
++	}
++
++	return skb;
++}
++
++static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
++{
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		return wl1271_ap_skb_dequeue(wl);
++
++	return wl1271_sta_skb_dequeue(wl);
++}
++
+ static void wl1271_skb_queue_head(struct wl1271 *wl, struct sk_buff *skb)
+ {
+ 	unsigned long flags;
+ 	int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 
+-	skb_queue_head(&wl->tx_queue[q], skb);
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		u8 hlid = wl1271_tx_get_hlid(skb);
++		skb_queue_head(&wl->links[hlid].tx_queue[q], skb);
++
++		/* make sure we dequeue the same packet next time */
++		wl->last_tx_hlid = (hlid + AP_MAX_LINKS - 1) % AP_MAX_LINKS;
++	} else {
++		skb_queue_head(&wl->tx_queue[q], skb);
++	}
++
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+ 	wl->tx_queue_count++;
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+@@ -428,7 +506,7 @@ out_ack:
+ 	if (sent_packets) {
+ 		/* interrupt the firmware with the new packets */
+ 		wl1271_write32(wl, WL1271_HOST_WR_ACCESS, wl->tx_packets_count);
+-		handle_tx_low_watermark(wl);
++		wl1271_handle_tx_low_watermark(wl);
+ 	}
+ 
+ out:
+@@ -545,6 +623,27 @@ void wl1271_tx_complete(struct wl1271 *wl)
+ 	}
+ }
+ 
++void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
++{
++	struct sk_buff *skb;
++	int i, total = 0;
++	unsigned long flags;
++
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
++			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
++			ieee80211_tx_status(wl->hw, skb);
++			total++;
++		}
++	}
++
++	spin_lock_irqsave(&wl->wl_lock, flags);
++	wl->tx_queue_count -= total;
++	spin_unlock_irqrestore(&wl->wl_lock, flags);
++
++	wl1271_handle_tx_low_watermark(wl);
++}
++
+ /* caller must hold wl->mutex */
+ void wl1271_tx_reset(struct wl1271 *wl)
+ {
+@@ -552,19 +651,28 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 	struct sk_buff *skb;
+ 
+ 	/* TX failure */
+-	for (i = 0; i < NUM_TX_QUEUES; i++) {
+-		while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
+-			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
+-			ieee80211_tx_status(wl->hw, skb);
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		for (i = 0; i < AP_MAX_LINKS; i++)
++			wl1271_tx_reset_link_queues(wl, i);
++
++		wl->last_tx_hlid = 0;
++	} else {
++		for (i = 0; i < NUM_TX_QUEUES; i++) {
++			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
++				wl1271_debug(DEBUG_TX, "freeing skb 0x%p",
++					     skb);
++				ieee80211_tx_status(wl->hw, skb);
++			}
+ 		}
+ 	}
++
+ 	wl->tx_queue_count = 0;
+ 
+ 	/*
+ 	 * Make sure the driver is at a consistent state, in case this
+ 	 * function is called from a context other than interface removal.
+ 	 */
+-	handle_tx_low_watermark(wl);
++	wl1271_handle_tx_low_watermark(wl);
+ 
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		if (wl->tx_frames[i] != NULL) {
+@@ -585,8 +693,8 @@ void wl1271_tx_flush(struct wl1271 *wl)
+ 
+ 	while (!time_after(jiffies, timeout)) {
+ 		mutex_lock(&wl->mutex);
+-		wl1271_debug(DEBUG_TX, "flushing tx buffer: %d",
+-			     wl->tx_frames_cnt);
++		wl1271_debug(DEBUG_TX, "flushing tx buffer: %d %d",
++			     wl->tx_frames_cnt, wl->tx_queue_count);
+ 		if ((wl->tx_frames_cnt == 0) && (wl->tx_queue_count == 0)) {
+ 			mutex_unlock(&wl->mutex);
+ 			return;
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 05722a5..76df5d5 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -152,5 +152,8 @@ void wl1271_tx_flush(struct wl1271 *wl);
+ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
+ u32 wl1271_tx_min_rate_get(struct wl1271 *wl);
++u8 wl1271_tx_get_hlid(struct sk_buff *skb);
++void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
++void wl1271_handle_tx_low_watermark(struct wl1271 *wl);
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index d1de13f..30450e4 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -278,6 +278,11 @@ struct wl1271_ap_key {
+ 	u16 tx_seq_16;
+ };
+ 
++struct wl1271_link {
++	/* AP-mode - TX queue per AC in link */
++	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
++};
++
+ struct wl1271 {
+ 	struct platform_device *plat_dev;
+ 	struct ieee80211_hw *hw;
+@@ -474,6 +479,15 @@ struct wl1271 {
+ 	/* RX BA constraint value */
+ 	bool ba_support;
+ 	u8 ba_rx_bitmap;
++
++	/*
++	 * AP-mode - links indexed by HLID. The global and broadcast links
++	 * are always active.
++	 */
++	struct wl1271_link links[AP_MAX_LINKS];
++
++	/* the hlid of the link where the last transmitted skb came from */
++	int last_tx_hlid;
+ };
+ 
+ struct wl1271_station {
 -- 
-1.7.0.2
+1.7.1
 
