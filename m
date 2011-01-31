@@ -1,250 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57352 "EHLO nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:46204 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754086Ab1ATWjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 17:39:18 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 1/4] ath9k: remove the virtual wiphy debugfs interface
-Date: Thu, 20 Jan 2011 23:39:11 +0100
-Message-Id: <1295563154-17556-1-git-send-email-nbd@openwrt.org>
+	id S1754301Ab1AaVxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 16:53:18 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/11] iwlwifi: always support idle mode for agn devices
+Date: Mon, 31 Jan 2011 13:40:40 -0800
+Message-Id: <1296510047-24576-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1296510047-24576-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1296510047-24576-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It does not make much sense to keep the current virtual wiphy implementation
-any longer - it adds significant complexity, has very few users and is still
-very experimental. At some point in time, it will be replaced by a proper
-implementation in mac80211.
+For agn devices, always support idle mode which help power
+consumption in idle unassociated state.
 
-By making the code easier to read and maintain, removing virtual wiphy support
-helps with fixing the remaining driver issues and adding further improvements.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |  202 --------------------------------
- 1 files changed, 0 insertions(+), 202 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-1000.c  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c  |    2 --
+ drivers/net/wireless/iwlwifi/iwl-6000.c  |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-power.c |    3 +--
+ 5 files changed, 1 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 3586c43..73644c4 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -381,204 +381,6 @@ static const struct file_operations fops_interrupt = {
- 	.llseek = default_llseek,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 127723e..ba78bc8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -270,7 +270,6 @@ static struct iwl_base_params iwl1000_base_params = {
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+ 	.chain_noise_calib_by_driver = true,
+-	.supports_idle = true,
  };
+ static struct iwl_ht_params iwl1000_ht_params = {
+ 	.ht_greenfield_support = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index ac5996f..8d637e7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -368,7 +368,6 @@ static struct iwl_base_params iwl2000_base_params = {
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+@@ -393,7 +392,6 @@ static struct iwl_base_params iwl2030_base_params = {
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 57,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c195674..aa32b1e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -479,7 +479,6 @@ static struct iwl_base_params iwl6000_base_params = {
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+@@ -503,7 +502,6 @@ static struct iwl_base_params iwl6050_base_params = {
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+@@ -526,7 +524,6 @@ static struct iwl_base_params iwl6000_g2_base_params = {
+ 	.shadow_ram_support = true,
+ 	.led_compensation = 57,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+-	.supports_idle = true,
+ 	.adv_thermal_throttle = true,
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index b57e739..e0ec170 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -305,7 +305,6 @@ struct iwl_base_params {
+ 	u16 led_compensation;
+ 	const bool broken_powersave;
+ 	int chain_noise_num_beacons;
+-	const bool supports_idle;
+ 	bool adv_thermal_throttle;
+ 	bool support_ct_kill_exit;
+ 	const bool support_wimax_coexist;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 25f7d47..1d1bf32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -356,8 +356,7 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
  
--static const char * ath_wiphy_state_str(enum ath_wiphy_state state)
--{
--	switch (state) {
--	case ATH_WIPHY_INACTIVE:
--		return "INACTIVE";
--	case ATH_WIPHY_ACTIVE:
--		return "ACTIVE";
--	case ATH_WIPHY_PAUSING:
--		return "PAUSING";
--	case ATH_WIPHY_PAUSED:
--		return "PAUSED";
--	case ATH_WIPHY_SCAN:
--		return "SCAN";
--	}
--	return "?";
--}
--
--static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
--			       size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	struct ath_wiphy *aphy = sc->pri_wiphy;
--	struct ieee80211_channel *chan = aphy->hw->conf.channel;
--	char buf[512];
--	unsigned int len = 0;
--	int i;
--	u8 addr[ETH_ALEN];
--	u32 tmp;
--
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"primary: %s (%s chan=%d ht=%d)\n",
--			wiphy_name(sc->pri_wiphy->hw->wiphy),
--			ath_wiphy_state_str(sc->pri_wiphy->state),
--			ieee80211_frequency_to_channel(chan->center_freq),
--			aphy->chan_is_ht);
--
--	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
--	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"addr: %pM\n", addr);
--	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
--	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"addrmask: %pM\n", addr);
--	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"rfilt: 0x%x", tmp);
--	if (tmp & ATH9K_RX_FILTER_UCAST)
--		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
--	if (tmp & ATH9K_RX_FILTER_MCAST)
--		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
--	if (tmp & ATH9K_RX_FILTER_BCAST)
--		len += snprintf(buf + len, sizeof(buf) - len, " BCAST");
--	if (tmp & ATH9K_RX_FILTER_CONTROL)
--		len += snprintf(buf + len, sizeof(buf) - len, " CONTROL");
--	if (tmp & ATH9K_RX_FILTER_BEACON)
--		len += snprintf(buf + len, sizeof(buf) - len, " BEACON");
--	if (tmp & ATH9K_RX_FILTER_PROM)
--		len += snprintf(buf + len, sizeof(buf) - len, " PROM");
--	if (tmp & ATH9K_RX_FILTER_PROBEREQ)
--		len += snprintf(buf + len, sizeof(buf) - len, " PROBEREQ");
--	if (tmp & ATH9K_RX_FILTER_PHYERR)
--		len += snprintf(buf + len, sizeof(buf) - len, " PHYERR");
--	if (tmp & ATH9K_RX_FILTER_MYBEACON)
--		len += snprintf(buf + len, sizeof(buf) - len, " MYBEACON");
--	if (tmp & ATH9K_RX_FILTER_COMP_BAR)
--		len += snprintf(buf + len, sizeof(buf) - len, " COMP_BAR");
--	if (tmp & ATH9K_RX_FILTER_PSPOLL)
--		len += snprintf(buf + len, sizeof(buf) - len, " PSPOLL");
--	if (tmp & ATH9K_RX_FILTER_PHYRADAR)
--		len += snprintf(buf + len, sizeof(buf) - len, " PHYRADAR");
--	if (tmp & ATH9K_RX_FILTER_MCAST_BCAST_ALL)
--		len += snprintf(buf + len, sizeof(buf) - len, " MCAST_BCAST_ALL\n");
--	else
--		len += snprintf(buf + len, sizeof(buf) - len, "\n");
--
--	/* Put variable-length stuff down here, and check for overflows. */
--	for (i = 0; i < sc->num_sec_wiphy; i++) {
--		struct ath_wiphy *aphy_tmp = sc->sec_wiphy[i];
--		if (aphy_tmp == NULL)
--			continue;
--		chan = aphy_tmp->hw->conf.channel;
--		len += snprintf(buf + len, sizeof(buf) - len,
--			"secondary: %s (%s chan=%d ht=%d)\n",
--			wiphy_name(aphy_tmp->hw->wiphy),
--			ath_wiphy_state_str(aphy_tmp->state),
--			ieee80211_frequency_to_channel(chan->center_freq),
--						       aphy_tmp->chan_is_ht);
--	}
--	if (len > sizeof(buf))
--		len = sizeof(buf);
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static struct ath_wiphy * get_wiphy(struct ath_softc *sc, const char *name)
--{
--	int i;
--	if (strcmp(name, wiphy_name(sc->pri_wiphy->hw->wiphy)) == 0)
--		return sc->pri_wiphy;
--	for (i = 0; i < sc->num_sec_wiphy; i++) {
--		struct ath_wiphy *aphy = sc->sec_wiphy[i];
--		if (aphy && strcmp(name, wiphy_name(aphy->hw->wiphy)) == 0)
--			return aphy;
--	}
--	return NULL;
--}
--
--static int del_wiphy(struct ath_softc *sc, const char *name)
--{
--	struct ath_wiphy *aphy = get_wiphy(sc, name);
--	if (!aphy)
--		return -ENOENT;
--	return ath9k_wiphy_del(aphy);
--}
--
--static int pause_wiphy(struct ath_softc *sc, const char *name)
--{
--	struct ath_wiphy *aphy = get_wiphy(sc, name);
--	if (!aphy)
--		return -ENOENT;
--	return ath9k_wiphy_pause(aphy);
--}
--
--static int unpause_wiphy(struct ath_softc *sc, const char *name)
--{
--	struct ath_wiphy *aphy = get_wiphy(sc, name);
--	if (!aphy)
--		return -ENOENT;
--	return ath9k_wiphy_unpause(aphy);
--}
--
--static int select_wiphy(struct ath_softc *sc, const char *name)
--{
--	struct ath_wiphy *aphy = get_wiphy(sc, name);
--	if (!aphy)
--		return -ENOENT;
--	return ath9k_wiphy_select(aphy);
--}
--
--static int schedule_wiphy(struct ath_softc *sc, const char *msec)
--{
--	ath9k_wiphy_set_scheduler(sc, simple_strtoul(msec, NULL, 0));
--	return 0;
--}
--
--static ssize_t write_file_wiphy(struct file *file, const char __user *user_buf,
--				size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	char buf[50];
--	size_t len;
--
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--	if (len > 0 && buf[len - 1] == '\n')
--		buf[len - 1] = '\0';
--
--	if (strncmp(buf, "add", 3) == 0) {
--		int res = ath9k_wiphy_add(sc);
--		if (res < 0)
--			return res;
--	} else if (strncmp(buf, "del=", 4) == 0) {
--		int res = del_wiphy(sc, buf + 4);
--		if (res < 0)
--			return res;
--	} else if (strncmp(buf, "pause=", 6) == 0) {
--		int res = pause_wiphy(sc, buf + 6);
--		if (res < 0)
--			return res;
--	} else if (strncmp(buf, "unpause=", 8) == 0) {
--		int res = unpause_wiphy(sc, buf + 8);
--		if (res < 0)
--			return res;
--	} else if (strncmp(buf, "select=", 7) == 0) {
--		int res = select_wiphy(sc, buf + 7);
--		if (res < 0)
--			return res;
--	} else if (strncmp(buf, "schedule=", 9) == 0) {
--		int res = schedule_wiphy(sc, buf + 9);
--		if (res < 0)
--			return res;
--	} else
--		return -EOPNOTSUPP;
--
--	return count;
--}
--
--static const struct file_operations fops_wiphy = {
--	.read = read_file_wiphy,
--	.write = write_file_wiphy,
--	.open = ath9k_debugfs_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
- #define PR(str, elem)							\
- 	do {								\
- 		len += snprintf(buf + len, size - len,			\
-@@ -895,10 +697,6 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			sc, &fops_interrupt))
- 		goto err;
- 
--	if (!debugfs_create_file("wiphy", S_IRUSR | S_IWUSR,
--			sc->debug.debugfs_phy, sc, &fops_wiphy))
--		goto err;
--
- 	if (!debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy,
- 			sc, &fops_xmit))
- 		goto err;
+ 	if (priv->cfg->base_params->broken_powersave)
+ 		iwl_power_sleep_cam_cmd(priv, cmd);
+-	else if (priv->cfg->base_params->supports_idle &&
+-		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
++	else if (priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+ 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+ 	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
+ 		 priv->cfg->ops->lib->tt_ops.tt_power_mode &&
 -- 
-1.7.3.2
+1.7.0.4
 
