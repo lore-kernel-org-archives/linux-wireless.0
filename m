@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:59984 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342Ab1AXURc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Jan 2011 15:17:32 -0500
-Subject: Re: [PATCH] wl12xx: Cleanup PLT mode when module is removed
-From: Luciano Coelho <coelho@ti.com>
-To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1295005726-10323-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1295005726-10323-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 Jan 2011 22:17:40 +0200
-Message-ID: <1295900260.2063.2.camel@pimenta>
+Received: from mail.platinumzone24.at ([88.198.159.93]:48884 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756666Ab1AaW6T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 17:58:19 -0500
+Message-ID: <4D473E83.1050703@davizone.at>
+Date: Mon, 31 Jan 2011 23:58:11 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 04/18] wl1251: add sysfs interface for bluetooth coexistence
+ mode configuration
+References: <4D45A5A5.5090909@davizone.at> <87mxmhdrdz.fsf@purkki.adurom.net>
+In-Reply-To: <87mxmhdrdz.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-01-14 at 12:48 +0100, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Am 2011-01-31 16:28, schrieb Kalle Valo:
+> Sorry, but this was an awful hack in the fremantle kernel and I really
+> would not like to see this in the upstream driver. We should do better
+> than that :) And besides, who would use it? The only user I know is
+> maemo's wlancond and maemo is dead and buried anyway. RIP
 > 
-> PLT mode start/stop is controlled from userspace. When removing module, the
-> PLT mode state is however not checked, and not cleared. There is the possibility
-> of some unwanted state to left linger and there is even the possiblity of a
-> kernel crash if for instance IRQ work is running when the module is removed.
+> I'm not saying that we don't need this, I just want to understand
+> where we need this. And also sysfs is not the best choise imho, maybe
+> debugfs is better?
+
+I understand that you don't like this patch upstream, but I also think that it
+is a very useful feature to switch btcoex on/off. Moreover I think 3 states
+aren't needed at all, but we should at least be able to disable it completely.
+Maybe we could also detect if bt is enabled/disabled in kernel and switch the
+btcoex automatically?
+By the way, how is this problem solved in other drivers?
+
+>> It should be noted that this driver always enabled bt-coexistence before
+>> and enabled bt-coexistence directly affects the receiving performance,
+>> rendering it unusable in some low-signal situations. Especially monitor
+>> mode is affected very badly with bt-coexistence enabled.
 > 
-> Fix this by stopping PLT mode on module removal, if still running.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+> Yes, btcoex is very tricky to get right. Also one problem is that
+> wl1251's btcoex implementation significantly increases power
+> consumption.
 
-Applied.  Thanks, Juuso!
-
--- 
-Cheers,
-Luca.
-
+One more point to make it switchable.
