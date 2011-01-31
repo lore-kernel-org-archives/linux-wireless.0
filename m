@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49204
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753575Ab1AZTzq (ORCPT
+Received: from lider.pardus.org.tr ([193.140.100.216]:51821 "EHLO
+	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755301Ab1AaJD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 14:55:46 -0500
-Date: Wed, 26 Jan 2011 11:56:21 -0800 (PST)
-Message-Id: <20110126.115621.104075131.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2011-01-26
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110126184745.GB3084@tuxdriver.com>
-References: <20110126184745.GB3084@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 31 Jan 2011 04:03:56 -0500
+Message-ID: <4D467AFC.7090503@pardus.org.tr>
+Date: Mon, 31 Jan 2011 11:03:56 +0200
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+MIME-Version: 1.0
+To: Joey Lee <jlee@novell.com>
+CC: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org
+Subject: Re: Rfkill always soft/hard blocked upon boot
+References: <4D455DC1.6010909@pardus.org.tr> <4D45B338.8010802@lwfinger.net> <4D45B776.4000403@pardus.org.tr> <4D46B4340200002300027E82@novprvlin0050.provo.novell.com>
+In-Reply-To: <4D46B4340200002300027E82@novprvlin0050.provo.novell.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 26 Jan 2011 13:47:46 -0500
+On 31.01.2011 04:08, Joey Lee wrote:
 
-> Dave,
-> 
-> Here is a collection of fixes intended for 2.6.38.  There is a
-> MAINTAINERS fix for iwlwifi, a fix to avoid disabling .11n on iwl4965, a
-> NULL pointer fix for rtlwifi, a powersaving wakeup fix for ath9k, and
-> some others.
-> 
-> Also included is a batch of Bluetooth fixes via Gustavo.  These include
-> a fix for an RFCOMM crash, a HCI blacklist leak fix, and a number of other
-> simple fixes.
-> 
-> Please let me know if there are problems!
+> Does it possible share your machine's model name, dmidecode and
+> acpidump?
 
-Pulled, thanks John.
+Yes of course. I have the acpidump and dmidecode outputs but I could not 
+extract the tables from the acpidump output. It gave an error about the 
+table headers and their lengths.
+
+This is a local (Turkish) brand laptop. The manufacturer is Casper. 
+Model is Nirvana i7 (Casper Nirvana i7 CNTKI-620A). It can be an exact 
+clone-copy of a popular laptop as it happens with these no-name stuff.
+
+acpidump:
+  http://bugs.pardus.org.tr/attachment.cgi?id=6673
+
+dmidecode:
+  http://bugs.pardus.org.tr/attachment.cgi?id=6674
+
+
+
+
+
+-- 
+Pardus Linux
+http://www.pardus.org.tr/eng
