@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36783 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752982Ab1AZUEx convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:56975 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753553Ab1AaTEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Jan 2011 15:04:53 -0500
-Received: by yxt3 with SMTP id 3so278970yxt.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jan 2011 12:04:53 -0800 (PST)
+	Mon, 31 Jan 2011 14:04:49 -0500
+Message-ID: <4D4707CD.60903@candelatech.com>
+Date: Mon, 31 Jan 2011 11:04:45 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1296050470.2039.47.camel@pimenta>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
- <1295156534-4178-3-git-send-email-arik@wizery.com> <1296050470.2039.47.camel@pimenta>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 26 Jan 2011 22:04:37 +0200
-Message-ID: <AANLkTi=sLYCiBSjv-c1L86AJ7UtDS6+p+Pax36bLJLFb@mail.gmail.com>
-Subject: Re: [PATCH 02/10] wl12xx: AP-mode - fix race condition on sta connection
-To: Luciano Coelho <coelho@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Recalculate channel-type on iface removal.
+References: <1296499072-6721-1-git-send-email-greearb@candelatech.com>	 <1296499462.3812.41.camel@jlt3.sipsolutions.net>	 <4D470416.9020403@candelatech.com> <1296500220.3812.43.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296500220.3812.43.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 26, 2011 at 16:01, Luciano Coelho <coelho@ti.com> wrote:
-> On Sun, 2011-01-16 at 06:42 +0100, Arik Nemtsov wrote:
->> If a sta starts transmitting immediately after authentication, sometimes
->> the FW deauthenticates it. Fix this by marking the sta "in-connection"
->> in FW before sending the autentication response.
+On 01/31/2011 10:57 AM, Johannes Berg wrote:
+> On Mon, 2011-01-31 at 10:48 -0800, Ben Greear wrote:
+>> On 01/31/2011 10:44 AM, Johannes Berg wrote:
+>>> On Mon, 2011-01-31 at 10:37 -0800, greearb@candelatech.com wrote:
+>>>
+>>>> Also, use WARN_ON_ONCE instead of WARN_ON if user has
+>>>> ht40- stations in conjunction with ht40+.  It's not
+>>>> really a kernel bug, just a mis-configuration of the
+>>>> user's wifi environment.
+>>>
+>>> But how did we end up here to start with -- shouldn't that have been
+>>> rejected?
 >>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
+>> The set-channel-type logic will complain, and I imagine the interfaces
+>> will bounce around and attempt to re-associate, but I think it can
+>> get into the mixed state.
 >
-> Looks good.  So you don't need to remove the STA from the inconnection
-> list later? Does the firmware remove it automatically?
+> I think we should try to avoid that.
 
-Yes. There's a timeout period after which the STA is removed.
+Ok.  I haven't actually tested that case yet.  It's possible
+that we can't actually get in that case..but I haven't found
+anything that prevents it while reading code.  Assuming there is a problem,
+what would be the preferred fix?  Maybe force to NO_HT if an interface
+tries to associate with HT40+/- mis-match?
 
->
->
->> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
->> index fdec4a3..d3ba27c 100644
->> --- a/drivers/net/wireless/wl12xx/tx.c
->> +++ b/drivers/net/wireless/wl12xx/tx.c
->> @@ -70,6 +70,22 @@ static void wl1271_free_tx_id(struct wl1271 *wl, int id)
->>       }
->>  }
->>
->> +static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
->> +                                           struct sk_buff *skb)
->
-> This indentation seems wrong.
+Do you want me to repost this patch without the WARN_ON_ONCE
+changes?
 
-will fix.
+>> Regardless of that, it may be something more mundane where we have
+>> some HT-40 and HT-20 interfaces that can co-exist, but one of those
+>> leaves.  We should still re-calculate in case their leaving changes
+>> the super-chan calculation.
+>
+> Yeah, no argument about that part of the patch.
+>
+> johannes
 
->
->
->> +     /*
->> +      * add the station to the known list before broadcasting the
->> +      * authentication response. this way it won't get de-authed by FW
->> +      * when transmitting too soon.
->> +      */
->
-> Broadcasting the auth response? Isn't it unicast?
-
-I meant "transmitting". Thanks.
+Thanks,
+Ben
 
 >
->
->> @@ -238,6 +254,9 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
->>       if (ret < 0)
->>               return ret;
->>
->> +     if (wl->bss_type == BSS_TYPE_AP_BSS)
->> +             wl1271_tx_ap_update_inconnection_sta(wl, skb);
->> +
->>       wl1271_tx_fill_hdr(wl, skb, extra, info);
->
-> Isn't there any other place where you can put this? Doesn't it add too
-> much overhead if you do it for every TX frame?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-At this stage the STA has not been officially added yet, so this is
-just a packet. In fact it won't be added unless authenticated. When
-the STA is added its too late. If we failed to mark it in-connection,
-sometimes the FW will disconnect it.
 
-Performance wise - its just another "compare + jmp" statement
-basically (checking the packet header). Didn't see any effect on
-throughput.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Regards,
-Arik
