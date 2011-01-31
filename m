@@ -1,157 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34355 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751979Ab1AIPGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Jan 2011 10:06:37 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: remove 28-pm-qos-params.patch
-Date: Sun,  9 Jan 2011 16:06:20 +0100
-Message-Id: <1294585581-9991-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
-References: <1294585581-9991-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:54267 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755541Ab1AaSh5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:37:57 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Recalculate channel-type on iface removal.
+Date: Mon, 31 Jan 2011 10:37:52 -0800
+Message-Id: <1296499072-6721-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
+From: Ben Greear <greearb@candelatech.com>
 
-This is no longer required as Felix backported this
-properly through compat.git now :)
+When a vif goes away, it could cause the super-chan
+to be recalculated differently, so do that calculation
+on iface removal.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Also, use WARN_ON_ONCE instead of WARN_ON if user has
+ht40- stations in conjunction with ht40+.  It's not
+really a kernel bug, just a mis-configuration of the
+user's wifi environment.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- patches/28-pm-qos-params.patch |  118 ----------------------------------------
- 1 files changed, 0 insertions(+), 118 deletions(-)
- delete mode 100644 patches/28-pm-qos-params.patch
+:100644 100644 5b24740... ad9055d... M	net/mac80211/chan.c
+:100644 100644 605c222... abf5f8e... M	net/mac80211/iface.c
+ net/mac80211/chan.c  |    4 ++--
+ net/mac80211/iface.c |    9 ++++++++-
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/patches/28-pm-qos-params.patch b/patches/28-pm-qos-params.patch
-deleted file mode 100644
-index 7c9dd9e..0000000
---- a/patches/28-pm-qos-params.patch
-+++ /dev/null
-@@ -1,118 +0,0 @@
--
--This patch is required because now pm-qos has 3 different flavors:
--
--On kernels >= 2.6.36 the pm qos req is kzalloc()'d by pm-qos itself
--On kernel   = 2.6.35 the pm qos req uses the stack
--On kernels <  2.6.35 the pm qos req is pegged to a unique name
--
--On newer kernels we don't use a name to tag a pm-qos requirement, and on
--older kernels we do. Although we can port over the struct pm_qos_request_list
--to older kernels it provides no variable with any unique name we can use
--for older kernels. Perhaps there's a way.. right now I just don't see it.
--
--We also should probably not bother updating pm-qos to newer versions unless 
--we are willing to treat the oldest kernels as newer ones and that'd be a
--little wierd.
--
----- a/drivers/net/wireless/ipw2x00/ipw2100.c
--+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
--@@ -174,7 +174,11 @@ that only one external action is invoked
-- #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2100 Network Driver"
-- #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
-- 
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- static struct pm_qos_request_list ipw2100_pm_qos_req;
--+#else
--+static struct pm_qos_request_list *ipw2100_pm_qos_req;
--+#endif
-- 
-- /* Debugging stuff */
-- #ifdef CONFIG_IPW2100_DEBUG
--@@ -1741,7 +1745,13 @@ static int ipw2100_up(struct ipw2100_pri
-- 	/* the ipw2100 hardware really doesn't want power management delays
-- 	 * longer than 175usec
-- 	 */
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 	pm_qos_update_request(&ipw2100_pm_qos_req, 175);
--+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
--+	pm_qos_update_request(ipw2100_pm_qos_req, 175);
--+#else
--+	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100", 175);
--+#endif
-- 
-- 	/* If the interrupt is enabled, turn it off... */
-- 	spin_lock_irqsave(&priv->low_lock, flags);
--@@ -1889,7 +1899,14 @@ static void ipw2100_down(struct ipw2100_
-- 	ipw2100_disable_interrupts(priv);
-- 	spin_unlock_irqrestore(&priv->low_lock, flags);
-- 
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 	pm_qos_update_request(&ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
--+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
--+	pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
--+#else
--+	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
--+				  PM_QOS_DEFAULT_VALUE);
--+#endif
-- 
-- 	/* We have to signal any supplicant if we are disassociating */
-- 	if (associated)
--@@ -6661,8 +6678,16 @@ static int __init ipw2100_init(void)
-- 	printk(KERN_INFO DRV_NAME ": %s, %s\n", DRV_DESCRIPTION, DRV_VERSION);
-- 	printk(KERN_INFO DRV_NAME ": %s\n", DRV_COPYRIGHT);
-- 
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 	pm_qos_add_request(&ipw2100_pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
-- 			   PM_QOS_DEFAULT_VALUE);
--+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
--+	ipw2100_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
--+						PM_QOS_DEFAULT_VALUE);
--+#else
--+	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
--+			       PM_QOS_DEFAULT_VALUE);
--+#endif
-- 
-- 	ret = pci_register_driver(&ipw2100_pci_driver);
-- 	if (ret)
--@@ -6689,7 +6714,13 @@ static void __exit ipw2100_exit(void)
-- 			   &driver_attr_debug_level);
-- #endif
-- 	pci_unregister_driver(&ipw2100_pci_driver);
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 	pm_qos_remove_request(&ipw2100_pm_qos_req);
--+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
--+	pm_qos_remove_request(ipw2100_pm_qos_req);
--+#else
--+	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
--+#endif
-- }
-- 
-- module_init(ipw2100_init);
----- a/net/mac80211/mlme.c
--+++ b/net/mac80211/mlme.c
--@@ -609,7 +609,11 @@ void ieee80211_recalc_ps(struct ieee8021
-- 		s32 beaconint_us;
-- 
-- 		if (latency < 0)
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 			latency = pm_qos_request(PM_QOS_NETWORK_LATENCY);
--+#else
--+			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
--+#endif
-- 
-- 		beaconint_us = ieee80211_tu_to_usec(
-- 					found->vif.bss_conf.beacon_int);
----- a/net/mac80211/scan.c
--+++ b/net/mac80211/scan.c
--@@ -507,7 +507,11 @@ static void ieee80211_scan_state_decisio
-- 		bad_latency = time_after(jiffies +
-- 				ieee80211_scan_get_channel_time(next_chan),
-- 				local->leave_oper_channel_time +
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 				usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
--+#else
--+				usecs_to_jiffies(pm_qos_requirement(PM_QOS_NETWORK_LATENCY)));
--+#endif
-- 
-- 		listen_int_exceeded = time_after(jiffies +
-- 				ieee80211_scan_get_channel_time(next_chan),
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 5b24740..ad9055d 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -80,11 +80,11 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 			superchan = tmp->vif.bss_conf.channel_type;
+ 			break;
+ 		case NL80211_CHAN_HT40PLUS:
+-			WARN_ON(superchan == NL80211_CHAN_HT40MINUS);
++			WARN_ON_ONCE(superchan == NL80211_CHAN_HT40MINUS);
+ 			superchan = NL80211_CHAN_HT40PLUS;
+ 			break;
+ 		case NL80211_CHAN_HT40MINUS:
+-			WARN_ON(superchan == NL80211_CHAN_HT40PLUS);
++			WARN_ON_ONCE(superchan == NL80211_CHAN_HT40PLUS);
+ 			superchan = NL80211_CHAN_HT40MINUS;
+ 			break;
+ 		}
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 605c222..abf5f8e 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -382,6 +382,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	struct sk_buff *skb, *tmp;
+ 	u32 hw_reconf_flags = 0;
+ 	int i;
++	enum nl80211_channel_type orig_ct;
+ 
+ 	if (local->scan_sdata == sdata)
+ 		ieee80211_scan_cancel(local);
+@@ -542,8 +543,14 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		hw_reconf_flags = 0;
+ 	}
+ 
++	/* Re-calculate channel-type, in case there are multiple vifs
++	 * on different channel types.
++	 */
++	orig_ct = local->_oper_channel_type;
++	ieee80211_set_channel_type(local, NULL, NL80211_CHAN_NO_HT);
++
+ 	/* do after stop to avoid reconfiguring when we stop anyway */
+-	if (hw_reconf_flags)
++	if (hw_reconf_flags || (orig_ct != local->_oper_channel_type))
+ 		ieee80211_hw_config(local, hw_reconf_flags);
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
 -- 
-1.7.1
+1.7.2.3
 
