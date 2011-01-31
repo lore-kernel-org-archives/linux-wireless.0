@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([86.59.21.14]:40552 "EHLO home.einfach.org"
+Received: from smtp.nokia.com ([147.243.1.47]:16598 "EHLO mgw-sa01.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751543Ab1AaKop (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 05:44:45 -0500
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [BUG] iwlwifi need to correct channels info
-Date: Mon, 31 Jan 2011 19:44:42 +0900
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-References: <20110128154100.GB2452@redhat.com> <1296237969.5118.12.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296237969.5118.12.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101311944.42513.br1@einfach.org>
+	id S1753322Ab1AaNxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 08:53:11 -0500
+From: juuso.oikarinen@nokia.com
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Fix power save state after interface type change
+Date: Mon, 31 Jan 2011 15:52:58 +0200
+Message-Id: <1296481978-1123-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 January 2011 03:06:09 Johannes Berg wrote:
-> On Fri, 2011-01-28 at 16:41 +0100, Stanislaw Gruszka wrote:
-> > After commit 59eb21a6504731fc16db4cf9463065dd61093e08
-> > "cfg80211: Extend channel to frequency mapping for 802.11j"
-> > 5GHz networks are not seen on scan results.
-> > 
-> > I think above commit is correct, but we have broken channel
-> 
-> > information on iwlwifi (freq is 0 on 5GHz channels):
-> No, the above commit is buggy -- it assumes sband->band is set when it
-> isn't. Does this fix it?
-> 
-> Bruno can you please verify you haven't made that mistake elsewhere?
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Honestly, I can't. Really sorry.
+Currently cfg80211 only configures the PSM state to the driver upon creation
+of a new virtual interface, but not after interface type change. The mac80211
+on the other hand reinitializes its sdata structure every time the interface
+type is changed, losing the PSM configuration.
 
-bruno
+Hence, if the interface type is changed to, say, ad-hoc and then back to
+managed, "iw wlan0 get power_save" will claim that PSM is enabled, when in
+fact on mac80211 level it is not.
+
+Fix this in cfg80211 by configuring the PSM state to the driver each time
+the interface is brought up instead of just when the interface is created.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ net/wireless/core.c |   20 +++++++++++++-------
+ 1 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index e9a5f8c..fe01de2 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -718,13 +718,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
+ 			wdev->ps = false;
+ 		/* allow mac80211 to determine the timeout */
+ 		wdev->ps_timeout = -1;
+-		if (rdev->ops->set_power_mgmt)
+-			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
+-						      wdev->ps,
+-						      wdev->ps_timeout)) {
+-				/* assume this means it's off */
+-				wdev->ps = false;
+-			}
+ 
+ 		if (!dev->ethtool_ops)
+ 			dev->ethtool_ops = &cfg80211_ethtool_ops;
+@@ -813,6 +806,19 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
+ 		rdev->opencount++;
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		cfg80211_unlock_rdev(rdev);
++
++		/*
++		 * Configure power management to the driver here so that its
++		 * correctly set also after interface type changes etc.
++		 */
++		if (wdev->iftype == NL80211_IFTYPE_STATION &&
++		    rdev->ops->set_power_mgmt)
++			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
++						      wdev->ps,
++						      wdev->ps_timeout)) {
++				/* assume this means it's off */
++				wdev->ps = false;
++			}
+ 		break;
+ 	case NETDEV_UNREGISTER:
+ 		/*
+-- 
+1.7.1
+
