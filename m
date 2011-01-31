@@ -1,98 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40518 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1AUDBb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 22:01:31 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so1249489iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jan 2011 19:01:31 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:14703 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755754Ab1AaSSv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:18:51 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 10:18:31 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 4/5] ath9k_htc: make use common of function to update txpower
+Date: Mon, 31 Jan 2011 23:47:45 +0530
+Message-ID: <1296497866-3189-4-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1296497866-3189-1-git-send-email-rmanoharan@atheros.com>
+References: <1296497866-3189-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19768.63197.462196.80033@gargle.gargle.HOWL>
-Date: Fri, 21 Jan 2011 08:30:45 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC/WIP 11/33] ath9k_htc: Fix WMI and beacon header
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-
-Match the beacon header with that of the firmware.
-Also, the firmware reports the TSF for an SWBA, so
-store it.
-
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h |    2 +-
- drivers/net/wireless/ath/ath9k/wmi.c |    7 ++++++-
- drivers/net/wireless/ath/ath9k/wmi.h |    6 ++++++
- 3 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h          |    1 -
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   23 ++++++++---------------
+ 3 files changed, 10 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 87e2d41..6a09ad4 100644
+index 6354986..0cb504d 100644
 --- a/drivers/net/wireless/ath/ath9k/htc.h
 +++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -95,8 +95,8 @@ struct tx_mgmt_hdr {
- } __packed;
+@@ -460,7 +460,6 @@ void ath9k_htc_ps_restore(struct ath9k_htc_priv *priv);
+ void ath9k_ps_work(struct work_struct *work);
+ bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
+ 			enum ath9k_power_mode mode);
+-void ath_update_txpow(struct ath9k_htc_priv *priv);
  
- struct tx_beacon_header {
--	u8 len_changed;
- 	u8 vif_index;
-+	u8 len_changed;
- 	u16 rev;
- } __packed;
+ void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv);
+ void ath9k_htc_rfkill_poll_state(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index fe70f67..7e630a8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -389,7 +389,8 @@ void ath9k_htc_radio_enable(struct ieee80211_hw *hw)
+ 			ret, ah->curchan->channel);
+ 	}
  
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index dc862f5..8ed6fe6 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -158,6 +158,7 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
- 	struct wmi_cmd_hdr *hdr;
- 	u16 cmd_id;
- 	void *wmi_event;
-+	struct wmi_event_swba *swba;
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
- 	__be32 txrate;
- #endif
-@@ -172,7 +173,11 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
- 		wmi_event = skb_pull(skb, sizeof(struct wmi_cmd_hdr));
- 		switch (cmd_id) {
- 		case WMI_SWBA_EVENTID:
--			wmi->beacon_pending = *(u8 *)wmi_event;
-+			swba = (struct wmi_event_swba *) wmi_event;
-+
-+			wmi->tsf = be64_to_cpu(swba->tsf);
-+			wmi->beacon_pending = swba->beacon_pending;
-+
- 			tasklet_schedule(&wmi->drv_priv->swba_tasklet);
- 			break;
- 		case WMI_FATAL_EVENTID:
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 4208427..24f16fa 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -31,6 +31,11 @@ struct wmi_cmd_hdr {
- 	__be16 seq_no;
- } __packed;
+-	ath_update_txpow(priv);
++	ath9k_cmn_update_txpow(ah, priv->curtxpow, priv->txpowlimit,
++			       &priv->curtxpow);
  
-+struct wmi_event_swba {
-+	__be64 tsf;
-+	u8 beacon_pending;
-+};
-+
- enum wmi_cmd_id {
- 	WMI_ECHO_CMDID = 0x0001,
- 	WMI_ACCESS_MEMORY_CMDID,
-@@ -100,6 +105,7 @@ struct wmi {
- 	u32 cmd_rsp_len;
- 	bool stopped;
+ 	/* Start RX */
+ 	WMI_CMD(WMI_START_RECV_CMDID);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 0526c25..953036a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -24,17 +24,6 @@ static struct dentry *ath9k_debugfs_root;
+ /* Utilities */
+ /*************/
  
-+	u64 tsf;
- 	u8 beacon_pending;
- 	spinlock_t wmi_lock;
+-void ath_update_txpow(struct ath9k_htc_priv *priv)
+-{
+-	struct ath_hw *ah = priv->ah;
+-
+-	if (priv->curtxpow != priv->txpowlimit) {
+-		ath9k_hw_set_txpowerlimit(ah, priv->txpowlimit, false);
+-		/* read back in case value is clamped */
+-		priv->curtxpow = ath9k_hw_regulatory(ah)->power_limit;
+-	}
+-}
+-
+ /* HACK Alert: Use 11NG for 2.4, use 11NA for 5 */
+ static enum htc_phymode ath9k_htc_get_curmode(struct ath9k_htc_priv *priv,
+ 					      struct ath9k_channel *ichan)
+@@ -147,7 +136,8 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 			channel->center_freq, ret);
+ 	}
  
+-	ath_update_txpow(priv);
++	ath9k_cmn_update_txpow(ah, priv->curtxpow, priv->txpowlimit,
++			       &priv->curtxpow);
+ 
+ 	WMI_CMD(WMI_START_RECV_CMDID);
+ 	ath9k_host_rx_init(priv);
+@@ -212,7 +202,8 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		goto err;
+ 	}
+ 
+-	ath_update_txpow(priv);
++	ath9k_cmn_update_txpow(ah, priv->curtxpow, priv->txpowlimit,
++			       &priv->curtxpow);
+ 
+ 	WMI_CMD(WMI_START_RECV_CMDID);
+ 	if (ret)
+@@ -988,7 +979,8 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
+ 		return ret;
+ 	}
+ 
+-	ath_update_txpow(priv);
++	ath9k_cmn_update_txpow(ah, priv->curtxpow, priv->txpowlimit,
++			       &priv->curtxpow);
+ 
+ 	mode = ath9k_htc_get_curmode(priv, init_channel);
+ 	htc_mode = cpu_to_be16(mode);
+@@ -1254,7 +1246,8 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+ 		priv->txpowlimit = 2 * conf->power_level;
+-		ath_update_txpow(priv);
++		ath9k_cmn_update_txpow(priv->ah, priv->curtxpow,
++				       priv->txpowlimit, &priv->curtxpow);
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
 -- 
 1.7.3.5
 
