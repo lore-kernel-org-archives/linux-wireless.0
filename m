@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4354 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751782Ab1ARPn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 10:43:27 -0500
-Date: Tue, 18 Jan 2011 16:43:05 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Tim Gardner <tim.gardner@canonical.com>
-Cc: stable@kernel.org, Dominik Brodowski <linux@dominikbrodowski.net>,
-	linux-wireless@vger.kernel.org, linux-pcmcia@lists.infradead.org
-Subject: Re: [PATCH 2.6.32.y] hostap_cs: fix sleeping function called from
- invalid context
-Message-ID: <20110118154305.GA2448@redhat.com>
-References: <1295269524-4937-1-git-send-email-sgruszka@redhat.com>
- <4D35A87D.3020600@canonical.com>
+Received: from mail.candelatech.com ([208.74.158.172]:40584 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755973Ab1AaSs6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:48:58 -0500
+Message-ID: <4D470416.9020403@candelatech.com>
+Date: Mon, 31 Jan 2011 10:48:54 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D35A87D.3020600@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Recalculate channel-type on iface removal.
+References: <1296499072-6721-1-git-send-email-greearb@candelatech.com> <1296499462.3812.41.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296499462.3812.41.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 18, 2011 at 07:49:33AM -0700, Tim Gardner wrote:
-> Yes - I think this patch is correct. I didn't drill deep enough to
-> notice the GFP_KERNEL memory allocation. However, I think there is
-> still a problem with the interrupt handler which will only be
-> noticed if there is another active device on the same shared
-> interrupt. Shouldn't it return IRQ_NONE? See attached.
+On 01/31/2011 10:44 AM, Johannes Berg wrote:
+> On Mon, 2011-01-31 at 10:37 -0800, greearb@candelatech.com wrote:
+>
+>> Also, use WARN_ON_ONCE instead of WARN_ON if user has
+>> ht40- stations in conjunction with ht40+.  It's not
+>> really a kernel bug, just a mis-configuration of the
+>> user's wifi environment.
+>
+> But how did we end up here to start with -- shouldn't that have been
+> rejected?
 
-I'm not sure. I think kernel could disable interrupt line when IRQ_NONE
-is returned, but line is not shared.
+The set-channel-type logic will complain, and I imagine the interfaces
+will bounce around and attempt to re-associate, but I think it can
+get into the mixed state.
 
-Generally hostap pcmcia initialization procedure does not look correct.
-It should be rahter rearranged to request irq when we are ready to
-receive it, like that:
+Regardless of that, it may be something more mundane where we have
+some HT-40 and HT-20 interfaces that can co-exist, but one of those
+leaves.  We should still re-calculate in case their leaving changes
+the super-chan calculation.
 
-        ret = pcmcia_enable_device(link);
-        if (ret)
-                goto failed;
+Thanks,
+Ben
 
-        dev->irq = link->irq;
-        dev->base_addr = link->resource[0]->start;
+>
+> johannes
 
-        ret = pcmcia_request_irq(link, prism2_interrupt);
-        if (ret)
-                goto failed;
 
-However I'm not sure if pcmcia_enable_device() does not require
-to have pcmcia_request_irq() before?
-
-Stanislaw
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
