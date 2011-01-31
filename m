@@ -1,87 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:45839 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740Ab1A3STf (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:33681 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754116Ab1AaUdI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 13:19:35 -0500
-Message-ID: <4D45A5E7.1040202@davizone.at>
-Date: Sun, 30 Jan 2011 18:54:47 +0100
-From: David Gnedt <david.gnedt@davizone.at>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: [PATCH 12/18] wl1251: set rate index and preamble flag on received
- packets
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 31 Jan 2011 15:33:08 -0500
+Received: by wwi17 with SMTP id 17so3952286wwi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 12:33:06 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 7/8] wl12xx: AP-mode - count free FW TX blocks per link
+Date: Mon, 31 Jan 2011 22:32:30 +0200
+Message-Id: <1296505951-29644-8-git-send-email-arik@wizery.com>
+In-Reply-To: <1296505951-29644-1-git-send-email-arik@wizery.com>
+References: <1296505951-29644-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the rate index rate_idx and preamble flag RX_FLAG_SHORTPRE on received
-packets.
+Count the number of FW TX blocks allocated per link. We add blocks to a
+link counter when allocated for a TX descriptor. We remove blocks
+according to counters in fw_status indicating the number of freed blocks
+in FW. These counters are polled after each IRQ.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/wl1251/rx.c |   46 +++++++++++++++++++++++++++++++++++++-
- 1 files changed, 45 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   11 +++++++
+ drivers/net/wireless/wl12xx/ps.c     |    2 -
+ drivers/net/wireless/wl12xx/tx.c     |   53 ++++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 ++
+ 4 files changed, 44 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/wl1251/rx.c b/drivers/net/wireless/wl1251/rx.c
-index 99308af..c9396b5 100644
---- a/drivers/net/wireless/wl1251/rx.c
-+++ b/drivers/net/wireless/wl1251/rx.c
-@@ -96,8 +96,52 @@ static void wl1251_rx_status(struct wl1251 *wl,
- 	if (unlikely(!(desc->flags & RX_DESC_VALID_FCS)))
- 		status->flag |= RX_FLAG_FAILED_FCS_CRC;
- +	switch (desc->rate) {
-+		/* skip 1 and 12 Mbps because they have same value 0x0a */
-+	case RATE_2MBPS:
-+		status->rate_idx = 1;
-+		break;
-+	case RATE_5_5MBPS:
-+		status->rate_idx = 2;
-+		break;
-+	case RATE_11MBPS:
-+		status->rate_idx = 3;
-+		break;
-+	case RATE_6MBPS:
-+		status->rate_idx = 4;
-+		break;
-+	case RATE_9MBPS:
-+		status->rate_idx = 5;
-+		break;
-+	case RATE_18MBPS:
-+		status->rate_idx = 7;
-+		break;
-+	case RATE_24MBPS:
-+		status->rate_idx = 8;
-+		break;
-+	case RATE_36MBPS:
-+		status->rate_idx = 9;
-+		break;
-+	case RATE_48MBPS:
-+		status->rate_idx = 10;
-+		break;
-+	case RATE_54MBPS:
-+		status->rate_idx = 11;
-+		break;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 46eb499..f68f1fe 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -553,6 +553,17 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 	if (total)
+ 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
+ 
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		for (i = 0; i < AP_MAX_LINKS; i++) {
++			u8 cnt = status->tx_lnk_free_blks[i] -
++				wl->links[i].prev_freed_blks;
++
++			wl->links[i].prev_freed_blks =
++				status->tx_lnk_free_blks[i];
++			wl->links[i].allocated_blks -= cnt;
++		}
 +	}
 +
-+	/* for 1 and 12 Mbps we have to check the modulation */
-+	if (desc->rate == RATE_1MBPS) {
-+		if (!(desc->mod_pre & OFDM_RATE_BIT))
-+			/* CCK -> RATE_1MBPS */
-+			status->rate_idx = 0;
-+		else
-+			/* OFDM -> RATE_12MBPS */
-+			status->rate_idx = 6;
-+	}
- -	/* FIXME: set status->rate_idx */
-+	if (desc->mod_pre & SHORT_PREAMBLE_BIT)
-+		status->flag |= RX_FLAG_SHORTPRE;
+ 	/* update the host-chipset time offset */
+ 	getnstimeofday(&ts);
+ 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 60a3738..92397ad 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -174,5 +174,3 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 
+ 	return ret;
  }
-  static void wl1251_rx_body(struct wl1251 *wl,
+-
+-
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 71d964c..a91f179 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -108,7 +108,7 @@ u8 wl1271_tx_get_hlid(struct sk_buff *skb)
+ }
+ 
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+-				u32 buf_offset)
++				u32 buf_offset, u8 hlid)
+ {
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+@@ -137,6 +137,9 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 
+ 		wl->tx_blocks_available -= total_blocks;
+ 
++		if (wl->bss_type == BSS_TYPE_AP_BSS)
++			wl->links[hlid].allocated_blks += total_blocks;
++
+ 		ret = 0;
+ 
+ 		wl1271_debug(DEBUG_TX,
+@@ -150,7 +153,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ }
+ 
+ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+-			      u32 extra, struct ieee80211_tx_info *control)
++			      u32 extra, struct ieee80211_tx_info *control,
++			      u8 hlid)
+ {
+ 	struct timespec ts;
+ 	struct wl1271_tx_hw_descr *desc;
+@@ -186,7 +190,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	desc->tid = ac;
+ 
+ 	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+-		desc->aid = TX_HW_DEFAULT_AID;
++		desc->aid = hlid;
+ 
+ 		/* if the packets are destined for AP (have a STA entry)
+ 		   send them with AP rate policies, otherwise use default
+@@ -196,25 +200,17 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 		else
+ 			rate_idx = ACX_TX_BASIC_RATE;
+ 	} else {
+-		if (control->control.sta) {
+-			struct wl1271_station *wl_sta;
+-
+-			wl_sta = (struct wl1271_station *)
+-					control->control.sta->drv_priv;
+-			desc->hlid = wl_sta->hlid;
++		desc->hlid = hlid;
++		switch (hlid) {
++		case WL1271_AP_GLOBAL_HLID:
++			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
++			break;
++		case WL1271_AP_BROADCAST_HLID:
++			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
++			break;
++		default:
+ 			rate_idx = ac;
+-		} else {
+-			struct ieee80211_hdr *hdr;
+-
+-			hdr = (struct ieee80211_hdr *)
+-						(skb->data + sizeof(*desc));
+-			if (ieee80211_is_mgmt(hdr->frame_control)) {
+-				desc->hlid = WL1271_AP_GLOBAL_HLID;
+-				rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
+-			} else {
+-				desc->hlid = WL1271_AP_BROADCAST_HLID;
+-				rate_idx = ACX_TX_AP_MODE_BCST_RATE;
+-			}
++			break;
+ 		}
+ 	}
+ 
+@@ -245,6 +241,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 	u32 extra = 0;
+ 	int ret = 0;
+ 	u32 total_len;
++	u8 hlid;
+ 
+ 	if (!skb)
+ 		return -EINVAL;
+@@ -271,14 +268,19 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		}
+ 	}
+ 
+-	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		hlid = wl1271_tx_get_hlid(skb);
++	else
++		hlid = TX_HW_DEFAULT_AID;
++
++	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
+ 
+-	wl1271_tx_fill_hdr(wl, skb, extra, info);
++	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+ 
+ 	/*
+ 	 * The length of each packet is stored in terms of words. Thus, we must
+@@ -657,8 +659,11 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 
+ 	/* TX failure */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+-		for (i = 0; i < AP_MAX_LINKS; i++)
++		for (i = 0; i < AP_MAX_LINKS; i++) {
+ 			wl1271_tx_reset_link_queues(wl, i);
++			wl->links[i].allocated_blks = 0;
++			wl->links[i].prev_freed_blks = 0;
++		}
+ 
+ 		wl->last_tx_hlid = 0;
+ 	} else {
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 30450e4..d169655 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -281,6 +281,10 @@ struct wl1271_ap_key {
+ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
++
++	/* accounting for allocated / available TX blocks in FW */
++	u8 allocated_blks;
++	u8 prev_freed_blks;
+ };
+ 
+ struct wl1271 {
 -- 
-1.7.0.4
-
+1.7.1
 
