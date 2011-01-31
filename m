@@ -1,55 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:49325 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400Ab1A3LZM (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:52929 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752855Ab1AaSrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Jan 2011 06:25:12 -0500
-Received: by gxk9 with SMTP id 9so1635323gxk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Jan 2011 03:25:11 -0800 (PST)
+	Mon, 31 Jan 2011 13:47:42 -0500
+Subject: [PATCH 04/22] zd1211rw: fix beacon interval setup
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 31 Jan 2011 20:47:36 +0200
+Message-ID: <20110131184736.10044.38677.stgit@fate.lan>
+In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
+References: <20110131184657.10044.98610.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <20110126140444.GA30373@jm.kir.nu>
-References: <1295816579-28925-1-git-send-email-arik@wizery.com>
- <1295869283.3639.7.camel@jlt3.sipsolutions.net> <AANLkTi=cSdi_i=RBtcp_aLG92S3xdMvJEMSfVdqX=qAK@mail.gmail.com>
- <20110126140444.GA30373@jm.kir.nu>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 30 Jan 2011 13:24:56 +0200
-Message-ID: <AANLkTi=AWanc8+JK7hQnRMpPEC+2hK0aTn0xenru7Ryw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/6] Probe-resp offloading support
-To: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Jouni, Johannes,
+Vendor driver uses CR_BNC_INTERVAL at various places, one is HW_EnableBeacon()
+that combinies beacon interval with BSS-type flag and DTIM value in upper 16bit
+of u32. The other one is HW_UpdateBcnInterval() that set_aw_pt_bi()
+appears to be based on. HW_UpdateBcnInterval() takes interval argument as u16
+and uses that for calculations, set_aw_pt_bi() uses u32 value that has flags
+and dtim in upper part. This clearly seems wrong. Also HW_UpdateBcnInterval()
+updates only lower 16bit part of CR_BNC_INTERVAL. So make set_aw_pt_bi() do
+calculations on only lower u16 part of s->beacon_interval.
 
-After discussing this with the wl12xx FW guys, it seems that:
-- WPS2 and P2P special cases are currently not handled in FW - the
-default template is always returned for probe requests
-- The AP currently always responds to a probe request
-- The AP currently never passes up probe requests
+Also set 32bit beacon interval register before reading values from device,
+as HW_EnableBeacon() on vendor driver does. This is required to make beacon
+work on AP-mode, simply reading and then writing updated values is not enough
+at least with zd1211b.
 
-In light of this new info, this might be a possible solution:
-- Implement a capability flag for
-ap-supports-offloading-of-basic-probe-reqs. With "basic" I mean WPS1/2
-and P2P IEs are not included.
-- Hostapd will configure a probe-resp template only when it supports
-probe-resp offloading (currently when WPS and P2P are off) and the
-driver supports it (using the capability flag).
-- Support a "pass and and don't reply to probe requests" mode in FW
-(this will take some time to implement).
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-For now the wl12xx driver must operate in a "compatibility" mode,
-since the FW doesn't support passing-up probe requests. When the
-probe-resp template is not available we will use the beacon template,
-as currently used now. There are currently no plans for intelligent
-filtering of probe requests in FW - its all or nothing.
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index b644ced..447f236 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -849,11 +849,12 @@ static int get_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ {
+ 	struct zd_ioreq32 reqs[3];
++	u16 b_interval = s->beacon_interval & 0xffff;
+ 
+-	if (s->beacon_interval <= 5)
+-		s->beacon_interval = 5;
+-	if (s->pre_tbtt < 4 || s->pre_tbtt >= s->beacon_interval)
+-		s->pre_tbtt = s->beacon_interval - 1;
++	if (b_interval <= 5)
++		b_interval = 5;
++	if (s->pre_tbtt < 4 || s->pre_tbtt >= b_interval)
++		s->pre_tbtt = b_interval - 1;
+ 	if (s->atim_wnd_period >= s->pre_tbtt)
+ 		s->atim_wnd_period = s->pre_tbtt - 1;
+ 
+@@ -862,7 +863,7 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
+ 	reqs[1].addr = CR_PRE_TBTT;
+ 	reqs[1].value = s->pre_tbtt;
+ 	reqs[2].addr = CR_BCN_INTERVAL;
+-	reqs[2].value = s->beacon_interval;
++	reqs[2].value = (s->beacon_interval & ~0xffff) | b_interval;
+ 
+ 	return zd_iowrite32a_locked(chip, reqs, ARRAY_SIZE(reqs));
+ }
+@@ -874,10 +875,13 @@ static int set_beacon_interval(struct zd_chip *chip, u32 interval)
+ 	struct aw_pt_bi s;
+ 
+ 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
++
++	r = zd_iowrite32_locked(chip, interval, CR_BCN_INTERVAL);
++	if (r)
++		return r;
+ 	r = get_aw_pt_bi(chip, &s);
+ 	if (r)
+ 		return r;
+-	s.beacon_interval = interval;
+ 	return set_aw_pt_bi(chip, &s);
+ }
+ 
 
-Should hostapd reply to probe requests when offloading is configured?
-This is a moot point for wl12xx since probe-requests are not passed
-up. Do you have a preference here?
-
-I'd appreciate your comments on this.
-
-Arik
