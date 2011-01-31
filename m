@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755215Ab1ATKVB (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48812 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756207Ab1AaRaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 05:21:01 -0500
-Subject: Re: [RFC 1/4] mac80211: support for IEEE80211N in IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20110120T110320-779@post.gmane.org>
-References: <201101191438.01161.alexander.simon@saxnet.de>
-	 <1295447708.4685.5.camel@jlt3.sipsolutions.net>
-	 <loom.20110120T093834-982@post.gmane.org>
-	 <1295515469.3693.17.camel@jlt3.sipsolutions.net>
-	 <loom.20110120T103741-140@post.gmane.org>
-	 <1295517283.3693.31.camel@jlt3.sipsolutions.net>
-	 <loom.20110120T110320-779@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 Jan 2011 11:20:59 +0100
-Message-ID: <1295518859.3693.35.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 31 Jan 2011 12:30:35 -0500
+Message-ID: <4D46F1B4.1020504@candelatech.com>
+Date: Mon, 31 Jan 2011 09:30:28 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC v3] mac80211:  Optimize scans on current operating channel.
+References: <1296074238-4012-1-git-send-email-greearb@candelatech.com>	 <1296136347.3622.55.camel@jlt3.sipsolutions.net>	 <4D41BA91.30608@candelatech.com>	 <1296220846.5118.1.camel@jlt3.sipsolutions.net>	 <4D431778.1000604@candelatech.com> <1296482183.3812.29.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296482183.3812.29.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-01-20 at 10:15 +0000, Alexander Simon wrote:
-> > Of course I'd accept that  Reducing duplicated code is good, and I
-> > can deal with patches touching many files. Though it'd be nice to do the
-> > necessary refactoring first.
+On 01/31/2011 05:56 AM, Johannes Berg wrote:
+>
+>>> However -- I was thinking of something else, not data packets. While
+>>> scanning, all received beacons will be handed to the scan code. But if
+>>> the mlme code isn't told to stop looking for them, it'll still expect to
+>>> see the beacons.
+>>
+>> Currently, it seems mlme timers are stopped when we start scanning,
+>> and then started when scanning is complete.
+>
+> Ok, I wasn't quite sure about that part -- whether it happened when
+> going off-channel or when starting scan. If it happened while going
+> off-channel this would've been problematic here.
+>
+>> However, I don't see any similar effort in the work_work() method
+>> when it goes off-channel.
+>>
+>> Should we move the timer pause&  restart logic into the offchannel_stop_vifs
+>> and offchannel_return methods?
+>
+> Well, sort of no, and sort of yes -- both will disrupt that code in a
+> sense, but even scanning on the same channel will disrupt it due to the
+> beacon diversion, unless we copy the beacons and give them to both sides
+> (scan and mlme)?
 
-> Ok give me some time and I'll have a look at util.c.
+Seems to me both sides should get them.  I'll try to figure out how to
+do that properly today.
 
-Thanks.
+But, if work_work() takes us off-channel often enough, wouldn't that
+cause undue beacon loss and/or timed-out tx acks?  Are there any guarantees
+about how often and how long work_work() can take us off-channel?
 
-> > A nice touch, btw, would be if you included a diffstat. Maybe you should
-> > look at using quilt or git to submit patches which help you automate a
-> > lot of things.
+Thanks,
+Ben
 
-> Actually I don't like git, but when this is getting something bigger,I'll agree
-> to use it :)
+>
+> johannes
 
-I personally rarely use it for the kernel (even if I know how to very
-well), mostly because rebasing is slow for me ... quilt helps a lot too.
-If you intend to submit more patches than this series I suggest you
-learn at least one of them, it'll make your life easier :-)
 
-> > I'm sorry, I don't understand what you mean by "a separate option"? With
-> > the approach that you've posted patches for you need to tell iw whether
-> > you want HT or not, right?
-
-> What i mean is, right now there's just one option - setting the HT channel.
-> There could be less (the card automatically enables HT and uses it for a station
-> that advertises HT), or even more (as in hostapd.confs HT section). Or there
-> could be a module option to switch ht for ibss on or off. So, i'm asking about
-> the "ideal" interface...
-
-Hmm, I guess you have a point there -- restricting it to HT40- doesn't
-make much sense since then you can't merge with another IBSS that is
-using HT40+. I guess just enable/disable HT makes more sense?
-
-johannes
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
