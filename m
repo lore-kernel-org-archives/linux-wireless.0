@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38110
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751552Ab1AJIHl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 03:07:41 -0500
-Date: Mon, 10 Jan 2011 00:08:13 -0800 (PST)
-Message-Id: <20110110.000813.173856001.davem@davemloft.net>
-To: rjw@sisk.pl
-Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com,
-	florian@mickler.org, akpm@linux-foundation.org,
-	torvalds@linux-foundation.org, kernel-testers@vger.kernel.org,
-	netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-	linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: 2.6.37-rc8: Reported regressions from 2.6.36
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <96DQe4a_2tH.A.cFB.l27GNB@chimera>
-References: <96DQe4a_2tH.A.cFB.l27GNB@chimera>
+Received: from mga09.intel.com ([134.134.136.24]:54214 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756006Ab1AaP3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 10:29:17 -0500
+Subject: Re: [PATCH] iwlwifi: correct frequency settings
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1296475295-5420-1-git-send-email-sgruszka@redhat.com>
+References: <1296475295-5420-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 07:27:41 -0800
+Message-ID: <1296487661.10026.9.camel@wwguy-ubuntu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
+On Mon, 2011-01-31 at 04:01 -0800, Stanislaw Gruszka wrote:
+> After commit 59eb21a6504731fc16db4cf9463065dd61093e08
+> "cfg80211: Extend channel to frequency mapping for 802.11j"
+> we use uninitialized sband->band when assign channel frequencies, what
+> results that 5GHz channels have erroneous (zero) center_freq value.
+> 
+> Patch fixes problem and simplifies code a bit.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
-> Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
-> Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
-> Date		: 2010-12-08 21:09 (22 days old)
-> Message-ID	: <4CFFF3F3.90100@goop.org>
-> References	: http://marc.info/?l=linux-kernel&m=129184256629712&w=2
 
-This bug is intended to be fixed by:
+Thanks, it make sense.
 
-commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
-Author: David S. Miller <davem@davemloft.net>
-Date:   Wed Jan 5 15:38:53 2011 -0800
-
-    af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
-    
-    unix_release() can asynchornously set socket->sk to NULL, and
-    it does so without holding the unix_state_lock() on "other"
-    during stream connects.
-    
-    However, the reverse mapping, sk->sk_socket, is only transitioned
-    to NULL under the unix_state_lock().
-    
-    Therefore make the security hooks follow the reverse mapping instead
-    of the forward mapping.
-    
-    Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
-    Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+Wey
 
