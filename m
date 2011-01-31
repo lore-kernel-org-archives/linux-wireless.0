@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:33750 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751690Ab1B1RfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 12:35:05 -0500
-Date: Mon, 28 Feb 2011 09:36:04 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU
- to enter C3 state.
-Message-ID: <20110228173604.GA4375@kroah.com>
-References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
- <20110228142243.GB25724@kroah.com>
- <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
- <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com>
- <AANLkTikTNavD44e_bMO7Q8C5X73qwVHdjnVCiOUO1xCr@mail.gmail.com>
- <AANLkTikxfjcStGND0SAqgCA+sZBEa0Xo_mf-ZGpsQrks@mail.gmail.com>
+Received: from mail.platinumzone24.at ([88.198.159.93]:46526 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754206Ab1AaXDN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 18:03:13 -0500
+Message-ID: <4D473F9B.5040803@davizone.at>
+Date: Tue, 01 Feb 2011 00:02:51 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikxfjcStGND0SAqgCA+sZBEa0Xo_mf-ZGpsQrks@mail.gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 18/18] wl1251: disable retry and ACK policy for injected
+ packets
+References: <4D45A7BD.705@davizone.at> <4D45B7DF.1030703@davizone.at>	<AANLkTik5nkCT6Xbg0SF4oggCXiQjn4EybDq_RKmjPko+@mail.gmail.com> <871v3tdpq3.fsf@purkki.adurom.net>
+In-Reply-To: <871v3tdpq3.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 09:21:01AM -0800, Luis R. Rodriguez wrote:
-> On Mon, Feb 28, 2011 at 9:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Mon, Feb 28, 2011 at 8:52 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
-> >> On Mon, Feb 28, 2011 at 8:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >>> On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
-> >>>> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
-> >>>>> The default qos value of 55 causes higher power consumption
-> >>>>> and the battery drains out quickly. So, remove the pm_qos request
-> >>>>> in the driver and the throughout issue in the Intel Pinetrail
-> >>>>> platforms in which the DMA latency is seen can be fixed with
-> >>>>> the following script:
-> >>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
-> >>>>> http://johannes.sipsolutions.net/files/netlatency.c.txt
-> >>>>>
-> >>>>> More details can be found in the following bugzilla link:
-> >>>>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
-> >>>>>
-> >>>>> Cc: stable@kernel.org
-> >>>>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> >>>>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> >>>>
-> >>>> Why did you send me 3 copies of this patch, when I don't need any copies
-> >>>> of it?
-> >>>>
-> >>>> Totally confused,
-> >>>
-> >>> Vivek, please only ask John to send this to David as stable so it can
-> >>> get into 2.6.38-rc, then once there you can refer the sha1sum from
-> >>> Linus' tree and justify propagating into the stable series.
-> >>>
-> >> I had sent separate patches for v2.6.37 and for v2.6.38 since the
-> >> patch could not be applied directly to previous versions. So, should I
-> >> send this rebased patch for v2.6.37 only after it makes it into
-> >> v2.6.38?
-> >
-> > Affirmative. You cannot propagate stable patches unless they are
-> > already in Linus' tree.
+Am 2011-01-31 17:04, schrieb Kalle Valo:
+> Gábor Stefanik <netrolller.3d@gmail.com> writes:
 > 
-> See:
+>> On Sun, Jan 30, 2011 at 8:11 PM, David Gnedt <david.gnedt@davizone.at> wrote:
+>>> Set the retry limit to 0 and disable the ACK policy for injected
+>>> packets.
+>>
+>> Unfortunately this is not the right thing to do - something like this
+>> should be done in mac80211, but triggered by radiotap (sometimes, it
+>> makes sense to inject packets and expect ACKs). See the list for
+>> earlier discussions about the TX Flags field, and
+>> patches.aircrack-ng.org for a proof-of-concept implementation.
 > 
-> http://wireless.kernel.org/en/users/Documentation/Fix_Propagation
+> Agreed. Again I prefer the less-logic-in-the-driver philosophy.
 
-And of course, the file, Documentation/stable_kernel_rules.txt
-
-thanks,
-
-greg k-h
+Yeah, you are right. I will remove the IEEE80211_TX_CTL_INJECTED check, but I
+think the rate class setting for IEEE80211_TX_CTL_NO_ACK frames is still needed,
+as my testing showed that the ack_policy setting is not sufficient to disable
+retries.
