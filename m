@@ -1,363 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34493 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756164Ab1AaQiJ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46371 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755432Ab1AaLRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 11:38:09 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 15so5416800bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 08:38:08 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 4/4] wl12xx: set supported_rates after association
-Date: Mon, 31 Jan 2011 18:38:19 +0200
-Message-Id: <1296491899-25440-5-git-send-email-eliad@wizery.com>
-In-Reply-To: <1296491899-25440-1-git-send-email-eliad@wizery.com>
-References: <1296491899-25440-1-git-send-email-eliad@wizery.com>
+	Mon, 31 Jan 2011 06:17:03 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so5465134fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:17:02 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 09/10] wl12xx: AP-mode - count free FW TX blocks per link
+Date: Mon, 31 Jan 2011 13:16:28 +0200
+Message-Id: <1296472589-26401-10-git-send-email-arik@wizery.com>
+In-Reply-To: <1296472589-26401-1-git-send-email-arik@wizery.com>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of looking for supported_rates change on every tx packet,
-just extract the supported_rates after association completes (station only).
+Count the number of FW TX blocks allocated per link. We add blocks to a
+link counter when allocated for a TX descriptor. We remove blocks
+according to counters in fw_status indicating the number of freed blocks
+in FW. These counters are polled after each IRQ.
 
-Remove wl1271.sta_rate_set and WL1271_FLAG_STA_RATES_CHANGED which are
-not used anymore.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-v1->v2:
-	1. consider mcs rates when setting sta_rate_set
-	2. remove unused flags/members
- drivers/net/wireless/wl12xx/acx.c    |    4 +
- drivers/net/wireless/wl12xx/cmd.c    |   11 +--
- drivers/net/wireless/wl12xx/main.c   |  115 ++++++++++++++--------------------
- drivers/net/wireless/wl12xx/tx.c     |   22 -------
- drivers/net/wireless/wl12xx/wl12xx.h |   35 +++++-----
- 5 files changed, 72 insertions(+), 115 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   11 +++++++
+ drivers/net/wireless/wl12xx/ps.c     |    2 -
+ drivers/net/wireless/wl12xx/tx.c     |   53 ++++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 ++
+ 4 files changed, 44 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 6ea19d7..33840d9 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -783,6 +783,10 @@ int wl1271_acx_sta_rate_policies(struct wl1271 *wl)
- 
- 	acx->rate_class_cnt = cpu_to_le32(ACX_TX_RATE_POLICY_CNT);
- 
-+	wl1271_debug(DEBUG_ACX, "basic_rate: 0x%x, full_rate: 0x%x",
-+		acx->rate_class[ACX_TX_BASIC_RATE].enabled_rates,
-+		acx->rate_class[ACX_TX_AP_FULL_RATE].enabled_rates);
-+
- 	ret = wl1271_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1271_warning("Setting of rate policies failed: %d", ret);
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 66d15e7..97ffd7a 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -286,13 +286,7 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- 	join->rx_filter_options = cpu_to_le32(wl->rx_filter);
- 	join->bss_type = bss_type;
- 	join->basic_rate_set = cpu_to_le32(wl->basic_rate_set);
--	/*
--	 * for supported_rate_set, we should use wl->rate_set. however,
--	 * it seems that acx_rate_policies doesn't affect full_rate, and
--	 * since we want to avoid additional join, we'll use a 0xffffffff value,
--	 * and let the fw find the actual supported rates
--	 */
--	join->supported_rate_set = cpu_to_le32(0xffffffff);
-+	join->supported_rate_set = cpu_to_le32(wl->rate_set);
- 
- 	if (wl->band == IEEE80211_BAND_5GHZ)
- 		join->bss_type |= WL1271_JOIN_CMD_BSS_TYPE_5GHZ;
-@@ -310,6 +304,9 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- 	wl->tx_security_last_seq = 0;
- 	wl->tx_security_seq = 0;
- 
-+	wl1271_debug(DEBUG_CMD, "cmd join: basic_rate_set=0x%x, rate_set=0x%x",
-+		join->basic_rate_set, join->supported_rate_set);
-+
- 	ret = wl1271_cmd_send(wl, CMD_START_JOIN, join, sizeof(*join), 0);
- 	if (ret < 0) {
- 		wl1271_error("failed to initiate cmd join");
 diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 0f6786d..92ba6cc 100644
+index 46eb499..f68f1fe 100644
 --- a/drivers/net/wireless/wl12xx/main.c
 +++ b/drivers/net/wireless/wl12xx/main.c
-@@ -978,39 +978,10 @@ int wl1271_plt_stop(struct wl1271 *wl)
- static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct wl1271 *wl = hw->priv;
--	struct ieee80211_conf *conf = &hw->conf;
--	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
--	struct ieee80211_sta *sta = txinfo->control.sta;
- 	unsigned long flags;
- 	int q;
+@@ -553,6 +553,17 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 	if (total)
+ 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
  
--	/*
--	 * peek into the rates configured in the STA entry.
--	 * The rates set after connection stage, The first block only BG sets:
--	 * the compare is for bit 0-16 of sta_rate_set. The second block add
--	 * HT rates in case of HT supported.
--	 */
- 	spin_lock_irqsave(&wl->wl_lock, flags);
--	if (sta &&
--	    (sta->supp_rates[conf->channel->band] !=
--	    (wl->sta_rate_set & HW_BG_RATES_MASK)) &&
--		wl->bss_type != BSS_TYPE_AP_BSS) {
--		wl->sta_rate_set = sta->supp_rates[conf->channel->band];
--		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
--	}
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		for (i = 0; i < AP_MAX_LINKS; i++) {
++			u8 cnt = status->tx_lnk_free_blks[i] -
++				wl->links[i].prev_freed_blks;
++
++			wl->links[i].prev_freed_blks =
++				status->tx_lnk_free_blks[i];
++			wl->links[i].allocated_blks -= cnt;
++		}
++	}
++
+ 	/* update the host-chipset time offset */
+ 	getnstimeofday(&ts);
+ 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 60a3738..92397ad 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -174,5 +174,3 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 
+ 	return ret;
+ }
 -
--#ifdef CONFIG_WL12XX_HT
--	if (sta &&
--	    sta->ht_cap.ht_supported &&
--	    ((wl->sta_rate_set >> HW_HT_RATES_OFFSET) !=
--	      sta->ht_cap.mcs.rx_mask[0])) {
--		/* Clean MCS bits before setting them */
--		wl->sta_rate_set &= HW_BG_RATES_MASK;
--		wl->sta_rate_set |=
--			(sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET);
--		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
--	}
--#endif
- 	wl->tx_queue_count++;
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+-
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 71d964c..a91f179 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -108,7 +108,7 @@ u8 wl1271_tx_get_hlid(struct sk_buff *skb)
+ }
  
-@@ -1245,7 +1216,6 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 	wl->time_offset = 0;
- 	wl->session_counter = 0;
- 	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
--	wl->sta_rate_set = 0;
- 	wl->flags = 0;
- 	wl->vif = NULL;
- 	wl->filters = 0;
-@@ -1432,7 +1402,6 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
- 				goto out;
- 		}
- 		wl->rate_set = wl1271_tx_min_rate_get(wl);
--		wl->sta_rate_set = 0;
- 		ret = wl1271_acx_sta_rate_policies(wl);
- 		if (ret < 0)
- 			goto out;
-@@ -2246,6 +2215,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+-				u32 buf_offset)
++				u32 buf_offset, u8 hlid)
  {
- 	bool do_join = false, set_assoc = false;
- 	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
-+	u32 sta_rate_set = 0;
- 	int ret;
- 	struct ieee80211_sta *sta;
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+@@ -137,6 +137,9 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
  
-@@ -2311,6 +2281,48 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 		wl->tx_blocks_available -= total_blocks;
+ 
++		if (wl->bss_type == BSS_TYPE_AP_BSS)
++			wl->links[hlid].allocated_blks += total_blocks;
++
+ 		ret = 0;
+ 
+ 		wl1271_debug(DEBUG_TX,
+@@ -150,7 +153,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ }
+ 
+ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+-			      u32 extra, struct ieee80211_tx_info *control)
++			      u32 extra, struct ieee80211_tx_info *control,
++			      u8 hlid)
+ {
+ 	struct timespec ts;
+ 	struct wl1271_tx_hw_descr *desc;
+@@ -186,7 +190,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	desc->tid = ac;
+ 
+ 	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+-		desc->aid = TX_HW_DEFAULT_AID;
++		desc->aid = hlid;
+ 
+ 		/* if the packets are destined for AP (have a STA entry)
+ 		   send them with AP rate policies, otherwise use default
+@@ -196,25 +200,17 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 		else
+ 			rate_idx = ACX_TX_BASIC_RATE;
+ 	} else {
+-		if (control->control.sta) {
+-			struct wl1271_station *wl_sta;
+-
+-			wl_sta = (struct wl1271_station *)
+-					control->control.sta->drv_priv;
+-			desc->hlid = wl_sta->hlid;
++		desc->hlid = hlid;
++		switch (hlid) {
++		case WL1271_AP_GLOBAL_HLID:
++			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
++			break;
++		case WL1271_AP_BROADCAST_HLID:
++			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
++			break;
++		default:
+ 			rate_idx = ac;
+-		} else {
+-			struct ieee80211_hdr *hdr;
+-
+-			hdr = (struct ieee80211_hdr *)
+-						(skb->data + sizeof(*desc));
+-			if (ieee80211_is_mgmt(hdr->frame_control)) {
+-				desc->hlid = WL1271_AP_GLOBAL_HLID;
+-				rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
+-			} else {
+-				desc->hlid = WL1271_AP_BROADCAST_HLID;
+-				rate_idx = ACX_TX_AP_MODE_BCST_RATE;
+-			}
++			break;
  		}
  	}
  
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta(vif, bss_conf->bssid);
-+	if (sta)  {
-+		/* save the supp_rates of the ap */
-+		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
-+		sta_rate_set |=
-+			(sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET);
+@@ -245,6 +241,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 	u32 extra = 0;
+ 	int ret = 0;
+ 	u32 total_len;
++	u8 hlid;
+ 
+ 	if (!skb)
+ 		return -EINVAL;
+@@ -271,14 +268,19 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		}
+ 	}
+ 
+-	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		hlid = wl1271_tx_get_hlid(skb);
++	else
++		hlid = TX_HW_DEFAULT_AID;
 +
-+		/* handle new association with HT and HT information change */
-+		if ((changed & BSS_CHANGED_HT) &&
-+		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
-+			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
-+							     true);
-+			if (ret < 0) {
-+				wl1271_warning("Set ht cap true failed %d",
-+					       ret);
-+				rcu_read_unlock();
-+				goto out;
-+			}
-+			ret = wl1271_acx_set_ht_information(wl,
-+						bss_conf->ht_operation_mode);
-+			if (ret < 0) {
-+				wl1271_warning("Set ht information failed %d",
-+					       ret);
-+				rcu_read_unlock();
-+				goto out;
-+			}
-+		}
-+		/* handle new association without HT and disassociation */
-+		else if (changed & BSS_CHANGED_ASSOC) {
-+			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
-+							     false);
-+			if (ret < 0) {
-+				wl1271_warning("Set ht cap false failed %d",
-+					       ret);
-+				rcu_read_unlock();
-+				goto out;
-+			}
-+		}
-+	}
-+	rcu_read_unlock();
-+
- 	if ((changed & BSS_CHANGED_ASSOC)) {
- 		if (bss_conf->assoc) {
- 			u32 rates;
-@@ -2328,6 +2340,9 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
- 									 rates);
- 			wl->basic_rate = wl1271_tx_min_rate_get(wl);
-+			if (sta_rate_set)
-+				wl->rate_set = wl1271_tx_enabled_rates_get(wl,
-+								sta_rate_set);
- 			ret = wl1271_acx_sta_rate_policies(wl);
- 			if (ret < 0)
- 				goto out;
-@@ -2406,43 +2421,6 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
++	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
  	if (ret < 0)
- 		goto out;
+ 		return ret;
  
--	rcu_read_lock();
--	sta = ieee80211_find_sta(vif, bss_conf->bssid);
--	if (sta)  {
--		/* handle new association with HT and HT information change */
--		if ((changed & BSS_CHANGED_HT) &&
--		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
--			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
--							     true);
--			if (ret < 0) {
--				wl1271_warning("Set ht cap true failed %d",
--					       ret);
--				rcu_read_unlock();
--				goto out;
--			}
--			ret = wl1271_acx_set_ht_information(wl,
--						bss_conf->ht_operation_mode);
--			if (ret < 0) {
--				wl1271_warning("Set ht information failed %d",
--					       ret);
--				rcu_read_unlock();
--				goto out;
--			}
--		}
--		/* handle new association without HT and disassociation */
--		else if (changed & BSS_CHANGED_ASSOC) {
--			ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap,
--							     false);
--			if (ret < 0) {
--				wl1271_warning("Set ht cap false failed %d",
--					       ret);
--				rcu_read_unlock();
--				goto out;
--			}
--		}
--	}
--	rcu_read_unlock();
--
- 	if (changed & BSS_CHANGED_ARP_FILTER) {
- 		__be32 addr = bss_conf->arp_addr_list[0];
- 		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
-@@ -3329,7 +3307,6 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
- 	wl->basic_rate = CONF_TX_RATE_MASK_BASIC;
- 	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
--	wl->sta_rate_set = 0;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 	wl->vif = NULL;
- 	wl->flags = 0;
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 3507c81..67a0094 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -334,35 +334,13 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
- {
- 	struct sk_buff *skb;
- 	bool woken_up = false;
--	u32 sta_rates = 0;
- 	u32 buf_offset = 0;
- 	bool sent_packets = false;
- 	int ret;
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
  
--	/* check if the rates supported by the AP have changed */
--	if (unlikely(test_and_clear_bit(WL1271_FLAG_STA_RATES_CHANGED,
--					&wl->flags))) {
--		unsigned long flags;
--
--		spin_lock_irqsave(&wl->wl_lock, flags);
--		sta_rates = wl->sta_rate_set;
--		spin_unlock_irqrestore(&wl->wl_lock, flags);
--	}
--
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
- 		goto out;
+-	wl1271_tx_fill_hdr(wl, skb, extra, info);
++	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
  
--	/* if rates have changed, re-configure the rate policy */
--	if (unlikely(sta_rates)) {
--		ret = wl1271_ps_elp_wakeup(wl, false);
--		if (ret < 0)
--			goto out;
--		woken_up = true;
--
--		wl->rate_set = wl1271_tx_enabled_rates_get(wl, sta_rates);
--		wl1271_acx_sta_rate_policies(wl);
--	}
--
- 	while ((skb = wl1271_skb_dequeue(wl))) {
- 		if (!woken_up) {
- 			ret = wl1271_ps_elp_wakeup(wl, false);
+ 	/*
+ 	 * The length of each packet is stored in terms of words. Thus, we must
+@@ -657,8 +659,11 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 
+ 	/* TX failure */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+-		for (i = 0; i < AP_MAX_LINKS; i++)
++		for (i = 0; i < AP_MAX_LINKS; i++) {
+ 			wl1271_tx_reset_link_queues(wl, i);
++			wl->links[i].allocated_blks = 0;
++			wl->links[i].prev_freed_blks = 0;
++		}
+ 
+ 		wl->last_tx_hlid = 0;
+ 	} else {
 diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 39adcdf..15d9e9e 100644
+index 30450e4..d169655 100644
 --- a/drivers/net/wireless/wl12xx/wl12xx.h
 +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -301,6 +301,24 @@ struct wl1271_ap_key {
- 	u16 tx_seq_16;
+@@ -281,6 +281,10 @@ struct wl1271_ap_key {
+ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
++
++	/* accounting for allocated / available TX blocks in FW */
++	u8 allocated_blks;
++	u8 prev_freed_blks;
  };
  
-+enum wl12xx_flags {
-+	WL1271_FLAG_STA_ASSOCIATED,
-+	WL1271_FLAG_JOINED,
-+	WL1271_FLAG_GPIO_POWER,
-+	WL1271_FLAG_TX_QUEUE_STOPPED,
-+	WL1271_FLAG_IN_ELP,
-+	WL1271_FLAG_PSM,
-+	WL1271_FLAG_PSM_REQUESTED,
-+	WL1271_FLAG_IRQ_PENDING,
-+	WL1271_FLAG_IRQ_RUNNING,
-+	WL1271_FLAG_IDLE,
-+	WL1271_FLAG_IDLE_REQUESTED,
-+	WL1271_FLAG_PSPOLL_FAILURE,
-+	WL1271_FLAG_STA_STATE_SENT,
-+	WL1271_FLAG_FW_TX_BUSY,
-+	WL1271_FLAG_AP_STARTED
-+};
-+
  struct wl1271 {
- 	struct platform_device *plat_dev;
- 	struct ieee80211_hw *hw;
-@@ -319,22 +337,6 @@ struct wl1271 {
- 	enum wl1271_state state;
- 	struct mutex mutex;
- 
--#define WL1271_FLAG_STA_RATES_CHANGED  (0)
--#define WL1271_FLAG_STA_ASSOCIATED     (1)
--#define WL1271_FLAG_JOINED             (2)
--#define WL1271_FLAG_GPIO_POWER         (3)
--#define WL1271_FLAG_TX_QUEUE_STOPPED   (4)
--#define WL1271_FLAG_IN_ELP             (5)
--#define WL1271_FLAG_PSM                (6)
--#define WL1271_FLAG_PSM_REQUESTED      (7)
--#define WL1271_FLAG_IRQ_PENDING        (8)
--#define WL1271_FLAG_IRQ_RUNNING        (9)
--#define WL1271_FLAG_IDLE              (10)
--#define WL1271_FLAG_IDLE_REQUESTED    (11)
--#define WL1271_FLAG_PSPOLL_FAILURE    (12)
--#define WL1271_FLAG_STA_STATE_SENT    (13)
--#define WL1271_FLAG_FW_TX_BUSY        (14)
--#define WL1271_FLAG_AP_STARTED        (15)
- 	unsigned long flags;
- 
- 	struct wl1271_partition_set part;
-@@ -428,7 +430,6 @@ struct wl1271 {
- 	 *	bits 16-23 - 802.11n   MCS index mask
- 	 * support only 1 stream, thus only 8 bits for the MCS rates (0-7).
- 	 */
--	u32 sta_rate_set;
- 	u32 basic_rate_set;
- 	u32 basic_rate;
- 	u32 rate_set;
 -- 
-1.7.0.4
+1.7.1
 
