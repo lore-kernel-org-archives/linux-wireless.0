@@ -1,110 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52200 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200Ab1APIub (ORCPT
+Received: from mail.ukfsn.org ([77.75.108.10]:34239 "EHLO mail.ukfsn.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752075Ab1AaQdU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 03:50:31 -0500
-Subject: Re: [PATCH 06/10] mac80211: add HW flag for disabling auto link-PS
- in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1295156534-4178-7-git-send-email-arik@wizery.com>
-References: <1295156534-4178-1-git-send-email-arik@wizery.com>
-	 <1295156534-4178-7-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 16 Jan 2011 09:50:29 +0100
-Message-ID: <1295167829.3574.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 31 Jan 2011 11:33:20 -0500
+Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
+	by mail.ukfsn.org (Postfix) with ESMTP id B103DDEC8F
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 16:13:10 +0000 (GMT)
+Received: from mail.ukfsn.org ([192.168.54.25])
+	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
+	with ESMTP id IUq12YKSpDRJ for <linux-wireless@vger.kernel.org>;
+	Mon, 31 Jan 2011 16:13:10 +0000 (GMT)
+Received: from stargate.localnet (unknown [84.45.236.142])
+	by mail.ukfsn.org (Postfix) with ESMTP id 6CE2CDEC85
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 16:13:10 +0000 (GMT)
+From: David Goodenough <david.goodenough@btconnect.com>
+To: linux-wireless@vger.kernel.org
+Subject: How do I use the UK 5.8GHz lightly regulated band with the regulatory DB?
+Date: Mon, 31 Jan 2011 16:13:07 +0000
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201101311613.07381.david.goodenough@btconnect.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-01-16 at 07:42 +0200, Arik Nemtsov wrote:
-> When operating in AP mode the wl1271 hardware filters our null-data
-> packets as well as management packets. This makes it impossible for
-> mac80211 to monitor the PS mode by using the PM bit of incoming frames.
-> 
-> Implement a HW flag to indicate that mac80211 should ignore the PM bit.
-> In addition, expose ieee80211_start_ps()/ieee80211_end_ps() to make
-> low-level drivers capable of controlling PS-mode.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
->  include/net/mac80211.h |   38 ++++++++++++++++++++++++++++++++++++++
->  net/mac80211/rx.c      |   19 ++++++++++++++++++-
->  2 files changed, 56 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 62c0ce2..26a8cfb 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1069,6 +1069,13 @@ enum ieee80211_tkip_key_type {
->   *	to decrypt group addressed frames, then IBSS RSN support is still
->   *	possible but software crypto will be used. Advertise the wiphy flag
->   *	only in that case.
-> + *
-> + * @IEEE80211_HW_AP_LINK_PS: When operating in AP mode the device
-> + *	autonomously manages the PS status of connected stations. When
-> + *	this flag is set mac80211 will not trigger PS mode for connected
-> + *	stations based on the PM bit of incoming frames.
-> + *	Use ieee80211_start_ps()/ieee8021_end_ps() to manually configure
-> + *	the PS mode of connected stations.
->   */
->  enum ieee80211_hw_flags {
->  	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-> @@ -1093,6 +1100,7 @@ enum ieee80211_hw_flags {
->  	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
->  	IEEE80211_HW_SUPPORTS_CQM_RSSI			= 1<<20,
->  	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
-> +	IEEE80211_HW_AP_LINK_PS				= 1<<22,
->  };
->  
->  /**
-> @@ -2113,6 +2121,36 @@ static inline void ieee80211_rx_ni(struct ieee80211_hw *hw,
->  	local_bh_enable();
->  }
->  
-> +/**
-> + * ieee80211_start_ps - start PS for connected sta
-> + *
-> + * When operating in AP mode, use this function to inform mac80211
-> + * about a station entering PS mode.
-> + * Note that by default mac80211 will automatically call the internal
-> + * equivalent of this function according to the PM bit of incoming frames.
-> + * Use the IEEE80211_HW_AP_LINK_PS flag to change this.
+In the UK Ofcom (our regulator) has designated a portion of spectrum at
+5.8GHz for use outdoors, with 4W EIRP and requiring DFS, on payment of
+an annual fee of GBP 1.00 per client/access-point (to a minimum of GBP 50.00).
+With the standard GB regulatory db entry this is excluded.
 
-I think that explanation should be clearer and say that you must call
-this only when the flag is set and vice versa. Also, there should be a 
+How do I add this (had anyone already done this) and how to I restrict the DFS
+code to remain within this range rather than using any of the other channels
+that require DFS?
 
-WARN_ON(hw->flags & HW_AP_LINK_PS)
+The GB regulatory domain database entry normally reads:-
 
-in the functions.
+country GB:
+       (2402 - 2482 @ 40), (N/A, 20)
+       (5170 - 5250 @ 40), (N/A, 20)
+       (5250 - 5330 @ 40), (N/A, 20), DFS
+       (5490 - 5710 @ 40), (N/A, 27), DFS
 
-Also, maybe just a single function with a bool argument would be more
-appropriate? Call it "ieee80211_sta_ps_transition()" or something like
-that. You should also remove the text about calling the internal
-equivalent -- the internal details might change at any time but the API
-should be documented in a way that makes sense without the internal
-details for the benefit of both sides -- people implementing a driver
-don't need to know about the internal details, and people changing the
-internal details know what semantics to keep.
+BTW I notice that in some countries some frequencies are marked NO_OUTDOOR
+but the 5.1, 5.2 and 5.4 bands are not marked NO_OUTDOOR for GB.  Is there
+a reason for this?
 
-> + * This function may not be called in IRQ context or process context.
+>From the relevant Ofcom document for the 5.8 GHz band 
+(http://stakeholders.ofcom.org.uk/binaries/spectrum/spectrum-policy-
+area/spectrum-management/research-guidelines-tech-info/interface-
+requirements/uk_interface_2007.pdf page 6) we find:-
 
-This can't be true -- the latter part you must mean "or with softirqs
-enabled".
+Table 3.1: Minimum requirements for the use of: - Fixed Broadband Radio
+Systems operating in the 5725 - 5850 MHz band (Band C)
+Mandatory (1-9)
+ 1 Frequency band                 5725 MHz to 5850 MHz
+ 2 Radio service                      Fixed
+ 3 Application                         Fixed Wireless Access
+ 4 Channelling modulation      N/A
+ 5 Maximum transmit power    Maximum mean e.i.r.p. of 4W
+    limit                                    Maximum mean e.i.r.p. density of              
+                                              23dBm/MHz
+ 6   Channel occupation rules N/A
+ 7   Duplex type/separation     TDD
+ 8   Licensing Regime               A licence is required
+ 9   Additional essential           N/A
+          requirements
+Informative (10-13)
+ 10  Frequency planning        DFS and TPC is assumed to be implemented as
+       assumptions                   specified in ETSI harmonised European
+                                              standard EN 302 502
+ 11 Reference                        EN 302 502
+ 12 Remarks                          N/A
+ 13 EU Notification Number   2006/422/UK
 
+ NOTE
+   The frequency range 5795-5815 MHz shall not be used and should be notched 
+   out to protect RTTT devices
 
-Also, I'm worried about races between this and RX. All of the RX path
-assumes that it is running at the same time. The ap_sta_ps_{start,end}
-functions won't be called from the RX path when the flag is set, and
-this is dependent on setting the flag, but is there really nothing in
-them that could race?
+So that would appear to require two extra lines:-
 
-Finally, I'm worried about this calling back into the driver's
-sta_notify callback. If that is to remain that way, it needs to be
-*very* clearly documented, I'd *much* prefer it not doing that but
-handing off to a work struct or so internally.
+       (5725 - 5795 @ 40), (N/A, 27), DFS
+       (5815 - 5850 @ 40), (N/A, 27), DFS
+ 
+But these two lines have to be available for DFS hopping, and the two 
+indoor bands in the regular GB spec have to be excluded.  How is this
+achieved?  Or do I have to have a 
 
-johannes
-
+David
