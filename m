@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:57580 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753540Ab1AKNep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Jan 2011 08:34:45 -0500
-Date: Tue, 11 Jan 2011 14:34:41 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: lrodriguez <lrodriguez@atheros.com>, nbd <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Message-ID: <2847292.30.1294752879394.JavaMail.wlan@CHBU500181>
-In-Reply-To: <5380482.20.1294752135253.JavaMail.wlan@CHBU500181>
-Subject: [RFC] mac80211: Allow AP to change channels for DFS support
+Received: from mail.platinumzone24.at ([88.198.159.93]:42096 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756708Ab1AaW7P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 17:59:15 -0500
+Message-ID: <4D473EBC.5040006@davizone.at>
+Date: Mon, 31 Jan 2011 23:59:08 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 15/18] wl1251: disable power saving in monitor mode
+References: <4D45A79E.7040801@davizone.at> <4D45B7D5.2030408@davizone.at> <87ei7tdqbt.fsf@purkki.adurom.net>
+In-Reply-To: <87ei7tdqbt.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Am 2011-01-31 16:51, schrieb Kalle Valo:
+> David Gnedt <david.gnedt@davizone.at> writes:
+> 
+>> Force power saving off while monitor interface is present.
+> 
+> Again, why? 
+> 
+> Maybe to avoid dropping frames when associated? That would make sense.
+> But on the other hand someone might want to have power save enabled
+> when using monitor mode, for example when debugging power save related
+> issues.
+> 
+> Nevertheless, I think mac80211 is the correct place to do this, not
+> the driver.
 
-  I have started studying DFS support possibilities in ath9k 
-and I have noticed that at the moment AP is not allowed to 
-change channels when it's using beacons.
-
-I have found that I can go around it by setting CHAN_MODE_UNDEFINED
-for this case. Not sure whether we need extra mode for it but
-to me this is a case when AP is neither fixed nor hopping.
-
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c 
-@@ -34,8 +34,11 @@
- 				return CHAN_MODE_HOPPING;
- 		}
- 
--		if (sdata->vif.type == NL80211_IFTYPE_AP &&
--		    !sdata->u.ap.beacon)
-+
-+		/* TODO: CHAN_MODE_FIXED shouldn't be set when
-+		  AP is on DFS channel. For now assume always
-+		  undefined */
-+		if (sdata->vif.type == NL80211_IFTYPE_AP)
- 			continue;
- 
- 		return CHAN_MODE_FIXED;
-
-
-It's also possible to check whether channel is of radar type
-and set mode undefined for this case. Question is whether it's 
-needed at all.
-
-Any comments?
-
-Br,
-Wojtek
+Yeah, my thought was to avoid dropping frames when associated.
+I am going to drop that patch in v2.
