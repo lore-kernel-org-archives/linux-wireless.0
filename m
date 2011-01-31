@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:65104 "EHLO mail.atheros.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:41997 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750706Ab1APF1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 00:27:32 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 21:27:13 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: Fix endian issue in tx header
-Date: Sun, 16 Jan 2011 10:56:37 +0530
-Message-ID: <1295155597-14247-1-git-send-email-rmanoharan@atheros.com>
+	id S1753665Ab1AaUGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 15:06:50 -0500
+Subject: Re: [PATCH v2 06/10] mac80211: add HW flag for disabling auto
+ link-PS in AP mode
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1296475910.3812.27.camel@jlt3.sipsolutions.net>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
+	 <1296472589-26401-7-git-send-email-arik@wizery.com>
+	 <1296473043.3812.10.camel@jlt3.sipsolutions.net>
+	 <AANLkTin9vOQJqDJezzBMjjRyGNDYGEwOwgT_aFk2NBYD@mail.gmail.com>
+	 <1296475910.3812.27.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 Jan 2011 22:06:35 +0200
+Message-ID: <1296504395.3069.651.camel@pimenta>
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 +++++---
- 2 files changed, 6 insertions(+), 4 deletions(-)
+On Mon, 2011-01-31 at 13:11 +0100, Johannes Berg wrote:
+> On Mon, 2011-01-31 at 13:49 +0200, Arik Nemtsov wrote:
+> > On Mon, Jan 31, 2011 at 13:24, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > > It'd be nicer if you could separate out mac80211 patches, but then
+> Luca
+> > > needs to hold off merging until John picked up the mac80211 patch.
+> > 
+> > Yea that would complicate matters a bit. Does the ordering of the
+> > patches bother you?
+> 
+> It just makes it more complicated for me to pick out the right thing
+> --
+> I almost missed that there was a mac80211 patch in this huge series. 
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c976600..6354986 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -78,7 +78,7 @@ struct tx_frame_hdr {
- 	u8 node_idx;
- 	u8 vif_idx;
- 	u8 tidno;
--	u32 flags; /* ATH9K_HTC_TX_* */
-+	__be32 flags; /* ATH9K_HTC_TX_* */
- 	u8 key_type;
- 	u8 keyix;
- 	u8 reserved[26];
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 33f3602..7a5ffca 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -113,6 +113,7 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
- 
- 	if (ieee80211_is_data(fc)) {
- 		struct tx_frame_hdr tx_hdr;
-+		u32 flags = 0;
- 		u8 *qc;
- 
- 		memset(&tx_hdr, 0, sizeof(struct tx_frame_hdr));
-@@ -136,13 +137,14 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
- 		/* Check for RTS protection */
- 		if (priv->hw->wiphy->rts_threshold != (u32) -1)
- 			if (skb->len > priv->hw->wiphy->rts_threshold)
--				tx_hdr.flags |= ATH9K_HTC_TX_RTSCTS;
-+				flags |= ATH9K_HTC_TX_RTSCTS;
- 
- 		/* CTS-to-self */
--		if (!(tx_hdr.flags & ATH9K_HTC_TX_RTSCTS) &&
-+		if (!(flags & ATH9K_HTC_TX_RTSCTS) &&
- 		    (priv->op_flags & OP_PROTECT_ENABLE))
--			tx_hdr.flags |= ATH9K_HTC_TX_CTSONLY;
-+			flags |= ATH9K_HTC_TX_CTSONLY;
- 
-+		tx_hdr.flags = cpu_to_be32(flags);
- 		tx_hdr.key_type = ath9k_cmn_get_hw_crypto_keytype(skb);
- 		if (tx_hdr.key_type == ATH9K_KEY_TYPE_CLEAR)
- 			tx_hdr.keyix = (u8) ATH9K_TXKEYIX_INVALID;
+Yes, I totally agree with Johannes.  I prefer that
+mac80211/cfg80211/whatever_other_stuff be sent as separate series, so
+that there's not confusions about who applies what.  If the patches are
+in the same series, I always need to ask John to either take them all or
+not.
+
+The ideal is if you send mac80211 patches separated from wl12xx and
+mention the dependency on the wl12xx series, so I'm aware and wait for
+John's integration before taking the wl12xx stuff in.
+
+
 -- 
-1.7.3.5
+Cheers,
+Luca.
 
