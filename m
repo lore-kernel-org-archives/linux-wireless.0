@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43510 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751792Ab1ASUFF (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:42525 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754206Ab1AaW6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Jan 2011 15:05:05 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 708B454070F
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Jan 2011 15:06:57 -0500 (EST)
-Subject: Compat-wireless release for 2011-01-19 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110119200503.473B440F97@repository3.orbit-lab.org>
-Date: Wed, 19 Jan 2011 15:05:03 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 31 Jan 2011 17:58:04 -0500
+Message-ID: <4D473E72.3050307@davizone.at>
+Date: Mon, 31 Jan 2011 23:57:54 +0100
+From: David Gnedt <david.gnedt@davizone.at>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
+References: <4D45A583.3060605@davizone.at> <4D45B7B2.40001@davizone.at> <87r5btdsb8.fsf@purkki.adurom.net>
+In-Reply-To: <87r5btdsb8.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   8ffd020..143a29f  history    -> origin/history
- + a4e85a5...a3d484f master     -> origin/master  (forced update)
-   9e8a462..c56eb8f  stable     -> origin/stable
- * [new tag]         next-20110119 -> next-20110119
- * [new tag]         v2.6.38-rc1 -> v2.6.38-rc1
+Am 2011-01-31 16:08, schrieb Kalle Valo:
+> How did you test the patches? For example, what hardware did you use
+> etc.
 
-compat-wireless code metrics
+I tested the patches with compat-wireless and a modified fremantle 2.6.28 kernel
+on my Nokia N900.
 
-    782530 - Total upstream lines of code being pulled
-      2103 - backport code changes
-      1843 - backport code additions
-       260 - backport code deletions
-      7279 - backport from compat module
-      9382 - total backport code
-    1.1989 - % of code consists of backport work
-      1531 - Crap changes not yet posted
-      1488 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1956 - % of crap code
+> About the code from fremantle kernels. Few weeks ago nokia sent me
+> privately the original patches from their internal git tree, I gave
+> some comments and never heard back. So, in theory I should have all
+> the fremantle patches somewhere in my email archives. I would just
+> need to clean them up and send them here. I'll go over your patches
+> and let's see what we should do.
 
-Base tree: linux-next.git
-Base tree version: next-20110119
-compat-wireless release: compat-wireless-2011-01-06-3-g8db1608-pc
+It would be interesting if I missed some features. I diffed the drivers, but I
+am not 100% sure if I overlooked something useful.
+One thing I haven't included in this patchset is the netlink interface from the
+fremantle code for NVS loading because I thought it wouldn't be accepted anyway.
