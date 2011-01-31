@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:30489 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755155Ab1AKAuU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58559 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753649Ab1AaUAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 19:50:20 -0500
-Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0434147018
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jan 2011 09:50:19 +0900 (JST)
-Subject: [PATCH v2 3/4] iw: add multicast rates to IBSS join
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Date: Tue, 11 Jan 2011 09:51:18 +0900
-Message-ID: <20110111005118.10231.71706.stgit@localhost6.localdomain6>
-In-Reply-To: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
-References: <20110111005107.10231.81618.stgit@localhost6.localdomain6>
+	Mon, 31 Jan 2011 15:00:18 -0500
+Date: Mon, 31 Jan 2011 14:47:27 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mathias Krause <minipli@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
+Subject: Re: [PATCH] wl12xx: fix use after free
+Message-ID: <20110131194727.GA3065@tuxdriver.com>
+References: <1296383387-20151-1-git-send-email-minipli@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1296383387-20151-1-git-send-email-minipli@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Sun, Jan 30, 2011 at 11:29:47AM +0100, Mathias Krause wrote:
+> When DEBUG_SPI is included in the debug log level wl1271_spi_reset()
+> will dump the already freed memory instead of the SPI buffer.
+> 
+> This bug was spotted by the semantic patch tool coccinelle using the
+> script found at scripts/coccinelle/free/kfree.cocci.
+> 
+> More information about semantic patching is available at
+> http://coccinelle.lip6.fr/
+> 
+> Signed-off-by: Mathias Krause <minipli@googlemail.com>
 
-Add multicast rates to IBSS join command.
+Luca, I'll go ahead and apply this one directly to wireless-2.6.
 
-This patch comes from OpenWRT. Original author: Felix Fietkau.
-
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- ibss.c |   21 ++++++++++++++++++---
- 1 files changed, 18 insertions(+), 3 deletions(-)
-
-diff --git a/ibss.c b/ibss.c
-index 84ea7f2..ca8a4ec 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -95,6 +95,20 @@ static int join_ibss(struct nl80211_state *state,
- 		argc--;
- 	}
- 
-+	/* multicast rate */
-+	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
-+		argv++;
-+		argc--;
-+
-+		rate = strtod(argv[0], &end);
-+		if (*end != '\0')
-+			return 1;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int) rate * 10);
-+		argv++;
-+		argc--;
-+	}
-+
- 	if (!argc)
- 		return 0;
- 
-@@ -120,12 +134,13 @@ COMMAND(ibss, leave, NULL,
- 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
- 	"Leave the current IBSS cell.");
- COMMAND(ibss, join,
--	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval "
--	"<TU>] [basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
-+	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
-+	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
-+	"[key d:0:abcde]",
- 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
- 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
- 	"it on the given frequency. When fixed frequency is requested, don't\n"
- 	"join/create a cell on a different frequency. When a fixed BSSID is\n"
- 	"requested use that BSSID and do not adopt another cell's BSSID even\n"
- 	"if it has higher TSF and the same SSID. If an IBSS is created, create\n"
--	"it with the specified basic-rates and beacon-interval (in TU).");
-+	"it with the specified basic-rates, multicast-rate and beacon-interval.");
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
