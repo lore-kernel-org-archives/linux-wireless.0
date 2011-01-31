@@ -1,53 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:36808 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab1A1T5F (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:40846 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083Ab1AaVpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Jan 2011 14:57:05 -0500
-Message-ID: <4D431F8A.3000403@gmail.com>
-Date: Fri, 28 Jan 2011 11:56:58 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Mon, 31 Jan 2011 16:45:22 -0500
+Date: Mon, 31 Jan 2011 15:45:16 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Wolfgang Kufner <wolfgang.kufner@gmail.com>
+Subject: Missing skb_pad() return value checks in rt2x00 driver
+Message-ID: <20110131214515.GC6368@thinkpad-t410>
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: "trivial@kernel.org" <trivial@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH]drivers:wireless:acx.h change initate to initiate
-References: <1296244204-3890-1-git-send-email-justinmattock@gmail.com> <1296244444.3069.399.camel@pimenta>
-In-Reply-To: <1296244444.3069.399.camel@pimenta>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/28/11 11:54, Luciano Coelho wrote:
-> On Fri, 2011-01-28 at 20:50 +0100, Justin P. Mattock wrote:
->> Not sure if this is a typo or not. if it is then feel free to take this.
->>
->> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>
->> ---
->>   drivers/net/wireless/wl12xx/acx.h |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
->> index 7bd8e4d..c56088b 100644
->> --- a/drivers/net/wireless/wl12xx/acx.h
->> +++ b/drivers/net/wireless/wl12xx/acx.h
->> @@ -987,7 +987,7 @@ struct wl1271_acx_ht_capabilities {
->>   	 *         Note, driver will still leave space for HT control in packets
->>   	 *         regardless of the value of this field. FW will be responsible
->>   	 *         to drop the HT field from any frame when this Bit set to 0.
->> -	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
->> +	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initiate RD.
->>   	 *         Exact policy setting for this feature is TBD.
->>   	 *         Note, this bit can only be set to 1 if bit 3 is set to 1.
->>   	 */
->
-> Yep, it's a typo.  Thanks for fixing it.
->
-> Acked-by: Luciano Coelho<coelho@ti.com>
->
+In looking at the following commit:
 
-alright.. cool..
+  commit 739fd9405416e22732e46a9226a8cac379bd57fc
+  Author: Wolfgang Kufner <wolfgang.kufner@gmail.com>
+  Date:   Mon Dec 13 12:39:12 2010 +0100
+  
+      rt2x00: Pad beacon to multiple of 32 bits.
 
-Justin P. Mattock
+I noticed that the skb_pad() calls it introduces are not being checked
+for failure. I don't know whether or not it's possible for these calls
+to fail in this context; would it make sense to incorporate the patch
+below?
+
+Thanks,
+Seth
+
+>From 6cebee1731e158df888e5ec19f5c221ac8a1a213 Mon Sep 17 00:00:00 2001
+From: Seth Forshee <seth.forshee@canonical.com>
+Date: Mon, 31 Jan 2011 15:06:47 -0600
+Subject: [PATCH] rt2x00: Check for errors from skb_pad() calls
+
+Commit 739fd94 ("rt2x00: Pad beacon to multiple of 32 bits")
+added calls to skb_pad() without checking the return value,
+which could cause problems if any of those calls does happen
+to fail. Add checks to prevent this from happening and move
+the padding to the tops of the relevant functions so we can
+bail out before writing to any registers.
+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   13 +++++++++++--
+ drivers/net/wireless/rt2x00/rt61pci.c   |   13 +++++++++++--
+ drivers/net/wireless/rt2x00/rt73usb.c   |   13 +++++++++++--
+ 3 files changed, 33 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index f8ba01c..79d17da 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -776,6 +776,17 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 	u32 reg;
+ 
+ 	/*
++	 * Pad out the beacon to a 32-bit boundary
++	 */
++	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
++	if (padding_len && skb_pad(entry->skb, padding_len)) {
++		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
++		/* skb freed by skb_pad() on failure */
++		entry->skb = NULL;
++		return;
++	}
++
++	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+@@ -809,8 +820,6 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 	/*
+ 	 * Write entire beacon with TXWI and padding to register.
+ 	 */
+-	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+-	skb_pad(entry->skb, padding_len);
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+ 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				   entry->skb->len + padding_len);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 8de44dd..83ac31e 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1965,6 +1965,17 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 	u32 reg;
+ 
+ 	/*
++	 * Pad out the beacon to a 32-bit boundary
++	 */
++	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
++	if (padding_len && skb_pad(entry->skb, padding_len)) {
++		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
++		/* skb freed by skb_pad() on failure */
++		entry->skb = NULL;
++		return;
++	}
++
++	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+@@ -1985,8 +1996,6 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 	/*
+ 	 * Write entire beacon with descriptor and padding to register.
+ 	 */
+-	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+-	skb_pad(entry->skb, padding_len);
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+ 	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base,
+ 				      entry_priv->desc, TXINFO_SIZE);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 029be3c..5b15609 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1550,6 +1550,17 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 	u32 reg;
+ 
+ 	/*
++	 * Pad out the beacon to a 32-bit boundary
++	 */
++	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
++	if (padding_len && skb_pad(entry->skb, padding_len)) {
++		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
++		/* skb freed by skb_pad() on failure */
++		entry->skb = NULL;
++		return;
++	}
++
++	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+@@ -1576,8 +1587,6 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 	/*
+ 	 * Write entire beacon with descriptor and padding to register.
+ 	 */
+-	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+-	skb_pad(entry->skb, padding_len);
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+ 	rt2x00usb_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				      entry->skb->len + padding_len);
+-- 
+1.7.1
+
