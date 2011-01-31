@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42486 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933167Ab1ANTZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 14:25:00 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 11:24:42 -0800
-Date: Sat, 15 Jan 2011 00:54:14 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>, <greearb@candelatech.com>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	=?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k: Handle interface changes properly
-Message-ID: <20110114192414.GA12090@vmraj-lnx.users.atheros.com>
-References: <AANLkTi=S6TFk88cY27KFZ2q5mCykMMSn17LnH=V95MST@mail.gmail.com>
- <4D2E0653.7040606@openwrt.org>
- <20110113051849.GD8836@vmraj-lnx.users.atheros.com>
- <4D2F0ADF.1040009@openwrt.org>
- <20110113163513.GA9291@vmraj-lnx.users.atheros.com>
- <4D2F2D22.6070301@openwrt.org>
- <20110114181309.GA11920@vmraj-lnx.users.atheros.com>
- <4D30944A.30100@openwrt.org>
- <20110114185317.GA12051@vmraj-lnx.users.atheros.com>
- <4D309EC2.2060409@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D309EC2.2060409@openwrt.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33441 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033Ab1AaUcl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 15:32:41 -0500
+Received: by wwa36 with SMTP id 36so6228533wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 12:32:39 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 0/8] wl12xx: AP-mode per link PSM
+Date: Mon, 31 Jan 2011 22:32:23 +0200
+Message-Id: <1296505951-29644-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 15, 2011 at 12:36:42AM +0530, Felix Fietkau wrote:
-> On 2011-01-14 7:53 PM, Rajkumar Manoharan wrote:
-> > On Fri, Jan 14, 2011 at 11:52:02PM +0530, Felix Fietkau wrote:
-> >>  On 2011-01-14 7:13 PM, Rajkumar Manoharan wrote:
-> >>  >  On Thu, Jan 13, 2011 at 10:19:38PM +0530, Felix Fietkau wrote:
-> >>  >>   On 2011-01-13 5:35 PM, Rajkumar Manoharan wrote:
-> >>  >>   >   Instead of setting opmde as AP for WDS, it is better to handle WDS
-> >>  >>   >   case in ath9k_hw.
-> >>  >>   Why? Right now I don't even see any NL80211_IFTYPE_WDS handling in
-> >>  >>   ath9k_hw, and I can't think of anything that should be handled
-> >>  >>   differently in ath9k_hw compared to the AP opmode.
-> >>  >  For WDS station, what should be the interface type? Forgive if I'm wrong.
-> >>  There is no WDS station opmode. 'WDS station' is a regular station
-> >>  interface with 4-addr mode enabled. It needs no special handling in ath9k.
-> > still not convinced. Then what is the point mac80211 is informing about
-> > WDS type to drivers. mac itself can pass it as AP type like what it
-> > is doing for p2p GO.
-> The WDS type is something else. If you have two APs, you can link them 
-> together with a separate WDS vif on each side pointing at the remote MAC 
-> address of the other node.
-> I think that when we use ah->opmode, we should only use it for very 
-> generic operating modes:
-> 
-> AP: no TSF sync, beacon tx can be enabled.
-> ADHOC: TSF sync against IBSS cell, beacon tx can be enabled
-> STATION: TSF sync against one AP, only station beacon timers for PS.
-> 
-> Only the above distinctions are relevant for ath9k_hw, everything else 
-> is handled by the driver/stack. There is no reason for adding extra 
-> checks to ath9k_hw for mesh and WDS, since they work best with 
-> ah->opmode set to AP, and there is nothing extra on the *hardware* side 
-> that should be configured there via a different opmode. That's why I 
-> think leaking the mac80211 interface types to ath9k_hw is a bad idea.
-Thanks for your detailed explanation. And meanwhile Ben is also
-fixing hw mode based on vif counter. It would be better if he make
-use this thread and address the same.
+This patchset introduces per-link PSM for AP-mode. The PS status of each
+link is updated from FW.
+The wl12xx concept of PSM is different from the mac80211 one - some data
+must remain in FW for a link in PSM since the TIM is updated automatically
+by FW. This functionality depends on the following mac80211 patch:
+"mac80211: add HW flag for disabling auto link-PS in AP mode"
 
-Ben,
-Any comments.
+We set up a skb-queue per link which allows for a cleaner link
+disconnection and prepares the code for regulating each link separately.
 
---
-Rajkumar
+A few other AP-mode related small bug fixes and enchancements are included.
+
+Arik Nemtsov (8):
+  wl12xx: fix potential race condition with TX queue watermark
+  wl12xx: AP-mode - fix race condition on sta connection
+  wl12xx: AP-mode - TX queue per link in AC
+  wl12xx: report invalid TX rate when returning non-TX-ed skbs
+  wl12xx: AP-mode - support HW based link PS monitoring
+  wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
+  wl12xx: AP-mode - count free FW TX blocks per link
+  wl12xx: AP-mode - management of links in PS-mode
+
+ drivers/net/wireless/wl12xx/acx.c    |   25 ++++
+ drivers/net/wireless/wl12xx/acx.h    |    9 ++
+ drivers/net/wireless/wl12xx/main.c   |  125 +++++++++++++++---
+ drivers/net/wireless/wl12xx/ps.c     |   78 +++++++++++
+ drivers/net/wireless/wl12xx/ps.h     |    2 +
+ drivers/net/wireless/wl12xx/tx.c     |  235 +++++++++++++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/tx.h     |    3 +
+ drivers/net/wireless/wl12xx/wl12xx.h |   37 ++++++
+ 8 files changed, 457 insertions(+), 57 deletions(-)
+
