@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33257 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384Ab1AWJFc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 04:05:32 -0500
-Subject: Re: [PATCH 01/14] iwlwifi: use mac80211 throughput trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1295654809-5790-2-git-send-email-wey-yi.w.guy@intel.com>
-References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1295654809-5790-2-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 23 Jan 2011 10:05:26 +0100
-Message-ID: <1295773526.3639.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57458 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756637Ab1AaWHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 17:07:15 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: remove max_brightness
+Date: Mon, 31 Jan 2011 23:06:44 +0100
+Message-Id: <1296511604-16921-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
+References: <1296511604-16921-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That should have
 
-From: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/37-led-max-brightness.patch |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+ create mode 100644 patches/37-led-max-brightness.patch
 
-:-)
-
-> Instead of keeping track of LED blink speed
-> in the driver, use the new mac80211 trigger
-> and link it up with an LED classdev that we
-> now register. This also allows users more
-> flexibility in how they want to have the LED
-> blink or not.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-
-...
-
+diff --git a/patches/37-led-max-brightness.patch b/patches/37-led-max-brightness.patch
+new file mode 100644
+index 0000000..ef684b5
+--- /dev/null
++++ b/patches/37-led-max-brightness.patch
+@@ -0,0 +1,12 @@
++--- a/drivers/net/wireless/iwlwifi/iwl-led.c
+++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
++@@ -149,7 +149,9 @@ void iwl_leds_init(struct iwl_priv *priv
++ 				   wiphy_name(priv->hw->wiphy));
++ 	priv->led.brightness_set = iwl_led_brightness_set;
++ 	priv->led.blink_set = iwl_led_blink_set;
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
++ 	priv->led.max_brightness = 1;
+++#endif
++ 
++ 	switch (mode) {
++ 	case IWL_LED_DEFAULT:
+-- 
+1.7.1
 
