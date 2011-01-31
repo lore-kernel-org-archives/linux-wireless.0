@@ -1,262 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:40959 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754680Ab1AKASe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Jan 2011 19:18:34 -0500
-Received: by eyd10 with SMTP id 10so8946750eyd.17
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Jan 2011 16:18:32 -0800 (PST)
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:58512 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754943Ab1AaSuS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:50:18 -0500
+Subject: [PATCH 20/22] zd1211rw: reset rx urbs after idle period of 30 seconds
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Mon, 31 Jan 2011 20:50:12 +0200
+Message-ID: <20110131185012.10044.21341.stgit@fate.lan>
+In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
+References: <20110131184657.10044.98610.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=KnSjVVCN=9=PaL9_GYpDOpJFvD-LGxFXEevhw@mail.gmail.com>
-References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
-	<1294062164-3459-2-git-send-email-shahar_levi@ti.com>
-	<1294671655.1992.103.camel@pimenta>
-	<AANLkTi=KnSjVVCN=9=PaL9_GYpDOpJFvD-LGxFXEevhw@mail.gmail.com>
-Date: Tue, 11 Jan 2011 02:18:31 +0200
-Message-ID: <AANLkTimpDo=0AcL5OdEjnpB8-_o7XBJ5QT-mE-FmfZo6@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] wl12xx: BA initiator support
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 11, 2011 at 2:13 AM, Levi, Shahar <shahar_levi@ti.com> wrote:
->
-> On Mon, Jan 10, 2011 at 5:00 PM, Luciano Coelho <coelho@ti.com> wrote:
->>
->> On Mon, 2011-01-03 at 14:42 +0100, Shahar Levi wrote:
->> > Add 80211n BA initiator session support wl1271 driver.
->> > Include BA supported FW version auto detection mechanism.
->> > BA initiator session management included in FW independently.
->> >
->> > Signed-off-by: Shahar Levi <shahar_levi@ti.com>
->> > ---
->>
->> Some comments...
->
-thanks for your review.
+RX appears to freeze while idle. Resetting rx-urbs appears to be enough to fix
+this. Do reset 30 seconds after last rx.
 
->>
->>
->> > diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
->> > index cc4068d..54fd68d 100644
->> > --- a/drivers/net/wireless/wl12xx/acx.c
->> > +++ b/drivers/net/wireless/wl12xx/acx.c
->> > @@ -1309,6 +1309,56 @@ out:
->> >         return ret;
->> >  }
->> >
->> > +/* Configure BA session initiator\receiver parameters setting in the FW. */
->>
->> Please use forward slash here instead of backslash, ie. use
->> "initiator/receiver".
->
-np, will be fix.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_usb.c |   79 +++++++++++++++++++++++++++++++-
+ drivers/net/wireless/zd1211rw/zd_usb.h |    7 ++-
+ 2 files changed, 83 insertions(+), 3 deletions(-)
 
->>
->>
->> > diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
->> > index 9cbc3f4..df48468 100644
->> > --- a/drivers/net/wireless/wl12xx/acx.h
->> > +++ b/drivers/net/wireless/wl12xx/acx.h
->> > @@ -1051,6 +1051,40 @@ struct wl1271_acx_ht_information {
->> >         u8 padding[3];
->> >  } __packed;
->> >
->> > +#define BA_WIN_SIZE 8
->>
->> Should this be DEFAULT_BA_WIN_SIZE?
->
-No, the FW support win size of 8. it is not configurable.
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 00c333f..5cedfea 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -638,6 +638,8 @@ static void rx_urb_complete(struct urb *urb)
+ 	usb = urb->context;
+ 	rx = &usb->rx;
+ 
++	zd_usb_reset_rx_idle_timer(usb);
++
+ 	if (length%rx->usb_packet_size > rx->usb_packet_size-4) {
+ 		/* If there is an old first fragment, we don't care. */
+ 		dev_dbg_f(urb_dev(urb), "*** first fragment ***\n");
+@@ -702,7 +704,7 @@ static void free_rx_urb(struct urb *urb)
+ 	usb_free_urb(urb);
+ }
+ 
+-int zd_usb_enable_rx(struct zd_usb *usb)
++static int __zd_usb_enable_rx(struct zd_usb *usb)
+ {
+ 	int i, r;
+ 	struct zd_usb_rx *rx = &usb->rx;
+@@ -754,7 +756,21 @@ error:
+ 	return r;
+ }
+ 
+-void zd_usb_disable_rx(struct zd_usb *usb)
++int zd_usb_enable_rx(struct zd_usb *usb)
++{
++	int r;
++	struct zd_usb_rx *rx = &usb->rx;
++
++	mutex_lock(&rx->setup_mutex);
++	r = __zd_usb_enable_rx(usb);
++	mutex_unlock(&rx->setup_mutex);
++
++	zd_usb_reset_rx_idle_timer(usb);
++
++	return r;
++}
++
++static void __zd_usb_disable_rx(struct zd_usb *usb)
+ {
+ 	int i;
+ 	unsigned long flags;
+@@ -781,6 +797,40 @@ void zd_usb_disable_rx(struct zd_usb *usb)
+ 	spin_unlock_irqrestore(&rx->lock, flags);
+ }
+ 
++void zd_usb_disable_rx(struct zd_usb *usb)
++{
++	struct zd_usb_rx *rx = &usb->rx;
++
++	mutex_lock(&rx->setup_mutex);
++	__zd_usb_disable_rx(usb);
++	mutex_unlock(&rx->setup_mutex);
++
++	cancel_delayed_work_sync(&rx->idle_work);
++}
++
++static void zd_usb_reset_rx(struct zd_usb *usb)
++{
++	bool do_reset;
++	struct zd_usb_rx *rx = &usb->rx;
++	unsigned long flags;
++
++	mutex_lock(&rx->setup_mutex);
++
++	spin_lock_irqsave(&rx->lock, flags);
++	do_reset = rx->urbs != NULL;
++	spin_unlock_irqrestore(&rx->lock, flags);
++
++	if (do_reset) {
++		__zd_usb_disable_rx(usb);
++		__zd_usb_enable_rx(usb);
++	}
++
++	mutex_unlock(&rx->setup_mutex);
++
++	if (do_reset)
++		zd_usb_reset_rx_idle_timer(usb);
++}
++
+ /**
+  * zd_usb_disable_tx - disable transmission
+  * @usb: the zd1211rw-private USB structure
+@@ -1033,6 +1083,29 @@ void zd_tx_watchdog_disable(struct zd_usb *usb)
+ 	}
+ }
+ 
++static void zd_rx_idle_timer_handler(struct work_struct *work)
++{
++	struct zd_usb *usb =
++		container_of(work, struct zd_usb, rx.idle_work.work);
++	struct zd_mac *mac = zd_usb_to_mac(usb);
++
++	if (!test_bit(ZD_DEVICE_RUNNING, &mac->flags))
++		return;
++
++	dev_dbg_f(zd_usb_dev(usb), "\n");
++
++	/* 30 seconds since last rx, reset rx */
++	zd_usb_reset_rx(usb);
++}
++
++void zd_usb_reset_rx_idle_timer(struct zd_usb *usb)
++{
++	struct zd_usb_rx *rx = &usb->rx;
++
++	cancel_delayed_work(&rx->idle_work);
++	queue_delayed_work(zd_workqueue, &rx->idle_work, ZD_RX_IDLE_INTERVAL);
++}
++
+ static inline void init_usb_interrupt(struct zd_usb *usb)
+ {
+ 	struct zd_usb_interrupt *intr = &usb->intr;
+@@ -1047,12 +1120,14 @@ static inline void init_usb_rx(struct zd_usb *usb)
+ {
+ 	struct zd_usb_rx *rx = &usb->rx;
+ 	spin_lock_init(&rx->lock);
++	mutex_init(&rx->setup_mutex);
+ 	if (interface_to_usbdev(usb->intf)->speed == USB_SPEED_HIGH) {
+ 		rx->usb_packet_size = 512;
+ 	} else {
+ 		rx->usb_packet_size = 64;
+ 	}
+ 	ZD_ASSERT(rx->fragment_length == 0);
++	INIT_DELAYED_WORK(&rx->idle_work, zd_rx_idle_timer_handler);
+ }
+ 
+ static inline void init_usb_tx(struct zd_usb *usb)
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
+index 98f09c2..2d688f4 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.h
++++ b/drivers/net/wireless/zd1211rw/zd_usb.h
+@@ -34,6 +34,7 @@
+ 
+ #define ZD_TX_TIMEOUT		(HZ * 5)
+ #define ZD_TX_WATCHDOG_INTERVAL	round_jiffies_relative(HZ)
++#define ZD_RX_IDLE_INTERVAL	round_jiffies_relative(30 * HZ)
+ 
+ enum devicetype {
+ 	DEVICE_ZD1211  = 0,
+@@ -180,7 +181,9 @@ static inline struct usb_int_regs *get_read_regs(struct zd_usb_interrupt *intr)
+ 
+ struct zd_usb_rx {
+ 	spinlock_t lock;
+-	u8 fragment[2*USB_MAX_RX_SIZE];
++	struct mutex setup_mutex;
++	struct delayed_work idle_work;
++	u8 fragment[2 * USB_MAX_RX_SIZE];
+ 	unsigned int fragment_length;
+ 	unsigned int usb_packet_size;
+ 	struct urb **urbs;
+@@ -251,6 +254,8 @@ void zd_usb_disable_int(struct zd_usb *usb);
+ int zd_usb_enable_rx(struct zd_usb *usb);
+ void zd_usb_disable_rx(struct zd_usb *usb);
+ 
++void zd_usb_reset_rx_idle_timer(struct zd_usb *usb);
++
+ void zd_usb_enable_tx(struct zd_usb *usb);
+ void zd_usb_disable_tx(struct zd_usb *usb);
+ 
 
->>
->>
->> > diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
->> > index 4a9f929..cd42e12 100644
->> > --- a/drivers/net/wireless/wl12xx/boot.c
->> > +++ b/drivers/net/wireless/wl12xx/boot.c
->> > @@ -101,6 +101,39 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
->> >         wl1271_write32(wl, ACX_REG_ECPU_CONTROL, cpu_ctrl);
->> >  }
->> >
->> > +static void wl1271_save_fw_ver(struct wl1271 *wl)
->>
->> This function name is not very informative.  Why not call it
->> wl1271_parse_fw_ver() instead?
->
-np, will be fix
-
->>
->>
->> > +{
->> > +       char fw_ver_str[ETHTOOL_BUSINFO_LEN];
->>
->> This is weird, but it seem to be what is used in cfg80211 (as Shahar
->> pointed out on IRC).  IMHO it should be ETHTOOL_FWVERS_LEN instead, both
->> here and in cfg80211.
->>
->> In any case, this is a bit confusing here, because we don't use the
->> fw_version in the wiphy struct (we probably should).  Let's keep it like
->> this for now and maybe later we can change.
->>
->> Also, I don't see why you need a local copy here.
->
-i use local copy in order to remove '.' (*fw_ver_point = '\0') without
-destroyed wl->chip.fw_ver_str.
-
->>
->> > +       char *fw_ver_point;
->> > +       int ret, i;
->> > +
->> > +       /* copy the fw version to temp str */
->> > +       strncpy(fw_ver_str, wl->chip.fw_ver_str, sizeof(fw_ver_str));
->> > +
->> > +       for (i = (WL12XX_NUM_FW_VER - 1); i > 0; --i) {
->> > +               /* find the last '.' */
->> > +               fw_ver_point = strrchr(fw_ver_str, '.');
->> > +
->> > +               /* read version number */
->> > +               ret = strict_strtoul(fw_ver_point+1, 10, &(wl->chip.fw_ver[i]));
->> > +               if (ret < 0) {
->> > +                       wl1271_warning("fw version incorrect value");
->> > +                       memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
->> > +                       return;
->> > +               }
->> > +
->> > +               /* clean '.' */
->> > +               *fw_ver_point = '\0';
->> > +       }
->> > +
->> > +       ret = strict_strtoul(fw_ver_point-1, 10, &(wl->chip.fw_ver[0]));
->> > +       if (ret < 0) {
->> > +               wl1271_warning("fw version incorrect value");
->> > +               memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
->> > +               return;
->> > +       }
->> > +}
->>
->> Instead of all this manual parsing, why don't you use sscanf? I think
->> the following could do the work very nicely:
->>
->>        ret = sscanf(wl->chip.fw_ver_str + WL12XX_FW_VER_OFFSET,
->>                     "%lu.%lu.%lu.%lu.%lu", &wl->chip.fw_ver[0],
->>                     &wl->chip.fw_ver[1], &wl->chip.fw_ver[2]
->>                     &wl->chip.fw_ver[3], &wl->chip.fw_ver[4]);
->>
->> Wouldn't something like this be much simpler? (or you could use %u if
->> you agree on using unsigned int, see below)
->
-good point, i will try and update.
-
->>
->>
->> >  static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
->> > diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
->> > index a16b361..41df771 100644
->> > --- a/drivers/net/wireless/wl12xx/conf.h
->> > +++ b/drivers/net/wireless/wl12xx/conf.h
->> > @@ -1090,6 +1090,12 @@ struct conf_rf_settings {
->> >         u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
->> >  };
->> >
->> > +#define CONF_BA_INACTIVITY_TIMEOUT 10000
->>
->> If this is a CONFigurable value, it should be in conf.h and in the
->> configuration parameters in main.c, shouldn't it?
->>
->>
->> > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
->> > index 062247e..c44462d 100644
->> > --- a/drivers/net/wireless/wl12xx/main.c
->> > +++ b/drivers/net/wireless/wl12xx/main.c
->> > @@ -233,7 +233,7 @@ static struct conf_drv_settings default_conf = {
->> >                 .avg_weight_rssi_beacon       = 20,
->> >                 .avg_weight_rssi_data         = 10,
->> >                 .avg_weight_snr_beacon        = 20,
->> > -               .avg_weight_snr_data          = 10
->> > +               .avg_weight_snr_data          = 10,
->> >         },
->> >         .scan = {
->> >                 .min_dwell_time_active        = 7500,
->> > @@ -252,6 +252,9 @@ static struct conf_drv_settings default_conf = {
->> >                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
->> >                 },
->> >         },
->> > +       .ht = {
->> > +               .inactivity_timeout = CONF_BA_INACTIVITY_TIMEOUT,
->> > +       },
->>
->> Ah, I see.  You are using that macro here, but I guess you could use the
->> value directly, since this is all configuration stuff, so no need to use
->> defines, unless the values mean something specific.  Here it is just a
->> measure of time, so a number can be used directly (like in the
->> min_dwell_time_active).
->
-np, will be fix
-
->>
->>
->> > diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
->> > index 01711fe..7b34393 100644
->> > --- a/drivers/net/wireless/wl12xx/wl12xx.h
->> > +++ b/drivers/net/wireless/wl12xx/wl12xx.h
->> > @@ -38,6 +38,11 @@
->> >  #define DRIVER_NAME "wl1271"
->> >  #define DRIVER_PREFIX DRIVER_NAME ": "
->> >
->> > +#define WL12XX_BA_SUPPORT_FW_SUB_VER           339
->> > +#define WL12XX_BA_SUPPORT_FW_COST_VER1          33
->> > +#define WL12XX_BA_SUPPORT_FW_COST_VER2_START    50
->> > +#define WL12XX_BA_SUPPORT_FW_COST_VER2_END      60
->>
->> This defines are very confusing.  Can you explain a bit?
-yes i will add comments.
-
->>
->> What about
->> "COST" version 0 (like 6.0.0.0.343), will that branch never support BA?Where do the 50 to 60 come from?
->
-no, all open source version will be tag from 50 to 60.
-
->>
->> And what is 33? This kind of magic
->>
->> should be explained.
->>
->>
->> > @@ -161,10 +166,13 @@ struct wl1271_partition_set {
->> >
->> >  struct wl1271;
->> >
->> > +#define WL12XX_NUM_FW_VER 5
->> > +
->>
->> WL12XX_FW_VER_OFFSET sounds better to me.
->>
->> And it shouldn't it be 4,
->> which is the "Rev " prefix?
->
-the macro represent the number of numbers in the version. it is not offset.
-
->>
->>
->> >  /* FIXME: I'm not sure about this structure name */
->> >  struct wl1271_chip {
->> >         u32 id;
->> > -       char fw_ver[21];
->> > +       char fw_ver_str[ETHTOOL_BUSINFO_LEN];
->> > +       unsigned long fw_ver[WL12XX_NUM_FW_VER];
->>
->> Why not unsigned int? (and then use %u.%u... as I mentioned earlier).
->
-i will try and update.
-
->>
->> --
->> Cheers,
->> Luca.
->>
-Shahar
