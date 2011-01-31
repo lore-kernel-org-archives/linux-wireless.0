@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42996 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299Ab1ASBmb (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53626 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755576Ab1AaLt5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 20:42:31 -0500
-Message-ID: <4D36417C.4080000@candelatech.com>
-Date: Tue, 18 Jan 2011 17:42:20 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 31 Jan 2011 06:49:57 -0500
+Received: by yxt3 with SMTP id 3so1921698yxt.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:49:57 -0800 (PST)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, amod.bodas@atheros.com,
-	pstew@google.com
-Subject: Re: [PATCH 1/5] ath9k: warn when we get a ATH9K_INT_TIM_TIMER and
- are idle
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com> <1291690135-4535-2-git-send-email-lrodriguez@atheros.com> <4D363FBA.3000207@candelatech.com> <AANLkTi=cWF0UrHG2DXoYp1NLP6F179A6pQ3P-tLFBNTg@mail.gmail.com>
-In-Reply-To: <AANLkTi=cWF0UrHG2DXoYp1NLP6F179A6pQ3P-tLFBNTg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1296473043.3812.10.camel@jlt3.sipsolutions.net>
+References: <1296472589-26401-1-git-send-email-arik@wizery.com>
+ <1296472589-26401-7-git-send-email-arik@wizery.com> <1296473043.3812.10.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 31 Jan 2011 13:49:41 +0200
+Message-ID: <AANLkTin9vOQJqDJezzBMjjRyGNDYGEwOwgT_aFk2NBYD@mail.gmail.com>
+Subject: Re: [PATCH v2 06/10] mac80211: add HW flag for disabling auto link-PS
+ in AP mode
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/18/2011 05:38 PM, Luis R. Rodriguez wrote:
-> On Tue, Jan 18, 2011 at 5:34 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 12/06/2010 06:48 PM, Luis R. Rodriguez wrote:
->>>
->>> We should not be idle when we get the ATH9K_INT_TIM_TIMER,
->>> otherwise we wake up the chip and that throws off the idle
->>> state, the driver needs to be in full sleep when idle and
->>> nothing should turn it awake without turning it back to
->>> full sleep again. If we leave the chip idle and suspend,
->>> upon resume the device will become unusable and we get:
->>>
->>> ath: Starting driver with initial channel: 5745 MHz
->>> ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef&    0x00000003 !=
->>> 0x00000000
->>>
->>> Cc: Paul Stewart<pstew@google.com>
->>> Cc: Amod Bodas<amod.bodas@atheros.com>
->>> signed-off-by: Luis R. Rodriguez<lrodriguez@atheros.com>
->>> ---
->>>   drivers/net/wireless/ath/ath9k/main.c |    1 +
->>>   1 files changed, 1 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/main.c
->>> b/drivers/net/wireless/ath/ath9k/main.c
->>> index f026a03..fd27ec9 100644
->>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>> @@ -770,6 +770,7 @@ irqreturn_t ath_isr(int irq, void *dev)
->>>                 if (status&    ATH9K_INT_TIM_TIMER) {
->>>                         /* Clear RxAbort bit so that we can
->>>                          * receive frames */
->>> +                       WARN_ON(sc->ps_idle);
->>>                         ath9k_setpower(sc, ATH9K_PM_AWAKE);
->>>                         ath9k_hw_setrxabort(sc->sc_ah, 0);
->>>                         sc->ps_flags |= PS_WAIT_FOR_BEACON;
->>
->> Looks like this patch never made it in.
->>
->> Should it be in, or should I just drop it from my queue?
->>
->
-> Eh, it shouldn't happen and if we warn we should use the new debugging
-> warn once thingy you added. I never saw that trigger so probably we
-> can just ignore it.
+On Mon, Jan 31, 2011 at 13:24, Johannes Berg <johannes@sipsolutions.net> wrote:
+> It'd be nicer if you could separate out mac80211 patches, but then Luca
+> needs to hold off merging until John picked up the mac80211 patch.
 
-I've been running this patch for months and haven't noticed the
-WARN_ON hit, so probably it's not needed.  Of course, I disable
-power-saving..so maybe I'm not a good test case :P
-
-Thanks,
-Ben
+Yea that would complicate matters a bit. Does the ordering of the
+patches bother you?
 
 >
->    Luis
+>> + * @IEEE80211_HW_AP_LINK_PS: When operating in AP mode the device
+>> + *   autonomously manages the PS status of connected stations. When
+>> + *   this flag is set mac80211 will not trigger PS mode for connected
+>> + *   stations based on the PM bit of incoming frames.
+>> + *   Use ieee80211_start_ps()/ieee8021_end_ps() to manually configure
+>> + *   the PS mode of connected stations.
+>
+> You just renamed it.
 
+Yea thanks for that.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+>
+> Also, come to think of it, the ieee80211_sta_block_awake will not be
+> effective I think? Or will it?
 
+Haven't noticed any adverse effects. ap_sta_ps_end() still checks if
+the station is blocked before delivering queued packets.
+
+Also is should be pretty hard to find a driver that uses both mechanisms.
+If it wants to block a station from waking up, it can simply not call
+ieee80211_sta_ps_transition().
+
+Should work though.
+
+Arik
