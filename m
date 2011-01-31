@@ -1,84 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37357 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751790Ab1AQL54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Jan 2011 06:57:56 -0500
-Subject: Re: Merging SSB and HND/AI support
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com> (sfid-20110117_122135_343461_FFFFFFFFFA00D75F)
-References: <AANLkTi=GDcy50zsC6=Dgv1-Ty3cYK2qpx9o=q3JdXuCh@mail.gmail.com>
-	 <1295261783.24530.3.camel@maggie>
-	 <AANLkTikJcug7LUTgX_YDD4Z8ZBrdkAdLq8_Epa6TkA5f@mail.gmail.com>
-	 (sfid-20110117_122135_343461_FFFFFFFFFA00D75F)
+Received: from mail.perches.com ([173.55.12.10]:3508 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753559Ab1AaS6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:58:18 -0500
+Subject: Re: [PATCH 1/1] compat-wireless: Fix ath9k debug log issue.
+From: Joe Perches <joe@perches.com>
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: luis.rodriguez@atheros.com, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <1296473865-18529-1-git-send-email-senthilkumar@atheros.com>
+References: <1296473865-18529-1-git-send-email-senthilkumar@atheros.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 17 Jan 2011 12:57:48 +0100
-Message-ID: <1295265468.24530.23.camel@maggie>
+Date: Mon, 31 Jan 2011 10:58:16 -0800
+Message-ID: <1296500296.4131.175.camel@Joe-Laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-17 at 12:21 +0100, Jonas Gorski wrote: 
-> On 17 January 2011 11:56, Michael Büsch <mb@bu3sch.de> wrote:
-> > On Mon, 2011-01-17 at 11:46 +0100, Jonas Gorski wrote:
-> >> a) Merge the HND/AI code into the current SSB code, or
-> >>
-> >> b) add the missing code for SoCs to brcm80211 and replace the SSB code with it.
-> >
-> > Why can't we keep those two platforms separated?
-> > Is there really a lot of shared code between SSB and HND/AI?
-> 
-> Yes, as far as I understand the AI bus behaves mostly like a SSB bus
-> except for places like enabling/disabling cores. E.g. the AI bus also
-> has a common core, which has a bit for telling whether its a SSB or AI
-> bus, and has the mostly the same registers as the SSB common cores (so
-> most driver_chipcommon_* stuff also applies for the AI bus).
+On Mon, 2011-01-31 at 17:07 +0530, Senthil Balasubramanian wrote:
+> ath9k debug logs are not shown as we are using recursive vsnprintf
+> which are supported in kernel 2.6.36 and above. use vprintk for older
+> kernels.
 
-Well... I don't really like the idea of running one driver and
-subsystem implementation on completely distinct types of silicon.
-We will end up with the same mess that broadcom ended up with in
-their "SB" code (broadcom's SSB backplane implementation).
-For example, in their code the driver calls pci_enable_device() and
-related PCI functions, even if there is no PCI device at all. The calls
-are magically re-routed to the actual SB backplane.
-You'd have to do the same mess with SSB. Calling ssb_device_enable()
-will mean "enable the SSB device", if the backplane is SSB, and will
-mean "enable the HND/AI" device, if the backplane is HND/AI.
+#ifdefs spread around the tree for this sort of
+change are not very nice.
 
-So I'm still in favor of doing a separate HND/AI bus implementation,
-even if
-that means duplicating a few lines of code. I think that compared to the
-workarounds and conditionals needed for getting SSB to run on HND/AI
-hardware, it will be a net win.
+Perhaps wireless-compat should not be an impediment to
+mainline progress and these sorts of changes should be
+minimized.
+ 
+If this is really necessary for backward compatibility,
+I think the %pV could just be removed.
 
-> > So why do we need to replace or merge SSB in the first place? Can't
-> > it co-exist with HND/AI?
-> 
-> It probably can, but then the SSB code must be at least made AI aware
-> so it doesn't try to attach itself if it finds one.
+If not, because this style would be used in several
+places, perhaps another macro could be used to hide the
+use of %pV.
 
-SSB doesn't search for SSB busses in the system, because there's no
-way to do so. The architecture (or the PCI/PCMCIA/SDIO device) registers
-the bus,
-if it detected an SSB device. So for the embedded case, it's hardcoded
-in the arch code. For the PCI case it simply depends on the PCI IDs.
-I don't see a problem here. Your arch code will already have to know
-what machine it is running on. So it will have to decide whether to
-register a SSB or HND/AI bus.
+Maybe something like:
 
-It's like a platform_device. However, it doesn't use the platform_device
-mechanism. There's no technical reason. It would be trivial to port the
-SSB bus registration to use platform_device, however.
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+#define PRINTK_VA_LIST(level, prefix, fmt, __va_list)	\
+({							\
+ 	struct va_format vaf;				\
+ 							\
+ 	vaf.fmt = fmt;					\
+ 	vaf.va = &__va_list;				\
+							\
+	printk("%s" prefix "%pV", level, &vaf);		\
+})
+#else
+#define PRINTK_VA_LIST(level, prefix, fmt, __va_list)	\
+({							\
+	printk("%s" prefix, level);			\
+	vprintk(fmt, __va_list);			\
+})
+#endif
 
-> Also I don't know
-> if it is a good idea to let arch-specific code depend on code in
-> staging.
+> +diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+> +index c325202..e3e60d4 100644
+> +--- a/drivers/net/wireless/ath/main.c
+> ++++ b/drivers/net/wireless/ath/main.c
+> +@@ -60,16 +60,23 @@ EXPORT_SYMBOL(ath_rxbuf_alloc);
+> + int ath_printk(const char *level, struct ath_common *common,
+> + 	       const char *fmt, ...)
+> + {
+> ++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+> + 	struct va_format vaf;
+> ++#endif
+> + 	va_list args;
+> + 	int rtn;
+> + 
+> + 	va_start(args, fmt);
+> + 
+> ++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+> + 	vaf.fmt = fmt;
+> + 	vaf.va = &args;
+> + 
+> + 	rtn = printk("%sath: %pV", level, &vaf);
+> ++#else
+> ++	printk("%sath: ", level);
+> ++	rtn = vprintk(fmt, args);
+> ++#endif
+> + 
+> + 	va_end(args);
+> + 
 
-Sure. The code needs to be cleaned up and moved to the mainline kernel
-_anyway_. You don't get around this.
+So this would become something like:
 
--- 
-Greetings Michael.
+int ath_printk(const char *level, struct ath_common *common,
+	       const char *fmt, ...)
+{
+	va_list args;
+	int rtn;
+
+	va_start(args, fmt);
+
+	rtn = PRINTK_VA_LIST(level, "ath: ", fmt, args);
+
+	va_end(args);
+
+	return rtn;
+}
+
 
