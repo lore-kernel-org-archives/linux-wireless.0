@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:44346 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119Ab1ACFqk (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:46172 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573Ab1AaTAs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 00:46:40 -0500
-Date: Mon, 3 Jan 2011 08:46:29 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch -next] ath5k: ath5k_eeprom_mode_from_channel() returns
- signed
-Message-ID: <20110103054629.GR1886@bicker>
+	Mon, 31 Jan 2011 14:00:48 -0500
+Received: by qyk12 with SMTP id 12so6498973qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 11:00:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110131181725.GA11054@sig21.net>
+References: <201101311600.39486.IvDoorn@gmail.com>
+	<20110131181725.GA11054@sig21.net>
+Date: Mon, 31 Jan 2011 20:00:09 +0100
+Message-ID: <AANLkTin+cpLWKbX4YaLUUiR_UAKqSPFy-9Lt1cjK3wOs@mail.gmail.com>
+Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in
+ powersave mode
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath5k_eeprom_mode_from_channel() returns -1 on error but we're storing
-the result in "ee_mode" which is an unsigned char.  This breaks the
-error handling.  This patch makes "ee_mode" an int.
+Hi,
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+>> +     if (test_bit(DRIVER_REQUIRE_PS_AUTOWAKE, &rt2x00dev->flags) &&
+>> +         (ieee80211_flags & IEEE80211_CONF_CHANGE_PS) &&
+>> +         (conf->flags & IEEE80211_CONF_PS))
+>> +             queue_delayed_work(rt2x00dev->workqueue,
+>> +                                &rt2x00dev->autowakeup_work,
+>> +                                msecs_to_jiffies(rt2x00dev->beacon_int) - 1);
+>> +
+>
+> I have doubts about this part.  Doesn't this just catch
+> one beacon?  I'm not sure how often mac80211 calls the .config
+> op, I thought it is called once when going to sleep, and then the
+> hw/fw/driver is responsible to wakeup every n'th beacon
+> (according to the configured listen interval).
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 9306d5f..78c26fd 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1916,7 +1916,8 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
- 	struct ieee80211_channel *channel = ah->ah_current_channel;
- 	bool use_def_for_tx, update_def_on_tx, use_def_for_rts, fast_div;
- 	bool use_def_for_sg;
--	u8 def_ant, tx_ant, ee_mode;
-+	int ee_mode;
-+	u8 def_ant, tx_ant;
- 	u32 sta_id1 = 0;
- 
- 	/* if channel is not initialized yet we can't set the antennas
-@@ -3081,7 +3082,8 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- {
- 	struct ath5k_rate_pcal_info rate_info;
- 	struct ieee80211_channel *curr_channel = ah->ah_current_channel;
--	u8 type, ee_mode;
-+	int ee_mode;
-+	u8 type;
- 	int ret;
- 
- 	if (txpower > AR5K_TUNE_MAX_TXPOWER) {
+Yes, I was also doubting about that. But is the listen_interval is TU, msecs,
+or the number of beacons?
+
+> Also, I think rt2x00dev->beacon_int is in TUs, not msecs.
+
+Nope, it is in msecs :)
+
+Ivo
