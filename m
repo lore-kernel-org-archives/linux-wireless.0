@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:22736 "EHLO mga14.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:48638 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751406Ab1AWSRl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Jan 2011 13:17:41 -0500
-Subject: Re: [PATCH 01/14] iwlwifi: use mac80211 throughput trigger
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1295773526.3639.3.camel@jlt3.sipsolutions.net>
-References: <1295654809-5790-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1295654809-5790-2-git-send-email-wey-yi.w.guy@intel.com>
-	 <1295773526.3639.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 23 Jan 2011 10:05:58 -0800
-Message-ID: <1295805958.3591.58.camel@wwguy-huron>
-Mime-Version: 1.0
+	id S1756562Ab1AaVtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 16:49:47 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 13:49:27 -0800
+From: Michael Green <Michael.Green@Atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	Kathy Giori <Kathy.Giori@Atheros.com>,
+	David Quan <David.Quan@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 31 Jan 2011 13:49:39 -0800
+Subject: RE: Review of EN 301 893 1.5.1 and 1.6.1 changes
+Message-ID: <93781E992CBA7843962D8B0E7D683F3C16FE767CC6@SC1EXMB-MBCL.global.atheros.com>
+References: <AANLkTim3CG+aN9QGhGOfBD9+BSYsgQW_ACC0o+k9H-rt@mail.gmail.com>
+	 <AANLkTinuFzBMMLd08Zpkf8iGBO-YdM2Ni-KtNCNxuUbT@mail.gmail.com>
+	 <AANLkTi=b-Tm7r1eODgAQqpQJuimD0+dQkHFB4YV06kES@mail.gmail.com>
+ <1296510225.3812.50.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296510225.3812.50.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-01-23 at 01:05 -0800, Johannes Berg wrote:
-> That should have
-> 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> :-)
-> 
-Very sorry, never mean to take the credit from you :-)
-my mistake and need to be really careful and read twice before push.
-
-Wey
-
-
+THVja2lseSwgdGhlICJoYXJtb25pemVkIHN0YW5kYXJkIiBpcyBieSBsYXcsIG9uZSBhbmQgb25s
+eSBvbmUgZm9yIERGUyBjb25mb3JtYW5jZSBhY3Jvc3MgYWxsIEV1cm9wZWFuIENvbW11bml0eSBj
+b3VudHJpZXMuIA0KDQpUaGVyZSBhcmUgbm8gZGlmZmVyZW5jZXMgaW4gcHVsc2UgcGF0dGVybnMs
+IG5vbiBvY2N1cGFuY3ksIGNoYW5uZWwgY2xvc2UgdGltZSwgZXRjIGV0Yy4gYWNyb3NzIEVVIGNv
+dW50cmllcy4gIEkgaGF2ZSBub3QgZ290dGVuIGFueSBpbmRpY2F0aW9uIGZyb20gYW55d2hlcmUg
+dGhhdCB0aGVyZSB3aWxsIGJlIGRldmlhdGlvbiBvbiBhIGNvdW50cnkgYnkgY291bnRyeSBiYXNp
+cyBpbiBFdXJvcGUgYWZmZWN0aW5nIERGUyBydWxlcy4NCg0KQlRXLCBhcyBvZiBKdW5lIDMwLCAy
+MDEwLCBFTjMwMSA4OTMgVjEuNS4xIGJlY2FtZSBtYW5kYXRvcnkuICBBbGwgZGV2aWNlcyBwbGFj
+ZWQgb24gdGhlIEVDIG1hcmtldCBtdXN0IG1lZXQgdGhvc2UgbGF0ZXN0IHB1bHNlIHBhdHRlcm5z
+IHBlciBWMS41LjEuDQoNCnRrcywNCg0KDQoNCk1pY2hhZWwgR3JlZW4NCkF0aGVyb3MgQ29tbXVu
+aWNhdGlvbnMsIEluYy4NCm1ncmVlbkBhdGhlcm9zLmNvbQ0KRGVzazogICArMS03ODEtNDAwLTE0
+OTENCk1vYmlsZTogKzEtNTA4LTM4MC00OTIxDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0g
+DQpTZW50OiBNb25kYXksIEphbnVhcnkgMzEsIDIwMTEgNDo0NCBQTQ0KVG86IEx1aXMgUi4gUm9k
+cmlndWV6DQpDYzogTWljaGFlbCBHcmVlbjsgbGludXgtd2lyZWxlc3M7IHdpcmVsZXNzLXJlZ2Ri
+QGxpc3RzLmluZnJhZGVhZC5vcmc7IEthdGh5IEdpb3JpOyBEYXZpZCBRdWFuOyBKb2huIFcuIExp
+bnZpbGxlDQpTdWJqZWN0OiBSZTogUmV2aWV3IG9mIEVOIDMwMSA4OTMgMS41LjEgYW5kIDEuNi4x
+IGNoYW5nZXMNCg0KTm90ZTogdGhpcyBlbWFpbCBpcyBvbiBhIHB1YmxpYyBsaXN0LiBJZiB5b3Ug
+Y2FuJ3QgdGVsbCB0aGF0IGZyb20gdGhlIENjDQpsaW5lIG9mIHRoZSBlbWFpbCwgSSdtIG5vdCBz
+dXJlIHlvdSBzaG91bGQgYmUgd29ya2luZyBpbiB0aGlzIGZpZWxkLiBJZg0KeW91IHRoaW5rIEkn
+bSBtb2NraW5nIHlvdSwgbWF5YmUgSSBhbSA6UA0KDQpPbiBNb24sIDIwMTEtMDEtMzEgYXQgMTM6
+MzMgLTA4MDAsIEx1aXMgUi4gUm9kcmlndWV6IHdyb3RlOg0KPiBGWUkgLSBFdXJvcGVhbiBjb25m
+b3JtYW5jZSBzcGVjIGZvciA1IEdIeiBSYWRpbyBMQU5zIGhhcyBzb21lIHNsaWdodA0KPiBtb2Rp
+ZmljYXRpb25zIHdoaWNoIEpvaGFubmVzIGhhcyBwb2ludGVkIG91dCB3aGljaCB3ZSBoYXZlIHJl
+dmlld2VkDQo+IHRvZGF5IGluIGNvbnNpZGVyYXRpb24gZm9yIG91ciBuZXcgREZTIGRlc2lnbi4g
+VGhlIHNraW5ueSBpcyB0aGF0IG91cg0KPiBpbXBsZW1lbnRhdGlvbiBvZiB1c2luZyAzIHJlZ2lv
+bnMgYXJlIE9LIGFuZCB3ZSB3aWxsIG1vdmUgZm9yd2FyZCB3aXRoDQo+IHRoYXQuDQoNCkkganVz
+dCBmZWFyIHRoYXQgd2lsbCBub3QgYWxsb3cgdXMgdG8ga2VlcCBtYW5vZXV2cmluZyBlZmZlY3Rp
+dmVseSBpbg0KdGhlIGZ1dHVyZSwgYmVjYXVzZSB0aGVuIHdlIG5lZWQgdG8gY2hhbmdlIGFsbCB0
+aGUgaW1wbGVtZW50YXRpb25zLA0KcG90ZW50aWFsbHkgb2xkIG9uZXMsIHJhdGhlciB0aGFuIGp1
+c3QgdXBkYXRpbmcgdGhlIGRhdGFiYXNlLg0KDQpJIHdhc24ndCBzbyBtdWNoIHRoaW5raW5nIG9m
+IHRoZSBwdWxzZSBwYXR0ZXJucyB0aG91Z2ggYXMgdGhlIG90aGVyDQp0aW1pbmdzIGxpa2UgdGhl
+IGFpcnRpbWUgYWxsb3dlZCB0byB1c2UgYmVmb3JlIG1vdmluZyBvbnRvIGEgbmV3DQpjaGFubmVs
+Lg0KDQpqb2hhbm5lcw0KDQo=
