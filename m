@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:65317 "EHLO mail.atheros.com"
+Received: from purkki.adurom.net ([80.68.90.206]:57262 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822Ab1APGUm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Jan 2011 01:20:42 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Jan 2011 22:20:24 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: abort tx/rx on fast channel change
-Date: Sun, 16 Jan 2011 11:49:54 +0530
-Message-ID: <1295158794-3088-1-git-send-email-rmanoharan@atheros.com>
+	id S1751020Ab1AaQEV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 11:04:21 -0500
+To: =?utf-8?Q?G=C3=A1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: David Gnedt <david.gnedt@davizone.at>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+Subject: Re: [PATCH 18/18] wl1251: disable retry and ACK policy for injected packets
+References: <4D45A7BD.705@davizone.at> <4D45B7DF.1030703@davizone.at>
+	<AANLkTik5nkCT6Xbg0SF4oggCXiQjn4EybDq_RKmjPko+@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 31 Jan 2011 18:04:20 +0200
+In-Reply-To: <AANLkTik5nkCT6Xbg0SF4oggCXiQjn4EybDq_RKmjPko+@mail.gmail.com>
+ (=?utf-8?Q?=22G=C3=A1bor?= Stefanik"'s message of "Mon\, 31 Jan 2011
+ 00\:08\:35 +0100")
+Message-ID: <871v3tdpq3.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Abort Tx/Rx on fast channel change before hw reset.
-This helps to avoid timeout on loading noise floor
-values after channel change.
+Gábor Stefanik <netrolller.3d@gmail.com> writes:
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+> On Sun, Jan 30, 2011 at 8:11 PM, David Gnedt <david.gnedt@davizone.at> wrote:
+>> Set the retry limit to 0 and disable the ACK policy for injected
+>> packets.
+>
+> Unfortunately this is not the right thing to do - something like this
+> should be done in mac80211, but triggered by radiotap (sometimes, it
+> makes sense to inject packets and expect ACKs). See the list for
+> earlier discussions about the TX Flags field, and
+> patches.aircrack-ng.org for a proof-of-concept implementation.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 187af5b..d374867 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -193,8 +193,6 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	ath9k_htc_ps_wakeup(priv);
- 	htc_stop(priv->htc);
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
--	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
--	WMI_CMD(WMI_STOP_RECV_CMDID);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"(%u MHz) -> (%u MHz), HT: %d, HT40: %d fastcc: %d\n",
-@@ -202,8 +200,21 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
- 		fastcc);
- 
--	if (!fastcc)
-+	if (fastcc) {
-+		/* abort pending tx frames */
-+		WMI_CMD(WMI_ABORT_TX_DMA_CMDID);
-+		WMI_CMD(WMI_ABORT_TXQ_CMDID);
-+
-+		/* Clear receive filter */
-+		ath9k_hw_setrxfilter(ah, 0);
-+
-+		WMI_CMD(WMI_STOP_DMA_RECV_CMDID);
-+		WMI_CMD(WMI_RX_LINK_CMDID);
-+	} else {
-+		WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
-+		WMI_CMD(WMI_STOP_RECV_CMDID);
- 		caldata = &priv->caldata;
-+	}
- 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
- 	if (ret) {
- 		ath_err(common,
+Agreed. Again I prefer the less-logic-in-the-driver philosophy.
+
 -- 
-1.7.3.5
-
+Kalle Valo
