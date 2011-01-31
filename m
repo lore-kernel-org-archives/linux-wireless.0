@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56579 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751662Ab1ARL7u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Jan 2011 06:59:50 -0500
-Received: by fxm20 with SMTP id 20so7109155fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jan 2011 03:59:48 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+Received: from mail.atheros.com ([12.19.149.2]:53880 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751020Ab1AaN4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 08:56:43 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 05:56:23 -0800
+Date: Mon, 31 Jan 2011 19:25:55 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/5] mac80211: add DFS related channel flags
-Date: Tue, 18 Jan 2011 12:59:46 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201101171621.29863.bernhard.schmidt@saxnet.de> <20110117161133.66B54207E@mx.techwires.net> <1295347236.3563.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1295347236.3563.5.camel@jlt3.sipsolutions.net>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: disable ps if an AP type vif is present
+Message-ID: <20110131135554.GC14176@vmraj-lnx.users.atheros.com>
+References: <1296394571-3317-1-git-send-email-rmanoharan@atheros.com>
+ <1296473558.3812.15.camel@jlt3.sipsolutions.net>
+ <20110131115341.GB14176@vmraj-lnx.users.atheros.com>
+ <1296475637.3812.18.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201101181259.46719.bernhard.schmidt@saxnet.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1296475637.3812.18.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, January 18, 2011 11:40:36 Johannes Berg wrote:
-> On Mon, 2011-01-17 at 09:31 +0100, Bernhard Schmidt wrote:
-> > Before a radar channel can be used, a full CAC has be done, the
-> > IEEE80211_CHAN_RADAR_CLEAR flags indicates that this has been done.
-> > If either during CAC or in-service monitoring interference is
-> > detected, the channel is added to NOL and marked with
-> > IEEE80211_CHAN_RADAR_INTERFERENCE.
+On Mon, Jan 31, 2011 at 05:37:16PM +0530, Johannes Berg wrote:
+> On Mon, 2011-01-31 at 17:23 +0530, Rajkumar Manoharan wrote:
 > 
-> I'm not sure about this -- shouldn't that be global information? If
-> one device in the system records a radar on the channel, it surely
-> applies to other devices as well, even if they are hot-plugged after
-> the radar was found?
+> > > >  	list_for_each_entry(sdata, &local->interfaces, list) {
+> > > >  		if (!ieee80211_sdata_running(sdata))
+> > > >  			continue;
+> > > > +		if (((sdata->vif.type == NL80211_IFTYPE_AP) ||
+> > > > +		     (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) &&
+> > > > +		    !sdata->vif.p2p) {
+> > > > +			count = 0;
+> > > > +			break;
+> > > 
+> > > I'd leave out the P2P check for now -- as soon as you have more than one
+> > > interface we don't go to PS,
+> > Not exactly. we are counting only station type, though we have multi vifs.
+> 
+> Right -- that was confusing.
+> 
+> > >and we don't have NoA things etc. yet.
+> > the p2p check means that infra AP only.
+> 
+> Yeah but do we have any drivers that handle PS in P2P mode? I guess
+> iwlwifi might if you have the right firmware, but ath9k surely won't?
+> I'd rather not have to worry about it right now.
+Ok. I leave the p2p check and send the patch. Thanks for the review.
 
-True, I've based this on our IRC discussions, the consensus there was to 
-do it per-wiphy only at first.
-
--- 
-Best regards,
-
-Dipl.-Inf. (FH) Bernhard Schmidt (software development)
-
-saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
-Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
-managing director: Steffen Dreise - county court Chemnitz - HRB 23017
-http://www.saxnet.de
+--
+Rajkumar
