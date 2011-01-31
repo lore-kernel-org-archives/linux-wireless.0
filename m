@@ -1,101 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33649 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753523Ab1ATWj1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Jan 2011 17:39:27 -0500
-Message-ID: <4D38B990.50406@candelatech.com>
-Date: Thu, 20 Jan 2011 14:39:12 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH 1/4] ath9k: remove the virtual wiphy debugfs interface
-References: <1295562349-17161-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1295562349-17161-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <4D46B4340200002300027E82@novprvlin0050.provo.novell.com>
+Date: Sun, 30 Jan 2011 19:08:04 -0700
+From: "Joey Lee" <jlee@novell.com>
+To: <ozan@pardus.org.tr>
+Cc: <Larry.Finger@lwfinger.net>, <linux-wireless@vger.kernel.org>,
+	<platform-driver-x86@vger.kernel.org>
+Subject: Re: Rfkill always soft/hard blocked upon boot
+References: <4D455DC1.6010909@pardus.org.tr>
+ <4D45B338.8010802@lwfinger.net> <4D45B776.4000403@pardus.org.tr>
+In-Reply-To: <4D45B776.4000403@pardus.org.tr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2011 02:25 PM, Felix Fietkau wrote:
-> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
-> ---
->   drivers/net/wireless/ath/ath9k/debug.c |  202 --------------------------------
->   1 files changed, 0 insertions(+), 202 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> index 3586c43..73644c4 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -381,204 +381,6 @@ static const struct file_operations fops_interrupt = {
->   	.llseek = default_llseek,
->   };
+Hi Ozan, 
 
-I think a lot of this could still be useful, even if it's named something
-other than wiphy, so please don't remove all the filter debug and
-similar...
+於 日，2011-01-30 於 21:09 +0200，Ozan Çağlayan 提到：
+> On 30.01.2011 20:51, Larry Finger wrote:
+> 
+> > The nature of that Fn-F2 key depends on how the motherboard manufacturer coded
+> > their BIOS. Most do it as a toggle and use some WMI (Windows Management
+> > Interface) code to initialize it on boot up. As this no-name laptop is unlikely
+> > to have a WMI driver the way that name brands do, it probably generates a
+> > keystroke. That is easy to check - Use CTRL-ALT-F1 to switch to a console, log
+> > in, and issue the command "showkey". Is a keycode returned when Fn-F2 is pressed?
+> 
+> Hmm I've got it. So maybe taking look at the ACPI tables/WMI block can 
+> reveal a way to initialize the toggle? I'm not really experienced in 
+> these things but I'll take a look out of curiosity.
+> 
+> Thanks!
+> 
+> 
 
-Thanks,
-Ben
+Does it possible share your machine's model name, dmidecode and
+acpidump?
 
->
-> -static const char * ath_wiphy_state_str(enum ath_wiphy_state state)
-> -{
-> -	switch (state) {
-> -	case ATH_WIPHY_INACTIVE:
-> -		return "INACTIVE";
-> -	case ATH_WIPHY_ACTIVE:
-> -		return "ACTIVE";
-> -	case ATH_WIPHY_PAUSING:
-> -		return "PAUSING";
-> -	case ATH_WIPHY_PAUSED:
-> -		return "PAUSED";
-> -	case ATH_WIPHY_SCAN:
-> -		return "SCAN";
-> -	}
-> -	return "?";
-> -}
-> -
-> -static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
-> -			       size_t count, loff_t *ppos)
-> -{
-> -	struct ath_softc *sc = file->private_data;
-> -	struct ath_wiphy *aphy = sc->pri_wiphy;
-> -	struct ieee80211_channel *chan = aphy->hw->conf.channel;
-> -	char buf[512];
-> -	unsigned int len = 0;
-> -	int i;
-> -	u8 addr[ETH_ALEN];
-> -	u32 tmp;
-> -
-> -	len += snprintf(buf + len, sizeof(buf) - len,
-> -			"primary: %s (%s chan=%d ht=%d)\n",
-> -			wiphy_name(sc->pri_wiphy->hw->wiphy),
-> -			ath_wiphy_state_str(sc->pri_wiphy->state),
-> -			ieee80211_frequency_to_channel(chan->center_freq),
-> -			aphy->chan_is_ht);
-> -
-> -	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
-> -	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1)&  0xffff, addr + 4);
-> -	len += snprintf(buf + len, sizeof(buf) - len,
-> -			"addr: %pM\n", addr);
-> -	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
-> -	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU)&  0xffff, addr + 4);
-> -	len += snprintf(buf + len, sizeof(buf) - len,
-> -			"addrmask: %pM\n", addr);
-> -	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
-> -	len += snprintf(buf + len, sizeof(buf) - len,
-> -			"rfilt: 0x%x", tmp);
-> -	if (tmp&  ATH9K_RX_FILTER_UCAST)
-> -		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
-> -	if (tmp&  ATH9K_RX_FILTER_MCAST)
-> -		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Thank's
+Joey Lee
 
