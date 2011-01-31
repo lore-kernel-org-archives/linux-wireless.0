@@ -1,41 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33202 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075Ab1AaSpt (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:51488 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299Ab1AaSoC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:45:49 -0500
-Message-ID: <4D470359.6050902@candelatech.com>
-Date: Mon, 31 Jan 2011 10:45:45 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 31 Jan 2011 13:44:02 -0500
+Received: by qwa26 with SMTP id 26so5785389qwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 10:44:01 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Missing config_hw() in ieee80211_ibss_join?
-References: <4D46FF7E.9080409@candelatech.com> <1296499385.3812.40.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296499385.3812.40.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
+References: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 31 Jan 2011 10:43:41 -0800
+Message-ID: <AANLkTi=4jgGmnSXZNBWu30WVfda7QrHFyWt_XKJD0jDK@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
+To: Mark Mentovai <mark@moxienet.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2011 10:43 AM, Johannes Berg wrote:
-> On Mon, 2011-01-31 at 10:29 -0800, Ben Greear wrote:
->> The method ieee80211_ibss_join can change the operating channel,
->> but I don't see anywhere that it calls config_hw to flush the
->> changes into the kernel.
->>
->> Should we add such a call?
->
-> I don't think so -- it doesn't actually really join until it has scanned
-> first etc.?
+John, I'll review this today.
 
-Ok, good enough for me.  I don't think this will cause any problems
-with my scan-on-channel logic, but it looked a bit strange while
-I was auditing the oper-channel related code.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+  Luis
