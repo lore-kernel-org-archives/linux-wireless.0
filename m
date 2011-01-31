@@ -1,204 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:50470 "EHLO comal.ext.ti.com"
+Received: from mail.atheros.com ([12.19.149.2]:49049 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754796Ab1ACNlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Jan 2011 08:41:14 -0500
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v3 2/2] wl12xx: BA receiver support
-Date: Mon,  3 Jan 2011 15:42:44 +0200
-Message-Id: <1294062164-3459-3-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
-References: <1294062164-3459-1-git-send-email-shahar_levi@ti.com>
+	id S1752784Ab1AaLyc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 06:54:32 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 03:54:13 -0800
+Date: Mon, 31 Jan 2011 17:23:41 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: disable ps if an AP type vif is present
+Message-ID: <20110131115341.GB14176@vmraj-lnx.users.atheros.com>
+References: <1296394571-3317-1-git-send-email-rmanoharan@atheros.com>
+ <1296473558.3812.15.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1296473558.3812.15.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new ampdu_action ops to support receiver BA.
-The BA initiator session management in FW independently.
+On Mon, Jan 31, 2011 at 05:02:38PM +0530, Johannes Berg wrote:
+> On Sun, 2011-01-30 at 19:06 +0530, Rajkumar Manoharan wrote:
+> > PS should be disabled for AP type. So while recalculating
+> > PS, AP vif type should be taken into account.
+> > 
+> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> > ---
+> >  net/mac80211/mlme.c |    6 ++++++
+> >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> > index 3221069..1fd6023 100644
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -601,6 +601,12 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+> >  	list_for_each_entry(sdata, &local->interfaces, list) {
+> >  		if (!ieee80211_sdata_running(sdata))
+> >  			continue;
+> > +		if (((sdata->vif.type == NL80211_IFTYPE_AP) ||
+> > +		     (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) &&
+> > +		    !sdata->vif.p2p) {
+> > +			count = 0;
+> > +			break;
+> 
+> I'd leave out the P2P check for now -- as soon as you have more than one
+> interface we don't go to PS,
+Not exactly. we are counting only station type, though we have multi vifs.
+>and we don't have NoA things etc. yet.
+the p2p check means that infra AP only.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
-Dependencies:
-- BA Initiator patches have a runtime dependency on commit
-   "[RFC v5] wl1271: BA Initiator support"
+> Also, the VLAN check can go, since if there's a VLAN then there must
+> also be an AP.
+> 
+> Setting count to 0 is likely to be confusing to somebody trying to
+> implement multi-interface PS though, a comment would be good.
+Sure. 
 
-Changes from v1:
-- Add mutex and (wl->state == WL1271_STATE_OFF) protection
-- "BIT(tid)" instead of "BIT(0) << tid"
-- Move all event code move to the next patch
-
-Changes from v2:
-- Add supported FW version auto detection mechanism
-
- drivers/net/wireless/wl12xx/acx.c  |   36 ++++++++++++++++++++++
- drivers/net/wireless/wl12xx/acx.h  |   21 +++++++++++++
- drivers/net/wireless/wl12xx/main.c |   59 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 116 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 54fd68d..f33ab50 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1359,6 +1359,42 @@ out:
- 	return ret;
- }
- 
-+/* setup BA session receiver setting in the FW. */
-+int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
-+				       u16 *ssn, u8 policy)
-+{
-+	struct wl1271_acx_ba_receiver_setup *acx;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx ba receiver session setting");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/* Single link for now */
-+	acx->link_id = 1;
-+	acx->tid = tid_index;
-+	acx->enable = policy;
-+	acx->win_size = 0;
-+
-+	if (policy)
-+		acx->ssn = *ssn;
-+
-+	ret = wl1271_cmd_configure(wl, ACX_BA_SESSION_RX_SETUP, acx,
-+				   sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx ba receiver session failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
- {
- 	struct wl1271_acx_fw_tsf_information *tsf_info;
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index df48468..8fc98b7 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1085,6 +1085,25 @@ struct wl1271_acx_ba_session_policy {
- 	u8 padding[3];
- } __packed;
- 
-+struct wl1271_acx_ba_receiver_setup {
-+	struct acx_header header;
-+
-+	/* Specifies Link Id, Range 0-31, 0xFF means ANY  Link Id */
-+	u8 link_id;
-+
-+	u8 tid;
-+
-+	u8 enable;
-+
-+	u8 padding[1];
-+
-+	/* Windows size in number of packets */
-+	u16 win_size;
-+
-+	/* BA session starting sequence number.  RANGE 0-FFF */
-+	u16 ssn;
-+} __packed;
-+
- struct wl1271_acx_fw_tsf_information {
- 	struct acx_header header;
- 
-@@ -1222,6 +1241,8 @@ int wl1271_acx_set_ht_information(struct wl1271 *wl,
- int wl1271_acx_set_ba_session(struct wl1271 *wl,
- 			      enum ieee80211_back_parties direction,
- 			      u8 tid_index, u8 policy);
-+int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
-+				       u16 *ssn, u8 policy);
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
- 
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index c44462d..04b69ab 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2251,6 +2251,64 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
- 
-+int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   enum ieee80211_ampdu_mlme_action action,
-+			   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF)) {
-+		ret = -EAGAIN;
-+		goto out;
-+	}
-+
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
-+	switch (action) {
-+	case IEEE80211_AMPDU_RX_START:
-+		if ((wl->ba_allowed) && (wl->ba_support)) {
-+			ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
-+								 true);
-+			if (!ret)
-+				wl->ba_rx_bitmap |= BIT(tid);
-+		} else
-+			ret = -EPERM;
-+		break;
-+
-+	case IEEE80211_AMPDU_RX_STOP:
-+		ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn, false);
-+		if (!ret)
-+			wl->ba_rx_bitmap &= ~BIT(tid);
-+		break;
-+
-+	/*
-+	 * The BA initiator session management in FW independently.
-+	 * Falling break here on purpose for all TX APDU commands.
-+	 */
-+	case IEEE80211_AMPDU_TX_START:
-+	case IEEE80211_AMPDU_TX_STOP:
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		ret = -EINVAL;
-+		break;
-+
-+	default:
-+		wl1271_error("Incorrect ampdu action id=%x\n", action);
-+		ret = -ENODEV;
-+	}
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+
-+	return ret;
-+}
-+
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_rate wl1271_rates[] = {
- 	{ .bitrate = 10,
-@@ -2497,6 +2555,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.conf_tx = wl1271_op_conf_tx,
- 	.get_tsf = wl1271_op_get_tsf,
- 	.get_survey = wl1271_op_get_survey,
-+	.ampdu_action = wl1271_op_ampdu_action,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
--- 
-1.7.0.4
-
+--
+Rajkumar
