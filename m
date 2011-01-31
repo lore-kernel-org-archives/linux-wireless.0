@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:50219 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540Ab1A2Leg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jan 2011 06:34:36 -0500
-Received: by wwi17 with SMTP id 17so1927295wwi.1
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Jan 2011 03:34:32 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:6196 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755604Ab1AaL33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 06:29:29 -0500
+Date: Mon, 31 Jan 2011 12:29:20 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 7/8] iwlagn: remove
+ CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+Message-ID: <20110131112916.GA22367@redhat.com>
+References: <1296229671-3041-1-git-send-email-sgruszka@redhat.com>
+ <1296229671-3041-7-git-send-email-sgruszka@redhat.com>
+ <1296231817.7388.18.camel@wwguy-ubuntu>
+ <20110128164136.GF2452@redhat.com>
+ <1296256821.8832.1.camel@wwguy-ubuntu>
+ <20110131094624.GA20641@redhat.com>
+ <AANLkTinBneG0nqGFt=mnP0-ZSdLGzdxhfYpyo62WYJQA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4D42C27A.70509@t-online.de>
-References: <4D42C27A.70509@t-online.de>
-Date: Sat, 29 Jan 2011 17:04:30 +0530
-Message-ID: <AANLkTi=sRLjQ1gw5yb1ihVKAyp8E5B99KDKedwHTbW+=@mail.gmail.com>
-Subject: Re: ath9k: scanning kills unicast
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: =?ISO-8859-1?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTinBneG0nqGFt=mnP0-ZSdLGzdxhfYpyo62WYJQA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 28, 2011 at 6:49 PM, Richard Schütz <r.schtz@t-online.de> wrote:
-> When I receive data with the highest possible speed in my 802.11g network
-> and simultaneously scan for available networks (NetworkManager does this all
-> the time in the background) ath9k enters a strange state: unicast data
-> transfer is stalled, but broadcast is still working. This state lasts for a
-> while. Then it ends after deauthentication (Reason: 6) and reauthentication.
-> ATH_DEBUG_FATAL logs nothing.
->
->
-> $ lspci -nn|grep Atheros
-> 05:00.0 Network controller [0280]: Atheros Communications Inc. AR9285
-> Wireless Network Adapter (PCI-Express) [168c:002b] (rev 01)
->
-> $ dmesg|grep -i ath
-> ath9k 0000:05:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-> ath9k 0000:05:00.0: setting latency timer to 64
-> ath: EEPROM regdomain: 0x65
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: 00
-> ath: Regpair used: 0x65
-> ieee80211 phy0: Selected rate control algorithm 'ath9k_rate_control'
-> Registered led device: ath9k-phy0::radio
-> Registered led device: ath9k-phy0::assoc
-> Registered led device: ath9k-phy0::tx
-> Registered led device: ath9k-phy0::rx
-> ieee80211 phy0: Atheros AR9285 Rev:2 mem=0xffffc90012260000, irq=16
->
-> $ uname -r
-> 2.6.37-ARCH
+On Mon, Jan 31, 2011 at 11:23:33AM +0100, RafaÅ‚ MiÅ‚ecki wrote:
+> >> > Not really. I believe someone who download a tarball, unpack it and copy
+> >> > files to /lib/firmware is pretty much aware what he/she is doing.
+> >> >
+> >> Agree whoever download the tarball know what he/she is doing, but I am
+> >> not fully agree the driver always use experimental uCode if it is in the
+> >> firmware directory
+> >
+> > I do not understand what for you need that, but ok, I can live with it.
+> >
+> > John, please skip this patch.
+> 
+> Maybe make it module parameter? Like use_experimental_fw, default to 0?
 
-Yes reproducible, if you can get some useful logs(inspite of
-DEBUG_FATAL) it will be highly.
-At present please disable the NM and run the traffic
+For me that even worse. Now I can provide users with kernel binaries with
+enabled experimental fw support. Telling them to install firmware is
+enough, to get test results.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+With module option:
+
+sgruszka: download exp firmware and load module with use_experimental_fw=1
+user: ok, but how to do this 
+sgruszka: echo "options iwlagn use_experiental_fw=1" >> /etc/modprobe.d/iwlwifi.conf
+sgruszka: and restart the system
+user: hmm, I have error
+user: bash: /etc/modprobe.d/iwlwifi.conf: Permission denied 
+sgruszka: login as root
+user: ok I did, but new firmware did not help me
+sgruszka: show me dmesg please
+user: dmesg
+sgruszka: old firmware is used
+sgruszka: gash, I made a typo, it should be
+sgruszka: echo "options iwlagn use_experimental_fw=1" >> /etc/modprobe.d/iwlwifi.conf
+sgruszka: grrrrrrr
+
+Stanislaw
