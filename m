@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56208 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752402Ab1A2NeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Jan 2011 08:34:23 -0500
-Message-ID: <4D441756.5010702@openwrt.org>
-Date: Sat, 29 Jan 2011 14:34:14 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: hti->control_chan is 15??
-References: <4D4345A8.6060806@candelatech.com> <4D435D76.2040703@candelatech.com> <AANLkTimji+Y0KfDCzWDX63KfOjRFzxgKbVAq6HhMcw20@mail.gmail.com> <4D4362BF.7050208@candelatech.com> <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
-In-Reply-To: <AANLkTimG05o=y2xGXh0YAmRqbuixifKp7xgmU7sH61Uf@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37902 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754085Ab1AaU3X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 15:29:23 -0500
+Received: by wyb28 with SMTP id 28so5916278wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 12:29:22 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 1/2] mac80211: do not calc frame duration when using HW rate-control
+Date: Mon, 31 Jan 2011 22:29:12 +0200
+Message-Id: <1296505753-29594-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-01-29 1:48 AM, Daniel Halperin wrote:
-> On Fri, Jan 28, 2011 at 4:43 PM, Ben Greear <greearb@candelatech.com> wrote:
->> My AP is an off-the-shelf Netgear:
->> WNDR3700
->>
->> It's only rate configuration option is '300Mbps', which appears to
->> turn on HT40.
->>
->> It is configured for channel 10 (for the packet capture) and actually
->> passes traffic there.  It's just this HT Info thing with (primary-channel ==
->> (real_channel + 4))
->> that seems wrong.  Note that when I had the channel set to 11, it was
->> reporting
->> 15 for the primary channel in the HT info.
->>
->> Looks like a bug in that AP to me...but would be nice if there were a way to
->> work around it, in case others have similar issues.
-> 
-> Set it to channel 6, then?
-> 
-> Yeah, I played with Netgear's APs (and D-Link's) for about 3 hours
-> before I put them down and never picked them up again.  Performance,
-> configuration, reliability, etc., were horrible.  I've found that
-> Apple APs work well, but really hostapd offers the best flexibility by
-> far.
-I think the hardware quality of the WNDR3700 is pretty good. I'm using
-it at home regularly (running OpenWrt of course).
+When rate-control is performed in HW, we cannot calculate frame
+duration as we do not have the skb transmission rate in SW.
 
-- Felix
+ieee80211_tx_h_calculate_duration() should only be called when
+ieee80211_tx_h_rate_ctrl() has been called before to initialize data
+in skb->cb. This doesn't happen for drivers with HW rate-control.
+
+Fixes the following warning when operating in AP-mode
+in a driver with HW rate-control.
+
+WARNING: at net/mac80211/tx.c:57 ieee80211_duration+0x54/0x1d8 [mac80211]()
+Modules linked in: wl1271_sdio wl1271 firmware_class crc7 mac80211 cfg80211
+[<c0046090>] (unwind_backtrace+0x0/0x124) from [<c0064c10>] (warn_slowpath_common+0x4c/0x64)
+[<c0064c10>] (warn_slowpath_common+0x4c/0x64) from [<c0064c40>] (warn_slowpath_null+0x18/0x1c)
+[<c0064c40>] (warn_slowpath_null+0x18/0x1c) from [<bf040e34>] (ieee80211_duration+0x54/0x1d8 [mac80211])
+[<bf040e34>] (ieee80211_duration+0x54/0x1d8 [mac80211]) from [<bf04200c>] (invoke_tx_handlers+0xfa0/0x1088 [mac80211])
+[<bf04200c>] (invoke_tx_handlers+0xfa0/0x1088 [mac80211]) from [<bf042178>] (ieee80211_tx+0x84/0x248 [mac80211])
+[<bf042178>] (ieee80211_tx+0x84/0x248 [mac80211]) from [<bf042f44>] (ieee80211_tx_pending+0x12c/0x278 [mac80211])
+[<bf042f44>] (ieee80211_tx_pending+0x12c/0x278 [mac80211]) from [<c0069a9c>] (tasklet_action+0x68/0xbc)
+[<c0069a9c>] (tasklet_action+0x68/0xbc) from [<c006a044>] (__do_softirq+0x84/0x114)
+[<c006a044>] (__do_softirq+0x84/0x114) from [<c006a1b8>] (do_softirq+0x48/0x54)
+[<c006a1b8>] (do_softirq+0x48/0x54) from [<c006a4f8>] (local_bh_enable+0x98/0xcc)
+[<c006a4f8>] (local_bh_enable+0x98/0xcc) from [<bf074e60>] (wl1271_rx+0x2e8/0x3a4 [wl1271])
+[<bf074e60>] (wl1271_rx+0x2e8/0x3a4 [wl1271]) from [<bf071ae4>] (wl1271_irq_work+0x230/0x310 [wl1271])
+[<bf071ae4>] (wl1271_irq_work+0x230/0x310 [wl1271]) from [<c0076864>] (process_one_work+0x208/0x350)
+[<c0076864>] (process_one_work+0x208/0x350) from [<c0076e14>] (worker_thread+0x1cc/0x300)
+[<c0076e14>] (worker_thread+0x1cc/0x300) from [<c007bb88>] (kthread+0x84/0x8c)
+[<c007bb88>] (kthread+0x84/0x8c) from [<c0041494>] (kernel_thread_exit+0x0/0x8)
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/tx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e46c801..8c477a9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1394,7 +1394,8 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 	/* handlers after fragment must be aware of tx info fragmentation! */
+ 	CALL_TXH(ieee80211_tx_h_stats);
+ 	CALL_TXH(ieee80211_tx_h_encrypt);
+-	CALL_TXH(ieee80211_tx_h_calculate_duration);
++	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
++		CALL_TXH(ieee80211_tx_h_calculate_duration);
+ #undef CALL_TXH
+ 
+  txh_done:
+-- 
+1.7.1
+
