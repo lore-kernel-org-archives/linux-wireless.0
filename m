@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:48468 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:21259 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213Ab1ANUMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Jan 2011 15:12:48 -0500
+	id S1753573Ab1AaS7u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Jan 2011 13:59:50 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Jan 2011 12:12:30 -0800
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 10:59:30 -0800
 From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_hw: fix carrier leakage calibration for AR9271
-Date: Sat, 15 Jan 2011 01:42:01 +0530
-Message-ID: <1295035921-13097-1-git-send-email-rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH v2] mac80211: disable power save if an infra AP vif exists
+Date: Tue, 1 Feb 2011 00:28:59 +0530
+Message-ID: <1296500339-4252-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9285 carrier leakage calibration related workaround on high
-temperature is not applicable for AR9271.
+PS should not be enabled if an infra AP vif exists in
+the interface list. So while recalculating PS,
+AP vif type should be taken into account.
 
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ net/mac80211/mlme.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index ea2e7d7..14d7d2a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -805,7 +805,10 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
-+	if (AR_SREV_9271(ah)) {
-+		if (!ar9285_hw_cl_cal(ah, chan))
-+			return false;
-+	} else if (AR_SREV_9285_12_OR_LATER(ah)) {
- 		if (!ar9285_hw_clc(ah, chan))
- 			return false;
- 	} else {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 3221069..dfa752e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -601,6 +601,14 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
++		if (sdata->vif.type == NL80211_IFTYPE_AP) {
++			/* If an AP vif is found, then disable PS
++			 * by setting the count to zero thereby setting
++			 * ps_sdata to NULL.
++			 */
++			count = 0;
++			break;
++		}
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 			continue;
+ 		found = sdata;
 -- 
 1.7.3.5
 
