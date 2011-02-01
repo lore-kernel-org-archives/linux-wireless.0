@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42325 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752071Ab1BHV0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 16:26:36 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:36804 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756262Ab1BAMtY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 07:49:24 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1PkFff-0004iA-GH
+	for linux-wireless@vger.kernel.org; Tue, 01 Feb 2011 13:49:23 +0100
+Subject: [RFC] mac80211: reply to directed probes in IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, lrodriguez@atheros.com, m.sujith@gmail.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [RFC 1/2] mac80211: add a function for setting the TIM bit for a specific station
-Date: Tue,  8 Feb 2011 22:26:11 +0100
-Message-Id: <1297200372-79404-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Feb 2011 13:49:23 +0100
+Message-ID: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a driver wants to buffer some frames internally without feeding them
-back to mac80211, this allows it to still wake up the station
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+At least the WMM spec says we should reply to
+unicast probe request frames that go to us.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h  |   14 ++++++++++++++
- net/mac80211/sta_info.c |    8 ++++++++
- 2 files changed, 22 insertions(+), 0 deletions(-)
+ net/mac80211/ibss.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 8fcd169..9a0babe 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2194,6 +2194,20 @@ static inline int ieee80211_sta_ps_transition_ni(struct ieee80211_sta *sta,
- #define IEEE80211_TX_STATUS_HEADROOM	13
+--- wireless-testing.orig/net/mac80211/ibss.c	2011-02-01 12:58:16.000000000 +0100
++++ wireless-testing/net/mac80211/ibss.c	2011-02-01 13:47:44.000000000 +0100
+@@ -689,7 +689,7 @@ static void ieee80211_rx_mgmt_probe_req(
+ 	       mgmt->bssid, tx_last_beacon);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
  
- /**
-+ * ieee80211_sta_set_tim - set the TIM bit for a sleeping station
-+ *
-+ * If a driver buffers frames for a powersave station instead of passing
-+ * them back to mac80211 for retransmission, the station needs to be told
-+ * to wake up using the TIM bitmap in the beacon.
-+ *
-+ * This function sets the station's TIM bit - it will be cleared automatically
-+ * either when the station wakes up (and mac80211 has flushed out its
-+ * buffered frames), or if all remaining buffered frames in mac80211 have
-+ * timed out.
-+ */
-+void ieee80211_sta_set_tim(struct ieee80211_sta *sta);
-+
-+/**
-  * ieee80211_tx_status - transmit status callback
-  *
-  * Call this function for all transmitted frames after they have been
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 5a11078..3458091 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -991,3 +991,11 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
- 		ieee80211_queue_work(hw, &sta->drv_unblock_wk);
- }
- EXPORT_SYMBOL(ieee80211_sta_block_awake);
-+
-+void ieee80211_sta_set_tim(struct ieee80211_sta *pubsta)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+
-+	sta_info_set_tim_bit(sta);
-+}
-+EXPORT_SYMBOL(ieee80211_sta_set_tim);
--- 
-1.7.3.2
+-	if (!tx_last_beacon)
++	if (!tx_last_beacon && !(status->rx_flags & IEEE80211_RX_RA_MATCH))
+ 		return;
+ 
+ 	if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
+
 
