@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56351 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752042Ab1BTUC2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 15:02:28 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 235D65405AD
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 15:05:28 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-20 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110220200226.C377F434FE@repository3.orbit-lab.org>
-Date: Sun, 20 Feb 2011 15:02:26 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52568 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023Ab1BAVEV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 16:04:21 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat: backport alloc_ordered_workqueue
+Date: Tue,  1 Feb 2011 22:04:12 +0100
+Message-Id: <1296594253-21273-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+This was moved from a patch in compat-wireless to this place.
 
-compat-wireless code metrics
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.37.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-    787919 - Total upstream lines of code being pulled
+diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
+index 502d2b1..e993f75 100644
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -106,6 +106,8 @@ extern void compat_led_classdev_unregister(struct led_classdev *led_cdev);
+ extern void compat_led_brightness_set(struct led_classdev *led_cdev,
+ 				      enum led_brightness brightness);
+ 
++#define alloc_ordered_workqueue(name, flags) create_singlethread_workqueue(name)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 
+ #endif /* LINUX_26_37_COMPAT_H */
+-- 
+1.7.1
+
