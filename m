@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:56456 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822Ab1BIURK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 15:17:10 -0500
-Subject: Re: Notes on ssb specs and implementation
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com> (sfid-20110209_210017_862769_37B0C3E4)
-References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
-	 (sfid-20110209_210017_862769_37B0C3E4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Feb 2011 21:17:01 +0100
-Message-ID: <1297282621.9734.5.camel@maggie>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:36575 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023Ab1BAWfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 17:35:04 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 11/18] wl1251: configure hardware en-/decryption for monitor mode
+References: <4D45A5DE.70507@davizone.at> <87ipx5dqom.fsf@purkki.adurom.net>
+	<4D473E9A.9050106@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 02 Feb 2011 00:35:00 +0200
+In-Reply-To: <4D473E9A.9050106@davizone.at> (David Gnedt's message of "Mon\, 31 Jan 2011 23\:58\:34 +0100")
+Message-ID: <87oc6vbcyz.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-09 at 21:00 +0100, Rafał Miłecki wrote: 
-> Michael: was there any reasons why we didn't implement some parts of
-> core-disabling code?
+David Gnedt <david.gnedt@davizone.at> writes:
 
-The function are complete as of latest reverse engineering efforts.
-Broadcom added stuff, if they do more stuff in latest code.
+> Am 2011-01-31 16:43, schrieb Kalle Valo:
+>>> Disable hardware encryption (DF_ENCRYPTION_DISABLE) and decryption
+>>> (DF_SNIFF_MODE_ENABLE) via wl1251_acx_feature_cfg while monitor interface is
+>>> present.
+>> 
+>> Why? To be able to receive encrypted frames when associated or
+>> something else?
+>
+> DF_SNIFF_MODE_ENABLE is set for receiving encrypted frames when associated.
+> DF_ENCRYPTION_DISABLE is set to allow packet injection at all, as my testing
+> showed that disabling encryption per-packet doesn't work.
 
-> Michael: should we care about the way wl sets core specific flags? I
-> didn't dig into that moment in MMIO dumps, but as ssb_device_enable
-> implementation ignores flags at the end, it has to set flags somehow
-> differently on it's own.
-
-I have no idea. ssb_device_enable is very hairy and I'm not going
-to touch it without good reason and regression testing.
-
-You didn't tell us the important part: Does changing ssb_device_enable
-make it work?
+But doesn't this break the case when you are connected to a network
+with encryption and you have a separate monitor interface at the same
+time? Or even worse, as Johannes pointed out, will the frames sent
+unencrypted?
 
 -- 
-Greetings Michael.
-
+Kalle Valo
