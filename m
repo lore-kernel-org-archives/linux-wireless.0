@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:42024 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752569Ab1BNUHF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 15:07:05 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id DD80E54017F
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 15:09:52 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-14 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110214200704.0F281434AE@repository3.orbit-lab.org>
-Date: Mon, 14 Feb 2011 15:07:03 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from purkki.adurom.net ([80.68.90.206]:59948 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828Ab1BAGjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 01:39:18 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
+References: <4D45A583.3060605@davizone.at> <4D45B7B2.40001@davizone.at>
+	<87r5btdsb8.fsf@purkki.adurom.net> <4D473E72.3050307@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 01 Feb 2011 08:39:14 +0200
+In-Reply-To: <4D473E72.3050307@davizone.at> (David Gnedt's message of "Mon\, 31 Jan 2011 23\:57\:54 +0100")
+Message-ID: <87wrlkcl7x.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + f26e68f...6d48219 akpm-end   -> origin/akpm-end  (forced update)
-   67d0195..091994c  akpm-start -> origin/akpm-start
-   13a1f7a..c4286b3  history    -> origin/history
- + c71f8b8...6a658e2 master     -> origin/master  (forced update)
-   67d0195..091994c  stable     -> origin/stable
- * [new tag]         next-20110214 -> next-20110214
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+David Gnedt <david.gnedt@davizone.at> writes:
 
-compat-wireless code metrics
+> One thing I haven't included in this patchset is the netlink
+> interface from the fremantle code for NVS loading because I thought
+> it wouldn't be accepted anyway.
 
-    787076 - Total upstream lines of code being pulled
-      2093 - backport code changes
-      1831 - backport code additions
-       262 - backport code deletions
-      7292 - backport from compat module
-      9385 - total backport code
-    1.1924 - % of code consists of backport work
+Correct, it's definitely not for upstream. nl80211 now has testmode
+interface which can be used for that, but as wl1251 hardware is so old
+already I doubt anyone has any interest on.
+
+I have now read and commented some of your patches, I will go through
+the rest today. But 18 patches in a patchset is quite a lot. To make
+it easier to review and manage the patches I would recommend to split
+them to smaller and logical patchsets.
+
+-- 
+Kalle Valo
