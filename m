@@ -1,30 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47484 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755181Ab1BOQFk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 11:05:40 -0500
-Subject: Re: [RFC/RFT] mac80211: make tx() operation return void
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <19802.41912.909410.520385@gargle.gargle.HOWL>
-References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
-	 <19802.41912.909410.520385@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 17:05:39 +0100
-Message-ID: <1297785939.8664.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:58563 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751020Ab1BAW12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 17:27:28 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 09/18] wl1251: enable adhoc mode
+References: <4D45A5CF.6050603@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 02 Feb 2011 00:27:26 +0200
+In-Reply-To: <4D45A5CF.6050603@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 18\:54\:23 +0100")
+Message-ID: <87vd13bdbl.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-15 at 21:33 +0530, Sujith wrote:
+David Gnedt <david.gnedt@davizone.at> writes:
 
-> No problems with this change for ath9k_htc, but if required I can
-> send this as a separate patch...
+> Enable adhoc support in wl1251 driver.
+>
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 
-Go ahead and send it -- I still need to test this etc. and it won't go
-into the current / stable either.
+Acked-by: Kalle Valo <kvalo@adurom.com>
 
-johannes
-
+-- 
+Kalle Valo
