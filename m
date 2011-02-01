@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50125 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755163Ab1BVW1P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:27:15 -0500
-Received: by wyg36 with SMTP id 36so269256wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:27:14 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/2] wl12xx: always set mac_address when configuring ht caps
-Date: Wed, 23 Feb 2011 00:27:07 +0200
-Message-Id: <1298413627-19819-2-git-send-email-eliad@wizery.com>
-In-Reply-To: <1298413627-19819-1-git-send-email-eliad@wizery.com>
-References: <1298413627-19819-1-git-send-email-eliad@wizery.com>
+Received: from purkki.adurom.net ([80.68.90.206]:36582 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023Ab1BAWgO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 17:36:14 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 12/18] wl1251: set rate index and preamble flag on received packets
+References: <4D45A5E7.1040202@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 02 Feb 2011 00:36:12 +0200
+In-Reply-To: <4D45A5E7.1040202@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 18\:54\:47 +0100")
+Message-ID: <87k4hjbcwz.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac_address should be set also when ht caps are disabled.
+David Gnedt <david.gnedt@davizone.at> writes:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> Set the rate index rate_idx and preamble flag RX_FLAG_SHORTPRE on received
+> packets.
+>
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 33840d9..6d53129 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1328,10 +1328,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
- 		/* get data from A-MPDU parameters field */
- 		acx->ampdu_max_length = ht_cap->ampdu_factor;
- 		acx->ampdu_min_spacing = ht_cap->ampdu_density;
--
--		memcpy(acx->mac_address, mac_address, ETH_ALEN);
- 	}
- 
-+	memcpy(acx->mac_address, mac_address, ETH_ALEN);
- 	acx->ht_capabilites = cpu_to_le32(ht_capabilites);
- 
- 	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
+Acked-by: Kalle Valo <kvalo@adurom.com>
+
 -- 
-1.7.0.4
-
+Kalle Valo
