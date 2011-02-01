@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39238 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753560Ab1BIQag (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 11:30:36 -0500
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:51236 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756916Ab1BAOft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 09:35:49 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 06:35:29 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k: wakeup hw before stopping beacon queue
+Date: Tue, 1 Feb 2011 20:04:52 +0530
+Message-ID: <1296570892-7074-2-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1296570892-7074-1-git-send-email-rmanoharan@atheros.com>
+References: <1296570892-7074-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19794.49430.480720.290057@gargle.gargle.HOWL>
-Date: Wed, 9 Feb 2011 22:00:14 +0530
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Sujith <m.sujith@gmail.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Martin Schleier <drahemmaps@gmx.net>,
-	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
-	<linville@tuxdriver.com>, <kune@deine-taler.de>,
-	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
-Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change
- endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
-In-Reply-To: <Pine.LNX.4.44L0.1102091017370.2050-100000@iolanthe.rowland.org>
-References: <19793.64449.344588.240418@gargle.gargle.HOWL>
-	<Pine.LNX.4.44L0.1102091017370.2050-100000@iolanthe.rowland.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Stern wrote:
-> On Wed, 9 Feb 2011, Sujith wrote:
-> 
-> > > The first two problems are the device's fault, and the third is the 
-> > > driver's fault.  None of them are the fault of usbcore.
-> > 
-> > Indeed, which is why this dirty hack is done in the driver.
-> > And it was done to fix a similar issue - high CPU usage when scanning.
-> > 
-> > But do you have any suggestion for such broken devices ?
-> > The FW changes the type from Interrupt to Bulk, but can the host
-> > driver continue to use Interrupt URBs and use the URB_NO_INTERRUPT trick
-> > that you have mentioned ?
-> 
-> Yes.  And it's not a trick; that is exactly what URB_NO_INTERRUPT was 
-> intended for.
+Before stopping beacon queue ensure that hw is in AWAKE state.
+No doing so, causes failure to stop tx dma error message.
 
-Ok, thanks. Will fix the driver then.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c9925e9..bfc70c1 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1411,6 +1411,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
+ 
+ 	if (ath9k_uses_beacons(vif->type)) {
+ 		int error;
++		ath9k_ps_wakeup(sc);
+ 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+ 		/* This may fail because upper levels do not have beacons
+ 		 * properly configured yet.  That's OK, we assume it
+@@ -1423,6 +1424,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
+ 			ath9k_reclaim_beacon(sc, vif);
+ 		else
+ 			ath_beacon_config(sc, vif);
++		ath9k_ps_restore(sc);
+ 	}
+ }
+ 
+-- 
+1.7.4
+
