@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39491 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754755Ab1BIO0X (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45050 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148Ab1BAOPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:26:23 -0500
-Message-ID: <4D52A40B.8020302@candelatech.com>
-Date: Wed, 09 Feb 2011 06:26:19 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 1 Feb 2011 09:15:13 -0500
+Date: Tue, 1 Feb 2011 09:05:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mohammed Shafi <mshajakhan@atheros.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Mohammed Shajakhan <Mohammed.Shajakhan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Fix memory leak due to failed PAPRD frames
+Message-ID: <20110201140538.GA2560@tuxdriver.com>
+References: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com>
+ <AANLkTimbtr8zKf6Nj0GmTccKU2u2ubTkL3a5BVSGfUK0@mail.gmail.com>
+ <4D478F12.1070404@atheros.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/7] mac80211:  Make STA disconnect messages warn instead
- of debug.
-References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>	<87y65q7hc3.fsf@purkki.adurom.net> <4D517908.6020003@candelatech.com> <87tygd76nw.fsf@purkki.adurom.net>
-In-Reply-To: <87tygd76nw.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D478F12.1070404@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2011 04:07 AM, Kalle Valo wrote:
-> Ben Greear<greearb@candelatech.com>  writes:
->
->>> Messages like these are in the category "business as usual", which
->>> happens frequently when the device is moved. IMHO they are not really
->>> warnings. I'm worried that making the messages more visible might
->>> scare the users too much.
->>
->> To me it seems more useful than the network up/down messages that
->> are already printed from the networking core.
->
-> You are not a normal user :) But what networking core messages are you
-> referring to? I don't recall seeing anything like that.
+On Tue, Feb 01, 2011 at 10:11:54AM +0530, Mohammed Shafi wrote:
+> On Tuesday 01 February 2011 12:13 AM, Luis R. Rodriguez wrote:
+> >On Sun, Jan 30, 2011 at 11:55 PM, Mohammed Shafi Shajakhan
+> ><mshajakhan@atheros.com>  wrote:
+> >>From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >>
+> >>free the skb's when the Tx of PAPRD frames fails and also add a debug
+> >>message indicating that.
+> >>
+> >>Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >Is this a stable fix?
+> No Luis, this problem came from some recent changes in PAPRD before
+> that it was Ok.
 
-ADDRCONF(NETDEV_CHANGE): sta6: link becomes ready
-ADDRCONF(NETDEV_CHANGE): sta5: link becomes ready
-ADDRCONF(NETDEV_CHANGE): sta4: link becomes ready
+The patch applied to wireless-2.6 without changes, and the error
+handling for ath_tx_start matched existing usage.  So, I have it
+queued now in wireless-2.6 with an added "Cc: stable@kernel.org".
 
-Possibly I previously hacked on the console logging levels and forgot
-about it...
+Should I not?
 
->
->> That said, I don't feel strongly about this change, and it's certainly
->> an easy patch for me to carry in my own tree.
->
-> I also don't have any strong opinion about this, just voiced my
-> concern.
-
-No problem.  One final note:  These will only show if someone has
-compiled in wireless debugging...
-
-We can let the maintainer make the call :)
-
-Thanks,
-Ben
-
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
