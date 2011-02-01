@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43850 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751396Ab1BGPf1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 10:35:27 -0500
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Fry, Donald H" <donald.h.fry@intel.com>
-Date: Mon, 7 Feb 2011 07:35:26 -0800
-Subject: RE: [PATCH wireless-2.6.38] iwlagn: Re-enable RF_KILL interrupt
- when down
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A35013A610604@orsmsx506.amr.corp.intel.com>
-References: <1297013385-9918-1-git-send-email-wey-yi.w.guy@intel.com>
- <20110207101123.GA2319@redhat.com>
-In-Reply-To: <20110207101123.GA2319@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53980 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023Ab1BAVN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 16:13:56 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: remove compat for threaded_irq in rt2x00
+Date: Tue,  1 Feb 2011 22:13:46 +0100
+Message-Id: <1296594827-30742-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 06, 2011 at 09:29:45AM -0800, Wey-Yi Guy wrote:
-> From: Don Fry <donald.h.fry@intel.com>
-> 
-> With commit 554d1d027b19265c4aa3f718b3126d2b86e09a08 only one RF_KILL
-> interrupt will be seen by the driver when the interface is down.
-> 
-> Re-enable the interrupt when it occurs to see all transitions.
+rt2x00 does not use threaded_irq any more.
 
-What practical problem this fix? I'm asking, because my RF_KILL commit
-went to stable, shouldn't this fix go to stable as well?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/09-threaded-irq.patch |   56 -----------------------------------------
+ 1 files changed, 0 insertions(+), 56 deletions(-)
 
-We seeing problem when we perform the following step:
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index 059e58e..df164e9 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -61,59 +61,3 @@ thread in process context as well.
+  };
+  
+  /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
+---- a/drivers/net/wireless/rt2x00/rt2x00.h
+-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
+-@@ -901,6 +901,10 @@ struct rt2x00_dev {
+- 	 * Tasklet for processing tx status reports (rt2800pci).
+- 	 */
+- 	struct tasklet_struct txstatus_tasklet;
+-+
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+-+	struct compat_threaded_irq irq_compat;
+-+#endif
+- };
+- 
+- /*
+---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+-@@ -160,10 +160,18 @@ int rt2x00pci_initialize(struct rt2x00_d
+- 	/*
+- 	 * Register interrupt handler.
+- 	 */
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+-+	status = compat_request_threaded_irq(&rt2x00dev->irq_compat,
+-+					  rt2x00dev->irq,
+-+					  rt2x00dev->ops->lib->irq_handler,
+-+					  rt2x00dev->ops->lib->irq_handler_thread,
+-+					  IRQF_SHARED, rt2x00dev->name, rt2x00dev);
+-+#else
+- 	status = request_threaded_irq(rt2x00dev->irq,
+- 				      rt2x00dev->ops->lib->irq_handler,
+- 				      rt2x00dev->ops->lib->irq_handler_thread,
+- 				      IRQF_SHARED, rt2x00dev->name, rt2x00dev);
+-+#endif
+- 	if (status) {
+- 		ERROR(rt2x00dev, "IRQ %d allocation failed (error %d).\n",
+- 		      rt2x00dev->irq, status);
+-@@ -187,7 +195,11 @@ void rt2x00pci_uninitialize(struct rt2x0
+- 	/*
+- 	 * Free irq line.
+- 	 */
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+-+	compat_free_threaded_irq(&rt2x00dev->irq_compat);
+-+#else
+- 	free_irq(rt2x00dev->irq, rt2x00dev);
+-+#endif
+- 
+- 	/*
+- 	 * Free DMA
+-@@ -202,6 +214,9 @@ EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize
+-  */
+- static void rt2x00pci_free_reg(struct rt2x00_dev *rt2x00dev)
+- {
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+-+	compat_destroy_threaded_irq(&rt2x00dev->irq_compat);
+-+#endif
+- 	kfree(rt2x00dev->rf);
+- 	rt2x00dev->rf = NULL;
+- 
+-- 
+1.7.1
 
-1. Load the driver
-2. Switch HW RF kill ON
-3. Switch HW RF Kill OFF
-4. Check the status with "rfkill list"
-
-Repeat few time, the "Hard blocked" will stay "yes", at this point, the only way to fix is to unload the driver.
-
-You are right, this patch should back port to stable since the commit 554d1d027b19265c4aa3f718b3126d2b86e09a08 backport to stable.
-
-Wey 
