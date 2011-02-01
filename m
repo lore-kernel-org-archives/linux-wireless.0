@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:52095 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752782Ab1BFPqP (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38333 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754543Ab1BALXL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 10:46:15 -0500
-Date: Sun, 6 Feb 2011 10:46:14 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Sujith <m.sujith@gmail.com>
-cc: Martin Schleier <drahemmaps@gmx.net>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
-	<linville@tuxdriver.com>, <kune@deine-taler.de>,
-	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
-Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change
- endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
-In-Reply-To: <19790.36590.884287.572619@gargle.gargle.HOWL>
-Message-ID: <Pine.LNX.4.44L0.1102061037060.20379-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 1 Feb 2011 06:23:11 -0500
+Received: by wyb28 with SMTP id 28so6558772wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 03:23:10 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: pass up beacons from external BSS when operating as AP
+Date: Tue,  1 Feb 2011 13:23:05 +0200
+Message-Id: <1296559385-5357-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 6 Feb 2011, Sujith wrote:
+Beacons from external BSSes are required for updating overlapping BSS
+info (i.e. ERP protection). Pass them up unconditionally.
 
-> Martin Schleier wrote:
-> > Interesting, I know that interrupt and bulk endpoints share a lot of
-> > common logic so I can see how this should work. But is it really
-> > possible [and more to the point: sane?!] to override the endpoint
-> > descriptors?
-> > 
-> > I know that usb_submit_urb checks [when config_usb_debug is enabled]
-> > if the xfertype of the submitted urb matches the one of the endpoint,
-> > so I wonder I started to wonder if we are fooling "just" the code
-> > here, or ourselves in the process?
-> >  
-> > > ath9k_htc does the same thing (see ath/ath9k/hif_usb.c).
-> > > It does seem to be working properly but I am wondering if the
-> > > USB subsystem has to be updated after the driver messes around with bmAttributes.
-> > > (lsusb would still show the endpoint type as INT).
-> > > 
-> > > You have a usb_reset_configuration() call before changing
-> > > the endpoint type, why is that necessary ? And would that
-> > > reset the endpoints as well ?
-> > Huh, has this already catched on?
-> 
-> Well, for ath9k_htc, the FW changes the descriptor type after it is
-> transferred to the target. The USB devs suggested that usb_device_reset()
-> should be called by the driver in such cases, but in ath9k_htc's case,
-> the device is disconnected and the error message "device firmware changed"
-> is displayed.
-> 
-> Agreed, this is a dirty hack - but is there any way for a driver to make the USB
-> subsystem re-configure the endpoints ?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/rx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Why do you want to?  Why does changing the endpoint type from interrupt
-to bulk improve performance?  Yes, the description says that this
-causes CPU usage to go from 10% to below 1%, but _why_ does it do that?
-
-Maybe the same effect can be achieved simply by changing the interrupt
-interval instead.
-
-Alan Stern
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f36d70f..42dbb6f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2658,7 +2658,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 				return 0;
+ 		} else if (!ieee80211_bssid_match(bssid,
+ 					sdata->vif.addr)) {
+-			if (!(status->rx_flags & IEEE80211_RX_IN_SCAN))
++			if (!(status->rx_flags & IEEE80211_RX_IN_SCAN) &&
++			    !ieee80211_is_beacon(hdr->frame_control))
+ 				return 0;
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 		}
+-- 
+1.7.1
 
