@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vader.london.02.net ([82.132.130.150]:35014 "EHLO mail.o2.co.uk"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753713Ab1BYOrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 09:47:17 -0500
-Date: Fri, 25 Feb 2011 14:47:18 +0000
-From: Tony Houghton <h@realh.co.uk>
-To: Mohammed Shafi <shafi.ath9k@gmail.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@lists.ath9k.org,
+Received: from he.sipsolutions.net ([78.46.109.217]:34438 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753602Ab1BBLd7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 06:33:59 -0500
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vivek Natarajan <vnatarajan@atheros.com>
-Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
-Message-ID: <20110225144718.63550601@realh.co.uk>
-In-Reply-To: <AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+In-Reply-To: <20110202113052.GA14126@jm.kir.nu>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+	 <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+	 <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
+	 <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+	 <1296633772.3624.2.camel@jlt3.sipsolutions.net>
+	 <20110202113052.GA14126@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Feb 2011 12:33:54 +0100
+Message-ID: <1296646434.5671.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 25 Feb 2011 13:21:32 +0530
-Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+On Wed, 2011-02-02 at 13:30 +0200, Jouni Malinen wrote:
 
-> > Tony Houghton wrote:
-> >
-> >> With 2.6.37 I can not use suspend on my Compaq/HP 311c (Intel Atom
-> >> N270/NVidia Ion LE). Originally the machine just kept locking up without
-> >> even blanking the display when I tried to suspend (using the GNOME menu
-> >> or by shutting the lid).
+> > Agree, that is a dumb idea. What's that driver going to do? Use custom
+> > nl80211 extensions?! That way lies insanity.
+> 
+> The only reason for that is to be able to support the wpa_supplicant
+> modifications used in Android that are not acceptable for upstream
+> hostap.git (mainly, driver_cmd). This would not add any custom nl80211
+> extensions; the needed functionality should be added properly to
+> upstream nl80211.
 
-[Snip]
+What's the driver_cmd things they use? If we they add support for
+whatever it is to nl80211, why can those not be normal supplicant
+interfaces?
 
-The above was from my original message before I worked out that the
-problem was in the wireless because disabling and reneabling wireless,
-killing the ath9k module etc, would often produce similar crashes, but
-suspend seems to do it more consistently.
+> If it is fine to remove the custom wpa_supplicant modifications from
+> Android, this is obviously a moot point, but until that happens, the
+> easiest approach seems to be to provide a custom driver_*.c based on
+> nl80211 to isolate the custom changes to user space and to small part of
+> it at that. I don't really want to see new drivers trying to provide
+> WEXT support with private ioctls to address need for making it work with
+> Android..
 
-> >> booting, but it's always a complete lock-up ie the keyboard is
-> >> completely responsive, including caps lock, the mouse won't move if the
+Indeed -- no way. Seems Android needs to learn upstream.
 
-I meant *un*responsive of course!
+johannes
 
-> >> I haven't tried looking in logs because the crashes are so severe I
-> >> don't think they'd be able to record anything useful.
-
-If I enable debugging is there a way to get it to sync to disc after
-every message? I think the developers are going to need at least that
-information to be able to track this down.
-
-> is this issue still reproducible ?
-
-Yes :-(.
-
-> Apart from this reporting I have not seen any other  issues for AR9285.
-
-Strange, isn't it. I can't be the only person trying to use a recent
-version of Linux on one of these netbooks, but I couldn't find any
-similar complaints on Google. Maybe mine has an obscure fault which is
-only triggered by a feature supported in the newer kernels.
