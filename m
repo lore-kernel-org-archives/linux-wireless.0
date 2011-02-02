@@ -1,119 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:21441 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323Ab1BIOmO (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34968 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754597Ab1BBQhc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:42:14 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000019980.msg
-	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 16:41:38 +0200
-Subject: Re: SSB AI support code ([RFC4/11] SSB core control and state
-	device ops)
-From: George Kashperko <george@znau.edu.ua>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-Content-Type: text/plain
-Date: Wed, 09 Feb 2011 16:34:49 +0200
-Message-Id: <1297262089.18053.24.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Wed, 2 Feb 2011 11:37:32 -0500
+MIME-Version: 1.0
+In-Reply-To: <20110202133839.GA14904@jm.kir.nu>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+ <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+ <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
+ <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+ <1296633772.3624.2.camel@jlt3.sipsolutions.net> <20110202113052.GA14126@jm.kir.nu>
+ <1296646434.5671.1.camel@jlt3.sipsolutions.net> <20110202133839.GA14904@jm.kir.nu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 2 Feb 2011 08:37:11 -0800
+Message-ID: <AANLkTimimuho23cY7LR+HN0+VXf4Xo+i4S8EHHz3ORhK@mail.gmail.com>
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: George Kashperko <george@znau.edu.ua>
+On Wed, Feb 2, 2011 at 5:38 AM, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, Feb 02, 2011 at 12:33:54PM +0100, Johannes Berg wrote:
+>> What's the driver_cmd things they use? If we they add support for
+>> whatever it is to nl80211, why can those not be normal supplicant
+>> interfaces?
+>
+> I have not reviewed what exactly gets used and how, so this is only
+> based on what the modification for wpa_supplicant are exposing.
+>
+> There seems to be some kind of mechanism for stopping/starting/reloading
+> the driver which I do not fully understand. It includes some kind of
+> driver hang detection and maybe recovery from that etc..
+>
+> Then there is a very generic mechanism of passing any command from user
+> space (i.e., command string to a SIOCSIWPRIV) and that goes
+> transparently through wpa_supplicant.. The response comes back as a
+> string. In other words, you could implement pretty much anything in a
+> driver specific way with that.. At least following commands are used or
+> have used with that: RSSI, LINKSPEED, MACADDR, GETPOWER, GETBAND.
+>
+> Since it is difficult to tell just from wpa_supplicant changes what
+> exactly is done with these interfaces, the answer to the question of
+> why these could not be normal supplicant interfaces is not immediately
+> clear to me. I would assume that some of this functionality could
+> certainly be added once identified clearly what is needed. Some may
+> already be available (like MACADDR; assuming it is used to fetch local
+> MAC address).
 
-Introduce handlers for SB core control and state flags' management. SB-style
-buses provide access to these flags at two high octets of TMSLOW and TMSHIGH
-registers whereas AI-ones implement these flags in two low octets of IOCTRL
-and IOSTAT registers.
-Signed-off-by: George Kashperko <george@znau.edu.ua>
----
- drivers/ssb/main.c      |   36 ++++++++++++++++++++++++++++++++++++
- include/linux/ssb/ssb.h |   14 +++++++++++++-
- 2 files changed, 49 insertions(+), 1 deletion(-)
---- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-07 16:58:50.000000000 +0200
-+++ linux-next-20110203/drivers/ssb/main.c	2011-02-07 17:07:11.000000000 +0200
-@@ -1350,6 +1350,40 @@ static u32 ssb_admatch_size_sb(struct ss
- 	return size;
- }
- 
-+static void ssb_core_ctl_flags_sb(struct ssb_device *dev, u32 mask,
-+				  u32 val, u32 *res)
-+{
-+	u32 tmp;
-+
-+	if (mask || val) {
-+		tmp = (ssb_read32(dev, SSB_TMSLOW) & ~mask) | val;
-+		ssb_write32(dev, SSB_TMSLOW, tmp);
-+	}
-+
-+	/* readback */
-+	tmp = ssb_read32(dev, SSB_TMSLOW);
-+	udelay(1);
-+
-+	if (res)
-+		*res = tmp;
-+}
-+
-+static u32 ssb_core_state_flags_sb(struct ssb_device *dev, u32 mask, u32 val)
-+{
-+	u32 tmp;
-+
-+	if (mask || val) {
-+		tmp = (ssb_read32(dev, SSB_TMSHIGH) & ~mask) | val;
-+		ssb_write32(dev, SSB_TMSHIGH, tmp);
-+	}
-+
-+	/* readback */
-+	tmp = ssb_read32(dev, SSB_TMSHIGH);
-+	udelay(1);
-+
-+	return tmp;
-+}
-+
- /* Ops for the plain SSB bus without a host-device (no PCI or PCMCIA). */
- static const struct ssb_bus_ops ssb_ssb_ops = {
- 	.read8			= ssb_ssb_read8,
-@@ -1368,6 +1402,8 @@ static const struct ssb_bus_ops ssb_ssb_
- 	.admatch_base		= ssb_admatch_base_sb,
- 	.admatch_size		= ssb_admatch_size_sb,
- 	.irqflag		= ssb_irqflag_sb,
-+	.core_ctl_flags		= ssb_core_ctl_flags_sb,
-+	.core_state_flags	= ssb_core_state_flags_sb,
- };
- 
- static int __init ssb_modinit(void)
---- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-07 16:58:50.000000000 +0200
-+++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-07 17:02:09.000000000 +0200
-@@ -125,6 +125,9 @@ struct ssb_bus_ops {
- 	u32 (*admatch_base)(struct ssb_device *dev, u32 adm);
- 	u32 (*admatch_size)(struct ssb_device *dev, u32 adm);
- 	u32 (*irqflag)(struct ssb_device *dev);
-+	void (*core_ctl_flags)(struct ssb_device *dev, u32 mask,
-+			       u32 val, u32 *res);
-+	u32 (*core_state_flags)(struct ssb_device *dev, u32 mask, u32 val);
- };
- 
- 
-@@ -490,7 +493,16 @@ static inline u32 ssb_irqflag(struct ssb
- {
- 	return dev->ops->irqflag(dev);
- }
--
-+static inline void ssb_core_ctl_flags(struct ssb_device *dev, u32 mask,
-+				      u32 val, u32 *res)
-+{
-+	return dev->ops->core_ctl_flags(dev, mask, val, res);
-+}
-+static inline u32 ssb_core_state_flags(struct ssb_device *dev, u32 mask,
-+				       u32 val)
-+{
-+	return dev->ops->core_state_flags(dev, mask, val);
-+}
- 
- /* The SSB DMA API. Use this API for any DMA operation on the device.
-  * This API basically is a wrapper that calls the correct DMA API for
+Sounds like Android kernel guys need to get their shit together. Why
+is this so hard?
 
-
-
+  Luis
