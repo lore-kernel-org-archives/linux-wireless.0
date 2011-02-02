@@ -1,81 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61906 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751539Ab1BDPgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 10:36:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 07:36:05 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] mac80211: Fix parsing of MCS rates to radiotap
-Date: Fri, 4 Feb 2011 21:06:18 +0530
-Message-ID: <1296833778-2912-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54559 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab1BBJUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 04:20:09 -0500
+Received: by wyb28 with SMTP id 28so7639230wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 01:20:08 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: declare support for IEEE80211_HW_REPORTS_TX_ACK_STATUS
+Date: Wed,  2 Feb 2011 11:20:05 +0200
+Message-Id: <1296638405-28704-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+The wl12xx fw supports ack status reporting for tx frames, so
+add the IEEE80211_HW_REPORTS_TX_ACK_STATUS flag to our supported
+features.
 
-Previously the MCS rate elements were parsed at the wrong position
+Since we do the rate control in the fw, we'll probably want
+to adjust the STA_LOST_PKT_THRESHOLD heuristics in the future, to
+account for retransmissions as well.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/rx.c |   31 ++++++++++---------------------
- 1 files changed, 10 insertions(+), 21 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c08b8e9..27b4b1f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -141,14 +141,16 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index dfab21e..fa05149 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3215,7 +3215,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_SUPPORTS_UAPSD |
+ 		IEEE80211_HW_HAS_RATE_CONTROL |
+ 		IEEE80211_HW_CONNECTION_MONITOR |
+-		IEEE80211_HW_SUPPORTS_CQM_RSSI;
++		IEEE80211_HW_SUPPORTS_CQM_RSSI |
++		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
  
- 	/* IEEE80211_RADIOTAP_RATE */
- 	if (status->flag & RX_FLAG_HT) {
--		/*
--		 * TODO: add following information into radiotap header once
--		 * suitable fields are defined for it:
--		 * - MCS index (status->rate_idx)
--		 * - HT40 (status->flag & RX_FLAG_40MHZ)
--		 * - short-GI (status->flag & RX_FLAG_SHORT_GI)
--		 */
--		*pos = 0;
-+		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
-+		*pos++ = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
-+			 IEEE80211_RADIOTAP_MCS_HAVE_GI |
-+			 IEEE80211_RADIOTAP_MCS_HAVE_BW;
-+		if (status->flag & RX_FLAG_SHORT_GI)
-+			*pos |= IEEE80211_RADIOTAP_MCS_SGI;
-+		if (status->flag & RX_FLAG_40MHZ)
-+			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
-+		pos++;
-+		*pos++ = status->rate_idx;
- 	} else {
- 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_RATE);
- 		*pos = rate->bitrate / 5;
-@@ -197,19 +199,6 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	put_unaligned_le16(rx_flags, pos);
- 	pos += 2;
- 
--	if (status->flag & RX_FLAG_HT) {
--		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
--		*pos++ = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
--			 IEEE80211_RADIOTAP_MCS_HAVE_GI |
--			 IEEE80211_RADIOTAP_MCS_HAVE_BW;
--		*pos = 0;
--		if (status->flag & RX_FLAG_SHORT_GI)
--			*pos |= IEEE80211_RADIOTAP_MCS_SGI;
--		if (status->flag & RX_FLAG_40MHZ)
--			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
--		pos++;
--		*pos++ = status->rate_idx;
--	}
- }
- 
- /*
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 -- 
 1.7.0.4
 
