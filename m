@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53193 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754485Ab1BMOk7 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44127 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753312Ab1BBW3T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 09:40:59 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 15so4702333bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 06:40:58 -0800 (PST)
-From: Stanislav Fomichev <kernel@fomichev.me>
+	Wed, 2 Feb 2011 17:29:19 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p12MTIlS030517
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 2 Feb 2011 14:29:18 -0800
+Message-ID: <4D49DABE.7040802@candelatech.com>
+Date: Wed, 02 Feb 2011 14:29:18 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: brudley@broadcom.com, gregkh@suse.de
-Subject: [PATCH 3/8] brcm80211: replace dot11_management_header with ieee80211_mgmt
-Date: Sun, 13 Feb 2011 17:40:38 +0300
-Message-Id: <1297608043-18381-3-git-send-email-kernel@fomichev.me>
-In-Reply-To: <1297608043-18381-1-git-send-email-kernel@fomichev.me>
-References: <1297608043-18381-1-git-send-email-kernel@fomichev.me>
+Subject: Crash in timer.c
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
----
- drivers/staging/brcm80211/include/proto/802.11.h |    8 --------
- drivers/staging/brcm80211/sys/wlc_mac80211.c     |   16 ++++++++--------
- 2 files changed, 8 insertions(+), 16 deletions(-)
+I had 128 STA vifs on an ath9k system...started deleting all but 16 of them.
+I did this twice, and both times, it crashes before finishing deleting
+all of them.
 
-diff --git a/drivers/staging/brcm80211/include/proto/802.11.h b/drivers/staging/brcm80211/include/proto/802.11.h
-index db4328d..11f7987 100644
---- a/drivers/staging/brcm80211/include/proto/802.11.h
-+++ b/drivers/staging/brcm80211/include/proto/802.11.h
-@@ -52,14 +52,6 @@
- #define DOT11_BA_BITMAP_LEN		128
- #define DOT11_BA_LEN		4
- 
--BWL_PRE_PACKED_STRUCT struct dot11_management_header {
--	u16 fc;
--	u16 durid;
--	struct ether_addr da;
--	struct ether_addr sa;
--	struct ether_addr bssid;
--	u16 seq;
--} BWL_POST_PACKED_STRUCT;
- #define	DOT11_MGMT_HDR_LEN	24
- 
- BWL_PRE_PACKED_STRUCT struct dot11_bcn_prb {
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index 391e958..ddaa515 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -1737,7 +1737,7 @@ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
- 	ASSERT(sizeof(d11rxhdr_t) == RXHDR_LEN);
- 	ASSERT(sizeof(struct ieee80211_hdr) == DOT11_A4_HDR_LEN);
- 	ASSERT(sizeof(struct ieee80211_rts) == DOT11_RTS_LEN);
--	ASSERT(sizeof(struct dot11_management_header) == DOT11_MGMT_HDR_LEN);
-+	ASSERT(IEEE80211_MIN_ACTION_SIZE - 1 == DOT11_MGMT_HDR_LEN);
- 	ASSERT(sizeof(struct dot11_bcn_prb) == DOT11_BCN_PRB_LEN);
- 	ASSERT(sizeof(tx_status_t) == TXSTATUS_LEN);
- 	ASSERT(sizeof(ht_cap_ie_t) == HT_CAP_IE_LEN);
-@@ -7614,7 +7614,7 @@ wlc_bcn_prb_template(struct wlc_info *wlc, uint type, ratespec_t bcn_rspec,
- 		     wlc_bsscfg_t *cfg, u16 *buf, int *len)
- {
- 	cck_phy_hdr_t *plcp;
--	struct dot11_management_header *h;
-+	struct ieee80211_mgmt *h;
- 	int hdr_len, body_len;
- 
- 	ASSERT(*len >= 142);
-@@ -7647,20 +7647,20 @@ wlc_bcn_prb_template(struct wlc_info *wlc, uint type, ratespec_t bcn_rspec,
- 		wlc_beacon_phytxctl_txant_upd(wlc, bcn_rspec);
- 
- 	if (MBSS_BCN_ENAB(cfg) && type == FC_BEACON)
--		h = (struct dot11_management_header *)&plcp[0];
-+		h = (struct ieee80211_mgmt *)&plcp[0];
- 	else
--		h = (struct dot11_management_header *)&plcp[1];
-+		h = (struct ieee80211_mgmt *)&plcp[1];
- 
- 	/* fill in 802.11 header */
--	h->fc = htol16((u16) type);
-+	h->frame_control = cpu_to_le16((u16) type);
- 
- 	/* DUR is 0 for multicast bcn, or filled in by MAC for prb resp */
- 	/* A1 filled in by MAC for prb resp, broadcast for bcn */
- 	if (type == FC_BEACON)
--		bcopy((const char *)&ether_bcast, (char *)&h->da,
-+		bcopy((const char *)&ether_bcast, h->da,
- 		      ETH_ALEN);
--	bcopy((char *)&cfg->cur_etheraddr, (char *)&h->sa, ETH_ALEN);
--	bcopy((char *)&cfg->BSSID, (char *)&h->bssid, ETH_ALEN);
-+	bcopy((char *)&cfg->cur_etheraddr, h->sa, ETH_ALEN);
-+	bcopy((char *)&cfg->BSSID, h->bssid, ETH_ALEN);
- 
- 	/* SEQ filled in by MAC */
- 
+This is using latest wireless-testing plus some of my patches
+previously posted to this list.
+
+
+------------[ cut here ]------------
+kernel BUG at /home/greearb/git/linux.wireless-testing/kernel/timer.c:1005!
+invalid opcode: 0000 [#1] SMP
+last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:03:00.0/net/sta111/flags
+Modules linked in: cryptd aes_i586 aes_generic 8021q garp stp llc michael_mic macvlan pktgen fuse coretemp hwmon nfs lockd fsc]
+
+Pid: 9998, comm: wpa_supplicant Not tainted 2.6.38-rc3-wl+ #42 To be filled by O.E.M./To Be Filled By O.E.M.
+EIP: 0060:[<c0443d87>] EFLAGS: 00210092 CPU: 1
+EIP is at cascade+0x45/0x63
+EAX: 00060008 EBX: 00000008 ECX: f54d8934 EDX: f123c908
+ESI: 00000000 EDI: f54d8000 EBP: f54e9f7c ESP: f54e9f64
+  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Process wpa_supplicant (pid: 9998, ti=f54e8000 task=f17ee720 task.ti=f081e000)
+Stack:
+  f54e9f68 f1158064 f4a2d664 f54d8000 00000000 00000004 f54e9fd0 c04451dd
+  f54e9fbc f54e9fac 00000286 f54d8e2c f54d8c2c f54d8a2c f54d882c f54e9fc8
+  c0486a6b 00000003 f17ee720 c043fb2f c043fade f54e9fc8 c0460dec 00000202
+Call Trace:
+  [<c04451dd>] run_timer_softirq+0x95/0x232
+  [<c0486a6b>] ? __rcu_process_callbacks+0x6b/0x26f
+  [<c043fb2f>] ? __do_softirq+0x51/0x184
+  [<c043fade>] ? __do_softirq+0x0/0x184
+  [<c0460dec>] ? trace_hardirqs_on_caller+0xf5/0x12f
+  [<c043fb94>] __do_softirq+0xb6/0x184
+  [<c043fade>] ? __do_softirq+0x0/0x184
+  <IRQ>
+  [<c043f976>] ? irq_exit+0x3a/0x6e
+  [<c041a713>] ? smp_apic_timer_interrupt+0x73/0x81
+  [<c07e2e0f>] ? apic_timer_interrupt+0x2f/0x40
+  [<c04f2a5f>] ? dput+0x1/0xde
+  [<c04ea6c0>] ? path_put+0x13/0x1d
+  [<c047fd0b>] ? audit_free_names+0x45/0x5e
+  [<c047feb2>] ? audit_syscall_exit+0x96/0x114
+  [<c04031ea>] ? sysexit_audit+0x29/0x4f
+Code: ca 89 75 ec 89 46 04 8b 74 da 04 89 75 f0 89 06 89 0c da 89 4c da 04 8b 55 ec 8b 32 89 45 e8 eb 19 8b 42 0c 83 e0 fe 39
+EIP: [<c0443d87>] cascade+0x45/0x63 SS:ESP 0068:f54e9f64
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
