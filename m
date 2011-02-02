@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39151 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751561Ab1BCWUY (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4565 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab1BBL7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 17:20:24 -0500
+	Wed, 2 Feb 2011 06:59:38 -0500
+Date: Wed, 2 Feb 2011 06:57:43 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+Message-ID: <20110202115743.GA12386@hash.localnet>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com> <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com> <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com> <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com> <1296633772.3624.2.camel@jlt3.sipsolutions.net> <20110202113052.GA14126@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
- <s5haaid3xos.wl%tiwai@suse.de> <201102032009.17100.rjw@sisk.pl>
- <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com> <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 3 Feb 2011 14:19:31 -0800
-Message-ID: <AANLkTin=YcecPX1AOpihPVJO3UOfrcjf0MFTu55dpEUy@mail.gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-To: Carlos Mafra <crmafra2@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Dave Airlie <airlied@redhat.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110202113052.GA14126@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 3, 2011 at 2:10 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> Maybe the right thing to do is to set it to 'unknown', something like this.
->
-> TOTALLY UNTESTED!
+On Wed, Feb 02, 2011 at 01:30:52PM +0200, Jouni Malinen wrote:
+> If it is fine to remove the custom wpa_supplicant modifications from
+> Android, this is obviously a moot point, but until that happens, the
+> easiest approach seems to be to provide a custom driver_*.c based on
+> nl80211 to isolate the custom changes to user space and to small part of
+> it at that. I don't really want to see new drivers trying to provide
+> WEXT support with private ioctls to address need for making it work with
+> Android..
 
-Doing some grepping and "git blame", I found this: commit 032d2a0d068
-("drm/i915: Prevent double dpms on") which took a very similar
-approach, except it just uses "-1" directly instead of introducing
-that DRM_MODE_DPMS_UNKNOWN concept.
+I guess my argument is if Atheros is spending resources on porting
+drivers to Android, it would be nice to take the time to fix Android's
+userspace too.  At any rate, I disagree with the wiki's wording "the
+proper approach" as opposed to maybe "the straight-forward approach."
 
-So I suspect that my patch is going in the right direction, and
-judging by the comments in that commit, we probably should do this
-correctly at the dri level rather than have drivers see those stupid
-"let's set dpms to the state that it was already in". But that very
-much does require that kind of "UNKNOWN" state option.
+Android already has a custom userspace library that sits between wpa_s
+and their Java stack where they could probably stick all of this stuff.
+If there is something that is truly missing from the kernel, then by
+all means we can add it to nl80211 for everyone's benefit.
 
-So maybe we can get that patch tested (and acked if it works)? Carlos, Takashi?
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-                         Linus
