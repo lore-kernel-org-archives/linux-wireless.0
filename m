@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60026 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756611Ab1BKQaO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45803 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753551Ab1BBIDA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 11:30:14 -0500
-Date: Fri, 11 Feb 2011 11:29:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k: make use of slot time macros
-Message-ID: <20110211162944.GD2224@tuxdriver.com>
-References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com>
- <4D553107.3020402@openwrt.org>
- <20110211161551.GA2224@tuxdriver.com>
- <4D5561F2.3050404@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4D5561F2.3050404@openwrt.org>
+	Wed, 2 Feb 2011 03:03:00 -0500
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+In-Reply-To: <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+	 <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+	 <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
+	 <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Feb 2011 09:02:52 +0100
+Message-ID: <1296633772.3624.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
-> On 2011-02-11 5:15 PM, John W. Linville wrote:
-> > On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
-> >> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
-> >> > From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> >> > 
-> >> > Instead of using raw numbers to assign slot time it would be better to
-> >> > make use of predefined slot time macros
-> >> How does this make it better?
-> > 
-> > Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
-> Well, neither the unit of this variable, nor the values that can be used
-> are ath9k specific.
+On Tue, 2011-02-01 at 21:41 -0500, Bob Copeland wrote:
+> On Tue, Feb 1, 2011 at 7:50 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> 
+> >> I don't think it's good to advocate a custom driver.  They should be able
+> >> to use stock wpa_supplicant w/ nl80211 and put the extensions in the
+> >> hardware layer.
+> >
+> > Can you elaborate?
+> 
+> From the wiki:
+> 
+> "The proper approach would be to provide a custom driver_nl80211_android.c
+> wrapper for the modified wpa_supplicant in Android."
+> 
+> I just don't think it's strictly necessary to ship a modified wpa_s.
+> Why is Android special when bog standard Linux gets by ok with
+> driver_nl80211?
 
-True -- the patch is probably an unnecessarily zealous attempt to avoid
-"magic numbers" in the code. :-)
+Agree, that is a dumb idea. What's that driver going to do? Use custom
+nl80211 extensions?! That way lies insanity.
 
-John
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+johannes
+
