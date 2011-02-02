@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61209 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755691Ab1BARgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 12:36:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 09:36:05 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k: reserve a beacon slot on beaconing vif addition
-Date: Tue, 1 Feb 2011 23:05:36 +0530
-Message-ID: <1296581736-3361-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:64973 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753312Ab1BBWlg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 17:41:36 -0500
+Received: by pzk35 with SMTP id 35so96793pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 14:41:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4D45B7B2.40001@davizone.at>
+References: <4D45A583.3060605@davizone.at>
+	<4D45B7B2.40001@davizone.at>
+Date: Thu, 3 Feb 2011 00:41:35 +0200
+Message-ID: <AANLkTi=xN8EKB+gih4_XxcgCJ0g3B9Q8tfJ5JuNJgCqu@mail.gmail.com>
+Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beaconing vif addition is based on max beacon slot
-available. So it is better to reserve a beacon slot
-on interface addition and let it be configured properly
-on bss_info change.
+On Sun, Jan 30, 2011 at 9:10 PM, David Gnedt <david.gnedt@davizone.at> wrote:
+> Patch 01-03 fix some bugs.
+> Patch 04-09 contain some feature ports from Maemo Fremantle and wl1271.
+> Patch 10-18 implement (mainly) monitor mode and packet injection.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bfc70c1..41b34fc 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1420,9 +1420,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
- 		 * there.
- 		 */
- 		error = ath_beacon_alloc(sc, vif);
--		if (error)
--			ath9k_reclaim_beacon(sc, vif);
--		else
-+		if (!error)
- 			ath_beacon_config(sc, vif);
- 		ath9k_ps_restore(sc);
- 	}
--- 
-1.7.4
-
+Just tried this on pandora board with 2.6.37 kernel and everything
+seems to be fine. Haven't tested monitor mode or packet injection
+though, so for fixes and feature ports:
+Tested-by: Grazvydas Ignotas <notasas@gmail.com>
