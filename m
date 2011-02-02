@@ -1,40 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38946 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752534Ab1BSKKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 05:10:50 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 02:10:29 -0800
-Date: Sat, 19 Feb 2011 15:39:29 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Implement op_flush()
-Message-ID: <20110219100928.GB16962@vasanth-laptop>
-References: <1298106822-9411-1-git-send-email-vasanth@atheros.com> <1298107440.3725.8.camel@jlt3.sipsolutions.net> <20110219094943.GA16465@vasanth-laptop> <1298109390.3725.9.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1298109390.3725.9.camel@jlt3.sipsolutions.net>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:39736 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409Ab1BBH7p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 02:59:45 -0500
+Received: by wyb28 with SMTP id 28so7584286wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 23:59:44 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 1/4] wl12xx: mcp2.5 - add config_ps acx
+Date: Wed,  2 Feb 2011 09:59:34 +0200
+Message-Id: <1296633577-15199-2-git-send-email-eliad@wizery.com>
+In-Reply-To: <1296633577-15199-1-git-send-email-eliad@wizery.com>
+References: <1296633577-15199-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 19, 2011 at 03:26:30PM +0530, Johannes Berg wrote:
-> On Sat, 2011-02-19 at 15:19 +0530, Vasanthakumar Thiagarajan wrote:
-> > On Sat, Feb 19, 2011 at 02:54:00PM +0530, Johannes Berg wrote:
-> > > On Sat, 2011-02-19 at 01:13 -0800, Vasanthakumar Thiagarajan wrote:
-> > > > When op_flush() is called with no drop (drop=false), the driver
-> > > > tries to tx as many frames as possible in about 100ms on every
-> > > > hw queue. During this time period frames from sw queue are also
-> > > > scheduled on to respective hw queue.
-> > > 
-> > > Given how long HW queues currently are, I wouldn't set the timeout to
-> > > 100ms -- mac80211 has no expectation how long this will take, although
-> > > 100ms seems pretty long I'm not sure it'll always be sufficient?
+mcp2.5 uses this acx to configure the fw only once, rather than
+passing the params in every enter psm command.
 
-Would not having a long timeout for flush affect bg scanning by
-applications (scan time out)?.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.c  |   30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h  |   11 +++++++++++
+ drivers/net/wireless/wl12xx/conf.h |    8 ++++++++
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ 4 files changed, 50 insertions(+), 0 deletions(-)
 
-Vasanth
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index afdc601..84d94b2 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1476,3 +1476,33 @@ out:
+ 	kfree(acx);
+ 	return ret;
+ }
++
++int wl1271_acx_config_ps(struct wl1271 *wl)
++{
++	struct wl1271_acx_config_ps *config_ps;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx config ps");
++
++	config_ps = kzalloc(sizeof(*config_ps), GFP_KERNEL);
++	if (!config_ps) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	config_ps->exit_retries = wl->conf.conn.psm_exit_retries;
++	config_ps->enter_retries = wl->conf.conn.psm_entry_retries;
++	config_ps->null_data_rate = cpu_to_le32(wl->basic_rate);
++
++	ret = wl1271_cmd_configure(wl, ACX_CONFIG_PS, config_ps,
++				   sizeof(*config_ps));
++
++	if (ret < 0) {
++		wl1271_warning("acx config ps failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(config_ps);
++	return ret;
++}
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index c683801..af36b16 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1136,6 +1136,15 @@ struct wl1271_acx_max_tx_retry {
+ 	u8 padding_1[2];
+ } __packed;
+ 
++struct wl1271_acx_config_ps {
++	struct acx_header header;
++
++	u8 exit_retries;
++	u8 enter_retries;
++	u8 padding[2];
++	__le32 null_data_rate;
++} __packed;
++
+ enum {
+ 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
+ 	ACX_MEM_CFG                 = 0x0003,
+@@ -1200,6 +1209,7 @@ enum {
+ 	DOT11_RTS_THRESHOLD         = 0x1013,
+ 	DOT11_GROUP_ADDRESS_TBL     = 0x1014,
+ 	ACX_PM_CONFIG               = 0x1016,
++	ACX_CONFIG_PS               = 0x1017,
+ 
+ 	MAX_DOT11_IE = DOT11_GROUP_ADDRESS_TBL,
+ 
+@@ -1269,5 +1279,6 @@ int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
+ 				       bool enable);
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
+ int wl1271_acx_max_tx_retry(struct wl1271 *wl);
++int wl1271_acx_config_ps(struct wl1271 *wl);
+ 
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index fd1dac9..c81aecd 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -960,6 +960,14 @@ struct conf_conn_settings {
+ 	u8 psm_entry_retries;
+ 
+ 	/*
++	 * Specifies the maximum number of times to try PSM exit if it fails
++	 * (if sending the appropriate null-func message fails.)
++	 *
++	 * Range 0 - 255
++	 */
++	u8 psm_exit_retries;
++
++	/*
+ 	 * Specifies the maximum number of times to try transmit the PSM entry
+ 	 * null-func frame for each PSM entry attempt
+ 	 *
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index dfab21e..ec82dd0 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -256,6 +256,7 @@ static struct conf_drv_settings default_conf = {
+ 		.bet_enable                  = CONF_BET_MODE_ENABLE,
+ 		.bet_max_consecutive         = 10,
+ 		.psm_entry_retries           = 5,
++		.psm_exit_retries            = 255,
+ 		.psm_entry_nullfunc_retries  = 3,
+ 		.psm_entry_hangover_period   = 1,
+ 		.keep_alive_interval         = 55000,
+-- 
+1.7.0.4
+
