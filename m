@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:54228 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755997Ab1BIC20 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 21:28:26 -0500
-From: Sujith <m.sujith@gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:58615 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752388Ab1BBKdy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 05:33:54 -0500
+Date: Wed, 2 Feb 2011 11:33:51 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: tony.luck@intel.com, fenghua.yu@intel.com,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
+	megaraidlinux@lsi.com, James.Bottomley@suse.de,
+	linux-scsi@vger.kernel.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, chas@cmf.nrl.navy.mil,
+	linux-atm-general@lists.sourceforge.net
+Subject: Re: [PATCH 1/8]arch:ia64:perfmon.h change a typo comamnd to
+ command
+In-Reply-To: <1296623130-5130-1-git-send-email-justinmattock@gmail.com>
+Message-ID: <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
+References: <1296623130-5130-1-git-send-email-justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19793.64449.344588.240418@gargle.gargle.HOWL>
-Date: Wed, 9 Feb 2011 07:58:17 +0530
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Sujith <m.sujith@gmail.com>,
-	Martin Schleier <drahemmaps@gmx.net>,
-	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
-	<linville@tuxdriver.com>, <kune@deine-taler.de>,
-	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
-Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
-In-Reply-To: <Pine.LNX.4.44L0.1102081011030.2100-100000@iolanthe.rowland.org>
-References: <20110208140329.16761adb54ekbcpw@hayate.sektori.org>
-	<Pine.LNX.4.44L0.1102081011030.2100-100000@iolanthe.rowland.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Stern wrote:
-> There are at least three problems that I can see.  First, the device 
-> doesn't disconnect from and reconnect to the USB bus when it starts 
-> using new firmware.
+On Tue, 1 Feb 2011, Justin P. Mattock wrote:
 
-Yes, ath9k_htc has this problem.
+> The below patch fixes a typo comamnd to command.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  arch/ia64/include/asm/perfmon.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/arch/ia64/include/asm/perfmon.h b/arch/ia64/include/asm/perfmon.h
+> index 7f3333d..d551183 100644
+> --- a/arch/ia64/include/asm/perfmon.h
+> +++ b/arch/ia64/include/asm/perfmon.h
+> @@ -7,7 +7,7 @@
+>  #define _ASM_IA64_PERFMON_H
+>  
+>  /*
+> - * perfmon comamnds supported on all CPU models
+> + * perfmon commands supported on all CPU models
 
-> Second, the device loses its firmware when it is 
-> reset.
+I have consended all the patches in this thread (modulo the staging ones) 
+into one and applied.
 
-Agreed again, this is a problem with ath9k_htc.
-
-> The first two problems are the device's fault, and the third is the 
-> driver's fault.  None of them are the fault of usbcore.
-
-Indeed, which is why this dirty hack is done in the driver.
-And it was done to fix a similar issue - high CPU usage when scanning.
-
-But do you have any suggestion for such broken devices ?
-The FW changes the type from Interrupt to Bulk, but can the host
-driver continue to use Interrupt URBs and use the URB_NO_INTERRUPT trick
-that you have mentioned ?
-
-Sujith
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
