@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48759 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:47780 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756Ab1BFUHH (ORCPT
+	with ESMTP id S1751829Ab1BBEvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 15:07:07 -0500
-Message-ID: <4D4EFF68.9060101@candelatech.com>
-Date: Sun, 06 Feb 2011 12:07:04 -0800
+	Tue, 1 Feb 2011 23:51:21 -0500
+Received: from [71.112.48.101] (pool-71-112-48-101.sttlwa.dsl-w.verizon.net [71.112.48.101])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p124pLPB007147
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 1 Feb 2011 20:51:21 -0800
+Message-ID: <4D48E2C8.5010300@candelatech.com>
+Date: Tue, 01 Feb 2011 20:51:20 -0800
 From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Scanning and channel types.
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
-In-Reply-To: <4D4EFD87.4010005@openwrt.org>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: rfkill API
+References: <4D48DF01.1010401@candelatech.com>
+In-Reply-To: <4D48DF01.1010401@candelatech.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2011 11:59 AM, Felix Fietkau wrote:
-> On 2011-02-06 8:54 PM, Ben Greear wrote:
->> On 02/06/2011 11:42 AM, Felix Fietkau wrote:
->>> On 2011-02-06 8:01 PM, Ben Greear wrote:
->>>> Current code always sets the channel type to NO_HT when scanning.
->>>>
->>>>    From what I can tell, we should be able to send NO_HT packets on
->>>> any channel type, and for passive scanning, it should not matter
->>>> at all what channel-type we are using.
->>>>
->>>> I tested relaxing scanning to use the current channel type
->>>> when scanning on the operating channel, and it seems to
->>>> work.
->>>>
->>>> Does anyone see any problems with this approach?
->>> One thing you should make sure is that once you're done associating to
->>> an NO_HT or HT20 AP (and you have no other interfaces to consider), the
->>> channel mode must not be HT40 - otherwise it could reduce throughput.
->>
->> That is currently handled correctly by the ieee80211_set_channel_type
->> method, as far as I can tell...
->>
->> Regardless of that, in my multi-vif testing, I see lower throughput when
->> using HT40- than using HT20 (between 128 ath9k vif machine and 1 VAP ath9k machine).
->> The VIFS all claim 300Mbps rate.
->> I haven't looked into this any further at this point...
-> Well, with HT40 you take a hit from not just the busy time of the
-> primary channel, but also from the busy time of the extension channel.
-> If you have other wifi activity on the extension channel, then it's
-> normal that this would reduce throughput.
+On 02/01/2011 08:35 PM, Ben Greear wrote:
+> Hello!
+>
+> I was looking at using one rfkill socket in wpa_supplicant, instead
+> of one per vif.
+>
+> Current wpa_supplicant code seems to treat the API as if there is only
+> as single rfkill object for the entire kernel. I would assume that
+> instead different NICs could have different rfkill status.
+>
+> Is there any way to coorelate a netdevice (or devices)
+> to the rfkill->idx in the
+>
+> struct rfkill_event {
+> u32 idx;
+> u8 type;
+> u8 op;
+> u8 soft;
+> u8 hard;
+> } STRUCT_PACKED;
+>
+>
+> ?
+>
+> Thanks,
+> Ben
+>
 
-There were a few other APs on that channel, but they were not doing any active work
-(just beacons and such).  The two ath9k systems were very busy
-talking to each other.  My typical work-load is STA sending to STA
-through the AP.
-
-So, would that scenario be likely to cause the slowdown that you
-mention?
+Err, nevermind..looks like you can grub around in sysfs and find the phy,
+and from there, find the devices....
 
 Thanks,
 Ben
-
->
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
 
 -- 
 Ben Greear <greearb@candelatech.com>
