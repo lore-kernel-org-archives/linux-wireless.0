@@ -1,81 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42491 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983Ab1BGVow (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:51788 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755281Ab1BBWyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 16:44:52 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 7/7] mac80211:  Ensure power-level set properly for scanning.
-Date: Mon,  7 Feb 2011 13:44:38 -0800
-Message-Id: <1297115078-27773-7-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
-References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+	Wed, 2 Feb 2011 17:54:39 -0500
+Received: by vws16 with SMTP id 16so253168vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 14:54:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110202214014.GC28687@sig21.net>
+References: <AANLkTi=bfq+2jev3YGCi0GwfZTkeKa9t2gfuQ8DkbB9p@mail.gmail.com>
+	<20110202214014.GC28687@sig21.net>
+Date: Wed, 2 Feb 2011 22:54:38 +0000
+Message-ID: <AANLkTikWjiJJcpoG64q553WKsizqya-o=xeYcDsZSNuB@mail.gmail.com>
+Subject: Re: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
+From: Eric Fernandez <zeb@zebulon.org.uk>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+2011/2/2 Johannes Stezenbach <js@sig21.net>:
 
-My previous patch to optimize scanning on operating channel
-accidentally removed the code that would ensure power was
-set to maximum for scanning.
+> No solution yet, but I'd like to point you to the
+> thread on the rt2x00-users list:
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-February/003109.html
+>
+> Johannes
+>
 
-This patch re-adds that functionality.
+What Leonardo is reporting might be the same manifestation of the same
+issue. This crash does not happen with kernel 2.6.36, and with 2.6.37,
+it happens quite rarely. However, I can increase the chances of it
+happening by heavily browsing the Internet, and especially when
+seekinbg in Youtube videos, leading to a lot of downloading.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 86562ce... e7eb2cf... M	net/mac80211/main.c
-:100644 100644 1f277c9... ab8d2c6... M	net/mac80211/scan.c
- net/mac80211/main.c |    3 ++-
- net/mac80211/scan.c |    9 ++++++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+Another post in this mailing list is this one:
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/002935.html
+since it reports a crash issue specific to 2.6.37 that did not happen
+in 2.6.36 (started with
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2010-December/002868.html).
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 86562ce..e7eb2cf 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -199,7 +199,8 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
- 
--	if (scan_chan)
-+	if ((local->scanning & SCAN_SW_SCANNING) ||
-+	    (local->scanning & SCAN_HW_SCANNING))
- 		power = chan->max_power;
- 	else
- 		power = local->power_constr_level ?
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 1f277c9..ab8d2c6 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -307,11 +307,15 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
- 	mutex_lock(&local->mtx);
- 	on_oper_chan = ieee80211_cfg_on_oper_channel(local);
- 
-+	WARN_ON(local->scanning & (SCAN_SW_SCANNING | SCAN_HW_SCANNING));
-+
- 	if (was_hw_scan || !on_oper_chan) {
- 		if (WARN_ON(local->scan_channel))
- 			local->scan_channel = NULL;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
--	}
-+	} else
-+		/* Set power back to normal operating levels. */
-+		ieee80211_hw_config(local, 0);
- 
- 	if (!was_hw_scan) {
- 		bool on_oper_chan2;
-@@ -434,6 +438,9 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 
- 	ieee80211_configure_filter(local);
- 
-+	/* We need to set power level at maximum rate for scanning. */
-+	ieee80211_hw_config(local, 0);
-+
- 	ieee80211_queue_delayed_work(&local->hw,
- 				     &local->scan_work,
- 				     IEEE80211_CHANNEL_TIME);
--- 
-1.7.2.3
+Finally, this issue seems to affect other users:
+http://ubuntuforums.org/showthread.php?t=1613049&page=2 "There is a
+fairly easy to trigger crash in this one with my USB Ralink
+Technology, Corp. RT2501/RT2573 Wireless Adapter (rt73/rt2x00lib). I
+am trying to get a proper snapshot of the trace for a report but at
+least people might want to be a bit careful."
 
+Eric
