@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42847 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967Ab1BCVaV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 16:30:21 -0500
-Date: Thu, 3 Feb 2011 16:25:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Mark Mentovai <mark@moxienet.com>, Felix Fietkau <nbd@openwrt.org>,
+Received: from bar.sig21.net ([80.81.252.164]:33269 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753591Ab1BBV3U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 16:29:20 -0500
+Date: Wed, 2 Feb 2011 22:29:12 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, users@rt2x00.serialmonkey.com,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
-Message-ID: <20110203212511.GE2809@tuxdriver.com>
-References: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
- <AANLkTi=4jgGmnSXZNBWu30WVfda7QrHFyWt_XKJD0jDK@mail.gmail.com>
+Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while
+ in powersave mode
+Message-ID: <20110202212912.GA28687@sig21.net>
+References: <201101311600.39486.IvDoorn@gmail.com>
+ <874o8mbaec.fsf@purkki.adurom.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=4jgGmnSXZNBWu30WVfda7QrHFyWt_XKJD0jDK@mail.gmail.com>
+In-Reply-To: <874o8mbaec.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 31, 2011 at 10:43:41AM -0800, Luis R. Rodriguez wrote:
-> John, I'll review this today.
+On Wed, Feb 02, 2011 at 07:42:51PM +0200, Kalle Valo wrote:
+> So the firmware/hardware doesn't have support for tracking and waking
+> up for beacons? I didn't even know that such hardware exists :) Waking
+> up for beacons from host sounds very inefficient and unrealiable. All
+> the devices I have seen either do this in firmware or hardware due to
+> time constraints. Even at76c50x-usb, which is ancient, does all this
+> in firmware.
 
-Any follow-up?
+IMHO this is a bit exaggerated.  Given that the beacon interval
+is typically ~100 msecs, and typical worst cast irq latencies
+on Linux 2.6 are a few 100 usecs, we can sleep e.g. 90msecs
+and wake up in time to catch the beacon with high probability, thus
+saving 90% on PHY power.  Not perfect, but good enough, isn't it?
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Johannes
