@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:34820 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374Ab1BQAqE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47385 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab1BBMDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 19:46:04 -0500
-Received: by ewy5 with SMTP id 5so798668ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 16:46:02 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/2] ssb: improve device disabling
-Date: Thu, 17 Feb 2011 01:50:49 +0100
-Message-Id: <1297903851-5499-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 2 Feb 2011 07:03:53 -0500
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jouni Malinen <j@w1.fi>, "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+In-Reply-To: <20110202115743.GA12386@hash.localnet>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+	 <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+	 <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
+	 <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+	 <1296633772.3624.2.camel@jlt3.sipsolutions.net>
+	 <20110202113052.GA14126@jm.kir.nu>  <20110202115743.GA12386@hash.localnet>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Feb 2011 13:03:49 +0100
+Message-ID: <1296648229.5671.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With that patches we follow specs and (as recently proved by MMIO dumps) wl.
+On Wed, 2011-02-02 at 06:57 -0500, Bob Copeland wrote:
+> On Wed, Feb 02, 2011 at 01:30:52PM +0200, Jouni Malinen wrote:
+> > If it is fine to remove the custom wpa_supplicant modifications from
+> > Android, this is obviously a moot point, but until that happens, the
+> > easiest approach seems to be to provide a custom driver_*.c based on
+> > nl80211 to isolate the custom changes to user space and to small part of
+> > it at that. I don't really want to see new drivers trying to provide
+> > WEXT support with private ioctls to address need for making it work with
+> > Android..
+> 
+> I guess my argument is if Atheros is spending resources on porting
+> drivers to Android, it would be nice to take the time to fix Android's
+> userspace too.  At any rate, I disagree with the wiki's wording "the
+> proper approach" as opposed to maybe "the straight-forward approach."
 
-The more important patch is the first one. It detects problem (and warns) with
-SSB when it is in some broken state. We can for example hit such an issue when
-enabling DMA on 14e4:4329 (N-PHY, rev 1). The real fix is now known yet, but
-not we at least get warning. Switching to PIO on that card does not raise
-warning anymore (as expected).
+I couldn't let that sit there so I edited it ;-)
 
-We all hate regressions and Michal says than enabling/disabling SSB device can
-be tricky. I have tested that patches with few b43 driven devices:
-14e4:4318 (BCM4318)
-14e4:4315 (BCM4312)
-14e4:4329 (BCM4321)
-14e4:4328 (BCM4321)
-14e4:432b (BCM4322)
+> Android already has a custom userspace library that sits between wpa_s
+> and their Java stack where they could probably stick all of this stuff.
+> If there is something that is truly missing from the kernel, then by
+> all means we can add it to nl80211 for everyone's benefit.
 
-With each device I performed cold booting, loading b43, testing, bringing
-interface down and up, testing, reloading, testing. Sometime even more.
+Right. But then stock wpa_s can also get it, and everybody is happy, no?
 
-Unfortunately I do not have aany other SSB devices, like that supported by b44
-or gige (OK, I did not even hear about gige earlier).
-
-Rafał Miłecki (2):
-  ssb: when needed, reject IM input while disabling device
-  ssb: reset device only if it was enabled
-
- drivers/ssb/main.c           |   36 +++++++++++++++++++++++++++---------
- include/linux/ssb/ssb_regs.h |    2 ++
- 2 files changed, 29 insertions(+), 9 deletions(-)
-
--- 
-1.7.3.4
+johannes
 
