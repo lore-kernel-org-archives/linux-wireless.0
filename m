@@ -1,97 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:40550 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.19.149.2]:47955 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756200Ab1BCK7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 05:59:30 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PkwuM-0000OJ-L6
-	for linux-wireless@vger.kernel.org; Thu, 03 Feb 2011 11:59:29 +0100
-Received: from san_juan-143-68.umh.es ([san_juan-143-68.umh.es])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 11:59:26 +0100
-Received: from baldo.ath9k by san_juan-143-68.umh.es with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 11:59:26 +0100
-To: linux-wireless@vger.kernel.org
-From: Baldomero Coll <baldo.ath9k@gmail.com>
-Subject: Re: [RFC] mac80211: support for IEEE80211N in IBSS
-Date: Thu, 3 Feb 2011 10:59:06 +0000 (UTC)
-Message-ID: <loom.20110203T115745-317@post.gmane.org>
-References: <201101191438.01161.alexander.simon@saxnet.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754521Ab1BBR17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 12:27:59 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 09:27:39 -0800
+Date: Wed, 2 Feb 2011 22:57:07 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2] mac80211: do not restart ps timer during scan or
+ offchannel
+Message-ID: <20110202172706.GA4712@vmraj-lnx.users.atheros.com>
+References: <1296581526-3004-1-git-send-email-rmanoharan@atheros.com>
+ <1296651590.5671.4.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1296651590.5671.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Feb 02, 2011 at 06:29:50PM +0530, Johannes Berg wrote:
+> On Tue, 2011-02-01 at 23:02 +0530, Rajkumar Manoharan wrote:
+> > While leaving oper channel, STA informs sleep state to AP to
+> > stop sending data. Till sending ack for the nullfunc, AP
+> > continues to send the data to STA which restarts ps_timer that
+> > is causing unnecessary nullfunc exchange on timer expiry
+> > when the STA was already moved to offchannel. So don't restart ps_timer
+> > on data reception during scan. This issue was identified by
+> > the following warning.
+> > 
+> > WARNING: at net/mac80211/tx.c:661 invoke_tx_handlers+0xf07/0x1330 [mac80211]
+> > wlan0: Dropped data frame as no usable bitrate found while scanning and
+> > associated. Target station: 00:03:7f:0b:a6:1b on 5 GHz band
+> > Call Trace:
+> >   [<ffffffffa0413ba7>] invoke_tx_handlers+0xf07/0x1330 [mac80211]
+> >   [<ffffffffa0414056>] ieee80211_tx+0x86/0x2c0 [mac80211]
+> >   [<ffffffffa0414345>] ieee80211_xmit+0xb5/0x1d0 [mac80211]
+> >   [<ffffffffa04037e0>] ieee80211_dynamic_ps_enable_work+0x0/0xb0 [mac80211]
+> >   [<ffffffffa04158cf>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
+> >   [<ffffffffa04026e6>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
+> >   [<ffffffffa0403885>] ieee80211_dynamic_ps_enable_work+0xa5/0xb0 [mac80211]
+> 
+> But I suppose even during a HW scan we don't want mac80211 to
+> modify PS state anyway, so I guess it's fine.
+Yes. I meant that. Thanks for the review.
 
-I have sacesfully installed the IBSS HT support patches [1] [2], but something
-wrong happends when the network is created. Any idea why this happens?
-
-[1]
-# iw --debug dev wlan0 ibss join "uwicoreHT" 2412 HT20
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE ---------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 36
-    .nlmsg_type = 2 <ERROR>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 1296727732
-    .nlmsg_pid = 2350
-  [ERRORMSG] 20 octets
-    .error = 0 "Success"
-  [ORIGINAL MESSAGE] 16 octets
-    .nlmsg_len = 16
-    .nlmsg_type = 23 <0x17>
-    .nlmsg_flags = 5 <REQUEST,ACK>
-    .nlmsg_seq = 1296727732
-    .nlmsg_pid = 2350
----------------------------  END NETLINK MESSAGE   ---------------------------
-
-[2]
-iw --debug dev wlan0 ibss join "uwicoreHT" 2412 HT40-
--- Debug: Received Message:
---------------------------   BEGIN NETLINK MESSAGE ---------------------------
-  [HEADER] 16 octets
-    .nlmsg_len = 36
-    .nlmsg_type = 2 <ERROR>
-    .nlmsg_flags = 0 <>
-    .nlmsg_seq = 1296727811
-    .nlmsg_pid = 2354
-  [ERRORMSG] 20 octets
-    .error = 0 "Success"
-  [ORIGINAL MESSAGE] 16 octets
-    .nlmsg_len = 16
-    .nlmsg_type = 23 <0x17>
-    .nlmsg_flags = 5 <REQUEST,ACK>
-    .nlmsg_seq = 1296727811
-    .nlmsg_pid = 2354
----------------------------  END NETLINK MESSAGE   ---------------------------
-
-[3]
-As a result, the iwconfig shows the following:
-
-wlan0     IEEE 802.11abgn  ESSID:"uwicoreHT"  
-          Mode:Ad-Hoc  Frequency:2.412 GHz  Cell: Not-Associated   
-          Tx-Power=30 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-(After few seconds the ESSID disappear)
-
-wlan0     IEEE 802.11abgn  Mode:Ad-Hoc  Frequency:2.412 GHz  
-          Cell: Not-Associated   Tx-Power=27 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-
-
+--
+Rajkumar
