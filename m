@@ -1,53 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:51236 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756916Ab1BAOft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 09:35:49 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 06:35:29 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k: wakeup hw before stopping beacon queue
-Date: Tue, 1 Feb 2011 20:04:52 +0530
-Message-ID: <1296570892-7074-2-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1296570892-7074-1-git-send-email-rmanoharan@atheros.com>
-References: <1296570892-7074-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:39736 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753086Ab1BBH7t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 02:59:49 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so7584286wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 23:59:49 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 3/4] wl12xx: use the conf struct instead of macros for memory configuration
+Date: Wed,  2 Feb 2011 09:59:36 +0200
+Message-Id: <1296633577-15199-4-git-send-email-eliad@wizery.com>
+In-Reply-To: <1296633577-15199-1-git-send-email-eliad@wizery.com>
+References: <1296633577-15199-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before stopping beacon queue ensure that hw is in AWAKE state.
-No doing so, causes failure to stop tx dma error message.
+make the configuration management more flexible by using the
+conf struct, rather than predefined macros.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/acx.c  |   16 ++++++++--------
+ drivers/net/wireless/wl12xx/acx.h  |    4 ----
+ drivers/net/wireless/wl12xx/conf.h |   12 ++++++++++++
+ drivers/net/wireless/wl12xx/main.c |    4 ++++
+ 4 files changed, 24 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c9925e9..bfc70c1 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1411,6 +1411,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
- 
- 	if (ath9k_uses_beacons(vif->type)) {
- 		int error;
-+		ath9k_ps_wakeup(sc);
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 		/* This may fail because upper levels do not have beacons
- 		 * properly configured yet.  That's OK, we assume it
-@@ -1423,6 +1424,7 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
- 			ath9k_reclaim_beacon(sc, vif);
- 		else
- 			ath_beacon_config(sc, vif);
-+		ath9k_ps_restore(sc);
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index f2fbda0..6ea19d7 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -961,10 +961,10 @@ int wl1271_acx_ap_mem_cfg(struct wl1271 *wl)
  	}
- }
  
+ 	/* memory config */
+-	mem_conf->num_stations = DEFAULT_NUM_STATIONS;
+-	mem_conf->rx_mem_block_num = ACX_RX_MEM_BLOCKS;
+-	mem_conf->tx_min_mem_block_num = ACX_TX_MIN_MEM_BLOCKS;
+-	mem_conf->num_ssid_profiles = ACX_NUM_SSID_PROFILES;
++	mem_conf->num_stations = wl->conf.mem.num_stations;
++	mem_conf->rx_mem_block_num = wl->conf.mem.rx_block_num;
++	mem_conf->tx_min_mem_block_num = wl->conf.mem.tx_min_block_num;
++	mem_conf->num_ssid_profiles = wl->conf.mem.ssid_profiles;
+ 	mem_conf->total_tx_descriptors = cpu_to_le32(ACX_TX_DESCRIPTORS);
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_MEM_CFG, mem_conf,
+@@ -993,10 +993,10 @@ int wl1271_acx_sta_mem_cfg(struct wl1271 *wl)
+ 	}
+ 
+ 	/* memory config */
+-	mem_conf->num_stations = DEFAULT_NUM_STATIONS;
+-	mem_conf->rx_mem_block_num = ACX_RX_MEM_BLOCKS;
+-	mem_conf->tx_min_mem_block_num = ACX_TX_MIN_MEM_BLOCKS;
+-	mem_conf->num_ssid_profiles = ACX_NUM_SSID_PROFILES;
++	mem_conf->num_stations = wl->conf.mem.num_stations;
++	mem_conf->rx_mem_block_num = wl->conf.mem.rx_block_num;
++	mem_conf->tx_min_mem_block_num = wl->conf.mem.tx_min_block_num;
++	mem_conf->num_ssid_profiles = wl->conf.mem.ssid_profiles;
+ 	mem_conf->total_tx_descriptors = cpu_to_le32(ACX_TX_DESCRIPTORS);
+ 	mem_conf->dyn_mem_enable = wl->conf.mem.dynamic_memory;
+ 	mem_conf->tx_free_req = wl->conf.mem.min_req_tx_blocks;
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index ba13d1b..9822e16 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -133,7 +133,6 @@ enum {
+ 
+ #define DEFAULT_UCAST_PRIORITY          0
+ #define DEFAULT_RX_Q_PRIORITY           0
+-#define DEFAULT_NUM_STATIONS            1
+ #define DEFAULT_RXQ_PRIORITY            0 /* low 0 .. 15 high  */
+ #define DEFAULT_RXQ_TYPE                0x07    /* All frames, Data/Ctrl/Mgmt */
+ #define TRACE_BUFFER_MAX_SIZE           256
+@@ -797,10 +796,7 @@ struct acx_tx_config_options {
+ 	__le16 tx_compl_threshold;   /* number of packets */
+ } __packed;
+ 
+-#define ACX_RX_MEM_BLOCKS     70
+-#define ACX_TX_MIN_MEM_BLOCKS 40
+ #define ACX_TX_DESCRIPTORS    32
+-#define ACX_NUM_SSID_PROFILES 1
+ 
+ struct wl1271_acx_ap_config_memory {
+ 	struct acx_header header;
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index d8c1249..856a8a2 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1152,6 +1152,18 @@ struct conf_ht_setting {
+ };
+ 
+ struct conf_memory_settings {
++	/* Number of stations supported in IBSS mode */
++	u8 num_stations;
++
++	/* Number of ssid profiles used in IBSS mode */
++	u8 ssid_profiles;
++
++	/* Number of memory buffers allocated to rx pool */
++	u8 rx_block_num;
++
++	/* Minimum number of blocks allocated to tx pool */
++	u8 tx_min_block_num;
++
+ 	/* Disable/Enable dynamic memory */
+ 	u8 dynamic_memory;
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index c8fe2b0..0f6786d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -299,6 +299,10 @@ static struct conf_drv_settings default_conf = {
+ 		.inactivity_timeout = 10000,
+ 	},
+ 	.mem = {
++		.num_stations                 = 1,
++		.ssid_profiles                = 1,
++		.rx_block_num                 = 70,
++		.tx_min_block_num             = 40,
+ 		.dynamic_memory               = 0,
+ 		.min_req_tx_blocks            = 104,
+ 		.min_req_rx_blocks            = 22,
 -- 
-1.7.4
+1.7.0.4
 
