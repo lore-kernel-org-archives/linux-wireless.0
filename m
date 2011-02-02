@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:46119 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889Ab1BUSpu (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:36086 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755001Ab1BBTJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 13:45:50 -0500
-Received: by wwi17 with SMTP id 17so3258647wwi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 10:45:49 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: N-PHY: rev1: enable some gain ctl workarounds
-Date: Mon, 21 Feb 2011 19:45:34 +0100
-Message-Id: <1298313935-4094-1-git-send-email-zajec5@gmail.com>
+	Wed, 2 Feb 2011 14:09:03 -0500
+Received: by qyk12 with SMTP id 12so319612qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 11:09:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <874o8mbaec.fsf@purkki.adurom.net>
+References: <201101311600.39486.IvDoorn@gmail.com>
+	<874o8mbaec.fsf@purkki.adurom.net>
+Date: Wed, 2 Feb 2011 20:09:02 +0100
+Message-ID: <AANLkTikKevPWkWMu=HLPHt-jACLZLQzqN6thr-2LNk59@mail.gmail.com>
+Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in
+ powersave mode
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>,
+	RA-Dennis Lee <Dennis_Lee@ralinktech.com>,
+	RA-Eddy Tsai <Eddy_Tsai@ralinktech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index ab81ed8..cc19e3f 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1281,17 +1281,17 @@ static void b43_nphy_gain_ctrl_workarounds(struct b43_wldev *dev)
- 						B43_NPHY_TABLE_DATALO, tmp);
- 				}
- 			}
-+		}
- 
--			b43_nphy_set_rf_sequence(dev, 5,
--					rfseq_events, rfseq_delays, 3);
--			b43_phy_maskset(dev, B43_NPHY_OVER_DGAIN1,
--				~B43_NPHY_OVER_DGAIN_CCKDGECV & 0xFFFF,
--				0x5A << B43_NPHY_OVER_DGAIN_CCKDGECV_SHIFT);
-+		b43_nphy_set_rf_sequence(dev, 5,
-+				rfseq_events, rfseq_delays, 3);
-+		b43_phy_maskset(dev, B43_NPHY_OVER_DGAIN1,
-+			~B43_NPHY_OVER_DGAIN_CCKDGECV & 0xFFFF,
-+			0x5A << B43_NPHY_OVER_DGAIN_CCKDGECV_SHIFT);
- 
--			if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
--				b43_phy_maskset(dev, B43_PHY_N(0xC5D),
--						0xFF80, 4);
--		}
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-+			b43_phy_maskset(dev, B43_PHY_N(0xC5D),
-+					0xFF80, 4);
- 	}
- }
- 
--- 
-1.7.1
+>> Add a delayed work structure which can be used to wakeup the device
+>> just before a beacon from the AP is expected. This then allows the
+>> device to receive the beacon, check if there are pending broadcast
+>> or multicast frames.
+>
+> So the firmware/hardware doesn't have support for tracking and waking
+> up for beacons? I didn't even know that such hardware exists :) Waking
+> up for beacons from host sounds very inefficient and unrealiable. All
+> the devices I have seen either do this in firmware or hardware due to
+> time constraints. Even at76c50x-usb, which is ancient, does all this
+> in firmware.
+>
+> Are you sure there's no way to do this with hardware?
 
+Well the official Ralink driver also uses a timer to wakeup the hardware,
+there are however registers which suggest support for autowake functionality.
+
+Jay, Dennis, Eddy, can you explain a but how the autowake functionality is
+implemented in the rt2800usb firmware?
+
+>> TODO: Split out mac80211 changes into a separate patch. We also need
+>> to know if we need this check in mac80211 or in the driver.
+>> Personally I think the check belongs in mac80211, but at this time
+>> that work has been deferred to the drivers. However this means that
+>> a lot of logic is needed in the driver to check if the correct IE is
+>> available, and then check the value, while mac80211 will obtains
+>> that exact IE anyway during RX processing anyway...
+>
+> I'm worried that client power save support in mac80211 is getting
+> quite complex already. How many drivers need this feature?
+
+At least rt2800usb and carl9170. But I haven't done a full round
+through all drivers though.
+
+Ivo
