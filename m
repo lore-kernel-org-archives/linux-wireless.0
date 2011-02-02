@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:50673 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751530Ab1BFK1O (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:44286 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754478Ab1BBQBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 05:27:14 -0500
-Cc: linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	linville@tuxdriver.com, kune@deine-taler.de,
-	linux-usb@vger.kernel.org, stern@rowland.harvard.edu,
-	gregkh@suse.de
-Content-Type: text/plain; charset="utf-8"
-Date: Sun, 06 Feb 2011 11:27:10 +0100
-From: "Martin Schleier" <drahemmaps@gmx.net>
-Message-ID: <20110206102710.152130@gmx.net>
-MIME-Version: 1.0
-Subject: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change
- endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+	Wed, 2 Feb 2011 11:01:48 -0500
+Cc: tony.luck@intel.com, fenghua.yu@intel.com,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
+	megaraidlinux@lsi.com, James.Bottomley@suse.de,
+	linux-scsi@vger.kernel.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, chas@cmf.nrl.navy.mil,
+	linux-atm-general@lists.sourceforge.net
+Message-Id: <792EE80F-000E-44CA-9E0A-F18995591126@gmail.com>
+From: Justin Mattock <justinmattock@gmail.com>
+To: Jiri Kosina <jkosina@suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v936)
+Subject: Re: [PATCH 1/8]arch:ia64:perfmon.h change a typo comamnd to command
+Date: Wed, 2 Feb 2011 08:01:43 -0800
+References: <1296623130-5130-1-git-send-email-justinmattock@gmail.com> <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith <m.sujith@...> writes:
-> Jussi Kivilinna wrote:
-> > +static int usb_endpoint_int_to_bulk(struct usb_device *udev, unsigned int pipe)
-> > +{
-> > +	struct usb_host_endpoint *ep;
-> > +
-> > +	ep = usb_pipe_endpoint(udev, pipe);
-> > +	if (!ep)
-> > +		return -EPIPE;
-> > +
-> > +	switch (ep->desc.bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) {
-> > +	case USB_ENDPOINT_XFER_INT:
-> > +		ep->desc.bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
-> > +		ep->desc.bmAttributes |= USB_ENDPOINT_XFER_BULK;
-> > +		ep->desc.bInterval = 0;
-> > +		/* passthru */
 
-Interesting, I know that interrupt and bulk endpoints share a lot of
-common logic so I can see how this should work. But is it really
-possible [and more to the point: sane?!] to override the endpoint
-descriptors?
+On Feb 2, 2011, at 2:33 AM, Jiri Kosina wrote:
 
-I know that usb_submit_urb checks [when config_usb_debug is enabled]
-if the xfertype of the submitted urb matches the one of the endpoint,
-so I wonder I started to wonder if we are fooling "just" the code
-here, or ourselves in the process?
- 
-> ath9k_htc does the same thing (see ath/ath9k/hif_usb.c).
-> It does seem to be working properly but I am wondering if the
-> USB subsystem has to be updated after the driver messes around with bmAttributes.
-> (lsusb would still show the endpoint type as INT).
-> 
-> You have a usb_reset_configuration() call before changing
-> the endpoint type, why is that necessary ? And would that
-> reset the endpoints as well ?
-Huh, has this already catched on?
--- 
-Empfehlen Sie GMX DSL Ihren Freunden und Bekannten und wir
-belohnen Sie mit bis zu 50,- Euro! https://freundschaftswerbung.gmx.de
+> On Tue, 1 Feb 2011, Justin P. Mattock wrote:
+>
+>> The below patch fixes a typo comamnd to command.
+>>
+>> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+>>
+>> ---
+>> arch/ia64/include/asm/perfmon.h |    2 +-
+>> 1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/ia64/include/asm/perfmon.h b/arch/ia64/include/ 
+>> asm/perfmon.h
+>> index 7f3333d..d551183 100644
+>> --- a/arch/ia64/include/asm/perfmon.h
+>> +++ b/arch/ia64/include/asm/perfmon.h
+>> @@ -7,7 +7,7 @@
+>> #define _ASM_IA64_PERFMON_H
+>>
+>> /*
+>> - * perfmon comamnds supported on all CPU models
+>> + * perfmon commands supported on all CPU models
+>
+> I have consended all the patches in this thread (modulo the staging  
+> ones)
+> into one and applied.
+>
+> -- 
+> Jiri Kosina
+> SUSE Labs, Novell Inc.
+
+
+cool... if I find anymore Ill send it on up!!
+
+Justin P. Mattock
