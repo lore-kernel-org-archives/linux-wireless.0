@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58502 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754174Ab1BOOtf (ORCPT
+Received: from w1.fi ([128.177.27.249]:59514 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754268Ab1BBNjO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 09:49:35 -0500
-Received: by bwz15 with SMTP id 15so506080bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 06:49:34 -0800 (PST)
-Message-ID: <4D5A927A.7060208@gmail.com>
-Date: Tue, 15 Feb 2011 15:49:30 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Wed, 2 Feb 2011 08:39:14 -0500
+Date: Wed, 2 Feb 2011 15:38:39 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+Message-ID: <20110202133839.GA14904@jm.kir.nu>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+ <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+ <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
+ <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
+ <1296633772.3624.2.camel@jlt3.sipsolutions.net>
+ <20110202113052.GA14126@jm.kir.nu>
+ <1296646434.5671.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: me@bobcopeland.com
-CC: =?UTF-8?B?0J3QuNC60L7Qu9Cw0Lkg0JvQtdC00L7QstGB0LrQuNGF?=
-	<nledovskikh@gmail.com>, linville@tuxdriver.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com, mickflemm@gmail.com
-Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
- seqfault on AHB chips
-References: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com> <20110215144445.GA6066@hash.localnet>
-In-Reply-To: <20110215144445.GA6066@hash.localnet>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1296646434.5671.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2011 03:44 PM, me@bobcopeland.com wrote:
-> On Tue, Feb 15, 2011 at 02:29:13PM +0000, Николай Ледовских wrote:
->> -    mem = ioremap_nocache(res->start, res->end - res->start + 1);
->> +    mem = res->start;
-> 
-> Won't this break iommu platforms?
+On Wed, Feb 02, 2011 at 12:33:54PM +0100, Johannes Berg wrote:
+> What's the driver_cmd things they use? If we they add support for
+> whatever it is to nl80211, why can those not be normal supplicant
+> interfaces?
 
-And not only those. This is incorrect on _all_ platforms. You try to
-dereference a physical address.
+I have not reviewed what exactly gets used and how, so this is only
+based on what the modification for wpa_supplicant are exposing.
 
-regards,
+There seems to be some kind of mechanism for stopping/starting/reloading
+the driver which I do not fully understand. It includes some kind of
+driver hang detection and maybe recovery from that etc..
+
+Then there is a very generic mechanism of passing any command from user
+space (i.e., command string to a SIOCSIWPRIV) and that goes
+transparently through wpa_supplicant.. The response comes back as a
+string. In other words, you could implement pretty much anything in a
+driver specific way with that.. At least following commands are used or
+have used with that: RSSI, LINKSPEED, MACADDR, GETPOWER, GETBAND.
+
+Since it is difficult to tell just from wpa_supplicant changes what
+exactly is done with these interfaces, the answer to the question of
+why these could not be normal supplicant interfaces is not immediately
+clear to me. I would assume that some of this functionality could
+certainly be added once identified clearly what is needed. Some may
+already be available (like MACADDR; assuming it is used to fetch local
+MAC address).
+
 -- 
-js
+Jouni Malinen                                            PGP id EFC895FA
