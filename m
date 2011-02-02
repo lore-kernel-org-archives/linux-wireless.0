@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49909 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753949Ab1BCIQs (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:58600 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258Ab1BBFHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 03:16:48 -0500
-Subject: Re: Crash in timer.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D49DABE.7040802@candelatech.com>
-References: <4D49DABE.7040802@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Feb 2011 09:16:44 +0100
-Message-ID: <1296721004.3854.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 2 Feb 2011 00:07:44 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: henryp@broadcom.com, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 6/8]drivers:staging:brcm80211i:sbsdio.h change a typo comamnd to command
+Date: Tue,  1 Feb 2011 21:07:28 -0800
+Message-Id: <1296623248-5399-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-02 at 14:29 -0800, Ben Greear wrote:
-> I had 128 STA vifs on an ath9k system...started deleting all but 16 of them.
-> I did this twice, and both times, it crashes before finishing deleting
-> all of them.
-> 
-> This is using latest wireless-testing plus some of my patches
-> previously posted to this list.
+The below patch fixes a typo comamnd to command.
 
-Timers should have debug objects support -- that would be helpful.
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-johannes
+---
+ drivers/staging/brcm80211/include/sbsdio.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/include/sbsdio.h b/drivers/staging/brcm80211/include/sbsdio.h
+index 6afdbbe..c190acb 100644
+--- a/drivers/staging/brcm80211/include/sbsdio.h
++++ b/drivers/staging/brcm80211/include/sbsdio.h
+@@ -144,7 +144,7 @@
+ 						 */
+ 
+ #define SBSDIO_BYTEMODE_DATALEN_MAX	64	/* sdio byte mode: maximum length of one
+-						 * data comamnd
++						 * data command 
+ 						 */
+ 
+ #define SBSDIO_CORE_ADDR_MASK		0x1FFFF	/* sdio core function one address mask */
+-- 
+1.6.5.GIT
 
