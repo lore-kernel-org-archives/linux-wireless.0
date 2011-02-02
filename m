@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:53387 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895Ab1B1Jlq (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:35077 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753328Ab1BBLB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 04:41:46 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by aurora.create-net.org (Postfix) with ESMTP id 3A05B3835F
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 10:34:37 +0100 (CET)
-Received: from aurora.create-net.org ([127.0.0.1])
-	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id xYqJ8pM05eT0 for <linux-wireless@vger.kernel.org>;
-	Mon, 28 Feb 2011 10:34:36 +0100 (CET)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by aurora.create-net.org (Postfix) with ESMTP id 1EDAF3835C
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 10:32:34 +0100 (CET)
-Received: from aurora.create-net.org ([127.0.0.1])
-	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id QI2uEJMczE2E for <linux-wireless@vger.kernel.org>;
-	Mon, 28 Feb 2011 10:32:33 +0100 (CET)
-Received: from [192.168.9.184] (unknown [192.168.9.184])
-	by aurora.create-net.org (Postfix) with ESMTPSA id 31BB73832E
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 10:32:33 +0100 (CET)
-Message-ID: <4D6B6BB0.3070500@create-net.org>
-Date: Mon, 28 Feb 2011 10:32:32 +0100
-From: Roberto Riggio <roberto.riggio@create-net.org>
+	Wed, 2 Feb 2011 06:01:28 -0500
+Received: by pzk35 with SMTP id 35so1206132pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 03:01:27 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Extended presence mask ignored in injected frame
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <87r5btdsb8.fsf@purkki.adurom.net>
+References: <4D45A583.3060605@davizone.at>
+	<4D45B7B2.40001@davizone.at>
+	<87r5btdsb8.fsf@purkki.adurom.net>
+Date: Wed, 2 Feb 2011 13:01:27 +0200
+Message-ID: <AANLkTimto_rYQfePQG8d2wJHeHwyoFSZLO_U4o+-ro=F@mail.gmail.com>
+Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: David Gnedt <david.gnedt@davizone.at>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
+	Yuri Ershov <ext-yuri.ershov@nokia.com>,
+	Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-I'm injecting some traffic using the Click modular router. The radiotap
-header that I'm building contains four presence masks. In the first three
-mask the bit 31 is set to 1 while the last masj sets the bit 31 to 0.
+On Mon, Jan 31, 2011 at 5:08 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Hi David,
+>
+> David Gnedt <david.gnedt@davizone.at> writes:
+>
+>> Patch 01-03 fix some bugs.
+>> Patch 04-09 contain some feature ports from Maemo Fremantle and wl1271.
+>> Patch 10-18 implement (mainly) monitor mode and packet injection.
+>
+> How did you test the patches? For example, what hardware did you use
+> etc.
+>
+> About the code from fremantle kernels. Few weeks ago nokia sent me
+> privately the original patches from their internal git tree, I gave
+> some comments and never heard back. So, in theory I should have all
+> the fremantle patches somewhere in my email archives. I would just
+> need to clean them up and send them here. I'll go over your patches
+> and let's see what we should do.
 
-The problem is that only the first block is parsed by the kernel while 
-the other
-are ignored more precisely -ENOENT is returned when the last bit of the 
-first
-presence mask is found. Basically since in the second to forth blocks I'm
-specifying RATE and DATA_RETRIES fields I was expecting this fields to be
-processed multiple times in the tx.c file. However this is not happening and
-only the first occurrences of RATE and DATA_RETRIES fields are processed.
+I was the one trying to organize this, Luciano managed this from Nokia
+side and Yuri (CCed) did the porting to newer kernels. However several
+patches were missing attribution and things somehow got stuck there.
 
-Is anybody using frame injection with multiple presence masks and has faced
-the same issue? The driver I'm using is ath5k.
-
-R.
-
--- 
---------------------------------------------------------
-Roberto Riggio, Ph.D.
-CREATE-NET
-Network&  Security Solutions for Pervasive Computing Systems (iNSPIRE)
-Senior Researcher
-Via alla Cascata 56/D - 38123 Povo Trento (Italy)
-e-mail: roberto.riggio@create-net.org
-Tel: (+39) 0461 408400 - interno/extension 708
-Fax: (+39) 0461 421157
-www.create-net.org/~rriggio
---------------------------------------------------------
-
-The information transmitted is intended only for the person or entity to
-which it is addressed and may contain confidential and/or privileged
-material. Any review, retransmission, dissemination or other use of, or
-taking of any action in reliance upon, this information by persons or
-entities other than the intended recipient is prohibited according to
-the Italian Law 196/2003 of the Legislature. If you received this in
-error, please contact the sender and delete the material from any
-computer.
-
-Le informazioni contenute in questo messaggio di posta elettronica e nei
-file allegati sono da considerarsi strettamente riservate. Il loro
-utilizzo e' consentito esclusivamente al destinatario del messaggio, per
-le finalita' indicate nel messaggio stesso. Qualora riceveste questo
-messaggio senza esserne il destinatario, Vi preghiamo cortesemente di
-darcene notizia via e-mail e di procedere alla cancellazione del
-messaggio stesso dal Vostro sistema. Trattenere il messaggio stesso,
-divulgarlo anche in parte, distribuirlo ad altri soggetti, copiarlo,
-od utilizzarlo per finalita' diverse, costituisce comportamento
-contrario ai principi dettati dal D. Lgs. 196/2003.
-
+As for this series, I'll try to test them on pandora hardware over this week.
