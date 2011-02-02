@@ -1,55 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:45127 "EHLO mx1.suse.de"
+Received: from mail.atheros.com ([12.19.149.2]:32381 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751630Ab1BRDGB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 22:06:01 -0500
-Date: Thu, 17 Feb 2011 19:05:39 -0800
-From: Greg KH <gregkh@suse.de>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"kernel@fomichev.me" <kernel@fomichev.me>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>
-Subject: Re: [PATCH v2 1/4] brcm80211: fix compile issue
-Message-ID: <20110218030539.GE17143@suse.de>
-References: <1297721111-20606-1-git-send-email-kernel@fomichev.me>
- <7A94256FD72B884D9E7C55586C3CBCEE13CDA25D88@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110215221200.GA2087@sdf-MacBook>
- <4D5B0034.3090303@broadcom.com>
- <20110216015040.GA2349@tuxdriver.com>
- <4D5DDD7A.4080801@broadcom.com>
+	id S1755143Ab1BBWJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 17:09:30 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 14:09:10 -0800
+Date: Wed, 2 Feb 2011 14:09:26 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Zhao, Shanyu" <shanyu.zhao@intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: Backporting other subsystems on Linux
+Message-ID: <20110202220926.GB3035@tux>
+References: <380B2771CDD78E46856E6B788D9F1997D2468080@orsmsx503.amr.corp.intel.com>
+ <BD672EAEE3AD2C47A7120B0973C3FB3A50F0AC156A@SC1EXMB-MBCL.global.atheros.com>
+ <380B2771CDD78E46856E6B788D9F1997D27D86D2@orsmsx503.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D5DDD7A.4080801@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <380B2771CDD78E46856E6B788D9F1997D27D86D2@orsmsx503.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 17, 2011 at 06:46:18PM -0800, Henry Ptasinski wrote:
-> On 02/15/2011 05:50 PM, John W. Linville wrote:
-> >On Tue, Feb 15, 2011 at 02:37:40PM -0800, Henry Ptasinski wrote:
-> >>On 02/15/2011 02:12 PM, Stanislav Fomichev wrote:
-> >>>Commit 59eb21a65047 "cfg80211: Extend channel to frequency mapping for 802.11j"
-> >>>changed the definition of the ieee80211_channel_to_frequency; so fix its
-> >>>usage in brcmfmac.
-> >>>
-> >>
-> >>Commit 59eb21a65047 went into wireless-next a few weeks ago, but
-> >>hasn't made it over to staging-next yet.  Should John pick up this
-> >>patch for wireless-next now, and it'll eventually migrate over to
-> >>staging-next?
-> >
-> >If so, not only let me know but also resend a copy to me -- I haven't
-> >been tracking these...
+Increasing audience.
+
+On Wed, Feb 02, 2011 at 01:27:10PM -0800, Zhao, Shanyu wrote:
+> Hi Luis,
 > 
+> Thank you for the quick response. When I say USB, I didn't mean USB network
+> drivers, I'm talking about USB host/device controller drivers or gadget
+> drivers. For example, we can backport USB3 support to, say, 2.6.28.
 > 
-> Greg, any opinions?  See any issues with making minimally-required
-> changes over in wireless-next to track mac80211 API changes that you
-> haven't picked up yet?
+> From what I understand, I can add any driver to your compat-wireless tree and
+> build it the same way as other wireless drivers. Am I right?
 
-No objection from me.
+That's right.
 
-thanks,
+> Then your tree should really be called compat-drivers. :) I'm not sure if
+> you're welcoming non-network related drivers.
 
-greg k-h
+I see the value in providing backport support for not just 802.11 but
+other drivers as well. Today compat-wireless backports: 802.11, Bluetooth,
+Ethernet, and because some of these drivers require larger components like
+the Sonic Silicon Backplane (ssb) for b44 an b43, it means it also backports
+a bit more.
+
+I would be hesitant to allow for more drivers to go into compat-wireless if
+it was not for the fact that I am actually getting a good slew of contributions
+from other members and this helps me maintain this thing. So -- if are willing
+to upkeep backport support for other non 802.11/Bluetooth/Ethernet drivers
+in compat-wireless, I gladly welcome the changes.
+
+> What's the routine of maintaining a driver in compat-xxx?
+
+I use linux-next.git to suck out drivers and we apply backport stuff to them
+during a kernel development cycle. Generic kernel backport crap goes into the
+compat.git tree: new request_firmware API got added recently, so we have a
+compat_firmware_class, and respective udev changes. Things that are specific to
+the stuff you are backport get stuffed into the compat-wireless.git tree.
+Typically this involves patches which apply onto the linux-next.git code we
+suck out which we cannot backport through compat.git. Preference is to always
+push for compat.git changes over some nasty patch with ifdefs, and only leave
+as a last resort uses patches on compat-wireless. The patches in
+compat-wireless patches/ directory are sorted by the API change that requires
+patching the kernel. This helps add support for new drivers that we want to add
+to compat-wireless. The offsets for patches are adjusted regularly through some
+Quilt magic that Hauke Mehrtens implemented (./scripts/admin-update refresh).
+When crap fails to compile we either remove the driver or fix it. PCMCIA for
+example was deemed as pointless to backport on our last Linux wireless summit
+so there is some desire to remove all that crap but so far no one has so we go
+on with it.
+
+> Do you periodically
+> run compat-xxx along with compat and latest kernel (mainstream) and fix any
+> patch that no longer applies cleanly? How about stable kernel like 2.6.35.3?
+> How do you align compat, compat-wireless and mainstream kernel?
+
+Apart from bleeding edge code from linux-next.git, I also make branches for
+both compat-wireless.git and compat.git for each stable kernel release. This
+follows the model H. Peter Anvin has implemented in the maintenance of the
+linux-2.6-allstable.git tree. When a branch there say on linux-2.6.36.y gets a new
+extraversion and I know it has some juicy stuff I update my linux-2.6.36.y trees
+as well and make a release through the stable compat-wireless page:
+
+http://wireless.kernel.org/en/users/Download/stable/
+
+It used to be that we only made bleeding edge releases based on linux-next.git but
+that proved too unstable for some users.
+
+Check out the ChangeLog for the latest stable compat-wireless, I have automated
+the ChangeLog release to include the git shortlog of all components involved
+between each stable kernel release.
+
+The next question you have which you have not asked me yet is how do you address
+cherry picks or patches not upstream. For that I have added three directories,
+they are self described by their names with a URL to their respective README:
+
+  * linux-next-cherry-picks/ http://bit.ly/h76wrL 
+  * linux-next-pending/      http://bit.ly/eY4aCY 
+  * pending-stable/          http://bit.ly/dOsi7J 
+
+What I really need to get to at some point is to use implement a
+menuconfig thingy, we already drag the Kconfigs in but use config.mk for
+makefile/dependency mapping. Patches welcomed.
+
+  Luis
