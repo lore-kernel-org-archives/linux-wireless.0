@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f51.google.com ([74.125.83.51]:64428 "EHLO
-	mail-gw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281Ab1B1Dl0 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:60074 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753086Ab1BBIGl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 22:41:26 -0500
-Received: by gwb15 with SMTP id 15so2147191gwb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 19:41:26 -0800 (PST)
-Message-ID: <4D6B1961.1090502@lwfinger.net>
-Date: Sun, 27 Feb 2011 21:41:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 2 Feb 2011 03:06:41 -0500
+Received: by qyk12 with SMTP id 12so8487491qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 00:06:41 -0800 (PST)
 MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Change rate-control feedback
-References: <99164.32713.qm@web29504.mail.ird.yahoo.com>
-In-Reply-To: <99164.32713.qm@web29504.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20110128075211.26919.39228.stgit@localhost6.localdomain6>
+References: <20110128075211.26919.39228.stgit@localhost6.localdomain6>
+Date: Wed, 2 Feb 2011 09:06:40 +0100
+Message-ID: <AANLkTim2MBSMSDxyokEWWDC=bwzMCO92qd4_i3Cm0h29@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Fix short and long retry configuration
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2011 08:21 PM, Hin-Tak Leung wrote:
+On Fri, Jan 28, 2011 at 8:52 AM, Bruno Randolf <br1@einfach.org> wrote:
+> The register definition for retry configuration on AR5212 was wrong, and simply
+> copied over from AR5210. Update the register definitions from the documentation.
 >
-> --- On Sun, 27/2/11, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+> Let the short and long retries be configured from mac80211 and use the standard
+> values of 7 and 4 by default. Also we need to make sure we don't export more
+> retries than we are configured for to mac80211 (and the rate module) in
+> hw->max_rate_tries.
 >
->> The driver for the RTL8187L chips
->> returns IEEE80211_TX_STAT_ACK for all
->> packets, even if the maximum number of retries was
->> exhausted. In addition
->> it fails to setup max_rates in the ieee80211_hw struct,
->> This behavior
->> may be responsible for the problems noted in Bug 14168. As
->> the bug is very
->> old, testers have not been found, and I do not have the
->> case where the
->> indicated signal is less than -70 dBm.
+> Also clean up the code by removing unused defines and variables and drop the
+> different values for "station retries" - if these need to be different it can
+> be handled tru ah_retry_long/short.
 >
->
-> Possibility of division by zero? The while loop dequeues - does this code always get invoked with a non-empty queue? Also it worrys me a little if tmp<  retry?
 
-This routine is not schedules until a packet has been transmitted, thus the 
-queue length will always be at least one, but I should protect against a divide 
-by zero anyway.
+As I saw your patch in linux-next/wireless-next-2.6, I wanted to ask
+what's up with Bob's
+"mac80211-minstrel-honor-max-retry-counts-from-cfg80211.patch" (see
+[1])?
+Is this patch obsolete, now?
+Will it go in one of the wireless trees?
 
-The hardware keeps track of the retries. I suppose there could be a possibility 
-of the register wrapping back to zero. I'll throw in a test there as well.
 
-Thanks,
+- Sedat -
 
-Larry
+[1] https://patchwork.kernel.org/patch/359722/
