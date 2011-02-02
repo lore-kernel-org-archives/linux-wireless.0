@@ -1,156 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:45212 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819Ab1B0WC1 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49500 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754930Ab1BBTWk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 17:02:27 -0500
-Message-ID: <4D6AC9EE.2070904@lwfinger.net>
-Date: Sun, 27 Feb 2011 16:02:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 2 Feb 2011 14:22:40 -0500
+Message-ID: <4D49AEFA.6090202@candelatech.com>
+Date: Wed, 02 Feb 2011 11:22:34 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Alessio Igor Bogani <abogani@kernel.org>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Bird <tim.bird@am.sony.com>
-Subject: Re: [PATCH] rtlwifi: Add the missing rcu_read_lock/unlock
-References: <1298840392-588-1-git-send-email-abogani@kernel.org>
-In-Reply-To: <1298840392-588-1-git-send-email-abogani@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v9] mac80211: Optimize scans on current operating channel.
+References: <1296670694-28596-1-git-send-email-greearb@candelatech.com> <1296672941.5671.38.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296672941.5671.38.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2011 02:59 PM, Alessio Igor Bogani wrote:
-> ===================================================
-> [ INFO: suspicious rcu_dereference_check() usage. ]
-> ---------------------------------------------------
-> net/mac80211/sta_info.c:125 invoked rcu_dereference_check() without protection!
+On 02/02/2011 10:55 AM, Johannes Berg wrote:
+> On Wed, 2011-02-02 at 10:18 -0800, greearb@candelatech.com wrote:
 >
-> other info that might help us debug this:
+>> * Do no blindly go off/on channel in work.c  Instead, only call
+>>    appropriate on/off code when we really need to change channels.
 >
-> rcu_scheduler_active = 1, debug_locks = 0
-> 5 locks held by wpa_supplicant/468:
->   #0:  (rtnl_mutex){+.+.+.}, at: [<c1465d84>] rtnl_lock+0x14/0x20
->   #1:  (&rdev->mtx){+.+.+.}, at: [<f84b8c2b>] cfg80211_mgd_wext_siwfreq+0x6b/0x170 [cfg80211]
->   #2:  (&rdev->devlist_mtx){+.+.+.}, at: [<f84b8c37>] cfg80211_mgd_wext_siwfreq+0x77/0x170 [cfg80211]
->   #3:  (&wdev->mtx){+.+.+.}, at: [<f84b8c44>] cfg80211_mgd_wext_siwfreq+0x84/0x170 [cfg80211]
->   #4:  (&rtlpriv->locks.conf_mutex){+.+.+.}, at: [<f8506476>] rtl_op_bss_info_changed+0x26/0xc10 [rtlwifi]
->
-> stack backtrace:
-> Pid: 468, comm: wpa_supplicant Not tainted 2.6.38-rc6+ #79
-> Call Trace:
->   [<c108806a>] ? lockdep_rcu_dereference+0xaa/0xb0
->   [<f8523d2c>] ? sta_info_get_bss+0x19c/0x1b0 [mac80211]
->   [<f8523d62>] ? ieee80211_find_sta+0x22/0x40 [mac80211]
->   [<f850661c>] ? rtl_op_bss_info_changed+0x1cc/0xc10 [rtlwifi]
->   [<c153671c>] ? __mutex_unlock_slowpath+0x14c/0x160
->   [<c153673d>] ? mutex_unlock+0xd/0x10
->   [<f8507180>] ? rtl_op_config+0x120/0x310 [rtlwifi]
->   [<c10896db>] ? trace_hardirqs_on+0xb/0x10
->   [<f8522169>] ? ieee80211_bss_info_change_notify+0xf9/0x1f0 [mac80211]
->   [<f8506450>] ? rtl_op_bss_info_changed+0x0/0xc10 [rtlwifi]
->   [<f853646f>] ? ieee80211_set_channel+0xbf/0xd0 [mac80211]
->   [<f84b5f41>] ? cfg80211_set_freq+0x121/0x180 [cfg80211]
->   [<f85363b0>] ? ieee80211_set_channel+0x0/0xd0 [mac80211]
->   [<f84b8ceb>] ? cfg80211_mgd_wext_siwfreq+0x12b/0x170 [cfg80211]
->   [<f84b87eb>] ? cfg80211_wext_siwfreq+0x9b/0x100 [cfg80211]
->   [<c153b98b>] ? sub_preempt_count+0x7b/0xb0
->   [<c150f874>] ? ioctl_standard_call+0x74/0x3b0
->   [<c1465d84>] ? rtnl_lock+0x14/0x20
->   [<f84b8750>] ? cfg80211_wext_siwfreq+0x0/0x100 [cfg80211]
->   [<c14568bd>] ? __dev_get_by_name+0x8d/0xb0
->   [<c150fddb>] ? wext_handle_ioctl+0x16b/0x180
->   [<f84b8750>] ? cfg80211_wext_siwfreq+0x0/0x100 [cfg80211]
->   [<c145bc7a>] ? dev_ioctl+0x5ba/0x720
->   [<c108a947>] ? __lock_acquire+0x3e7/0x19b0
->   [<c1443b0b>] ? sock_ioctl+0x1eb/0x290
->   [<c108bfa5>] ? lock_release_non_nested+0x95/0x2f0
->   [<c1443920>] ? sock_ioctl+0x0/0x290
->   [<c114d74d>] ? do_vfs_ioctl+0x7d/0x5c0
->   [<c1112232>] ? might_fault+0x62/0xb0
->   [<c113e3c6>] ? fget_light+0x226/0x390
->   [<c1112278>] ? might_fault+0xa8/0xb0
->   [<c114dd17>] ? sys_ioctl+0x87/0x90
->   [<c1002f9f>] ? sysenter_do_call+0x12/0x38
->
-> This work was supported by a hardware donation from the CE Linux Forum.
->
-> Signed-off-by: Alessio Igor Bogani<abogani@kernel.org>
-> ---
->   drivers/net/wireless/rtlwifi/core.c          |    4 ++++
->   drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    5 ++++-
->   2 files changed, 8 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-> index d6a924a..b93f12d 100644
-> --- a/drivers/net/wireless/rtlwifi/core.c
-> +++ b/drivers/net/wireless/rtlwifi/core.c
-> @@ -552,6 +552,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
->   			 ("BSS_CHANGED_HT\n"));
->
-> +		rcu_read_lock();
->   		sta = ieee80211_find_sta(mac->vif, mac->bssid);
->
->   		if (sta) {
-> @@ -564,6 +565,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   				mac->current_ampdu_factor =
->   				    sta->ht_cap.ampdu_factor;
->   		}
-> +		rcu_read_unlock();
->
->   		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SHORTGI_DENSITY,
->   					      (u8 *) (&mac->max_mss_density));
-> @@ -615,6 +617,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   		else
->   			mac->mode = WIRELESS_MODE_G;
->
-> +		rcu_read_lock();
->   		sta = ieee80211_find_sta(mac->vif, mac->bssid);
->
->   		if (sta) {
-> @@ -649,6 +652,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   				 */
->   			}
->   		}
-> +		rcu_read_unlock();
->
->   		/*mac80211 just give us CCK rates any time
->   		 *So we add G rate in basic rates when
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-> index bf5852f..8a8b0e2 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-> @@ -729,7 +729,7 @@ void rtl92ce_tx_fill_desc(struct ieee80211_hw *hw,
->   	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
->   	bool b_defaultadapter = true;
->
-> -	struct ieee80211_sta *sta = ieee80211_find_sta(mac->vif, mac->bssid);
-> +	struct ieee80211_sta *sta;
->
->   	u8 *pdesc = (u8 *) pdesc_tx;
->   	struct rtl_tcb_desc tcb_desc;
-> @@ -811,10 +811,13 @@ void rtl92ce_tx_fill_desc(struct ieee80211_hw *hw,
->   		SET_TX_DESC_LINIP(pdesc, 0);
->   		SET_TX_DESC_PKT_SIZE(pdesc, (u16) skb->len);
->
-> +		rcu_read_lock();
-> +		sta = ieee80211_find_sta(mac->vif, mac->bssid);
->   		if (sta) {
->   			u8 ampdu_density = sta->ht_cap.ampdu_density;
->   			SET_TX_DESC_AMPDU_DENSITY(pdesc, ampdu_density);
->   		}
-> +		rcu_read_unlock();
->
->   		if (info->control.hw_key) {
->   			struct ieee80211_key_conf *keyconf =
+> Based on the powersave comments I had earlier, maybe we should remove
+> that bit for now? Work items here require powersave is disabled, but we
+> won't do that right now if we're on the same channel.
 
-When I turned RCU lock debugging on, I got the same diagnostic.
+The problem is, if we leave the work_work() in the original
+manner, the on/off channel state changes are not properly
+tracked because work blindly assumes it goes off/on channel.
+This breaks assumptions about when we must call the return-to-channel
+logic.  I think if we do not religiously track the on/off channel
+state changes it would be too easy to get in a state where we think
+we are on-channel but haven't actually re-enabled xmit queues, etc.
 
-BTW, drivers/net/wireless/rtlwifi/rtl8192cu/trx.c has the same problem in 
-rtl92cu_tx_fill_desc() as you found in the rtl8192ce version of the routine. Do 
-you want to include that in a V2 of the patch, or should I prepare a second one?
+I think I would rather change the work logic to expressly disable/enable
+powersave.  That wouldn't be difficult, would it?
 
-For the content of this one, ACK.
+> Scan, on the other hand, will still disable powersave (right?)
 
-Larry
+I don't think it does anything if we are scanning on-channel
+with my patch.
+The enable/disable logic is now in the offchannel code...
+
+Do we need to disable it if we are scanning on channel?  If so,
+I can add that explicitly to the scanning code.
+
+
+While we are on that topic, it seems the conf.flags are set
+opposite to what I expect.  Is that code below correct?
+
+/* inform AP that we are awake again, unless power save is enabled */
+static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
+{
+	struct ieee80211_local *local = sdata->local;
+
+	if (!local->ps_sdata)
+		ieee80211_send_nullfunc(local, sdata, 0);
+	else if (local->offchannel_ps_enabled) {
+		/*
+		 * In !IEEE80211_HW_PS_NULLFUNC_STACK case the hardware
+		 * will send a nullfunc frame with the powersave bit set
+		 * even though the AP already knows that we are sleeping.
+		 * This could be avoided by sending a null frame with power
+		 * save bit disabled before enabling the power save, but
+		 * this doesn't gain anything.
+		 *
+		 * When IEEE80211_HW_PS_NULLFUNC_STACK is enabled, no need
+		 * to send a nullfunc frame because AP already knows that
+		 * we are sleeping, let's just enable power save mode in
+		 * hardware.
+		 */
+		local->hw.conf.flags |= IEEE80211_CONF_PS;
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
