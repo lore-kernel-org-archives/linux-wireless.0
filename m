@@ -1,29 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51762 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754998Ab1BOSpd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33296 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677Ab1BBKQZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 13:45:33 -0500
-Date: Tue, 15 Feb 2011 13:38:00 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ar9170usb: mark the old driver as obsolete
-Message-ID: <20110215183800.GE2557@tuxdriver.com>
-References: <201102092213.11681.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201102092213.11681.chunkeey@googlemail.com>
+	Wed, 2 Feb 2011 05:16:25 -0500
+Subject: Re: [PATCH] wl12xx: declare support for
+ IEEE80211_HW_REPORTS_TX_ACK_STATUS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1296638405-28704-1-git-send-email-eliad@wizery.com>
+References: <1296638405-28704-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Feb 2011 11:16:22 +0100
+Message-ID: <1296641782.5671.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 09, 2011 at 10:13:11PM +0100, Christian Lamparter wrote:
-> AR9170USB will be replaced by carl9170 in the foreseeable
-> future [2.6.39].
+On Wed, 2011-02-02 at 11:20 +0200, Eliad Peller wrote:
+> The wl12xx fw supports ack status reporting for tx frames, so
+> add the IEEE80211_HW_REPORTS_TX_ACK_STATUS flag to our supported
+> features.
+> 
+> Since we do the rate control in the fw, we'll probably want
+> to adjust the STA_LOST_PKT_THRESHOLD heuristics in the future, to
+> account for retransmissions as well.
 
-How about if we mark this as 2.6.40 instead?
+I agree, they're very rough -- they don't even account for
+retransmissions now. I also think some timing should be taken into
+account as TCP will quickly stop sending packets.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
