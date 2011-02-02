@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62839 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758796Ab1BPJR3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 04:17:29 -0500
-Date: Wed, 16 Feb 2011 10:16:06 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Nathaniel Smith <njs@pobox.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: [PATCH 1/5] iwlwifi: Simplify tx queue management
-Message-ID: <20110216091605.GA2812@redhat.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
- <1297619803-2832-2-git-send-email-njs@pobox.com>
- <1297677453.3785.4.camel@jlt3.sipsolutions.net>
- <AANLkTinA0yoF_dU+2B6+rHcE_DvS7yjqu+TqYzhprvZj@mail.gmail.com>
- <1297723541.4723.22.camel@wwguy-ubuntu>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:35713 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754642Ab1BBSV7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Feb 2011 13:21:59 -0500
+Received: by qwa26 with SMTP id 26so256235qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 10:21:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297723541.4723.22.camel@wwguy-ubuntu>
+In-Reply-To: <201102021229.28104.br1@einfach.org>
+References: <20110128075211.26919.39228.stgit@localhost6.localdomain6>
+	<AANLkTim2MBSMSDxyokEWWDC=bwzMCO92qd4_i3Cm0h29@mail.gmail.com>
+	<20110202105254.GA15843@hash.localnet>
+	<201102021229.28104.br1@einfach.org>
+Date: Wed, 2 Feb 2011 13:21:57 -0500
+Message-ID: <AANLkTimdSsp=vN2MKC5dT1YW_ZPc5nCWuDVY2dEK0QSG@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Fix short and long retry configuration
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: sedat.dilek@gmail.com, linville@tuxdriver.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 02:45:41PM -0800, wwguy wrote:
-> btw, we are in the process of splitting 3945/4965 out of iwlwifi into it
-> own directory (iwlwifilegacy). 
-Uhh, we do not have suchlongdrivernames in kernel, what about iwlegacy :-)
+On Wed, Feb 2, 2011 at 6:29 AM, Bruno Randolf <br1@einfach.org> wrote:
+> My patch for ath5k is only one part of the story. It sets the retry limits in
+> HW. Most of these values only affect after how many retries the contention
+> window is reset to cw_min, not the actual number of retries (please check the
+> register documentation in my patch). The total number of retries for a frame
+> are the values we put into the TX descriptor - coming from the rate control
+> module (minstrel).
 
-Stanislaw
+Ah, thanks for the clarification.  We could of course mess with the MRR
+setup in ->tx inside the driver, but it would be better to fix it there.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
