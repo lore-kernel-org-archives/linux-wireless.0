@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:39525 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755416Ab1BWNx0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32988 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756411Ab1BCNpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 08:53:26 -0500
-Received: by mail-wy0-f181.google.com with SMTP id 42so2333750wyb.26
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 05:53:22 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: fix identification of beacon packets (debug)
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
+	Thu, 3 Feb 2011 08:45:23 -0500
+Date: Wed, 2 Feb 2011 15:10:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Eric Fernandez <zeb@zebulon.org.uk>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1297247114-4563-1-git-send-email-eliad@wizery.com>
-References: <1297247114-4563-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Feb 2011 15:53:19 +0200
-Message-ID: <1298469199.2104.22.camel@pimenta>
-Mime-Version: 1.0
+Subject: Re: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
+Message-ID: <20110202201040.GC2500@tuxdriver.com>
+References: <AANLkTi=bfq+2jev3YGCi0GwfZTkeKa9t2gfuQ8DkbB9p@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=bfq+2jev3YGCi0GwfZTkeKa9t2gfuQ8DkbB9p@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-09 at 12:25 +0200, Eliad Peller wrote:
-> for debugging purposes, wl12xx determines whether a rx packet
-> is a beacon packet.
+On Wed, Feb 02, 2011 at 07:57:15PM +0000, Eric Fernandez wrote:
+> Hi,
 > 
-> however, it checks only the frame_control subtype without checking
-> the actual packet type, which leads to false identification in some
-> cases.
+> This follows the issue I reported two days ago. I have had two crashes
+> tonight using kernel 2.6.37-5 on Archlinux 64. Unfortunately, this
+> leads to no log in the kernel log whatsoever. The machine freezes
+> completely, if sound is played it loops. I cannot confirm if I can ssh
+> to the box (have only one computer), however, this is linked to the
+> usage of my wireless adapter, since switching to wired ethernet does
+> not lead to this issue.
+> One thing: when I reboot (hard reset), I need to unplug my adapter so
+> that it works after login. Otherwise, it seems to associate fine with
+> the router, but strangely I cannot download anything. Using gkrellm, I
+> can see that it sends some packets to the router at regular interval,
+> but does not download. I don't know if this is significant and if this
+> can help identify the issue.
 > 
-> use ieee80211_is_beacon instead.
+> I would be very keen to help, but without log messages I am stuck. Any
+> suggestions?
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> --- 
+> Thanks in advance.
+> Eric
 
-Applied to wl12xx.  Thanks!
+Can you use netconsole over the wired link to capture a backtrace
+when the lock-up occurs?
 
+John
 -- 
-Cheers,
-Luca.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
