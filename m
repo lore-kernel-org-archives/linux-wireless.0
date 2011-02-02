@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38034 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323Ab1BOGQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 01:16:48 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 22:16:27 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.net>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
-Subject: [RFC 2/2] mac80211: Flush all txq before sending a nullfunc frame.
-Date: Tue, 15 Feb 2011 11:46:29 +0530
-Message-ID: <1297750589-15465-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1297750589-15465-1-git-send-email-vnatarajan@atheros.com>
-References: <1297750589-15465-1-git-send-email-vnatarajan@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54718 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966Ab1BBApN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Feb 2011 19:45:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
+Date: Tue, 1 Feb 2011 19:45:12 -0500
+Message-ID: <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
+Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Xin Jin <Xin.Jin@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In a highly noisy environment, a data frame which is queued before
-a nullfunc frame on a different hw queue may be sent over the air
-after the tx completion of nullfunc frame. This causes the station
-to enter power save and the AP to see the station as awake and
-continues to send the data traffic. Fix this by flushing all tx
-queues before we send the null function frame with PM bit set.
+On Tue, Feb 1, 2011 at 6:29 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> We get poked every now and then for Android support for mac80211 or
+> cfg80211 drivers. Since the questions is quite common I figured It'd
+> be good to document what needs to get done for this. Android folks,
+> you listening?
+>
+> http://wireless.kernel.org/en/developers/Documentation/Android
+>
+> If you already have worked on this or are going to please feel free to
+> update the wiki so no one else re-invents the wheel.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- net/mac80211/mlme.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+I don't think it's good to advocate a custom driver.  They should be able
+to use stock wpa_supplicant w/ nl80211 and put the extensions in the
+hardware layer.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4c58769..79e8f49 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -741,6 +741,9 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED) ||
- 	     !(ifmgd->flags & IEEE80211_STA_PS_PENDING))) {
- 		ifmgd->flags |= IEEE80211_STA_PS_PENDING;
-+		ieee80211_stop_queues_by_reason(&local->hw,
-+						IEEE80211_QUEUE_STOP_REASON_PS);
-+		drv_flush(local, false);
- 		ieee80211_send_nullfunc(local, sdata, 1);
- 	}
- 
 -- 
-1.6.3.3
-
+Bob Copeland %% www.bobcopeland.com
