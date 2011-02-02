@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:43758 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932067Ab1BCQFc (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44535 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751266Ab1BBUGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 11:05:32 -0500
-Received: by qwa26 with SMTP id 26so1047876qwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 08:05:31 -0800 (PST)
-Message-ID: <4D4AD27E.4080101@lwfinger.net>
-Date: Thu, 03 Feb 2011 10:06:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	george0505 <george0505@realtek.com>,
-	'Zhaoming_Li' <chaoming_li@realsil.com.cn>
-Subject: Re: [RFC/RFT 3/8] rtl8192cu: Add new driver code - Part 2
-References: <1296411100-5675-1-git-send-email-Larry.Finger@lwfinger.net> <1296411100-5675-4-git-send-email-Larry.Finger@lwfinger.net> <20110203112813.GD3516@redhat.com>
-In-Reply-To: <20110203112813.GD3516@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Feb 2011 15:06:31 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id BC5235400F2
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Feb 2011 15:08:53 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-02 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110202200630.4C69B40F97@repository3.orbit-lab.org>
+Date: Wed,  2 Feb 2011 15:06:30 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/03/2011 05:28 AM, Stanislaw Gruszka wrote:
-> On Sun, Jan 30, 2011 at 12:11:35PM -0600, Larry.Finger@lwfinger.net wrote:
->> From: Larry Finger <Larry.Finger@lwfinger.net>
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: george0505 <george0505@realtek.com>
->> Cc: 'Zhaoming_Li' <chaoming_li@realsil.com.cn>
->> ---
->>  drivers/net/wireless/rtlwifi/rtl8192cu/fw.c  |  685 ++++++++++++++++
->>  drivers/net/wireless/rtlwifi/rtl8192cu/fw.h  |   97 +++
->>  drivers/net/wireless/rtlwifi/rtl8192cu/led.c |  143 ++++
->>  drivers/net/wireless/rtlwifi/rtl8192cu/led.h |   38 +
-> This files duplicate with rtl8192ce, that need to be merged
-> into one lib.
-> 
-> I'm not reading furhter, I will continue when you post
-> patches without code duplication.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + d2627ce...6eaa0ba akpm-end   -> origin/akpm-end  (forced update)
+   7921127..afe8a88  akpm-start -> origin/akpm-start
+   7911a84..929e642  history    -> origin/history
+ + 906227e...79333d1 master     -> origin/master  (forced update)
+   7921127..afe8a88  stable     -> origin/stable
+ * [new tag]         next-20110202 -> next-20110202
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.38-rc3 -> v2.6.38-rc3
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Thanks for reading this far. The files are not identical; however, they can be
-merged.
+compat-wireless code metrics
 
-Larry
+    786110 - Total upstream lines of code being pulled
