@@ -1,66 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:26764 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753140Ab1BHLY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 06:24:56 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id p18BOsLl015468
-	for <linux-wireless@vger.kernel.org>; Tue, 8 Feb 2011 13:24:54 +0200
-Subject: Re: [RFC PATCH] wl12xx: Change claiming of the (SDIO) bus
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43088 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727Ab1BCVxB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 16:53:01 -0500
+Received: by wwa36 with SMTP id 36so1702264wwa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 13:52:59 -0800 (PST)
+Message-Id: <f65439b7f2e5843eb18b7880ba64adb959b87c11.1296769444.git.chunkeey@googlemail.com>
+In-Reply-To: <cb1597685120e228d2c66a7eafc07aed1466f7dd.1296769444.git.chunkeey@googlemail.com>
+References: <cb1597685120e228d2c66a7eafc07aed1466f7dd.1296769444.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Thu, 3 Feb 2011 22:30:05 +0100
+Subject: [RFT/RFC] carl9170: export HW random number generator
 To: linux-wireless@vger.kernel.org
-Cc: luciano.coelho@nokia.com
-In-Reply-To: <1297058902.4035.69.camel@wimaxnb.nmp.nokia.com>
-References: <1296819336-8373-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1297058902.4035.69.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Feb 2011 13:24:42 +0200
-Message-ID: <1297164282.3389.10.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-07 at 08:08 +0200, ext Juuso Oikarinen wrote:
-> On Fri, 2011-02-04 at 13:35 +0200, ext juuso.oikarinen@nokia.com wrote:
-> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > 
-> > Currently, the SDIO bus is claimed separately for each and every SDIO
-> > transaction - i.e. every register write/read etc.
-> > 
-> > The SDIO claiming is a relatively heavy operation. In a worst case scenario,
-> > it will put the SDIO bus on suspend, stop relevant clocks etc which all can be
-> > extremely costly if done between each SDIO transaction. This has a dramatic
-> > impact on the maximum throughput achieved.
-> > 
-> > The driver already manages its access to the bus as it needs to manage
-> > chipset ELP. This mechanism disables ELP for the duration of the whole bus
-> > access, consisting of multiple transactions.
-> > 
-> > Into the IO layer, this patch implements a claim/unclaim function, which is
-> > used to claim access to the bus. Relevant functions are checked and updated to
-> > maintain correctly the claim reference counter, so that each claim is paired
-> > with a corresponding unclaim.
-> > 
-> > For PLT and ad-hoc modes the bus is kept claimed contantly.
-> > 
-> > For AP mode, this patch brings no change to the previous way of working,
-> > someone familiar with it and with the ability to test it may implement
-> > something similar as is done here for the other modes.
-> > 
-> > For the SPI bus, the claim/unclaim functions are not implemented, i.e. no
-> > change to functionality.
-> > 
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > ---
-> 
-> I realised there are two separate issues here in one patch. I'll need to
-> split this into two patches. Also, there are some other issues I need to
-> address.
-> 
+All AR9170 hardware have a 16-Bit random number generator.
+The documentation claims the values are suitable for
+"security keys".
 
-I'm dropping this patch. In the end our measurements didn't indicate any
-drastic benefits of this change, so its not worth contemplating more
-about it.
+This is an early, but working version. The "throughput" is
+around 320Kibit/s. It's slow, but it will work without
+introducing any special offload firmware commands.
 
--Juuso
+rngtest 2-unofficial-mt.13
+
+rngtest: starting FIPS tests...
+rngtest: bits received from input: 514064384
+rngtest: FIPS 140-2 successes: 25688
+rngtest: FIPS 140-2 failures: 15
+rngtest: FIPS 140-2(2001-10-10) Monobit: 3
+rngtest: FIPS 140-2(2001-10-10) Poker: 3
+rngtest: FIPS 140-2(2001-10-10) Runs: 9
+rngtest: FIPS 140-2(2001-10-10) Long run: 0
+rngtest: FIPS 140-2(2001-10-10) Continuous run: 0
+rngtest: input channel speed: (min=23.495; avg=324.541; max=434.021)Kibits/s
+rngtest: FIPS tests speed: (min=6.019; avg=39.985; max=113.533)Mibits/s
+
+SECURITY WARNING: It's relatively easy to eavesdrop all
+generated random numbers from the transport stream with
+usbmon [software] or special usb sniffer hardware.
+
+---
+ drivers/net/wireless/ath/carl9170/Kconfig        |   15 +++
+ drivers/net/wireless/ath/carl9170/carl9170.h     |   12 +++
+ drivers/net/wireless/ath/carl9170/main.c         |  110 ++++++++++++++++++++++
+ 3 files changed, 137 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/carl9170/Module.symvers
+
+diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+index 2d1b821..61ed56e 100644
+--- a/drivers/net/wireless/ath/carl9170/Kconfig
++++ b/drivers/net/wireless/ath/carl9170/Kconfig
+@@ -39,3 +39,18 @@ config CARL9170_WPC
+ 	bool
+ 	depends on CARL9170 && (INPUT = y || INPUT = CARL9170)
+ 	default y
++
++config CARL9170_HWRNG
++        bool
++        depends on CARL9170 && (HW_RANDOM = y || HW_RANDOM = CARL9170)
++        default n
++	help
++	  Provides a hardware random number generator to the kernel.
++
++	  SECURITY WARNING: It's relatively easy to eavesdrop all
++	  generated random numbers from the transport stream with
++	  usbmon [software] or special usb sniffer hardware.
++
++	  Say N, unless your setup[i.e.: embedded system] has no
++	  other rng source and you can afford the risk.
++
+diff --git a/drivers/net/wireless/ath/carl9170/Module.symvers b/drivers/net/wireless/ath/carl9170/Module.symvers
+new file mode 100644
+index 0000000..e69de29
+diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
+index 420d437..321f4d6 100644
+--- a/drivers/net/wireless/ath/carl9170/carl9170.h
++++ b/drivers/net/wireless/ath/carl9170/carl9170.h
+@@ -43,6 +43,7 @@
+ #include <linux/firmware.h>
+ #include <linux/completion.h>
+ #include <linux/spinlock.h>
++#include <linux/hw_random.h>
+ #include <net/cfg80211.h>
+ #include <net/mac80211.h>
+ #include <linux/usb.h>
+@@ -431,6 +432,17 @@ struct ar9170 {
+ 		unsigned int off_override;
+ 		bool state;
+ 	} ps;
++
++#ifdef CONFIG_CARL9170_HWRNG
++# define CARL9170_HWRNG_CACHE_SIZE	CARL9170_MAX_CMD_PAYLOAD_LEN
++	struct {
++		struct hwrng rng;
++		bool initialized;
++		char name[30 + 1];
++		u16 cache[CARL9170_HWRNG_CACHE_SIZE / sizeof(u16)];
++		unsigned int cache_idx;
++	} rng;
++#endif /* CONFIG_CARL9170_HWRNG */
+ };
+ 
+ enum carl9170_ps_off_override_reasons {
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index ede3d7e..d26e79c 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1416,6 +1416,110 @@ static int carl9170_register_wps_button(struct ar9170 *ar)
+ }
+ #endif /* CONFIG_CARL9170_WPC */
+ 
++#ifdef CONFIG_CARL9170_HWRNG
++static int carl9170_rng_get(struct ar9170 *ar)
++{
++
++#define RW	(CARL9170_MAX_CMD_PAYLOAD_LEN / sizeof(u32))
++#define RB	(CARL9170_MAX_CMD_PAYLOAD_LEN)
++
++	static const __le32 rng_load[RW] = {
++		[0 ... (RW - 1)] = cpu_to_le32(AR9170_RAND_REG_NUM)};
++
++	u32 buf[RW];
++
++	unsigned int i, off = 0, transfer, count;
++	int err;
++
++	BUILD_BUG_ON(RB > CARL9170_MAX_CMD_PAYLOAD_LEN);
++
++	if (!IS_ACCEPTING_CMD(ar) || !ar->rng.initialized)
++		return -EAGAIN;
++
++	count = ARRAY_SIZE(ar->rng.cache);
++	while (count) {
++		err = carl9170_exec_cmd(ar, CARL9170_CMD_RREG,
++					RB, (u8 *) rng_load,
++					RB, (u8 *) buf);
++		if (err)
++			return err;
++
++		transfer = min_t(unsigned int, count, RW);
++		for (i = 0; i < transfer; i++)
++			ar->rng.cache[off + i] = buf[i];
++
++		off += transfer;
++		count -= transfer;
++	}
++
++	ar->rng.cache_idx = 0;
++
++#undef RW
++#undef RB
++	return 0;
++}
++
++static int carl9170_rng_read(struct hwrng *rng, u32 *data)
++{
++	struct ar9170 *ar = (struct ar9170 *)rng->priv;
++	int ret = -EIO;
++
++	if (ar->rng.cache_idx >= ARRAY_SIZE(ar->rng.cache)) {
++		mutex_lock(&ar->mutex);
++		ret = carl9170_rng_get(ar);
++		mutex_unlock(&ar->mutex);
++		if (ret)
++			return ret;
++	}
++
++	*data = ar->rng.cache[ar->rng.cache_idx++];
++	return sizeof(u16);
++}
++#endif /* CONFIG_CARL9170_HWRNG */
++
++static void carl9170_unregister_hwrng(struct ar9170 *ar)
++{
++#ifdef CONFIG_CARL9170_HWRNG
++	if (ar->rng.initialized) {
++		hwrng_unregister(&ar->rng.rng);
++		ar->rng.initialized = false;
++	}
++#endif /* CONFIG_CARL9170_HWRNG */
++}
++
++static int carl9170_register_hwrng(struct ar9170 *ar)
++{
++#ifdef CONFIG_CARL9170_HWRNG
++	int err;
++
++	snprintf(ar->rng.name, ARRAY_SIZE(ar->rng.name),
++		 "%s_%s", KBUILD_MODNAME, wiphy_name(ar->hw->wiphy));
++	ar->rng.rng.name = ar->rng.name;
++	ar->rng.rng.data_read = carl9170_rng_read;
++	ar->rng.rng.priv = (unsigned long)ar;
++
++	if (WARN_ON(ar->rng.initialized))
++		return -EALREADY;
++
++	err = hwrng_register(&ar->rng.rng);
++	if (err) {
++		dev_err(&ar->udev->dev, "Failed to register the random "
++			"number generator (%d)\n", err);
++		return err;
++	}
++
++	ar->rng.initialized = true;
++
++	err = carl9170_rng_get(ar);
++	if (err) {
++		carl9170_unregister_hwrng(ar);
++		return err;
++	}
++
++#endif /* CONFIG_CARL9170_HWRNG */
++	return 0;
++}
++
+ static int carl9170_op_get_survey(struct ieee80211_hw *hw, int idx,
+ 				struct survey_info *survey)
+ {
+@@ -1861,6 +1965,10 @@ int carl9170_register(struct ar9170 *ar)
+ 		goto err_unreg;
+ #endif /* CONFIG_CARL9170_WPC */
+ 
++	err = carl9170_register_hwrng(ar);
++	if (err)
++		goto err_unreg;
++
+ 	dev_info(&ar->udev->dev, "Atheros AR9170 is registered as '%s'\n",
+ 		 wiphy_name(ar->hw->wiphy));
+ 
+@@ -1893,6 +2001,8 @@ void carl9170_unregister(struct ar9170 *ar)
+ 	}
+ #endif /* CONFIG_CARL9170_WPC */
+ 
++	carl9170_unregister_hwrng(ar);
++
+ 	carl9170_cancel_worker(ar);
+ 	cancel_work_sync(&ar->restart_work);
+ 
+-- 
+1.7.2.3
 
