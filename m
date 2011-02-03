@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:62102 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752821Ab1BQWsB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 17:48:01 -0500
-Received: by qyj19 with SMTP id 19so5415821qyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 14:48:00 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org
-Subject: [PATCH V2 2/3] mwl8k: Tell mac80211 we have rate adaptation in FW
-Date: Thu, 17 Feb 2011 14:45:17 -0800
-Message-Id: <1297982718-20377-2-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1297982718-20377-1-git-send-email-thomas@cozybit.com>
-References: <1297982718-20377-1-git-send-email-thomas@cozybit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41514 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932413Ab1BCSmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 13:42:00 -0500
+Subject: Re: rfkill API
+From: Dan Williams <dcbw@redhat.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 03 Feb 2011 12:42:56 -0600
+In-Reply-To: <4D48E2C8.5010300@candelatech.com>
+References: <4D48DF01.1010401@candelatech.com>
+	 <4D48E2C8.5010300@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1296758576.3668.89.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nishant Sarmukadam <nishants@marvell.com>
+On Tue, 2011-02-01 at 20:51 -0800, Ben Greear wrote:
+> On 02/01/2011 08:35 PM, Ben Greear wrote:
+> > Hello!
+> >
+> > I was looking at using one rfkill socket in wpa_supplicant, instead
+> > of one per vif.
+> >
+> > Current wpa_supplicant code seems to treat the API as if there is only
+> > as single rfkill object for the entire kernel. I would assume that
+> > instead different NICs could have different rfkill status.
+> >
+> > Is there any way to coorelate a netdevice (or devices)
+> > to the rfkill->idx in the
+> >
+> > struct rfkill_event {
+> > u32 idx;
+> > u8 type;
+> > u8 op;
+> > u8 soft;
+> > u8 hard;
+> > } STRUCT_PACKED;
+> >
+> >
+> > ?
+> >
+> > Thanks,
+> > Ben
+> >
+> 
+> Err, nevermind..looks like you can grub around in sysfs and find the phy,
+> and from there, find the devices....
 
-All mwl8k parts perform rate control in firmware.  Make this known to
-mac80211 so that it does not launch minstrel.  Also, because actual tx
-rate information is not available from the firmware, invalidate the
-rate status before returning the skb to mac80211.
+Remember about platform devices.  An rfkill device is not always
+associated with a netdevice, and sometimes platform rfkill devices can
+block the netdevice rfkill.
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/mwl8k.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+So, if you have a laptop with a BIOS rfkill switch, setting that rfkill
+switch "softblocked" will hardblock the netdevice rfkill device.  Thus
+you cannot unblock the netdevice rfkill until you unblock the
+platform/BIOS device rfkill.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index f79da1b..44355f7 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1535,6 +1535,13 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
- 
- 		info = IEEE80211_SKB_CB(skb);
- 		ieee80211_tx_info_clear_status(info);
-+
-+		/* Rate control is happening in the firmware.
-+		 * Ensure no tx rate is being reported.
-+		 */
-+                info->status.rates[0].idx = -1;
-+                info->status.rates[0].count = 1;
-+
- 		if (MWL8K_TXD_SUCCESS(status))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
- 
-@@ -4764,7 +4771,7 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
- 	hw->queues = MWL8K_TX_QUEUES;
- 
- 	/* Set rssi values to dBm */
--	hw->flags |= IEEE80211_HW_SIGNAL_DBM;
-+	hw->flags |= IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_HAS_RATE_CONTROL;
- 	hw->vif_data_size = sizeof(struct mwl8k_vif);
- 	hw->sta_data_size = sizeof(struct mwl8k_sta);
- 
--- 
-1.7.0.4
+Yes, this sucks.
+
+Dan
+
 
