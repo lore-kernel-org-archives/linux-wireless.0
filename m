@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37908 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235Ab1BHIcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 03:32:15 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 4/5] iwlwifi: fix ack health for WiFi/BT combo devices
-Date: Tue,  8 Feb 2011 09:31:58 +0100
-Message-Id: <1297153919-18766-4-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
-References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
+Received: from dakia2.marvell.com ([65.219.4.35]:42119 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051Ab1BCWoQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 17:44:16 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/2] mwifiex: use modified ieee80211_channel_to_frequency() API
+Date: Thu,  3 Feb 2011 14:46:00 -0800
+Message-Id: <1296773161-11642-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Combo devices have TX statistics on different place, because
-struct statistics_rx_bt and struct statistics_rx have different
-size. User proper values on combo devices instead of random data.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+After Bruno Randolf's recent code changes (commit 59eb21a6
+"cfg80211: Extend channel to frequency mapping for 802.11j")
+ieee80211_channel_to_frequency() API expects an extra "band"
+parameter. Update the driver code to provide this extra
+parameter.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8c4ca39..6dd5001 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1419,8 +1419,13 @@ bool iwl_good_ack_health(struct iwl_priv *priv, struct iwl_rx_packet *pkt)
- 	if (priv->_agn.agg_tids_count)
- 		return true;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index c961e0f..45fabaa 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -916,7 +916,8 @@ mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ 	ie_len = ie_buf[1] + sizeof(struct ieee_types_header);
  
--	cur = &pkt->u.stats.tx;
--	old = &priv->_agn.statistics.tx;
-+	if (iwl_bt_statistics(priv)) {
-+		cur = &pkt->u.stats_bt.tx;
-+		old = &priv->_agn.statistics_bt.tx;
-+	} else {
-+		cur = &pkt->u.stats.tx;
-+		old = &priv->_agn.statistics.tx;
-+	}
+ 	chan = __ieee80211_get_channel(priv->wdev->wiphy,
+-			ieee80211_channel_to_frequency(bss_info.bss_chan));
++			ieee80211_channel_to_frequency(bss_info.bss_chan,
++						priv->curr_bss_params.band));
  
- 	actual_delta = le32_to_cpu(cur->actual_ack_cnt) -
- 		       le32_to_cpu(old->actual_ack_cnt);
+ 	cfg80211_inform_bss(priv->wdev->wiphy, chan,
+ 		bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
 -- 
-1.7.1
+1.7.0.2
 
