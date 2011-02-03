@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:15208 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753687Ab1BRXA7 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62900 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770Ab1BCWkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 18:00:59 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000022482.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:00:17 +0200
-Subject: Re: [RFC] AI support
-From: George Kashperko <george@znau.edu.ua>
-To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>
-In-Reply-To: <1298067699.23801.9.camel@maggie>
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 <4D5DDCBC.2050501@broadcom.com> <1298014793.28946.39.camel@dev.znau.edu.ua>
-	 (sfid-20110218_084826_360002_FFFFFFFF9D44E835)  <1298030032.22193.1.camel@maggie>
-	 <1298032787.25739.2.camel@dev.znau.edu.ua>
-	 (sfid-20110218_134828_009719_FFFFFFFFC55A831E)  <1298067699.23801.9.camel@maggie>
-Content-Type: text/plain
-Date: Sat, 19 Feb 2011 00:52:20 +0200
-Message-Id: <1298069540.25739.9.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Thu, 3 Feb 2011 17:40:01 -0500
+Received: by iyj18 with SMTP id 18so1558726iyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 14:40:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <f65439b7f2e5843eb18b7880ba64adb959b87c11.1296769444.git.chunkeey@googlemail.com>
+References: <cb1597685120e228d2c66a7eafc07aed1466f7dd.1296769444.git.chunkeey@googlemail.com>
+ <f65439b7f2e5843eb18b7880ba64adb959b87c11.1296769444.git.chunkeey@googlemail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 4 Feb 2011 09:39:40 +1100
+Message-ID: <AANLkTin=AxaG=bvV6pr18tZ0SpHpU21adzeHFm=gei8W@mail.gmail.com>
+Subject: Re: [RFT/RFC] carl9170: export HW random number generator
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Feb 4, 2011 at 08:30, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> All AR9170 hardware have a 16-Bit random number generator.
+> The documentation claims the values are suitable for
+> "security keys".
+>
+> This is an early, but working version. The "throughput" is
+> around 320Kibit/s. It's slow, but it will work without
+> introducing any special offload firmware commands.
 
-> You should improve your CC lists in general
-> for all your mails. Most of us don't have the time to read all
-> mail on the list, so it's always a good idea to maintain a CC list
-> of people who already commented on the RFC for patch submissions.
-Apologises for that.
+Would it not be better to cut down on the #ifdefs and move this
+functionality into a separate file?
 
-Have nice day,
-George
+Thanks,
 
+-- 
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
