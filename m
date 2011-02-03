@@ -1,226 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:26877 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab1BQW3O (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44081 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751540Ab1BCWLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 17:29:14 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000022257.msg
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 00:28:36 +0200
-Subject: Re: [RFC] AI support (8/14 ssb ssb_bus_detect routine)
-From: George Kashperko <george@znau.edu.ua>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297980093.13554.5.camel@maggie>
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
-Content-Type: text/plain
-Date: Fri, 18 Feb 2011 00:20:47 +0200
-Message-Id: <1297981247.23381.22.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Thu, 3 Feb 2011 17:11:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+ <s5haaid3xos.wl%tiwai@suse.de> <201102032009.17100.rjw@sisk.pl> <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 3 Feb 2011 14:10:51 -0800
+Message-ID: <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+To: Carlos Mafra <crmafra2@gmail.com>,
+	Keith Packard <keithp@keithp.com>,
+	Dave Airlie <airlied@redhat.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: multipart/mixed; boundary=001485eba1e80dd0f1049b680b26
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: George Kashperko <george@znau.edu.ua>
+--001485eba1e80dd0f1049b680b26
+Content-Type: text/plain; charset=ISO-8859-1
 
-Diagnostic messages in main.c with chip type info.
-Move piece of code out of ssb_bus_scan to introduce basic bus detection
-routine for later extension with AI-style bus detection.
-Signed-off-by: George Kashperko <george@znau.edu.ua>
----
- drivers/ssb/main.c                        |   34 +++++++++----
- drivers/ssb/scan.c                        |   51 +++++++++++++-------
- include/linux/ssb/ssb_driver_chipcommon.h |   12 ++++
- 3 files changed, 72 insertions(+), 25 deletions(-)
---- linux-wireless-testing.orig/drivers/ssb/main.c	2011-02-17 15:48:23.000000000 +0200
-+++ linux-wireless-testing/drivers/ssb/main.c	2011-02-17 15:48:51.000000000 +0200
-@@ -850,6 +850,16 @@ err_disable_xtal:
- 	return err;
- }
- 
-+static const char *ssb_chipco_chiptype_name(struct ssb_bus *bus)
-+{
-+	switch (bus->chipco.chiptype) {
-+	case SSB_CHIPCO_SB:
-+		return "SB";
-+	default:
-+		return "UNKNOWN";
-+	}
-+}
-+
- #ifdef CONFIG_SSB_PCIHOST
- int ssb_bus_pcibus_register(struct ssb_bus *bus,
- 			    struct pci_dev *host_pci)
-@@ -862,11 +872,14 @@ int ssb_bus_pcibus_register(struct ssb_b
- 
- 	err = ssb_bus_register(bus, ssb_pci_get_invariants, 0);
- 	if (!err) {
--		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane found on "
--			   "PCI device %s\n", dev_name(&host_pci->dev));
-+		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane "
-+			   "(%s type) found on PCI device %s\n",
-+			   ssb_chipco_chiptype_name(bus),
-+			   dev_name(&host_pci->dev));
- 	} else {
- 		ssb_printk(KERN_ERR PFX "Failed to register PCI version"
--			   " of SSB with error %d\n", err);
-+			   " of SSB (%s type) with error %d\n",
-+			   ssb_chipco_chiptype_name(bus), err);
- 	}
- 
- 	return err;
-@@ -887,8 +900,9 @@ int ssb_bus_pcmciabus_register(struct ss
- 
- 	err = ssb_bus_register(bus, ssb_pcmcia_get_invariants, baseaddr);
- 	if (!err) {
--		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane found on "
--			   "PCMCIA device %s\n", pcmcia_dev->devname);
-+		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane "
-+			   "(%s type) found on PCMCIA device %s\n",
-+			   ssb_chipco_chiptype_name(bus), pcmcia_dev->devname);
- 	}
- 
- 	return err;
-@@ -909,8 +923,9 @@ int ssb_bus_sdiobus_register(struct ssb_
- 
- 	err = ssb_bus_register(bus, ssb_sdio_get_invariants, ~0);
- 	if (!err) {
--		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane found on "
--			   "SDIO device %s\n", sdio_func_id(func));
-+		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane "
-+			   "(%s type) found on SDIO device %s\n",
-+			   ssb_chipco_chiptype_name(bus), sdio_func_id(func));
- 	}
- 
- 	return err;
-@@ -929,8 +944,9 @@ int ssb_bus_ssbbus_register(struct ssb_b
- 
- 	err = ssb_bus_register(bus, get_invariants, baseaddr);
- 	if (!err) {
--		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane found at "
--			   "address 0x%08lX\n", baseaddr);
-+		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane "
-+			   "(%s type) found at address 0x%08lX\n",
-+			   ssb_chipco_chiptype_name(bus), baseaddr);
- 	}
- 
- 	return err;
---- linux-wireless-testing.orig/drivers/ssb/scan.c	2011-02-17 15:48:23.000000000 +0200
-+++ linux-wireless-testing/drivers/ssb/scan.c	2011-02-17 15:50:23.000000000 +0200
-@@ -355,24 +355,11 @@ int ssb_bus_check_core(struct ssb_device
- 	return 0;
- }
- 
--int ssb_bus_scan(struct ssb_bus *bus,
--		 unsigned long baseaddr)
-+/* Detect bus type and major bus information */
-+static int ssb_bus_detect(struct ssb_bus *bus)
- {
--	int err = -ENOMEM;
--	void __iomem *mmio;
- 	u32 idhi, cc, rev, tmp;
--	int dev_i, i;
--	struct ssb_device *dev;
--	int nr_80211_cores = 0;
--
--	mmio = ssb_ioremap(bus, baseaddr);
--	if (!mmio)
--		goto out;
--	bus->mmio = mmio;
--
--	err = scan_switchcore(bus, 0); /* Switch to first core */
--	if (err)
--		goto err_unmap;
-+	enum ssb_chipco_chiptype chiptype = SSB_CHIPCO_SB;
- 
- 	idhi = scan_read32(bus, 0, SSB_IDHIGH);
- 	cc = (idhi & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
-@@ -383,6 +370,7 @@ int ssb_bus_scan(struct ssb_bus *bus,
- 	if (cc == SSB_DEV_CHIPCOMMON) {
- 		tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPID);
- 
-+		chiptype = SSB_CHIPCO_TYPE(tmp);
- 		bus->chip_id = (tmp & SSB_CHIPCO_IDMASK);
- 		bus->chip_rev = (tmp & SSB_CHIPCO_REVMASK) >>
- 				SSB_CHIPCO_REVSHIFT;
-@@ -412,8 +400,39 @@ int ssb_bus_scan(struct ssb_bus *bus,
- 		ssb_printk(KERN_ERR PFX
- 			   "More than %d ssb cores found (%d)\n",
- 			   SSB_MAX_NR_CORES, bus->nr_devices);
-+		return -ENOMEM;
-+	}
-+
-+	bus->chipco.chiptype = chiptype;
-+	return chiptype == SSB_CHIPCO_SB ? 0 : -ENODEV;
-+}
-+
-+int ssb_bus_scan(struct ssb_bus *bus, unsigned long baseaddr)
-+{
-+	int err = -ENOMEM;
-+	void __iomem *mmio;
-+	u32 idhi;
-+	int dev_i, i;
-+	struct ssb_device *dev;
-+	int nr_80211_cores = 0;
-+
-+	mmio = ssb_ioremap(bus, baseaddr);
-+	if (!mmio)
-+		goto out;
-+	bus->mmio = mmio;
-+
-+	err = scan_switchcore(bus, 0); /* Switch to first core */
-+	if (err)
-+		goto err_unmap;
-+
-+	err = ssb_bus_detect(bus);
-+	if (err) {
-+		ssb_printk(KERN_ERR PFX
-+			   "ERROR: Unknown SSB chip type %d detected\n",
-+			   bus->chipco.chiptype);
- 		goto err_unmap;
- 	}
-+
- 	if (bus->bustype == SSB_BUSTYPE_SSB) {
- 		/* Now that we know the number of cores,
- 		 * remap the whole IO space for all cores.
---- linux-wireless-testing.orig/include/linux/ssb/ssb_driver_chipcommon.h	2011-02-17 15:48:23.000000000 +0200
-+++ linux-wireless-testing/include/linux/ssb/ssb_driver_chipcommon.h	2011-02-17 15:48:45.000000000 +0200
-@@ -16,6 +16,9 @@
- /** ChipCommon core registers. **/
- 
- #define SSB_CHIPCO_CHIPID		0x0000
-+#define  SSB_CHIPCO_TYPE_MASK		0xF0000000
-+#define  SSB_CHIPCO_TYPE_SHIFT		28
-+#define   SSB_CHIPCO_TYPE_SB		0
- #define  SSB_CHIPCO_IDMASK		0x0000FFFF
- #define  SSB_CHIPCO_REVMASK		0x000F0000
- #define  SSB_CHIPCO_REVSHIFT		16
-@@ -248,6 +251,9 @@
- #define SSB_CHIPCO_PLLCTL_ADDR			0x0660
- #define SSB_CHIPCO_PLLCTL_DATA			0x0664
- 
-+/** ChipCommon core registers identification macro helpers **/
-+#define SSB_CHIPCO_TYPE(cid) (((cid) & SSB_CHIPCO_TYPE_MASK) >> \
-+			      SSB_CHIPCO_TYPE_SHIFT)
- 
- 
- /** PMU PLL registers */
-@@ -575,10 +581,16 @@ struct ssb_chipcommon_pmu {
- 	u32 crystalfreq;	/* The active crystal frequency (in kHz) */
- };
- 
-+/* Chipcommon implementation type */
-+enum ssb_chipco_chiptype {
-+	SSB_CHIPCO_SB = SSB_CHIPCO_TYPE(SSB_CHIPCO_TYPE_SB), /* SB-style bus */
-+};
-+
- struct ssb_chipcommon {
- 	struct ssb_device *dev;
- 	u32 capabilities;
- 	u32 status;
-+	enum ssb_chipco_chiptype chiptype;
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct ssb_chipcommon_pmu pmu;
+On Thu, Feb 3, 2011 at 1:56 PM, Carlos Mafra <crmafra2@gmail.com> wrote:
+>>
+>> I added https://bugzilla.kernel.org/show_bug.cgi?id=24982 to the list of
+>> post-2.6.36 regressions for further tracking.
+>
+> I also tested on 2.6.38-rc3+ now and the issue is not solved,
+> just like Takashi expected.
 
+Hmm. That commit (bf9dc102e284) still reverts cleanly.
 
+Keith, Dave, should we just revert it? It's definitely a regression,
+and we do _not_ allow "fixes" to one thing that just causes a
+regression to another.
 
+Quite frankly, I think it's totally wrong to just blindly set DPMS
+status to ON like that. It's as wrong as it was to leave it off, and
+the regressions reported are basically mirror images of the exact same
+bug that that commit tried to fix.
+
+IOW, the commit message says:
+
+    When setting a new crtc configuration, force the DPMS state of all
+    connectors to ON. Otherwise, they'll be left at OFF and a future mode set
+    that disables the specified connector will not turn the connector off.
+
+but setting it to ON doesn't actually _fix_ anything, because you just
+get the exact same issue in reverse, ie you just get
+
+   .. and a future mode set  that ENables the specified connector will
+    not turn the connector ON.
+
+instead. Which is exactly what Carlos and Takashi are reporting.
+
+Maybe the right thing to do is to set it to 'unknown', something like this.
+
+TOTALLY UNTESTED!
+
+                          Linus
+
+--001485eba1e80dd0f1049b680b26
+Content-Type: text/x-patch; charset=US-ASCII; name="patch.diff"
+Content-Disposition: attachment; filename="patch.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjq7zjz50
+
+IGRyaXZlcnMvZ3B1L2RybS9kcm1fY3J0Y19oZWxwZXIuYyB8ICAgIDYgKysrLS0tCiBpbmNsdWRl
+L2RybS9kcm1fbW9kZS5oICAgICAgICAgICAgfCAgICAxICsKIDIgZmlsZXMgY2hhbmdlZCwgNCBp
+bnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2Ry
+bS9kcm1fY3J0Y19oZWxwZXIuYyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fY3J0Y19oZWxwZXIuYwpp
+bmRleCA5NTJiM2Q0Li43ZjU4NWVkIDEwMDY0NAotLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2Ny
+dGNfaGVscGVyLmMKKysrIGIvZHJpdmVycy9ncHUvZHJtL2RybV9jcnRjX2hlbHBlci5jCkBAIC02
+ODEsMTEgKzY4MSwxMSBAQCBpbnQgZHJtX2NydGNfaGVscGVyX3NldF9jb25maWcoc3RydWN0IGRy
+bV9tb2RlX3NldCAqc2V0KQogCQkJZ290byBmYWlsOwogCQl9CiAJfQotCURSTV9ERUJVR19LTVMo
+IlNldHRpbmcgY29ubmVjdG9yIERQTVMgc3RhdGUgdG8gb25cbiIpOworCURSTV9ERUJVR19LTVMo
+IlNldHRpbmcgY29ubmVjdG9yIERQTVMgc3RhdGUgdG8gJ3Vua25vd24nXG4iKTsKIAlmb3IgKGkg
+PSAwOyBpIDwgc2V0LT5udW1fY29ubmVjdG9yczsgaSsrKSB7Ci0JCURSTV9ERUJVR19LTVMoIlx0
+W0NPTk5FQ1RPUjolZDolc10gc2V0IERQTVMgb25cbiIsIHNldC0+Y29ubmVjdG9yc1tpXS0+YmFz
+ZS5pZCwKKwkJRFJNX0RFQlVHX0tNUygiXHRbQ09OTkVDVE9SOiVkOiVzXSBzZXQgRFBNUyAndW5r
+bm93bidcbiIsIHNldC0+Y29ubmVjdG9yc1tpXS0+YmFzZS5pZCwKIAkJCSAgICAgIGRybV9nZXRf
+Y29ubmVjdG9yX25hbWUoc2V0LT5jb25uZWN0b3JzW2ldKSk7Ci0JCXNldC0+Y29ubmVjdG9yc1tp
+XS0+ZHBtcyA9IERSTV9NT0RFX0RQTVNfT047CisJCXNldC0+Y29ubmVjdG9yc1tpXS0+ZHBtcyA9
+IERSTV9NT0RFX0RQTVNfVU5LTk9XTjsKIAl9CiAKIAlrZnJlZShzYXZlX2Nvbm5lY3RvcnMpOwpk
+aWZmIC0tZ2l0IGEvaW5jbHVkZS9kcm0vZHJtX21vZGUuaCBiL2luY2x1ZGUvZHJtL2RybV9tb2Rl
+LmgKaW5kZXggMGZjNzM5Ny4uNGI1MTQ0YyAxMDA2NDQKLS0tIGEvaW5jbHVkZS9kcm0vZHJtX21v
+ZGUuaAorKysgYi9pbmNsdWRlL2RybS9kcm1fbW9kZS5oCkBAIC01OSw2ICs1OSw3IEBACiAKIC8q
+IERQTVMgZmxhZ3MgKi8KIC8qIGJpdCBjb21wYXRpYmxlIHdpdGggdGhlIHhvcmcgZGVmaW5pdGlv
+bnMuICovCisjZGVmaW5lIERSTV9NT0RFX0RQTVNfVU5LTk9XTgkoLTEpCiAjZGVmaW5lIERSTV9N
+T0RFX0RQTVNfT04JMAogI2RlZmluZSBEUk1fTU9ERV9EUE1TX1NUQU5EQlkJMQogI2RlZmluZSBE
+Uk1fTU9ERV9EUE1TX1NVU1BFTkQJMgo=
+--001485eba1e80dd0f1049b680b26--
