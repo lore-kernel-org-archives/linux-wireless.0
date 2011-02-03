@@ -1,45 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:53035 "EHLO mail.neratec.ch"
+Received: from lo.gmane.org ([80.91.229.12]:40550 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751419Ab1BIPcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 10:32:50 -0500
-Message-ID: <4D52B3A0.7060905@neratec.com>
-Date: Wed, 09 Feb 2011 16:32:48 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] nl80211: interface update
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com> <1297252905-29739-2-git-send-email-zefir.kurtisi@neratec.com> <20110209143138.GA2494@tuxdriver.com>
-In-Reply-To: <20110209143138.GA2494@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1756200Ab1BCK7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 05:59:30 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PkwuM-0000OJ-L6
+	for linux-wireless@vger.kernel.org; Thu, 03 Feb 2011 11:59:29 +0100
+Received: from san_juan-143-68.umh.es ([san_juan-143-68.umh.es])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 11:59:26 +0100
+Received: from baldo.ath9k by san_juan-143-68.umh.es with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 11:59:26 +0100
+To: linux-wireless@vger.kernel.org
+From: Baldomero Coll <baldo.ath9k@gmail.com>
+Subject: Re: [RFC] mac80211: support for IEEE80211N in IBSS
+Date: Thu, 3 Feb 2011 10:59:06 +0000 (UTC)
+Message-ID: <loom.20110203T115745-317@post.gmane.org>
+References: <201101191438.01161.alexander.simon@saxnet.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2011 03:31 PM, John W. Linville wrote:
-> On Wed, Feb 09, 2011 at 01:01:41PM +0100, Zefir Kurtisi wrote:
->> Interface implementation to pass DFS pulse events via nl80211.
->>
->> Includes
->>  * new command NL80211_CMD_SET_DFS_EVENT
->>  * new attributes NL80211_DFSEVENT_ATTR_{FREQ,TS,WIDTH}
->>  * functions to pass DFS pulse events through netlink interface
-> 
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> index 864ddfb..8e75f40 100644
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -4015,7 +4015,6 @@ __cfg80211_testmode_alloc_skb(struct cfg80211_registered_device *rdev,
->>  	skb = nlmsg_new(approxlen + 100, gfp);
->>  	if (!skb)
->>  		return NULL;
->> -
->>  	hdr = nl80211hdr_put(skb, pid, seq, 0, NL80211_CMD_TESTMODE);
->>  	if (!hdr) {
->>  		kfree_skb(skb);
-> 
-> Please don't randomly remove whitespace in your patches. :-)
-> 
-Sure. No idea how this could ever happen ;)
-> John
+
+I have sacesfully installed the IBSS HT support patches [1] [2], but something
+wrong happends when the network is created. Any idea why this happens?
+
+[1]
+# iw --debug dev wlan0 ibss join "uwicoreHT" 2412 HT20
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE ---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 36
+    .nlmsg_type = 2 <ERROR>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 1296727732
+    .nlmsg_pid = 2350
+  [ERRORMSG] 20 octets
+    .error = 0 "Success"
+  [ORIGINAL MESSAGE] 16 octets
+    .nlmsg_len = 16
+    .nlmsg_type = 23 <0x17>
+    .nlmsg_flags = 5 <REQUEST,ACK>
+    .nlmsg_seq = 1296727732
+    .nlmsg_pid = 2350
+---------------------------  END NETLINK MESSAGE   ---------------------------
+
+[2]
+iw --debug dev wlan0 ibss join "uwicoreHT" 2412 HT40-
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE ---------------------------
+  [HEADER] 16 octets
+    .nlmsg_len = 36
+    .nlmsg_type = 2 <ERROR>
+    .nlmsg_flags = 0 <>
+    .nlmsg_seq = 1296727811
+    .nlmsg_pid = 2354
+  [ERRORMSG] 20 octets
+    .error = 0 "Success"
+  [ORIGINAL MESSAGE] 16 octets
+    .nlmsg_len = 16
+    .nlmsg_type = 23 <0x17>
+    .nlmsg_flags = 5 <REQUEST,ACK>
+    .nlmsg_seq = 1296727811
+    .nlmsg_pid = 2354
+---------------------------  END NETLINK MESSAGE   ---------------------------
+
+[3]
+As a result, the iwconfig shows the following:
+
+wlan0     IEEE 802.11abgn  ESSID:"uwicoreHT"  
+          Mode:Ad-Hoc  Frequency:2.412 GHz  Cell: Not-Associated   
+          Tx-Power=30 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+(After few seconds the ESSID disappear)
+
+wlan0     IEEE 802.11abgn  Mode:Ad-Hoc  Frequency:2.412 GHz  
+          Cell: Not-Associated   Tx-Power=27 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
 
