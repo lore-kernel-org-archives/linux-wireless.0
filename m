@@ -1,203 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:55510 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550Ab1BVWXB (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39151 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751561Ab1BCWUY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:23:01 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so264297wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:23:00 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 7/8] wl12xx: AP-mode - count free FW TX blocks per link
-Date: Wed, 23 Feb 2011 00:22:30 +0200
-Message-Id: <1298413351-15462-8-git-send-email-arik@wizery.com>
-In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
-References: <1298413351-15462-1-git-send-email-arik@wizery.com>
+	Thu, 3 Feb 2011 17:20:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+ <s5haaid3xos.wl%tiwai@suse.de> <201102032009.17100.rjw@sisk.pl>
+ <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com> <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 3 Feb 2011 14:19:31 -0800
+Message-ID: <AANLkTin=YcecPX1AOpihPVJO3UOfrcjf0MFTu55dpEUy@mail.gmail.com>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+To: Carlos Mafra <crmafra2@gmail.com>,
+	Keith Packard <keithp@keithp.com>,
+	Dave Airlie <airlied@redhat.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Count the number of FW TX blocks allocated per link. We add blocks to a
-link counter when allocated for a TX descriptor. We remove blocks
-according to counters in fw_status indicating the number of freed blocks
-in FW. These counters are polled after each IRQ.
+On Thu, Feb 3, 2011 at 2:10 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> Maybe the right thing to do is to set it to 'unknown', something like this.
+>
+> TOTALLY UNTESTED!
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |   11 +++++++
- drivers/net/wireless/wl12xx/ps.c     |    2 -
- drivers/net/wireless/wl12xx/tx.c     |   53 ++++++++++++++++++---------------
- drivers/net/wireless/wl12xx/wl12xx.h |    4 ++
- 4 files changed, 44 insertions(+), 26 deletions(-)
+Doing some grepping and "git blame", I found this: commit 032d2a0d068
+("drm/i915: Prevent double dpms on") which took a very similar
+approach, except it just uses "-1" directly instead of introducing
+that DRM_MODE_DPMS_UNKNOWN concept.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index cb9baa0..6cb114f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -570,6 +570,17 @@ static void wl1271_fw_status(struct wl1271 *wl,
- 	if (total)
- 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
- 
-+	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-+		for (i = 0; i < AP_MAX_LINKS; i++) {
-+			u8 cnt = status->tx_lnk_free_blks[i] -
-+				wl->links[i].prev_freed_blks;
-+
-+			wl->links[i].prev_freed_blks =
-+				status->tx_lnk_free_blks[i];
-+			wl->links[i].allocated_blks -= cnt;
-+		}
-+	}
-+
- 	/* update the host-chipset time offset */
- 	getnstimeofday(&ts);
- 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index 2d3086a..b7b3139 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -172,5 +172,3 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
- 
- 	return ret;
- }
--
--
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index e67b68b..3eb6533 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -108,7 +108,7 @@ u8 wl1271_tx_get_hlid(struct sk_buff *skb)
- }
- 
- static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
--				u32 buf_offset)
-+				u32 buf_offset, u8 hlid)
- {
- 	struct wl1271_tx_hw_descr *desc;
- 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
-@@ -137,6 +137,9 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 
- 		wl->tx_blocks_available -= total_blocks;
- 
-+		if (wl->bss_type == BSS_TYPE_AP_BSS)
-+			wl->links[hlid].allocated_blks += total_blocks;
-+
- 		ret = 0;
- 
- 		wl1271_debug(DEBUG_TX,
-@@ -150,7 +153,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- }
- 
- static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
--			      u32 extra, struct ieee80211_tx_info *control)
-+			      u32 extra, struct ieee80211_tx_info *control,
-+			      u8 hlid)
- {
- 	struct timespec ts;
- 	struct wl1271_tx_hw_descr *desc;
-@@ -186,7 +190,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 	desc->tid = ac;
- 
- 	if (wl->bss_type != BSS_TYPE_AP_BSS) {
--		desc->aid = TX_HW_DEFAULT_AID;
-+		desc->aid = hlid;
- 
- 		/* if the packets are destined for AP (have a STA entry)
- 		   send them with AP rate policies, otherwise use default
-@@ -196,25 +200,17 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 		else
- 			rate_idx = ACX_TX_BASIC_RATE;
- 	} else {
--		if (control->control.sta) {
--			struct wl1271_station *wl_sta;
--
--			wl_sta = (struct wl1271_station *)
--					control->control.sta->drv_priv;
--			desc->hlid = wl_sta->hlid;
-+		desc->hlid = hlid;
-+		switch (hlid) {
-+		case WL1271_AP_GLOBAL_HLID:
-+			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
-+			break;
-+		case WL1271_AP_BROADCAST_HLID:
-+			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
-+			break;
-+		default:
- 			rate_idx = ac;
--		} else {
--			struct ieee80211_hdr *hdr;
--
--			hdr = (struct ieee80211_hdr *)
--						(skb->data + sizeof(*desc));
--			if (ieee80211_is_mgmt(hdr->frame_control)) {
--				desc->hlid = WL1271_AP_GLOBAL_HLID;
--				rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
--			} else {
--				desc->hlid = WL1271_AP_BROADCAST_HLID;
--				rate_idx = ACX_TX_AP_MODE_BCST_RATE;
--			}
-+			break;
- 		}
- 	}
- 
-@@ -245,6 +241,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 	u32 extra = 0;
- 	int ret = 0;
- 	u32 total_len;
-+	u8 hlid;
- 
- 	if (!skb)
- 		return -EINVAL;
-@@ -271,14 +268,19 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 		}
- 	}
- 
--	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset);
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		hlid = wl1271_tx_get_hlid(skb);
-+	else
-+		hlid = TX_HW_DEFAULT_AID;
-+
-+	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
- 	if (ret < 0)
- 		return ret;
- 
- 	if (wl->bss_type == BSS_TYPE_AP_BSS)
- 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
- 
--	wl1271_tx_fill_hdr(wl, skb, extra, info);
-+	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
- 
- 	/*
- 	 * The length of each packet is stored in terms of words. Thus, we must
-@@ -635,8 +637,11 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 
- 	/* TX failure */
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
--		for (i = 0; i < AP_MAX_LINKS; i++)
-+		for (i = 0; i < AP_MAX_LINKS; i++) {
- 			wl1271_tx_reset_link_queues(wl, i);
-+			wl->links[i].allocated_blks = 0;
-+			wl->links[i].prev_freed_blks = 0;
-+		}
- 
- 		wl->last_tx_hlid = 0;
- 	} else {
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 9ffac80..0e00c5b 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -322,6 +322,10 @@ enum wl12xx_flags {
- struct wl1271_link {
- 	/* AP-mode - TX queue per AC in link */
- 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
-+
-+	/* accounting for allocated / available TX blocks in FW */
-+	u8 allocated_blks;
-+	u8 prev_freed_blks;
- };
- 
- struct wl1271 {
--- 
-1.7.1
+So I suspect that my patch is going in the right direction, and
+judging by the comments in that commit, we probably should do this
+correctly at the dri level rather than have drivers see those stupid
+"let's set dpms to the state that it was already in". But that very
+much does require that kind of "UNKNOWN" state option.
 
+So maybe we can get that patch tested (and acked if it works)? Carlos, Takashi?
+
+                         Linus
