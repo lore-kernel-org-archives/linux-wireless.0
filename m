@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15429 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751618Ab1BUOCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 09:02:42 -0500
-Date: Mon, 21 Feb 2011 15:02:41 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	ath9k-devel@venema.h4ckr.net
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] ath9k: correct ath9k_hw_set_interrupts
-Message-ID: <20110221140210.GA5996@redhat.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49311 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755238Ab1BCOl2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 09:41:28 -0500
+Received: by vws16 with SMTP id 16so677292vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 06:41:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110202201040.GC2500@tuxdriver.com>
+References: <AANLkTi=bfq+2jev3YGCi0GwfZTkeKa9t2gfuQ8DkbB9p@mail.gmail.com>
+	<20110202201040.GC2500@tuxdriver.com>
+Date: Thu, 3 Feb 2011 14:41:27 +0000
+Message-ID: <AANLkTikzUgg3Q80qvH_dAurbmDZT2rq8Y31RREXEWLsH@mail.gmail.com>
+Subject: Re: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
+From: Eric Fernandez <zeb@zebulon.org.uk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 4df3071ebd92ef7115b409da64d0eb405d24a631 "ath9k_hw: optimize
-interrupt mask changes", changed ath9k_hw_set_interrupts function to
-enable interrupts regardless of function argument, what could possibly
-be wrong. Correct that behaviour and check "ints" arguments before
-enabling interrupts, also disable interrupts if ints do not have
-ATH9K_INT_GLOBAL flag set.
+2011/2/2 John W. Linville <linville@tuxdriver.com>:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> Can you use netconsole over the wired link to capture a backtrace
+> when the lock-up occurs?
+>
+> John
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index c75d40f..5efc869 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -891,7 +891,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (!(ints & ATH9K_INT_GLOBAL))
--		ath9k_hw_enable_interrupts(ah);
-+		ath9k_hw_disable_interrupts(ah);
- 
- 	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
- 
-@@ -969,7 +969,8 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 			REG_CLR_BIT(ah, AR_IMR_S5, AR_IMR_S5_TIM_TIMER);
- 	}
- 
--	ath9k_hw_enable_interrupts(ah);
-+	if (ints & ATH9K_INT_GLOBAL)
-+		ath9k_hw_enable_interrupts(ah);
- 
- 	return;
- }
--- 
-1.7.1
+Hi John,
 
+Unfortunately I have not got another machine. I'll see what I can do.
+
+Eric
