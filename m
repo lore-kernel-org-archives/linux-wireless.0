@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41755 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145Ab1B1RUn (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:41185 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755477Ab1BCQNO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 12:20:43 -0500
-Received: by iyb26 with SMTP id 26so3066492iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 09:20:43 -0800 (PST)
+	Thu, 3 Feb 2011 11:13:14 -0500
+Received: by qyj19 with SMTP id 19so7253105qyj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 08:13:14 -0800 (PST)
+Message-ID: <4D4AD44C.4070409@lwfinger.net>
+Date: Thu, 03 Feb 2011 10:14:04 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com>
-References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
- <20110228142243.GB25724@kroah.com> <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
- <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 28 Feb 2011 09:20:23 -0800
-Message-ID: <AANLkTikTNavD44e_bMO7Q8C5X73qwVHdjnVCiOUO1xCr@mail.gmail.com>
-Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU to
- enter C3 state.
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Greg KH <greg@kroah.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	zhaoming_li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH] rtlwifi: rtl8192ce: Modify core for inclusion of additional
+ drivers
+References: <1296324761-14158-1-git-send-email-Larry.Finger@lwfinger.net> <20110203102331.GA3516@redhat.com>
+In-Reply-To: <20110203102331.GA3516@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 8:52 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
-> On Mon, Feb 28, 2011 at 8:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
->>> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
->>>> The default qos value of 55 causes higher power consumption
->>>> and the battery drains out quickly. So, remove the pm_qos request
->>>> in the driver and the throughout issue in the Intel Pinetrail
->>>> platforms in which the DMA latency is seen can be fixed with
->>>> the following script:
->>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
->>>> http://johannes.sipsolutions.net/files/netlatency.c.txt
->>>>
->>>> More details can be found in the following bugzilla link:
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->>>>
->>>> Cc: stable@kernel.org
->>>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
->>>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->>>
->>> Why did you send me 3 copies of this patch, when I don't need any copies
->>> of it?
->>>
->>> Totally confused,
->>
->> Vivek, please only ask John to send this to David as stable so it can
->> get into 2.6.38-rc, then once there you can refer the sha1sum from
->> Linus' tree and justify propagating into the stable series.
->>
-> I had sent separate patches for v2.6.37 and for v2.6.38 since the
-> patch could not be applied directly to previous versions. So, should I
-> send this rebased patch for v2.6.37 only after it makes it into
-> v2.6.38?
+On 02/03/2011 04:23 AM, Stanislaw Gruszka wrote:
+> On Sat, Jan 29, 2011 at 12:12:41PM -0600, Larry.Finger@lwfinger.net wrote:
+>> From: zhaoming_li <chaoming_li@realsil.com.cn>
+> 
+>> Unfortunately, this is a much larger patch than I would like, but the
+>> changes are substantial. I tried to keep any white-space changes to a
+>> minimum. My attempts to split the patch into separate pieces resulted
+>> in compilation errors, which would break bisection.
+> 
+> But zhaoming_li did not change code in one big commit like that,
+> zhaoming_li did you? :-)
+> 
+> It would be better if realsil will send small patches when
+> they are created, instead of develop driver behind closed doors
+> and then post changes in one huge hunk.
 
-Affirmative. You cannot propagate stable patches unless they are
-already in Linus' tree.
+I agree; however, the situation is even more complicated. The Realsil group in
+China now has mac80211 drivers for 3 PCI-based devices, and the Realtek group in
+Taiwan has a similar driver for a USB-based device. Drivers for each of the 2
+new PCI devices and the USB device were sent to me as a complete package. I'm
+trying to merge them with as little effort as possible, which resulted in that
+large patch.
 
-  Luis
+I'll back off and take it in smaller steps to make it easier to review. Once we
+get these three new drivers merged, then any further changes will be as
+incremental patches.
+
+As these 802.11N devices are starting to appear in late-model laptops,
+particularly those made by Toshiba, it is important to merge these drivers ASAP.
+
+Larry
+
+
