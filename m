@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:48388 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752059Ab1BNPyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 10:54:05 -0500
-Message-ID: <4D595018.3080609@neratec.com>
-Date: Mon, 14 Feb 2011 16:54:00 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:10902 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051Ab1BCUO7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 15:14:59 -0500
+Date: Thu, 3 Feb 2011 21:14:01 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-wireless@vger.kernel.org
+cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@adurom.com>
+Subject: [PATCH] wireless, wl1251: Fix potential NULL pointer dereference in
+ wl1251_op_bss_info_changed()
+Message-ID: <alpine.LNX.2.00.1102032100460.15101@swampdragon.chaosbits.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] nl80211: interface update
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>	 <1297252905-29739-2-git-send-email-zefir.kurtisi@neratec.com> <1297678858.3785.20.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1297678858.3785.20.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2011 11:20 AM, Johannes Berg wrote:
-> I'm thinking this is [RFC] really?
-> 
->> @@ -1076,6 +1078,10 @@ enum nl80211_attrs {
->>  
->>  	/* add attributes here, update the policy in nl80211.c */
->>  
->> +	NL80211_DFSEVENT_ATTR_FREQ,
->> +	NL80211_DFSEVENT_ATTR_TS,
->> +	NL80211_DFSEVENT_ATTR_WIDTH,
-> 
-> I think it would be preferable to create a new DFS_EVENT attribute (also
-> note that all attributse should be prefixed by NL80211_ATTR_) and then
-> nest data into it.
-> 
-> However, why is the TS/width data needed at all?
-> 
-> johannes
-> 
-Thanks for the review.
+In drivers/net/wireless/wl1251/main.c:wl1251_op_bss_info_changed() we make 
+a call to ieee80211_beacon_get() which may return NULL, but we do not 
+check the return value before dereferencing the pointer.
 
-I will follow Your suggestions in case we decided to take the approach of 
-DFS handling done in userspace (we most probably will not).
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ main.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-FYI, TS and width are the attributes of radar pulse events that a DFS pattern 
-detector is fed with. In fact, the width is inaccurate (e.g. with Atheros 
-chipsets) for most test patterns, so you basically have a series of time 
-stamps to do the pattern matching.
+diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
+index 012e1a4..40372ba 100644
+--- a/drivers/net/wireless/wl1251/main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -1039,6 +1039,9 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changed & BSS_CHANGED_BEACON) {
+ 		beacon = ieee80211_beacon_get(hw, vif);
++		if (!beacon)
++			goto out_sleep;
++
+ 		ret = wl1251_cmd_template_set(wl, CMD_BEACON, beacon->data,
+ 					      beacon->len);
+ 
 
-
-
-Cheers
-Zefir
-
+-- 
+Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
+Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please.
 
