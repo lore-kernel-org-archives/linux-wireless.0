@@ -1,201 +1,325 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43382 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754445Ab1BMOk6 (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:38382 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755290Ab1BCAEB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 09:40:58 -0500
-Received: by bwz15 with SMTP id 15so4702350bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 06:40:57 -0800 (PST)
-From: Stanislav Fomichev <kernel@fomichev.me>
-To: linux-wireless@vger.kernel.org
-Cc: brudley@broadcom.com, gregkh@suse.de
-Subject: [PATCH 2/8] brcm80211: replace dot11_rts_frame with ieee80211_rts
-Date: Sun, 13 Feb 2011 17:40:37 +0300
-Message-Id: <1297608043-18381-2-git-send-email-kernel@fomichev.me>
-In-Reply-To: <1297608043-18381-1-git-send-email-kernel@fomichev.me>
-References: <1297608043-18381-1-git-send-email-kernel@fomichev.me>
+	Wed, 2 Feb 2011 19:04:01 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
+Date: Thu,  3 Feb 2011 01:03:41 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
----
- drivers/staging/brcm80211/include/d11.h          |    4 +++-
- drivers/staging/brcm80211/include/proto/802.11.h |    7 -------
- drivers/staging/brcm80211/sys/wlc_ampdu.c        |   12 ++++++------
- drivers/staging/brcm80211/sys/wlc_mac80211.c     |   22 +++++++++++-----------
- 4 files changed, 20 insertions(+), 25 deletions(-)
+This message contains a list of some post-2.6.36 regressions introduced before
+2.6.37, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-diff --git a/drivers/staging/brcm80211/include/d11.h b/drivers/staging/brcm80211/include/d11.h
-index be2d497..604ef60 100644
---- a/drivers/staging/brcm80211/include/d11.h
-+++ b/drivers/staging/brcm80211/include/d11.h
-@@ -17,6 +17,8 @@
- #ifndef	_D11_H
- #define	_D11_H
- 
-+#include <linux/ieee80211.h>
-+
- /* This marks the start of a packed structure section. */
- #include <packed_section_start.h>
- 
-@@ -739,7 +741,7 @@ BWL_PRE_PACKED_STRUCT struct d11txh {
- 	u16 MaxABytes_FBR;	/* 0x2a corerev >=16 */
- 	u16 MinMBytes;	/* 0x2b corerev >=16 */
- 	u8 RTSPhyHeader[D11_PHY_HDR_LEN];	/* 0x2c - 0x2e */
--	struct dot11_rts_frame rts_frame;	/* 0x2f - 0x36 */
-+	struct ieee80211_rts rts_frame;	/* 0x2f - 0x36 */
- 	u16 PAD;		/* 0x37 */
- } BWL_POST_PACKED_STRUCT;
- 
-diff --git a/drivers/staging/brcm80211/include/proto/802.11.h b/drivers/staging/brcm80211/include/proto/802.11.h
-index 3bc066a..db4328d 100644
---- a/drivers/staging/brcm80211/include/proto/802.11.h
-+++ b/drivers/staging/brcm80211/include/proto/802.11.h
-@@ -45,13 +45,6 @@
- 
- #define DOT11_OUI_LEN			3
- 
--BWL_PRE_PACKED_STRUCT struct dot11_rts_frame {
--	u16 fc;
--	u16 durid;
--	struct ether_addr ra;
--	struct ether_addr ta;
--} BWL_POST_PACKED_STRUCT;
--
- #define	DOT11_RTS_LEN		16
- #define	DOT11_CTS_LEN		10
- #define	DOT11_ACK_LEN		10
-diff --git a/drivers/staging/brcm80211/sys/wlc_ampdu.c b/drivers/staging/brcm80211/sys/wlc_ampdu.c
-index 74da502..ae051de 100644
---- a/drivers/staging/brcm80211/sys/wlc_ampdu.c
-+++ b/drivers/staging/brcm80211/sys/wlc_ampdu.c
-@@ -519,7 +519,7 @@ wlc_sendampdu(struct ampdu_info *ampdu, wlc_txq_info_t *qi,
- 	ratespec_t rspec = 0, rspec_fallback = 0;
- 	ratespec_t rts_rspec = 0, rts_rspec_fallback = 0;
- 	u16 mimo_ctlchbw = PHY_TXC1_BW_20MHZ;
--	struct dot11_rts_frame *rts;
-+	struct ieee80211_rts *rts;
- 	u8 rr_retry_limit;
- 	wlc_fifo_info_t *f;
- 	bool fbr_iscck;
-@@ -639,8 +639,8 @@ wlc_sendampdu(struct ampdu_info *ampdu, wlc_txq_info_t *qi,
- 			mcl |= (TXC_AMPDU_FIRST << TXC_AMPDU_SHIFT);
- 			/* refill the bits since might be a retx mpdu */
- 			mcl |= TXC_STARTMSDU;
--			rts = (struct dot11_rts_frame *)&txh->rts_frame;
--			fc = ltoh16(rts->fc);
-+			rts = (struct ieee80211_rts *)&txh->rts_frame;
-+			fc = le16_to_cpu(rts->frame_control);
- 			if ((fc & FC_KIND_MASK) == FC_RTS) {
- 				mcl |= TXC_SENDRTS;
- 				use_rts = true;
-@@ -837,7 +837,7 @@ wlc_sendampdu(struct ampdu_info *ampdu, wlc_txq_info_t *qi,
- 		/* update RTS dur fields */
- 		if (use_rts || use_cts) {
- 			u16 durid;
--			rts = (struct dot11_rts_frame *)&txh->rts_frame;
-+			rts = (struct ieee80211_rts *)&txh->rts_frame;
- 			if ((mch & TXC_PREAMBLE_RTS_MAIN_SHORT) ==
- 			    TXC_PREAMBLE_RTS_MAIN_SHORT)
- 				rts_preamble_type = WLC_SHORT_PREAMBLE;
-@@ -851,7 +851,7 @@ wlc_sendampdu(struct ampdu_info *ampdu, wlc_txq_info_t *qi,
- 						   rspec, rts_preamble_type,
- 						   preamble_type, ampdu_len,
- 						   true);
--			rts->durid = htol16(durid);
-+			rts->duration = cpu_to_le16(durid);
- 			durid = wlc_compute_rtscts_dur(wlc, use_cts,
- 						       rts_rspec_fallback,
- 						       rspec_fallback,
-@@ -860,7 +860,7 @@ wlc_sendampdu(struct ampdu_info *ampdu, wlc_txq_info_t *qi,
- 						       ampdu_len, true);
- 			txh->RTSDurFallback = htol16(durid);
- 			/* set TxFesTimeNormal */
--			txh->TxFesTimeNormal = rts->durid;
-+			txh->TxFesTimeNormal = rts->duration;
- 			/* set fallback rate version of TxFesTimeNormal */
- 			txh->TxFesTimeFallback = txh->RTSDurFallback;
- 		}
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index 96ff02f..391e958 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -1736,7 +1736,7 @@ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
- 	ASSERT(sizeof(d11txh_t) == D11_TXH_LEN);
- 	ASSERT(sizeof(d11rxhdr_t) == RXHDR_LEN);
- 	ASSERT(sizeof(struct ieee80211_hdr) == DOT11_A4_HDR_LEN);
--	ASSERT(sizeof(struct dot11_rts_frame) == DOT11_RTS_LEN);
-+	ASSERT(sizeof(struct ieee80211_rts) == DOT11_RTS_LEN);
- 	ASSERT(sizeof(struct dot11_management_header) == DOT11_MGMT_HDR_LEN);
- 	ASSERT(sizeof(struct dot11_bcn_prb) == DOT11_BCN_PRB_LEN);
- 	ASSERT(sizeof(tx_status_t) == TXSTATUS_LEN);
-@@ -4858,7 +4858,7 @@ void wlc_print_txdesc(d11txh_t *txh)
- 	u16 mmbyte = ltoh16(txh->MinMBytes);
- 
- 	u8 *rtsph = txh->RTSPhyHeader;
--	struct dot11_rts_frame rts = txh->rts_frame;
-+	struct ieee80211_rts rts = txh->rts_frame;
- 	char hexbuf[256];
- 
- 	/* add plcp header along with txh descriptor */
-@@ -5666,7 +5666,7 @@ wlc_d11hdrs_mac80211(struct wlc_info *wlc, struct ieee80211_hw *hw,
- 	u8 preamble_type[2] = { WLC_LONG_PREAMBLE, WLC_LONG_PREAMBLE };
- 	u8 rts_preamble_type[2] = { WLC_LONG_PREAMBLE, WLC_LONG_PREAMBLE };
- 	u8 *rts_plcp, rts_plcp_fallback[D11_PHY_HDR_LEN];
--	struct dot11_rts_frame *rts = NULL;
-+	struct ieee80211_rts *rts = NULL;
- 	bool qos;
- 	uint ac;
- 	u32 rate_val[2];
-@@ -6110,12 +6110,12 @@ wlc_d11hdrs_mac80211(struct wlc_info *wlc, struct ieee80211_hw *hw,
- 		      sizeof(txh->RTSPLCPFallback));
- 
- 		/* RTS frame fields... */
--		rts = (struct dot11_rts_frame *)&txh->rts_frame;
-+		rts = (struct ieee80211_rts *)&txh->rts_frame;
- 
- 		durid = wlc_compute_rtscts_dur(wlc, use_cts, rts_rspec[0],
- 					       rspec[0], rts_preamble_type[0],
- 					       preamble_type[0], phylen, false);
--		rts->durid = htol16(durid);
-+		rts->duration = cpu_to_le16(durid);
- 		/* fallback rate version of RTS DUR field */
- 		durid = wlc_compute_rtscts_dur(wlc, use_cts,
- 					       rts_rspec[1], rspec[1],
-@@ -6124,11 +6124,11 @@ wlc_d11hdrs_mac80211(struct wlc_info *wlc, struct ieee80211_hw *hw,
- 		txh->RTSDurFallback = htol16(durid);
- 
- 		if (use_cts) {
--			rts->fc = htol16(FC_CTS);
--			bcopy((char *)h->addr2, (char *)&rts->ra, ETH_ALEN);
-+			rts->frame_control = cpu_to_le16(FC_CTS);
-+			bcopy((char *)h->addr2, (char *)rts->ra, ETH_ALEN);
- 		} else {
--			rts->fc = htol16((u16) FC_RTS);
--			bcopy((char *)h->addr1, (char *)&rts->ra,
-+			rts->frame_control = cpu_to_le16((u16) FC_RTS);
-+			bcopy((char *)h->addr1, (char *)rts->ra,
- 			      2 * ETH_ALEN);
- 		}
- 
-@@ -6142,7 +6142,7 @@ wlc_d11hdrs_mac80211(struct wlc_info *wlc, struct ieee80211_hw *hw,
- 	} else {
- 		memset((char *)txh->RTSPhyHeader, 0, D11_PHY_HDR_LEN);
- 		memset((char *)&txh->rts_frame, 0,
--			sizeof(struct dot11_rts_frame));
-+			sizeof(struct ieee80211_rts));
- 		memset((char *)txh->RTSPLCPFallback, 0,
- 		      sizeof(txh->RTSPLCPFallback));
- 		txh->RTSDurFallback = 0;
-@@ -6249,7 +6249,7 @@ wlc_d11hdrs_mac80211(struct wlc_info *wlc, struct ieee80211_hw *hw,
- 				    wlc_calc_cts_time(wlc, rts_rspec[1],
- 						      rts_preamble_type[1]);
- 				/* (SIFS + CTS) + SIFS + frame + SIFS + ACK */
--				dur += ltoh16(rts->durid);
-+				dur += le16_to_cpu(rts->duration);
- 				dur_fallback += ltoh16(txh->RTSDurFallback);
- 			} else if (use_rifs) {
- 				dur = frag_dur;
--- 
-1.7.1
+If you know of any other unresolved post-2.6.36 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
+
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
+
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-02-03      118       36          31
+  2010-12-30       85       32          26
+  2010-12-19       73       28          24
+  2010-12-03       55       25          19
+  2010-11-19       39       29          25
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27892
+Subject		: SNB: GPU hang with Slip xscreensaver
+Submitter	: Takashi Iwai <tiwai@suse.de>
+Date		: 2011-01-31 12:06 (3 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27842
+Subject		: [regression?] hang with 2.6.37 on a BTRFS test machine
+Submitter	: Martin Steigerwald <Martin@lichtvoll.de>
+Date		: 2011-01-23 12:06 (11 days old)
+Message-ID	: <201101231306.23069.Martin@lichtvoll.de>
+References	: http://marc.info/?l=linux-kernel&m=129578445613283&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27642
+Subject		: 2.6.37 says WARNING: at arch/x86/kernel/apic/apic.c:1287 setup_local_APIC+0x18f/0x263()
+Submitter	: Rob Landley <rlandley@parallels.com>
+Date		: 2011-01-18 13:11 (16 days old)
+Message-ID	: <4D359188.3040408@parallels.com>
+References	: http://marc.info/?l=linux-kernel&m=129535632319892&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27532
+Subject		: ath9k prevents CPU from entering lower C-states
+Submitter	: Thomas Bächler <thomas@archlinux.org>
+Date		: 2011-01-24 22:43 (10 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27402
+Subject		: Atheros adapter no longer loads firmware
+Submitter	: Michal Vaner <vorner@ucw.cz>
+Date		: 2011-01-23 15:29 (11 days old)
+First-Bad-Commit: http://git.kernel.org/linus/be93112accb42c5586a459683d71975cc70673ca
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27152
+Subject		: VGA output broken at cold boot
+Submitter	: Takashi Iwai <tiwai@suse.de>
+Date		: 2011-01-20 13:26 (14 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27132
+Subject		: flush-btrfs gets into an infinite loop
+Submitter	: Artem Anisimov <aanisimov@inbox.ru>
+Date		: 2011-01-20 11:51 (14 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26942
+Subject		: radeon: screen distortion on resume
+Submitter	: Brett Witherspoon <spoonb@exherbo.org>
+Date		: 2011-01-17 13:23 (17 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26932
+Subject		: [SNB mobile] Oops in DRM intel driver, esp. during S3/S4 stress test
+Submitter	: Matthias Hopf <mat@mshopf.de>
+Date		: 2011-01-17 11:45 (17 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26842
+Subject		: [2.6.37 regression] threads with CPU affinity cannot be killed
+Submitter	: tim blechmann <tim@klingt.org>
+Date		: 2011-01-16 13:39 (18 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26802
+Subject		: b43: Suspend failed
+Submitter	: Patrick Matthäi <patrick@linux-dev.org>
+Date		: 2011-01-15 18:56 (19 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26582
+Subject		: NULL pointer dereference on pipe creation
+Submitter	: Ferenc Wágner <wferi@niif.hu>
+Date		: 2011-01-12 13:30 (22 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26552
+Subject		: Screen flickering with 2.6.37 [ATI X1600]
+Submitter	: Andrea Iob <andrea_iob@yahoo.it>
+Date		: 2011-01-11 22:53 (23 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26212
+Subject		: kernel NULL pointer dereference in pxa3xx_nand_probe
+Submitter	: Sven Neumann <s.neumann@raumfeld.com>
+Date		: 2011-01-05 11:43 (29 days old)
+Message-ID	: <1294227801.3996.62.camel@sven>
+References	: http://marc.info/?l=linux-kernel&m=129422903703756&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26112
+Subject		: [LogFS] [2.6.37-rc8+] Kernel BUG at logfs/readwrite.c:297!
+Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
+Date		: 2011-01-02 21:22 (32 days old)
+Message-ID	: <AANLkTinpoM8FuG8UkF88xs_V37dz_wgE8t-s0JPzaS-w@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=129400335910652&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26102
+Subject		: [2.6.37-rc8] BUG kmalloc-256: Poison overwritten.
+Submitter	: Pawel Sikora <pluto@agmk.net>
+Date		: 2010-12-30 15:08 (35 days old)
+Message-ID	: <201012301608.40859.pluto@agmk.net>
+References	: http://marc.info/?l=linux-kernel&m=129372388925679&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25922
+Subject		: IdeaPad Y530 brightness keys not functioning
+Submitter	: Tomasz <tm.temp@gmx.com>
+Date		: 2010-12-30 12:48 (35 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25832
+Subject		: kernel crashes upon resume if usb devices are removed when suspended
+Submitter	: rocko <rockorequin@hotmail.com>
+Date		: 2010-12-29 11:47 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25732
+Subject		: i915 turns picture green when display switched off-on
+Submitter	: Tõnu Raitviir <jussuf@linux.ee>
+Date		: 2010-12-27 22:14 (38 days old)
+First-Bad-Commit: http://git.kernel.org/linus/3c17fe4b8f40a112a85758a9ab2aebf772bdd647
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25432
+Subject		: Alpha fails to build with gcc 4.4
+Submitter	: Ben Hutchings <ben@decadent.org.uk>
+Date		: 2010-12-22 01:55 (43 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25402
+Subject		: kernel (2.6.37-8-generic_amd64) panic on boot (with message "map_single: bounce buffer is not DMA'ble) - possible regression !!!
+Submitter	: carlos <carlos.palma@ono.com>
+Date		: 2010-12-21 19:58 (44 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25072
+Subject		: backlight level is not maintened during LID close/open
+Submitter	: Lukas Hejtmanek <xhejtman@fi.muni.cz>
+Date		: 2010-12-17 11:56 (48 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24882
+Subject		: PM/Hibernate: Memory corruption patch introduces regression (2.6.36.2)
+Submitter	:  <akwatts@ymail.com>
+Date		: 2010-12-14 04:00 (51 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24822
+Subject		: Embedded DisplayPort is detected wrongly on HP ProBook 5320m
+Submitter	: Takashi Iwai <tiwai@suse.de>
+Date		: 2010-12-13 11:09 (52 days old)
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24762
+Subject		: BUG at perf_ctx_adjust_freq (kernel/perf_event.c:1582)
+Submitter	: Chris Wilson <chris@chris-wilson.co.uk>
+Date		: 2010-12-10 12:00 (55 days old)
+Message-ID	: <c6d829$pqibha@fmsmga001.fm.intel.com>
+References	: http://marc.info/?l=linux-kernel&m=129198247531612&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24582
+Subject		: Kernel Oops at tty_buffer_request_room when using pppd program (2.6.37-rc4)
+Submitter	: baoyb <baoyb@avit.org.cn>
+Date		: 2010-12-08 13:55 (57 days old)
+Message-ID	: <EF6DDE218DB34702B1FA84D6CD7EA771@baoyb>
+References	: http://marc.info/?l=linux-kernel&m=129181763525738&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22942
+Subject		: [2.6.37-rc1, OOM] virtblk: OOM in do_virtblk_request()
+Submitter	: Dave Chinner <david@fromorbit.com>
+Date		: 2010-11-05 1:30 (90 days old)
+Message-ID	: <20101105013003.GE13830@dastard>
+References	: http://marc.info/?l=linux-kernel&m=128892062917641&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22912
+Subject		: spi_lm70llp module crash on unload (2.6.37-rc1)
+Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
+Date		: 2010-11-05 0:16 (90 days old)
+Message-ID	: <20101104171620.00d8c95d.randy.dunlap@oracle.com>
+References	: http://marc.info/?l=linux-kernel&m=128891627913647&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22882
+Subject		: (2.6.37-rc1) amd64-agp module crashed on second load
+Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
+Date		: 2010-11-05 0:13 (90 days old)
+Message-ID	: <20101104171333.fea1f498.randy.dunlap@oracle.com>
+References	: http://marc.info/?l=linux-kernel&m=128891605213447&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22642
+Subject		: 2.6.37-rc1: Disk takes 10 seconds to resume - MacBook2,1
+Submitter	: Tobias <devnull@plzk.org>
+Date		: 2010-11-10 19:33 (85 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22542
+Subject		: [2.6.37-rc1] drm:i195 errors
+Submitter	: Paul Rolland <rol@witbe.net>
+Date		: 2010-11-02 14:58 (93 days old)
+Message-ID	: <20101102155813.09cb2c6e@tux.DEF.witbe.net>
+References	: http://marc.info/?l=linux-kernel&m=128870991628970&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27202
+Subject		: Remote control of saa7134-based tv card "ASUSTeK P7131 Hybrid" stopped working in 2.6.37
+Submitter	:  <acaizzo@gmail.com>
+Date		: 2011-01-20 17:23 (14 days old)
+First-Bad-Commit: http://git.kernel.org/linus/4651918a4afdd49bdea21d2f919b189ef17a6399
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=44532
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=26242
+Subject		: BUG: unable to handle kernel NULL pointer dereference at   (null)
+Submitter	: Steffen Michalke <StMichalke@web.de>
+Date		: 2011-01-06 20:59 (28 days old)
+Patch		: http://www.spinics.net/lists/linux-btrfs/msg08051.html
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25822
+Subject		: [BUG] kernel BUG at mm/truncate.c:479! on 2.6.37-rc8
+Submitter	: Gurudas Pai <gurudas.pai@oracle.com>
+Date		: 2010-12-29 6:58 (36 days old)
+Message-ID	: <4D1AD935.1020504@oracle.com>
+References	: http://marc.info/?l=linux-kernel&m=129360511222037&w=2
+Patch		: https://lkml.org/lkml/2010/12/29/131
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=25442
+Subject		: ixp4xx defines FREQ macro; conflicts with gspca/ov519 driver
+Submitter	: Ben Hutchings <ben@decadent.org.uk>
+Date		: 2010-12-22 02:02 (43 days old)
+Handled-By	: Ben Hutchings <ben@decadent.org.uk>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=41252
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23472
+Subject		: 2.6.37-rc2 vs. 2.6.36 laptop backlight changes?
+Submitter	: Patrick Schaaf <netdev@bof.de>
+Date		: 2010-11-17 13:41 (78 days old)
+Message-ID	: <1290001262.5727.2.camel@lat1>
+References	: http://marc.info/?l=linux-kernel&m=129000127920912&w=2
+Handled-By	: Indan Zupancic <indan@nul.nu>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=43482
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.36 and 2.6.37, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=21782
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
