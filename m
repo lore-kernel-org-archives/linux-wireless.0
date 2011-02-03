@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:34750 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751799Ab1BNXWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 18:22:04 -0500
-Subject: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 00:21:50 +0100
-Message-ID: <1297725710.5683.17.camel@maggie>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45055 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752568Ab1BCVPl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 16:15:41 -0500
+Message-ID: <4D4B1AF4.2050000@hauke-m.de>
+Date: Thu, 03 Feb 2011 22:15:32 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"Zhao, Shanyu" <shanyu.zhao@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lance Zimmerman <lance.zimmerman@atheros.com>,
+	Prem Kumar <Prem.Kumar@atheros.com>
+Subject: Re: Backporting other subsystems on Linux
+References: <380B2771CDD78E46856E6B788D9F1997D2468080@orsmsx503.amr.corp.intel.com> <BD672EAEE3AD2C47A7120B0973C3FB3A50F0AC156A@SC1EXMB-MBCL.global.atheros.com> <380B2771CDD78E46856E6B788D9F1997D27D86D2@orsmsx503.amr.corp.intel.com> <20110202220926.GB3035@tux> <20110202222645.GE3035@tux>
+In-Reply-To: <20110202222645.GE3035@tux>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb_wait_bit was designed for only one-bit bitmasks.
-People start using it for multi-bit bitmasks. Make the "set" case
-is safe for this. The "unset" case is already safe.
+On 02/02/2011 11:26 PM, Luis R. Rodriguez wrote:
+> On Wed, Feb 02, 2011 at 02:09:26PM -0800, Luis Rodriguez wrote:
+>> Increasing audience.
+>>
+>> On Wed, Feb 02, 2011 at 01:27:10PM -0800, Zhao, Shanyu wrote:
+>>> Hi Luis,
+>>>
+>>> Thank you for the quick response. When I say USB, I didn't mean USB network
+>>> drivers, I'm talking about USB host/device controller drivers or gadget
+>>> drivers. For example, we can backport USB3 support to, say, 2.6.28.
+>>>
+>>> From what I understand, I can add any driver to your compat-wireless tree and
+>>> build it the same way as other wireless drivers. Am I right?
+>>
+>> That's right.
+>>
+>>> Then your tree should really be called compat-drivers. :) I'm not sure if
+>>> you're welcoming non-network related drivers.
 
-This does not change behavior of the current code.
+When adding more and more stuff we should probably rename
+compat-wireless to something else. ;-)
+I am fine with adding USB3 support, if Intel will help maintaining the
+stuff in compat-wireless after they added it.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+>> What I really need to get to at some point is to use implement a
+>> menuconfig thingy, we already drag the Kconfigs in but use config.mk for
+>> makefile/dependency mapping. Patches welcomed.
+> 
+> BTW one idea I have as of recent is to consider using Hudson for automatic
+> build testing for compat-wireless but haven't yet mucked with it. Eventually
+> this will be more and more important as time goes by and we support older
+> kernels. The goal is to at the *very least* always support down to the last
+> stable 2.6 kernel listed on kernel.org, today that is 2.6.27 and I think its
+> a safe promise to commit to backporting *at least* to that kernel. We go
+> beyond 2.6.27 though today.
 
----
+Automatic compile testing is really needed for compat-wireless. There
+are often some special kernel version where it does not compile, like
+now. ;-)
 
-Index: wireless-testing/drivers/ssb/main.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/main.c	2010-12-30 15:49:39.235946210 +0100
-+++ wireless-testing/drivers/ssb/main.c	2011-02-15 00:17:35.727816704 +0100
-@@ -1192,10 +1192,10 @@ void ssb_device_enable(struct ssb_device
- }
- EXPORT_SYMBOL(ssb_device_enable);
- 
--/* Wait for a bit in a register to get set or unset.
-+/* Wait for bitmask in a register to get set or cleared.
-  * timeout is in units of ten-microseconds */
--static int ssb_wait_bit(struct ssb_device *dev, u16 reg, u32 bitmask,
--			int timeout, int set)
-+static int ssb_wait_bits(struct ssb_device *dev, u16 reg, u32 bitmask,
-+			 int timeout, int set)
- {
- 	int i;
- 	u32 val;
-@@ -1203,7 +1203,7 @@ static int ssb_wait_bit(struct ssb_devic
- 	for (i = 0; i < timeout; i++) {
- 		val = ssb_read32(dev, reg);
- 		if (set) {
--			if (val & bitmask)
-+			if ((val & bitmask) == bitmask)
- 				return 0;
- 		} else {
- 			if (!(val & bitmask))
-@@ -1227,8 +1227,8 @@ void ssb_device_disable(struct ssb_devic
- 
- 	reject = ssb_tmslow_reject_bitmask(dev);
- 	ssb_write32(dev, SSB_TMSLOW, reject | SSB_TMSLOW_CLOCK);
--	ssb_wait_bit(dev, SSB_TMSLOW, reject, 1000, 1);
--	ssb_wait_bit(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
-+	ssb_wait_bits(dev, SSB_TMSLOW, reject, 1000, 1);
-+	ssb_wait_bits(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
- 	ssb_write32(dev, SSB_TMSLOW,
- 		    SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
- 		    reject | SSB_TMSLOW_RESET |
+Some time ago I started writing a small bash script which tries to build
+compat-wireless for various kernel versions and sends a email if
+something went wrong. This was more or less hacked together from the
+compat-wireless release script and some other scripts I have here. I
+stopped working on this after I recognized that my server is way to slow
+for running this script (compat-wireless build for one kernel toke more
+than 30 minutes).
 
--- 
-Greetings Michael.
+Using hudson or buildbot [2] is the better choice, but it should just
+take 1 to 2 hours to get this hacked script working. Luis do you have a
+server with hudson installed or a server capable for running hudson and
+building compat-wireless? My server has a Intel Celeron with 2.4 GHz and
+512MB Ram. I have to clean up my script before releasing it to someone
+else, but if someone is interest I have no problem with making it relay
+for use.
 
+[1] http://en.wikipedia.org/wiki/Hudson_(software)
+[2] http://en.wikipedia.org/wiki/BuildBot
+
+Hauke
