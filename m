@@ -1,38 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8146 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754606Ab1BMTBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 14:01:51 -0500
-Subject: Re: experimental iwlwifi 5000 uCode available
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Andy Lutomirski <luto@MIT.EDU>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D581D69.1090407@mit.edu>
-References: <1294856157.20725.26.camel@wwguy-ubuntu>
-	 <4D581D69.1090407@mit.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 13 Feb 2011 10:48:04 -0800
-Message-ID: <1297622884.19491.27.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:53720 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693Ab1BCXlJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Feb 2011 18:41:09 -0500
+Received: by eye27 with SMTP id 27so1035500eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 15:41:08 -0800 (PST)
+Date: Fri, 4 Feb 2011 01:41:02 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH] ath5k: Fix fast channel switching
+Message-ID: <20110203234102.GA4714@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-02-13 at 10:05 -0800, Andy Lutomirski wrote:
-> On 01/12/2011 01:15 PM, Guy, Wey-Yi wrote:
-> > Hi
-> >
-> > Experimental version 8.83.5.1 of uCode for Intel@ 5000 Series WiFi
-> > Adapters is now available for download from
-> > http://www.intellinuxwireless.org/?n=experimental
-> 
-> I've been running this on my 5350 for a couple weeks with no obvious 
-> problems (and only one instance where my phone worked but my laptop 
-> didn't, and that was fixed by reassociating).
-> 
-> Thanks so much for making this available!
-> 
-Very happy to hear that and thanks for let us know.Sorry for taking so
-long for the release.
+Fast channel change fixes:
+    
+a) Always set OFDM timings
+b) Don't re-activate PHY
+c) Enable only NF calibration, not AGC
 
-Wey
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
+---
+ drivers/net/wireless/ath/ath5k/phy.c |  142 +++++++++++++++++++++-------------
+ 1 files changed, 87 insertions(+), 55 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 78c26fd..d673ab2 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -282,6 +282,34 @@ int ath5k_hw_phy_disable(struct ath5k_hw *ah)
+ 	return 0;
+ }
+ 
++/*
++ * Wait for synth to settle
++ */
++static void ath5k_hw_wait_for_synth(struct ath5k_hw *ah,
++			struct ieee80211_channel *channel)
++{
++	/*
++	 * On 5211+ read activation -> rx delay
++	 * and use it (100ns steps).
++	 */
++	if (ah->ah_version != AR5K_AR5210) {
++		u32 delay;
++		delay = ath5k_hw_reg_read(ah, AR5K_PHY_RX_DELAY) &
++			AR5K_PHY_RX_DELAY_M;
++		delay = (channel->hw_value & CHANNEL_CCK) ?
++			((delay << 2) / 22) : (delay / 10);
++		if (ah->ah_bwmode == AR5K_BWMODE_10MHZ)
++			delay = delay << 1;
++		if (ah->ah_bwmode == AR5K_BWMODE_5MHZ)
++			delay = delay << 2;
++		/* XXX: /2 on turbo ? Let's be safe
++		 * for now */
++		udelay(100 + delay);
++	} else {
++		mdelay(1);
++	}
++}
++
+ 
+ /**********************\
+ * RF Gain optimization *
+@@ -3237,6 +3265,13 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		/* Failed */
+ 		if (i >= 100)
+ 			return -EIO;
++
++		/* Set channel and wait for synth */
++		ret = ath5k_hw_channel(ah, channel);
++		if (ret)
++			return ret;
++
++		ath5k_hw_wait_for_synth(ah, channel);
+ 	}
+ 
+ 	/*
+@@ -3251,13 +3286,53 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	if (ret)
+ 		return ret;
+ 
++	/* Write OFDM timings on 5212*/
++	if (ah->ah_version == AR5K_AR5212 &&
++		channel->hw_value & CHANNEL_OFDM) {
++
++		ret = ath5k_hw_write_ofdm_timings(ah, channel);
++		if (ret)
++			return ret;
++
++		/* Spur info is available only from EEPROM versions
++		 * greater than 5.3, but the EEPROM routines will use
++		 * static values for older versions */
++		if (ah->ah_mac_srev >= AR5K_SREV_AR5424)
++			ath5k_hw_set_spur_mitigation_filter(ah,
++							    channel);
++	}
++
++	/* If we used fast channel switching
++	 * we are done, release RF bus and
++	 * fire up NF calibration.
++	 *
++	 * Note: Only NF calibration due to
++	 * channel change, not AGC calibration
++	 * since AGC is still running !
++	 */
++	if (fast) {
++		/*
++		 * Release RF Bus grant
++		 */
++		AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_RFBUS_REQ,
++				    AR5K_PHY_RFBUS_REQ_REQUEST);
++
++		/*
++		 * Start NF calibration
++		 */
++		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
++					AR5K_PHY_AGCCTL_NF);
++
++		return ret;
++	}
++
+ 	/*
+ 	 * For 5210 we do all initialization using
+ 	 * initvals, so we don't have to modify
+ 	 * any settings (5210 also only supports
+ 	 * a/aturbo modes)
+ 	 */
+-	if ((ah->ah_version != AR5K_AR5210) && !fast) {
++	if (ah->ah_version != AR5K_AR5210) {
+ 
+ 		/*
+ 		 * Write initial RF gain settings
+@@ -3276,22 +3351,6 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		if (ret)
+ 			return ret;
+ 
+-		/* Write OFDM timings on 5212*/
+-		if (ah->ah_version == AR5K_AR5212 &&
+-			channel->hw_value & CHANNEL_OFDM) {
+-
+-			ret = ath5k_hw_write_ofdm_timings(ah, channel);
+-			if (ret)
+-				return ret;
+-
+-			/* Spur info is available only from EEPROM versions
+-			 * greater than 5.3, but the EEPROM routines will use
+-			 * static values for older versions */
+-			if (ah->ah_mac_srev >= AR5K_SREV_AR5424)
+-				ath5k_hw_set_spur_mitigation_filter(ah,
+-								    channel);
+-		}
+-
+ 		/*Enable/disable 802.11b mode on 5111
+ 		(enable 2111 frequency converter + CCK)*/
+ 		if (ah->ah_radio == AR5K_RF5111) {
+@@ -3322,47 +3381,20 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	 */
+ 	ath5k_hw_reg_write(ah, AR5K_PHY_ACT_ENABLE, AR5K_PHY_ACT);
+ 
++	ath5k_hw_wait_for_synth(ah, channel);
++
+ 	/*
+-	 * On 5211+ read activation -> rx delay
+-	 * and use it.
++	 * Perform ADC test to see if baseband is ready
++	 * Set tx hold and check adc test register
+ 	 */
+-	if (ah->ah_version != AR5K_AR5210) {
+-		u32 delay;
+-		delay = ath5k_hw_reg_read(ah, AR5K_PHY_RX_DELAY) &
+-			AR5K_PHY_RX_DELAY_M;
+-		delay = (channel->hw_value & CHANNEL_CCK) ?
+-			((delay << 2) / 22) : (delay / 10);
+-		if (ah->ah_bwmode == AR5K_BWMODE_10MHZ)
+-			delay = delay << 1;
+-		if (ah->ah_bwmode == AR5K_BWMODE_5MHZ)
+-			delay = delay << 2;
+-		/* XXX: /2 on turbo ? Let's be safe
+-		 * for now */
+-		udelay(100 + delay);
+-	} else {
+-		mdelay(1);
+-	}
+-
+-	if (fast)
+-		/*
+-		 * Release RF Bus grant
+-		 */
+-		AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_RFBUS_REQ,
+-				    AR5K_PHY_RFBUS_REQ_REQUEST);
+-	else {
+-		/*
+-		 * Perform ADC test to see if baseband is ready
+-		 * Set tx hold and check adc test register
+-		 */
+-		phy_tst1 = ath5k_hw_reg_read(ah, AR5K_PHY_TST1);
+-		ath5k_hw_reg_write(ah, AR5K_PHY_TST1_TXHOLD, AR5K_PHY_TST1);
+-		for (i = 0; i <= 20; i++) {
+-			if (!(ath5k_hw_reg_read(ah, AR5K_PHY_ADC_TEST) & 0x10))
+-				break;
+-			udelay(200);
+-		}
+-		ath5k_hw_reg_write(ah, phy_tst1, AR5K_PHY_TST1);
++	phy_tst1 = ath5k_hw_reg_read(ah, AR5K_PHY_TST1);
++	ath5k_hw_reg_write(ah, AR5K_PHY_TST1_TXHOLD, AR5K_PHY_TST1);
++	for (i = 0; i <= 20; i++) {
++		if (!(ath5k_hw_reg_read(ah, AR5K_PHY_ADC_TEST) & 0x10))
++			break;
++		udelay(200);
+ 	}
++	ath5k_hw_reg_write(ah, phy_tst1, AR5K_PHY_TST1);
+ 
+ 	/*
+ 	 * Start automatic gain control calibration
