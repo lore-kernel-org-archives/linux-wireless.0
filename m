@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43077 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277Ab1BPSnO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 13:43:14 -0500
-Received: by fxm20 with SMTP id 20so1707894fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 10:43:13 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: implement flush callback
-Date: Wed, 16 Feb 2011 19:43:06 +0100
-Cc: linville@tuxdriver.com
+Received: from mx1.redhat.com ([209.132.183.28]:22391 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751787Ab1BDGa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 01:30:56 -0500
+Date: Fri, 4 Feb 2011 07:29:41 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	george0505 <george0505@realtek.com>,
+	"'Zhaoming_Li'" <chaoming_li@realsil.com.cn>
+Subject: Re: [RFC/RFT 1/8] rtlwifi: Prepare core for addition of USB driver
+Message-ID: <20110204062940.GA2222@redhat.com>
+References: <1296411100-5675-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1296411100-5675-2-git-send-email-Larry.Finger@lwfinger.net>
+ <20110203102552.GB3516@redhat.com>
+ <4D4B7D92.7000402@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201102161943.07076.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D4B7D92.7000402@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index d176afa..a3171e3 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -524,6 +524,48 @@ static int p54_get_survey(struct ieee80211_hw *dev, int idx,
- 	return 0;
- }
- 
-+static unsigned int p54_flush_count(struct p54_common *priv)
-+{
-+	unsigned int total = 0, i;
-+
-+	BUILD_BUG_ON(P54_QUEUE_NUM > ARRAY_SIZE(priv->tx_stats));
-+
-+	/*
-+	 * Because the firmware has the sole control over any frames
-+	 * in the P54_QUEUE_BEACON or P54_QUEUE_SCAN queues, they
-+	 * don't really count as pending or active.
-+	 */
-+	for (i = P54_QUEUE_MGMT; i < P54_QUEUE_NUM; i++)
-+		total += priv->tx_stats[i].len;
-+	return total;
-+}
-+
-+static void p54_flush(struct ieee80211_hw *dev, bool drop)
-+{
-+	struct p54_common *priv = dev->priv;
-+	unsigned int total, i;
-+
-+	/*
-+	 * Currently, it wouldn't really matter if we wait for one second
-+	 * or 15 minutes. But once someone gets around and completes the
-+	 * TODOs [ancel stuck frames / reset device] in p54_work, it will
-+	 * suddenly make sense to wait that long.
-+	 */
-+	i = P54_STATISTICS_UPDATE * 2 / 20;
-+
-+	/*
-+	 * In this case no locking is required because as we speak the
-+	 * queues have already been stopped and no new frames can sneak
-+	 * up from behind.
-+	 */
-+	while ((total = p54_flush_count(priv) && i--)) {
-+		/* waste time */
-+		msleep(20);
-+	}
-+
-+	WARN(total, "tx flush timeout, unresponsive firmware");
-+}
-+
- static const struct ieee80211_ops p54_ops = {
- 	.tx			= p54_tx_80211,
- 	.start			= p54_start,
-@@ -536,6 +578,7 @@ static const struct ieee80211_ops p54_ops = {
- 	.sta_remove		= p54_sta_add_remove,
- 	.set_key		= p54_set_key,
- 	.config			= p54_config,
-+	.flush			= p54_flush,
- 	.bss_info_changed	= p54_bss_info_changed,
- 	.configure_filter	= p54_configure_filter,
- 	.conf_tx		= p54_conf_tx,
+Hi Larry
+
+On Thu, Feb 03, 2011 at 10:16:18PM -0600, Larry Finger wrote:
+> >> +static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
+> >> +					  u16 value, u16 index, void *pdata,
+> >> +					  u16 len, u8 requesttype)
+> >> +{
+> >> +	int rc;
+> >> +	unsigned int pipe;
+> >> +	u8 reqtype;
+> >> +	struct usb_ctrlrequest *dr;
+> >> +	struct urb *urb;
+> >> +	struct rtl819x_async_write_data {
+> >> +		u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
+> >> +		struct usb_ctrlrequest dr;
+> >> +	} *buf;
+> >> +
+> >> +	if (requesttype == VENDOR_READ) {
+> >> +		pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
+> >> +		reqtype =  REALTEK_USB_VENQT_READ;
+> > This is not needed, or function should be named differently not _async_write.
+> 
+> This one I do not understand. The function does do an asynchronous write. Please
+> explain.
+If function do "write", then requesttype argument should be removed, and
+dr->bRequestType = REALTEK_USB_VENQT_WRITE should be hardcoded.
+
+> >> +	wvalue = (u16)(addr&0x0000ffff);
+> >> +	_usbctrl_vendorreq_sync(udev, request, wvalue, index, data, len,
+> >> +				requesttype);
+> >> +	ret = (le32_to_cpu(*data) & (0xffffffff >> ((4 - len) * 8)));
+> > Ok, BYTEMASK can be used, but what mean this magic? 
+> 
+> As the output of this routine is always cast with (u8) when len is 1 and (u16)
+> when len is 2, I think the magic can just disappear and ret can simply be
+> 
+> 	ret = le32_to_cpu(*data);
+Good.
+
+> I will test and have contacted the original author. There is similar magic in
+> _usb_write_async() that can also disappear.
+> 
+> >> +
+> >> +	 /* IBSS */
+> >> +	 mac->beacon_interval = 100;
+> >> +
+> >> +	 /* AMPDU */
+> >> +	 mac->min_space_cfg = 0;
+> >> +	 mac->max_mss_density = 0;
+> > Spaces.
+> 
+> Please explain what you mean by "spaces".
+I guess I should wrote "indention". On that lines, there in one space
+after tab :-)
+
+Thanks for working on my remarks.
+Stanislaw
