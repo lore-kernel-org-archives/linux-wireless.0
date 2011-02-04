@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50412 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504Ab1BXJJq (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40544 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462Ab1BDHh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 04:09:46 -0500
-Received: by fxm17 with SMTP id 17so327541fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 01:09:45 -0800 (PST)
-Message-ID: <4D662054.5070100@gmail.com>
-Date: Thu, 24 Feb 2011 10:09:40 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
+	Fri, 4 Feb 2011 02:37:58 -0500
+Received: by iwn9 with SMTP id 9so1889291iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 23:37:58 -0800 (PST)
 MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	Lars Uebernickel <larsuebernickel@gmx.de>,
-	peter sikking <peter@mmiworks.net>
-Subject: Re: Google Summer of Code 2011 - Project ideas page for the Linux
- Foundation online
-References: <4D5DA039.9010907@gmail.com>	<AANLkTikq2XA9c9FUQJ3cv7xjL69J=tHxLdwj8fiNnmhN@mail.gmail.com> <AANLkTikkv0QbzoHv_Z8cdDp7g67oG57tN7QaZv8NH4Na@mail.gmail.com>
-In-Reply-To: <AANLkTikkv0QbzoHv_Z8cdDp7g67oG57tN7QaZv8NH4Na@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1296800640-6381-2-git-send-email-vnatarajan@atheros.com>
+References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com> <1296800640-6381-2-git-send-email-vnatarajan@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 3 Feb 2011 23:37:38 -0800
+Message-ID: <AANLkTikqBvB6+bwKRPFb+oSstzbR9K=bdmjK-D76D23Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mac80211: Fix a race on enabling power save.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2011 01:52 AM, Hin-Tak Leung wrote:
-> P.S. Till: please feel free to recycle past unfinished ideas and sign
-> me up as possible mentors of relevant printer-stuff projects
+On Thu, Feb 3, 2011 at 10:24 PM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+> There is a race of queuing a data frame before the tx completion
+> of nullfunc frame for enabling power save. This has caused a power
+> save state mismatch between the station and the AP. This patch
+> addresses this issue.
 >
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 
-I am already doing so. Everything which did not get taken last year I 
-have reposted this year. Feel free to edit your entries to update or to 
-make it more attractive.
+Not stable fix? What't the effect of not having this patch? The
+description could use some love to explain better what is observed in
+terms of metrics or loss.
 
-    Till
+  Luis
