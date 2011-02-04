@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sv1.nifty.com ([220.209.183.60]:28568 "EHLO
-	defg302.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755315Ab1BNBXO (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:52287 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009Ab1BDLHZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 20:23:14 -0500
-Received: from pbsg500.nifty.com (pbsg500p.nifty.com [172.22.128.70])by defg302.nifty.com with ESMTP id p1E1K0Y0011820
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 10:20:00 +0900
-Received: from [127.0.0.1] (himob2-p36.iem.hi-ho.ne.jp [203.180.25.36]) (authenticated)
-	by pbsg500.nifty.com with ESMTP id p1E1JWgh032501
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 10:19:34 +0900
-Date: Mon, 14 Feb 2011 10:19:27 +0900
-From: Masahiro Inoue <miyabi.-.inoue@nifty.com>
-To: linux-wireless@vger.kernel.org
-Subject: Build Error Report(zd1211rw)
-Message-Id: <20110214101925.9EC3.2E210E2F@nifty.com>
+	Fri, 4 Feb 2011 06:07:25 -0500
+Received: by pxi15 with SMTP id 15so384870pxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 03:07:24 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19787.56808.340852.289586@gargle.gargle.HOWL>
+Date: Fri, 4 Feb 2011 16:37:20 +0530
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
+In-Reply-To: <AANLkTimfONC20SyM=OA9Fykkt91ZsU19XEBiC7uDnVY8@mail.gmail.com>
+References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
+	<19787.47298.50879.401166@gargle.gargle.HOWL>
+	<AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
+	<19787.54182.293274.705139@gargle.gargle.HOWL>
+	<AANLkTimfONC20SyM=OA9Fykkt91ZsU19XEBiC7uDnVY8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Vivek Natarajan wrote:
+> This is true for retry_tx set as false(for ath_draintxq) but if the
+> retry is set, I suppose the frame will be in the hw queue till all the
+> hw retries(20) and sw retries(10) (200 retries in total)are over. This
+> will take a lot of time for completion if the channel is busy.
 
-The build error occurs by compat-wireless-2011-02-12.
-My kernel is 2.6.27. 
+Time for completion ? We are _draining_ the pending frames, they are never
+sent out ...
 
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.o
-/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.c: In function 'zd_mac_config_beacon':
-/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.c:781: error: implicit declaration of function 'usb_queue_reset_device'
-make[4]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.o] Error 1
-make[3]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw] Error 2
-make[2]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless] Error 2
-make[1]: *** [_module_/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.27-67vl5-x86_64'
-make: *** [modules] Error 2
+> I am thinking of calling ath_drain_all_txq() in flush() and the only
+> query is should the retry_tx be set.
 
+Not sure.
 
+Sujith
