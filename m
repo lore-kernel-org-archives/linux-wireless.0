@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37708 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751293Ab1B0VT0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 16:19:26 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, chunkeey@googlemail.com
-Subject: [PATCH] p54: fix a NULL pointer dereference bug
-Date: Sun, 27 Feb 2011 22:19:22 +0100
-Message-Id: <1298841562-62496-1-git-send-email-nbd@openwrt.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50561 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857Ab1BDO20 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 09:28:26 -0500
+Received: by wwa36 with SMTP id 36so2409526wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 06:28:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1296828506.3671.8.camel@jlt3.sipsolutions.net>
+References: <1296822326-4878-1-git-send-email-vnatarajan@atheros.com>
+	<1296824920.3671.4.camel@jlt3.sipsolutions.net>
+	<1296825156.3671.7.camel@jlt3.sipsolutions.net>
+	<AANLkTim+g=qT1JHyK9--Tqw=NfE_ccFL+hiYzwz-m-V_@mail.gmail.com>
+	<1296828506.3671.8.camel@jlt3.sipsolutions.net>
+Date: Fri, 4 Feb 2011 19:58:13 +0530
+Message-ID: <AANLkTi=oExUyV0VCmJL7QEr2fWXBmhmTXZj43muGw-O-@mail.gmail.com>
+Subject: Re: [PATCH v2] mac80211: Fix a race on enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the RSSI calibration table was not found or not parsed properly,
-priv->rssi_db will be NULL, p54_rssi_find needs to be able to deal
-with that.
+On Fri, Feb 4, 2011 at 7:38 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2011-02-04 at 18:58 +0530, Vivek Natarajan wrote:
+>> On Fri, Feb 4, 2011 at 6:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2011-02-04 at 14:08 +0100, Johannes Berg wrote:
+>> > Ok maybe I see how this helps -- but I don't think it's race-free. When
+>> > the PS-pending flag is cleared here, the code above that checks it might
+>> > already have passed and be in the driver callback or so.
+>>
+>> When it is in the driver callback, IEEE80211_CONF_PS would have been
+>> set and when this is set, ieee80211_tx_h_dynamic_ps will disable PS
+>> and there wont be any discrepancy in power save states between AP and
+>> the station.
+>
+> Indeed, but the trace still exists between checking PS_PENDING and
+> setting CONF_PS.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/p54/eeprom.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Agreed. :)
+I will try this out and test a bit:
+>
+> Maybe the subif queues should be stopped, then flush, then tx nullfunc,
+> then stop all queues to configure the HW or something like that?
+>
+> johannes
+>
 
-diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
-index f54e15f..13d750d 100644
---- a/drivers/net/wireless/p54/eeprom.c
-+++ b/drivers/net/wireless/p54/eeprom.c
-@@ -524,10 +524,13 @@ err_data:
- 
- struct p54_rssi_db_entry *p54_rssi_find(struct p54_common *priv, const u16 freq)
- {
--	struct p54_rssi_db_entry *entry = (void *)(priv->rssi_db->data +
--						   priv->rssi_db->offset);
-+	struct p54_rssi_db_entry *entry;
- 	int i, found = -1;
- 
-+	if (!priv->rssi_db)
-+		return &p54_rssi_default;
-+
-+	entry = (void *)(priv->rssi_db->data + priv->rssi_db->offset);
- 	for (i = 0; i < priv->rssi_db->entries; i++) {
- 		if (!same_band(freq, entry[i].freq))
- 			continue;
--- 
-1.7.3.2
-
+Thanks
+Vivek.
