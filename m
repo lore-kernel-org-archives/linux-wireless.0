@@ -1,39 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:55908 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751365Ab1BPUHK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47588 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab1BDMdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 15:07:10 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 2BD4A5401D1
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 15:10:02 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-16 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110216200709.21FD0434D6@repository3.orbit-lab.org>
-Date: Wed, 16 Feb 2011 15:07:08 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 4 Feb 2011 07:33:25 -0500
+Received: from wireless by sipsolutions.net with local (Exim 4.72)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1PlKqr-0001j4-1U
+	for linux-wireless@vger.kernel.org; Fri, 04 Feb 2011 13:33:25 +0100
+Date: Fri, 04 Feb 2011 13:33:25 +0100
+Message-Id: <E1PlKqr-0001j4-1U@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v0.9.22
+Reply-to: linux-wireless@vger.kernel.org
+From: wireless@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + a57cb3b...b205214 akpm-end   -> origin/akpm-end  (forced update)
-   795abaf..b90be86  akpm-start -> origin/akpm-start
-   1136027..47db34d  history    -> origin/history
- + b7bbcc2...f54bb7e master     -> origin/master  (forced update)
-   795abaf..b90be86  stable     -> origin/stable
- * [new tag]         next-20110216 -> next-20110216
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-compat-wireless code metrics
+A new release of iw (v0.9.22) is available at:
 
-    787872 - Total upstream lines of code being pulled
-      2093 - backport code changes
-      1831 - backport code additions
-       262 - backport code deletions
-      7292 - backport from compat module
-      9385 - total backport code
-    1.1912 - % of code consists of backport work
+http://wireless.kernel.org/download/iw/iw-0.9.22.tar.bz2
+
+SHA1 sum: a91226daab473d1aa0b6586c61f1c62db9618b7d
+
+Here is the short log of the changes included in this 
+release:
+
+Bill Jordan (1):
+      iw: new command to set the wds peer
+
+Bruno Randolf (5):
+      iw: print station retry counters
+      iw: Add ibss join parameter for beacon interval
+      iw: Add antenna configuration commands
+      iw: Add antenna configuration
+      iw: Add signal average to station dump information
+
+Felix Fietkau (3):
+      iw: survey: Mark frequency in use
+      iw: Add channel busy time to survey
+      iw: add multicast rates to IBSS join
+
+Jochen Friedrich (1):
+      iw: Implement set 4addr.
+
+Johannes Berg (25):
+      fix NL80211_ATTR_MAX_SCAN_IE_LEN attribute size
+      flush stdout after each event
+      parse RSN IE information on PMKIDs and mgmt cipher suite
+      update nl80211.h
+      add p2p interface types
+      fix some indentation
+      event parsing: remove PARSE_BEACON_CHAN
+      update nl80211.h
+      clean up some messages
+      events: allow relative timestamps
+      genl: include genetlink.h explicitly
+      update nl80211.h
+      allow sub-command selection
+      Revert "update nl80211.h"
+      Revert "iw: Add antenna configuration commands"
+      mesh: allow getting all parameters at once
+      mesh: allow setting multiple parameters at once
+      update nl80211.h
+      mesh: support join/leave
+      mesh: add support for NL80211_MESHCONF_ELEMENT_TTL
+      update nl80211.h
+      parse NL80211_ATTR_CQM_PKT_LOSS_EVENT
+      add unprot events
+      add more command names
+      version 0.9.22
+
+Jouni Malinen (1):
+      iw: parse michael MIC failure event
+
+Luis R. Rodriguez (2):
+      iw: print out eirp for triplets on scan
+      iw: fix country print
+
