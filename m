@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59547 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755751Ab1BIXKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 18:10:15 -0500
-Subject: Re: SSB AI support code
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: George Kashperko <george@znau.edu.ua>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com> (sfid-20110209_235402_132054_FFFFFFFFCF302BC4)
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-	 <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
-	 <1297288286.9734.28.camel@maggie>
-	 <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
-	 (sfid-20110209_235402_132054_FFFFFFFFCF302BC4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Feb 2011 00:10:08 +0100
-Message-ID: <1297293008.9734.45.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:55458 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085Ab1BDRWu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 12:22:50 -0500
+Received: by iyj18 with SMTP id 18so2344255iyj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 09:22:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <loom.20110204T175104-690@post.gmane.org>
+References: <201101191438.01161.alexander.simon@saxnet.de>
+	<loom.20110204T175104-690@post.gmane.org>
+Date: Fri, 4 Feb 2011 12:22:49 -0500
+Message-ID: <AANLkTimSSn=Drij5uvhy0p0iPghrySSv9B4raa9fRn9O@mail.gmail.com>
+Subject: Re: [RFC] mac80211: support for IEEE80211N in IBSS
+From: Brian Prodoehl <bprodoehl@gmail.com>
+To: Baldomero Coll <baldo.ath9k@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-09 at 23:53 +0100, RafaÅ‚ MiÅ‚ecki wrote: 
-> OK, I think I'll need some your help with better understanding SSB.
-> 
-> AFAIK SSB is "box" (ssb_bus) containing cores (ssb_devices).
+On Fri, Feb 4, 2011 at 12:10 PM, Baldomero Coll <baldo.ath9k@gmail.com> wrote:
+>
+> 1)When I join/create the HT IBSS network (iw dev wlan0 ibss join baldoHT 2412
+> HT20),my wireless card tries to scan and create several network with different
+> BSSID. [1]
+>
+> This command [*] should create it.
+>
+> 2)And if I join/create the HT IBSS network adding fixed-freq and fixed-BSSID it
+> happends the same! [2].
+>
+> Based on the command [*], why it tries to create new BSSIDs?
+>
+> [*]
+> Join the IBSS cell with the given SSID, if it doesn't exist create it on the
+> given frequency. When fixed frequency is requested, don't join/create a cell on
+> a different frequency. When a fixed BSSID is requested use that BSSID and do not
+> adopt another cell's BSSID even if it has higher TSF and the same SSID.
+>
+> [1]
+> Feb  4 17:47:29 uwicore-desktop kernel: [ 3618.354382] wlan0: Creating new IBSS
+> network, BSSID 5a:48:a7:db:3d:e5
+> Feb  4 17:47:30 uwicore-desktop wpa_supplicant[900]: No network configuration
+> found for the current AP
+> ...
+> Feb  4 17:49:31 uwicore-desktop kernel: [ 3739.988024] wlan0: Trigger new scan
+> to find an IBSS to join
+> Feb  4 17:49:41 uwicore-desktop kernel: [ 3750.263484] wlan0: Creating new IBSS
+> network, BSSID 52:89:c5:d0:53:19
+> Feb  4 17:49:42 uwicore-desktop wpa_supplicant[900]: No network configuration
+> found for the current AP
+> Feb  4 17:49:44 uwicore-desktop kernel: [ 3753.000025] wlan0: Trigger new scan
+> to find an IBSS to join
+>
+> [2]
+> Feb  4 17:55:17 uwicore-desktop kernel: [ 4085.420015] wlan0: Creating new IBSS
+> network, BSSID 11:11:11:11:11:11
+> Feb  4 17:55:17 uwicore-desktop wpa_supplicant[900]: No network configuration
+> found for the current AP
+> Feb  4 17:55:19 uwicore-desktop kernel: [ 4087.988026] wlan0: Trigger new scan
+> to find an IBSS to join
+> Feb  4 17:55:29 uwicore-desktop kernel: [ 4098.274430] wlan0: Creating new IBSS
+> network, BSSID 8a:28:f2:8f:0f:b4
+> Feb  4 17:55:30 uwicore-desktop wpa_supplicant[900]: No network configuration
+> found for the current AP
+> Feb  4 17:55:32 uwicore-desktop kernel: [ 4101.000037] wlan0: Trigger new scan
+> to find an IBSS to join
+> Feb  4 17:55:42 uwicore-desktop kernel: [ 4111.282690] wlan0: Creating new IBSS
+> network, BSSID ee:35:37:46:4c:66
+>
+>
+> Baldomero Coll
 
-SSB and AI are just simple interconnects that can be used on-chip
-or on embedded boards. The devices connected to this interconnect
-(or bus) are the "cores".
+So, are you using iw, or are you using wpa_supplicant?  Your previous
+email had the iw command, but now this email has a warning message
+coming out of wpa_supplicant.  Do you have NetworkManager running?  I
+have no problems setting up an 802.11n IBSS network using iw.
 
-> How do we talk with SSB? Is this that magic "Hostbus"? What does it
-> mean? Do we use one of the cores of ssb_bus to talk? Is this why I see
-> "ssb: Core 2 found: PCI-E (cc 0x820, rev 0x02, vendor 0x4243)"? If
-> only one core can be selected at time, how is this possible we selecre
-> 802.11 core and we are still able to talk with SSB?
-
-That completely depends on what hostbus we're on. It's completely hidden
-by SSB's I/O ops. For the trivial case without any hostbus (embedded),
-the cores
-are simply mapped into MMIO one after another. For the PCI hostbus case,
-the MMIO has to be remapped (through PCI config space) on each
-core switch. (Core switches are completely hidden from the device 
-drivers). PCMCIA and SDIO are similar.
-
-> What are the other cores for? Why do we need driver for chipcommon,
-> mipscore? Are that cores internally accessed by 80211 core?
-
-The chipcommon is a management core for the interconnect.
-
-Device drivers are (mostly) distinct. There are a few exceptions.
-Built-in device drivers (drivers/ssb/driver_....c) have some
-interdependencies. However, b43, b44 and ssb-gige are completely
-independent, for example.
-
-> What is that whole AI? Is that replacement for SSB? Does it also
-> contains cores? What AI and SSB share?
-
-It is a replacement that shares some register API and design
-decisions with SSB.
-People who worked some time with broadcom stuff will recognize the
-pattern: Take old stuff -> redesign it -> put lots of workarounds
-and patching layers on top of it to be theoretically compatible
-with old code -> fail at being fully compatible -> release it.
-
--- 
-Greetings Michael.
-
+-Brian
