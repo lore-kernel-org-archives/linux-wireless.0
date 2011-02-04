@@ -1,63 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:36086 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755001Ab1BBTJD (ORCPT
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:39656 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751843Ab1BDOGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 14:09:03 -0500
-Received: by qyk12 with SMTP id 12so319612qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 11:09:02 -0800 (PST)
+	Fri, 4 Feb 2011 09:06:15 -0500
+Message-ID: <20110204160608.20567gbpmp95luq8@hayate.sektori.org>
+Date: Fri, 04 Feb 2011 16:06:08 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: Re: [PATCH 00/22] zd1211rw: add support for AP-mode
+References: <20110131184657.10044.98610.stgit@fate.lan>
+In-Reply-To: <20110131184657.10044.98610.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <874o8mbaec.fsf@purkki.adurom.net>
-References: <201101311600.39486.IvDoorn@gmail.com>
-	<874o8mbaec.fsf@purkki.adurom.net>
-Date: Wed, 2 Feb 2011 20:09:02 +0100
-Message-ID: <AANLkTikKevPWkWMu=HLPHt-jACLZLQzqN6thr-2LNk59@mail.gmail.com>
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in
- powersave mode
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>,
-	RA-Dennis Lee <Dennis_Lee@ralinktech.com>,
-	RA-Eddy Tsai <Eddy_Tsai@ralinktech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello,
 
->> Add a delayed work structure which can be used to wakeup the device
->> just before a beacon from the AP is expected. This then allows the
->> device to receive the beacon, check if there are pending broadcast
->> or multicast frames.
+Is this too much, should I split fixes (oops and device reset for  
+TX-stall) to separate patchset?
+
+OOPS fixed by first patch and TX-stall/device freeze under heavy load  
+happens in station mode (and AP, probably adhoc too). Heavy load here  
+means connected at rate 54Mbit, with iperf running both ways, freezes  
+usually with in ~20 minutes.
+
+-Jussi
+
+Quoting Jussi Kivilinna <jussi.kivilinna@mbnet.fi>:
+
+> This patchset adds AP-mode support to zd1211rw. Tested with zd1211b  
+> devices only.
 >
-> So the firmware/hardware doesn't have support for tracking and waking
-> up for beacons? I didn't even know that such hardware exists :) Waking
-> up for beacons from host sounds very inefficient and unrealiable. All
-> the devices I have seen either do this in firmware or hardware due to
-> time constraints. Even at76c50x-usb, which is ancient, does all this
-> in firmware.
+> Patches are mix of fixes and AP support adding code.
+>    [1-2]  fix oopses noticed while testing
+>      [3]  add missing locking
+>      [4]  fix beacon setup to match vendor driver (needed for AP mode)
+>    [5-6]  'may sleep' cleanups, move code from workers to mac80211-functions
+>   [7-11]  AP-mode supporting code
+>  [12-16]  beacon setup fixes/workarounds
+>  [17-20]  device reset and device/TX/RX stall workarounds
+>     [21]  enable AP mode
+>     [22]  add more debuging output
 >
-> Are you sure there's no way to do this with hardware?
-
-Well the official Ralink driver also uses a timer to wakeup the hardware,
-there are however registers which suggest support for autowake functionality.
-
-Jay, Dennis, Eddy, can you explain a but how the autowake functionality is
-implemented in the rt2800usb firmware?
-
->> TODO: Split out mac80211 changes into a separate patch. We also need
->> to know if we need this check in mac80211 or in the driver.
->> Personally I think the check belongs in mac80211, but at this time
->> that work has been deferred to the drivers. However this means that
->> a lot of logic is needed in the driver to check if the correct IE is
->> available, and then check the value, while mac80211 will obtains
->> that exact IE anyway during RX processing anyway...
+> ---
 >
-> I'm worried that client power save support in mac80211 is getting
-> quite complex already. How many drivers need this feature?
+> Christian Lamparter (1):
+>       mac80211: fix race between next beacon dtim and  
+> ieee80211_get_buffered_bc
+>
+> Jussi Kivilinna (21):
+>       zd1211rw: use urb anchors for tx and fix tx-queue disabling
+>       zd1211rw: cancel process_intr work on zd_chip_disable_int()
+>       zd1211rw: add locking for mac->process_intr
+>       zd1211rw: fix beacon interval setup
+>       zd1211rw: move set_multicast_hash and set_rx_filter from  
+> workers to configure_filter
+>       zd1211rw: move set_rts_cts_work to bss_info_changed
+>       zd1211rw: support setting BSSID for AP mode
+>       zd1211rw: fix ack_pending in filter_ack causing tx-packet  
+> ordering problem on monitor
+>       zd1211rw: let zd_set_beacon_interval() set dtim_period and add  
+> AP-beacon flag
+>       zd1211rw: implement beacon fetching and handling  
+> ieee80211_get_buffered_bc()
+>       zd1211rw: add beacon watchdog and setting HW beacon more failsafe
+>       zd1211rw: batch beacon config commands together
+>       [v2] zd1211rw: use stack and preallocated memory for small cmd-buffers
+>       zd1211rw: change interrupt URB buffer to DMA buffer
+>       zd1211rw: lower hw command timeouts
+>       zd1211rw: collect driver settings and add function to restore theim
+>       zd1211rw: add TX watchdog and device resetting
+>       zd1211rw: reset device when CR_BCN_FIFO_SEMAPHORE freezes in  
+> beacon setup
+>       zd1211rw: reset rx urbs after idle period of 30 seconds
+>       zd1211rw: enable NL80211_IFTYPE_AP
+>       zd1211rw: add useful debug output
+>
+>
+>  drivers/net/wireless/zd1211rw/zd_chip.c |  134 ++++++---
+>  drivers/net/wireless/zd1211rw/zd_chip.h |    5
+>  drivers/net/wireless/zd1211rw/zd_mac.c  |  448  
+> ++++++++++++++++++++++++-------
+>  drivers/net/wireless/zd1211rw/zd_mac.h  |   24 +-
+>  drivers/net/wireless/zd1211rw/zd_usb.c  |  445  
+> ++++++++++++++++++++++++-------
+>  drivers/net/wireless/zd1211rw/zd_usb.h  |   30 ++
+>  net/mac80211/ieee80211_i.h              |    1
+>  net/mac80211/tx.c                       |    4
+>  8 files changed, 822 insertions(+), 269 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-At least rt2800usb and carl9170. But I haven't done a full round
-through all drivers though.
 
-Ivo
+
