@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:55725 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419Ab1BUCTP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60143 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414Ab1BDTJ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:19:15 -0500
-Received: by gyb11 with SMTP id 11so65408gyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:19:14 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52116.847107.354456@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:49:00 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 10/23] ath9k_htc: Use VIF from the packet's control data
+	Fri, 4 Feb 2011 14:09:29 -0500
+Subject: Re: [PATCH v9] mac80211: Optimize scans on current operating
+ channel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4D4C4C61.7060605@candelatech.com>
+References: <1296670694-28596-1-git-send-email-greearb@candelatech.com>
+	 <1296672941.5671.38.camel@jlt3.sipsolutions.net>
+	 <4D4C4C61.7060605@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Feb 2011 20:09:26 +0100
+Message-ID: <1296846566.3671.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Fri, 2011-02-04 at 10:58 -0800, Ben Greear wrote:
+> On 02/02/2011 10:55 AM, Johannes Berg wrote:
+> > On Wed, 2011-02-02 at 10:18 -0800, greearb@candelatech.com wrote:
+> >
+> >> * Do no blindly go off/on channel in work.c  Instead, only call
+> >>    appropriate on/off code when we really need to change channels.
+> >
+> > Based on the powersave comments I had earlier, maybe we should remove
+> > that bit for now? Work items here require powersave is disabled, but we
+> > won't do that right now if we're on the same channel.
+> >
+> > Scan, on the other hand, will still disable powersave (right?)
+> 
+> With regard to scanning and power-save:  If we are scanning on
+> channel, I think we should still be able to receive normal traffic.
+> 
+> The offchannel_ps_enable has this comment:
+> 
+> /*
+>   * inform AP that we will go to sleep so that it will buffer the frames
+>   * while we scan
+>   */
+> static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+> 
+> 
+> So, do we really need to call this method for on-channel scanning?
+> 
+> My naive assumption is that we would actually want the NIC to disable it's
+> local power-save logic while we are scanning so that it doesn't
+> get sleepy and miss beacons?
 
-There is no need to use a locally stored reference.
+Right. We don't need this for on-channel stuff. But we do need to
+disable PS for on-channel stuff as you point out.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 6ddcf93..04d8248 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -232,6 +232,7 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
- void ath9k_tx_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-+	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
-@@ -243,12 +244,16 @@ void ath9k_tx_tasklet(unsigned long data)
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		fc = hdr->frame_control;
- 		tx_info = IEEE80211_SKB_CB(skb);
-+		vif = tx_info->control.vif;
- 
- 		memset(&tx_info->status, 0, sizeof(tx_info->status));
- 
-+		if (!vif)
-+			goto send_mac80211;
-+
- 		rcu_read_lock();
- 
--		sta = ieee80211_find_sta(priv->vif, hdr->addr1);
-+		sta = ieee80211_find_sta(vif, hdr->addr1);
- 		if (!sta) {
- 			rcu_read_unlock();
- 			ieee80211_tx_status(priv->hw, skb);
-@@ -278,6 +283,7 @@ void ath9k_tx_tasklet(unsigned long data)
- 
- 		rcu_read_unlock();
- 
-+	send_mac80211:
- 		/* Send status to mac80211 */
- 		ieee80211_tx_status(priv->hw, skb);
- 	}
--- 
-1.7.4.1
+johannes
 
