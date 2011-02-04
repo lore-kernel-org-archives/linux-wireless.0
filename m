@@ -1,58 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:53881 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750725Ab1BZBri (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 20:47:38 -0500
-Date: Sat, 26 Feb 2011 12:47:29 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlegacy: change some symbols duplicated from iwlwifi
- directory
-Message-Id: <20110226124729.3bd3d75d.sfr@canb.auug.org.au>
-In-Reply-To: <20110225220504.GI15897@tuxdriver.com>
-References: <1298670606-1250-1-git-send-email-linville@tuxdriver.com>
-	<20110225220504.GI15897@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Sat__26_Feb_2011_12_47_29_+1100_cWpgFohn/VM+vtSY"
+Received: from external1.orbit-lab.org ([128.6.192.131]:57874 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752387Ab1BDUFw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 15:05:52 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 00096540155
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Feb 2011 15:08:18 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-04 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110204200551.537BC40F97@repository3.orbit-lab.org>
+Date: Fri,  4 Feb 2011 15:05:51 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Sat__26_Feb_2011_12_47_29_+1100_cWpgFohn/VM+vtSY
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 6224917...da7658b akpm-end   -> origin/akpm-end  (forced update)
+   afe8a88..831d52b  akpm-start -> origin/akpm-start
+   5a53652..d564fa0  history    -> origin/history
+ + 5ca3c5b...a2a5d7a master     -> origin/master  (forced update)
+   afe8a88..831d52b  stable     -> origin/stable
+ * [new tag]         next-20110204 -> next-20110204
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Hi John,
+compat-wireless code metrics
 
-On Fri, 25 Feb 2011 17:05:04 -0500 "John W. Linville" <linville@tuxdriver.c=
-om> wrote:
->
-> Sorry about the SPAM -- either I had some network issues here or I
-> _really_ meant for you to see this!! :-)
-
-Yeah, I go the message, thanks :-)
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Sat__26_Feb_2011_12_47_29_+1100_cWpgFohn/VM+vtSY
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJNaFuxAAoJEDMEi1NhKgbsVRYH/R9bbyAMkyNBLvxHa9nEDOru
-N8eqqMRkdVDI5IzZ+NIdrShxzUuzQZ61nW8P91HPJ/oFPTtSI+hckSr8Ob4iPfNs
-Beu3OAFbDbzqOGaVqK1O4uSOky5DuDqCW95T4ViDzkxEY0Kl6XTI1IBpoiUlfuxD
-AWwXPtupeuSY49VoxVHhOY0wJmdDrQrTDURGoTQ/XFgAVlv/HBiYvkQRI2VMFe9X
-RdE/33MCLvRGOLvYo6JpQg0vPVlKsne+U8dLyIMJdcsGRsCbm3nWsoQ9fpMu7KQA
-X5vojIyehfH4UW0NzD4lLtFpkKNph5a0oaDkg94x+RdQ7bDXATSLDPADptmnrXE=
-=p/KE
------END PGP SIGNATURE-----
-
---Signature=_Sat__26_Feb_2011_12_47_29_+1100_cWpgFohn/VM+vtSY--
+    786694 - Total upstream lines of code being pulled
