@@ -1,49 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:20352 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754891Ab1BSB20 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 20:28:26 -0500
-Date: Fri, 18 Feb 2011 17:25:36 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	akpm <akpm@linux-foundation.org>
-Subject: [PATCH -next] wl12xx: fix sdio_test kconfig/build errors
-Message-Id: <20110218172536.970b5b39.randy.dunlap@oracle.com>
-In-Reply-To: <20110217162650.092e77c3.sfr@canb.auug.org.au>
-References: <20110217162650.092e77c3.sfr@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nbd.name ([46.4.11.11]:36534 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098Ab1BDMFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 07:05:48 -0500
+Message-ID: <4D4BEB99.4060202@openwrt.org>
+Date: Fri, 04 Feb 2011 13:05:45 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Wireless regression (was 2.6.38-rc3: FUSE (sshfs) hangs under
+ load)
+References: <20110201175452.GB518@core.coreip.homeip.net> <E1PkbGG-0005Rf-QL@pomaz-ex.szeredi.hu> <20110202165236.GA3178@core.coreip.homeip.net> <20110203065541.GB5592@core.coreip.homeip.net> <E1Pkx7s-00073l-5B@pomaz-ex.szeredi.hu> <20110203194115.GA14159@core.coreip.homeip.net> <20110204064952.GA12914@core.coreip.homeip.net> <4D4BE5D7.8090202@openwrt.org>
+In-Reply-To: <4D4BE5D7.8090202@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On 2011-02-04 12:41 PM, Felix Fietkau wrote:
+> On 2011-02-04 7:49 AM, Dmitry Torokhov wrote:
+>> On Thu, Feb 03, 2011 at 11:41:15AM -0800, Dmitry Torokhov wrote:
+>>> On Thu, Feb 03, 2011 at 12:13:24PM +0100, Miklos Szeredi wrote:
+>>> > On Wed, 2 Feb 2011, Dmitry Torokhov wrote:
+>>> > > On Wed, Feb 02, 2011 at 08:52:36AM -0800, Dmitry Torokhov wrote:
+>>> > > > On Wed, Feb 02, 2011 at 12:52:36PM +0100, Miklos Szeredi wrote:
+>>> > > > > On Tue, 1 Feb 2011, Dmitry Torokhov wrote:
+>>> > > > > > Hi,
+>>> > > > > > 
+>>> > > > > > After installing 2.6.38-rc3 (plus a few input patches) sshfs started to
+>>> > > > > > misbehave on me under load. It starts off fine but when I try to compile
+>>> > > > > > a few modules against kernel sources residing on the other box the
+>>> > > > > > processes go into 'D' state and just sit there doing nothing.
+>>> > > > > 
+>>> > > > > Can you please post a stack trace from SysRq-T?
+>>> > > > > 
+>>> > > > 
+>> ...
+>>> > > 
+>>> > > OK, so here are the stack traces you requested. First one is snapshot of
+>>> > > when compile got stuck, the 2nd one is when I interrupted make which
+>>> > > caused gcc to go to 'D' state.
+>>> > 
+>>> > There doesn't appear anything abnormal there.
+>>> > 
+>>> > It's going into D state after it has received an interrupt and sent it
+>>> > along to the userspace filesystem.  Then it will go into
+>>> > uninterruptible sleep until the answer is received.
+>>> > 
+>>> > So the hang is because the answer to an open request is not being
+>>> > received.  I can't tell where it got stuck, apparently not anywhere on
+>>> > the local machine.
+>>> > 
+>>> > Can you please get a log from sshfs with "-odebug,sshfs_debug" and
+>>> > redirect stderr to a file?  That might tell a bit more about the
+>>> > situation.  Or it might not...
+>>> 
+>>> Hmm, it might be just the network itself, last night mutt in ssh session
+>>> froze on me as well. I guess I'll just have to finish my bisect
+>>> exercise.
+>>> 
+>> 
+>> I finished bisecting and it turned out that the problematic commit
+>> happened to be in wireless (I have iwl3945):
+>> 
+>> commit 4cd06a344db752f513437138953af191cbe9a691
+>> Author: Felix Fietkau <nbd@openwrt.org>
+>> Date:   Sat Dec 18 19:30:49 2010 +0100
+>> 
+>>     mac80211: skip unnecessary pskb_expand_head calls
+>> 
+>>     If the skb is not cloned and we don't need any extra headroom, there
+>>     is no point in reallocating the skb head.
+>> 
+>>     Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> 
+>> With this commit reverted from 2.6.38-rc3 I can not reproduce sshfs
+>> getting stuck here.
+> I really don't see how this commit could be causing these issues, and
+> I'm not aware of any similar issues affecting other drivers.
+Could you please try this patch to see if it fixes the issue as well?
 
-The wl12xx sdio_test code uses wl12xx_get_platform_data, which is
-only present when WL12*_SDIO is enabled, so make WL12XX_SDIO_TEST
-depend on WL12XX_SDIO so that the needed interface will be present.
-
-sdio_test.c:(.devinit.text+0x13178): undefined reference to `wl12xx_get_platform_data'
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: Roger Quadros <roger.quadros@nokia.com>
----
- drivers/net/wireless/wl12xx/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux-next-20110217.orig/drivers/net/wireless/wl12xx/Kconfig
-+++ linux-next-20110217/drivers/net/wireless/wl12xx/Kconfig
-@@ -54,7 +54,7 @@ config WL12XX_SDIO
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ffc6749..3168eae 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1547,7 +1547,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ 		skb_orphan(skb);
+ 	}
  
- config WL12XX_SDIO_TEST
- 	tristate "TI wl12xx SDIO testing support"
--	depends on WL12XX && MMC
-+	depends on WL12XX && MMC && WL12XX_SDIO
- 	default n
- 	---help---
- 	  This module adds support for the SDIO bus testing with the
+-	if (skb_header_cloned(skb))
++	if (skb_cloned(skb))
+ 		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 	else if (head_need || tail_need)
+ 		I802_DEBUG_INC(local->tx_expand_skb_head);
