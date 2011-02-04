@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57153 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752365Ab1BTM6M (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62063 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755434Ab1BDKXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 07:58:12 -0500
-Received: by eye27 with SMTP id 27so2477439eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 04:58:07 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/8] Revert "rt2x00 : avoid timestamp for monitor injected frame."
-Date: Sun, 20 Feb 2011 13:56:07 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <201102201354.53379.IvDoorn@gmail.com> <201102201355.26260.IvDoorn@gmail.com> <201102201355.47592.IvDoorn@gmail.com>
-In-Reply-To: <201102201355.47592.IvDoorn@gmail.com>
+	Fri, 4 Feb 2011 05:23:37 -0500
+Received: by iyj18 with SMTP id 18so1974898iyj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 02:23:36 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201102201356.08735.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19787.54182.293274.705139@gargle.gargle.HOWL>
+Date: Fri, 4 Feb 2011 15:53:34 +0530
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
+In-Reply-To: <AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
+References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
+	<19787.47298.50879.401166@gargle.gargle.HOWL>
+	<AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Vivek Natarajan wrote:
+> So, will it be appropriate to add stop and wake queue while calling
+> ath_drain_all_txq?
 
-This reverts commit e81e0aef32bfa7f593b14479b9c7eaa7196798ac "rt2x00 : avoid
-timestamp for monitor injected frame." as it breaks proper timestamp insertion
-into probe responses injected by hostapd for example.
+Am not sure. I happened to look at that comment and thought it a bit
+odd that the caller is expected to call wake_queues().
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: Alban Browaeys <prahal@yahoo.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+> Currently, flush() is called only when mac80211 is moving to off
+> channel. Even if we call flush before sending nullfunc frame for power
+> save, a question arises if it should be done with drop = true or
+> false.  If set as false, there is a possibility that the frames might
+> be still around in the hw when nullfunc is sent and the same issue
+> might pop up.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index fa17c83..bf9bba3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -365,13 +365,10 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 
- 	/*
- 	 * Beacons and probe responses require the tsf timestamp
--	 * to be inserted into the frame, except for a frame that has been injected
--	 * through a monitor interface. This latter is needed for testing a
--	 * monitor interface.
-+	 * to be inserted into the frame.
- 	 */
--	if ((ieee80211_is_beacon(hdr->frame_control) ||
--	    ieee80211_is_probe_resp(hdr->frame_control)) &&
--	    (!(tx_info->flags & IEEE80211_TX_CTL_INJECTED)))
-+	if (ieee80211_is_beacon(hdr->frame_control) ||
-+	    ieee80211_is_probe_resp(hdr->frame_control))
- 		__set_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags);
- 
- 	/*
--- 
-1.7.2.3
+"Still around in the hw" ?
 
+ath_drain_all_txq() will stop HW DMA first and then remove all the
+pending frames in all HW queues and add them to the free buffer list.
+
+When flush() is called, the driver would empty its HW queues and then
+mac80211 would proceed to send the nullfunc frame. Isn't this the fix
+that you require ?
+
+> Drop is set as false for scanning. iwlwifi waits for 2sec for all the
+> packets to complete but for ath9k, since it is asynchronous, I am not
+> quite sure of how to wait for tx_completion of all pending packets.
+
+Not sure I understand. Why should we wait for completion of pending packets
+when we have just drained them ?
+
+> We were considering yet another approach too:
+> In this case, if a nullfunc frame for PS comes to the driver when
+> there are pending frames in the hw queue(the frames queued before
+> 100ms and still pending because of highly noisy environment), silently
+> drop the frame so that mac80211 will try once again after 100ms to go
+> to PS. The issue that I face here is, ath9k does not know whether this
+> frame is actually for PS or for fake sleep before scanning.
+
+Well, silently dropping frames is generally frowned upon. :)
+
+Sujith
