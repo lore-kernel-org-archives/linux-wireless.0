@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41780 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755353Ab1BOTuS (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43768 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035Ab1BDUGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 14:50:18 -0500
-Received: by bwz15 with SMTP id 15so4267bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 11:50:16 -0800 (PST)
-Message-ID: <4D5AD73A.70909@gmail.com>
-Date: Tue, 15 Feb 2011 20:42:50 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 4 Feb 2011 15:06:13 -0500
+Message-ID: <4D4C5C2F.50403@candelatech.com>
+Date: Fri, 04 Feb 2011 12:06:07 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Nikolay Ledovskikh <nledovskikh@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com, mickflemm@gmail.com, me@bobcopeland.com
-Subject: Re: [PATCH] ath5k: Right channel setting for ar2317 chip
-References: <20110215221313.498d21ed.nledovskikh@gmail.com>
-In-Reply-To: <20110215221313.498d21ed.nledovskikh@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v10] mac80211: Optimize scans on current operating channel.
+References: <1296849257-10260-1-git-send-email-greearb@candelatech.com> <1296849410.3671.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1296849410.3671.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2011 08:13 PM, Nikolay Ledovskikh wrote:
-> Patch that fixes right channel setting when running ar2317 based boards.
+On 02/04/2011 11:56 AM, Johannes Berg wrote:
+> I'm not going to be able to review this properly until I get back -- so
+> maybe we should just merge it and fix fallout, if any, later?
 
-I see what it does. However I want to know why. That's what the
-changelog should enlighten. I suppose we didn't handled ar2317 and we
-want to. And since it is the same as 2425 we may reuse the current code?
+Well, that is fine by me.  I'll certainly be willing to help
+with any issues that come up as a top priority.
 
-> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 78c26fd..c44111f 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1253,6 +1253,7 @@ static int ath5k_hw_channel(struct ath5k_hw *ah,
->  	case AR5K_RF5111:
->  		ret = ath5k_hw_rf5111_channel(ah, channel);
->  		break;
-> +	case AR5K_RF2317:
->  	case AR5K_RF2425:
->  		ret = ath5k_hw_rf2425_channel(ah, channel);
->  		break;
-> 
+I've been running one version or another of this patch for several
+weeks and I haven't noticed any obvious problems with it, and
+it would be great to get some additional testing coverage.
+
+Most of the real gains will come after we order the operating
+channel first in the list of channels to scan, and (if possible)
+allow scanning on channel-types other than just NO_HT so that we
+can scan-on channel while running HT20, HT40, etc.
+
+Thanks,
+Ben
+
+
+>
+> johannes
+>
+>
 
 
 -- 
-js
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
