@@ -1,44 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38431 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690Ab1BOPPg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 10:15:36 -0500
-Date: Tue, 15 Feb 2011 10:03:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nathaniel Smith <njs@pobox.com>, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
-Subject: Re: [PATCH 4/5] iwlwifi: auto-tune tx queue size to minimize latency
-Message-ID: <20110215150317.GA2557@tuxdriver.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
- <1297619803-2832-5-git-send-email-njs@pobox.com>
- <1297685871.3785.39.camel@jlt3.sipsolutions.net>
- <AANLkTinuvxEuuz3-xWkhQ1fA8s7QumJHJQKpd1C48CV1@mail.gmail.com>
- <1297771986.3935.9.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:60201 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752234Ab1BDMZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 07:25:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 04:25:11 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: Fix a race on enabling power save.
+Date: Fri, 4 Feb 2011 17:55:26 +0530
+Message-ID: <1296822326-4878-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297771986.3935.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 01:13:06PM +0100, Johannes Berg wrote:
+There is a race on sending a data frame before the tx completion
+of nullfunc frame for enabling power save. As the data quickly
+follows the nullfunc frame, the AP thinks that the station is out
+of power save and continues to send the frames. Whereas in the
+station, the nullfunc ack will be processed after the tx completion
+of data frame and mac80211 goes to powersave. Thus the power
+save state mismatch between the station and the AP causes some
+data loss and some applications fail because of that. This patch
+fixes this issue.
 
-> mac80211 has the advantage that TX status is reported back, so it could
-> pretty accurately know how many frames are queued up -- more generically
-> this cannot be done.
-> 
-> But since it's not perfectly accurate right now, it may not be the best
-> idea to do this at this time.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    8 ++++++--
+ net/mac80211/tx.c          |    8 ++++++++
+ 3 files changed, 15 insertions(+), 2 deletions(-)
 
-Let's not make the perfect the enemy of the good.  An imperfect
-implementation at the mac80211 layer is likely better than a somewhat
-better implementation for one driver and no implementation for
-the rest.
-
-Now, someone help me understand how .11n aggregation complicates this... :-)
-
-John
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 533fd32..6ad97f6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -346,6 +346,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_UAPSD_ENABLED	= BIT(7),
+ 	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
+ 	IEEE80211_STA_RESET_SIGNAL_AVE	= BIT(9),
++	IEEE80211_STA_PS_PENDING	= BIT(10),
+ };
+ 
+ struct ieee80211_if_managed {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e059b3a..45f736e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -727,13 +727,17 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		return;
+ 
+ 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+-	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
++	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
++		ifmgd->flags |= IEEE80211_STA_PS_PENDING;
+ 		ieee80211_send_nullfunc(local, sdata, 1);
++	}
+ 
+ 	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+ 	      (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
+-	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
++	    ((ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED) &&
++	      ifmgd->flags & IEEE80211_STA_PS_PENDING))  {
+ 		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
++		ifmgd->flags &= ~IEEE80211_STA_PS_PENDING;
+ 		local->hw.conf.flags |= IEEE80211_CONF_PS;
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8fbbc7a..e1c2256 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -185,6 +185,7 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_local *local = tx->local;
+ 	struct ieee80211_if_managed *ifmgd;
++	struct ieee80211_hdr *hdr;
+ 
+ 	/* driver doesn't support power save */
+ 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
+@@ -233,6 +234,13 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 	    && skb_get_queue_mapping(tx->skb) == 0)
+ 		return TX_CONTINUE;
+ 
++	hdr = (struct ieee80211_hdr *)tx->skb->data;
++
++	if (!(ieee80211_is_nullfunc(hdr->frame_control) &&
++	     ieee80211_has_pm(hdr->frame_control)) &&
++	    (ifmgd->flags & IEEE80211_STA_PS_PENDING))
++		ifmgd->flags &= ~IEEE80211_STA_PS_PENDING;
++
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+ 						IEEE80211_QUEUE_STOP_REASON_PS);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
