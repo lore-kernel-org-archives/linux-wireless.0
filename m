@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4565 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab1BBL7i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 06:59:38 -0500
-Date: Wed, 2 Feb 2011 06:57:43 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Xin Jin <Xin.Jin@atheros.com>
-Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
-Message-ID: <20110202115743.GA12386@hash.localnet>
-References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com> <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com> <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com> <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com> <1296633772.3624.2.camel@jlt3.sipsolutions.net> <20110202113052.GA14126@jm.kir.nu>
+Received: from kroah.org ([198.145.64.141]:53438 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750863Ab1BDO4C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 09:56:02 -0500
+Date: Fri, 4 Feb 2011 06:57:07 -0800
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Vivek Natarajan <vnatarajan@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
+Message-ID: <20110204145707.GB11581@kroah.com>
+References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
+ <AANLkTi=tANgmxukLg0GQbLRkc-XuEBi-hmpJono=q=m8@mail.gmail.com>
+ <AANLkTinSy7tQDXrVo2AdRpyQ2dQvvaeoJEpYdK1YszfQ@mail.gmail.com>
+ <20110204142130.GB2539@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110202113052.GA14126@jm.kir.nu>
+In-Reply-To: <20110204142130.GB2539@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 02, 2011 at 01:30:52PM +0200, Jouni Malinen wrote:
-> If it is fine to remove the custom wpa_supplicant modifications from
-> Android, this is obviously a moot point, but until that happens, the
-> easiest approach seems to be to provide a custom driver_*.c based on
-> nl80211 to isolate the custom changes to user space and to small part of
-> it at that. I don't really want to see new drivers trying to provide
-> WEXT support with private ioctls to address need for making it work with
-> Android..
+On Fri, Feb 04, 2011 at 09:21:30AM -0500, John W. Linville wrote:
+> On Thu, Feb 03, 2011 at 11:36:27PM -0800, Luis R. Rodriguez wrote:
+> > Adding Greg for real this time.
+> > 
+> >   Luis
+> > 
+> > On Thu, Feb 3, 2011 at 11:36 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > > On Thu, Feb 3, 2011 at 10:23 PM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+> > >> In a highly noisy environment, a data frame which is queued before
+> > >> a nullfunc frame on a different hw queue may be sent over the air
+> > >> after the tx completion of nullfunc frame. This causes the station
+> > >> to enter power save and the AP to see the station as awake and
+> > >> continues to send the data traffic. Fix this by draining all tx
+> > >> queues before we send the null function frame with PM bit set.
+> > >>
+> > >> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> > >
+> > > Hm nice, this is a good example of one of those random not-so-critical
+> > > but still nice fixes which I wish would go to stable. John, Greg, any
+> > > qualms for such things to go to stable if they apply? It was my
+> > > impression we could send it, but I want to verify with both you guys
+> > > so neither we or John get bashed if we try to send it as a stable fix.
+> 
+> I think the feeling is that it is silly to mark something for stable if
+> it is not important enough to be sent as a fix for the current release.
 
-I guess my argument is if Atheros is spending resources on porting
-drivers to Android, it would be nice to take the time to fix Android's
-userspace too.  At any rate, I disagree with the wiki's wording "the
-proper approach" as opposed to maybe "the straight-forward approach."
+I totally agree.
 
-Android already has a custom userspace library that sits between wpa_s
-and their Java stack where they could probably stick all of this stuff.
-If there is something that is truly missing from the kernel, then by
-all means we can add it to nl80211 for everyone's benefit.
+thanks,
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+greg k-h
