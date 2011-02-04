@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dspam.koyote.com ([204.11.31.20]:2819 "EHLO vopmail.neato.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753453Ab1BEV5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Feb 2011 16:57:39 -0500
-Received: from fl-server.ewol.com (unverified [66.209.47.174]) by vopmail.neato.net
-  (Vircom SMTPRS 5.0.916.3) with ESMTP id <B0808884863@vopmail.neato.net> for <linux-wireless@vger.kernel.org>;
-  Sat, 5 Feb 2011 15:46:21 -0600
-Received: from [192.168.2.6] (nm.ewol.com [192.168.2.6])
-	by fl-server.ewol.com (8.14.1/8.14.1) with ESMTP id p15LkIM2009997
-	for <linux-wireless@vger.kernel.org>; Sat, 5 Feb 2011 16:46:19 -0500
-Subject: 4addr station in a bridge gives 'received own source address'
- errors
-From: Steve Brown <sbrown@cortland.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 05 Feb 2011 14:46:17 -0700
-Message-ID: <1296942377.27336.29.camel@nm.ewol.com>
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40310 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847Ab1BDJUR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 04:20:17 -0500
+Received: by iyj18 with SMTP id 18so1931398iyj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 01:20:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201102040912.44181.chunkeey@googlemail.com>
+References: <cb1597685120e228d2c66a7eafc07aed1466f7dd.1296769444.git.chunkeey@googlemail.com>
+ <f65439b7f2e5843eb18b7880ba64adb959b87c11.1296769444.git.chunkeey@googlemail.com>
+ <AANLkTin=AxaG=bvV6pr18tZ0SpHpU21adzeHFm=gei8W@mail.gmail.com> <201102040912.44181.chunkeey@googlemail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 4 Feb 2011 20:19:56 +1100
+Message-ID: <AANLkTimYiRWfKvREu0bxhF-7Zrmwb4Exr=D38SFSh96i@mail.gmail.com>
+Subject: Re: [RFT/RFC] carl9170: export HW random number generator
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have an AP and 2 stations. The wifi interfaces on the stations are in
-bridges. Pinging from one station to the other generates this error.
-This does not occur if the station interfaces are not in a bridge.
+On Fri, Feb 4, 2011 at 19:12, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Thursday 03 February 2011 23:39:40 Julian Calaby wrote:
+>> On Fri, Feb 4, 2011 at 08:30, Christian Lamparter
+>> <chunkeey@googlemail.com> wrote:
+>> > All AR9170 hardware have a 16-Bit random number generator.
+>> > The documentation claims the values are suitable for
+>> > "security keys".
+>> >
+>> > This is an early, but working version. The "throughput" is
+>> > around 320Kibit/s. It's slow, but it will work without
+>> > introducing any special offload firmware commands.
+>>
+>> Would it not be better to cut down on the #ifdefs and move this
+>> functionality into a separate file?
+> I don't think so. Just take a look at the led code, most of it is
+> in a separate file but the ifdefs are still everywhere you look...
 
-The bridge puts the station wifi interface in promiscuous mode. After
-instrumenting the bridge code, the following seems to be happening. In
-the case of a frame sent from S1->AP->S2, S1 also receives the AP->S2
-frame. When that frame is converted to 802.3, S1 is the source address
-and the bridge code complains.
+Fair enough.
 
-I don't understand why the station interface needs to be in promiscuous
-mode. The 4addr frames would seem to make this unnecessary.
+I was just thinking that if it were in a file, then the only bits that
+would need ifdef-ing would be one in a header file for the
+register_*() and unregister_*() exports and the Makefile.
 
-As a test, I ignored promiscuous mode for stations in the ath9k driver
-(a hack) and the messages disappeared. The setup then functions as a
-client bridge in that computers hooked to one station can ping computers
-connected to the other station.
+But then again, it's your driver =)
 
-I think this is a bug.
+Thanks,
 
-Steve
+-- 
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
