@@ -1,37 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48023 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753341Ab1BNVIB (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:64021 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754853Ab1BDAGW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:08:01 -0500
-Received: by bwz15 with SMTP id 15so5906042bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 13:08:00 -0800 (PST)
-Date: Tue, 15 Feb 2011 00:07:55 +0300
-From: Stanislav Fomichev <kernel@fomichev.me>
-To: Dan Carpenter <error27@gmail.com>
-Cc: Roland Vossen <rvossen@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	gregkh@suse.de, linux-wireless@vger.kernel.org, s@fomichev.me
-Subject: Re: [PATCH] brcm80211: remove multiple calls to wl_release_fw
-Message-ID: <20110214210755.GB26387@sdf-MacBook>
-References: <20110212150033.GA1941@sdf-MacBook>
- <4D598993.4020900@broadcom.com>
- <20110214202249.GK4384@bicker>
+	Thu, 3 Feb 2011 19:06:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110214202249.GK4384@bicker>
+In-Reply-To: <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
+	<AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+	<s5haaid3xos.wl%tiwai@suse.de>
+	<201102032009.17100.rjw@sisk.pl>
+	<AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
+	<AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+Date: Fri, 4 Feb 2011 10:06:19 +1000
+Message-ID: <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+From: Dave Airlie <airlied@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Carlos Mafra <crmafra2@gmail.com>,
+	Keith Packard <keithp@keithp.com>,
+	Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This patch isn't right.  It fixes the oops but it introduces some leaks.
-> (We still need to release firmware that was allocated successfully).
-Sorry Dan, but where do you see the leaks? We make a call to
-wl_request_fw and if returns non-zero call wl_release_fw for a cleanup.
+On Fri, Feb 4, 2011 at 8:10 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Thu, Feb 3, 2011 at 1:56 PM, Carlos Mafra <crmafra2@gmail.com> wrote:
+>>>
+>>> I added https://bugzilla.kernel.org/show_bug.cgi?id=24982 to the list of
+>>> post-2.6.36 regressions for further tracking.
+>>
+>> I also tested on 2.6.38-rc3+ now and the issue is not solved,
+>> just like Takashi expected.
+>
+> Hmm. That commit (bf9dc102e284) still reverts cleanly.
+>
+> Keith, Dave, should we just revert it? It's definitely a regression,
+> and we do _not_ allow "fixes" to one thing that just causes a
+> regression to another.
+>
+> Quite frankly, I think it's totally wrong to just blindly set DPMS
+> status to ON like that. It's as wrong as it was to leave it off, and
+> the regressions reported are basically mirror images of the exact same
+> bug that that commit tried to fix.
+>
+> IOW, the commit message says:
+>
+>    When setting a new crtc configuration, force the DPMS state of all
+>    connectors to ON. Otherwise, they'll be left at OFF and a future mode set
+>    that disables the specified connector will not turn the connector off.
+>
+> but setting it to ON doesn't actually _fix_ anything, because you just
+> get the exact same issue in reverse, ie you just get
+>
+>   .. and a future mode set  that ENables the specified connector will
+>    not turn the connector ON.
 
-I just removed the call to wl_release_fw in the wl_request_fw itself; so
-it should not introduce any leak.
+If we are setting a mode on a connector it automatically will end up
+in a DPMS on state,
+so this seemed correct from what I can see.
 
-Could you pls clarify?
+A future mode set shouldn't ever not turn the connector on, since
+modesetting is an implicit
+DPMS,
 
--- 
-	Stas
+It sounds like something more subtle than that, though I'm happy to
+revert this for now, and let Keith
+think about it a bit more.
+
+Dave.
