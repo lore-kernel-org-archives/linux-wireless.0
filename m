@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38264 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753905Ab1BFUMH (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58416 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173Ab1BDUTt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 15:12:07 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 3/5] mac80211:  Properly set work-item channel-type.
-Date: Sun,  6 Feb 2011 12:11:56 -0800
-Message-Id: <1297023118-24363-3-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
-References: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
+	Fri, 4 Feb 2011 15:19:49 -0500
+Received: by bwz15 with SMTP id 15so3098435bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 12:19:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikn2XSROW0V42FcBoRgBBd74WXMOmvdoToJGqfe@mail.gmail.com>
+References: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
+	<AANLkTikNUv2VuL8ftQAF_x4R-ccB0Y_aPFFdF52UBnBt@mail.gmail.com>
+	<AANLkTikxhPHQ_50cKoJn920n9A0hVssoZZfJRCsw=CH+@mail.gmail.com>
+	<AANLkTikn2XSROW0V42FcBoRgBBd74WXMOmvdoToJGqfe@mail.gmail.com>
+Date: Fri, 4 Feb 2011 15:19:46 -0500
+Message-ID: <AANLkTim7cnHNsYqezre3AGaEmnPkjafqmHcpk=1hw7gr@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
+From: Mark Mentovai <mark@moxienet.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Luis R. Rodriguez wrote:
+> On Fri, Feb 4, 2011 at 11:42 AM, Mark Mentovai <mark@moxienet.com> wrote:
+>> If you can come up with a good way to compute the hardware maximum per
+>> channel (overcoming ath9k_init_txpower_limits’s current faults), then
+>> I think this can be accommodated with another field, but I don’t think
+>> orig_mpwr should be overloaded. Maybe renamed to better reflect its
+>> purpose, though.
+>
+> I do wonder if the patch above introduced a regression I overlooked..
 
-Some were indirectly set to NO_HT (zero), but I think
-it's better to explicitly set it in case the enum ever
-changes.  In cfg.c, it seems the channel-type was just
-ignored (and thus always set to NO_HT).
+(Re babcbc295fee766ca710235e431686fef744d9a6)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 a7cd6a1... 9938f7f... M	net/mac80211/cfg.c
-:100644 100644 340bef6... cd68f2a... M	net/mac80211/mlme.c
- net/mac80211/cfg.c  |    1 +
- net/mac80211/mlme.c |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
+I don’t think it introduced any regressions, because max_power and
+orig_mpwr are always updated with regulatory-based values. I think
+that the patch was effectively a no-op. It tried to set better initial
+values, but the regulatory values that superseded them didn’t change.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a7cd6a1..9938f7f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1871,6 +1871,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 
- 	wk->type = IEEE80211_WORK_OFFCHANNEL_TX;
- 	wk->chan = chan;
-+	wk->chan_type = channel_type;
- 	wk->sdata = sdata;
- 	wk->done = ieee80211_offchan_tx_done;
- 	wk->offchan_tx.frame = skb;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 340bef6..cd68f2a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2294,6 +2294,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	else
- 		wk->type = IEEE80211_WORK_DIRECT_PROBE;
- 	wk->chan = req->bss->channel;
-+	wk->chan_type = NL80211_CHAN_NO_HT;
- 	wk->sdata = sdata;
- 	wk->done = ieee80211_probe_auth_done;
- 
-@@ -2443,6 +2444,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		memcpy(wk->assoc.prev_bssid, req->prev_bssid, ETH_ALEN);
- 
- 	wk->chan = req->bss->channel;
-+	wk->chan_type = NL80211_CHAN_NO_HT;
- 	wk->sdata = sdata;
- 	wk->done = ieee80211_assoc_done;
- 	if (!bss->dtim_period &&
--- 
-1.7.2.3
+>> I don’t think that a good way for a driver to reflect the transmit
+>> power it has actually put into effect (after taking the effects of CTL
+>> limits) back to user space currently exists.
+>
+> What do you mean here, sorry I could not follow.
 
+The user space interface for txpower winds up getting piped through
+cfg80211_ops’ set_tx_power and get_tx_power fields. For mac80211,
+net/mac80211/cfg.c sends set_tx_power requests through to the driver
+(ieee80211_set_tx_power calls ieee80211_hw_config which calls through
+to an ieee80211_ops config field), but get_tx_power requests are
+satisfied without ever checking the driver. mac80211 get_tx_power just
+pulls a cached value out of an ieee80211_local. A driver couldn’t even
+push a better value back into mac80211, because its ieee80211_local is
+private.
+
+Felix Fietkau wrote:
+> Right, for testing the tx power, we need to override the
+> twiceMaxRegulatoryPower parameter that we pass to the set_txpower op.
+
+That would work for ath9k. I still think it’d be prudent to examine a
+handful of rates. I also seem to remember that some other values that
+were being used within ath9k_init_txpower_limits were invalid. I think
+ntxchains was invalid during that early phase of initialization, for
+example. That might not have any ultimate effect on the result, but
+it’s not right to hit that ath_debug claiming "Invalid chainmask
+configuration" once for every supported channel every time the driver
+initializes.
