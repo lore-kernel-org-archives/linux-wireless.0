@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:47207 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754218Ab1BUC2p (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47680 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753877Ab1BDBme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:28:45 -0500
-Received: by yxs7 with SMTP id 7so125077yxs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:28:45 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 3 Feb 2011 20:42:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52191.602985.119813@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:50:15 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 20/23] ath9k_htc: Fix host RX initialization
+In-Reply-To: <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
+	<AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+	<s5haaid3xos.wl%tiwai@suse.de>
+	<201102032009.17100.rjw@sisk.pl>
+	<AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
+	<AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+	<AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
+	<AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
+	<yund3n88v7x.fsf@aiko.keithp.com>
+	<AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
+Date: Fri, 4 Feb 2011 11:42:33 +1000
+Message-ID: <AANLkTim-1MofNWc_PkmKE3dPWB3Ahe8d8jP_aUD5konx@mail.gmail.com>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+From: Dave Airlie <airlied@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Keith Packard <keithp@keithp.com>,
+	Carlos Mafra <crmafra2@gmail.com>,
+	Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Fri, Feb 4, 2011 at 11:11 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Thu, Feb 3, 2011 at 5:05 PM, Keith Packard <keithp@keithp.com> wrote:
+>>
+>> The goal is to make it so that when you *do* set a mode, DPMS gets set
+>> to ON (as the monitor will actually be "on" at that point). Here's a
+>> patch which does the DPMS_ON precisely when setting a mode.
+>
+> Ok, patch looks sane, but it does leave me with the "what about the
+> 'fb_changed' case?" question. Is that case basically guaranteed to not
+> change any existing dpms state?
 
-There is no need to set the BSSID mask or opmode when
-initializing RX, they would be set correctly in the HW reset
-routine.
+Yes its inconsistent behaviour but nothing in the fb_changed case will
+affect the DPMS
+state. I expect we should probably do that so all paths via that
+function turn DPMS on,
+and it'll be consistent, might be something for 39.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 04d8248..426620a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -433,20 +433,12 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
- static void ath9k_htc_opmode_init(struct ath9k_htc_priv *priv)
- {
- 	struct ath_hw *ah = priv->ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--
- 	u32 rfilt, mfilt[2];
- 
- 	/* configure rx filter */
- 	rfilt = ath9k_htc_calcrxfilter(priv);
- 	ath9k_hw_setrxfilter(ah, rfilt);
- 
--	/* configure bssid mask */
--	ath_hw_setbssidmask(common);
--
--	/* configure operational mode */
--	ath9k_hw_setopmode(ah);
--
- 	/* calculate and install multicast filter */
- 	mfilt[0] = mfilt[1] = ~0;
- 	ath9k_hw_setmcastfilter(ah, mfilt[0], mfilt[1]);
--- 
-1.7.4.1
-
+Dave.
