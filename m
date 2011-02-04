@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43268 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753946Ab1BFVHY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 16:07:24 -0500
-Message-ID: <4D4F0D83.4040401@candelatech.com>
-Date: Sun, 06 Feb 2011 13:07:15 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Scanning and channel types.
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org> <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
-In-Reply-To: <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:57557 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849Ab1BDWev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 17:34:51 -0500
+Subject: [PATCH] ssb-pcmcia: Fix parsing of invariants tuples
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Cc: dylan cristiani <d.cristiani@idem-tech.it>,
+	Dominik Brodowski <linux@dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Feb 2011 23:34:45 +0100
+Message-ID: <1296858885.21503.33.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2011 12:23 PM, Daniel Halperin wrote:
-> Could be rate selection.
->
-> Ben, a sanity check:  is it possible for the device to be associated
-> to an "HT-Only" AP and thus not be able to sent NO_HT packets?  Could
-> that be why there might need to be a channel change sometimes?
+This fixes parsing of the device invariants (MAC address)
+for PCMCIA SSB devices.
 
-I don't know.  The code and comments in  ieee80211_set_channel_type
-make me think that it's always possible to send NO_HT packets regardless
-of hardware's channel type.
+ssb_pcmcia_do_get_invariants expects an iv pointer as data
+argument.
 
-One thing I haven't figured out yet:  What actually tells the
-hardware to send NO_HT v/s HT20 v/s HT40, etc.  I have previously tested
-HT20 STAs concurrent with HT40 stas, and both can send/receive at once
-while the hardware stays in HT40 mode.
+Tested-by: dylan cristiani <d.cristiani@idem-tech.it>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org
 
-Thanks,
-Ben
+---
 
+
+Index: wireless-testing/drivers/ssb/pcmcia.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pcmcia.c	2010-12-30 15:49:39.000000000 +0100
++++ wireless-testing/drivers/ssb/pcmcia.c	2011-02-04 23:29:37.000000000 +0100
+@@ -733,7 +733,7 @@ int ssb_pcmcia_get_invariants(struct ssb
+ 
+ 	/* Fetch the vendor specific tuples. */
+ 	res = pcmcia_loop_tuple(bus->host_pcmcia, SSB_PCMCIA_CIS,
+-				ssb_pcmcia_do_get_invariants, sprom);
++				ssb_pcmcia_do_get_invariants, iv);
+ 	if ((res == 0) || (res == -ENOSPC))
+ 		return 0;
+ 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Greetings Michael.
+
