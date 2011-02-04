@@ -1,41 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:45455 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754203Ab1BIRvc (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:48627 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498Ab1BDGt7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 12:51:32 -0500
-Date: Wed, 9 Feb 2011 19:50:44 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Chaoxing Lin <CLin@3eti.com>
-Cc: "'John W. Linville'" <linville@tuxdriver.com>,
-	"'Zefir Kurtisi'" <zefir.kurtisi@neratec.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] DFS userspace handler
-Message-ID: <20110209175044.GA13242@jm.kir.nu>
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
- <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
- <4D52B7DB.8000000@neratec.com>
- <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC34@RockMX01.rock.corp>
- <20110209163030.GD2494@tuxdriver.com>
- <BD54DDEB2546894FAB0731EA7B0EDF8D0571DD3A@RockMX01.rock.corp>
+	Fri, 4 Feb 2011 01:49:59 -0500
+Date: Thu, 3 Feb 2011 22:49:52 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Miklos Szeredi <miklos@szeredi.hu>, Felix Fietkau <nbd@openwrt.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Wireless regression (was 2.6.38-rc3: FUSE (sshfs) hangs under load)
+Message-ID: <20110204064952.GA12914@core.coreip.homeip.net>
+References: <20110201175452.GB518@core.coreip.homeip.net>
+ <E1PkbGG-0005Rf-QL@pomaz-ex.szeredi.hu>
+ <20110202165236.GA3178@core.coreip.homeip.net>
+ <20110203065541.GB5592@core.coreip.homeip.net>
+ <E1Pkx7s-00073l-5B@pomaz-ex.szeredi.hu>
+ <20110203194115.GA14159@core.coreip.homeip.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DD3A@RockMX01.rock.corp>
+In-Reply-To: <20110203194115.GA14159@core.coreip.homeip.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 09, 2011 at 05:09:49PM +0000, Chaoxing Lin wrote:
-> Do we have to choose between hostapd and wpa_supplicant?
+On Thu, Feb 03, 2011 at 11:41:15AM -0800, Dmitry Torokhov wrote:
+> On Thu, Feb 03, 2011 at 12:13:24PM +0100, Miklos Szeredi wrote:
+> > On Wed, 2 Feb 2011, Dmitry Torokhov wrote:
+> > > On Wed, Feb 02, 2011 at 08:52:36AM -0800, Dmitry Torokhov wrote:
+> > > > On Wed, Feb 02, 2011 at 12:52:36PM +0100, Miklos Szeredi wrote:
+> > > > > On Tue, 1 Feb 2011, Dmitry Torokhov wrote:
+> > > > > > Hi,
+> > > > > > 
+> > > > > > After installing 2.6.38-rc3 (plus a few input patches) sshfs started to
+> > > > > > misbehave on me under load. It starts off fine but when I try to compile
+> > > > > > a few modules against kernel sources residing on the other box the
+> > > > > > processes go into 'D' state and just sit there doing nothing.
+> > > > > 
+> > > > > Can you please post a stack trace from SysRq-T?
+> > > > > 
+> > > > 
+...
+> > > 
+> > > OK, so here are the stack traces you requested. First one is snapshot of
+> > > when compile got stuck, the 2nd one is when I interrupted make which
+> > > caused gcc to go to 'D' state.
+> > 
+> > There doesn't appear anything abnormal there.
+> > 
+> > It's going into D state after it has received an interrupt and sent it
+> > along to the userspace filesystem.  Then it will go into
+> > uninterruptible sleep until the answer is received.
+> > 
+> > So the hang is because the answer to an open request is not being
+> > received.  I can't tell where it got stuck, apparently not anywhere on
+> > the local machine.
+> > 
+> > Can you please get a log from sshfs with "-odebug,sshfs_debug" and
+> > redirect stderr to a file?  That might tell a bit more about the
+> > situation.  Or it might not...
+> 
+> Hmm, it might be just the network itself, last night mutt in ssh session
+> froze on me as well. I guess I'll just have to finish my bisect
+> exercise.
+> 
 
-No, but it should be noted that either one of those is most likely going
-to be present on the system anyway if any sort of security is used in
-AP/WDS/mesh/IBSS/STA.
+I finished bisecting and it turned out that the problematic commit
+happened to be in wireless (I have iwl3945):
 
-> Why not a new daemon, e.g. DFSd or radard? So that it can be used intuitively for all master or IBSS modes.
+commit 4cd06a344db752f513437138953af191cbe9a691
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Sat Dec 18 19:30:49 2010 +0100
 
-One more interface to define and implement (user space between that new
-daemon and hostapd/wpa_supplicant).. I'm not strongly against this, but
-I would expect it to increase the total amount of work needed.
+    mac80211: skip unnecessary pskb_expand_head calls
+
+    If the skb is not cloned and we don't need any extra headroom, there
+    is no point in reallocating the skb head.
+
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+With this commit reverted from 2.6.38-rc3 I can not reproduce sshfs
+getting stuck here.
+
+Thanks.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Dmitry
