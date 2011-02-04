@@ -1,197 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36663 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754744Ab1BMR5e (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50465 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753490Ab1BDAbT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 12:57:34 -0500
-Received: by mail-iy0-f174.google.com with SMTP id 8so4089435iyj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 09:57:34 -0800 (PST)
-From: "Nathaniel J. Smith" <njs@pobox.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, "Nathaniel J. Smith" <njs@pobox.com>
-Subject: [PATCH 4/5] iwlwifi: auto-tune tx queue size to minimize latency
-Date: Sun, 13 Feb 2011 09:56:41 -0800
-Message-Id: <1297619803-2832-5-git-send-email-njs@pobox.com>
-In-Reply-To: <1297619803-2832-1-git-send-email-njs@pobox.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	Thu, 3 Feb 2011 19:31:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+ <s5haaid3xos.wl%tiwai@suse.de> <201102032009.17100.rjw@sisk.pl>
+ <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
+ <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com> <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 3 Feb 2011 16:30:56 -0800
+Message-ID: <AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+To: Dave Airlie <airlied@gmail.com>
+Cc: Carlos Mafra <crmafra2@gmail.com>,
+	Keith Packard <keithp@keithp.com>,
+	Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We maintain several ring buffers that queue up packets for the
-hardware to transmit. These buffers can be quite large, and the
-quality of wireless connections can vary greatly; as a result, it can
-be that a full queue might take multiple seconds to drain.
+On Thu, Feb 3, 2011 at 4:06 PM, Dave Airlie <airlied@gmail.com> wrote:
+>
+> If we are setting a mode on a connector it automatically will end up
+> in a DPMS on state,
+> so this seemed correct from what I can see.
 
-For instance, if there is a high-bandwidth outgoing flow, like a large
-file upload, then it will completely fill the tx queues. Once the
-queues are full, then any other outgoing packets -- like those sent
-when a user clicks on an HTTP link, or types into an SSH session --
-will have to wait at the end of the line, and will not actually be
-transmitted until multiple seconds have passed.  This results in a
-suboptimal level of interactive response.
+The more I look at that function, the more I disagree with you and
+with that patch.
 
-So we really don't want to allow too many packets to get queued up. On
-the other hand, we do want to queue up *some* packets, to maintain
-throughput -- and the queue size that maintains interactivity for a
-degraded 1 Mb/s connection might not be so great for some
-super-fancy 802.11n 600 Mb/s connection.
+The code is just crazy.
 
-This patch estimates how long it takes the hardware to transmit one
-packet (by comparing each packet's queue residency time to the number
-of packets it had to wait behind), and then further smooths these
-estimates with an EWMA. Then, it uses the estimated packet
-transmission time to choose the maximum queue size that will still
-produce reasonably bounded queue residency times, given current
-conditions.
+First off, it isn't even necessarily setting a mode to begin with,
+because as far as I can tell. If the mode doesn't change, neither
+mode_changed nor fb_changed will be true, afaik. There seems to be a
+fair amount of code there explicitly to avoid changing modes if not
+necessary.
 
-Signed-off-by: Nathaniel J. Smith <njs@pobox.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    3 +++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   11 +++++++++++
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   26 ++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
- 6 files changed, 44 insertions(+), 0 deletions(-)
+But even _if_ we are setting a mode, if I read the code correctly, the
+mode may be set to NULL - which seems to mean "turn it off". In which
+case it looks to me that drm_helper_disable_unused_functions() will
+actually do a
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index f2e9e59..d52bcb3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -288,6 +288,7 @@ static void iwl3945_tx_queue_reclaim(struct iwl_priv *priv,
- 	for (index = iwl_queue_inc_wrap(index, q->n_bd); q->read_ptr != index;
- 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
- 
-+		iwl_tx_queue_update_high_mark(txq, txq->q.read_ptr);
- 		tx_info = &txq->txb[txq->q.read_ptr];
- 		ieee80211_tx_status_irqsafe(priv->hw, tx_info->skb);
- 		tx_info->skb = NULL;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 921876d..06347e3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -655,6 +655,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
- 	txq->txb[q->write_ptr].skb = skb;
- 	txq->txb[q->write_ptr].ctx = ctx;
-+	getrawmonotonic(&txq->txb[q->write_ptr].enqueue_time);
-+	txq->txb[q->write_ptr].enqueue_depth = iwl_queue_space_used(q) + 1;
- 
- 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
- 	out_cmd = txq->cmd[q->write_ptr];
-@@ -1215,6 +1217,7 @@ int iwlagn_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 	     q->read_ptr != index;
- 	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
- 
-+		iwl_tx_queue_update_high_mark(txq, txq->q.read_ptr);
- 		tx_info = &txq->txb[txq->q.read_ptr];
- 		iwlagn_tx_status(priv, tx_info,
- 				 txq_id >= IWLAGN_FIRST_AMPDU_QUEUE);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e0ec170..b97a6dc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -532,6 +532,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- 		      int slots_num, u32 txq_id);
- void iwl_tx_queue_reset(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- 			int slots_num, u32 txq_id);
-+void iwl_tx_queue_update_high_mark(struct iwl_tx_queue *txq, int index);
- void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id);
- void iwl_setup_watchdog(struct iwl_priv *priv);
- /*****************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index dc6dd5f..3b421fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -38,6 +38,7 @@
- #include <linux/leds.h>
- #include <net/ieee80211_radiotap.h>
- #include <linux/time.h>
-+#include <linux/average.h>
- 
- #include "iwl-eeprom.h"
- #include "iwl-csr.h"
-@@ -137,12 +138,22 @@ struct iwl_queue {
- 	u32 id;
- 	atomic_t high_mark;    /* high watermark -- don't queue more than this
- 				* many entries */
-+	struct ewma ns_per_packet; /* tracks how long it takes each packet
-+				    * to be transmitted, in nanoseconds */
- };
- 
-+/* We attempt to find a setting for high_mark (which is measured in packets)
-+ * so that no packet spends longer than this (measured in wall clock time)
-+ * waiting around in the transmit queue:
-+ */
-+#define IWL_TX_HIGH_MARK_IN_NSEC (2 * NSEC_PER_MSEC)
-+
- /* One for each TFD */
- struct iwl_tx_info {
- 	struct sk_buff *skb;
- 	struct iwl_rxon_context *ctx;
-+	struct timespec enqueue_time;
-+	int enqueue_depth;
- };
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index ce62981..07fac3d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -266,6 +266,8 @@ static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- 	if (q->n_window - atomic_read(&q->high_mark) < 2)
- 		atomic_set(&q->high_mark, q->n_window - 2);
- 
-+	ewma_init(&q->ns_per_packet, 1, 8);
-+
- 	q->write_ptr = q->read_ptr = 0;
- 
- 	return 0;
-@@ -410,6 +412,30 @@ void iwl_tx_queue_reset(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- }
- EXPORT_SYMBOL(iwl_tx_queue_reset);
- 
-+void iwl_tx_queue_update_high_mark(struct iwl_tx_queue *txq, int index)
-+{
-+	struct iwl_queue *q = &txq->q;
-+	struct timespec now, diff;
-+	int enqueue_depth = txq->txb[index].enqueue_depth;
-+	int this_ns_per_packet, avg_ns_per_packet;
-+	int new_high_mark;
-+
-+	getrawmonotonic(&now);
-+	diff = timespec_sub(now, txq->txb[index].enqueue_time);
-+	this_ns_per_packet = (NSEC_PER_SEC / enqueue_depth) * diff.tv_sec;
-+	this_ns_per_packet += diff.tv_nsec / enqueue_depth;
-+	/* Just some sanity checks for paranoia's sake */
-+	if (this_ns_per_packet < 0 && this_ns_per_packet > NSEC_PER_SEC)
-+		return;
-+	ewma_add(&q->ns_per_packet, this_ns_per_packet);
-+	avg_ns_per_packet = ewma_read(&q->ns_per_packet);
-+	new_high_mark = IWL_TX_HIGH_MARK_IN_NSEC / avg_ns_per_packet;
-+	new_high_mark = clamp(new_high_mark, 2, q->n_window - 2);
-+	atomic_set(&q->high_mark, new_high_mark);
-+}
-+EXPORT_SYMBOL(iwl_tx_queue_update_high_mark);
-+
-+
- /*************** HOST COMMAND QUEUE FUNCTIONS   *****/
- 
- /**
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d0aa01c..a2ae4ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -548,6 +548,8 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
- 	txq->txb[q->write_ptr].skb = skb;
- 	txq->txb[q->write_ptr].ctx = &priv->contexts[IWL_RXON_CTX_BSS];
-+	getrawmonotonic(&txq->txb[q->write_ptr].enqueue_time);
-+	txq->txb[q->write_ptr].enqueue_depth = iwl_queue_space_used(q) + 1;
- 
- 	/* Init first empty entry in queue's array of Tx/cmd buffers */
- 	out_cmd = txq->cmd[idx];
--- 
-1.7.1
+   (*crtc_funcs->dpms)(crtc, DRM_MODE_DPMS_OFF);
 
+call on the crtc in question. So then blindly just saying "it's mode
+DRM_MODE_DPMS_ON" afterwards looks rather bogus to me.
+
+_Maybe_ it would work if it was done before that whole
+"disable_unused" logic. Or maybe it should just be done in
+drm_crtc_helper_set_mode(), which is what actually sets the mode (but
+there's the 'fb_changed' case too)
+
+> A future mode set shouldn't ever not turn the connector on, since
+> modesetting is an implicit
+> DPMS,
+>
+> It sounds like something more subtle than that, though I'm happy to
+> revert this for now, and let Keith
+> think about it a bit more.
+
+So I haven't heard anything from Keith. Keith? Just revert it? Or do
+you have a patch for people to try?
+
+                               Linus
