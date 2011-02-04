@@ -1,141 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mow301.securemx.jp ([210.130.202.49]:33826 "EHLO
-	mow.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520Ab1BQBy2 (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:43559 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161Ab1BDKru convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 20:54:28 -0500
-Date: Thu, 17 Feb 2011 10:54:29 +0900
-From: Takashi Kawamoto <tkawamoto@silex.jp>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: BUG: AR9271 cause a Kernel Panic on ARM11 SMP environment
-Cc: linux-wireless@vger.kernel.org, Yoshitaka Imura <imura@silex.jp>,
-	Yasuo Bato <bato@silex.jp>, Yuji Sasaki <sasaki@silex.jp>,
-	Ryou Matsuura <matsuura@silex.jp>, ath9k-devel@atheros.com
-In-Reply-To: <20110216145201.GB10287@tuxdriver.com>
-References: <20110216141657.9270.9AD4E5EB@silex.jp> <20110216145201.GB10287@tuxdriver.com>
-Message-Id: <20110217104717.6822.9AD4E5EB@silex.jp>
+	Fri, 4 Feb 2011 05:47:50 -0500
+Received: by wwi17 with SMTP id 17so183464wwi.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 02:47:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <19787.54182.293274.705139@gargle.gargle.HOWL>
+References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
+	<19787.47298.50879.401166@gargle.gargle.HOWL>
+	<AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
+	<19787.54182.293274.705139@gargle.gargle.HOWL>
+Date: Fri, 4 Feb 2011 16:17:49 +0530
+Message-ID: <AANLkTimfONC20SyM=OA9Fykkt91ZsU19XEBiC7uDnVY8@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear John,
+On Fri, Feb 4, 2011 at 3:53 PM, Sujith <m.sujith@gmail.com> wrote:
+> Vivek Natarajan wrote:
+>> So, will it be appropriate to add stop and wake queue while calling
+>> ath_drain_all_txq?
+>
+> Am not sure. I happened to look at that comment and thought it a bit
+> odd that the caller is expected to call wake_queues().
+>
+>> Currently, flush() is called only when mac80211 is moving to off
+>> channel. Even if we call flush before sending nullfunc frame for power
+>> save, a question arises if it should be done with drop = true or
+>> false.  If set as false, there is a possibility that the frames might
+>> be still around in the hw when nullfunc is sent and the same issue
+>> might pop up.
+>
+> "Still around in the hw" ?
+>
+> ath_drain_all_txq() will stop HW DMA first and then remove all the
+> pending frames in all HW queues and add them to the free buffer list.
+>
 
-Thanks for your comment.
+This is true for retry_tx set as false(for ath_draintxq) but if the
+retry is set, I suppose the frame will be in the hw queue till all the
+hw retries(20) and sw retries(10) (200 retries in total)are over. This
+will take a lot of time for completion if the channel is busy.
 
-I also tried to duplicate this on x86 environment, but I've never seen 
-this yet. So this might perhaps have somthing to do with an 
-ARM-specific implementation in the kernel.
+> When flush() is called, the driver would empty its HW queues and then
+> mac80211 would proceed to send the nullfunc frame. Isn't this the fix
+> that you require ?
 
-> All
-Have you ever experienced something like a crash like this on ARM-based 
-platform when you use AR9271?
+I am thinking of calling ath_drain_all_txq() in flush() and the only
+query is should the retry_tx be set.
 
+>> We were considering yet another approach too:
+>> In this case, if a nullfunc frame for PS comes to the driver when
+>> there are pending frames in the hw queue(the frames queued before
+>> 100ms and still pending because of highly noisy environment), silently
+>> drop the frame so that mac80211 will try once again after 100ms to go
+>> to PS. The issue that I face here is, ath9k does not know whether this
+>> frame is actually for PS or for fake sleep before scanning.
+>
+> Well, silently dropping frames is generally frowned upon. :)
 
+return -ENOMEM is what I meant though mac80211 does not check the
+return status here.
 
-Best Regards,
-Takashi Kawamoto
-
-On Wed, 16 Feb 2011 09:52:01 -0500
-"John W. Linville" <linville@tuxdriver.com> wrote:
-
-> On Wed, Feb 16, 2011 at 02:17:07PM +0900, Takashi Kawamoto wrote:
-> > Dear all,
-> > 
-> > 
-> > When I make an AR9271 to perform as an iperf client with 
-> > compat-wireless-2011-01-30, a Kernel Panic occurs.
-> > 
-> > [log]
-> > =======================================================================
-> > BUG: spinlock lockup on CPU#1, iperf/552, 9f9aade4
-> > [<80030ca4>] (unwind_backtrace+0x0/0xdc) from [<801835ac>] (do_raw_spin_lock+0x14c/0x168)
-> > [<801835ac>] (do_raw_spin_lock+0x14c/0x168) from [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18)
-> > [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18) from [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc])
-> > [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc]) from [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc])
-> > [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc]) from [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc])
-> > [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc]) from [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc])
-> > [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc]) from [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc])
-> > [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc]) from [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211])
-> > [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211]) from [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211])
-> > [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211]) from [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211])
-> > [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211]) from [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0)
-> > [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0) from [<8027878c>] (sch_direct_xmit+0x70/0x1c8)
-> > [<8027878c>] (sch_direct_xmit+0x70/0x1c8) from [<802696e0>] (dev_queue_xmit+0x290/0x428)
-> > [<802696e0>] (dev_queue_xmit+0x290/0x428) from [<80287320>] (ip_finish_output+0x250/0x2a8)
-> > [<80287320>] (ip_finish_output+0x250/0x2a8) from [<80285178>] (ip_local_out+0x24/0x28)
-> > [<80285178>] (ip_local_out+0x24/0x28) from [<80286cac>] (ip_queue_xmit+0x2f4/0x35c)
-> > [<80286cac>] (ip_queue_xmit+0x2f4/0x35c) from [<80299010>] (tcp_transmit_skb+0x74c/0x7b8)
-> > [<80299010>] (tcp_transmit_skb+0x74c/0x7b8) from [<8029b5dc>] (tcp_write_xmit+0x860/0x978)
-> > [<8029b5dc>] (tcp_write_xmit+0x860/0x978) from [<8029b730>] (tcp_push_one+0x3c/0x48)
-> > [<8029b730>] (tcp_push_one+0x3c/0x48) from [<8028f840>] (tcp_sendmsg+0x864/0xaa4)
-> > [<8028f840>] (tcp_sendmsg+0x864/0xaa4) from [<80258ecc>] (sock_aio_write+0xe0/0xe8)
-> > [<80258ecc>] (sock_aio_write+0xe0/0xe8) from [<800bba20>] (do_sync_write+0x94/0xe0)
-> > [<800bba20>] (do_sync_write+0x94/0xe0) from [<800bc460>] (vfs_write+0xc4/0x154)
-> > [<800bc460>] (vfs_write+0xc4/0x154) from [<800bc59c>] (sys_write+0x3c/0x68)
-> > [<800bc59c>] (sys_write+0x3c/0x68) from [<8002a220>] (ret_fast_syscall+0x0/0x2c)
-> > =======================================================================
-> 
-> My guess would be that somehow you are leaking hif_dev->tx.tx_lock,
-> and then hanging when trying to retake it in hif_usb_send_tx.
-> Unfortunately, it is not obvious to me how that might happen...
-> 
-> > An environment of AR9271's host is as follows.
-> > 
-> > [Host Environment]
-> > =======================================================================
-> > CPU         : ARM11MP
-> > Kernel      : 2.6.33 (SMP enabled)
-> > Distribution: Zoran Quatro inferno
-> > =======================================================================
-> > 
-> > As long as I see, this panic happens under the following conditions.
-> > 
-> > (1) When sending a data frame
-> >     When AR9271 performs as an iperf server, this panic appears less 
-> >     frequently than as a client.
-> > 
-> > (1) When transmission throughput is relatively high
-> >     For example, this panic never seems to appear when Ping 
-> >     communication is performed.
-> > 
-> > (2) When multi processor mode is enabled
-> >     When SMP option of the kernel is disabled (CONFIG_SMP=m), this 
-> >     panic doesn't occur.
-> > 
-> > I've not duplicated the same on a x86 environment yet.
-> > 
-> > I suspect that spinlock usage in Tx routines of ath9k/hif_usb.c must 
-> > have something to do with this panic.
-> > 
-> > Have anyone come across the similar crash as this?
-> > 
-> > 
-> > 
-> > Best Regards,
-> > Takashi Kawamoto
-> > 
-> > ==================================================
-> >  Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
-> >  silex technology,Inc. 
-> >  Software Engineering Division
-> >  Phone:+81-774-98-3877 FAX:+81-774-98-3678
-> > ==================================================
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-
-==================================================
- Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
- silex technology,Inc. 
- Software Engineering Division
- Phone:+81-774-98-3877 FAX:+81-774-98-3678
-==================================================
-
+Vivek.
