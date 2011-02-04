@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55248 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751131Ab1BUWcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 17:32:33 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat: backport tty_{lock,unlock,locked}
-Date: Mon, 21 Feb 2011 23:32:23 +0100
-Message-Id: <1298327544-18943-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1298327544-18943-1-git-send-email-hauke@hauke-m.de>
-References: <1298327544-18943-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:53345 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727Ab1BDJ01 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 04:26:27 -0500
+Received: by wyb28 with SMTP id 28so2046700wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 01:26:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikqBvB6+bwKRPFb+oSstzbR9K=bdmjK-D76D23Q@mail.gmail.com>
+References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
+	<1296800640-6381-2-git-send-email-vnatarajan@atheros.com>
+	<AANLkTikqBvB6+bwKRPFb+oSstzbR9K=bdmjK-D76D23Q@mail.gmail.com>
+Date: Fri, 4 Feb 2011 14:56:26 +0530
+Message-ID: <AANLkTinD4XS7XKeQfy-hW==KcVExh_ybGpT3UdoHKYP_@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mac80211: Fix a race on enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 4, 2011 at 1:07 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Feb 3, 2011 at 10:24 PM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+>> There is a race of queuing a data frame before the tx completion
+>> of nullfunc frame for enabling power save. This has caused a power
+>> save state mismatch between the station and the AP. This patch
+>> addresses this issue.
+>>
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>
+> Not stable fix? What't the effect of not having this patch? The
+> description could use some love to explain better what is observed in
+> terms of metrics or loss.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.36.h |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+The issue is similar to the other patch I posted for ath9k. As there
+is a power save state mismatch, AP continues to send the data traffic
+whereas the station might be in sleep mode. I see a IxChariot
+disconnect issue while testing continuous Rx UDP traffic. I will add
+these details in the next version after the review of these two PS
+related patches.
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 74d2309..0e3b774 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -9,6 +9,7 @@
- #include <pcmcia/cistpl.h>
- #include <pcmcia/ds.h>
- #include <linux/pm_qos_params.h>
-+#include <linux/smp_lock.h>
- 
- #define kparam_block_sysfs_write(a)
- #define kparam_unblock_sysfs_write(a)
-@@ -101,6 +102,23 @@ int no_printk(const char *s, ...) { return 0; }
- #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
- #endif
- 
-+#define EXTPROC	0200000
-+#define TIOCPKT_IOCTL		64
-+
-+static inline void tty_lock(void) __acquires(kernel_lock)
-+{
-+#ifdef CONFIG_LOCK_KERNEL
-+	/* kernel_locked is 1 for !CONFIG_LOCK_KERNEL */
-+	WARN_ON(kernel_locked());
-+#endif
-+	lock_kernel();
-+}
-+static inline void tty_unlock(void) __releases(kernel_lock)
-+{
-+	unlock_kernel();
-+}
-+#define tty_locked()           (kernel_locked())
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
- 
- #endif /* LINUX_26_36_COMPAT_H */
--- 
-1.7.1
-
+VIvek.
