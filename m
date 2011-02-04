@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45725 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637Ab1BLW2T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Feb 2011 17:28:19 -0500
-Received: by fxm20 with SMTP id 20so3925905fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 14:28:18 -0800 (PST)
-Message-Id: <6c1cef43fb9d4979f9f7e0dcc71f61921730149b.1297548925.git.chunkeey@googlemail.com>
-In-Reply-To: <50e288fa312fbeef461043181587959576545f8d.1297548925.git.chunkeey@googlemail.com>
-References: <a1716888d72252e775f666c0caf6aa15cd0de33b.1297548925.git.chunkeey@googlemail.com>
-	<22063045349cb651b39a410a66fcdfedf7eb3a0c.1297548925.git.chunkeey@googlemail.com>
-	<50e288fa312fbeef461043181587959576545f8d.1297548925.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 12 Feb 2011 22:53:00 +0100
-Subject: [PATCH 4/4] p54spi: update sample eeprom
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Received: from mail.atheros.com ([12.19.149.2]:60315 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098Ab1BDMku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Feb 2011 07:40:50 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 04:40:30 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [RFC] mac80211: Flush all txq before sending a nullfunc frame.
+Date: Fri, 4 Feb 2011 18:10:46 +0530
+Message-ID: <1296823246-5517-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit: "p54: enhance rssi->dBm database import"
-changed the way how the driver deals with the
-rssical data. A new data format was necessary
-and hence this patch.
+In a highly noisy environment, a data frame which is queued before
+a nullfunc frame on a different hw queue may be sent over the air
+after the tx completion of nullfunc frame. This causes the station
+to enter power save and the AP to see the station as awake and
+continues to send the data traffic. Fix this by flushing all tx
+queues before we send the null function frame with PM bit set.
 
-NOTE: (for users with a custom eeprom binary)
-I spent some time updating p54tools to support
-the new format too: => (git available from)
-http://git.kernel.org/?p=linux/kernel/git/chr/p54tools.git
-
-It now comes with a simplistic script "n800_rssi2v2.sh"
-which can be used to automate the conversion.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- drivers/net/wireless/p54/p54spi_eeprom.h |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/p54spi_eeprom.h b/drivers/net/wireless/p54/p54spi_eeprom.h
-index d592cbd..0b7bfb0 100644
---- a/drivers/net/wireless/p54/p54spi_eeprom.h
-+++ b/drivers/net/wireless/p54/p54spi_eeprom.h
-@@ -65,9 +65,10 @@ static unsigned char p54spi_eeprom[] = {
- 0x03, 0x00, 0x00, 0x11,		/* PDR_ANTENNA_GAIN */
- 	0x08, 0x08, 0x08, 0x08,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 45f736e..f963df5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -729,6 +729,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+ 	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
+ 		ifmgd->flags |= IEEE80211_STA_PS_PENDING;
++		drv_flush(local, false);
+ 		ieee80211_send_nullfunc(local, sdata, 1);
+ 	}
  
--0x09, 0x00, 0xad, 0xde,		/* PDR_RSSI_LINEAR_APPROXIMATION_CUSTOM */
--	0x0a, 0x01, 0x72, 0xfe, 0x1a, 0x00, 0x00, 0x00,
--	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+0x0a, 0x00, 0xff, 0xca,		/* PDR_RSSI_LINEAR_APPROXIMATION_CUSTOMV2 */
-+	0x01, 0x00, 0x0a, 0x00,
-+	0x00, 0x00, 0x0a, 0x00,
-+		0x85, 0x09, 0x0a, 0x01, 0x72, 0xfe, 0x1a, 0x00, 0x00, 0x00,
- 
- /* struct pda_custom_wrapper */
- 0x10, 0x06, 0x5d, 0xb0,		/* PDR_PRISM_PA_CAL_CURVE_DATA_CUSTOM */
-@@ -671,7 +672,7 @@ static unsigned char p54spi_eeprom[] = {
- 	0xa8, 0x09, 0x25, 0x00, 0xf5, 0xff, 0xf9, 0xff, 0x00, 0x01,
- 
- 0x02, 0x00, 0x00, 0x00,		/* PDR_END */
--	0x67, 0x99,
-+	0xb6, 0x04,
- };
- 
- #endif /* P54SPI_EEPROM_H */
 -- 
-1.7.2.3
+1.6.3.3
 
