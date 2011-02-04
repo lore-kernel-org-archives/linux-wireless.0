@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42485 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929Ab1BGVoo (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:50668 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752267Ab1BDVNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 16:44:44 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/7] mac80211:  Make STA disconnect messages warn instead of debug.
-Date: Mon,  7 Feb 2011 13:44:32 -0800
-Message-Id: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+	Fri, 4 Feb 2011 16:13:22 -0500
+Cc: trivial@kernel.org, henryp@broadcom.com, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <95FFFE22-6CF5-4ECF-B2B4-D6835F0F100E@gmail.com>
+From: Justin Mattock <justinmattock@gmail.com>
+To: Greg KH <greg@kroah.com>
+In-Reply-To: <20110204210021.GA15713@kroah.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v936)
+Subject: Re: [PATCH 6/8]staging: brcm80211i: sbsdio.h: change a typo comamnd to command
+Date: Fri, 4 Feb 2011 13:13:17 -0800
+References: <1296623248-5399-1-git-send-email-justinmattock@gmail.com> <20110204205919.GA15658@kroah.com> <20110204210021.GA15713@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-This makes them more easily seen in /var/log/messages
-and the console, for instance.
+On Feb 4, 2011, at 1:00 PM, Greg KH wrote:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 f77adf1... 340bef6... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
+> On Fri, Feb 04, 2011 at 12:59:19PM -0800, Greg KH wrote:
+>> On Tue, Feb 01, 2011 at 09:07:28PM -0800, Justin P. Mattock wrote:
+>>> The below patch fixes a typo comamnd to command.
+>>>
+>>> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+>>>
+>>> ---
+>>> drivers/staging/brcm80211/include/sbsdio.h |    2 +-
+>>> 1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/brcm80211/include/sbsdio.h b/drivers/ 
+>>> staging/brcm80211/include/sbsdio.h
+>>> index 6afdbbe..c190acb 100644
+>>> --- a/drivers/staging/brcm80211/include/sbsdio.h
+>>> +++ b/drivers/staging/brcm80211/include/sbsdio.h
+>>> @@ -144,7 +144,7 @@
+>>> 						 */
+>>>
+>>> #define SBSDIO_BYTEMODE_DATALEN_MAX	64	/* sdio byte mode: maximum  
+>>> length of one
+>>> -						 * data comamnd
+>>> +						 * data command
+>>
+>> This patch adds a trailing space, which is not allowed.
+>>
+>> Please fix this and resend.
+>
+> Nevermind, I've edited this by hand and fixed it up.
+>
+> Please be more careful in the future and ALWAYS run your patches  
+> through
+> scripts/checkpatch.pl to catch these types of things.
+>
+> thanks,
+>
+> greg k-h
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f77adf1..340bef6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2019,10 +2019,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 				ieee80211_mgd_probe_ap_send(sdata);
- 			} else {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--				wiphy_debug(local->hw.wiphy,
--					    "%s: No ack for nullfunc frame to"
--					    " AP %pM, disconnecting.\n",
--					    sdata->name, bssid);
-+				wiphy_warn(local->hw.wiphy,
-+					   "%s: No ack for nullfunc frame to"
-+					   " AP %pM, disconnecting.\n",
-+					   sdata->name, bssid);
- #endif
- 				ieee80211_sta_connection_lost(sdata, bssid);
- 			}
-@@ -2030,11 +2030,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			run_again(ifmgd, ifmgd->probe_timeout);
- 		else if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--			wiphy_debug(local->hw.wiphy,
--				    "%s: Failed to send nullfunc to AP %pM"
--				    " after %dms, disconnecting.\n",
--				    sdata->name,
--				    bssid, probe_wait_ms);
-+			wiphy_warn(local->hw.wiphy,
-+				   "%s: Failed to send nullfunc to AP %pM"
-+				   " after %dms, disconnecting.\n",
-+				   sdata->name,
-+				   bssid, probe_wait_ms);
- #endif
- 			ieee80211_sta_connection_lost(sdata, bssid);
- 		} else if (ifmgd->probe_send_count < max_tries) {
-@@ -2052,11 +2052,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
--			wiphy_debug(local->hw.wiphy,
--				    "%s: No probe response from AP %pM"
--				    " after %dms, disconnecting.\n",
--				    sdata->name,
--				    bssid, probe_wait_ms);
-+			wiphy_warn(local->hw.wiphy,
-+				   "%s: No probe response from AP %pM"
-+				   " after %dms, disconnecting.\n",
-+				   sdata->name,
-+				   bssid, probe_wait_ms);
- 
- 			ieee80211_sta_connection_lost(sdata, bssid);
- 		}
--- 
-1.7.2.3
 
+yep I admit I had forgotten to use that script(was focusing on  
+maintainers)..
+I will remember that next time..
+
+Thanks..
+
+Justin P. Mattock
