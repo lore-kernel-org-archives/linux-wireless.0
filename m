@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52088 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab1BNS7O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 13:59:14 -0500
-Received: by vxb37 with SMTP id 37so2855770vxb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 10:59:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimVK9pJXW32EwHoeqF=0_o-L3wmUC8W1Hd6kBO6@mail.gmail.com>
-References: <AANLkTimVK9pJXW32EwHoeqF=0_o-L3wmUC8W1Hd6kBO6@mail.gmail.com>
-Date: Mon, 14 Feb 2011 19:55:45 +0100
-Message-ID: <AANLkTinLNxBkS73=VL=N=0161LSnudVcyHbF-DvwcrVf@mail.gmail.com>
-Subject: Installing compat-wireless modules on an external system
-From: Juan Carlos Garza <juancarlosgarza@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from dspam.koyote.com ([204.11.31.20]:2819 "EHLO vopmail.neato.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753453Ab1BEV5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Feb 2011 16:57:39 -0500
+Received: from fl-server.ewol.com (unverified [66.209.47.174]) by vopmail.neato.net
+  (Vircom SMTPRS 5.0.916.3) with ESMTP id <B0808884863@vopmail.neato.net> for <linux-wireless@vger.kernel.org>;
+  Sat, 5 Feb 2011 15:46:21 -0600
+Received: from [192.168.2.6] (nm.ewol.com [192.168.2.6])
+	by fl-server.ewol.com (8.14.1/8.14.1) with ESMTP id p15LkIM2009997
+	for <linux-wireless@vger.kernel.org>; Sat, 5 Feb 2011 16:46:19 -0500
+Subject: 4addr station in a bridge gives 'received own source address'
+ errors
+From: Steve Brown <sbrown@cortland.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 05 Feb 2011 14:46:17 -0700
+Message-ID: <1296942377.27336.29.camel@nm.ewol.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I have a 2.6.24 system running in a separate box (which boots from an
-SD Card), and I want to install compat-wireless in it in order to use
-a driver (and update the wireless subsystem). I compile the kernel for
-the 2.6.24 system in my daily PC.
+I have an AP and 2 stations. The wifi interfaces on the stations are in
+bridges. Pinging from one station to the other generates this error.
+This does not occur if the station interfaces are not in a bridge.
 
-I cross compiled compat-wireless without problems against the 2.6.24
-sources using KLIB=(2.6.24 src path) and KLIB_BUILD=(2.6.24 src path)
+The bridge puts the station wifi interface in promiscuous mode. After
+instrumenting the bridge code, the following seems to be happening. In
+the case of a frame sent from S1->AP->S2, S1 also receives the AP->S2
+frame. When that frame is converted to 802.3, S1 is the source address
+and the bridge code complains.
 
-My problem is that I am not sure of how to install it in the 2.6.24
-system. As this system can be booted from the SD Card, I can mount it
-in my daily PC and set the DESTDIR and others with destination the
-path. I ran something like:
+I don't understand why the station interface needs to be in promiscuous
+mode. The 4addr frames would seem to make this unnecessary.
 
-make KLIB=(2.6.24 src path) KLIB_BUILD=(2.6.24 src path)
-KMODPATH_ARG="INSTALL_MOD_PATH=(2.6.24 mounted in my
-pc/lib/modules/2.6.24/)" DESTDIR=(2.6.24 mounted in my
-pc/lib/modules/2.6.24/) modules_install
+As a test, I ignored promiscuous mode for stations in the ath9k driver
+(a hack) and the messages disappeared. The setup then functions as a
+client bridge in that computers hooked to one station can ping computers
+connected to the other station.
 
-Which actually copied the modules into the 2.6.24 system in the SD
-Card. However, when booting the 2.6.24 box, and then trying to do
-insmod /path/driver.ko, it fails to find some symbols. Going through
-the different dependencies (by trying to insert a module, and then
-executing dmesg -c), and trying to insert them, it fails too. I cannot
-insert mac80211.ko or compat.ko or the rfkill module, etc. I think one
-of the last dependences is the function "dev_set_name" which appears
-in compat-2.6.26.c I am not sure if this file is also being compiled
-(as my daily PC has a 2.6.29 kernel and I don't have access to it
-right now).
+I think this is a bug.
 
-Well, maybe missing a dependency somewhere, or the 2.6.24 kernel
-version is not correctly identified. Any hints?
+Steve
 
-Best regards,
-
-Juan Carlos
