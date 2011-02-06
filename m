@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47045 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:44284 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997Ab1BJRsT convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750988Ab1BFMHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 12:48:19 -0500
-Received: by iyj8 with SMTP id 8so1551670iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 09:48:18 -0800 (PST)
+	Sun, 6 Feb 2011 07:07:35 -0500
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
-References: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 10 Feb 2011 09:47:43 -0800
-Message-ID: <AANLkTinYRLVkXjZ1g8bV6CxEfq-e-JrPBJytETZ2kXeV@mail.gmail.com>
-Subject: Re: [PATCH 0/4] compat-wireless: some fixes
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19790.36590.884287.572619@gargle.gargle.HOWL>
+Date: Sun, 6 Feb 2011 17:37:10 +0530
+To: "Martin Schleier" <drahemmaps@gmx.net>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	linville@tuxdriver.com, kune@deine-taler.de,
+	linux-usb@vger.kernel.org, stern@rowland.harvard.edu,
+	gregkh@suse.de
+Subject: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+In-Reply-To: <20110206102710.152130@gmx.net>
+References: <20110206102710.152130@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 10, 2011 at 7:26 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This patch series replaces the old one send on Tuesday.
-> Now brcm80211 builds without debugging activated and all patches in the
-> patches directory are applying onto todays linux-next.
->
-> Hauke Mehrtens (4):
->  compat-wireless: make patches apply again
->  compat-wireless: brcm80211 adapt changes in mac80211
->  compat-wireless: build zd1211rw only for kernel >= 2.6.29
->  compat-wireless: activate BRCMFMAC
+Martin Schleier wrote:
+> Interesting, I know that interrupt and bulk endpoints share a lot of
+> common logic so I can see how this should work. But is it really
+> possible [and more to the point: sane?!] to override the endpoint
+> descriptors?
+> 
+> I know that usb_submit_urb checks [when config_usb_debug is enabled]
+> if the xfertype of the submitted urb matches the one of the endpoint,
+> so I wonder I started to wonder if we are fooling "just" the code
+> here, or ourselves in the process?
+>  
+> > ath9k_htc does the same thing (see ath/ath9k/hif_usb.c).
+> > It does seem to be working properly but I am wondering if the
+> > USB subsystem has to be updated after the driver messes around with bmAttributes.
+> > (lsusb would still show the endpoint type as INT).
+> > 
+> > You have a usb_reset_configuration() call before changing
+> > the endpoint type, why is that necessary ? And would that
+> > reset the endpoints as well ?
+> Huh, has this already catched on?
 
-Thanks! Applied all and pushed!
+Well, for ath9k_htc, the FW changes the descriptor type after it is
+transferred to the target. The USB devs suggested that usb_device_reset()
+should be called by the driver in such cases, but in ath9k_htc's case,
+the device is disconnected and the error message "device firmware changed"
+is displayed.
 
-  Luis
+Agreed, this is a dirty hack - but is there any way for a driver to make the USB
+subsystem re-configure the endpoints ?
+
+Sujith
