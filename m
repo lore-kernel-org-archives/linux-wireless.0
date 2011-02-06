@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:52336 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752430Ab1BALsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 06:48:11 -0500
-Date: Tue, 1 Feb 2011 12:47:57 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Eric Fernandez <zeb@zebulon.org.uk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
-Message-ID: <20110201114757.GA11930@sig21.net>
-References: <AANLkTik=oRjh9UHAsOOTpuOJR7OBw2HCsXd8vhHN_YJY@mail.gmail.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:58993 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753003Ab1BFQQB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Feb 2011 11:16:01 -0500
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTik=oRjh9UHAsOOTpuOJR7OBw2HCsXd8vhHN_YJY@mail.gmail.com>
+Message-ID: <19790.51491.583675.986658@gargle.gargle.HOWL>
+Date: Sun, 6 Feb 2011 21:45:31 +0530
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sujith <m.sujith@gmail.com>, Martin Schleier <drahemmaps@gmx.net>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
+	<linville@tuxdriver.com>, <kune@deine-taler.de>,
+	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
+Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+In-Reply-To: <Pine.LNX.4.44L0.1102061037060.20379-100000@netrider.rowland.org>
+References: <19790.36590.884287.572619@gargle.gargle.HOWL>
+	<Pine.LNX.4.44L0.1102061037060.20379-100000@netrider.rowland.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Tue, Feb 01, 2011 at 09:26:25AM +0000, Eric Fernandez wrote:
-> I reported this issue for two Linux distribution (Arch and Mandriva)
-> after upgrading to kernel 2.6.37 and is rather critical for users of
-> RT2573 Ralink USB Wireless adapters. This leads to complete system
-> crash, which is solved either by using a wired ethernet connection, or
-> by downgrading the kernel to 2.6.36 version. This happens in
-> particular when watching a streaming video (e.g. Youtube). I do not
-> see any entry in the log files. The sound goes to a loop, system is
-> completely blocked and only a hard reset will allow rebooting.
+Alan Stern wrote:
+> Why do you want to?  Why does changing the endpoint type from interrupt
+> to bulk improve performance?  Yes, the description says that this
+> causes CPU usage to go from 10% to below 1%, but _why_ does it do that?
 > 
-> I feel this issue has been reported for other distributions too:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/673682
-> and this may be related:
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/002935.html
-> 
-> I tried to use the compat-wireless drivers (2011-01-30), which were
-> compiled correctly, but rt2x00 module loading segfaults when inserting
-> the USB adapter.
-> 
-> What can I do to help squashing this issue?
+> Maybe the same effect can be achieved simply by changing the interrupt
+> interval instead.
 
-I have no immediate idea about the cause of the crash, but
-did you make sure you unloaded _all_ wireless modules
-before plugging in the USB adapter after installing
-compat-wireless?  "make unload" or a reboot should do the trick.
+Well, when the device is plugged in, the USB core recognizes the endpoints
+as interrupt type. Later, in the probe() callback, the FW is uploaded to the
+target and it patches the endpoints' type to bulk. Please correct me if am
+wrong, but I think this mismatch between the host and the target would be
+the cause for the high CPU usage, when the transmission load for that
+endpoint is high.
 
-If it still crashes, can you check dmesg for the crash messages?
-
-
-Thanks,
-Johannes
+Sujith
