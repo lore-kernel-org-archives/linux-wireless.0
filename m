@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:57239 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750858Ab1BHI1E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 03:27:04 -0500
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in powersave mode
-References: <201101311600.39486.IvDoorn@gmail.com>
-	<874o8mbaec.fsf@purkki.adurom.net> <20110202212912.GA28687@sig21.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 08 Feb 2011 10:27:02 +0200
-In-Reply-To: <20110202212912.GA28687@sig21.net> (Johannes Stezenbach's message of "Wed\, 2 Feb 2011 22\:29\:12 +0100")
-Message-ID: <87r5bj7wyx.fsf@purkki.adurom.net>
+Received: from mail.candelatech.com ([208.74.158.172]:36859 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753496Ab1BFS7L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Feb 2011 13:59:11 -0500
+Received: from [71.112.48.101] (pool-71-112-48-101.sttlwa.dsl-w.verizon.net [71.112.48.101])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p16Ix9lG026986
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Sun, 6 Feb 2011 10:59:10 -0800
+Message-ID: <4D4EEF7D.9020502@candelatech.com>
+Date: Sun, 06 Feb 2011 10:59:09 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: mac80211 work and channel type
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Stezenbach <js@sig21.net> writes:
+Much of the work items currently do not explicitly set a channel-type,
+and so default to NO_HT (which is zero).
 
-> On Wed, Feb 02, 2011 at 07:42:51PM +0200, Kalle Valo wrote:
->> So the firmware/hardware doesn't have support for tracking and waking
->> up for beacons? I didn't even know that such hardware exists :) Waking
->> up for beacons from host sounds very inefficient and unrealiable. All
->> the devices I have seen either do this in firmware or hardware due to
->> time constraints. Even at76c50x-usb, which is ancient, does all this
->> in firmware.
->
-> IMHO this is a bit exaggerated.
+This currently means that we have to do a channel (type)
+change for each work item if we are running HT20 or HT40
+on the operating channel.  This happens, for instance, during
+authentication for stations.
 
-Ok, you have a point that maybe I was exaggerating a bit too much.
+Based on my limited understanding, it seems that it is perfectly
+legal to send NO_HT pkts on any channel-type.  It seems that you
+can also send HT20 on HT40 channel-types.  So, would there be any
+problem to optimizing the work logic to not change the channel type
+if the work channel type fit within the bounds of the current
+channel type?
 
->  Given that the beacon interval is typically ~100 msecs, and typical
-> worst cast irq latencies on Linux 2.6 are a few 100 usecs, we can
-> sleep e.g. 90msecs and wake up in time to catch the beacon with high
-> probability, thus saving 90% on PHY power. Not perfect, but good
-> enough, isn't it?
-
-But it's not only about irq latency. If we would implement this in
-mac80211 at least one context switch is involved before the beacon is
-processed. Also driver might create more latency. And then there's
-waking up chip from the sleep mode, that usually takes time. And what
-happens when the host is under severe load? I just think that there is
-just too much ucertainty here and I don't trust this to be reliable.
-
-So I have my concerns if it really makes sense to implement this in
-mac80211. Extra complexity (and extra maintenance) for two sub-optimal
-(from power save point of view) hardware.
-
-(dropping rt2x00 list because it spams me about not being subscribed)
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
