@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:51147 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293Ab1BXVJr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 16:09:47 -0500
-Message-ID: <4D66C912.8090205@mail.berlios.de>
-Date: Thu, 24 Feb 2011 22:09:38 +0100
-From: Stefan Weil <weil@mail.berlios.de>
-MIME-Version: 1.0
-To: Greg KH <greg@kroah.com>
-CC: Greg Kroah-Hartman <gregkh@suse.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: brcm80211: Fix memory leak after kmalloc failure
-References: <1298158151-22903-1-git-send-email-weil@mail.berlios.de> <20110223220533.GA23425@kroah.com>
-In-Reply-To: <20110223220533.GA23425@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:39589 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753371Ab1BFRz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Feb 2011 12:55:58 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/2] iwlwifi: remove unnecessary locking
+Date: Sun,  6 Feb 2011 09:42:52 -0800
+Message-Id: <1297014173-28964-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1297014173-28964-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1297014173-28964-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 23.02.2011 23:05, schrieb Greg KH:
-> On Sun, Feb 20, 2011 at 12:29:11AM +0100, Stefan Weil wrote:
->> This error was spotted by cppcheck:
->>
->> drivers/staging/brcm80211/phy/wlc_phy_lcn.c:4053: error: Memory leak: ptr
->>
->> Cc: Brett Rudley <brudley@broadcom.com>
->> Cc: Henry Ptasinski <henryp@broadcom.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: devel@driverdev.osuosl.org
->> Cc: linux-kernel@vger.kernel.org
->> Signed-off-by: Stefan Weil <weil@mail.berlios.de>
->> ---
->> drivers/staging/brcm80211/phy/wlc_phy_lcn.c | 1 +
->
-> What tree did you make this against? This file isn't in the linux-next
-> tree anymore.
->
-> thanks,
->
-> greg k-h
+From: Johannes Berg <johannes.berg@intel.com>
 
-The patch was based on 
-git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git.
+This code, and the places that set the variable
+is_internal_short_scan and the vif pointers are
+all protected by the mutex, there's no point in
+locking the spinlock here as well (any more).
 
-In linux-next, the file was moved to a different directory:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ---
+ 2 files changed, 0 insertions(+), 6 deletions(-)
 
-from drivers/staging/brcm80211/phy/wlc_phy_lcn.c
-to   drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
-
-It still needs the same fix. I'll send a new patch based on latest 
-linux-next.
-
-Regards
-Stefan W.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index d4ba335..3aa4864 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1395,15 +1395,12 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		u32 extra;
+ 		u32 suspend_time = 100;
+ 		u32 scan_suspend_time = 100;
+-		unsigned long flags;
+ 
+ 		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
+-		spin_lock_irqsave(&priv->lock, flags);
+ 		if (priv->is_internal_short_scan)
+ 			interval = 0;
+ 		else
+ 			interval = vif->bss_conf.beacon_int;
+-		spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 		scan->suspend_time = 0;
+ 		scan->max_out_time = cpu_to_le32(200 * 1024);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 76fae81..adcef73 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2860,16 +2860,13 @@ int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		u32 extra;
+ 		u32 suspend_time = 100;
+ 		u32 scan_suspend_time = 100;
+-		unsigned long flags;
+ 
+ 		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
+ 
+-		spin_lock_irqsave(&priv->lock, flags);
+ 		if (priv->is_internal_short_scan)
+ 			interval = 0;
+ 		else
+ 			interval = vif->bss_conf.beacon_int;
+-		spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 		scan->suspend_time = 0;
+ 		scan->max_out_time = cpu_to_le32(200 * 1024);
+-- 
+1.7.0.4
 
