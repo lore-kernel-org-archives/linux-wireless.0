@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48156 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab1BNUPe (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:34919 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574Ab1BFOE7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 15:15:34 -0500
-Date: Mon, 14 Feb 2011 15:10:53 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
-Message-ID: <20110214201052.GE2722@tuxdriver.com>
-References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
- <1297677349.3785.3.camel@jlt3.sipsolutions.net>
- <1297697139.4723.4.camel@wwguy-ubuntu>
- <1297697334.3953.7.camel@jlt3.sipsolutions.net>
- <1297698486.4723.15.camel@wwguy-ubuntu>
- <1297698872.3953.8.camel@jlt3.sipsolutions.net>
- <1297699053.4723.17.camel@wwguy-ubuntu>
+	Sun, 6 Feb 2011 09:04:59 -0500
+Message-ID: <4D4EAA82.5010904@davizone.at>
+Date: Sun, 06 Feb 2011 15:04:50 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297699053.4723.17.camel@wwguy-ubuntu>
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 03/18] wl1251: fix scan behaviour while not associated
+References: <4D45A598.20709@davizone.at> <4D45B7BA.9080402@davizone.at> <87d3nbcutc.fsf@purkki.adurom.net>
+In-Reply-To: <87d3nbcutc.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 07:57:33AM -0800, wwguy wrote:
-> On Mon, 2011-02-14 at 07:54 -0800, Johannes Berg wrote:
-> > On Mon, 2011-02-14 at 07:48 -0800, wwguy wrote:
-> > > On Mon, 2011-02-14 at 07:28 -0800, Johannes Berg wrote:
-> > > > On Mon, 2011-02-14 at 07:25 -0800, wwguy wrote:
-> > > > > On Mon, 2011-02-14 at 01:55 -0800, Johannes Berg wrote:
-> > > > > > On Thu, 2011-02-10 at 08:16 -0800, Wey-Yi Guy wrote:
-> > > > > > > remove plcp check for 3945, mark the function __maybe_unused
-> > > > > > 
-> > > > > > Why not remove the function instead?
-> > > > > > 
-> > > > > I guess we can remove it in legacy driver
-> > > > 
-> > > > But it's a 3945 specific function, and never used, so ...??
-> > > > 
-> > > I mean we should remove this function in legacy driver after driver
-> > > split
-> > 
-> > I just don't see why we can't remove it right now?
-> > 
-> we can do it for _stable, for mainstream, all 3945 will move to separate
-> driver anyway.
+Am 2011-02-01 22:24, schrieb Kalle Valo:
+> Now that's a weird problem. I wonder this wasn't reported with the
+> fremantle kernels. How often did you see the problem?
 
-...where it will still be unused.  No?
+My guess is that it doesn't occur with the fremantle kernel because it only
+uses the JOIN command when it really wants to associate. (It only does joins on
+!is_zero_ether_addr(bssid))
+The wireless-testing driver uses the JOIN command more often and doesn't check
+for zero BSSID.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Can you resend the patch with just this part and the accompanying
+> defines, please? It's better to have debug messages improvements in a
+> separate patch.
+
+Yes, I will do that.
