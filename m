@@ -1,91 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58253 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753473Ab1BDJR3 convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:40170 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753204Ab1BFSne (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 04:17:29 -0500
-Received: by wwa36 with SMTP id 36so2133636wwa.1
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 01:17:28 -0800 (PST)
+	Sun, 6 Feb 2011 13:43:34 -0500
+Date: Sun, 06 Feb 2011 12:44:31 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: sgruszka@redhat.com, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] rtlwifi: rtl8192ce: Refactor rtl8192ce/fw
+Message-ID: <4d4eec0f.et2vL5g5GiBl8wXm%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <19787.47298.50879.401166@gargle.gargle.HOWL>
-References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
-	<19787.47298.50879.401166@gargle.gargle.HOWL>
-Date: Fri, 4 Feb 2011 14:47:27 +0530
-Message-ID: <AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 4, 2011 at 1:58 PM, Sujith <m.sujith@gmail.com> wrote:
-> Vivek Natarajan wrote:
->> In a highly noisy environment, a data frame which is queued before
->> a nullfunc frame on a different hw queue may be sent over the air
->> after the tx completion of nullfunc frame. This causes the station
->> to enter power save and the AP to see the station as awake and
->> continues to send the data traffic. Fix this by draining all tx
->> queues before we send the null function frame with PM bit set.
->>
->> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/xmit.c |   10 +++++++++-
->>  1 files changed, 9 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
->> index 68a1c76..0cb6017 100644
->> --- a/drivers/net/wireless/ath/ath9k/xmit.c
->> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->> @@ -1710,7 +1710,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
->>                           bf->bf_buf_addr,
->>                           txq->axq_qnum);
->>
->> -
->>       return bf;
->>  }
->>
->> @@ -1813,6 +1812,15 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
->>       if (unlikely(!bf))
->>               return -ENOMEM;
->>
->> +     if (ieee80211_is_nullfunc(hdr->frame_control) &&
->> +         ieee80211_has_pm(hdr->frame_control)) {
->> +             /* Drain all the pending frames before we send a nullfunc frame
->> +              * to avoid any power save state mismatch between the station
->> +              * and the AP.
->> +              */
->> +             ath_drain_all_txq(sc, false);
->> +     }
->> +
->
-> There is a comment about the caller waking queues up properly in ath_drain_all_txq(),
-> I don't think that requirement is handled properly.
+Make rtlwifi/rtl8192ce/fw.{h,c} match what will be needed for
+rtlwifi/rtl8192cu.{h,c}.
 
-So, will it be appropriate to add stop and wake queue while calling
-ath_drain_all_txq?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> Also, mac80211's flush() callback exists precisely for this purpose.
-
-Currently, flush() is called only when mac80211 is moving to off
-channel. Even if we call flush before sending nullfunc frame for power
-save, a question arises if it should be done with drop = true or
-false.  If set as false, there is a possibility that the frames might
-be still around in the hw when nullfunc is sent and the same issue
-might pop up.
-Drop is set as false for scanning. iwlwifi waits for 2sec for all the
-packets to complete but for ath9k, since it is asynchronous, I am not
-quite sure of how to wait for tx_completion of all pending packets.
-
-> I think it would be better to use that rather than adding a check for every packet.
-
-We were considering yet another approach too:
-In this case, if a nullfunc frame for PS comes to the driver when
-there are pending frames in the hw queue(the frames queued before
-100ms and still pending because of highly noisy environment), silently
-drop the frame so that mac80211 will try once again after 100ms to go
-to PS. The issue that I face here is, ath9k does not know whether this
-frame is actually for PS or for fake sleep before scanning.
-
-Vivek.
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/fw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/fw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/fw.c
+@@ -133,17 +133,15 @@ static void _rtl92c_write_fw(struct ieee
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	bool is_version_b;
+ 	u8 *bufferPtr = (u8 *) buffer;
+ 
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, ("FW size is %d bytes,\n", size));
+ 
+-	is_version_b = IS_CHIP_VER_B(version);
+-	if (is_version_b) {
++	if (IS_CHIP_VER_B(version)) {
+ 		u32 pageNums, remainSize;
+ 		u32 page, offset;
+ 
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
++		if (IS_HARDWARE_TYPE_8192CE(rtlhal))
+ 			_rtl92c_fill_dummy(bufferPtr, &size);
+ 
+ 		pageNums = size / FW_8192C_PAGE_SIZE;
+@@ -231,14 +229,14 @@ int rtl92c_download_fw(struct ieee80211_
+ 	u32 fwsize;
+ 	int err;
+ 	enum version_8192c version = rtlhal->version;
++	const struct firmware *firmware;
+ 
+-	const struct firmware *firmware = NULL;
+-
++	printk(KERN_INFO "rtl8192cu: Loading firmware file %s\n",
++	       rtlpriv->cfg->fw_name);
+ 	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
+ 			       rtlpriv->io.dev);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 ("Failed to request firmware!\n"));
++		printk(KERN_ERR "rtl8192cu: Firmware loading failed\n");
+ 		return 1;
+ 	}
+ 
+@@ -560,39 +558,6 @@ void rtl92c_set_fw_pwrmode_cmd(struct ie
+ 
+ }
+ 
+-static bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
+-				    struct sk_buff *skb)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	struct rtl8192_tx_ring *ring;
+-	struct rtl_tx_desc *pdesc;
+-	u8 own;
+-	unsigned long flags;
+-	struct sk_buff *pskb = NULL;
+-
+-	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+-
+-	pskb = __skb_dequeue(&ring->queue);
+-	if (pskb)
+-		kfree_skb(pskb);
+-
+-	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+-
+-	pdesc = &ring->desc[0];
+-	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
+-
+-	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
+-
+-	__skb_queue_tail(&ring->queue, skb);
+-
+-	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
+-
+-	rtlpriv->cfg->ops->tx_polling(hw, BEACON_QUEUE);
+-
+-	return true;
+-}
+-
+ #define BEACON_PG		0 /*->1*/
+ #define PSPOLL_PG		2
+ #define NULL_PG			3
+@@ -776,7 +741,7 @@ void rtl92c_set_fw_rsvdpagepkt(struct ie
+ 	memcpy((u8 *) skb_put(skb, totalpacketlen),
+ 	       &reserved_page_packet, totalpacketlen);
+ 
+-	rtstatus = _rtl92c_cmd_send_packet(hw, skb);
++	rtstatus = rtlpriv->cfg->ops->cmd_send_packet(hw, skb);
+ 
+ 	if (rtstatus)
+ 		b_dlok = true;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -1029,3 +1029,37 @@ void rtl92ce_tx_polling(struct ieee80211
+ 			       BIT(0) << (hw_queue));
+ 	}
+ }
++
++bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
++			     struct sk_buff *skb)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	struct rtl8192_tx_ring *ring;
++	struct rtl_tx_desc *pdesc;
++	u8 own;
++	unsigned long flags;
++	struct sk_buff *pskb = NULL;
++
++	ring = &rtlpci->tx_ring[BEACON_QUEUE];
++
++	pskb = __skb_dequeue(&ring->queue);
++	if (pskb)
++		kfree_skb(pskb);
++
++	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
++
++	pdesc = &ring->desc[0];
++	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
++
++	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
++
++	__skb_queue_tail(&ring->queue, skb);
++
++	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
++
++	rtlpriv->cfg->ops->tx_polling(hw, BEACON_QUEUE);
++
++	return true;
++}
++
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
+@@ -711,4 +711,6 @@ void rtl92ce_tx_polling(struct ieee80211
+ void rtl92ce_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			     bool b_firstseg, bool b_lastseg,
+ 			     struct sk_buff *skb);
++bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
++
+ #endif
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -135,6 +135,7 @@ static struct rtl_hal_ops rtl8192ce_hal_
+ 	.set_bbreg = rtl92c_phy_set_bb_reg,
+ 	.get_rfreg = rtl92c_phy_query_rf_reg,
+ 	.set_rfreg = rtl92c_phy_set_rf_reg,
++	.cmd_send_packet = _rtl92c_cmd_send_packet,
+ };
+ 
+ static struct rtl_mod_params rtl92ce_mod_params = {
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h
+@@ -33,5 +33,7 @@
+ int rtl92c_init_sw_vars(struct ieee80211_hw *hw);
+ void rtl92c_deinit_sw_vars(struct ieee80211_hw *hw);
+ void rtl92c_init_var_map(struct ieee80211_hw *hw);
++bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
++			     struct sk_buff *skb);
+ 
+ #endif
