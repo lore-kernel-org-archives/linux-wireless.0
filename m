@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40343 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753188Ab1BIMR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 07:17:27 -0500
-To: Aleksandar Milivojevic <alex@milivojevic.org>
-Cc: Johannes Stezenbach <js@sig21.net>, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [RFC] rt2x00: Add autowakeup timer for receiving beacons while in powersave mode
-References: <201101311600.39486.IvDoorn@gmail.com>
-	<874o8mbaec.fsf@purkki.adurom.net> <20110202212912.GA28687@sig21.net>
-	<AANLkTinip3CZ8ZsY95E6dXnvhA_wEPSs4M7B+SmPY-ZM@mail.gmail.com>
-	<87mxm69ajp.fsf@purkki.adurom.net>
-	<AANLkTikgASqJ_7omn-Z4JWgAJ1dMtOYoSO8oa=GDtB=a@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 09 Feb 2011 14:17:25 +0200
-In-Reply-To: <AANLkTikgASqJ_7omn-Z4JWgAJ1dMtOYoSO8oa=GDtB=a@mail.gmail.com> (Aleksandar Milivojevic's message of "Tue\, 8 Feb 2011 11\:11\:26 -0800")
-Message-ID: <87pqr1767e.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.candelatech.com ([208.74.158.172]:38264 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905Ab1BFUMH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Feb 2011 15:12:07 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 3/5] mac80211:  Properly set work-item channel-type.
+Date: Sun,  6 Feb 2011 12:11:56 -0800
+Message-Id: <1297023118-24363-3-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
+References: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aleksandar Milivojevic <alex@milivojevic.org> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> On Tue, Feb 8, 2011 at 12:48 AM, Kalle Valo <kvalo@adurom.com> wrote:
->> Aleksandar Milivojevic <alex@milivojevic.org> writes:
->>
->> There is CONFIG_CFG80211_DEFAULT_PS kconfig option, but I'm not aware
->> of any other way to globally do this. I can only think of using iw or
->> iwconfig to disable power save per device.
->
-> I'm using iwconfig currently to disable power saving for wireless card
-> on my desktop after it boots up.  However, from user perspective of
-> things, it would be awesome if default was not hard coded in the
-> kernel.
+Some were indirectly set to NO_HT (zero), but I think
+it's better to explicitly set it in case the enum ever
+changes.  In cfg.c, it seems the channel-type was just
+ignored (and thus always set to NO_HT).
 
-Well, we have the kconfig option which you can use to achieve that.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 a7cd6a1... 9938f7f... M	net/mac80211/cfg.c
+:100644 100644 340bef6... cd68f2a... M	net/mac80211/mlme.c
+ net/mac80211/cfg.c  |    1 +
+ net/mac80211/mlme.c |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-> Though, I must admit that if it wasn't for the problem discussed
-> earlier in this thread, I probably wouldn't even notice power saving
-> was set to on.  I'm not sure if there are any other more subtle
-> downsides of having power saving enabled.
-
-Yeah, with a proper power save implemention user should not even
-notice any difference, apart from the reduced power consumptin of
-course. But if something in power save is broken (either in the client
-or in the AP) all sort of weird problems start to happen: network
-drops, randomly lost packets, packects going only one way and so on.
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a7cd6a1..9938f7f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1871,6 +1871,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	wk->type = IEEE80211_WORK_OFFCHANNEL_TX;
+ 	wk->chan = chan;
++	wk->chan_type = channel_type;
+ 	wk->sdata = sdata;
+ 	wk->done = ieee80211_offchan_tx_done;
+ 	wk->offchan_tx.frame = skb;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 340bef6..cd68f2a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2294,6 +2294,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		wk->type = IEEE80211_WORK_DIRECT_PROBE;
+ 	wk->chan = req->bss->channel;
++	wk->chan_type = NL80211_CHAN_NO_HT;
+ 	wk->sdata = sdata;
+ 	wk->done = ieee80211_probe_auth_done;
+ 
+@@ -2443,6 +2444,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(wk->assoc.prev_bssid, req->prev_bssid, ETH_ALEN);
+ 
+ 	wk->chan = req->bss->channel;
++	wk->chan_type = NL80211_CHAN_NO_HT;
+ 	wk->sdata = sdata;
+ 	wk->done = ieee80211_assoc_done;
+ 	if (!bss->dtim_period &&
 -- 
-Kalle Valo
+1.7.2.3
+
