@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57469 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419Ab1BUCTp (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:46896 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968Ab1BFThX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:19:45 -0500
-Received: by ywj3 with SMTP id 3so599530ywj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:19:45 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sun, 6 Feb 2011 14:37:23 -0500
+Received: by wyb28 with SMTP id 28so3921289wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Feb 2011 11:37:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52147.200376.92948@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:49:31 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 14/23] ath9k_htc: Calculate and set the HW opmode
+In-Reply-To: <AANLkTikYS1EUdTc9mo2kvoR-S1Cv+WcKqkGaFDA8fR+0@mail.gmail.com>
+References: <20110131214515.GC6368@thinkpad-t410>
+	<AANLkTikYS1EUdTc9mo2kvoR-S1Cv+WcKqkGaFDA8fR+0@mail.gmail.com>
+Date: Sun, 6 Feb 2011 20:37:21 +0100
+Message-ID: <AANLkTi=mRO99U5t3Z_gscuwix0X+brFhWtC=9nkytE+M@mail.gmail.com>
+Subject: Re: Missing skb_pad() return value checks in rt2x00 driver
+From: Wolfgang Kufner <wolfgang.kufner@gmail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Hi Ivo,
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   15 ++++++++++++++-
- 1 files changed, 14 insertions(+), 1 deletions(-)
+On Sun, Feb 6, 2011 at 5:17 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> Between here and where you added the padding are a couple of function
+> calls which use the skb->len field. So this patch would change the value what
+> they expect. Have you checked the possible impact?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 51a8c51..9733580 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -166,6 +166,18 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
- 	ath_hw_setbssidmask(common);
- }
- 
-+static void ath9k_htc_set_opmode(struct ath9k_htc_priv *priv)
-+{
-+	if (priv->num_ibss_vif)
-+		priv->ah->opmode = NL80211_IFTYPE_ADHOC;
-+	else if (priv->num_ap_vif)
-+		priv->ah->opmode = NL80211_IFTYPE_AP;
-+	else
-+		priv->ah->opmode = NL80211_IFTYPE_STATION;
-+
-+	ath9k_hw_setopmode(priv->ah);
-+}
-+
- void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- {
- 	struct ath_hw *ah = priv->ah;
-@@ -1252,12 +1264,12 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_htc_set_bssid_mask(priv, vif);
- 
--	priv->ah->opmode = vif->type;
- 	priv->vif_slot |= (1 << avp->index);
- 	priv->nvifs++;
- 	priv->vif = vif;
- 
- 	INC_VIF(priv, vif->type);
-+	ath9k_htc_set_opmode(priv);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
-@@ -1293,6 +1305,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 	priv->vif = NULL;
- 
- 	DEC_VIF(priv, vif->type);
-+	ath9k_htc_set_opmode(priv);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface at idx: %d\n", avp->index);
- 
--- 
-1.7.4.1
+I don't think skb_pad() touches skb->len. It writes zeros into the tailroom:
+/**
+*      skb_pad                 -       zero pad the tail of an skb
+*      @skb: buffer to pad
+*      @pad: space to pad
+*
+*      Ensure that a buffer is followed by a padding area that is zero
+*      filled. Used by network drivers which may DMA or transfer data
+*      beyond the buffer end onto the wire.
+*
+*      May return error in out of memory cases. The skb is freed on error.
+*/
 
+Thanks,
+Wolfgang
