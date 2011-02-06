@@ -1,95 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50359 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab1B0WOK (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40208 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753439Ab1BFSnn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 17:14:10 -0500
-Received: by wyg36 with SMTP id 36so3119314wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:14:09 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH] wl12xx: Don't rely on runtime PM for toggling power
-Date: Mon, 28 Feb 2011 00:13:58 +0200
-Message-Id: <1298844838-11845-1-git-send-email-ido@wizery.com>
+	Sun, 6 Feb 2011 13:43:43 -0500
+Date: Sun, 06 Feb 2011 12:44:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: sgruszka@redhat.com, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 5/6] rtlwifi: rtl8192ce: Rework rtl8192ce/phy.c
+Message-ID: <4d4eec14.NZEFs/idkaNYco3C%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Runtime PM might not always be enabled. Even if it is enabled in the
-running kernel, it can still be temporarily disabled, for instance
-during suspend. Runtime PM is opportunistic in nature, and should not be
-relied on for toggling power.
+Make the phy.c codes for rtl8192ce and rtl8192cu be as alike as possible.
 
-In case the interface is removed and re-added while runtime PM is
-disabled, the FW will fail to boot, as it is mandatory to toggle power
-between boots. For instance, this can happen during suspend in case one
-of the devices fails to suspend before the MMC host suspends, but after
-mac80211 was suspended. The interface will be removed and reactivated
-without toggling the power.
-
-Fix this by calling mmc_power_save_host/mmc_power_restore_host in
-wl1271_sdio_power_on/off functions. It will toggle the power to the chip
-even if runtime PM is disabled. The runtime PM functions should still be
-called to make sure runtime PM does not opportunistically power the chip
-off (e.g. after resuming from system suspend).
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/wl12xx/sdio.c |   16 ++++++++++++++--
- 1 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index d5e8748..f27e915 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -28,6 +28,7 @@
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/card.h>
-+#include <linux/mmc/host.h>
- #include <linux/gpio.h>
- #include <linux/wl12xx.h>
- #include <linux/pm_runtime.h>
-@@ -163,11 +164,16 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
- 	struct sdio_func *func = wl_to_func(wl);
- 	int ret;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+@@ -37,6 +37,9 @@
+ #include "dm.h"
+ #include "table.h"
  
--	/* Power up the card */
-+	/* Make sure the card will not be powered off by runtime PM */
- 	ret = pm_runtime_get_sync(&func->dev);
- 	if (ret < 0)
- 		goto out;
- 
-+	/* Runtime PM might be disabled, so power up the card manually */
-+	ret = mmc_power_restore_host(func->card->host);
-+	if (ret < 0)
-+		goto out;
++/* Define macro to shorten lines */
++#define MCS_TXPWR	mcs_txpwrlevel_origoffset
 +
- 	sdio_claim_host(func);
- 	sdio_enable_func(func);
- 	sdio_release_host(func);
-@@ -179,12 +185,18 @@ out:
- static int wl1271_sdio_power_off(struct wl1271 *wl)
- {
- 	struct sdio_func *func = wl_to_func(wl);
-+	int ret;
+ static u32 _rtl92c_phy_fw_rf_serial_read(struct ieee80211_hw *hw,
+ 					 enum radio_path rfpath, u32 offset);
+ static void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
+@@ -480,161 +485,129 @@ static void _rtl92c_store_pwrIndex_diffr
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
  
- 	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
+ 	if (regaddr == RTXAGC_A_RATE18_06) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][0] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][0]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0]));
+ 	}
+ 	if (regaddr == RTXAGC_A_RATE54_24) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][1]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1]));
+ 	}
+ 	if (regaddr == RTXAGC_A_CCK1_MCS32) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][6]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6]));
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][7]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS03_MCS00) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][2]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS07_MCS04) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][3]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS11_MCS08) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][4]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS15_MCS12) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][5]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5]));
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE18_06) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][8]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8]));
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE54_24) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9] = data;
  
--	/* Power down the card */
-+	/* Runtime PM might be disabled, so power off the card manually */
-+	ret = mmc_power_save_host(func->card->host);
-+	if (ret < 0)
-+		return ret;
-+
-+	/* Let runtime PM know the card is powered off */
- 	return pm_runtime_put_sync(&func->dev);
- }
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][9]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9]));
+ 	}
  
--- 
-1.7.1
+ 	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][14]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0x000000ff) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][15]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS03_MCS00) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][10]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS07_MCS04) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][11]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS11_MCS08) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][12]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS15_MCS12) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][13]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13]));
+ 
+ 		rtlphy->pwrgroup_cnt++;
+ 	}
 
