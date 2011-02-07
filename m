@@ -1,177 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:59491 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172Ab1BITlN (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39349 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365Ab1BGFnQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 14:41:13 -0500
-Received: by vws16 with SMTP id 16so336714vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 11:41:12 -0800 (PST)
-Message-ID: <4D52EE12.20509@lwfinger.net>
-Date: Wed, 09 Feb 2011 13:42:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 7 Feb 2011 00:43:16 -0500
+Received: by iyj8 with SMTP id 8so1782477iyj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Feb 2011 21:43:15 -0800 (PST)
 MIME-Version: 1.0
-To: George Kashperko <george@znau.edu.ua>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: SSB AI support code ([RFC3/11] SSB irqflag device op)
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>	 <1297261973.18053.20.camel@dev.znau.edu.ua> <4D52BE92.5070503@lwfinger.net>	 <1297271450.3361.0.camel@dev.znau.edu.ua> <4D52D358.5050208@lwfinger.net>	 <1297275805.3361.20.camel@dev.znau.edu.ua>  <4D52E8A7.3020208@lwfinger.net> <1297279566.5445.2.camel@dev.znau.edu.ua>
-In-Reply-To: <1297279566.5445.2.camel@dev.znau.edu.ua>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4D4F0DFF.9010703@openwrt.org>
+References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org>
+ <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
+ <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
+ <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Sun, 6 Feb 2011 21:42:55 -0800
+Message-ID: <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
+Subject: Re: Scanning and channel types.
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2011 01:26 PM, George Kashperko wrote:
-> 
->> On 02/09/2011 12:23 PM, George Kashperko wrote:
+Right. I think there is a function something like "send_rate_low" that
+sends the lowest entry in the mac80211 enabled rates table for control
+and mgmt packets.  If the NIC is associated to an HT Only AP then that
+lowest entry should be HT20 MCS 1, I'd think.
+
+Also, does circumventing "set channel type" code work properly across
+bands?  If you start on 5 GHz will it send 6 Mbps probes or 1 Mbps
+probes?
+
+Dan
+
+On Sun, Feb 6, 2011 at 1:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-02-06 10:07 PM, Ben Greear wrote:
+>> On 02/06/2011 12:23 PM, Daniel Halperin wrote:
+>>> Could be rate selection.
 >>>
->>>> On 02/09/2011 11:10 AM, George Kashperko wrote:
->>>>>> On 02/09/2011 08:32 AM, George Kashperko wrote:
->>>>>>> From: George Kashperko <george@znau.edu.ua>
->>>>>>>
->>>>>>> SB- and AI-style buses read irq flags from different locations.
->>>>>>> SB-ones read them from TPSFLAG whereas AI-ones from core oob register.
->>>>>>> In order to support both SB- and AI-style buses transparently
->>>>>>> irq flag accessor is implemented as ssb device op.
->>>>>>> Signed-off-by: George Kashperko <george@znau.edu.ua>
->>>>>>> ---
->>>>>>>  drivers/ssb/driver_mipscore.c       |    2 +-
->>>>>>>  drivers/ssb/main.c                  |    1 +
->>>>>>>  include/linux/ssb/ssb.h             |    5 +++++
->>>>>>>  include/linux/ssb/ssb_driver_mips.h |    1 +
->>>>>>>  4 files changed, 8 insertions(+), 1 deletion(-)
->>>>>>> --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-01 05:05:49.000000000 +0200
->>>>>>> +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-07 16:39:46.000000000 +0200
->>>>>>> @@ -47,7 +47,7 @@ static const u32 ipsflag_irq_shift[] = {
->>>>>>>  	SSB_IPSFLAG_IRQ4_SHIFT,
->>>>>>>  };
->>>>>>>  
->>>>>>> -static inline u32 ssb_irqflag(struct ssb_device *dev)
->>>>>>> +u32 ssb_irqflag_sb(struct ssb_device *dev)
->>>>>>>  {
->>>>>>>  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
->>>>>>>  	if (tpsflag)
->>>>>>> --- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-07 16:35:50.000000000 +0200
->>>>>>> +++ linux-next-20110203/drivers/ssb/main.c	2011-02-07 16:49:40.000000000 +0200
->>>>>>> @@ -1367,6 +1367,7 @@ static const struct ssb_bus_ops ssb_ssb_
->>>>>>>  	.device_disable		= ssb_device_disable_sb,
->>>>>>>  	.admatch_base		= ssb_admatch_base_sb,
->>>>>>>  	.admatch_size		= ssb_admatch_size_sb,
->>>>>>> +	.irqflag		= ssb_irqflag_sb,
->>>>>>>  };
->>>>>>>  
->>>>>>>  static int __init ssb_modinit(void)
->>>>>>> --- linux-next-20110203.orig/include/linux/ssb/ssb_driver_mips.h	2011-02-01 05:05:49.000000000 +0200
->>>>>>> +++ linux-next-20110203/include/linux/ssb/ssb_driver_mips.h	2011-02-07 16:39:10.000000000 +0200
->>>>>>> @@ -29,6 +29,7 @@ extern void ssb_mipscore_init(struct ssb
->>>>>>>  extern u32 ssb_cpu_clock(struct ssb_mipscore *mcore);
->>>>>>>  
->>>>>>>  extern unsigned int ssb_mips_irq(struct ssb_device *dev);
->>>>>>> +extern u32 ssb_irqflag_sb(struct ssb_device *dev);
->>>>>>>  
->>>>>>>  
->>>>>>>  #else /* CONFIG_SSB_DRIVER_MIPS */
->>>>>>> --- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-07 16:35:50.000000000 +0200
->>>>>>> +++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-07 16:38:34.000000000 +0200
->>>>>>> @@ -124,6 +124,7 @@ struct ssb_bus_ops {
->>>>>>>  	void (*device_disable)(struct ssb_device *dev, u32 core_specific_flags);
->>>>>>>  	u32 (*admatch_base)(struct ssb_device *dev, u32 adm);
->>>>>>>  	u32 (*admatch_size)(struct ssb_device *dev, u32 adm);
->>>>>>> +	u32 (*irqflag)(struct ssb_device *dev);
->>>>>>>  };
->>>>>>>  
->>>>>>>  
->>>>>>> @@ -485,6 +486,10 @@ static inline u32 ssb_admatch_size(struc
->>>>>>>  {
->>>>>>>  	return dev->ops->admatch_size(dev, adm);
->>>>>>>  }
->>>>>>> +static inline u32 ssb_irqflag(struct ssb_device *dev)
->>>>>>> +{
->>>>>>> +	return dev->ops->irqflag(dev);
->>>>>>> +}
->>>>>>>  
->>>>>>>  
->>>>>>>  /* The SSB DMA API. Use this API for any DMA operation on the device.
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> --
->>>>>>
->>>>>> This one fails to compile with the following error:
->>>>>>
->>>>>> drivers/ssb/main.c:1370:14: error: â€˜ssb_irqflag_sbâ€™ undeclared here (not in a
->>>>>> function)
->>>>>> make[1]: *** [drivers/ssb/main.o] Error 1
->>>>>> make: *** [drivers/ssb/] Error 2
->>>>>>
->>>>>> Larry
->>>>>> --
->>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>>>> the body of a message to majordomo@vger.kernel.org
->>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>>>
->>>>> Well, might the problem here is again caused with mine wrong post of <[RFC9/11] SSB modify irqflag treatment>
->>>>> Could you please remove that one and reaply whole set of patches again.
->>>>> Sorry for inconveniences.
->>>>
->>>> That cannot be the problem with this one. Each patch in a series MUST compile
->>>> correctly so that anyone that is bisecting the code always can build a kernel.
->>>> The code doesn't necessarily have to work correctly - that would be nice, but it
->>>> must compile. #3 fails this test.
->>>>
->>>> Larry
->>>>
->>> I do understand this. Every patch among these 11 (actually there are 21
->>> patches to get things working with newer Broadcom's socs) I've tested
->>> both compiling them and also flashing final images to two boxes -
->>> bcm4716 and bcm5354 I own in order to ensure that old things are still
->>> working as expected while new things didnt got bricked by changes I
->>> made.
->>> Just checked 3rd patch again - it applied and compiled cleanly for me,
->>> and mine SB-based bcm5354 is still alive after reflash.
->>>
->>> ssb_irqflag_sb is declared as extern in ssb_driver_mips.h which is
->>> included with ssb.h to main.c
->>> Could you please verify if patch applied cleanly ? I'm much surprised
->>> here as I can see no reason for <â€˜ssb_irqflag_sbâ€™ undeclared here> error
->>> in main.c other than patch failed to get applied to ssb_driver_mips.h
+>>> Ben, a sanity check:  is it possible for the device to be associated
+>>> to an "HT-Only" AP and thus not be able to sent NO_HT packets?  Could
+>>> that be why there might need to be a channel change sometimes?
 >>
->> It applied cleanly; however, you must consider the possibility that not everyone
->> has CONFIG_SSB_DRIVER_MIPS defined. On my x86_64 system, I clearly do not. With
->> the following change, it compiled:
+>> I don't know.  The code and comments in  ieee80211_set_channel_type
+>> make me think that it's always possible to send NO_HT packets regardless
+>> of hardware's channel type.
 >>
->> #ifdef CONFIG_SSB_DRIVER_MIPS
->>         .irqflag                = ssb_irqflag_sb,
->> #endif
->>
->> I haven't gone deeply enough into the code to see if that is the correct change,
->> or not. If x86 hardware can run AI hardware, then it won't be.
->>
->> Larry
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
-> Ohh lol. Seems im completely burrowed into mips stuff forgetting there
-> are things apart from mips :)
-> Will start reviewing code for other arch dependencies right now. Thanks
-> a lot for pointing it out for me.
-> There will be completely the same issue with 11th patch as AI code got
-> the same op struct with unconditional mips irqflag fn.
-> 
-> Are there any other issues with patch applying/compiling left ?
-
-I had a couple of patch failures due to adding the MIPS conditional around
-irqflag, but those were easily fixed. With all patches applied, including the
-one from the previous email, I'm still getting
-
-drivers/ssb/scan.c: In function â€˜ssb_bus_detectâ€™:
-drivers/ssb/scan.c:387:6: error: â€˜cpu_dataâ€™ undeclared (first use in this function)
-drivers/ssb/scan.c:387:6: note: each undeclared identifier is reported only once
-for each function it appears in
-drivers/ssb/scan.c:387:29: error: â€˜CPU_74Kâ€™ undeclared (first use in this function)
-make[2]: *** [drivers/ssb/scan.o] Error 1
-
-I haven't found the cause yet, but I'm sure it is MIPS related.
-
-Larry
+>> One thing I haven't figured out yet:  What actually tells the
+>> hardware to send NO_HT v/s HT20 v/s HT40, etc.  I have previously tested
+>> HT20 STAs concurrent with HT40 stas, and both can send/receive at once
+>> while the hardware stays in HT40 mode.
+> mac80211 tx info sets the mode for the transmission (as part of the rate
+> series). Drivers like ath9k translate that to descriptor fields.
+> Rate control selects these things based on peer HT capabilities.
+>
+> - Felix
+>
