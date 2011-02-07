@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38396 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880Ab1BNVM3 (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:37523 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754137Ab1BGEKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:12:29 -0500
-Subject: Re: pull request: wireless-2.6 2011-02-14
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20110214.130056.115934219.davem@davemloft.net>
-References: <20110214204406.GG2722@tuxdriver.com>
-	 <20110214.125148.59672184.davem@davemloft.net>
-	 <20110214.130056.115934219.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 22:12:22 +0100
-Message-ID: <1297717942.3953.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 6 Feb 2011 23:10:13 -0500
+Date: Sun, 6 Feb 2011 22:10:07 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Wolfgang Kufner <wolfgang.kufner@gmail.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: Missing skb_pad() return value checks in rt2x00 driver
+Message-ID: <20110207041007.GA14242@thinkpad-t410>
+References: <20110131214515.GC6368@thinkpad-t410>
+ <AANLkTikYS1EUdTc9mo2kvoR-S1Cv+WcKqkGaFDA8fR+0@mail.gmail.com>
+ <AANLkTi=mRO99U5t3Z_gscuwix0X+brFhWtC=9nkytE+M@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=mRO99U5t3Z_gscuwix0X+brFhWtC=9nkytE+M@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-14 at 13:00 -0800, David Miller wrote:
-
-> Please address this newly introduced warning in a future pull request,
-> thanks:
+On Sun, Feb 06, 2011 at 08:37:21PM +0100, Wolfgang Kufner wrote:
+> Hi Ivo,
 > 
-> drivers/net/wireless/iwlwifi/iwl-3945.c:411:13: warning: 'iwl3945_good_plcp_health' defined but not used
+> On Sun, Feb 6, 2011 at 5:17 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> > Between here and where you added the padding are a couple of function
+> > calls which use the skb->len field. So this patch would change the value what
+> > they expect. Have you checked the possible impact?
+> 
+> I don't think skb_pad() touches skb->len. It writes zeros into the tailroom:
 
-The function can simply be deleted.
+Agreed, it doesn't look like skb_pad() affects that field.
 
-johannes
+One point of concern though would be operations that changed the length
+so that the amount of padding applied was no longer correct. That isn't
+the case here, but it does make more sense logically that the padding
+would follow any adjustments to skb->len.
 
+My reason for moving it was that if the padding failed at the original
+location some data would have already been written to the hardware,
+potentially leaving it in a bad state (at a minimum it looks like
+beaconing would be left disabled). Maybe a better option would be to
+leave the padding at the original location and add some cleanup for the
+failure case. I don't have this hardware and am not familiar with it,
+but I'd be happy to rework the patch if someone who knows the hardware
+can advise me on what cleanup should be done.
