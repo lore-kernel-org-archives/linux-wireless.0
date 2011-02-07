@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36507 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754615Ab1BNOGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 09:06:21 -0500
-Message-ID: <4D593295.6060800@openwrt.org>
-Date: Mon, 14 Feb 2011 14:48:05 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58528 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755190Ab1BGXxm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 18:53:42 -0500
+Received: by iyj8 with SMTP id 8so2719323iyj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 15:53:41 -0800 (PST)
 MIME-Version: 1.0
-To: Mohammed Shafi <mshajakhan@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: make use of slot time macros
-References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com> <4D58B25D.4040507@atheros.com> <4D58B39B.9040207@atheros.com>
-In-Reply-To: <4D58B39B.9040207@atheros.com>
+In-Reply-To: <4D505DDD.8050805@candelatech.com>
+References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org>
+ <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
+ <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
+ <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org>
+ <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
+ <4D5033DE.4070701@candelatech.com> <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com>
+ <4D50503E.4090007@candelatech.com> <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
+ <4D505DDD.8050805@candelatech.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Mon, 7 Feb 2011 15:53:21 -0800
+Message-ID: <AANLkTimybx2pQGsy908ZOKCUndQX55vOQy1aToingWSY@mail.gmail.com>
+Subject: Re: Scanning and channel types.
+To: Ben Greear <greearb@candelatech.com>
+Cc: j@w1.fi, Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-02-14 5:46 AM, Mohammed Shafi wrote:
-> On Monday 14 February 2011 10:11 AM, Mohammed Shafi wrote:
->> On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
->>> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
->>>> On 2011-02-11 5:15 PM, John W. Linville wrote:
->>>>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
->>>>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
->>>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>>>>
->>>>>>> Instead of using raw numbers to assign slot time it would be 
->>>>>>> better to
->>>>>>> make use of predefined slot time macros
->>>>>> How does this make it better?
->>>>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
->>>> Well, neither the unit of this variable, nor the values that can be 
->>>> used
->>>> are ath9k specific.
-> Felix  then I don't know why these macros are used here and I followed 
-> the same thing:
-> 
-> htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
-> init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
-Just because the macros are there doesn't mean that it was a good idea
-to use them. As far as I know, these were simply inherited from the
-Atheros codebase that ath9k was based on.
-I actually consider the code more readable without the redundant
-"ATH9K_SLOT_TIME_" part.
+On Mon, Feb 7, 2011 at 1:02 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 02/07/2011 12:10 PM, Daniel Halperin wrote:
+>>
+>> On Mon, Feb 7, 2011 at 12:04 PM, Ben Greear<greearb@candelatech.com>
+>>  wrote:
+>>>>
+>>>> Start on 5 GHZ AP with HT Only set.  Scan.  What rate are probes sent
+>>>> at for 2.4 GHz?
+>>
+>> No HT20 is not the same as HT-Only.  I'm not sure how to set that. Jouni?
+>
+> I found a post from a year or so ago that indicates hostapd doesn't
+> support this type of thing (that could have changed, of course).
+>
+> Do you know of any commercial APs that support the HT-only feature?
+> (And/Or a general strategy for configuring it?)
+>
+>>> On 5Ghz channels, they are sent at 6Mbps
+>>> On channel 3 (2.4Ghz), they are sent at 1Mbps
+>>>
+>>>
+>>> That seem right?
+>>
+>> Yes, for a HT20 but not HT Only AP.
+>
+> Seems to me that the probe-request is to any/all APs,
+> so how could we possibly know that we should send it
+> at 6Mbps v/s 1Mbps until we discovered and communicated
+> with it?
 
-- Felix
+Just as there are G-only APs that don't advertise 1-11 Mbps in their
+beacons, there are HT-only APs that don't advertise support for 1-11
+or 6-54 Mbps in their beacons and *only* support MCS rates.
+
+Dan
