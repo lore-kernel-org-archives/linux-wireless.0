@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39971 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932226Ab1BCPuB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 10:50:01 -0500
+Received: from mail.candelatech.com ([208.74.158.172]:39745 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754524Ab1BGVC2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 16:02:28 -0500
+Message-ID: <4D505DDD.8050805@candelatech.com>
+Date: Mon, 07 Feb 2011 13:02:21 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20110203112316.GA3718@linux-yscl.site>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <20110203112316.GA3718@linux-yscl.site>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 3 Feb 2011 07:42:05 -0800
-Message-ID: <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-To: "Carlos R. Mafra" <crmafra2@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Dave Airlie <airlied@redhat.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: j@w1.fi, Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Scanning and channel types.
+References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org> <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com> <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org> <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com> <4D5033DE.4070701@candelatech.com> <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com> <4D50503E.4090007@candelatech.com> <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
+In-Reply-To: <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 3, 2011 at 3:23 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
-> On Thu  3.Feb'11 at  1:03:41 +0100, Rafael J. Wysocki wrote:
+On 02/07/2011 12:10 PM, Daniel Halperin wrote:
+> On Mon, Feb 7, 2011 at 12:04 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>>> Start on 5 GHZ AP with HT Only set.  Scan.  What rate are probes sent
+>>> at for 2.4 GHz?
+>
+> No HT20 is not the same as HT-Only.  I'm not sure how to set that. Jouni?
+
+I found a post from a year or so ago that indicates hostapd doesn't
+support this type of thing (that could have changed, of course).
+
+Do you know of any commercial APs that support the HT-only feature?
+(And/Or a general strategy for configuring it?)
+
+>> On 5Ghz channels, they are sent at 6Mbps
+>> On channel 3 (2.4Ghz), they are sent at 1Mbps
 >>
->> If you know of any other unresolved post-2.6.36 regressions, please let us know
->> either and we'll add them to the list.  Also, please let us know if any
->> of the entries below are invalid.
+>>
+>> That seem right?
 >
-> I'm sorry if I'm overlooking something, but as far as I can see the regression
-> reported here:
->
-> https://lkml.org/lkml/2011/1/24/457
->
-> is not in the list (update on that report: reverting that commit on top of
-> 2.6.37 fixes the issue).
+> Yes, for a HT20 but not HT Only AP.
 
-Ok, added Keith and Dave to the cc, since they are the signers of that commit.
+Seems to me that the probe-request is to any/all APs,
+so how could we possibly know that we should send it
+at 6Mbps v/s 1Mbps until we discovered and communicated
+with it?
 
-> After some time, I also ended up finding an earlier report in the kernel bugzilla
-> which I think is the same regression (it was bisected to the same commit):
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=24982
->
-> but I do not see it in the list either, even though it's marked as a
-> regression in the bugzilla.
->
-> The issue was also present in 2.6.38-rc2 last time I tested.
+Thanks,
+Ben
 
-Just to confirm, can you also check -rc3? I'm pretty sure nothing has
-changed, but there were a few drm patches after -rc2, so it's alsways
-good to double-check.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Keithp?
-
-                        Linus
