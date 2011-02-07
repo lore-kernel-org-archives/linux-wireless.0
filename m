@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2161 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752243Ab1BNUk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 15:40:56 -0500
-Message-ID: <4D59934D.2020600@broadcom.com>
-Date: Mon, 14 Feb 2011 21:40:45 +0100
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:59834 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400Ab1BGSXX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 13:23:23 -0500
+Message-ID: <4D503897.9040905@candelatech.com>
+Date: Mon, 07 Feb 2011 10:23:19 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "Dan Carpenter" <error27@gmail.com>,
-	"s@fomichev.me" <s@fomichev.me>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcm80211: remove multiple calls to wl_release_fw
-References: <20110212150033.GA1941@sdf-MacBook>
- <4D598993.4020900@broadcom.com> <20110214202249.GK4384@bicker>
-In-Reply-To: <20110214202249.GK4384@bicker>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Scanning and channel types.
+References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
+In-Reply-To: <4D4EFD87.4010005@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Dan and Stanislav,
+On 02/06/2011 11:59 AM, Felix Fietkau wrote:
+> On 2011-02-06 8:54 PM, Ben Greear wrote:
+>> On 02/06/2011 11:42 AM, Felix Fietkau wrote:
+>>> On 2011-02-06 8:01 PM, Ben Greear wrote:
+>>>> Current code always sets the channel type to NO_HT when scanning.
+>>>>
+>>>>    From what I can tell, we should be able to send NO_HT packets on
+>>>> any channel type, and for passive scanning, it should not matter
+>>>> at all what channel-type we are using.
+>>>>
+>>>> I tested relaxing scanning to use the current channel type
+>>>> when scanning on the operating channel, and it seems to
+>>>> work.
+>>>>
+>>>> Does anyone see any problems with this approach?
+>>> One thing you should make sure is that once you're done associating to
+>>> an NO_HT or HT20 AP (and you have no other interfaces to consider), the
+>>> channel mode must not be HT40 - otherwise it could reduce throughput.
+>>
+>> That is currently handled correctly by the ieee80211_set_channel_type
+>> method, as far as I can tell...
+>>
+>> Regardless of that, in my multi-vif testing, I see lower throughput when
+>> using HT40- than using HT20 (between 128 ath9k vif machine and 1 VAP ath9k machine).
+>> The VIFS all claim 300Mbps rate.
+>> I haven't looked into this any further at this point...
+> Well, with HT40 you take a hit from not just the busy time of the
+> primary channel, but also from the busy time of the extension channel.
+> If you have other wifi activity on the extension channel, then it's
+> normal that this would reduce throughput.
 
-I already had a patch in the making that is a superset of Stanislav's 
-patch. It fixes the leak issue. I agreed with Stanislav's patch since, I 
-made the same (but: more) changes. Stanislav, can we agree that we wait 
-for my patch (I plan on delivering this tomorrow) ?
+I think you perfectly described the problem.  I had another system that
+had a bunch of STAs configured and was making all sorts of noise.
+With it powered down, latency & throughput looks quite nice
+with 300Mbps HT40- (128 stas, 20kbps per sta tx and rx to other stas).
 
-Thanks, Roland.
+Thanks,
+Ben
 
-On 02/14/2011 09:22 PM, Dan Carpenter wrote:
->> On 02/12/2011 04:00 PM, Stanislav Fomichev wrote:
->>> This causes an oops when the bcm43xx_hdr-0.fw binary is not found.
->>>
->
-> This patch isn't right.  It fixes the oops but it introduces some leaks.
-> (We still need to release firmware that was allocated successfully).
->
-> regards,
-> dan carpenter
->
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
