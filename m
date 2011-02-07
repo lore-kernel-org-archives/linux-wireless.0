@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:63073 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755950Ab1BUQVG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 11:21:06 -0500
-Received: by gwj23 with SMTP id 23so1083900gwj.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 08:21:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D628D75.1070907@lwfinger.net>
-References: <AANLkTinoU0Dxy2iAHEsprTbakrbs8a8vPARFW0odz4g9@mail.gmail.com> <4D628D75.1070907@lwfinger.net>
-From: Mathieu Malaterre <mathieu.malaterre@gmail.com>
-Date: Mon, 21 Feb 2011 17:12:54 +0100
-Message-ID: <AANLkTim-=h6N5a=4gaA+42xoWHk3PY1jM8FU9fkJ3CJp@mail.gmail.com>
-Subject: Re: Realtek RTL8192SE support ? (aka r8192se_pci)
-To: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from smtp.nokia.com ([147.243.128.26]:42264 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753508Ab1BGLbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 06:31:01 -0500
+From: juuso.oikarinen@nokia.com
+To: coelho@ti.com
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
+Date: Mon,  7 Feb 2011 13:30:54 +0200
+Message-Id: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 21, 2011 at 5:06 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 02/21/2011 03:35 AM, Mathieu Malaterre wrote:
->>
->> Dear all,
->>
->>   As far as I know driver for rtl8192su will be added to kernel
->> 2.6.38. By any chance does anyone knows if rtl8192se will make it into
->> this release ?
->
-> As part of our collaborative effort, Realtek has sent me a mac80211-based
-> driver for the RTL8192SE. It will be submitted to the wireless mailing list
-> for review once the driver for the RTL8192CU is accepted. The earliest this
-> would happen is 2.6.39, but I think 2.6.40 is more realistic. I also have a
-> driver for the RTL8192DE that will follow the RTL8192SE.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Dear Larry,
+Currently the wl12xx interrupts are not configured to wake up the host, which
+leads to reduced performance.
 
-  Thank you very much for taking the time to answer my question.
-  Would it be possible to be part of some kind of testing group for
-this 'new' driver. I have been using r8192se_pci (*) for a couple of
-days, but I have the feeling this driver keeps filling in my
-computer's memory. I have to reboot to clean the memory (I have not
-found any other way).
+Add calls to enable waking up the host for the wl12xx irq.
 
-Using linux 2.6.37 from debian unstable
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |    2 ++
+ drivers/net/wireless/wl12xx/spi.c  |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-Thanks again for your time,
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index d5e8748..fc0235a 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -84,12 +84,14 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 
+ static void wl1271_sdio_disable_interrupts(struct wl1271 *wl)
+ {
++	disable_irq_wake(wl->irq);
+ 	disable_irq(wl->irq);
+ }
+ 
+ static void wl1271_sdio_enable_interrupts(struct wl1271 *wl)
+ {
+ 	enable_irq(wl->irq);
++	enable_irq_wake(wl->irq);
+ }
+ 
+ static void wl1271_sdio_reset(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 0132dad..85ad1bb 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -80,12 +80,14 @@ static struct device *wl1271_spi_wl_to_dev(struct wl1271 *wl)
+ 
+ static void wl1271_spi_disable_interrupts(struct wl1271 *wl)
+ {
++	disable_irq_wake(wl->irq);
+ 	disable_irq(wl->irq);
+ }
+ 
+ static void wl1271_spi_enable_interrupts(struct wl1271 *wl)
+ {
+ 	enable_irq(wl->irq);
++	enable_irq_wake(wl->irq);
+ }
+ 
+ static void wl1271_spi_reset(struct wl1271 *wl)
 -- 
-Mathieu
-(*) http://www.realtek.com/products/productsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&ProdID=226
+1.7.1
+
