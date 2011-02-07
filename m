@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44535 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751266Ab1BBUGb (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:63740 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597Ab1BGMjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 15:06:31 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id BC5235400F2
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Feb 2011 15:08:53 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-02 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110202200630.4C69B40F97@repository3.orbit-lab.org>
-Date: Wed,  2 Feb 2011 15:06:30 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 7 Feb 2011 07:39:09 -0500
+Received: by iyj8 with SMTP id 8so2077693iyj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 04:39:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1297081781.2064.12.camel@wimaxnb.nmp.nokia.com>
+References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
+ <AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com> <1297081781.2064.12.camel@wimaxnb.nmp.nokia.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Mon, 7 Feb 2011 14:38:46 +0200
+Message-ID: <AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
+Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + d2627ce...6eaa0ba akpm-end   -> origin/akpm-end  (forced update)
-   7921127..afe8a88  akpm-start -> origin/akpm-start
-   7911a84..929e642  history    -> origin/history
- + 906227e...79333d1 master     -> origin/master  (forced update)
-   7921127..afe8a88  stable     -> origin/stable
- * [new tag]         next-20110202 -> next-20110202
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- * [new tag]         v2.6.38-rc3 -> v2.6.38-rc3
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Mon, Feb 7, 2011 at 2:29 PM, Juuso Oikarinen
+<juuso.oikarinen@nokia.com> wrote:
+> On Mon, 2011-02-07 at 14:09 +0200, ext Ohad Ben-Cohen wrote:
+>> On Mon, Feb 7, 2011 at 1:30 PM, <juuso.oikarinen@nokia.com> wrote:
+>> >
+>> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+>> >
+>> > Currently the wl12xx interrupts are not configured to wake up the host, which
+>> > leads to reduced performance.
+>>
+>> Can you elaborate what do you mean ?
+>>
+>> Today the chip is powered off at system suspend, so it won't trigger
+>> any interrupts anyway.
+>>
+>> When additional suspend modes will be introduced (e.g. WoWL) this will
+>> be needed of course.
+>
+> These are not just for suspend, AFAIK, but apply also to power saving
+> states.
 
-compat-wireless code metrics
+What power states do you mean ? do you mean the cpuidle path ? I don't
+think it's related.
 
-    786110 - Total upstream lines of code being pulled
+Can you please describe what was the reduced performance that this
+solved for you ? performance is a hot topic for us now :)
+
+Thanks,
+Ohad.
+
+
+ Or do you know better?
+>
+> -Juuso
+>
+>> Thanks,
+>> Ohad.
+>
+>
+>
