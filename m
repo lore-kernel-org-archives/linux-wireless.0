@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39876 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:41088 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753039Ab1BIRGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 12:06:39 -0500
-Subject: Re: [PATCH 4/5] iwlwifi: fix ack health for WiFi/BT combo devices
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110209062645.GB2184@redhat.com>
-References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
-	 <1297153919-18766-4-git-send-email-sgruszka@redhat.com>
-	 <1297179370.20613.30.camel@wwguy-ubuntu> <20110209062645.GB2184@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Feb 2011 09:04:53 -0800
-Message-ID: <1297271093.20613.63.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1752305Ab1BGPie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 10:38:34 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 07:38:14 -0800
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH 1/1] ath9k: Update comments for not parsing DTIM period
+Date: Mon, 7 Feb 2011 21:08:28 +0530
+Message-ID: <1297093108-28541-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-08 at 22:26 -0800, Stanislaw Gruszka wrote:
-> On Tue, Feb 08, 2011 at 07:36:10AM -0800, wwguy wrote:
-> > Hi Stanislaw,
-> > 
-> > On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
-> > > Combo devices have TX statistics on different place, because
-> > > struct statistics_rx_bt and struct statistics_rx have different
-> > > size. User proper values on combo devices instead of random data.
-> > > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
+Add few comments for not parsing DTIM period from mac80211
 
-It make sense, thanks
-Wey
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 87ba44c..fcb36ab 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -721,8 +721,9 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 		cur_conf->beacon_interval = 100;
+ 
+ 	/*
+-	 * Some times we dont parse dtim period from mac80211, in that case
+-	 * use a default value
++	 * We don't parse dtim period from mac80211 during the driver
++	 * initialization as it breaks association with hidden-ssid
++	 * AP and it causes latency in roaming
+ 	 */
+ 	if (cur_conf->dtim_period == 0)
+ 		cur_conf->dtim_period = 1;
+-- 
+1.7.0.4
 
