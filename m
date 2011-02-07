@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1109 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531Ab1BOOov (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42497 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754995Ab1BGVpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 09:44:51 -0500
-Date: Tue, 15 Feb 2011 09:44:45 -0500
-From: me@bobcopeland.com
-To: =?utf-8?B?0J3QuNC60L7Qu9Cw0Lkg0JvQtdC00L7QstGB0LrQuNGF?=
-	<nledovskikh@gmail.com>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com, jirislaby@gmail.com
-Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
-	seqfault on AHB chips
-Message-ID: <20110215144445.GA6066@hash.localnet>
-References: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com>
+	Mon, 7 Feb 2011 16:45:00 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/7] ath9k:  Print channel-type in chan-change dbg message.
+Date: Mon,  7 Feb 2011 13:44:33 -0800
+Message-Id: <1297115078-27773-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 02:29:13PM +0000, Николай Ледовских wrote:
-> This patch fixes seqfault on ar2316 and other AHB based chips.
+From: Ben Greear <greearb@candelatech.com>
 
-Ok, but I'm guessing it also breaks PCI functionality?
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 70bb871... 1447887... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
->      struct ath5k_softc *sc = common->priv;
-> -    struct platform_device *pdev = to_platform_device(sc->dev);
-> +    struct platform_device *pdev =
-> to_platform_device(wiphy_dev(sc->hw->wiphy));
-
-Your patch got wrapped strangely here...
-
-> -    mem = ioremap_nocache(res->start, res->end - res->start + 1);
-> +    mem = res->start;
-
-Won't this break iommu platforms?
-
-> +    SET_IEEE80211_DEV(hw, &pdev->dev);
-> 
-> -    sc->dev = &pdev->dev;
-> +    sc->dev = NULL;
-
->      /* Initialize driver private data */
-> -    SET_IEEE80211_DEV(hw, sc->dev);
-
-> @@ -216,6 +216,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
->          ret = -ENOMEM;
->          goto err_map;
->      }
-> +    SET_IEEE80211_DEV(hw, &pdev->dev);
-
-This set of changes needs some rationale...  in other words, what is
-the real problem the patch fixes?
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 70bb871..1447887 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1677,8 +1677,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		else
+ 			sc->sc_flags &= ~SC_OP_OFFCHANNEL;
+ 
+-		ath_dbg(common, ATH_DBG_CONFIG, "Set channel: %d MHz\n",
+-			curchan->center_freq);
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Set channel: %d MHz type: %d\n",
++			curchan->center_freq, conf->channel_type);
+ 
+ 		ath9k_cmn_update_ichannel(&sc->sc_ah->channels[pos],
+ 					  curchan, conf->channel_type);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.2.3
 
