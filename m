@@ -1,66 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:45794 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab1B0WHt convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43791 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752601Ab1BGIGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 17:07:49 -0500
-Received: by qwd7 with SMTP id 7so2430130qwd.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:07:48 -0800 (PST)
+	Mon, 7 Feb 2011 03:06:42 -0500
+Date: Mon, 7 Feb 2011 00:06:35 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Wireless regression (was 2.6.38-rc3: FUSE (sshfs) hangs under
+ load)
+Message-ID: <20110207080634.GA11580@core.coreip.homeip.net>
+References: <20110201175452.GB518@core.coreip.homeip.net>
+ <E1PkbGG-0005Rf-QL@pomaz-ex.szeredi.hu>
+ <20110202165236.GA3178@core.coreip.homeip.net>
+ <20110203065541.GB5592@core.coreip.homeip.net>
+ <E1Pkx7s-00073l-5B@pomaz-ex.szeredi.hu>
+ <20110203194115.GA14159@core.coreip.homeip.net>
+ <20110204064952.GA12914@core.coreip.homeip.net>
+ <4D4BE5D7.8090202@openwrt.org>
+ <4D4BEB99.4060202@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4D6AC785.6020502@lwfinger.net>
-References: <AANLkTinoU0Dxy2iAHEsprTbakrbs8a8vPARFW0odz4g9@mail.gmail.com>
- <4D628D75.1070907@lwfinger.net> <AANLkTi=RaQonkove9=BrRJFpf+Oc3qkq29sNkxvwRP7w@mail.gmail.com>
- <4D6AC785.6020502@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 27 Feb 2011 23:07:28 +0100
-Message-ID: <AANLkTinT7PgN-mwBakyV67o0nsvZ_27exyvhsewwiJP0@mail.gmail.com>
-Subject: Re: Realtek RTL8192SE support ? (aka r8192se_pci)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Mathieu Malaterre <mathieu.malaterre@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D4BEB99.4060202@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/2/27 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 02/27/2011 03:42 PM, Gábor Stefanik wrote:
->>
->> On Mon, Feb 21, 2011 at 5:06 PM, Larry Finger<Larry.Finger@lwfinger.net>
->>  wrote:
->>>
->>> On 02/21/2011 03:35 AM, Mathieu Malaterre wrote:
->>>>
->>>> Dear all,
->>>>
->>>>   As far as I know driver for rtl8192su will be added to kernel
->>>> 2.6.38. By any chance does anyone knows if rtl8192se will make it into
->>>> this release ?
->>>
->>> As part of our collaborative effort, Realtek has sent me a mac80211-based
->>> driver for the RTL8192SE. It will be submitted to the wireless mailing
->>> list
->>> for review once the driver for the RTL8192CU is accepted. The earliest
->>> this
->>> would happen is 2.6.39, but I think 2.6.40 is more realistic. I also have
->>> a
->>> driver for the RTL8192DE that will follow the RTL8192SE.
->>
->> Is there any reason why you are holding back release of these drivers?
->> You know, the general Linux practice is release-early-release-often...
->
-> I know. The main reason is that I have been criticized regarding the quality
-> of these drivers, and I want to get them in as good as shape as possible.
->
-> In addition, the rtl8192se driver that is merged with wireless-testing fails
-> when allocating PCI resources, and I have not had time to sort it out.
->
-> Larry
->
+On Fri, Feb 04, 2011 at 01:05:45PM +0100, Felix Fietkau wrote:
+> On 2011-02-04 12:41 PM, Felix Fietkau wrote:
+> > On 2011-02-04 7:49 AM, Dmitry Torokhov wrote:
+> >> On Thu, Feb 03, 2011 at 11:41:15AM -0800, Dmitry Torokhov wrote:
+> >>> On Thu, Feb 03, 2011 at 12:13:24PM +0100, Miklos Szeredi wrote:
+> >>> > On Wed, 2 Feb 2011, Dmitry Torokhov wrote:
+> >>> > > On Wed, Feb 02, 2011 at 08:52:36AM -0800, Dmitry Torokhov wrote:
+> >>> > > > On Wed, Feb 02, 2011 at 12:52:36PM +0100, Miklos Szeredi wrote:
+> >>> > > > > On Tue, 1 Feb 2011, Dmitry Torokhov wrote:
+> >>> > > > > > Hi,
+> >>> > > > > > 
+> >>> > > > > > After installing 2.6.38-rc3 (plus a few input patches) sshfs started to
+> >>> > > > > > misbehave on me under load. It starts off fine but when I try to compile
+> >>> > > > > > a few modules against kernel sources residing on the other box the
+> >>> > > > > > processes go into 'D' state and just sit there doing nothing.
+> >>> > > > > 
+> >>> > > > > Can you please post a stack trace from SysRq-T?
+> >>> > > > > 
+> >>> > > > 
+> >> ...
+> >>> > > 
+> >>> > > OK, so here are the stack traces you requested. First one is snapshot of
+> >>> > > when compile got stuck, the 2nd one is when I interrupted make which
+> >>> > > caused gcc to go to 'D' state.
+> >>> > 
+> >>> > There doesn't appear anything abnormal there.
+> >>> > 
+> >>> > It's going into D state after it has received an interrupt and sent it
+> >>> > along to the userspace filesystem.  Then it will go into
+> >>> > uninterruptible sleep until the answer is received.
+> >>> > 
+> >>> > So the hang is because the answer to an open request is not being
+> >>> > received.  I can't tell where it got stuck, apparently not anywhere on
+> >>> > the local machine.
+> >>> > 
+> >>> > Can you please get a log from sshfs with "-odebug,sshfs_debug" and
+> >>> > redirect stderr to a file?  That might tell a bit more about the
+> >>> > situation.  Or it might not...
+> >>> 
+> >>> Hmm, it might be just the network itself, last night mutt in ssh session
+> >>> froze on me as well. I guess I'll just have to finish my bisect
+> >>> exercise.
+> >>> 
+> >> 
+> >> I finished bisecting and it turned out that the problematic commit
+> >> happened to be in wireless (I have iwl3945):
+> >> 
+> >> commit 4cd06a344db752f513437138953af191cbe9a691
+> >> Author: Felix Fietkau <nbd@openwrt.org>
+> >> Date:   Sat Dec 18 19:30:49 2010 +0100
+> >> 
+> >>     mac80211: skip unnecessary pskb_expand_head calls
+> >> 
+> >>     If the skb is not cloned and we don't need any extra headroom, there
+> >>     is no point in reallocating the skb head.
+> >> 
+> >>     Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> >>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> >> 
+> >> With this commit reverted from 2.6.38-rc3 I can not reproduce sshfs
+> >> getting stuck here.
+> > I really don't see how this commit could be causing these issues, and
+> > I'm not aware of any similar issues affecting other drivers.
+> Could you please try this patch to see if it fixes the issue as well?
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index ffc6749..3168eae 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1547,7 +1547,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+>  		skb_orphan(skb);
+>  	}
+>  
+> -	if (skb_header_cloned(skb))
+> +	if (skb_cloned(skb))
+>  		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+>  	else if (head_need || tail_need)
+>  		I802_DEBUG_INC(local->tx_expand_skb_head);
 
-Even if it's broken, more people having access to it mean more people
-capable of fixing it.
-This is not unpublished government material either, which shall be
-leaked slowly to maximize political impact á la Wikileaks.
+Yes, it does, thank you for fixing it.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Dmitry
