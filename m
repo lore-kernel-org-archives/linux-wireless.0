@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50723 "EHLO purkki.adurom.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46168 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754553Ab1BBRmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 12:42:53 -0500
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in powersave mode
-References: <201101311600.39486.IvDoorn@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 02 Feb 2011 19:42:51 +0200
-In-Reply-To: <201101311600.39486.IvDoorn@gmail.com> (Ivo van Doorn's message of "Mon\, 31 Jan 2011 16\:00\:38 +0100")
-Message-ID: <874o8mbaec.fsf@purkki.adurom.net>
+	id S1753309Ab1BGPJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 10:09:05 -0500
+Date: Mon, 7 Feb 2011 16:07:56 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/6] rtlwifi: Add usb driver
+Message-ID: <20110207150755.GC2319@redhat.com>
+References: <4d4eec04.v8FQZqbn2LYPF8zs%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4d4eec04.v8FQZqbn2LYPF8zs%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn <ivdoorn@gmail.com> writes:
+On Sun, Feb 06, 2011 at 12:44:20PM -0600, Larry Finger wrote:
+> +enum {
+> +	VENDOR_WRITE = 0x00,
+> +	VENDOR_READ = 0x01,
+> +};
+[snip]
+> +static int _usbctrl_vendorreq_async(struct usb_device *udev, u8 request,
+> +					  u16 value, u16 index, void *pdata,
+> +					  u16 len, u8 requesttype)
+> +{
+It whould be better to leave old name and remove requesttype argument.
+We never call  _usbctrl_vendorreq_async with VENDOR_READ, and 
+ _usbctrl_vendorreq_sync with VENDOR_WRITE.
 
-> Add a delayed work structure which can be used to wakeup the device
-> just before a beacon from the AP is expected. This then allows the
-> device to receive the beacon, check if there are pending broadcast
-> or multicast frames.
+If this is not preparation for future changes, that need to
+cleaned up, and VENDOR_WRITE and VENDOR_READ definition removed at all.
 
-So the firmware/hardware doesn't have support for tracking and waking
-up for beacons? I didn't even know that such hardware exists :) Waking
-up for beacons from host sounds very inefficient and unrealiable. All
-the devices I have seen either do this in firmware or hardware due to
-time constraints. Even at76c50x-usb, which is ancient, does all this
-in firmware.
+> +	wvalue = (u16)(addr&0x0000ffff);
+wvalue = (u16) addr;
 
-Are you sure there's no way to do this with hardware?
+> +static void _rtl_usb_io_handler_release(struct ieee80211_hw *hw)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +
+> +	if (&rtlpriv->io)
+How it can be NULL? :-) Perhaps this should be rtlpriv check?
 
-> TODO: Split out mac80211 changes into a separate patch. We also need
-> to know if we need this check in mac80211 or in the driver.
-> Personally I think the check belongs in mac80211, but at this time
-> that work has been deferred to the drivers. However this means that
-> a lot of logic is needed in the driver to check if the correct IE is
-> available, and then check the value, while mac80211 will obtains
-> that exact IE anyway during RX processing anyway...
+> +	/*  TODO: think of race condition... */
+[snip]
+> +	/*  TODO:	statistics */
+[snip]
+> +
+[snip]
+> +		/* TODO: Shall I ignore error and keep issue other urbs? */
+[snip]
+> +		/* TODO: reinsert skb to list or free the skb? */
+[snip]
+> +	/* TODO: if usb suspend, we may queue the skb and wake device up.
+> +	 * Then xmit.
+> +	 * TODO: may change this statement and check all usb state */
 
-I'm worried that client power save support in mac80211 is getting
-quite complex already. How many drivers need this feature?
+Lots of TODO, is this code working? :-)
 
-And if hardware is so broken, is it really worth the effort of trying
-to implement power save with ugly hacks like this? If power
-consumption is important for the user, I would recommend just buying
-better hardware.
+Is this driver for devices that are currently on the market,
+or for future product? I have 3 Realtek dongles, but all works
+only with staging driver ...
 
--- 
-Kalle Valo
+Stanislaw
