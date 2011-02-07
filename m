@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34399 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089Ab1BONJ6 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42495 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754990Ab1BGVo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 08:09:58 -0500
-Subject: Re: [PATCH v2] iwlwifi: fix dma mappings and skbs leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110215130428.GA2515@redhat.com>
-References: <1297693947-15310-1-git-send-email-sgruszka@redhat.com>
-	 <1297698696.4723.16.camel@wwguy-ubuntu> <20110215113444.GC2162@redhat.com>
-	 <1297770602.3935.3.camel@jlt3.sipsolutions.net>
-	 <20110215130428.GA2515@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 14:09:53 +0100
-Message-ID: <1297775393.3935.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 7 Feb 2011 16:44:58 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 6/7] ath9k:  Add debug info for configuring power level.
+Date: Mon,  7 Feb 2011 13:44:37 -0800
+Message-Id: <1297115078-27773-6-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-15 at 14:04 +0100, Stanislaw Gruszka wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> > Agree, but I wish the timer objects had a name so we'd know what it
-> > was ... hmm, how can we figure out which timer this is?
-> 
-> By patching kernel :-)
-> http://people.redhat.com/sgruszka/debugobj-add-timer-name.patch
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 1447887... e462a3f... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Heh, cool :-)
-
-> It's ifmgd->conn_mon_timer, seems we only deauthenticate but not
-> dissassociate when down interface, full dmesg below.
-
-Hmm. That's a bit strange, ieee80211_mgd_deauth() should also call
-ieee80211_set_disassoc()?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1447887..e462a3f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1725,6 +1725,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Set power: %d\n", conf->power_level);
+ 		sc->config.txpowlimit = 2 * conf->power_level;
+ 		ath9k_ps_wakeup(sc);
+ 		ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-- 
+1.7.2.3
 
