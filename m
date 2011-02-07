@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45546
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752797Ab1BNV2S (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42493 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754984Ab1BGVo4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:28:18 -0500
-Date: Mon, 14 Feb 2011 13:28:54 -0800 (PST)
-Message-Id: <20110214.132854.260094645.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: wey-yi.w.guy@intel.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110214210516.GH2722@tuxdriver.com>
-References: <20110214201052.GE2722@tuxdriver.com>
-	<1297715460.4723.18.camel@wwguy-ubuntu>
-	<20110214210516.GH2722@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 7 Feb 2011 16:44:56 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 4/7] mac80211:  Allow scanning on existing channel-type.
+Date: Mon,  7 Feb 2011 13:44:35 -0800
+Message-Id: <1297115078-27773-4-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 14 Feb 2011 16:05:17 -0500
+From: Ben Greear <greearb@candelatech.com>
 
-> On Mon, Feb 14, 2011 at 12:31:00PM -0800, wwguy wrote:
->> On Mon, 2011-02-14 at 12:10 -0800, John W. Linville wrote:
->> > On Mon, Feb 14, 2011 at 07:57:33AM -0800, wwguy wrote:
->> > > On Mon, 2011-02-14 at 07:54 -0800, Johannes Berg wrote:
->> > > > On Mon, 2011-02-14 at 07:48 -0800, wwguy wrote:
->> > > > > On Mon, 2011-02-14 at 07:28 -0800, Johannes Berg wrote:
->> > > > > > On Mon, 2011-02-14 at 07:25 -0800, wwguy wrote:
->> > > > > > > On Mon, 2011-02-14 at 01:55 -0800, Johannes Berg wrote:
->> > > > > > > > On Thu, 2011-02-10 at 08:16 -0800, Wey-Yi Guy wrote:
->> > > > > > > > > remove plcp check for 3945, mark the function __maybe_unused
->> > > > > > > > 
->> > > > > > > > Why not remove the function instead?
->> > > > > > > > 
->> > > > > > > I guess we can remove it in legacy driver
->> > > > > > 
->> > > > > > But it's a 3945 specific function, and never used, so ...??
->> > > > > > 
->> > > > > I mean we should remove this function in legacy driver after driver
->> > > > > split
->> > > > 
->> > > > I just don't see why we can't remove it right now?
->> > > > 
->> > > we can do it for _stable, for mainstream, all 3945 will move to separate
->> > > driver anyway.
->> > 
->> > ...where it will still be unused.  No?
->> > 
->> we will remove it from our legacy driver
-> 
-> I don't really see any reason to wait, so let's just remove it now. :-)
+Previous code set the channel type to NO_HT, but it
+appears that NO_HT packets can be sent on any channel
+type, so we do not need to change the channel type
+as long as the channel is correct.
 
-It's now done in net-2.6
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 c155c0b... 86562ce... M	net/mac80211/main.c
+:100644 100644 93da164... 1f277c9... M	net/mac80211/scan.c
+ net/mac80211/main.c |   16 ++++++++++++++--
+ net/mac80211/scan.c |    6 ++----
+ 2 files changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index c155c0b..86562ce 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -112,7 +112,13 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
+ 	/* This logic needs to match logic in ieee80211_hw_config */
+ 	if (local->scan_channel) {
+ 		chan = local->scan_channel;
+-		channel_type = NL80211_CHAN_NO_HT;
++		/* If scanning on oper channel, use whatever channel-type
++		 * is currently in use.
++		 */
++		if (chan == local->oper_channel)
++			channel_type = local->_oper_channel_type;
++		else
++			channel_type = NL80211_CHAN_NO_HT;
+ 	} else if (local->tmp_channel) {
+ 		chan = scan_chan = local->tmp_channel;
+ 		channel_type = local->tmp_channel_type;
+@@ -151,7 +157,13 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
+ 	if (scan_chan) {
+ 		chan = scan_chan;
+-		channel_type = NL80211_CHAN_NO_HT;
++		/* If scanning on oper channel, use whatever channel-type
++		 * is currently in use.
++		 */
++		if (chan == local->oper_channel)
++			channel_type = local->_oper_channel_type;
++		else
++			channel_type = NL80211_CHAN_NO_HT;
+ 	} else if (local->tmp_channel) {
+ 		chan = scan_chan = local->tmp_channel;
+ 		channel_type = local->tmp_channel_type;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 93da164..1f277c9 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -574,8 +574,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 
+ 	if (ieee80211_cfg_on_oper_channel(local)) {
+ 		/* We're currently on operating channel. */
+-		if ((next_chan == local->oper_channel) &&
+-		    (local->_oper_channel_type == NL80211_CHAN_NO_HT))
++		if (next_chan == local->oper_channel)
+ 			/* We don't need to move off of operating channel. */
+ 			local->next_scan_state = SCAN_SET_CHANNEL;
+ 		else
+@@ -677,8 +676,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	local->scan_channel = chan;
+ 
+ 	/* Only call hw-config if we really need to change channels. */
+-	if ((chan != local->hw.conf.channel) ||
+-	    (local->hw.conf.channel_type != NL80211_CHAN_NO_HT))
++	if (chan != local->hw.conf.channel)
+ 		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
+ 			skip = 1;
+ 
+-- 
+1.7.2.3
+
