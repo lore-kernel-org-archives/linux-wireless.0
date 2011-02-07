@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53632 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab1BRGEC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 01:04:02 -0500
-Received: by vxb37 with SMTP id 37so1693404vxb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 22:04:01 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:57504 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753353Ab1BGPJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 10:09:44 -0500
+Date: Mon, 7 Feb 2011 16:08:44 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/6] rtlwifi: rtl8192ce: Refactor rtl8192ce/dm
+Message-ID: <20110207150843.GD2319@redhat.com>
+References: <4d4eec0a.FzqEp5Xeq+3I1Pmn%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Fri, 18 Feb 2011 07:04:00 +0100
-Message-ID: <AANLkTi=o8r5wwZWjYtW2ubpnZ9q3NReZ5V3vGTQWjvdZ@mail.gmail.com>
-Subject: RTL8192cu in Ad-Hoc mode
-From: Juan Carlos Garza <juancarlosgarza@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4d4eec0a.FzqEp5Xeq+3I1Pmn%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, Feb 06, 2011 at 12:44:26PM -0600, Larry Finger wrote:
+> To reuse as much code as possible when adding additional drivers to the
+> rtlwifi tree, the common parts of various routines are moved to
+> drivers/net/wireless/rtlwifi.
+Great!
 
-I patched compat wireless with the first patch you released in the
-mailing list ( before the redesigns ), then cross compiled it with a
-2.6.24  kernel, then installed it on the running 2.6.24 system.
+> This patch does that for the version of
+> dm.{h,c} used by rtl8192ce.
 
-I am using iwconfig and ifconfig to try to configure an Ad-Hoc
-connection, and everything seems to work just fine (no errors on
-configuration, and iwconfig and ifconfig show the expected
-configuration information), however I am not able to detect this
-Ad-Hoc network in any other computer. Do you know if Ad-Hoc mode
-supported? Maybe there is a bug on the broadcasting of Ad-Hoc beacons.
+But what "dm" mean? 
 
+struct rtl_dm {
+        /*PHY status for DM */
 
-Best regards,
+does not tell much. Can we get some comments what for is this
+code?
 
-Juan Carlos
