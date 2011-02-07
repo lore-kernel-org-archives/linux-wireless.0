@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61476 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864Ab1BNWRT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 17:17:19 -0500
-Received: by bwz15 with SMTP id 15so5974231bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 14:17:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297677453.3785.4.camel@jlt3.sipsolutions.net>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
-	<1297619803-2832-2-git-send-email-njs@pobox.com>
-	<1297677453.3785.4.camel@jlt3.sipsolutions.net>
-Date: Mon, 14 Feb 2011 14:17:17 -0800
-Message-ID: <AANLkTinA0yoF_dU+2B6+rHcE_DvS7yjqu+TqYzhprvZj@mail.gmail.com>
-Subject: Re: [PATCH 1/5] iwlwifi: Simplify tx queue management
-From: Nathaniel Smith <njs@pobox.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.1.47]:39031 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751954Ab1BGM7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 07:59:03 -0500
+Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
+References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com>
+	 <1297081781.2064.12.camel@wimaxnb.nmp.nokia.com>
+	 <AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Feb 2011 14:58:54 +0200
+Message-ID: <1297083534.2064.19.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 1:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
->> Previously, the iwlwifi driver filled its transmit queue until it
->> reached a high-water mark, and then stopped until it had fallen to a
->> low-water mark. This basic logic makes sense for interrupt mitigation
->> -- you might not want to wake up the CPU after every packet, but
->> instead wait until a batch of packets has been sent -- except the
->> iwlwifi driver doesn't actually do any interrupt mitigation; the CPU
->> wakes up after every packet transmitted anyway. So we simplify the
->> code to maintain only a single limit on total queue length, and
->> whenever we drop below that limit we allow more packets in.
->>
->> This patch should have no user-visible effect.
->
-> I'm pretty sure the devices (but maybe not 3945) implement interrupt
-> mitigation at least in some cases. How did you arrive at the conclusion
-> that "the driver doesn't actually do any interrupt mitigation"?
+On Mon, 2011-02-07 at 14:38 +0200, ext Ohad Ben-Cohen wrote:
+> On Mon, Feb 7, 2011 at 2:29 PM, Juuso Oikarinen
+> <juuso.oikarinen@nokia.com> wrote:
+> > On Mon, 2011-02-07 at 14:09 +0200, ext Ohad Ben-Cohen wrote:
+> >> On Mon, Feb 7, 2011 at 1:30 PM, <juuso.oikarinen@nokia.com> wrote:
+> >> >
+> >> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> >> >
+> >> > Currently the wl12xx interrupts are not configured to wake up the host, which
+> >> > leads to reduced performance.
+> >>
+> >> Can you elaborate what do you mean ?
+> >>
+> >> Today the chip is powered off at system suspend, so it won't trigger
+> >> any interrupts anyway.
+> >>
+> >> When additional suspend modes will be introduced (e.g. WoWL) this will
+> >> be needed of course.
+> >
+> > These are not just for suspend, AFAIK, but apply also to power saving
+> > states.
+> 
+> What power states do you mean ? do you mean the cpuidle path ? I don't
+> think it's related.
+> 
+> Can you please describe what was the reduced performance that this
+> solved for you ? performance is a hot topic for us now :)
 
-Two reasons:
-  -- I searched the code and couldn't find any evidence for it
-  -- If I'm wrong then the quickest way to find out is to make loud
-and confident claims in front of people who know better ;-)
-I might be wrong.
+Actually this I don't see any performance impact for better or worse of
+this patch on brief testing. I was instructed by some of our other
+kernel-dudes that this is actually needed for the cpuidle path too, or
+there might be some implications.
 
-If so, then it'd be pretty straightforward to extend this approach to
-handle interrupt mitigation -- you set the low mark to N ms, and the
-high mark to N+M ms, where N is the amount of time you think you need
-to refill the queue after it drops, and 1/M is the maximum interrupt
-rate you're willing to tolerate.
+I'm currently trying to find out if this is really needed or not.
 
-On Mon, Feb 14, 2011 at 7:33 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
-> Hi Nathaniel,
-[...]
-> what device you test this with? I will like to see this changes with
-> newer device, especially with aggregation.
+-Juuso
 
-Hi Wey,
 
-03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
-[Golan] Network Connection (rev 02)
-
-Sadly, I don't have access to any newer hardware. I'd be happy to take
-donations ;-), but probably someone else will need to do the testing?
-
-I wouldn't be surprised if it needed some tweaks to properly handle
-aggregation (in particular, I'd want to start by clamping the minimum
-queue size to match our best guess at the number of packets we can
-currently combine into a single transmission), but I'm not enough of
-an 802.11 expert to be confident about how to do that either. That
-number varies with the rate, yes? So we'd need some way to ask the
-rate control algorithm what rate it plans to use next?
-
--- Nathaniel
