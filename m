@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57067 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942Ab1BWWak (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 17:30:40 -0500
-Date: Wed, 23 Feb 2011 17:28:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nathaniel Smith <njs@pobox.com>
-Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
-	johannes@sipsolutions.net, nbd@openwrt.org
-Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
-Message-ID: <20110223222842.GA20039@tuxdriver.com>
-References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
- <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
- <AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
- <20110221184716.GD9650@tuxdriver.com>
- <AANLkTi=LnpFLzKbtaPxSjg9TRU_pY2oRi6tsFg5GkaGK@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57973 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753306Ab1BGPKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 10:10:04 -0500
+Date: Mon, 7 Feb 2011 16:08:58 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/6] rtlwifi: rtl8192ce: Refactor rtl8192ce/fw
+Message-ID: <20110207150857.GE2319@redhat.com>
+References: <4d4eec0f.et2vL5g5GiBl8wXm%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTi=LnpFLzKbtaPxSjg9TRU_pY2oRi6tsFg5GkaGK@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4d4eec0f.et2vL5g5GiBl8wXm%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 21, 2011 at 03:26:32PM -0800, Nathaniel Smith wrote:
-> On Mon, Feb 21, 2011 at 10:47 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
+On Sun, Feb 06, 2011 at 12:44:31PM -0600, Larry Finger wrote:
+> +bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
+> +			     struct sk_buff *skb)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+> +	struct rtl8192_tx_ring *ring;
+> +	struct rtl_tx_desc *pdesc;
+> +	u8 own;
+> +	unsigned long flags;
+> +	struct sk_buff *pskb = NULL;
+> +
+> +	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+> +
+> +	pskb = __skb_dequeue(&ring->queue);
+> +	if (pskb)
+> +		kfree_skb(pskb);
+> +
+> +	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
 
-> > I tried to see how your measurement would be useful, but I just don't
-> > see how the number of frames ahead of me in the queue is relevant to
-> > the measured link latency?  I mean, I realize that having more packets
-> > ahead of me in the queue is likely to increase the latency for this
-> > frame, but I don't understand why I should use that information to
-> > discount the measured latency...?
-> 
-> It depends on which latency you want to measure. The way that I
-> reasoned was, suppose that at some given time, the card is able to
-> transmit 1 fragment every T nanoseconds. Then it can transmit n
-> fragments in n*T nanoseconds, so if we want the queue depth to be 2
-> ms, then we have
->   n * T = 2 * NSEC_PER_MSEC
->   n = 2 * NSEC_PER_MSEC / T
-> 
-> Which is the calculation that you're doing:
-> 
-> +                       sta->sdata->qdata[q].max_enqueued =
-> +                               max_t(int, 2, 2 * NSEC_PER_MSEC / tserv_ns_avg);
-> 
-> But for this calculation to make sense, we need T to be the time it
-> takes the card to transmit 1 fragment. In your patch, you're not
-> measuring that. You're measuring the total time between when a packet
-> is enqueued and when it is transmitted; if there were K packets in the
-> queue ahead of it, then this is the time to send *all* of them --
-> you're measuring (K+1)*T. That's why in my patch, I recorded the
-> current size of the queue when each packet is enqueued, so I could
-> compute T = total_time / (K+1).
-
-Thanks for the math!  I think I see what you are saying now.  Since the
-measured time is being used to determine the queue size, we need to
-factor-in the length of the queue that resulted in that measurment.
-
-Unfortunately, I'm not sure how to apply this with the technique I
-am using for the timing measurements. :-(  I'll have to think about
-this some more...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I think __skb_dequeue(&ring->queue) should be also protected
+by lock.
