@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:34781 "EHLO
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:45514 "EHLO
 	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159Ab1BOSSG (ORCPT
+	with ESMTP id S1754257Ab1BGRH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 13:18:06 -0500
-Received: by qwa26 with SMTP id 26so355637qwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 10:18:05 -0800 (PST)
+	Mon, 7 Feb 2011 12:07:57 -0500
+Received: by qwa26 with SMTP id 26so3567504qwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 09:07:57 -0800 (PST)
+Date: Mon, 7 Feb 2011 09:07:47 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH 2.6.38] mac80211: fix the skb cloned check in the tx path
+Message-ID: <20110207170747.GA31901@core.coreip.homeip.net>
+References: <1297076700-76871-1-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
-References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
-Date: Tue, 15 Feb 2011 19:17:52 +0100
-Message-ID: <AANLkTikhq6yAZOBKzVn8xyUMP6uy49ZXuLrkFFsdVh6i@mail.gmail.com>
-Subject: Re: [RFC/RFT] mac80211: make tx() operation return void
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <bcopeland@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297076700-76871-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 3:07 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> The return value of the tx operation is commonly
-> misused by drivers, leading to errors. All drivers
-> will drop frames if they fail to TX the frame, and
-> they must also properly manage the queues (if they
-> didn't, mac80211 would already warn).
->
-> Removing the ability for drivers to return a BUSY
-> value also allows significant cleanups of the TX
-> TX handling code in mac80211.
->
-> NB: Also fixes a bug in ath9k_htc.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+On Mon, Feb 07, 2011 at 12:05:00PM +0100, Felix Fietkau wrote:
+> Using skb_header_cloned to check if it's safe to write to the skb is not
+> enough - mac80211 also touches the tailroom of the skb.
+> Initially this check was only used to increase a counter, however this
+> commit changed the code to also skip skb data reallocation if no extra
+> head/tailroom was needed:
+> 
+> commit 4cd06a344db752f513437138953af191cbe9a691
+> mac80211: skip unnecessary pskb_expand_head calls
+> 
+> It added a regression at least with iwl3945, which is fixed by this patch.
+> 
+> Reported-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+
+Make it
+
+	Tested-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+
+as well since it cures my issue with sshfs getting stuck under load.
+
+Would be nice if the patch made it in .38.
+
+Thanks!
+
+
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 > ---
+>  net/mac80211/tx.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 2915168..fc1d728 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1549,7 +1549,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+>  		skb_orphan(skb);
+>  	}
+>  
+> -	if (skb_header_cloned(skb))
+> +	if (skb_cloned(skb))
+>  		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+>  	else if (head_need || tail_need)
+>  		I802_DEBUG_INC(local->tx_expand_skb_head);
+> -- 
+> 1.7.3.2
+> 
 
-Tested with ath5k against linux-next (next-20110215) and adapted
-ath5k-move-external-function-definitions-to-a-header-file-v2.patch (to
-fit this patch) from Bob.
-
-- Sedat -
+-- 
+Dmitry
