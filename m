@@ -1,67 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:65397 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754169Ab1BBWRw convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47980 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161Ab1BGSDU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 17:17:52 -0500
-Received: by pxi15 with SMTP id 15so92622pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 14:17:51 -0800 (PST)
+	Mon, 7 Feb 2011 13:03:20 -0500
+Message-ID: <4D5033DE.4070701@candelatech.com>
+Date: Mon, 07 Feb 2011 10:03:10 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4D45B7BA.9080402@davizone.at>
-References: <4D45A598.20709@davizone.at>
-	<4D45B7BA.9080402@davizone.at>
-Date: Thu, 3 Feb 2011 00:17:51 +0200
-Message-ID: <AANLkTi=g7=0T1navJ5PDNxJQceFBHYFYpsdXWD4wMTCN@mail.gmail.com>
-Subject: Re: [PATCH 03/18] wl1251: fix scan behaviour while not associated
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Scanning and channel types.
+References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org> <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com> <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org> <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
+In-Reply-To: <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 30, 2011 at 9:10 PM, David Gnedt <david.gnedt@davizone.at> wrote:
-> With a dissacociated card I often encoutered very long scan delays.
+On 02/06/2011 09:42 PM, Daniel Halperin wrote:
+> Right. I think there is a function something like "send_rate_low" that
+> sends the lowest entry in the mac80211 enabled rates table for control
+> and mgmt packets.  If the NIC is associated to an HT Only AP then that
+> lowest entry should be HT20 MCS 1, I'd think.
 >
-> My guess is that it has something to do with the cards DTIM handling and
-> another firmware bug mentioned in the TI WLAN driver, which is described as
-> the card may never end scanning if the channel is overloaded because it
-> can't send probe requests. I think the firmware somehow also tries to
-> receive DTIM messages when the BSSID is not set. Therefore most of the time
-> it waits for DTIM messages and can't do scanning work.
->
-> Anyway we can workaround this misbehaviour by setting the HIGH_PRIORITY
-> bit for scans in disassociated state.
->
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> ---
-> Sorry for the partly broken patches, I thought I configured my client the
-> right way. I tried to stop the mails at my mailserver, but it was mostly
-> already too late.
-> ---
->  drivers/net/wireless/wl1251/cmd.c  |   12 +++++++++++-
->  drivers/net/wireless/wl1251/cmd.h  |    5 +++++
->  drivers/net/wireless/wl1251/main.c |    1 +
->  3 files changed, 17 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/wl1251/cmd.c b/drivers/net/wireless/wl1251/cmd.c
-> index 0ade4bd..4e4987d 100644
-> --- a/drivers/net/wireless/wl1251/cmd.c
-> +++ b/drivers/net/wireless/wl1251/cmd.c
+> Also, does circumventing "set channel type" code work properly across
+> bands?  If you start on 5 GHz will it send 6 Mbps probes or 1 Mbps
+> probes?
 
-<snip>
+I did some tests with a sniffer set up:
 
-> +       /*
-> +        * Use high priority scan when not associated to prevent fw issue
-> +        * causing never-ending scans (sometimes 20+ minutes).
-> +        * Note: This bug may be caused by the fw's DTIM handling.
-> +        */
-> +       if (is_zero_ether_addr(wl->bssid))
-> +               cmd->params.scan_options |= WL1251_SCAN_OPT_PRIORITY_HIGH;
+I have 8 STA vifs.
 
-This seems to cause a build error (missing include?):
-drivers/net/wireless/wl1251/cmd.c: In function 'wl1251_cmd_scan':
-drivers/net/wireless/wl1251/cmd.c:455: error: implicit declaration of
-function 'is_zero_ether_addr'
+1)  AP is setup to run on channel 11, HT40-
+     Let all associate on channel 11, radio goes to HT40- mode.
+     Run Scan on operating channel:
+     Probe request is reported as 1Mbps data rate on ch 11.
+
+2)  Scan on all channels:
+     Probe requests on 2.4Ghz channels are 1Mbps data rate.
+     Probe requests on 5Ghz channels (channel 40 in this case)
+     are reported as 6Mbps data rate.
+
+3)  Kill AP, no VIFS are associated (radio goes to NO_HT)
+     Run scan on all channels.
+     Probe request on channel 40 is 6Mbps data rate.
+
+
+Please note that with my patches, the channel-type is still set to NO_HT
+if we are scanning off the operating channel.  Since test 1 appears to
+function properly, I think that verifies that we can safely send NO_HT
+requests while leaving the radio at HT40-.
+
+Please let me know if this answers your concerns.  If you can think of
+other combinations I should try, please let me know that as well.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
