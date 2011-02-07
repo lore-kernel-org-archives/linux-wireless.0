@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:42120 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072Ab1BCWoQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 17:44:16 -0500
-From: Bing Zhao <bzhao@marvell.com>
+Received: from nbd.name ([46.4.11.11]:57605 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752127Ab1BGLFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 06:05:10 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: fix list_del corruption while unloading modules
-Date: Thu,  3 Feb 2011 14:46:01 -0800
-Message-Id: <1296773161-11642-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1296773161-11642-1-git-send-email-bzhao@marvell.com>
-References: <1296773161-11642-1-git-send-email-bzhao@marvell.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	dmitry.torokhov@gmail.com
+Subject: [PATCH 2.6.38] mac80211: fix the skb cloned check in the tx path
+Date: Mon,  7 Feb 2011 12:05:00 +0100
+Message-Id: <1297076700-76871-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Using skb_header_cloned to check if it's safe to write to the skb is not
+enough - mac80211 also touches the tailroom of the skb.
+Initially this check was only used to increase a counter, however this
+commit changed the code to also skip skb data reallocation if no extra
+head/tailroom was needed:
 
-Driver uses pre-allocated number of command buffers. The
-command free queue keeps track of command buffers currently
-free/available for use.
-Currently while unloading the driver, command free queue is
-freed after releasing pre-allocated command buffers which
-sometimes leads to list_del corruption issue.
-Therefore command free queue is freed before releasing
-command buffers to fix the issue.
+commit 4cd06a344db752f513437138953af191cbe9a691
+mac80211: skip unnecessary pskb_expand_head calls
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+It added a regression at least with iwl3945, which is fixed by this patch.
+
+Reported-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mwifiex/init.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ net/mac80211/tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index de670c7..91a484c 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -353,6 +353,10 @@ mwifiex_free_adapter(struct mwifiex_adapter *adapter)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2915168..fc1d728 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1549,7 +1549,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ 		skb_orphan(skb);
  	}
  
- 	mwifiex_cancel_all_pending_cmd(adapter);
-+
-+	/* Free lock variables */
-+	mwifiex_free_lock_list(adapter);
-+
- 	/* Free command buffer */
- 	PRINTM(MINFO, "Free Command buffer\n");
- 	mwifiex_free_cmd_buffer(adapter);
-@@ -367,9 +371,6 @@ mwifiex_free_adapter(struct mwifiex_adapter *adapter)
- 
- 	mwifiex_free_buffer(adapter->sleep_cfm);
- 
--	/* Free lock variables */
--	mwifiex_free_lock_list(adapter);
--
- 	LEAVE();
- 	return;
- }
+-	if (skb_header_cloned(skb))
++	if (skb_cloned(skb))
+ 		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 	else if (head_need || tail_need)
+ 		I802_DEBUG_INC(local->tx_expand_skb_head);
 -- 
-1.7.0.2
+1.7.3.2
 
