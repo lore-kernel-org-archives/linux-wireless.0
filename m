@@ -1,135 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web36102.mail.mud.yahoo.com ([66.163.179.216]:27926 "HELO
-	web36102.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757171Ab1BJXIk (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:36850 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200Ab1BGTxH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 18:08:40 -0500
-Message-ID: <937938.34583.qm@web36102.mail.mud.yahoo.com>
-References: <875258.44241.qm@web36104.mail.mud.yahoo.com> <20110210212508.GA2508@tuxdriver.com>
-Date: Thu, 10 Feb 2011 15:08:38 -0800 (PST)
-From: Noel Milton Vega <nmvega@nyceyes.com>
-Reply-To: Noel Milton Vega <nmvega@nyceyes.com>
-Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110210212508.GA2508@tuxdriver.com>
+	Mon, 7 Feb 2011 14:53:07 -0500
+Date: Mon, 7 Feb 2011 13:53:01 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Wolfgang Kufner <wolfgang.kufner@gmail.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: Missing skb_pad() return value checks in rt2x00 driver
+Message-ID: <20110207195301.GB2430@thinkpad-t410>
+References: <20110131214515.GC6368@thinkpad-t410>
+ <AANLkTikYS1EUdTc9mo2kvoR-S1Cv+WcKqkGaFDA8fR+0@mail.gmail.com>
+ <AANLkTi=mRO99U5t3Z_gscuwix0X+brFhWtC=9nkytE+M@mail.gmail.com>
+ <20110207041007.GA14242@thinkpad-t410>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110207041007.GA14242@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-  > > In working with the kernel.org linux-wireless  developers, the conclusion
-  > > from one developer was that, though generally  speaking the
-  > > "Centrino Advanced-N 6230 AGN" card is supported by the  "iwlagn" kernel
-  > > module, it seems that the stock kernel module provided  in the
-  > > Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does  not
-  > > support the this card.
-  > > 
-  > > In other words, though code  in the main kernel.org git repository does
-  > > show support for the card  (via iwlagn kernel module), Fedora 14's
-  > > rendition/distribution of that  does not.
-  > 
-  > The point you seem to be missing is that your hardware is very  new,
-  > and the current Fedora 14 kernel is an "ancient" 6+ months  old.
-  >
-The point wasn't missed. In fact I highlighted the Fedora kernel
-version, and my card model to expressly make the point. Moreover,
-one of my suggested work-arounds was to try a newer kernel module
-(via compat-wireless) so as to bridge bridge that gap for this issue.
-
-  > > Command  output during my debugging session with the developers is
-  > > shown below  for completeness, and in case the Fedora folks are
-  > >  monitoring.
-  > 
-  > I'm sorry, but your acquisition of bleeding-edge hardware  does not
-  > merit a change in the normal Fedora release  policy.
-  >
-Nothing in my email asked or expected them to. Still, the community
-in general should know what's going on. And, I did suggest two
-work-arounds in my email, neither of which asks anything of Fedora. 
-
-  > P.S. I apologize if this seems rude -- that is  not my intent.
-  >
-Ah... This postscript repairs everything.
-
-
-
-
-
------ Original Message ----
-> From: John W. Linville <linville@tuxdriver.com>
-> To: Noel Milton Vega <nmvega@nyceyes.com>
-> Cc: Julian Calaby <julian.calaby@gmail.com>; ozan@pardus.org.tr; 
->linux-wireless@vger.kernel.org; Noel Milton Vega 
-><nmvega@ComputingArchitects.Com>
-> Sent: Thu, February 10, 2011 4:25:08 PM
-> Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel 
->Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-> 
-> On Thu, Feb 10, 2011 at 12:31:02PM -0800, Noel Milton Vega wrote:
-> 
-> > Hi  Friends....
+On Sun, Feb 06, 2011 at 10:10:07PM -0600, Seth Forshee wrote:
+> On Sun, Feb 06, 2011 at 08:37:21PM +0100, Wolfgang Kufner wrote:
+> > Hi Ivo,
 > > 
-> > UPDATE:
+> > On Sun, Feb 6, 2011 at 5:17 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> > > Between here and where you added the padding are a couple of function
+> > > calls which use the skb->len field. So this patch would change the value what
+> > > they expect. Have you checked the possible impact?
 > > 
-> > In working with the kernel.org linux-wireless  developers, the conclusion
-> > from one developer was that, though generally  speaking the
-> > "Centrino Advanced-N 6230 AGN" card is supported by the  "iwlagn" kernel
-> > module, it seems that the stock kernel module provided  in the
-> > Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does  not
-> > support the this card.
-> > 
-> > In other words, though code  in the main kernel.org git repository does
-> > show support for the card  (via iwlagn kernel module), Fedora 14's
-> > rendition/distribution of that  does not.
+> > I don't think skb_pad() touches skb->len. It writes zeros into the tailroom:
 > 
-> The point you seem to be missing is that your hardware is very  new,
-> and the current Fedora 14 kernel is an "ancient" 6+ months  old.
+> Agreed, it doesn't look like skb_pad() affects that field.
 > 
-> > "lspci(8) -v" did show the hardware (Intel Corporation Centrino  Advanced-N 
->6230
-> > (rev 34)), the necessary driver and firmware packages  were installed, and 
->the
-> > laptop RF toggle switches are set to enable  wireless communications.
-> > Yet manually performing "modprobe(8) iwlagn"  does not produce a wlan0
-> > interface in "ifconfig(8) -a" output; and  although "dmesg(8)" shows the
-> > module being loaded, it does not show it  detecting the card.
-> > 
-> > The two work arounds were suggested (I  haven't tried either):
-> > 
-> >   (1) Update the kernel. Since I  have the latest one provided
-> >       by Fedora for Fedora  14, this implies a manual compile
-> >       of a kernel.org  kernel. Note that if Fedora is not aware of
-> >       this  issue, it's not likely that the next kernel update
-> >        will remedy this.
-> 
-> You could update to a Fedora Rawhide kernel.
-> 
-> As  root:
-> 
->     yum install  fedora-release-rawhide
-> 
->     yum --enablerepo=rawhide  install kernel
-> 
-> Please note that Rawhide is not known for its  stability...
-> 
-> >   (2) Using a compat-wireless technique described  here,
-> >        http://wireless.kernel.org/en/users/Download
-> > 
-> > 
-> > Command  output during my debugging session with the developers is
-> > shown below  for completeness, and in case the Fedora folks are
-> >  monitoring.
-> 
-> I'm sorry, but your acquisition of bleeding-edge hardware  does not
-> merit a change in the normal Fedora release  policy.
-> 
-> John
-> 
-> P.S.  I apologize if this seems rude -- that is  not my intent.
-> -- 
-> John W. Linville         Someday the world will need a hero, and you
-> linville@tuxdriver.com             might be all we have.  Be ready.
-> 
+> One point of concern though would be operations that changed the length
+> so that the amount of padding applied was no longer correct. That isn't
+> the case here, but it does make more sense logically that the padding
+> would follow any adjustments to skb->len.
+
+I reworked the patch to use the clean-up approach, naively assuming that
+we should restore the original beaconing state on failure and that other
+writes require no clean-up. Please provide feedback as to whether this
+general approach is better and whether adjustments to the clean-up are
+required.
+
+
+>From 4a8b3969775cd233750a1b74b1d4f5fc065932bf Mon Sep 17 00:00:00 2001
+From: Seth Forshee <seth.forshee@canonical.com>
+Date: Mon, 7 Feb 2011 13:50:33 -0600
+Subject: [PATCH] rt2x00: Check for errors from skb_pad() calls
+
+Commit 739fd94 ("rt2x00: Pad beacon to multiple of 32 bits")
+added calls to skb_pad() without checking the return value,
+which could cause problems if any of those calls does happen
+to fail. Add checks to prevent this from happening.
+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++++++--
+ drivers/net/wireless/rt2x00/rt61pci.c   |   12 ++++++++++--
+ drivers/net/wireless/rt2x00/rt73usb.c   |   12 ++++++++++--
+ 3 files changed, 30 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c9bf074..0f439ba 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -773,13 +773,14 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	unsigned int beacon_base;
+ 	unsigned int padding_len;
+-	u32 reg;
++	u32 orig_reg, reg;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+ 	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
++	orig_reg = reg;
+ 	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_GEN, 0);
+ 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
+@@ -810,7 +811,14 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 	 * Write entire beacon with TXWI and padding to register.
+ 	 */
+ 	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+-	skb_pad(entry->skb, padding_len);
++	if (padding_len && skb_pad(entry->skb, padding_len)) {
++		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
++		/* skb freed by skb_pad() on failure */
++		entry->skb = NULL;
++		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, orig_reg);
++		return;
++	}
++
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+ 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				   entry->skb->len + padding_len);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index dd2164d..76d9c3a 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1978,13 +1978,14 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
+ 	unsigned int beacon_base;
+ 	unsigned int padding_len;
+-	u32 reg;
++	u32 orig_reg, reg;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+ 	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
++	orig_reg = reg;
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 
+@@ -2002,7 +2003,14 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 	 * Write entire beacon with descriptor and padding to register.
+ 	 */
+ 	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+-	skb_pad(entry->skb, padding_len);
++	if (padding_len && skb_pad(entry->skb, padding_len)) {
++		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
++		/* skb freed by skb_pad() on failure */
++		entry->skb = NULL;
++		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
++		return;
++	}
++
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+ 	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base,
+ 				      entry_priv->desc, TXINFO_SIZE);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 5ff72de..79becd7 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1533,13 +1533,14 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	unsigned int beacon_base;
+ 	unsigned int padding_len;
+-	u32 reg;
++	u32 orig_reg, reg;
+ 
+ 	/*
+ 	 * Disable beaconing while we are reloading the beacon data,
+ 	 * otherwise we might be sending out invalid data.
+ 	 */
+ 	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
++	orig_reg = reg;
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 
+@@ -1563,7 +1564,14 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 	 * Write entire beacon with descriptor and padding to register.
+ 	 */
+ 	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
+-	skb_pad(entry->skb, padding_len);
++	if (padding_len && skb_pad(entry->skb, padding_len)) {
++		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
++		/* skb freed by skb_pad() on failure */
++		entry->skb = NULL;
++		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, orig_reg);
++		return;
++	}
++
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+ 	rt2x00usb_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				      entry->skb->len + padding_len);
+-- 
+1.7.1
+
