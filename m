@@ -1,39 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:36724 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634Ab1BQWA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 17:00:26 -0500
-Subject: Re: [RFC] How to rename SSB_TMSLOW_*, B43_TMSLOW_*?
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: George Kashperko <george@znau.edu.ua>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <AANLkTi=sVaeizU3xJQQwwKXB5saPgdn9VxNQv0-aoiV7@mail.gmail.com> (sfid-20110217_131436_086343_78318A6B)
-References: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
-	 <1297894657.32237.2.camel@maggie>
-	 <AANLkTi=sVaeizU3xJQQwwKXB5saPgdn9VxNQv0-aoiV7@mail.gmail.com>
-	 (sfid-20110217_131436_086343_78318A6B)
+Received: from mga11.intel.com ([192.55.52.93]:22871 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754457Ab1BHPvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:51:51 -0500
+Subject: Re: [RFC/RFT] iwl3945: use software scanning by default
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297172211-17448-1-git-send-email-sgruszka@redhat.com>
+References: <1297172211-17448-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 17 Feb 2011 23:00:18 +0100
-Message-ID: <1297980018.13554.4.camel@maggie>
+Date: Tue, 08 Feb 2011 07:50:07 -0800
+Message-ID: <1297180207.20613.41.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-02-17 at 13:14 +0100, Rafał Miłecki wrote: 
-> That's why I wanted to introduce some SSBAI_CORECTL_FOOBAR and make
-> b43 unaware it that flags are going to be written in register A or B.
-> I wanted b43 to just pass flags to correct function and do not care
-> about place where they are getting written.
+Hi Stanislaw,
 
-Ok, well. That's basically what I am talking about for several
-days now.
+On Tue, 2011-02-08 at 05:36 -0800, Stanislaw Gruszka wrote:
+> Looking for some more testing and opinions.
+> 
+> Patch fixes:
+> https://bugzilla.redhat.com/show_bug.cgi?id=671366
+> and probably some other "very poor performance" bugs reported
+> elsewhere.
+> 
+> Sometimes after hardware scanning device is unable to receive frames
+> at higher rate, what cause that very slow speed is observed by the users.
+> 
+> To workaround problem we can use software scanning. Patch remove
+> "deprecated" warning and make sw scan be used by default on 3945.
+> 
+> On older kernels, in particular 2.6.35, software scanning does not
+> fix problem. On my setup, not affected by bug, I can see slow speed
+> with software scans on 2.6.35 as well. I'm not quite sure why. Anyway
+> on upstream patch works good for me and bug reporter.
+> 
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-core.h     |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |   14 +++-----------
+>  2 files changed, 5 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+> index 6e14a7b..9e7a6d1 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+> @@ -254,8 +254,8 @@ struct iwl_ops {
+>  };
+>  
+>  struct iwl_mod_params {
+> -	int sw_crypto;		/* def: 0 = using hardware encryption */
+> -	int disable_hw_scan;	/* def: 0 = use h/w scan */
+> +	int sw_crypto;		/* def: HW dependent */
+> +	int disable_hw_scan;	/* def: HW dependent */
+>  	int num_of_queues;	/* def: HW dependent */
+>  	int disable_11n;	/* def: 0 = 11n capabilities enabled */
+>  	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 10e8034..7d9e234 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -94,6 +94,7 @@ MODULE_LICENSE("GPL");
+>  struct iwl_mod_params iwl3945_mod_params = {
+>  	.sw_crypto = 1,
+>  	.restart_fw = 1,
+> +	.disable_hw_scan = 1,
+>  	/* the rest are 0 by default */
+>  };
+>  
+> @@ -3996,16 +3997,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+>  	priv->contexts[IWL_RXON_CTX_BSS].station_devtype = RXON_DEV_TYPE_ESS;
+>  	priv->contexts[IWL_RXON_CTX_BSS].unused_devtype = RXON_DEV_TYPE_ESS;
+>  
+> -	/*
+> -	 * Disabling hardware scan means that mac80211 will perform scans
+> -	 * "the hard way", rather than using device's scan.
+> -	 */
+> -	if (iwl3945_mod_params.disable_hw_scan) {
+> -		dev_printk(KERN_DEBUG, &(pdev->dev),
+> -			"sw scan support is deprecated\n");
+> +	if (iwl3945_mod_params.disable_hw_scan)
+>  		iwl3945_hw_ops.hw_scan = NULL;
+> -	}
+> -
+>  
+>  	IWL_DEBUG_INFO(priv, "*** LOAD DRIVER ***\n");
+>  	priv->cfg = cfg;
+> @@ -4326,8 +4319,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
+>  #endif
+>  module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
+>  		   int, S_IRUGO);
+> -MODULE_PARM_DESC(disable_hw_scan,
+> -		 "disable hardware scanning (default 0) (deprecated)");
+> +MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
+>  module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
+>  MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
+>  
 
-1) Keep SSB and AI separated.
-2) Introduce an additional thin layer on top of this to abstract the
-bus to the drivers.
+don't have much experience with 3945, but not sure setting sw scan by
+default is the right choice?
 
--- 
-Greetings Michael.
+Wey
 
