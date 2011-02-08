@@ -1,139 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mow302.securemx.jp ([210.130.202.52]:52026 "EHLO
-	mow.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750940Ab1B1GMT convert rfc822-to-8bit (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:39758 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753611Ab1BHMDk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 01:12:19 -0500
-Date: Mon, 28 Feb 2011 15:12:30 +0900
-From: Takashi Kawamoto <tkawamoto@silex.jp>
-To: linux-wireless@vger.kernel.org
-Subject: Re: BUG: AR9271 cause a Kernel Panic on ARM11 SMP environment
-Cc: Yoshitaka Imura <imura@silex.jp>, Yasuo Bato <bato@silex.jp>,
-	Yuji Sasaki <sasaki@silex.jp>,
-	Ryou Matsuura <matsuura@silex.jp>
-In-Reply-To: <20110216141657.9270.9AD4E5EB@silex.jp>
-References: <20110216141657.9270.9AD4E5EB@silex.jp>
-Message-Id: <20110228144940.DD87.9AD4E5EB@silex.jp>
+	Tue, 8 Feb 2011 07:03:40 -0500
+Message-ID: <20110208140329.16761adb54ekbcpw@hayate.sektori.org>
+Date: Tue, 08 Feb 2011 14:03:29 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sujith <m.sujith@gmail.com>, Martin Schleier <drahemmaps@gmx.net>,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	linville@tuxdriver.com, kune@deine-taler.de,
+	linux-usb@vger.kernel.org, gregkh@suse.de
+Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw:
+ change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+References: <Pine.LNX.4.44L0.1102061457400.24963-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1102061457400.24963-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Quoting Alan Stern <stern@rowland.harvard.edu>:
 
-As for the below Kernel Panic issue, just enabling kernel preemption 
-option seems to be able to prevent the panic.
+> On Sun, 6 Feb 2011, Sujith wrote:
+>
+>> Alan Stern wrote:
+>> > Why do you want to?  Why does changing the endpoint type from interrupt
+>> > to bulk improve performance?  Yes, the description says that this
+>> > causes CPU usage to go from 10% to below 1%, but _why_ does it do that?
+>> >
+>> > Maybe the same effect can be achieved simply by changing the interrupt
+>> > interval instead.
+>>
+>> Well, when the device is plugged in, the USB core recognizes the endpoints
+>> as interrupt type. Later, in the probe() callback, the FW is uploaded to the
+>> target and it patches the endpoints' type to bulk. Please correct me if am
+>> wrong, but I think this mismatch between the host and the target would be
+>> the cause for the high CPU usage, when the transmission load for that
+>> endpoint is high.
+>
+> (Actually, bulk transfers generally cause a higher CPU load than
+> interrupt transfers.  But never mind that...)
+>
+> The problem is that the kernel doesn't know the firmware has been
+> changed.  The kernel has to be told about this, one way or another.
+> Typically the device would disconnect itself from the USB bus briefly,
+> when starting to run the new firmware.  Or the kernel would be told to
+> reset the device after the firmware was transferred, after which the
+> device would start running the new firmware.
+>
+> Apparently the driver needs to call usb_reset_device() when the
+> firmware has been transferred.  Following the reset, the kernel will
+> see that the descriptors have changed and it will reload all of them.
+> Then it will know that the endpoint is bulk rather than interrupt.
+>
 
-[before]
------------------------------------------------------------------------
-...
-CONFIG_PREEMPT_NONE=y
-# CONFIG_PREEMPT_VOLUNTARY is not set
-# CONFIG_PREEMPT is not set
-...
------------------------------------------------------------------------
-[after]
------------------------------------------------------------------------
-...
-# CONFIG_PREEMPT_NONE is not set
-# CONFIG_PREEMPT_VOLUNTARY is not set
-CONFIG_PREEMPT=y
-...
------------------------------------------------------------------------
+Atleast with zd1211rw, after usb_reset_device() endpoints still show  
+as interrupt type and device requires firmware to be transferred  
+again. I cannot tell if zd1211 firmware actually changes endpoint  
+types (as ath9k_htc) but I know that vendor driver uses these  
+endpoints with bulk urbs and using those solve/workaround CPU usage  
+problem. Increasing interrupt interval from 1 to 255 didn't help.
 
-I have no idea why this change could be effective...
-Does anyone have ideas?
+I think zd1211rw have been trying to use bulk urbs too, but  
+usb_bulk_msg() silently switches to interrupt mode. I don't know if  
+editing endpoint descriptors is right way solve this, or why CPU usage  
+is higher.
 
+CPU usage comes from writing beacon frame to device, this is done  
+usually every 100ms on AP-mode. On Atom writing beacon (multiple  
+usb_bulk_msg() calls) with interrupt endpoints usually takes ~20msec  
+and this is when CPU usage goes up. By changing endpoints to bulk,  
+time to write beacon drops to 0~3msec.
 
+Endpoint descriptors appear to be edited by two drivers,  
+drivers/media/IR/mceusb.c (bulk to intr) and  
+/drivers/net/wireless/ath/ath9k/hif_usb.c (intr to bulk). Also bulk  
+endpoints are changed to interrupt type for buggy low-speed devices in  
+drivers/usb/core/config.c.
 
-Best Regards,
-Takashi Kawamoto
+So what is right way to proceed? Is problem in usb core or with  
+device? Deal with buggy device in driver and override endpoint as  
+patch does?
 
-On Wed, 16 Feb 2011 14:17:07 +0900
-Takashi Kawamoto <tkawamoto@silex.jp> wrote:
-
-> Dear all,
-> 
-> 
-> When I make an AR9271 to perform as an iperf client with 
-> compat-wireless-2011-01-30, a Kernel Panic occurs.
-> 
-> [log]
-> =======================================================================
-> BUG: spinlock lockup on CPU#1, iperf/552, 9f9aade4
-> [<80030ca4>] (unwind_backtrace+0x0/0xdc) from [<801835ac>] (do_raw_spin_lock+0x14c/0x168)
-> [<801835ac>] (do_raw_spin_lock+0x14c/0x168) from [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18)
-> [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18) from [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc])
-> [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc]) from [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc])
-> [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc]) from [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc])
-> [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc]) from [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc])
-> [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc]) from [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc])
-> [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc]) from [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211])
-> [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211]) from [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211])
-> [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211]) from [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211])
-> [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211]) from [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0)
-> [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0) from [<8027878c>] (sch_direct_xmit+0x70/0x1c8)
-> [<8027878c>] (sch_direct_xmit+0x70/0x1c8) from [<802696e0>] (dev_queue_xmit+0x290/0x428)
-> [<802696e0>] (dev_queue_xmit+0x290/0x428) from [<80287320>] (ip_finish_output+0x250/0x2a8)
-> [<80287320>] (ip_finish_output+0x250/0x2a8) from [<80285178>] (ip_local_out+0x24/0x28)
-> [<80285178>] (ip_local_out+0x24/0x28) from [<80286cac>] (ip_queue_xmit+0x2f4/0x35c)
-> [<80286cac>] (ip_queue_xmit+0x2f4/0x35c) from [<80299010>] (tcp_transmit_skb+0x74c/0x7b8)
-> [<80299010>] (tcp_transmit_skb+0x74c/0x7b8) from [<8029b5dc>] (tcp_write_xmit+0x860/0x978)
-> [<8029b5dc>] (tcp_write_xmit+0x860/0x978) from [<8029b730>] (tcp_push_one+0x3c/0x48)
-> [<8029b730>] (tcp_push_one+0x3c/0x48) from [<8028f840>] (tcp_sendmsg+0x864/0xaa4)
-> [<8028f840>] (tcp_sendmsg+0x864/0xaa4) from [<80258ecc>] (sock_aio_write+0xe0/0xe8)
-> [<80258ecc>] (sock_aio_write+0xe0/0xe8) from [<800bba20>] (do_sync_write+0x94/0xe0)
-> [<800bba20>] (do_sync_write+0x94/0xe0) from [<800bc460>] (vfs_write+0xc4/0x154)
-> [<800bc460>] (vfs_write+0xc4/0x154) from [<800bc59c>] (sys_write+0x3c/0x68)
-> [<800bc59c>] (sys_write+0x3c/0x68) from [<8002a220>] (ret_fast_syscall+0x0/0x2c)
-> =======================================================================
-> 
-> An environment of AR9271's host is as follows.
-> 
-> [Host Environment]
-> =======================================================================
-> CPU         : ARM11MP
-> Kernel      : 2.6.33 (SMP enabled)
-> Distribution: Zoran Quatro inferno
-> =======================================================================
-> 
-> As long as I see, this panic happens under the following conditions.
-> 
-> (1) When sending a data frame
->     When AR9271 performs as an iperf server, this panic appears less 
->     frequently than as a client.
-> 
-> (1) When transmission throughput is relatively high
->     For example, this panic never seems to appear when Ping 
->     communication is performed.
-> 
-> (2) When multi processor mode is enabled
->     When SMP option of the kernel is disabled (CONFIG_SMP=m), this 
->     panic doesn't occur.
-> 
-> I've not duplicated the same on a x86 environment yet.
-> 
-> I suspect that spinlock usage in Tx routines of ath9k/hif_usb.c must 
-> have something to do with this panic.
-> 
-> Have anyone come across the similar crash as this?
-> 
-> 
-> 
-> Best Regards,
-> Takashi Kawamoto
-> 
-> ==================================================
->  Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
->  silex technology,Inc. 
->  Software Engineering Division
->  Phone:+81-774-98-3877 FAX:+81-774-98-3678
-> ==================================================
-
-==================================================
- Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
- silex technology,Inc. 
- Software Engineering Division
- Phone:+81-774-98-3877 FAX:+81-774-98-3678
-==================================================
+-Jussi
 
