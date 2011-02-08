@@ -1,81 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:64881 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab1BDHgV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 02:36:21 -0500
-Received: by iwn9 with SMTP id 9so1888439iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 23:36:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
-References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 3 Feb 2011 23:36:01 -0800
-Message-ID: <AANLkTi=tANgmxukLg0GQbLRkc-XuEBi-hmpJono=q=m8@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39678 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751831Ab1BHVgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 16:36:35 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat-wireless: fix some problems with brcm80211
+Date: Tue,  8 Feb 2011 22:36:19 +0100
+Message-Id: <1297200981-22971-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 3, 2011 at 10:23 PM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
-> In a highly noisy environment, a data frame which is queued before
-> a nullfunc frame on a different hw queue may be sent over the air
-> after the tx completion of nullfunc frame. This causes the station
-> to enter power save and the AP to see the station as awake and
-> continues to send the data traffic. Fix this by draining all tx
-> queues before we send the null function frame with PM bit set.
->
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+We have to activate debug, without we get compile errors
 
-Hm nice, this is a good example of one of those random not-so-critical
-but still nice fixes which I wish would go to stable. John, Greg, any
-qualms for such things to go to stable if they apply? It was my
-impression we could send it, but I want to verify with both you guys
-so neither we or John get bashed if we try to send it as a stable fix.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk                              |    3 ++-
+ patches/35-fix-makefile-includes.patch |   14 +++++++-------
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-Vivek, is this applicable to stable kernels or does the hunk not even apply?
+diff --git a/config.mk b/config.mk
+index d8712e8..7c337bb 100644
+--- a/config.mk
++++ b/config.mk
+@@ -539,6 +539,7 @@ ifneq ($(CONFIG_COMPAT_STAGING),)
+ 
+ CONFIG_BRCM80211=m
+ CONFIG_BRCMSMAC=y
++CONFIG_BRCMDBG=y
+ 
+ ifdef CONFIG_WIRELESS_EXT
+ CONFIG_ATH6KL_CFG80211=y
+@@ -555,7 +556,7 @@ CONFIG_ATH6K_LEGACY=m
+ 
+ # It is not possible to compile CONFIG_BRCMSMAC and CONFIG_BRCMFMAC as
+ # module at the same time
+-# CONFIG_BRCMFMAC=y
++CONFIG_BRCMFMAC=y
+ 
+ endif #CONFIG_WIRELESS_EXT
+ endif #CONFIG_MMC
+diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
+index 2142da2..ea5b41d 100644
+--- a/patches/35-fix-makefile-includes.patch
++++ b/patches/35-fix-makefile-includes.patch
+@@ -20,11 +20,11 @@ path the make process will search in the kernel tree for the headers.
+ +ccflags-y += -I$(obj)/..
+ --- a/drivers/staging/brcm80211/brcmfmac/Makefile
+ +++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+-@@ -32,9 +32,9 @@ ccflags-y :=			\
+- 	-DPKT_FILTER_SUPPORT	\
+- 	-DSHOW_EVENTS		\
+- 	-DTOE			\
+--	-Idrivers/staging/brcm80211/brcmfmac		\
++@@ -35,9 +35,9 @@ ccflags-y :=			\
++ ccflags-$(CONFIG_BRCMDBG)	+= -DDHD_DEBUG
++ 
++ ccflags-y += \
++-	-Idrivers/staging/brcm80211/brcmfmac	\
+ -	-Idrivers/staging/brcm80211/include		\
+ -	-Idrivers/staging/brcm80211/util
+ +	-I$(obj)		\
+@@ -35,9 +35,9 @@ path the make process will search in the kernel tree for the headers.
+  	wl_cfg80211.o \
+ --- a/drivers/staging/brcm80211/brcmsmac/Makefile
+ +++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+-@@ -24,10 +24,10 @@ ccflags-y :=					\
++@@ -23,10 +23,10 @@ ccflags-y :=				\
++ 	-DWL11N					\
+  	-DDBAND					\
+- 	-DBCMDMA32				\
+  	-DBCMNVRAMR				\
+ -	-Idrivers/staging/brcm80211/brcmsmac \
+ -	-Idrivers/staging/brcm80211/brcmsmac/phy \
+-- 
+1.7.1
 
-  Luis
-
-> ---
->  drivers/net/wireless/ath/ath9k/xmit.c |   10 +++++++++-
->  1 files changed, 9 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 68a1c76..0cb6017 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -1710,7 +1710,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
->                            bf->bf_buf_addr,
->                            txq->axq_qnum);
->
-> -
->        return bf;
->  }
->
-> @@ -1813,6 +1812,15 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
->        if (unlikely(!bf))
->                return -ENOMEM;
->
-> +       if (ieee80211_is_nullfunc(hdr->frame_control) &&
-> +           ieee80211_has_pm(hdr->frame_control)) {
-> +               /* Drain all the pending frames before we send a nullfunc frame
-> +                * to avoid any power save state mismatch between the station
-> +                * and the AP.
-> +                */
-> +               ath_drain_all_txq(sc, false);
-> +       }
-> +
->        q = skb_get_queue_mapping(skb);
->        spin_lock_bh(&txq->axq_lock);
->        if (txq == sc->tx.txq_map[q] &&
-> --
-> 1.6.3.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
