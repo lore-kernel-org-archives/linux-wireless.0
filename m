@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33093 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823Ab1BYGVJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 01:21:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <1298614522-4153-1-git-send-email-justinmattock@gmail.com>
-References: <1298614522-4153-1-git-send-email-justinmattock@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 25 Feb 2011 17:20:49 +1100
-Message-ID: <AANLkTi=FuD0FCTv6f0sPKkg14O9R_giKi9uvA0Xsgy1q@mail.gmail.com>
-Subject: Re: [PATCH 18/21]include:net:mac80211.h remove one to many l's in the word.
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39683 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752638Ab1BHVgg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 16:36:36 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat-wireless: brcm80211 adapt changes in mac80211
+Date: Tue,  8 Feb 2011 22:36:20 +0100
+Message-Id: <1297200981-22971-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1297200981-22971-1-git-send-email-hauke@hauke-m.de>
+References: <1297200981-22971-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 25, 2011 at 17:15, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> The patch below removes an extra "l" in the word.
+The interface to mac80211 changes and brcm80211 uses the old one.
 
-Random thought:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/38-brcm80211-mac80211-backport.patch |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+ create mode 100644 patches/38-brcm80211-mac80211-backport.patch
 
-Not that I'm complaining about your work here, and not that commits
-are a finite resource, but would it be possible for you to collect
-your spelling changes into slightly bigger commits before sending them
-off?
-
-E.g. instead of sending off 21 patches to remove 21 erroneous l's, why
-not do a full spelling check on these 21 files, then send off 21
-patches to fix *all* the spelling mistakes in each file? You could
-even group them up by directory if you liked.
-
-Thanks,
-
+diff --git a/patches/38-brcm80211-mac80211-backport.patch b/patches/38-brcm80211-mac80211-backport.patch
+new file mode 100644
+index 0000000..0adb24c
+--- /dev/null
++++ b/patches/38-brcm80211-mac80211-backport.patch
+@@ -0,0 +1,11 @@
++--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++@@ -2312,7 +2312,7 @@ static s32 wl_inform_single_bss(struct w
++ 	notif_bss_info->frame_len =
++ 	    offsetof(struct ieee80211_mgmt,
++ 		     u.beacon.variable) + wl_get_ielen(wl);
++-	freq = ieee80211_channel_to_frequency(notif_bss_info->channel);
+++	freq = ieee80211_channel_to_frequency(notif_bss_info->channel, notif_bss_info->band);
++ 	channel = ieee80211_get_channel(wiphy, freq);
++ 
++ 	WL_DBG("SSID : \"%s\", rssi %d, channel %d, capability : 0x04%x, bssid %pM\n",
 -- 
+1.7.1
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
