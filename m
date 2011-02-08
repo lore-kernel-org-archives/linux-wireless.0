@@ -1,47 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755627Ab1BPLLe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 06:11:34 -0500
-Subject: Re: [PATCH v2] mac80211: Fix a race on enabling power save.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTin3V5Ck6vtJshcjG9KxrK8pX3vOYhKGfVjqupxw@mail.gmail.com>
-References: <1296822326-4878-1-git-send-email-vnatarajan@atheros.com>
-	 <1296824920.3671.4.camel@jlt3.sipsolutions.net>
-	 <1296825156.3671.7.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=eJf+ge7_w1-r1hmZE0aaPzm_NP-Y-v81uctXG@mail.gmail.com>
-	 <1297773858.3935.13.camel@jlt3.sipsolutions.net>
-	 <AANLkTinGP+Vxm7502wRmCu5g_Nthz0x-sNQ4NFx9uz1n@mail.gmail.com>
-	 <1297778952.8664.2.camel@jlt3.sipsolutions.net>
-	 <AANLkTin3V5Ck6vtJshcjG9KxrK8pX3vOYhKGfVjqupxw@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:50725 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754320Ab1BHPry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:47:54 -0500
+Subject: Re: [PATCH 5/5] iwlwifi: avoid too frequent recover from statistics
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297153919-18766-5-git-send-email-sgruszka@redhat.com>
+References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
+	 <1297153919-18766-5-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Feb 2011 12:11:28 +0100
-Message-ID: <1297854688.3736.1.camel@jlt3.sipsolutions.net>
+Date: Tue, 08 Feb 2011 07:45:53 -0800
+Message-ID: <1297179953.20613.38.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-16 at 15:01 +0530, Vivek Natarajan wrote:
+Hi Stanislaw,
 
-> >> And this is how I understand this:
-> >> stop queues, then send nullfunc, then do a flush to get the status and
-> >> wake queues again irrespective of acked or not(but set the ACK_STATUS
-> >> correspondingly). If tx() routine of nullfunc fails, then also wake
-> >> the queues.
-> >
-> > Yes, but since the flush is there, the latter (tx fails, ...) won't be
-> > needed.
+On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
+> Usually H/W generate statistics notify once per about 100ms, but
+> sometimes we can receive notify in shorter time, even 2 ms.
 > 
-> If queues are stopped before sending nullfunc, it is added in the
-> pending frames queue and the flush after nullfunc is ineffective. So,
-> is it okay to bypass this queue_stop check with REASON_PS if it is a
-> nullfunc frame? Any more ideas will be helpful.
+> This can be problem for plcp health and ack health checking.
+> 
+> I.e. with 2 plcp errors happens randomly in 2 ms duration, we
+> exceed plcp delta threshold equal to 100 (2*100/2).
+> 
+> Also checking ack's in short time, can results not necessary false
+> positive and firmware reset, for example when channel is noised and
+> we do not receive ACKs frames or when remote device does not send
+> ACKs at the moment.
+> 
+> Patch change code, to do statistic check and possible recovery only
+> if 99ms elapsed from last check. Forced delay should assure we have
+> good statistic data to estimate hardware state.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c     |   24 ++++++++------
+>  drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |   46 +++++++++++++++++----------
+>  drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +
+>  drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-core.h     |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl-rx.c       |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+>  8 files changed, 53 insertions(+), 34 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index f371d42..9646cbc 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -409,11 +409,9 @@ static void iwl3945_accumulative_statistics(struct iwl_priv *priv,
+>   * to improve the throughput.
+>   */
+>  static bool iwl3945_good_plcp_health(struct iwl_priv *priv,
+> -				struct iwl_rx_packet *pkt)
+> +				struct iwl_rx_packet *pkt, unsigned int msecs)
+>  {
+>  	__le32 cur_plcp_err, old_plcp_err;
+> -	unsigned int msecs;
+> -	unsigned long stamp;
+>  	int delta;
+>  	int threshold = priv->cfg->base_params->plcp_delta_threshold;
+>  
+> @@ -422,12 +420,7 @@ static bool iwl3945_good_plcp_health(struct iwl_priv *priv,
+>  		return true;
+>  	}
+>  
+> -	stamp = jiffies;
+> -	msecs = jiffies_to_msecs(stamp - priv->plcp_jiffies);
+> -	priv->plcp_jiffies = stamp;
+> -
+> -	if (msecs == 0)
+> -		return true;
+> +	BUG_ON(msecs == 0);
 
-Ah, but I wasn't thinking of stopping the device queues, just the sdata
-queues, and the nullfunc doesn't go across those.
+why not just return? I understand it should not be "0", but really need
+BUG_ON?
+ 
+>  
+> -	stamp = jiffies;
+> -	msecs = jiffies_to_msecs(stamp - priv->plcp_jiffies);
+> -	priv->plcp_jiffies = stamp;
+> -
+> -	if (msecs == 0)
+> -		return true;
+> +	BUG_ON(msecs == 0);
+Same above
 
-johannes
+
+Similar question, we are very close to finish driver split, when is the
+best time for this patch?
+
+Thanks
+Wey
 
