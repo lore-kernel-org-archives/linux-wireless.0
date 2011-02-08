@@ -1,124 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49426 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752612Ab1BZTBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Feb 2011 14:01:15 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/5] iwlagn: add BT Session Activity 2 UART message (BT -> WiFi)
-Date: Sat, 26 Feb 2011 10:46:04 -0800
-Message-Id: <1298745966-25130-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:40247 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011Ab1BHBLL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Feb 2011 20:11:11 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 7 Feb 2011 17:10:49 -0800
+Message-ID: <AANLkTineqSLDLg84Ah7Djd1R=K-xTfQDUd==K+eaJFES@mail.gmail.com>
+Subject: compat-wireless for 2.6.38-rc3 - third release
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-additional UART message defines
+I updated compat-wireless for 2.6.38-rc3, this is the third update, it
+should now include the proper compat.git branch and also adds some new
+patches from Hauke to minimize deltas and fix compilation. While at it
+I took the time to suck in new pending-stable patches for an "-s"
+release, I haven't cherry picked any patches yet as I cannot think of
+anything immediately important, if you do send me a patch.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |   78 +++++++++++++++++++++++++++
- 1 files changed, 78 insertions(+), 0 deletions(-)
+Code metrics for the vanilla release:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index b32b143..df6abbf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -4173,6 +4173,7 @@ enum iwl_bt_coex_profile_traffic_load {
-  */
- };
- 
-+/* BT UART message - Share Part (BT -> WiFi) */
- #define BT_UART_MSG_FRAME1MSGTYPE_POS		(0)
- #define BT_UART_MSG_FRAME1MSGTYPE_MSK		\
- 		(0x7 << BT_UART_MSG_FRAME1MSGTYPE_POS)
-@@ -4267,6 +4268,83 @@ enum iwl_bt_coex_profile_traffic_load {
- #define BT_UART_MSG_FRAME7RESERVED_MSK		\
- 		(0x3 << BT_UART_MSG_FRAME7RESERVED_POS)
- 
-+/* BT Session Activity 2 UART message (BT -> WiFi) */
-+#define BT_UART_MSG_2_FRAME1RESERVED1_POS	(5)
-+#define BT_UART_MSG_2_FRAME1RESERVED1_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME1RESERVED1_POS)
-+#define BT_UART_MSG_2_FRAME1RESERVED2_POS	(6)
-+#define BT_UART_MSG_2_FRAME1RESERVED2_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME1RESERVED2_POS)
-+
-+#define BT_UART_MSG_2_FRAME2AGGTRAFFICLOAD_POS	(0)
-+#define BT_UART_MSG_2_FRAME2AGGTRAFFICLOAD_MSK	\
-+		(0x3F<<BT_UART_MSG_2_FRAME2AGGTRAFFICLOAD_POS)
-+#define BT_UART_MSG_2_FRAME2RESERVED_POS	(6)
-+#define BT_UART_MSG_2_FRAME2RESERVED_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME2RESERVED_POS)
-+
-+#define BT_UART_MSG_2_FRAME3BRLASTTXPOWER_POS	(0)
-+#define BT_UART_MSG_2_FRAME3BRLASTTXPOWER_MSK	\
-+		(0xF<<BT_UART_MSG_2_FRAME3BRLASTTXPOWER_POS)
-+#define BT_UART_MSG_2_FRAME3INQPAGESRMODE_POS	(4)
-+#define BT_UART_MSG_2_FRAME3INQPAGESRMODE_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME3INQPAGESRMODE_POS)
-+#define BT_UART_MSG_2_FRAME3LEMASTER_POS	(5)
-+#define BT_UART_MSG_2_FRAME3LEMASTER_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME3LEMASTER_POS)
-+#define BT_UART_MSG_2_FRAME3RESERVED_POS	(6)
-+#define BT_UART_MSG_2_FRAME3RESERVED_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME3RESERVED_POS)
-+
-+#define BT_UART_MSG_2_FRAME4LELASTTXPOWER_POS	(0)
-+#define BT_UART_MSG_2_FRAME4LELASTTXPOWER_MSK	\
-+		(0xF<<BT_UART_MSG_2_FRAME4LELASTTXPOWER_POS)
-+#define BT_UART_MSG_2_FRAME4NUMLECONN_POS	(4)
-+#define BT_UART_MSG_2_FRAME4NUMLECONN_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME4NUMLECONN_POS)
-+#define BT_UART_MSG_2_FRAME4RESERVED_POS	(6)
-+#define BT_UART_MSG_2_FRAME4RESERVED_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME4RESERVED_POS)
-+
-+#define BT_UART_MSG_2_FRAME5BTMINRSSI_POS	(0)
-+#define BT_UART_MSG_2_FRAME5BTMINRSSI_MSK	\
-+		(0xF<<BT_UART_MSG_2_FRAME5BTMINRSSI_POS)
-+#define BT_UART_MSG_2_FRAME5LESCANINITMODE_POS	(4)
-+#define BT_UART_MSG_2_FRAME5LESCANINITMODE_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME5LESCANINITMODE_POS)
-+#define BT_UART_MSG_2_FRAME5LEADVERMODE_POS	(5)
-+#define BT_UART_MSG_2_FRAME5LEADVERMODE_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME5LEADVERMODE_POS)
-+#define BT_UART_MSG_2_FRAME5RESERVED_POS	(6)
-+#define BT_UART_MSG_2_FRAME5RESERVED_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME5RESERVED_POS)
-+
-+#define BT_UART_MSG_2_FRAME6LECONNINTERVAL_POS	(0)
-+#define BT_UART_MSG_2_FRAME6LECONNINTERVAL_MSK	\
-+		(0x1F<<BT_UART_MSG_2_FRAME6LECONNINTERVAL_POS)
-+#define BT_UART_MSG_2_FRAME6RFU_POS		(5)
-+#define BT_UART_MSG_2_FRAME6RFU_MSK		\
-+		(0x1<<BT_UART_MSG_2_FRAME6RFU_POS)
-+#define BT_UART_MSG_2_FRAME6RESERVED_POS	(6)
-+#define BT_UART_MSG_2_FRAME6RESERVED_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME6RESERVED_POS)
-+
-+#define BT_UART_MSG_2_FRAME7LECONNSLAVELAT_POS	(0)
-+#define BT_UART_MSG_2_FRAME7LECONNSLAVELAT_MSK	\
-+		(0x7<<BT_UART_MSG_2_FRAME7LECONNSLAVELAT_POS)
-+#define BT_UART_MSG_2_FRAME7LEPROFILE1_POS	(3)
-+#define BT_UART_MSG_2_FRAME7LEPROFILE1_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME7LEPROFILE1_POS)
-+#define BT_UART_MSG_2_FRAME7LEPROFILE2_POS	(4)
-+#define BT_UART_MSG_2_FRAME7LEPROFILE2_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME7LEPROFILE2_POS)
-+#define BT_UART_MSG_2_FRAME7LEPROFILEOTHER_POS	(5)
-+#define BT_UART_MSG_2_FRAME7LEPROFILEOTHER_MSK	\
-+		(0x1<<BT_UART_MSG_2_FRAME7LEPROFILEOTHER_POS)
-+#define BT_UART_MSG_2_FRAME7RESERVED_POS	(6)
-+#define BT_UART_MSG_2_FRAME7RESERVED_MSK	\
-+		(0x3<<BT_UART_MSG_2_FRAME7RESERVED_POS)
-+
- 
- struct iwl_bt_uart_msg {
- 	u8 header;
--- 
-1.7.0.4
+    782535 - Total upstream lines of code being pulled
+      2108 - backport code changes
+      1847 - backport code additions
+       261 - backport code deletions
+      7292 - backport from compat module
+      9400 - total backport code
+    1.2012 - % of code consists of backport work
 
+Base tree: linux-2.6-allstable.git
+Base tree version: v2.6.38-rc3
+compat-wireless release: compat-wireless-v2.6.38-rc3-3
+
+Code metrics for the "-s" release:
+
+    782535 - Total upstream lines of code being pulled
+      2108 - backport code changes
+      1847 - backport code additions
+       261 - backport code deletions
+      7292 - backport from compat module
+      9400 - total backport code
+    1.2012 - % of code consists of backport work
+       115 - Code changes brought in from pending-stable
+        57 - Code additions brought in from pending-stable
+        58 - Code deletions brought in from pending-stable
+    0.0147 - % of code being cherry picked from pending-stable
+
+Base tree: linux-2.6-allstable.git
+Base tree version: v2.6.38-rc3
+compat-wireless release: compat-wireless-v2.6.38-rc3-3-s
+
+Relevant URLs:
+
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38-rc3-3.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38-rc3-3-s.tar.bz2
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/ChangeLog-2.6.38-wireless
+http://wireless.kernel.org/en/users/Download/stable
+
+  Luis
