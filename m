@@ -1,90 +1,368 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:36548 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082Ab1BOALj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 19:11:39 -0500
-Received: by qyj19 with SMTP id 19so1918895qyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 16:11:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297725710.5683.17.camel@maggie>
-References: <1297725710.5683.17.camel@maggie>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 15 Feb 2011 01:03:33 +0100
-Message-ID: <AANLkTingds9m3sj5bJoExiuoivbRSAtnF2A-4emjYMdJ@mail.gmail.com>
-Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:42326 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752121Ab1BHV0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 16:26:37 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, lrodriguez@atheros.com, m.sujith@gmail.com,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [RFC 2/2] ath9k: fix powersave frame filtering/buffering in AP mode
+Date: Tue,  8 Feb 2011 22:26:12 +0100
+Message-Id: <1297200372-79404-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1297200372-79404-1-git-send-email-nbd@openwrt.org>
+References: <1297200372-79404-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 12:21 AM, Michael Büsch <mb@bu3sch.de> wrote:
-> ssb_wait_bit was designed for only one-bit bitmasks.
-> People start using it for multi-bit bitmasks. Make the "set" case
-> is safe for this. The "unset" case is already safe.
->
-> This does not change behavior of the current code.
->
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
->
-> ---
->
-> Index: wireless-testing/drivers/ssb/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/main.c    2010-12-30 15:49:39.235946210 +0100
-> +++ wireless-testing/drivers/ssb/main.c 2011-02-15 00:17:35.727816704 +0100
-> @@ -1192,10 +1192,10 @@ void ssb_device_enable(struct ssb_device
->  }
->  EXPORT_SYMBOL(ssb_device_enable);
->
-> -/* Wait for a bit in a register to get set or unset.
-> +/* Wait for bitmask in a register to get set or cleared.
->  * timeout is in units of ten-microseconds */
-> -static int ssb_wait_bit(struct ssb_device *dev, u16 reg, u32 bitmask,
-> -                       int timeout, int set)
-> +static int ssb_wait_bits(struct ssb_device *dev, u16 reg, u32 bitmask,
-> +                        int timeout, int set)
+This patch fixes a long standing issue of pending packets in the queue being
+sent (and retransmitted many times) to sleeping stations.
+This was made worse by aggregation through driver-internal retransmitting
+of A-MDPU subframes.
+Previously the hardware tx filter was cleared unconditionally for every
+single packet - with this patch it uses the IEEE80211_TX_CTL_CLEAR_PS_FILT
+for unaggregated frames.
+A sta_notify driver op is added to stop aggregation for stations when they
+enter powersave mode. Subframes stay buffered inside the driver, to ensure
+that the BlockAck window keeps a sane state.
+Since the driver uses software aggregation, the clearing of the tx filter
+needs to be handled by the driver instead of mac80211 for aggregated frames.
 
-While you are at it, you may want to change this to "bool set".
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |   12 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   12 ++++-
+ drivers/net/wireless/ath/ath9k/ath9k.h      |    6 ++
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |    5 ++
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 +
+ drivers/net/wireless/ath/ath9k/mac.h        |    1 -
+ drivers/net/wireless/ath/ath9k/main.c       |   22 +++++++
+ drivers/net/wireless/ath/ath9k/xmit.c       |   80 ++++++++++++++++++++++++++-
+ 8 files changed, 134 insertions(+), 5 deletions(-)
 
->  {
->        int i;
->        u32 val;
-> @@ -1203,7 +1203,7 @@ static int ssb_wait_bit(struct ssb_devic
->        for (i = 0; i < timeout; i++) {
->                val = ssb_read32(dev, reg);
->                if (set) {
-> -                       if (val & bitmask)
-> +                       if ((val & bitmask) == bitmask)
->                                return 0;
->                } else {
->                        if (!(val & bitmask))
-> @@ -1227,8 +1227,8 @@ void ssb_device_disable(struct ssb_devic
->
->        reject = ssb_tmslow_reject_bitmask(dev);
->        ssb_write32(dev, SSB_TMSLOW, reject | SSB_TMSLOW_CLOCK);
-> -       ssb_wait_bit(dev, SSB_TMSLOW, reject, 1000, 1);
-> -       ssb_wait_bit(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
-> +       ssb_wait_bits(dev, SSB_TMSLOW, reject, 1000, 1);
-> +       ssb_wait_bits(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
->        ssb_write32(dev, SSB_TMSLOW,
->                    SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
->                    reject | SSB_TMSLOW_RESET |
->
-> --
-> Greetings Michael.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 399ab3b..ccfe2c9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -290,7 +290,6 @@ static void ar9002_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
+ 		| (flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
+ 		| SM(txPower, AR_XmitPower)
+ 		| (flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
+-		| (flags & ATH9K_TXDESC_CLRDMASK ? AR_ClrDestMask : 0)
+ 		| (flags & ATH9K_TXDESC_INTREQ ? AR_TxIntrReq : 0)
+ 		| (keyIx != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0);
+ 
+@@ -311,6 +310,16 @@ static void ar9002_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
+ 	}
+ }
+ 
++static void ar9002_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	if (val)
++		ads->ds_ctl0 |= AR_ClrDestMask;
++	else
++		ads->ds_ctl0 &= ~AR_ClrDestMask;
++}
++
+ static void ar9002_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
+ 					  void *lastds,
+ 					  u32 durUpdateEn, u32 rtsctsRate,
+@@ -460,4 +469,5 @@ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
+ 	ops->clr11n_aggr = ar9002_hw_clr11n_aggr;
+ 	ops->set11n_burstduration = ar9002_hw_set11n_burstduration;
+ 	ops->set11n_virtualmorefrag = ar9002_hw_set11n_virtualmorefrag;
++	ops->set_clrdmask = ar9002_hw_set_clrdmask;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 038a0cb..349df33 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -329,7 +329,6 @@ static void ar9003_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
+ 		| (flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
+ 		| SM(txpower, AR_XmitPower)
+ 		| (flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
+-		| (flags & ATH9K_TXDESC_CLRDMASK ? AR_ClrDestMask : 0)
+ 		| (keyIx != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
+ 		| (flags & ATH9K_TXDESC_LOWRXCHAIN ? AR_LowRxChain : 0);
+ 
+@@ -350,6 +349,16 @@ static void ar9003_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
+ 	ads->ctl22 = 0;
+ }
+ 
++static void ar9003_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
++{
++	struct ar9003_txc *ads = (struct ar9003_txc *) ds;
++
++	if (val)
++		ads->ctl11 |= AR_ClrDestMask;
++	else
++		ads->ctl11 &= ~AR_ClrDestMask;
++}
++
+ static void ar9003_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
+ 					  void *lastds,
+ 					  u32 durUpdateEn, u32 rtsctsRate,
+@@ -522,6 +531,7 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
+ 	ops->clr11n_aggr = ar9003_hw_clr11n_aggr;
+ 	ops->set11n_burstduration = ar9003_hw_set11n_burstduration;
+ 	ops->set11n_virtualmorefrag = ar9003_hw_set11n_virtualmorefrag;
++	ops->set_clrdmask = ar9003_hw_set_clrdmask;
+ }
+ 
+ void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9272278..1207b0d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -205,6 +205,7 @@ struct ath_atx_ac {
+ 	int sched;
+ 	struct list_head list;
+ 	struct list_head tid_q;
++	bool clear_ps_filter;
+ };
+ 
+ struct ath_frame_info {
+@@ -262,6 +263,8 @@ struct ath_node {
+ 	struct ath_atx_ac ac[WME_NUM_AC];
+ 	u16 maxampdu;
+ 	u8 mpdudensity;
++
++	bool sleeping;
+ };
+ 
+ #define AGGR_CLEANUP         BIT(1)
+@@ -343,6 +346,9 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+ 
++void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an);
++bool ath_tx_aggr_sleep(struct ath_softc *sc, struct ath_node *an);
++
+ /********/
+ /* VIFs */
+ /********/
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index c8f254f..f64e86e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -128,6 +128,11 @@ static inline void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
+ 	ath9k_hw_ops(ah)->set11n_virtualmorefrag(ah, ds, vmf);
+ }
+ 
++static inline void ath9k_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
++{
++	ath9k_hw_ops(ah)->set_clrdmask(ah, ds, val);
++}
++
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index ef79f4c..77da61e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -642,6 +642,7 @@ struct ath_hw_ops {
+ 				     u32 burstDuration);
+ 	void (*set11n_virtualmorefrag)(struct ath_hw *ah, void *ds,
+ 				       u32 vmf);
++	void (*set_clrdmask)(struct ath_hw *ah, void *ds, bool val);
+ };
+ 
+ struct ath_nf_limits {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 04d58ae..e3cda955 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -239,7 +239,6 @@ struct ath_desc {
+ 	void *ds_vdata;
+ } __packed __aligned(4);
+ 
+-#define ATH9K_TXDESC_CLRDMASK		0x0001
+ #define ATH9K_TXDESC_NOACK		0x0002
+ #define ATH9K_TXDESC_RTSENA		0x0004
+ #define ATH9K_TXDESC_CTSENA		0x0008
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4ed43b2..0772852 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1794,6 +1794,27 @@ static int ath9k_sta_remove(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static void ath9k_sta_notify(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 enum sta_notify_cmd cmd,
++			 struct ieee80211_sta *sta)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_node *an = (struct ath_node *) sta->drv_priv;
++
++	switch (cmd) {
++	case STA_NOTIFY_SLEEP:
++		an->sleeping = true;
++		if (ath_tx_aggr_sleep(sc, an))
++			ieee80211_sta_set_tim(sta);
++		break;
++	case STA_NOTIFY_AWAKE:
++		an->sleeping = false;
++		ath_tx_aggr_wakeup(sc, an);
++		break;
++	}
++}
++
+ static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 			 const struct ieee80211_tx_queue_params *params)
+ {
+@@ -2133,6 +2154,7 @@ struct ieee80211_ops ath9k_ops = {
+ 	.configure_filter   = ath9k_configure_filter,
+ 	.sta_add	    = ath9k_sta_add,
+ 	.sta_remove	    = ath9k_sta_remove,
++	.sta_notify         = ath9k_sta_notify,
+ 	.conf_tx 	    = ath9k_conf_tx,
+ 	.bss_info_changed   = ath9k_bss_info_changed,
+ 	.set_key            = ath9k_set_key,
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 9f4e755..4696076 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -357,6 +357,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_frame_info *fi;
+ 	int nframes;
+ 	u8 tidno;
++	bool clear_filter;
+ 
+ 	skb = bf->bf_mpdu;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -442,7 +443,11 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			acked_cnt++;
+ 		} else {
+ 			if (!(tid->state & AGGR_CLEANUP) && retry) {
+-				if (fi->retries < ATH_MAX_SW_RETRIES) {
++				if (ts->ts_status & ATH9K_TXERR_FILT) {
++					if (!an->sleeping)
++						clear_filter = true;
++					txpending = 1;
++				} else if (fi->retries < ATH_MAX_SW_RETRIES) {
+ 					ath_tx_set_retry(sc, txq, bf->bf_mpdu);
+ 					txpending = 1;
+ 				} else {
+@@ -496,6 +501,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				!txfail, sendbar);
+ 		} else {
+ 			/* retry the un-acked ones */
++			ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, false);
+ 			if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)) {
+ 				if (bf->bf_next == NULL && bf_last->bf_stale) {
+ 					struct ath_buf *tbf;
+@@ -547,6 +553,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	/* prepend un-acked frames to the beginning of the pending frame queue */
+ 	if (!list_empty(&bf_pending)) {
+ 		spin_lock_bh(&txq->axq_lock);
++		if (clear_filter)
++			tid->ac->clear_ps_filter = true;
+ 		list_splice(&bf_pending, &tid->buf_q);
+ 		ath_tx_queue_tid(txq, tid);
+ 		spin_unlock_bh(&txq->axq_lock);
+@@ -816,6 +824,11 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		bf = list_first_entry(&bf_q, struct ath_buf, list);
+ 		bf->bf_lastbf = list_entry(bf_q.prev, struct ath_buf, list);
+ 
++		if (tid->ac->clear_ps_filter) {
++			tid->ac->clear_ps_filter = false;
++			ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
++		}
++
+ 		/* if only one frame, send as non-aggregate */
+ 		if (bf == bf->bf_lastbf) {
+ 			fi = get_frame_info(bf->bf_mpdu);
+@@ -896,6 +909,67 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 	ath_tx_flush_tid(sc, txtid);
+ }
+ 
++bool ath_tx_aggr_sleep(struct ath_softc *sc, struct ath_node *an)
++{
++	struct ath_atx_tid *tid;
++	struct ath_atx_ac *ac;
++	struct ath_txq *txq;
++	bool buffered = false;
++	int tidno;
++
++	for (tidno = 0, tid = &an->tid[tidno];
++	     tidno < WME_NUM_TID; tidno++, tid++) {
++
++		if (!tid->sched)
++			continue;
++
++		ac = tid->ac;
++		txq = ac->txq;
++
++		spin_lock_bh(&txq->axq_lock);
++
++		if (!list_empty(&tid->buf_q))
++			buffered = true;
++
++		tid->sched = false;
++		list_del(&tid->list);
++
++		if (ac->sched) {
++			ac->sched = false;
++			list_del(&ac->list);
++		}
++
++		spin_unlock_bh(&txq->axq_lock);
++	}
++
++	return buffered;
++}
++
++void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
++{
++	struct ath_atx_tid *tid;
++	struct ath_atx_ac *ac;
++	struct ath_txq *txq;
++	int tidno;
++
++	for (tidno = 0, tid = &an->tid[tidno];
++	     tidno < WME_NUM_TID; tidno++, tid++) {
++
++		ac = tid->ac;
++		txq = ac->txq;
++
++		spin_lock_bh(&txq->axq_lock);
++		ac->clear_ps_filter = true;
++
++		if (!list_empty(&tid->buf_q) && !tid->paused) {
++			ath_tx_queue_tid(txq, tid);
++			ath_txq_schedule(sc, txq);
++		}
++
++		spin_unlock_bh(&txq->axq_lock);
++	}
++}
++
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ {
+ 	struct ath_atx_tid *txtid;
+@@ -1492,7 +1566,6 @@ static int setup_tx_flags(struct sk_buff *skb)
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	int flags = 0;
+ 
+-	flags |= ATH9K_TXDESC_CLRDMASK; /* needed for crypto errors */
+ 	flags |= ATH9K_TXDESC_INTREQ;
+ 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
+@@ -1755,6 +1828,9 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 		if (txctl->paprd)
+ 			bf->bf_state.bfs_paprd_timestamp = jiffies;
+ 
++		if (tx_info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
++			ath9k_hw_set_clrdmask(sc->sc_ah, bf->bf_desc, true);
++
+ 		ath_tx_send_normal(sc, txctl->txq, tid, &bf_head);
+ 	}
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.3.2
+
