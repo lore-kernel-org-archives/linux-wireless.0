@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61641 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab1BKAsn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 19:48:43 -0500
-Received: by fxm20 with SMTP id 20so2116442fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 16:48:42 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH for-2.6.38] p54pci: update receive dma buffers before and after processing
-Date: Fri, 11 Feb 2011 01:48:42 +0100
-Cc: linville@tuxdriver.com
+Received: from nbd.name ([46.4.11.11]:52491 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754137Ab1BHW55 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 17:57:57 -0500
+Message-ID: <4D51CA71.7040105@openwrt.org>
+Date: Tue, 08 Feb 2011 23:57:53 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201102110148.43155.chunkeey@googlemail.com>
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless@vger.kernel.org, j@w1.fi, lrodriguez@atheros.com,
+	m.sujith@gmail.com
+Subject: Re: [RFC 2/2] ath9k: fix powersave frame filtering/buffering in AP
+ mode
+References: <1297200372-79404-1-git-send-email-nbd@openwrt.org>	<1297200372-79404-2-git-send-email-nbd@openwrt.org> <AANLkTinhX9R9XY2_BoJXkRxNMZ3F_Adzwcq5XVQyEX0t@mail.gmail.com>
+In-Reply-To: <AANLkTinhX9R9XY2_BoJXkRxNMZ3F_Adzwcq5XVQyEX0t@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Documentation/DMA-API-HOWTO.txt states:
+On 2011-02-08 11:06 PM, Björn Smedman wrote:
+> On Tue, Feb 8, 2011 at 10:26 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> This patch fixes a long standing issue of pending packets in the queue being
+>> sent (and retransmitted many times) to sleeping stations.
+>> This was made worse by aggregation through driver-internal retransmitting
+>> of A-MDPU subframes.
+> 
+> Nice. :) Just one thought, shouldn't there be one more call to
+> ieee80211_sta_set_tim() somewhere? I'm thinking there might be a race
+> condition otherwise where the tid queues are empty on sta_notify but
+> then later some failed/filtered A-MPDU subframes get queued...
+Good point, I'll fix that...
 
-"DMA transfers need to be synced properly in order for
-the cpu and device to see the most uptodate and correct
-copy of the DMA buffer."
+> Also, just curious so feel free to answer or not, but how does the
+> hardware handle the ps filter thing? Does it have a ps bit for every
+> dst address? How many different dsts can it keep track of?
+The hardware has a bitfield of blocked destinations, using the
+destination index of the descriptor (which is also used as an index for
+the key cache). The key cache can hold 128 entries.
+Having a frame time out with excessive retries will cause the hardware
+to block frames using the same destination index, until a frame is sent
+with a bit that tells the hardware to clear that flag.
+Right now, all unencrypted traffic uses the same destination index (0),
+so unencrypted mode will have more corner cases compared to using WPA2,
+but I plan on fixing that soon.
 
-Cc: <stable@kernel.org>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-Embarrassingly, this bug is unique to p54 and has been around
-since 2.6.25. This tells us something interesting about our
-userbase.
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index 1eacba4..0494d7b 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -199,6 +199,7 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
- 	while (i != idx) {
- 		u16 len;
- 		struct sk_buff *skb;
-+		dma_addr_t dma_addr;
- 		desc = &ring[i];
- 		len = le16_to_cpu(desc->len);
- 		skb = rx_buf[i];
-@@ -216,17 +217,20 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
- 
- 			len = priv->common.rx_mtu;
- 		}
-+		dma_addr = le32_to_cpu(desc->host_addr);
-+		pci_dma_sync_single_for_cpu(priv->pdev, dma_addr,
-+			priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
- 		skb_put(skb, len);
- 
- 		if (p54_rx(dev, skb)) {
--			pci_unmap_single(priv->pdev,
--					 le32_to_cpu(desc->host_addr),
--					 priv->common.rx_mtu + 32,
--					 PCI_DMA_FROMDEVICE);
-+			pci_unmap_single(priv->pdev, dma_addr,
-+				priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
- 			rx_buf[i] = NULL;
--			desc->host_addr = 0;
-+			desc->host_addr = cpu_to_le32(0);
- 		} else {
- 			skb_trim(skb, 0);
-+			pci_dma_sync_single_for_device(priv->pdev, dma_addr,
-+				priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
- 			desc->len = cpu_to_le16(priv->common.rx_mtu + 32);
- 		}
- 
+- Felix
