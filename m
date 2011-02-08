@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:62843 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:38938 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013Ab1BKHCK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 02:02:10 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 23:01:49 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k_htc: make use of slot time macros
-Date: Fri, 11 Feb 2011 12:32:03 +0530
-Message-ID: <1297407723-4069-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754908Ab1BHPZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:25:50 -0500
+Subject: Re: [PATCH 2/5] iwlwifi: cleanup {iwl,iwl3945}_good_plcp_health
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297153919-18766-2-git-send-email-sgruszka@redhat.com>
+References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
+	 <1297153919-18766-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Feb 2011 07:24:05 -0800
+Message-ID: <1297178645.20613.28.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Hi Stanislaw,
 
-Instead of using raw numbers to assign slot time it would be better to
-make use of predefined slot time macros
+On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
+> Make plcp health code human readable.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c     |   83 +++++++-----------
+>  drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |  122 +++++++++++----------------
+>  drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
+>  3 files changed, 80 insertions(+), 126 deletions(-)
+> 
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Thanks for the clean up, now is much easier to read.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 953036a..17db173 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1498,9 +1498,9 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		if (bss_conf->use_short_slot)
--			ah->slottime = 9;
-+			ah->slottime = ATH9K_SLOT_TIME_9;
- 		else
--			ah->slottime = 20;
-+			ah->slottime = ATH9K_SLOT_TIME_20;
- 
- 		ath9k_hw_init_global_settings(ah);
- 	}
--- 
-1.7.0.4
+Now we are very close to release the split driver, here you change both
+agn and 3945, not sure what is the easier approach will be? push the
+patch now, or wait for the driver split finish, then push the patch
+after that.
+
+Wey
+
 
