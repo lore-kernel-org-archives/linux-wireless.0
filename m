@@ -1,49 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:58244 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753064Ab1BYMBU convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44728 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753267Ab1BHLLK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 07:01:20 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 04:00:59 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath9k: Fix compilation warning.
-Date: Fri, 25 Feb 2011 17:31:03 +0530
-Message-ID: <1298635263-4883-3-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1298635263-4883-2-git-send-email-vnatarajan@atheros.com>
-References: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com>
- <1298635263-4883-2-git-send-email-vnatarajan@atheros.com>
+	Tue, 8 Feb 2011 06:11:10 -0500
+Received: by wwa36 with SMTP id 36so5886734wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 03:11:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
+References: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
+Date: Tue, 8 Feb 2011 16:41:06 +0530
+Message-ID: <AANLkTimEDvmp2RbLXdOf8vRrjzBKd+rLwqoreX+x3EdB@mail.gmail.com>
+Subject: Re: [RFC] mac80211: reply to directed probes in IBSS
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize txq to avoid this warning:
+On Tue, Feb 1, 2011 at 6:19 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> At least the WMM spec says we should reply to
+> unicast probe request frames that go to us.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/ibss.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- wireless-testing.orig/net/mac80211/ibss.c   2011-02-01 12:58:16.000000000 +0100
+> +++ wireless-testing/net/mac80211/ibss.c        2011-02-01 13:47:44.000000000 +0100
+> @@ -689,7 +689,7 @@ static void ieee80211_rx_mgmt_probe_req(
+>               mgmt->bssid, tx_last_beacon);
+>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>
+> -       if (!tx_last_beacon)
+> +       if (!tx_last_beacon && !(status->rx_flags & IEEE80211_RX_RA_MATCH))
+>                return;
+>
+>        if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
 
-drivers/net/wireless/ath/ath9k/main.c: In function â€˜ath9k_flushâ€™:
-drivers/net/wireless/ath/ath9k/main.c:2138: warning: â€˜txqâ€™ may be used uninitialized in this function
+Hi Johannes,
+             tested with the same thing (in addition of passing the
+rx_status structure) and it is working fine.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 775fb63..d26bd22 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -665,7 +665,8 @@ static void ieee80211_sta_find_ibss(struct
+ieee80211_sub_if_data *sdata)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9b03b5a..238fb76 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2135,7 +2135,7 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
+                                        struct ieee80211_mgmt *mgmt,
+-                                       size_t len)
++                                       size_t len,
++                                       struct ieee80211_rx_status *rx_status)
  {
- #define ATH_FLUSH_TIMEOUT	60 /* ms */
- 	struct ath_softc *sc = hw->priv;
--	struct ath_txq *txq;
-+	struct ath_txq *txq = NULL;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int i, j, npend = 0;
--- 
-1.6.3.3
+        struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+        struct ieee80211_local *local = sdata->local;
+@@ -689,7 +690,7 @@ static void ieee80211_rx_mgmt_probe_req(struct
+ieee80211_sub_if_data *sdata,
+               mgmt->bssid, tx_last_beacon);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
 
+-       if (!tx_last_beacon)
++       if (!tx_last_beacon && !(rx_status->rx_flags & IEEE80211_RX_RA_MATCH))
+                return;
+
+        if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
+@@ -786,7 +787,8 @@ void ieee80211_ibss_rx_queued_mgmt(struct
+ieee80211_sub_if_data *sdata,
+
+        switch (fc & IEEE80211_FCTL_STYPE) {
+        case IEEE80211_STYPE_PROBE_REQ:
+-               ieee80211_rx_mgmt_probe_req(sdata, mgmt, skb->len);
++               ieee80211_rx_mgmt_probe_req(sdata, mgmt, skb->len,
++                                            rx_status);
+                break;
+        case IEEE80211_STYPE_PROBE_RESP:
+                ieee80211_rx_mgmt_probe_resp(sdata, mgmt, skb->len,
+~
+
+thanks,
+shafi
+
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
