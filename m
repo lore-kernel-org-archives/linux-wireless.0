@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:15702 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138Ab1BRX7h (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44206
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754851Ab1BHUOV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 18:59:37 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000022506.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:58:57 +0200
-Subject: Re: [RFC] AI support (13/14 ssb add AI support)
-From: George Kashperko <george@znau.edu.ua>
-To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1298073251.23801.45.camel@maggie>
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
-	 <1297981882.23381.38.camel@dev.znau.edu.ua>
-	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>
-	 <1298070443.25739.23.camel@dev.znau.edu.ua>
-	 (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA)  <1298071637.23801.40.camel@maggie>
-	 <1298072549.25739.50.camel@dev.znau.edu.ua>
-	 (sfid-20110219_005115_279769_FFFFFFFFC1C82CA4)  <1298073251.23801.45.camel@maggie>
-Content-Type: text/plain
-Date: Sat, 19 Feb 2011 01:51:01 +0200
-Message-Id: <1298073061.25739.58.camel@dev.znau.edu.ua>
+	Tue, 8 Feb 2011 15:14:21 -0500
+Date: Tue, 08 Feb 2011 12:14:56 -0800 (PST)
+Message-Id: <20110208.121456.189701516.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2011-02-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110208195530.GB6244@tuxdriver.com>
+References: <20110208195530.GB6244@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 8 Feb 2011 14:55:30 -0500
 
-> On Sat, 2011-02-19 at 01:42 +0200, George Kashperko wrote: 
-> > I wish Broadcom could get us more tech. details on AI or if not then
-> > just name it SSB2 to avoid arguing on confusion caused by <SSB AI> ;)
-> 
-> You're actually suggesting to name the "AI" implementation "SSB2" to
-> avoid a naming confusion? I hope this is a misunderstanding.
-> 
-Nop, that was just clumsy attempt to ask for .dpf's :p
+> Here is the latest round of wireless fixes intended for 2.6.38.
+> Included is a carl9170 fix (described as a typo) for receiving buffered
+> broadcasts, an iwlagn fix to properly monitor the rfkill switch when
+> the interface is down, a mac80211 fix to correctly check for cloned
+> skbs when resizing, a null pointer fix for wl1251 if it fails to get
+> a beacon, a mac80211 fix related to off-channel tx, an ssb fix for
+> using the wrong pointer for getting invariance for pcmcia devices,
+> an ath9k double-free fix, and a one-line iwlagn fix to correctly
+> describe an antenna configuration.
 
-Have nice day,
-George
-
-
+Pulled, thanks John.
