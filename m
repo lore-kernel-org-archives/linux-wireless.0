@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:37643 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753519Ab1BDBMM (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43066 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab1BHMtg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 20:12:12 -0500
+	Tue, 8 Feb 2011 07:49:36 -0500
+Received: by bwz15 with SMTP id 15so5980253bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 04:49:35 -0800 (PST)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Subject: Re: [PATCH 0/3] libertas_spi fixes
+Date: Tue, 8 Feb 2011 13:52:50 +0100
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Colin McCabe <colin@cozybit.com>
+References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com> <1296759294.9471.0.camel@dcbw.foobar.com> <201102032059.27128.anarsoul@gmail.com>
+In-Reply-To: <201102032059.27128.anarsoul@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <yund3n88v7x.fsf@aiko.keithp.com>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
- <s5haaid3xos.wl%tiwai@suse.de> <201102032009.17100.rjw@sisk.pl>
- <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
- <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
- <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
- <AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com> <yund3n88v7x.fsf@aiko.keithp.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 3 Feb 2011 17:11:14 -0800
-Message-ID: <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-To: Keith Packard <keithp@keithp.com>
-Cc: Dave Airlie <airlied@gmail.com>, Carlos Mafra <crmafra2@gmail.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201102081352.51062.marek.vasut@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 3, 2011 at 5:05 PM, Keith Packard <keithp@keithp.com> wrote:
->
-> The goal is to make it so that when you *do* set a mode, DPMS gets set
-> to ON (as the monitor will actually be "on" at that point). Here's a
-> patch which does the DPMS_ON precisely when setting a mode.
+On Thursday 03 February 2011 19:59:26 Vasily Khoruzhick wrote:
+> On Thursday 03 February 2011 20:54:52 Dan Williams wrote:
+> > On Mon, 2011-01-31 at 14:52 -0500, John W. Linville wrote:
+> > > On Fri, Jan 21, 2011 at 10:44:47PM +0200, Vasily Khoruzhick wrote:
+> > > > This series attempts to fix libertas_spi bug (it calls functions that
+> > > > may sleep from atomic context) and add pm support to libertas_spi.
+> > > > Tested on Zipit Z2 device.
+> > > 
+> > > Are the libertas folks OK with this series?
+> > 
+> > 1 & 2 yes, I'll ack them if you like.  But I think we were waiting on a
+> > response from Vasily about #3, specifically Marek's question about "can
+> > this be done from the resume handler instead of a workqueue".
+> 
+> Nope, it can't, I tried to do so and it hangs on resume (console cursor
+> flickers, so it's not complete hang, but it does not return control to
+> shell). Can investigate why if you want.
 
-Ok, patch looks sane, but it does leave me with the "what about the
-'fb_changed' case?" question. Is that case basically guaranteed to not
-change any existing dpms state?
+Please do. It's not that I want to block this, but the code seems quick enough.
 
-> (note, this patch compiles, but is otherwise only lightly tested).
-
-Carlos? Takashi? Ignore my crazy patch, try this one instead. Does it
-fix things for you?
-
-                      Linus
+Btw. Dan, sorry for not looking into this as I promised, but as I can see, it 
+isn't needed anymore. Open Source is so awesome at this :-)
+> 
+> Regards
+> Vasily
