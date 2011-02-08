@@ -1,145 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41458 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161Ab1BDS2h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 13:28:37 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k: add additional checks for the baseband hang detection
-Date: Fri,  4 Feb 2011 19:28:30 +0100
-Message-Id: <1296844110-90311-1-git-send-email-nbd@openwrt.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35164 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752645Ab1BHPV4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:21:56 -0500
+Date: Tue, 8 Feb 2011 10:21:54 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+cc: Sujith <m.sujith@gmail.com>, Martin Schleier <drahemmaps@gmx.net>,
+	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
+	<linville@tuxdriver.com>, <kune@deine-taler.de>,
+	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
+Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change
+ endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+In-Reply-To: <20110208140329.16761adb54ekbcpw@hayate.sektori.org>
+Message-ID: <Pine.LNX.4.44L0.1102081011030.2100-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since even with the latest changes the false positive issue of the basebang
-hang check is not fully solved yet, additional checks are needed.
-If the baseband hang occurs, the rx_clear signal will be stuck to high, so
-we can use the cycle counters to confirm it.
-With this patch, a hardware reset is only triggered if the baseband hang
-check returned true three times in a row, with a beacon interval beetween
-each check and if the busy time was also 99% or more during the check
-intervals.
+On Tue, 8 Feb 2011, Jussi Kivilinna wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/main.c  |   45 +++++++++++++++++++++++++------
- 2 files changed, 38 insertions(+), 9 deletions(-)
+> Atleast with zd1211rw, after usb_reset_device() endpoints still show  
+> as interrupt type and device requires firmware to be transferred  
+> again.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bd85e31..7c8409e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -602,6 +602,8 @@ struct ath_softc {
- 	struct completion paprd_complete;
- 	bool paprd_pending;
- 
-+	unsigned int hw_busy_count;
-+
- 	u32 intrstatus;
- 	u32 sc_flags; /* SC_OP_* */
- 	u16 ps_flags; /* PS_* */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1447b55..c6177bc 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -177,7 +177,12 @@ static void ath_update_survey_nf(struct ath_softc *sc, int channel)
- 	}
- }
- 
--static void ath_update_survey_stats(struct ath_softc *sc)
-+/*
-+ * Updates the survey statistics and returns the busy time since last
-+ * update in %, if the measurement duration was long enough for the
-+ * result to be useful, -1 otherwise.
-+ */
-+static int ath_update_survey_stats(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -185,9 +190,10 @@ static void ath_update_survey_stats(struct ath_softc *sc)
- 	struct survey_info *survey = &sc->survey[pos];
- 	struct ath_cycle_counters *cc = &common->cc_survey;
- 	unsigned int div = common->clockrate * 1000;
-+	int ret = 0;
- 
- 	if (!ah->curchan)
--		return;
-+		return -1;
- 
- 	if (ah->power_mode == ATH9K_PM_AWAKE)
- 		ath_hw_cycle_counters_update(common);
-@@ -202,9 +208,18 @@ static void ath_update_survey_stats(struct ath_softc *sc)
- 		survey->channel_time_rx += cc->rx_frame / div;
- 		survey->channel_time_tx += cc->tx_frame / div;
- 	}
-+
-+	if (cc->cycles < div)
-+		return -1;
-+
-+	if (cc->cycles > 0)
-+		ret = cc->rx_busy * 100 / cc->cycles;
-+
- 	memset(cc, 0, sizeof(*cc));
- 
- 	ath_update_survey_nf(sc, pos);
-+
-+	return ret;
- }
- 
- /*
-@@ -226,6 +241,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return -EIO;
- 
-+	sc->hw_busy_count = 0;
-+
- 	del_timer_sync(&common->ani.timer);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
-@@ -592,17 +609,25 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
- void ath_hw_check(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
--	int i;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	unsigned long flags;
-+	int busy;
- 
- 	ath9k_ps_wakeup(sc);
-+	if (ath9k_hw_check_alive(sc->sc_ah))
-+		goto out;
- 
--	for (i = 0; i < 3; i++) {
--		if (ath9k_hw_check_alive(sc->sc_ah))
--			goto out;
-+	spin_lock_irqsave(&common->cc_lock, flags);
-+	busy = ath_update_survey_stats(sc);
-+	spin_unlock_irqrestore(&common->cc_lock, flags);
- 
--		msleep(1);
--	}
--	ath_reset(sc, true);
-+	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
-+		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
-+	if (busy >= 99) {
-+		if (++sc->hw_busy_count >= 3)
-+			ath_reset(sc, true);
-+	} else if (busy >= 0)
-+		sc->hw_busy_count = 0;
- 
- out:
- 	ath9k_ps_restore(sc);
-@@ -952,6 +977,8 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	struct ieee80211_hw *hw = sc->hw;
- 	int r;
- 
-+	sc->hw_busy_count = 0;
-+
- 	/* Stop ANI */
- 	del_timer_sync(&common->ani.timer);
- 
--- 
-1.7.3.2
+Ah, this is one of those bogus devices which has no way of telling the 
+host when its descriptors change.  Have you tried testing this device 
+across hibernation?
+
+>  I cannot tell if zd1211 firmware actually changes endpoint  
+> types (as ath9k_htc)
+
+Use "lsusb -v".
+
+>  but I know that vendor driver uses these  
+> endpoints with bulk urbs and using those solve/workaround CPU usage  
+> problem. Increasing interrupt interval from 1 to 255 didn't help.
+> 
+> I think zd1211rw have been trying to use bulk urbs too, but  
+> usb_bulk_msg() silently switches to interrupt mode. I don't know if  
+> editing endpoint descriptors is right way solve this, or why CPU usage  
+> is higher.
+> 
+> CPU usage comes from writing beacon frame to device, this is done  
+> usually every 100ms on AP-mode. On Atom writing beacon (multiple  
+> usb_bulk_msg() calls) with interrupt endpoints usually takes ~20msec  
+> and this is when CPU usage goes up. By changing endpoints to bulk,  
+> time to write beacon drops to 0~3msec.
+
+That's part of the problem -- the driver shouldn't use usb_bulk_msg().  
+Create a bunch of URBs and submit them explicitly all at once; don't
+wait for one to finish before submitting the next.  Setting the
+URB_NO_INTERRUPT flag on all but the last could also help.  This might 
+use even less CPU time than you see currently.
+
+> Endpoint descriptors appear to be edited by two drivers,  
+> drivers/media/IR/mceusb.c (bulk to intr) and  
+> /drivers/net/wireless/ath/ath9k/hif_usb.c (intr to bulk). Also bulk  
+> endpoints are changed to interrupt type for buggy low-speed devices in  
+> drivers/usb/core/config.c.
+> 
+> So what is right way to proceed? Is problem in usb core or with  
+> device? Deal with buggy device in driver and override endpoint as  
+> patch does?
+
+There are at least three problems that I can see.  First, the device 
+doesn't disconnect from and reconnect to the USB bus when it starts 
+using new firmware.  Second, the device loses its firmware when it is 
+reset.  Third, the driver wastes too much CPU time writing beacon 
+frames.
+
+The first two problems are the device's fault, and the third is the 
+driver's fault.  None of them are the fault of usbcore.
+
+Alan Stern
 
