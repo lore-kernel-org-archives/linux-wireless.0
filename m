@@ -1,86 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:60641 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab1BQKgg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 05:36:36 -0500
-Received: by gxk9 with SMTP id 9so927944gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 02:36:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297931040.3750.3.camel@jlt3.sipsolutions.net>
-References: <1297183399-2296-1-git-send-email-eliad@wizery.com>
-	<1297678190.3785.13.camel@jlt3.sipsolutions.net>
-	<AANLkTincDtRH=uq9H16W4Lyx-Z4WK9+YOZBYf6GEXjJ-@mail.gmail.com>
-	<1297931040.3750.3.camel@jlt3.sipsolutions.net>
-Date: Thu, 17 Feb 2011 12:36:35 +0200
-Message-ID: <AANLkTik1=fj87=2F0YCzbp=c=_Am2Gv_Pc6v3wwiJFYG@mail.gmail.com>
-Subject: Re: [PATCH v2] mac80211: add missing locking in ieee80211_reconfig
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.48]:34368 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752043Ab1BHH5K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 02:57:10 -0500
+Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTim6J9yizLPcj-ERwVEcp=VXSymXBfFdszHUMp80@mail.gmail.com>
+References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com>
+	 <1297081781.2064.12.camel@wimaxnb.nmp.nokia.com>
+	 <AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
+	 <1297083534.2064.19.camel@wimaxnb.nmp.nokia.com>
+	 <AANLkTim6J9yizLPcj-ERwVEcp=VXSymXBfFdszHUMp80@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Feb 2011 09:57:06 +0200
+Message-ID: <1297151826.2064.68.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 17, 2011 at 10:24 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-02-17 at 02:51 +0200, Eliad Peller wrote:
->
->> >>                       changed |= BSS_CHANGED_ASSOC;
->> >> +                     mutex_lock(&sdata->u.mgd.mtx);
->> >>                       ieee80211_bss_info_change_notify(sdata, changed);
->> >> +                     mutex_unlock(&sdata->u.mgd.mtx);
->> >>                       break;
->> >>               case NL80211_IFTYPE_ADHOC:
->> >>                       changed |= BSS_CHANGED_IBSS;
->> >
->> > Oi, this is a complicated locking rule.
->> >
->> > Can you please stick a
->> >
->> > lockdep_assert_held(...)
->> >
->> > in the right place to make sure we catch it even on drivers that don't
->> > use the probe_req function?
->> >
->> well, i'm not sure what is the right place / when this mutex should be taken.
->> when doing something like:
->>
->> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
->> index 1c507c6..ab1843d 100644
->> --- a/net/mac80211/main.c
->> +++ b/net/mac80211/main.c
->> @@ -191,6 +191,7 @@ void ieee80211_bss_info_change_notify(struct
->> ieee80211_sub_if_data *sdata,
->>                 return;
->>
->>         if (sdata->vif.type == NL80211_IFTYPE_STATION) {
->> +               lockdep_assert_held(&sdata->u.mgd.mtx);
->>                 /*
->>                  * While not associated, claim a BSSID of all-zeroes
->>                  * so that drivers don't do any weird things with the
->>
->> i got several warnings from ieee80211_open, ieee80211_recalc_idle, etc.
->> should this mutex be taken if the psm has been changed (for example)?
->> or should we check the mutex only if certain flags has been changed?
->
-> Yikes!! So you're saying that the locking is conditional on a certain
-> flag? That makes the driver API a lot more complex, and the locking
-> rules get really icky. I really don't like that.
->
-me neither :)
+On Mon, 2011-02-07 at 16:56 +0200, ext Ohad Ben-Cohen wrote:
+> On Mon, Feb 7, 2011 at 2:58 PM, Juuso Oikarinen
+> <juuso.oikarinen@nokia.com> wrote:
+> > Actually this I don't see any performance impact for better or worse of
+> > this patch on brief testing. I was instructed by some of our other
+> > kernel-dudes that this is actually needed for the cpuidle path too, or
+> > there might be some implications.
+> 
+> It might mean your platforms are configured to hit retention (assuming
+> omap) or even off mode in the cpuidle path as well, and in that case
+> it can explain the enable_irq_wake..
+> 
+> > I'm currently trying to find out if this is really needed or not.
+> 
+> Sure, thanks.
 
-> I think the answer to that is that we must rewrite the entire API. My
-> suggestion would be:
->  * remove ieee80211_ap_probereq_get
->  * add a new driver op "void set_ap_probe_req(..., skb)"
->  * call this in the few appropriate places, but not from
->   ieee80211_bss_info_change_notify
->  * make sure the locking for it is correct
->
+They are saying this is needed for OMAP's retention mode too, so AFAIK
+this is needed, not just for suspend.
 
-such solution will simplify the locking.
-however, it does require some additional work, and i'm pretty loaded right now.
-i'll add it to my TODO list.
+-Juuso
 
-Eliad.
