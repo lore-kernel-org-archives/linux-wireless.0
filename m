@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:24878 "EHLO mail.atheros.com"
+Received: from mga02.intel.com ([134.134.136.20]:41198 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755319Ab1BSBaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 20:30:03 -0500
-Date: Fri, 18 Feb 2011 17:30:01 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Naveen Singh <Naveen.Singh@Atheros.com>,
-	Jack Yang <Jack.Yang@Atheros.com>
-CC: Samuel Chang <Samuel.Chang@Atheros.com>,
-	Joe Perches <joe@perches.com>, Jerry Hu <Jerry.Hu@Atheros.com>,
-	Maggie Huang <Maggie.Huang@Atheros.com>,
-	Vipin Mehta <Vipin.Mehta@Atheros.com>,
-	<linux-kernel@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>, Greg KH <greg@kroah.com>,
-	<mcgrof@gmail.com>
-Subject: ath6kl - coordination of development
-Message-ID: <20110219013001.GM15610@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S1752300Ab1BHPhz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:37:55 -0500
+Subject: Re: [PATCH 4/5] iwlwifi: fix ack health for WiFi/BT combo devices
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297153919-18766-4-git-send-email-sgruszka@redhat.com>
+References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
+	 <1297153919-18766-4-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Feb 2011 07:36:10 -0800
+Message-ID: <1297179370.20613.30.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A lot of work is going to go into ath6kl soon. To help avoid conflicts
-with it is of critical importance to coordinate and communicate.
+Hi Stanislaw,
 
-The Linux kernel policy on staging drivers is that they will be removed
-from the Linux kernel if they do not get any cleanup attention. We are
-addressing that now but the cleanups will cause conflicts with any other
-wide spread change. Joe has some large amount of cleanup patches he has
-written with some scripts and will soon send them out. To help avoid
-conflicts the hope is we will limit the cleanups we do to a few set of
-patches at a time. All these changes will be as atomic and small as
-possible. Our goal is to eventually move ath6kl out to proper placement
-in the kernel, but this will take some time.
+On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
+> Combo devices have TX statistics on different place, because
+> struct statistics_rx_bt and struct statistics_rx have different
+> size. User proper values on combo devices instead of random data.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    9 +++++++--
+>  1 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 8c4ca39..6dd5001 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -1419,8 +1419,13 @@ bool iwl_good_ack_health(struct iwl_priv *priv, struct iwl_rx_packet *pkt)
+>  	if (priv->_agn.agg_tids_count)
+>  		return true;
+>  
+> -	cur = &pkt->u.stats.tx;
+> -	old = &priv->_agn.statistics.tx;
+> +	if (iwl_bt_statistics(priv)) {
+> +		cur = &pkt->u.stats_bt.tx;
+> +		old = &priv->_agn.statistics_bt.tx;
+> +	} else {
+> +		cur = &pkt->u.stats.tx;
+> +		old = &priv->_agn.statistics.tx;
+> +	}
+>  
+>  	actual_delta = le32_to_cpu(cur->actual_ack_cnt) -
+>  		       le32_to_cpu(old->actual_ack_cnt);
 
-Note that if you are doing development on a side branch it is incorrect,
-you should post your patches targetted upstream *first*. To hack on ath6kl
-you will need to:
+Should this combine with 3/5?
 
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
-git checkout -b ath6kl-dev origin/staging-next
+Thanks
+Wey
 
-To track our TODO we will use the wiki:
-
-http://wireless.kernel.org/en/users/Drivers/ath6kl
-
-To coordinate development we will talk on IRC:
-
-Channel: #ath6kl
-Server: irc.freenode.net
-
-Anyone looking to coordinate development or get patches into ath6kl in
-any way shape or form is recommended to use IRC to coordinate with
-myself, Naveen and Joe. Vipin is off on vacation for a while now.
-
-Joe -- I know you have a large series pending, but perhaps we can
-coordinate to only send batches in 20 ? Or Greg do you have any preference?
-
-Naveen, please work with me on your patches. I'd like to see Joe's patches
-merged first. I take it Jack Yang's patches are identical to the ones you are
-going to work on?
-
-  Luis
