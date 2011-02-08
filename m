@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43249 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653Ab1BORVF convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54222 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212Ab1BHAjA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 12:21:05 -0500
-Received: by eye27 with SMTP id 27so255693eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 09:21:03 -0800 (PST)
+	Mon, 7 Feb 2011 19:39:00 -0500
+Message-ID: <4D50909B.1020005@candelatech.com>
+Date: Mon, 07 Feb 2011 16:38:51 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4D5AAC7C.6060509@lwfinger.net>
-References: <AANLkTi=-KJ+OSvDGuxYvDYQZ2ZdS8G8obbvodOXd9zQD@mail.gmail.com>
- <AANLkTimTecR-W7iGzRWB_DxNVJoovK5SCuWfCmt8SUJo@mail.gmail.com>
- <AANLkTimx7=kYdWfe8FKL6oMyErE=3=GpXa-YrxkVVBG3@mail.gmail.com> <4D5AAC7C.6060509@lwfinger.net>
-From: Ben Ruijl <benruyl@gmail.com>
-Date: Tue, 15 Feb 2011 18:20:43 +0100
-Message-ID: <AANLkTikKsjmKeNdi9ugiNX-1W5qBKdxw-KexEYLnZJ1p@mail.gmail.com>
-Subject: Re: r8712u: packet loss
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: j@w1.fi, Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Scanning and channel types.
+References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org> <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com> <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org> <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com> <4D5033DE.4070701@candelatech.com> <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com> <4D50503E.4090007@candelatech.com> <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com> <4D505DDD.8050805@candelatech.com> <AANLkTimybx2pQGsy908ZOKCUndQX55vOQy1aToingWSY@mail.gmail.com>
+In-Reply-To: <AANLkTimybx2pQGsy908ZOKCUndQX55vOQy1aToingWSY@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
-
-Thanks for your response. I didn't really know where to post the
-issue. I won't be able to post the output of iwconfig to you until
-Friday, since I don't have the usb stick right now. I can give you the
-output of ifconfig, though:
-
-wlan0     Link encap:Ethernet  HWaddr 00:0C:F6:9E:31:6B
-          inet addr:192.168.1.3  Bcast:192.168.1.255  Mask:255.255.255.0
-          inet6 addr: fe80::20c:f6ff:fe9e:316b/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:2848 errors:0 dropped:419 overruns:0 frame:0
-          TX packets:2597 errors:0 dropped:119 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:2130344 (2.0 Mb)  TX bytes:527557 (515.1 Kb)
-
-ben@PC_ONDER ~ $ ifconfig
-wlan0     Link encap:Ethernet  HWaddr 00:0C:F6:9E:31:6B
-          inet addr:192.168.1.3  Bcast:192.168.1.255  Mask:255.255.255.0
-          inet6 addr: fe80::20c:f6ff:fe9e:316b/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:4415 errors:0 dropped:580 overruns:0 frame:0
-          TX packets:3460 errors:0 dropped:119 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:4356319 (4.1 Mb)  TX bytes:635028 (620.1 Kb)
-
-ben@PC_ONDER ~ $ ifconfig
-wlan0     Link encap:Ethernet  HWaddr 00:0C:F6:9E:31:6B
-          inet addr:192.168.1.3  Bcast:192.168.1.255  Mask:255.255.255.0
-          inet6 addr: fe80::20c:f6ff:fe9e:316b/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:4424 errors:0 dropped:582 overruns:0 frame:0
-          TX packets:3468 errors:0 dropped:119 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:4358105 (4.1 Mb)  TX bytes:636067 (621.1 Kb)
-
-I posted this in a topic on the arch linux forum
-(https://bbs.archlinux.org/viewtopic.php?id=112120). There is also
-another user with the same problems and he posted his ifconfig too.
-lsusb -v recognizes the chipset as RTL8191su.
-
-I hope this helps!
-
-Ben
-
-2011/2/15 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 02/15/2011 06:58 AM, Ben Ruijl wrote:
+On 02/07/2011 03:53 PM, Daniel Halperin wrote:
+> On Mon, Feb 7, 2011 at 1:02 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 02/07/2011 12:10 PM, Daniel Halperin wrote:
+>>>
+>>> On Mon, Feb 7, 2011 at 12:04 PM, Ben Greear<greearb@candelatech.com>
+>>>   wrote:
+>>>>>
+>>>>> Start on 5 GHZ AP with HT Only set.  Scan.  What rate are probes sent
+>>>>> at for 2.4 GHz?
+>>>
+>>> No HT20 is not the same as HT-Only.  I'm not sure how to set that. Jouni?
 >>
->> I am experiencing packet loss of about 12 percent with the r8712u
->> staging driver with my WL-352v2 device. I'm not the only one with this
->> problem (https://bbs.archlinux.org/viewtopic.php?id=112120). I haven't
->> done a git bisect yet, but I know the problem is in both the 2.6.37
->> version and the latest version.
+>> I found a post from a year or so ago that indicates hostapd doesn't
+>> support this type of thing (that could have changed, of course).
+>>
+>> Do you know of any commercial APs that support the HT-only feature?
+>> (And/Or a general strategy for configuring it?)
+>>
+>>>> On 5Ghz channels, they are sent at 6Mbps
+>>>> On channel 3 (2.4Ghz), they are sent at 1Mbps
+>>>>
+>>>>
+>>>> That seem right?
+>>>
+>>> Yes, for a HT20 but not HT Only AP.
+>>
+>> Seems to me that the probe-request is to any/all APs,
+>> so how could we possibly know that we should send it
+>> at 6Mbps v/s 1Mbps until we discovered and communicated
+>> with it?
 >
-> Normally, you should not expect to get much help in this mailing list with a
-> driver from staging. I assume that you have seen the warning that is placed
-> in the dmesg output when you load a staging driver. You are fortunate in
-> this case as I was the one that pushed this driver into staging.
->
-> A bisection would not do much good as there have been few changes to the
-> driver since it was included.
->
-> Please describe your case more completely. List the output of iwconfig. I
-> need this info as my device gets a ping packet loss of about 1%.
->
-> Larry
->
+> Just as there are G-only APs that don't advertise 1-11 Mbps in their
+> beacons, there are HT-only APs that don't advertise support for 1-11
+> or 6-54 Mbps in their beacons and *only* support MCS rates.
 
+Well, I don't think my changes would have made this any worse,
+so if it worked before, it probably still works.
+
+If anyone knows how to configure such a beast, I'll run some
+tests.  Or, if someone else has an AP like this, please let
+me know if you see any problems with these patches.
+
+Thanks,
+Ben
 
 
 -- 
-Ben Ruijl
-PGP 825472FC
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
