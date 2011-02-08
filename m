@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:50203 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:4797 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752661Ab1BWHej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 02:34:39 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 23:34:18 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix a race on enabling power save.
-Date: Wed, 23 Feb 2011 13:04:32 +0530
-Message-ID: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753143Ab1BHPtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:49:05 -0500
+Subject: Re: [PATCH] iwl3945: increase plcp check threshold
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <20110208090446.GA2490@redhat.com>
+References: <20110208090446.GA2490@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Feb 2011 07:47:20 -0800
+Message-ID: <1297180040.20613.39.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a race on sending a data frame before the tx completion
-of nullfunc frame for enabling power save. As the data quickly
-follows the nullfunc frame, the AP thinks that the station is out
-of power save and continues to send the frames. Whereas in the
-station, the nullfunc ack will be processed after the tx completion
-of data frame and mac80211 goes to powersave. Thus the power
-save state mismatch between the station and the AP causes some
-data loss and some applications fail because of that. This patch
-fixes this issue.
+Stanislaw,
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- net/mac80211/mlme.c   |   14 +++++++++++++-
- net/mac80211/status.c |    2 --
- 2 files changed, 13 insertions(+), 3 deletions(-)
+On Tue, 2011-02-08 at 01:04 -0800, Stanislaw Gruszka wrote:
+> iwl3945: increase plcp check threshold
+> 
+> Patch fixes:
+> https://bugzilla.redhat.com/show_bug.cgi?id=654599
+> 
+> Many users report very low speed problem on 3945 devices,
+> this patch fixes problem, but only for some of them.
+> 
+> For unknown reason, sometimes after hw scanning, device is not able
+> to receive frames at high rate. Since plcp health check may request
+> hw scan to "reset radio", performance problem start to be observable
+> after update kernel to .35, where plcp check was introduced.
+> 
+> Bug reporter confirmed that increase plcp check threshold fixed
+> problem for him.
+> 
+> Reported-and-tested-by: SilvioTO <silviotoya@yahoo.it>
+> Cc: stable@kernel.org  # 2.6.35+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+> Patch is oneliner, but does not apply on older kernel versions,
+> I will provide -stable patches when fix will land in mainline
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index 58213e7..27faa5e 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -2775,7 +2775,7 @@ static struct iwl_base_params iwl3945_base_params = {
+>  	.use_isr_legacy = true,
+>  	.led_compensation = 64,
+>  	.broken_powersave = true,
+> -	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+> +	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_MAX,
+>  	.wd_timeout = IWL_DEF_WD_TIMEOUT,
+>  	.max_event_log_size = 512,
+>  	.tx_power_by_driver = true,
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7b3f9df..abb0116 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 		return;
- 
- 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
--	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
-+	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-+		netif_tx_stop_all_queues(sdata->dev);
-+		/*
-+		 * Flush all the frames queued in the driver before
-+		 * going to power save
-+		 */
-+		drv_flush(local, false);
- 		ieee80211_send_nullfunc(local, sdata, 1);
- 
-+		/* Flush once again to get the tx status of nullfunc frame */
-+		drv_flush(local, false);
-+	}
-+
- 	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
- 	      (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
- 	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
-@@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 		local->hw.conf.flags |= IEEE80211_CONF_PS;
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 	}
-+
-+	netif_tx_start_all_queues(sdata->dev);
- }
- 
- void ieee80211_dynamic_ps_timer(unsigned long data)
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 010a559..8651851 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		if (info->flags & IEEE80211_TX_STAT_ACK) {
- 			local->ps_sdata->u.mgd.flags |=
- 					IEEE80211_STA_NULLFUNC_ACKED;
--			ieee80211_queue_work(&local->hw,
--					&local->dynamic_ps_enable_work);
- 		} else
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 					msecs_to_jiffies(10));
--- 
-1.6.3.3
+Do you see any help for 3945 with plcp checking at all?
+
+Wey
 
