@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:50619 "EHLO coco.kroah.org"
+Received: from mga11.intel.com ([192.55.52.93]:1842 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751431Ab1BDVBk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 16:01:40 -0500
-Date: Fri, 4 Feb 2011 12:59:19 -0800
-From: Greg KH <greg@kroah.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, henryp@broadcom.com, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/8]staging: brcm80211i: sbsdio.h: change a typo
- comamnd to command
-Message-ID: <20110204205919.GA15658@kroah.com>
-References: <1296623248-5399-1-git-send-email-justinmattock@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1296623248-5399-1-git-send-email-justinmattock@gmail.com>
+	id S1752100Ab1BHPeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 10:34:15 -0500
+Subject: Re: [PATCH 3/5] iwlwifi: cleanup iwl_good_ack_health
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297153919-18766-3-git-send-email-sgruszka@redhat.com>
+References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
+	 <1297153919-18766-3-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Feb 2011 07:32:30 -0800
+Message-ID: <1297179150.20613.29.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 01, 2011 at 09:07:28PM -0800, Justin P. Mattock wrote:
-> The below patch fixes a typo comamnd to command.
+On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
+> Make ack health code easies to read. Compared to previous
+> code, we do not print debug messages when expected_ack_cnt_delta == 0
+> and also do check against negative deltas.
 > 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 > ---
->  drivers/staging/brcm80211/include/sbsdio.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |   69 ++++++++++++++++----------------
+>  1 files changed, 35 insertions(+), 34 deletions(-)
 > 
-> diff --git a/drivers/staging/brcm80211/include/sbsdio.h b/drivers/staging/brcm80211/include/sbsdio.h
-> index 6afdbbe..c190acb 100644
-> --- a/drivers/staging/brcm80211/include/sbsdio.h
-> +++ b/drivers/staging/brcm80211/include/sbsdio.h
-> @@ -144,7 +144,7 @@
->  						 */
->  
->  #define SBSDIO_BYTEMODE_DATALEN_MAX	64	/* sdio byte mode: maximum length of one
-> -						 * data comamnd
-> +						 * data command 
 
-This patch adds a trailing space, which is not allowed.
+Thank you for cleaning up the code
 
-Please fix this and resend.
+Wey
 
-thanks,
-
-greg k-h
