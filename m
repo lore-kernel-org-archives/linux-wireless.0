@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:44286 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754478Ab1BBQBs (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35698 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755409Ab1BHTL2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 11:01:48 -0500
-Cc: tony.luck@intel.com, fenghua.yu@intel.com,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
-	megaraidlinux@lsi.com, James.Bottomley@suse.de,
-	linux-scsi@vger.kernel.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, chas@cmf.nrl.navy.mil,
-	linux-atm-general@lists.sourceforge.net
-Message-Id: <792EE80F-000E-44CA-9E0A-F18995591126@gmail.com>
-From: Justin Mattock <justinmattock@gmail.com>
-To: Jiri Kosina <jkosina@suse.cz>
-In-Reply-To: <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v936)
-Subject: Re: [PATCH 1/8]arch:ia64:perfmon.h change a typo comamnd to command
-Date: Wed, 2 Feb 2011 08:01:43 -0800
-References: <1296623130-5130-1-git-send-email-justinmattock@gmail.com> <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
+	Tue, 8 Feb 2011 14:11:28 -0500
+Received: by wyb28 with SMTP id 28so6066055wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 11:11:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87mxm69ajp.fsf@purkki.adurom.net>
+References: <201101311600.39486.IvDoorn@gmail.com>
+	<874o8mbaec.fsf@purkki.adurom.net>
+	<20110202212912.GA28687@sig21.net>
+	<AANLkTinip3CZ8ZsY95E6dXnvhA_wEPSs4M7B+SmPY-ZM@mail.gmail.com>
+	<87mxm69ajp.fsf@purkki.adurom.net>
+Date: Tue, 8 Feb 2011 11:11:26 -0800
+Message-ID: <AANLkTikgASqJ_7omn-Z4JWgAJ1dMtOYoSO8oa=GDtB=a@mail.gmail.com>
+Subject: Re: [rt2x00-users] [RFC] rt2x00: Add autowakeup timer for receiving
+ beacons while in powersave mode
+From: Aleksandar Milivojevic <alex@milivojevic.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Johannes Stezenbach <js@sig21.net>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Feb 2, 2011, at 2:33 AM, Jiri Kosina wrote:
-
-> On Tue, 1 Feb 2011, Justin P. Mattock wrote:
+On Tue, Feb 8, 2011 at 12:48 AM, Kalle Valo <kvalo@adurom.com> wrote:
+> Aleksandar Milivojevic <alex@milivojevic.org> writes:
 >
->> The below patch fixes a typo comamnd to command.
+>> Half-related to above, and purely from user perspective.  Is there a
+>> way to disable power saving for WiFi cards globally by default (for
+>> example, by passing an option to device driver)?  Having power saving
+>> turned on by default makes sense for laptops, but doesn't make much
+>> sense for desktops.  And in my case (due to problem with at least some
+>> rt2xxx chips that Ivo described) it causes relatively frequent
+>> disconnects/reconnects from/to AP due to lost beacons.
 >>
->> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
->>
->> ---
->> arch/ia64/include/asm/perfmon.h |    2 +-
->> 1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/arch/ia64/include/asm/perfmon.h b/arch/ia64/include/ 
->> asm/perfmon.h
->> index 7f3333d..d551183 100644
->> --- a/arch/ia64/include/asm/perfmon.h
->> +++ b/arch/ia64/include/asm/perfmon.h
->> @@ -7,7 +7,7 @@
->> #define _ASM_IA64_PERFMON_H
->>
->> /*
->> - * perfmon comamnds supported on all CPU models
->> + * perfmon commands supported on all CPU models
+>> For my desktop system, I'd rather pass an option to device driver to
+>> have power saving default to off, and have a smoother network
+>> experience.
 >
-> I have consended all the patches in this thread (modulo the staging  
-> ones)
-> into one and applied.
->
-> -- 
-> Jiri Kosina
-> SUSE Labs, Novell Inc.
+> There is CONFIG_CFG80211_DEFAULT_PS kconfig option, but I'm not aware
+> of any other way to globally do this. I can only think of using iw or
+> iwconfig to disable power save per device.
 
+I'm using iwconfig currently to disable power saving for wireless card
+on my desktop after it boots up.  However, from user perspective of
+things, it would be awesome if default was not hard coded in the
+kernel.
 
-cool... if I find anymore Ill send it on up!!
-
-Justin P. Mattock
+Though, I must admit that if it wasn't for the problem discussed
+earlier in this thread, I probably wouldn't even notice power saving
+was set to on.  I'm not sure if there are any other more subtle
+downsides of having power saving enabled.
