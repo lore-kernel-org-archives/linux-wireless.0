@@ -1,118 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51860 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756715Ab1BJSAF (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59491 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172Ab1BITlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 13:00:05 -0500
-Message-ID: <4D5427A0.20806@candelatech.com>
-Date: Thu, 10 Feb 2011 10:00:00 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 9 Feb 2011 14:41:13 -0500
+Received: by vws16 with SMTP id 16so336714vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 11:41:12 -0800 (PST)
+Message-ID: <4D52EE12.20509@lwfinger.net>
+Date: Wed, 09 Feb 2011 13:42:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k and pktgen generate WARNings.
-References: <4D531CA6.8010903@candelatech.com> <201102100931.38777.helmut.schaa@googlemail.com> <4D541E1B.5030707@candelatech.com> <201102101854.41627.helmut.schaa@googlemail.com>
-In-Reply-To: <201102101854.41627.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: George Kashperko <george@znau.edu.ua>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: SSB AI support code ([RFC3/11] SSB irqflag device op)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>	 <1297261973.18053.20.camel@dev.znau.edu.ua> <4D52BE92.5070503@lwfinger.net>	 <1297271450.3361.0.camel@dev.znau.edu.ua> <4D52D358.5050208@lwfinger.net>	 <1297275805.3361.20.camel@dev.znau.edu.ua>  <4D52E8A7.3020208@lwfinger.net> <1297279566.5445.2.camel@dev.znau.edu.ua>
+In-Reply-To: <1297279566.5445.2.camel@dev.znau.edu.ua>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2011 09:54 AM, Helmut Schaa wrote:
-> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
->> On 02/10/2011 12:31 AM, Helmut Schaa wrote:
->>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
->>>> I see this warning when I generate traffic with a hacked version
->>>> of pktgen.  This works with various other interfaces w/out problems,
->>>> so I think it's probably an ath9k and/or mac80211 bug.
->>>>
->>>>
->>>> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
->>>> Hardware name: To Be Filled By O.E.M.
->>>> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss
->>>> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath
->>>> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit
->>>> video [last unloaded: lockd]
->>>> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
->>>> Call Trace:
->>>>     [<c043091b>] ? warn_slowpath_common+0x65/0x7a
->>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
->>>>     [<c043093f>] ? warn_slowpath_null+0xf/0x13
->>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
->>>>     [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
->>>>     [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
->>>>     [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
->>>>     [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
->>>>     [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
->>>>     [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
->>>>     [<c0440000>] ? rescuer_thread+0x25/0x1c8
->>>>     [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
->>>>     [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
->>>>     [<c042d612>] ? default_wake_function+0xb/0xd
->>>>     [<c04254c7>] ? __wake_up_common+0x34/0x5c
->>>>     [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
->>>>     [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
->>>>     [<c044371a>] ? kthread+0x62/0x67
->>>>     [<c04436b8>] ? kthread+0x0/0x67
->>>>     [<c04035f6>] ? kernel_thread_helper+0x6/0x10
->>>>
->>>>
->>>> /* FIXME: tx power */
->>>> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
->>>> 			     struct ath_tx_control *txctl)
->>>> {
->>>> 	struct sk_buff *skb = bf->bf_mpdu;
->>>> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
->>>> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->>>> 	struct list_head bf_head;
->>>> 	struct ath_atx_tid *tid = NULL;
->>>> 	u8 tidno;
->>>>
->>>> 	spin_lock_bh(&txctl->txq->axq_lock);
->>>>
->>>> 	if (ieee80211_is_data_qos(hdr->frame_control)&&   txctl->an) {
->>>> 		tidno = ieee80211_get_qos_ctl(hdr)[0]&
->>>> 			IEEE80211_QOS_CTL_TID_MASK;
->>>> 		tid = ATH_AN_2_TID(txctl->an, tidno);
->>>>
->>>> 		WARN_ON(tid->ac->txq != txctl->txq);
->>>> 	}
->>>>
->>>> Anyone have any ideas on this one?
+On 02/09/2011 01:26 PM, George Kashperko wrote:
+> 
+>> On 02/09/2011 12:23 PM, George Kashperko wrote:
 >>>
->>> pktgen seems to directly inject frames via the xmit callback and hence
->>> mac80211's select_queue callback isn't used for proper queue assignment.
+>>>> On 02/09/2011 11:10 AM, George Kashperko wrote:
+>>>>>> On 02/09/2011 08:32 AM, George Kashperko wrote:
+>>>>>>> From: George Kashperko <george@znau.edu.ua>
+>>>>>>>
+>>>>>>> SB- and AI-style buses read irq flags from different locations.
+>>>>>>> SB-ones read them from TPSFLAG whereas AI-ones from core oob register.
+>>>>>>> In order to support both SB- and AI-style buses transparently
+>>>>>>> irq flag accessor is implemented as ssb device op.
+>>>>>>> Signed-off-by: George Kashperko <george@znau.edu.ua>
+>>>>>>> ---
+>>>>>>>  drivers/ssb/driver_mipscore.c       |    2 +-
+>>>>>>>  drivers/ssb/main.c                  |    1 +
+>>>>>>>  include/linux/ssb/ssb.h             |    5 +++++
+>>>>>>>  include/linux/ssb/ssb_driver_mips.h |    1 +
+>>>>>>>  4 files changed, 8 insertions(+), 1 deletion(-)
+>>>>>>> --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-01 05:05:49.000000000 +0200
+>>>>>>> +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-07 16:39:46.000000000 +0200
+>>>>>>> @@ -47,7 +47,7 @@ static const u32 ipsflag_irq_shift[] = {
+>>>>>>>  	SSB_IPSFLAG_IRQ4_SHIFT,
+>>>>>>>  };
+>>>>>>>  
+>>>>>>> -static inline u32 ssb_irqflag(struct ssb_device *dev)
+>>>>>>> +u32 ssb_irqflag_sb(struct ssb_device *dev)
+>>>>>>>  {
+>>>>>>>  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
+>>>>>>>  	if (tpsflag)
+>>>>>>> --- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-07 16:35:50.000000000 +0200
+>>>>>>> +++ linux-next-20110203/drivers/ssb/main.c	2011-02-07 16:49:40.000000000 +0200
+>>>>>>> @@ -1367,6 +1367,7 @@ static const struct ssb_bus_ops ssb_ssb_
+>>>>>>>  	.device_disable		= ssb_device_disable_sb,
+>>>>>>>  	.admatch_base		= ssb_admatch_base_sb,
+>>>>>>>  	.admatch_size		= ssb_admatch_size_sb,
+>>>>>>> +	.irqflag		= ssb_irqflag_sb,
+>>>>>>>  };
+>>>>>>>  
+>>>>>>>  static int __init ssb_modinit(void)
+>>>>>>> --- linux-next-20110203.orig/include/linux/ssb/ssb_driver_mips.h	2011-02-01 05:05:49.000000000 +0200
+>>>>>>> +++ linux-next-20110203/include/linux/ssb/ssb_driver_mips.h	2011-02-07 16:39:10.000000000 +0200
+>>>>>>> @@ -29,6 +29,7 @@ extern void ssb_mipscore_init(struct ssb
+>>>>>>>  extern u32 ssb_cpu_clock(struct ssb_mipscore *mcore);
+>>>>>>>  
+>>>>>>>  extern unsigned int ssb_mips_irq(struct ssb_device *dev);
+>>>>>>> +extern u32 ssb_irqflag_sb(struct ssb_device *dev);
+>>>>>>>  
+>>>>>>>  
+>>>>>>>  #else /* CONFIG_SSB_DRIVER_MIPS */
+>>>>>>> --- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-07 16:35:50.000000000 +0200
+>>>>>>> +++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-07 16:38:34.000000000 +0200
+>>>>>>> @@ -124,6 +124,7 @@ struct ssb_bus_ops {
+>>>>>>>  	void (*device_disable)(struct ssb_device *dev, u32 core_specific_flags);
+>>>>>>>  	u32 (*admatch_base)(struct ssb_device *dev, u32 adm);
+>>>>>>>  	u32 (*admatch_size)(struct ssb_device *dev, u32 adm);
+>>>>>>> +	u32 (*irqflag)(struct ssb_device *dev);
+>>>>>>>  };
+>>>>>>>  
+>>>>>>>  
+>>>>>>> @@ -485,6 +486,10 @@ static inline u32 ssb_admatch_size(struc
+>>>>>>>  {
+>>>>>>>  	return dev->ops->admatch_size(dev, adm);
+>>>>>>>  }
+>>>>>>> +static inline u32 ssb_irqflag(struct ssb_device *dev)
+>>>>>>> +{
+>>>>>>> +	return dev->ops->irqflag(dev);
+>>>>>>> +}
+>>>>>>>  
+>>>>>>>  
+>>>>>>>  /* The SSB DMA API. Use this API for any DMA operation on the device.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> --
+>>>>>>
+>>>>>> This one fails to compile with the following error:
+>>>>>>
+>>>>>> drivers/ssb/main.c:1370:14: error: ‘ssb_irqflag_sb’ undeclared here (not in a
+>>>>>> function)
+>>>>>> make[1]: *** [drivers/ssb/main.o] Error 1
+>>>>>> make: *** [drivers/ssb/] Error 2
+>>>>>>
+>>>>>> Larry
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>>
+>>>>> Well, might the problem here is again caused with mine wrong post of <[RFC9/11] SSB modify irqflag treatment>
+>>>>> Could you please remove that one and reaply whole set of patches again.
+>>>>> Sorry for inconveniences.
+>>>>
+>>>> That cannot be the problem with this one. Each patch in a series MUST compile
+>>>> correctly so that anyone that is bisecting the code always can build a kernel.
+>>>> The code doesn't necessarily have to work correctly - that would be nice, but it
+>>>> must compile. #3 fails this test.
+>>>>
+>>>> Larry
+>>>>
+>>> I do understand this. Every patch among these 11 (actually there are 21
+>>> patches to get things working with newer Broadcom's socs) I've tested
+>>> both compiling them and also flashing final images to two boxes -
+>>> bcm4716 and bcm5354 I own in order to ensure that old things are still
+>>> working as expected while new things didnt got bricked by changes I
+>>> made.
+>>> Just checked 3rd patch again - it applied and compiled cleanly for me,
+>>> and mine SB-based bcm5354 is still alive after reflash.
 >>>
->>> However, you should be able to specify the queue manuelly with
->>> "cur_queue_map".
+>>> ssb_irqflag_sb is declared as extern in ssb_driver_mips.h which is
+>>> included with ssb.h to main.c
+>>> Could you please verify if patch applied cleanly ? I'm much surprised
+>>> here as I can see no reason for <‘ssb_irqflag_sb’ undeclared here> error
+>>> in main.c other than patch failed to get applied to ssb_driver_mips.h
 >>
->> Yes, but I don't think I should have to know this detail.
+>> It applied cleanly; however, you must consider the possibility that not everyone
+>> has CONFIG_SSB_DRIVER_MIPS defined. On my x86_64 system, I clearly do not. With
+>> the following change, it compiled:
 >>
->> Once you send pkts with queue-map of 0 to ath9k, it spews
->> kernel warnings and then you have to rmmod the NIC before
->> it will start working again (because it's queues are
->> messed up probably).
+>> #ifdef CONFIG_SSB_DRIVER_MIPS
+>>         .irqflag                = ssb_irqflag_sb,
+>> #endif
 >>
->> I'm not sure my patch is the correct way to fix it, but
->> we need to do _something_ in mac80211 and/or ath9k I think.
->
-> Why not make pktgen use the select_queue callback instead?
+>> I haven't gone deeply enough into the code to see if that is the correct change,
+>> or not. If x86 hardware can run AI hardware, then it won't be.
+>>
+>> Larry
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> Ohh lol. Seems im completely burrowed into mips stuff forgetting there
+> are things apart from mips :)
+> Will start reviewing code for other arch dependencies right now. Thanks
+> a lot for pointing it out for me.
+> There will be completely the same issue with 11th patch as AI code got
+> the same op struct with unconditional mips irqflag fn.
+> 
+> Are there any other issues with patch applying/compiling left ?
 
-It's a test tool and should be able to force queue selection
-if it wants to.  I'd rather not have special case code to
-know if underlying interface is wifi (and thus need special
-queue selection).
+I had a couple of patch failures due to adding the MIPS conditional around
+irqflag, but those were easily fixed. With all patches applied, including the
+one from the previous email, I'm still getting
 
-I'd rather carry that hack to mac80211 I posted instead,
-if it comes to that.
+drivers/ssb/scan.c: In function ‘ssb_bus_detect’:
+drivers/ssb/scan.c:387:6: error: ‘cpu_data’ undeclared (first use in this function)
+drivers/ssb/scan.c:387:6: note: each undeclared identifier is reported only once
+for each function it appears in
+drivers/ssb/scan.c:387:29: error: ‘CPU_74K’ undeclared (first use in this function)
+make[2]: *** [drivers/ssb/scan.o] Error 1
 
-Thanks,
-Ben
+I haven't found the cause yet, but I'm sure it is MIPS related.
 
->
-> Helmut
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Larry
