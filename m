@@ -1,36 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:33305 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755036Ab1BIAyj (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:59538 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235Ab1BIU6Q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 19:54:39 -0500
-Received: by mail-qw0-f42.google.com with SMTP id 4so4796030qwe.29
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 16:54:38 -0800 (PST)
+	Wed, 9 Feb 2011 15:58:16 -0500
+Received: by qyj19 with SMTP id 19so1751033qyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 12:58:15 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1296633577-15199-1-git-send-email-eliad@wizery.com>
-References: <1296633577-15199-1-git-send-email-eliad@wizery.com>
-Date: Tue, 8 Feb 2011 22:54:37 -0200
-Message-ID: <AANLkTim=+LT7bj_1gD2=oEMWzmL=UuwU2H9TdKOQ8c_4@mail.gmail.com>
-Subject: Re: [PATCH v3 0/4] wl12xx: move to new firmware (6.1.3.50.49)
-From: "Coelho, Luciano" <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1297262161.18053.26.camel@dev.znau.edu.ua>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	<1297262161.18053.26.camel@dev.znau.edu.ua>
+Date: Wed, 9 Feb 2011 21:58:14 +0100
+Message-ID: <AANLkTi=DV6gnbYfBsXeL6rb3Rz0a+NhgmN04hPY12wLY@mail.gmail.com>
+Subject: Re: SSB AI support code ([RFC5/11] SSB propagate core control and
+ state ops usage)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 2, 2011 at 5:59 AM, Eliad Peller <eliad@wizery.com> wrote:
-> Make the wl12xx driver start working with the latest
-> wl12xx firmware (6.1.3.50.49).
+2011/2/9 George Kashperko <george@znau.edu.ua>:
+> From: George Kashperko <george@znau.edu.ua>
 >
-> The patchset only migrates exisiting functionality.
-> (i.e. it doesn't contain the new firmware features)
+> Major differences between AI/SB from drivers' perespective is control
+> and state flags handling. These long term used to be TMSLOW/TMSHIGH ones
+> and in order to be handled transparently should be masked under some
+> indirect access handlers. This patch forces use of ssb_core_ctl_flags
+> and ssb_core_state_flags introduced early. TMSLOW/TMSHIGH defines outside
+> ssb code (b43, ssb gige and ohci drivers) were renamed to reflect actual
+> meaning, flags' definitions moved to low two bytes. Common TMSLOW/TMSHIGH
+> defines moved to ssb_private.h in order to limit their use by internal
+> SB-specic code only.
+> Signed-off-by: George Kashperko <george@znau.edu.ua>
+> ---
+>  drivers/net/b44.c                          |    2
+>  drivers/net/wireless/b43/b43.h             |   32 ++++-----
+>  drivers/net/wireless/b43/dma.c             |    4 -
+>  drivers/net/wireless/b43/main.c            |   61 +++++++------------
+>  drivers/net/wireless/b43/phy_g.c           |    2
+>  drivers/net/wireless/b43/phy_n.c           |   18 +----
+>  drivers/net/wireless/b43legacy/b43legacy.h |   20 +++---
+>  drivers/net/wireless/b43legacy/dma.c       |    4 -
+>  drivers/net/wireless/b43legacy/main.c      |   52 +++++-----------
+>  drivers/net/wireless/b43legacy/phy.c       |    2
+>  drivers/ssb/driver_gige.c                  |   19 ++---
+>  drivers/ssb/main.c                         |   20 ++++--
+>  drivers/ssb/ssb_private.h                  |   24 +++++++
+>  drivers/usb/host/ohci-ssb.c                |    4 -
+>  include/linux/ssb/ssb.h                    |    4 -
+>  include/linux/ssb/ssb_driver_gige.h        |   12 +--
+>  include/linux/ssb/ssb_regs.h               |   42 ++++++-------
+>  17 files changed, 160 insertions(+), 162 deletions(-)
+> --- linux-next-20110203.orig/drivers/net/b44.c  2011-02-01 05:05:49.000000000 +0200
+> +++ linux-next-20110203/drivers/net/b44.c       2011-02-08 12:17:03.000000000 +0200
+> @@ -1568,7 +1568,7 @@ static void b44_setup_wol_pci(struct b44
+>        u16 val;
 >
-> Note that this new firmware is not backward compatible with the
-> current firmware, so a new firmware name is being used.
+>        if (bp->sdev->bus->bustype != SSB_BUSTYPE_SSB) {
+> -               bw32(bp, SSB_TMSLOW, br32(bp, SSB_TMSLOW) | SSB_TMSLOW_PE);
+> +               ssb_core_ctl_flags(bp->sdev, 0, SSB_CORECTL_PE, NULL);
+>                pci_read_config_word(bp->sdev->bus->host_pci, SSB_PMCSR, &val);
+>                pci_write_config_word(bp->sdev->bus->host_pci, SSB_PMCSR, val | SSB_PE);
+>        }
+> --- linux-next-20110203.orig/drivers/net/wireless/b43/b43.h     2011-02-01 05:05:49.000000000 +0200
+> +++ linux-next-20110203/drivers/net/wireless/b43/b43.h  2011-02-08 12:17:03.000000000 +0200
+> @@ -414,22 +414,22 @@ enum {
+>  #define B43_MACCMD_CCA                 0x00000008      /* Clear channel assessment */
+>  #define B43_MACCMD_BGNOISE             0x00000010      /* Background noise */
+>
+> -/* 802.11 core specific TM State Low (SSB_TMSLOW) flags */
+> -#define B43_TMSLOW_GMODE               0x20000000      /* G Mode Enable */
+> -#define B43_TMSLOW_PHY_BANDWIDTH       0x00C00000      /* PHY band width and clock speed mask (N-PHY only) */
+> -#define  B43_TMSLOW_PHY_BANDWIDTH_10MHZ        0x00000000      /* 10 MHz bandwidth, 40 MHz PHY */
+> -#define  B43_TMSLOW_PHY_BANDWIDTH_20MHZ        0x00400000      /* 20 MHz bandwidth, 80 MHz PHY */
+> -#define  B43_TMSLOW_PHY_BANDWIDTH_40MHZ        0x00800000      /* 40 MHz bandwidth, 160 MHz PHY */
+> -#define B43_TMSLOW_PLLREFSEL           0x00200000      /* PLL Frequency Reference Select (rev >= 5) */
+> -#define B43_TMSLOW_MACPHYCLKEN         0x00100000      /* MAC PHY Clock Control Enable (rev >= 5) */
+> -#define B43_TMSLOW_PHYRESET            0x00080000      /* PHY Reset */
+> -#define B43_TMSLOW_PHYCLKEN            0x00040000      /* PHY Clock Enable */
+> -
+> -/* 802.11 core specific TM State High (SSB_TMSHIGH) flags */
+> -#define B43_TMSHIGH_DUALBAND_PHY       0x00080000      /* Dualband PHY available */
+> -#define B43_TMSHIGH_FCLOCK             0x00040000      /* Fast Clock Available (rev >= 5) */
+> -#define B43_TMSHIGH_HAVE_5GHZ_PHY      0x00020000      /* 5 GHz PHY available (rev >= 5) */
+> -#define B43_TMSHIGH_HAVE_2GHZ_PHY      0x00010000      /* 2.4 GHz PHY available (rev >= 5) */
+> +/* 802.11 core specific control flags */
+> +#define B43_CORECTL_GMODE                      0x2000  /* G Mode Enable */
+> +#define B43_CORECTL_PHY_BANDWIDTH              0x00C0  /* PHY band width and clock speed mask (N-PHY only) */
+> +#define  B43_CORECTL_PHY_BANDWIDTH_10MHZ       0x0000  /* 10 MHz bandwidth, 40 MHz PHY */
+> +#define  B43_CORECTL_PHY_BANDWIDTH_20MHZ       0x0040  /* 20 MHz bandwidth, 80 MHz PHY */
+> +#define  B43_CORECTL_PHY_BANDWIDTH_40MHZ       0x0080  /* 40 MHz bandwidth, 160 MHz PHY */
+> +#define B43_CORECTL_PLLREFSEL                  0x0020  /* PLL Frequency Reference Select (rev >= 5) */
+> +#define B43_CORECTL_MACPHYCLKEN                        0x0010  /* MAC PHY Clock Control Enable (rev >= 5) */
+> +#define B43_CORECTL_PHYRESET                   0x0008  /* PHY Reset */
+> +#define B43_CORECTL_PHYCLKEN                   0x0004  /* PHY Clock Enable */
+> +
+> +/* 802.11 core specific state flags */
+> +#define B43_CORESTAT_DUALBAND_PHY              0x0008  /* Dualband PHY available */
+> +#define B43_CORESTAT_FCLOCK                    0x0004  /* Fast Clock Available (rev >= 5) */
+> +#define B43_CORESTAT_HAVE_5GHZ_PHY             0x0002  /* 5 GHz PHY available (rev >= 5) */
+> +#define B43_CORESTAT_HAVE_2GHZ_PHY             0x0001  /* 2.4 GHz PHY available (rev >= 5) */
 
-Applied and pushed.  Thanks, Eliad!
+I don't know, I've doubts about it :/ That flags are quite messy, mask
+for them is 0x3FFC0000. Ideally we should shift it by 14 bits, but
+that would make writing code harder. Maaaaybe... Michael what do you
+think about this?
 
---
-Cheers,
-Luca.
+
+> @@ -1213,6 +1214,9 @@ static void ssb_device_disable_sb(struct
+>        if (ssb_read32(dev, SSB_TMSLOW) & SSB_TMSLOW_RESET)
+>                return;
+>
+> +       SSB_WARN_ON(core_specific_flags & 0xFFFF0000);
+
+Make it ~0x00003FFC, value 0x1 is not valid flag.
+
+Why don't you go ahead and make core flags u16?
+
+-- 
+Rafał
