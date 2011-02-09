@@ -1,29 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36862 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4521 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752849Ab1B1JYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 04:24:44 -0500
-Date: Mon, 28 Feb 2011 10:24:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] iwlwifi: fix dma mappings and skbs leak
-Message-ID: <20110228092438.GB2230@redhat.com>
-References: <1298649432-4416-1-git-send-email-sgruszka@redhat.com>
- <1298652464.28351.22.camel@wwguy-huron>
+	id S1754597Ab1BIM71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 07:59:27 -0500
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Date: Wed, 9 Feb 2011 13:59:10 +0100
+Subject: implicit band switch or not
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1298652464.28351.22.camel@wwguy-huron>
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vqmzowhl3ri7v4@arend-laptop>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Hi Johannes,
 
-On Fri, Feb 25, 2011 at 08:47:44AM -0800, Guy, Wey-Yi wrote:
-> I don't think we need EXPORT_SYMBOL anymore after driver split
+With our mac80211-based driver I was associated with 5GHz AP and ran into  
+an assert. Investigating this I found that a software scan was initiated  
+and our driver got a probe request from mac80211 to be transmitted.  
+However, it turned out that the transmit rate was a 2GHz rate and our  
+driver was still configured to 5GHz band. The ieee80211_tx_info also  
+contained the band and indeed that was for 2GHz. Given the comment for the  
+band attribute I am wondering whether we should a band switch implicitly  
+or not:
 
-I will repost series addressing that and also comment from patch 3. 
+  * @band: the band to transmit on (use for checking for races)
 
-Thanks
-Stanislaw
+Any suggestions? Are we have a race condition here?
+
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
