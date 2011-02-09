@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48064 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019Ab1BXOSa (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:46602 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808Ab1BIVfa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 09:18:30 -0500
-Subject: Re: IBSS and 802.11i (RSN) with mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jpo234 <pommnitz@yahoo.com>
+	Wed, 9 Feb 2011 16:35:30 -0500
+Received: by qyj19 with SMTP id 19so1778339qyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 13:35:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+Date: Wed, 9 Feb 2011 22:35:29 +0100
+Message-ID: <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
+Subject: Re: SSB AI support code
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>,
+	Michael Buesch <mb@bu3sch.de>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20110224T145652-996@post.gmane.org>
-References: <loom.20110224T145652-996@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Feb 2011 15:18:28 +0100
-Message-ID: <1298557108.4775.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-02-24 at 14:01 +0000, jpo234 wrote:
+Switching general discussion to this thread.
 
-> Can somebody please either point me to some existing documentation on the topic 
-> or write a small HOWTO?
+W dniu 9 lutego 2011 22:12 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Wed, 2011-02-09 at 21:58 +0100, Rafał Miłecki wrote:
+>> I don't know, I've doubts about it :/ That flags are quite messy, mask
+>> for them is 0x3FFC0000. Ideally we should shift it by 14 bits, but
+>> that would make writing code harder. Maaaaybe... Michael what do you
+>> think about this?
+>
+> I have no idea.
+> I already expressed my opinion on all this stuff.
+>
+> One thing is for certain: If this is merged, George has to
+> adopt maintainership.
 
-1) Check that iw reports that you can do it (I just now committed code
-   to iw to report it since you asked, so use git version, which will
-   become 0.9.23 at some point in the future)
+What about proposed solution? Does it still look ugly for you with
+that pointers to functions? It looks quite fine separated, similarly
+to b43 and PHYs I think. Separated files and structs with pointers.
 
-2) get git version of wpa_supplicant, compile with CONFIG_IBSS_RSN and
-   use a config file like this:
+George: apart from few simple comparisons on beginning (like detecting
+type of device and determining name in switch), do you need any more
+(many?) tests in general code? Do you have many "if ssb_sb) {} else
+{}"?
 
-ap_scan=2
-network={
-	ssid="your SSID"
-	mode=1
-	frequency=2412
-	proto=RSN
-	key_mgmt=WPA-PSK
-	psk="your secret key!! :-)"
-}
-
-
-If you find a good place, maybe you can add it to the wiki?
-
-Note that wpa_supplicant currently doesn't reject the config if the
-driver doesn't support it, but it won't work.
-
-If you want to make your driver support it, the easiest way is to
-implement something like I did for iwlwifi:
-
-commit 274102a8a2a4a0b67c401b75a96694db76cfc701
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Tue Jan 18 04:44:03 2011 -0800
-
-    iwlwifi: support RSN IBSS
-
-
-johannes
-
+-- 
+Rafał
