@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3504 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752390Ab1BQJ2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 04:28:42 -0500
-Received: from mail-sj1-12.sj.broadcom.com (mail-sj1-12.sj.broadcom.com
- [10.17.16.106]) by mail-irva-13.broadcom.com (Postfix) with ESMTP id
- 819EF74D03 for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011
- 01:28:17 -0800 (PST)
-Received: from [192.168.1.139] (unknown [10.177.241.53]) by
- mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id ED84420501 for
- <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 01:28:16 -0800 (PST)
-Message-ID: <4D5CEA2F.8050905@broadcom.com>
-Date: Thu, 17 Feb 2011 10:28:15 +0100
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44849 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716Ab1BIVNe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 16:13:34 -0500
+Received: by fxm20 with SMTP id 20so661986fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 13:13:33 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ar9170usb: mark the old driver as obsolete
+Date: Wed, 9 Feb 2011 22:13:11 +0100
+Cc: linville@tuxdriver.com
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: SSB AI support code
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
- <4D56851D.7000509@hauke-m.de>
-In-Reply-To: <4D56851D.7000509@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201102092213.11681.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello guys,
+AR9170USB will be replaced by carl9170 in the foreseeable
+future [2.6.39].
 
-We (Broadcom) internally discussed in what way we can get involved in 
-HDN/AI support.
-
-We offer to write a AI library module that any driver module (eg, a new 
-AI bus driver, or b43, or brcm80211) can depend on. Similar to 
-mac80211.ko and cfg80211.ko, the library module only offers services to 
-interested driver modules, it does *not* claim any hardware itself.
-
-This approach improves code sharing, and still offers the driver module 
-implementer plenty of flexibility. The AI library module code would have 
-to be distilled from brcm80211. We propose the name 'lib_ai'.
-
-Please let me know how your thoughts.
-
-Thanks, Roland.
-
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index b3f35e5..d47ef03 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -35,6 +35,17 @@ Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
+ 
+ ---------------------------
+ 
++What:	AR9170USB
++When:	2.6.39
++
++Why:	This driver is deprecated and the firmware is no longer
++	maintained. The replacement driver "carl9170" has been
++	around for a while, so the devices are still supported.
++		
++Who:	Christian Lamparter <chunkeey@googlemail.com>
++
++---------------------------
++
+ What:	IRQF_SAMPLE_RANDOM
+ Check:	IRQF_SAMPLE_RANDOM
+ When:	July 2009
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 97a7841..1961669 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1205,7 +1205,7 @@ ATHEROS AR9170 WIRELESS DRIVER
+ M:	Christian Lamparter <chunkeey@web.de>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/ar9170
+-S:	Maintained
++S:	Obsolete
+ F:	drivers/net/wireless/ath/ar9170/
+ 
+ CARL9170 LINUX COMMUNITY WIRELESS DRIVER
+diff --git a/drivers/net/wireless/ath/ar9170/Kconfig b/drivers/net/wireless/ath/ar9170/Kconfig
+index d7a4799..7cfaf5f 100644
+--- a/drivers/net/wireless/ath/ar9170/Kconfig
++++ b/drivers/net/wireless/ath/ar9170/Kconfig
+@@ -1,8 +1,10 @@
+ config AR9170_USB
+-	tristate "Atheros AR9170 802.11n USB support"
++	tristate "Atheros AR9170 802.11n USB support (OBSOLETE)"
+ 	depends on USB && MAC80211
+ 	select FW_LOADER
+ 	help
++	  This driver is going to get replaced by carl9170. 
++
+ 	  This is a driver for the Atheros "otus" 802.11n USB devices.
+ 
+ 	  These devices require additional firmware (2 files).
