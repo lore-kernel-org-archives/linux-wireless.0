@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35688 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755660Ab1BJVaa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 16:30:30 -0500
-Date: Thu, 10 Feb 2011 16:25:08 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Noel Milton Vega <nmvega@nyceyes.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr,
-	linux-wireless@vger.kernel.org,
-	Noel Milton Vega <nmvega@ComputingArchitects.Com>
-Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel
- Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-Message-ID: <20110210212508.GA2508@tuxdriver.com>
-References: <875258.44241.qm@web36104.mail.mud.yahoo.com>
+Received: from mail.neratec.ch ([80.75.119.105]:52517 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751563Ab1BIPam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 10:30:42 -0500
+Message-ID: <4D52B31E.3030902@neratec.com>
+Date: Wed, 09 Feb 2011 16:30:38 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <875258.44241.qm@web36104.mail.mud.yahoo.com>
+To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath9k: pulse detection
+References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>,<1297252905-29739-3-git-send-email-zefir.kurtisi@neratec.com> <44EE5C37ADC36343B0625A05DD408C4850DAA785D2@CHEXMB-01.global.atheros.com>
+In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4850DAA785D2@CHEXMB-01.global.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 10, 2011 at 12:31:02PM -0800, Noel Milton Vega wrote:
-
-> Hi Friends....
+On 02/09/2011 04:15 PM, Vasanth Thiagarajan wrote:
 > 
-> UPDATE:
+> +       /* update 64-bit time stamp with that of rs */
+> +       /* TODO: do this per-wiphy */
+> +       ts = rs->rs_tstamp;
+> +       if (ts <= (last_ts & 0xffffffff))
 > 
-> In working with the kernel.org linux-wireless developers, the conclusion
-> from one developer was that, though generally speaking the
-> "Centrino Advanced-N 6230 AGN" card is supported by the "iwlagn" kernel
-> module, it seems that the stock kernel module provided in the
-> Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does not
-> support the this card.
+> last_ts is not initialized.
+true, but does not really matter since only deltas are relevant.
+
+> +               ts_hi++;
+> +       last_ts = ((u64)ts_hi << 32) | ts;
+> +
+> +
+> +       if (rs->rs_datalen != 0) {
+> +               char *vdata = (char *)ds->ds_vdata + rs->rs_datalen - 3;
+> +               dur = (u32) vdata[0];
+> +       }
+> +
+> +       /* ZKU: reverse measured scaling factor of 2/3 for duration */
 > 
-> In other words, though code in the main kernel.org git repository does
-> show support for the card (via iwlagn kernel module), Fedora 14's
-> rendition/distribution of that does not.
-
-The point you seem to be missing is that your hardware is very new,
-and the current Fedora 14 kernel is an "ancient" 6+ months old.
-
-> "lspci(8) -v" did show the hardware (Intel Corporation Centrino Advanced-N 6230
-> (rev 34)), the necessary driver and firmware packages were installed, and the
-> laptop RF toggle switches are set to enable wireless communications.
-> Yet manually performing "modprobe(8) iwlagn" does not produce a wlan0
-> interface in "ifconfig(8) -a" output; and although "dmesg(8)" shows the
-> module being loaded, it does not show it detecting the card.
+> ZKU ??
 > 
-> The two work arounds were suggested (I haven't tried either):
-> 
->   (1) Update the kernel. Since I have the latest one provided
->       by Fedora for Fedora 14, this implies a manual compile
->       of a kernel.org kernel. Note that if Fedora is not aware of
->       this issue, it's not likely that the next kernel update
->       will remedy this.
+thats me :)
 
-You could update to a Fedora Rawhide kernel.
+Sorry letting you read the code. It is meant only to test the proposed 
+approach. I missed to change the prefix to RFC.
 
-As root:
+Zefir
 
-	yum install fedora-release-rawhide
+> Vasanth--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-	yum --enablerepo=rawhide install kernel
-
-Please note that Rawhide is not known for its stability...
-
->   (2) Using a compat-wireless technique described here,
->       http://wireless.kernel.org/en/users/Download
-> 
-> 
-> Command output during my debugging session with the developers is
-> shown below for completeness, and in case the Fedora folks are
-> monitoring.
-
-I'm sorry, but your acquisition of bleeding-edge hardware does not
-merit a change in the normal Fedora release policy.
-
-John
-
-P.S.  I apologize if this seems rude -- that is not my intent.
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
