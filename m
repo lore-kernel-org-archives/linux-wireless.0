@@ -1,42 +1,761 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34162
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751986Ab1BNVAU (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:21553 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755502Ab1BIOn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:00:20 -0500
-Date: Mon, 14 Feb 2011 13:00:56 -0800 (PST)
-Message-Id: <20110214.130056.115934219.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2011-02-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110214.125148.59672184.davem@davemloft.net>
-References: <20110214204406.GG2722@tuxdriver.com>
-	<20110214.125148.59672184.davem@davemloft.net>
+	Wed, 9 Feb 2011 09:43:29 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000019982.msg
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 16:42:53 +0200
+Subject: Re: SSB AI support code ([RFC5/11] SSB propagate core control and
+	state ops usage)
+From: George Kashperko <george@znau.edu.ua>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+Content-Type: text/plain
+Date: Wed, 09 Feb 2011 16:36:01 +0200
+Message-Id: <1297262161.18053.26.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Mon, 14 Feb 2011 12:51:48 -0800 (PST)
+From: George Kashperko <george@znau.edu.ua>
 
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 14 Feb 2011 15:44:06 -0500
-> 
->> A handful of fixes intended for 2.6.38...
->> 
->> This includes a couple of bluetooth device IDs, a bluetooth one-liner
->> to avoid multiple connection responses, a locking fix to avoid some
->> log spam, and a patch to turn off PCLP health checking for iwl3945
->> (because the checking has not proven helpful and it kills performance).
->> 
->> Please let me know if there are problems!
-> 
-> Pulled, thanks John.
+Major differences between AI/SB from drivers' perespective is control
+and state flags handling. These long term used to be TMSLOW/TMSHIGH ones
+and in order to be handled transparently should be masked under some
+indirect access handlers. This patch forces use of ssb_core_ctl_flags
+and ssb_core_state_flags introduced early. TMSLOW/TMSHIGH defines outside
+ssb code (b43, ssb gige and ohci drivers) were renamed to reflect actual
+meaning, flags' definitions moved to low two bytes. Common TMSLOW/TMSHIGH
+defines moved to ssb_private.h in order to limit their use by internal
+SB-specic code only.
+Signed-off-by: George Kashperko <george@znau.edu.ua>
+---
+ drivers/net/b44.c                          |    2 
+ drivers/net/wireless/b43/b43.h             |   32 ++++-----
+ drivers/net/wireless/b43/dma.c             |    4 -
+ drivers/net/wireless/b43/main.c            |   61 +++++++------------
+ drivers/net/wireless/b43/phy_g.c           |    2 
+ drivers/net/wireless/b43/phy_n.c           |   18 +----
+ drivers/net/wireless/b43legacy/b43legacy.h |   20 +++---
+ drivers/net/wireless/b43legacy/dma.c       |    4 -
+ drivers/net/wireless/b43legacy/main.c      |   52 +++++-----------
+ drivers/net/wireless/b43legacy/phy.c       |    2 
+ drivers/ssb/driver_gige.c                  |   19 ++---
+ drivers/ssb/main.c                         |   20 ++++--
+ drivers/ssb/ssb_private.h                  |   24 +++++++
+ drivers/usb/host/ohci-ssb.c                |    4 -
+ include/linux/ssb/ssb.h                    |    4 -
+ include/linux/ssb/ssb_driver_gige.h        |   12 +--
+ include/linux/ssb/ssb_regs.h               |   42 ++++++-------
+ 17 files changed, 160 insertions(+), 162 deletions(-)
+--- linux-next-20110203.orig/drivers/net/b44.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/b44.c	2011-02-08 12:17:03.000000000 +0200
+@@ -1568,7 +1568,7 @@ static void b44_setup_wol_pci(struct b44
+ 	u16 val;
+ 
+ 	if (bp->sdev->bus->bustype != SSB_BUSTYPE_SSB) {
+-		bw32(bp, SSB_TMSLOW, br32(bp, SSB_TMSLOW) | SSB_TMSLOW_PE);
++		ssb_core_ctl_flags(bp->sdev, 0, SSB_CORECTL_PE, NULL);
+ 		pci_read_config_word(bp->sdev->bus->host_pci, SSB_PMCSR, &val);
+ 		pci_write_config_word(bp->sdev->bus->host_pci, SSB_PMCSR, val | SSB_PE);
+ 	}
+--- linux-next-20110203.orig/drivers/net/wireless/b43/b43.h	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43/b43.h	2011-02-08 12:17:03.000000000 +0200
+@@ -414,22 +414,22 @@ enum {
+ #define B43_MACCMD_CCA			0x00000008	/* Clear channel assessment */
+ #define B43_MACCMD_BGNOISE		0x00000010	/* Background noise */
+ 
+-/* 802.11 core specific TM State Low (SSB_TMSLOW) flags */
+-#define B43_TMSLOW_GMODE		0x20000000	/* G Mode Enable */
+-#define B43_TMSLOW_PHY_BANDWIDTH	0x00C00000	/* PHY band width and clock speed mask (N-PHY only) */
+-#define  B43_TMSLOW_PHY_BANDWIDTH_10MHZ	0x00000000	/* 10 MHz bandwidth, 40 MHz PHY */
+-#define  B43_TMSLOW_PHY_BANDWIDTH_20MHZ	0x00400000	/* 20 MHz bandwidth, 80 MHz PHY */
+-#define  B43_TMSLOW_PHY_BANDWIDTH_40MHZ	0x00800000	/* 40 MHz bandwidth, 160 MHz PHY */
+-#define B43_TMSLOW_PLLREFSEL		0x00200000	/* PLL Frequency Reference Select (rev >= 5) */
+-#define B43_TMSLOW_MACPHYCLKEN		0x00100000	/* MAC PHY Clock Control Enable (rev >= 5) */
+-#define B43_TMSLOW_PHYRESET		0x00080000	/* PHY Reset */
+-#define B43_TMSLOW_PHYCLKEN		0x00040000	/* PHY Clock Enable */
+-
+-/* 802.11 core specific TM State High (SSB_TMSHIGH) flags */
+-#define B43_TMSHIGH_DUALBAND_PHY	0x00080000	/* Dualband PHY available */
+-#define B43_TMSHIGH_FCLOCK		0x00040000	/* Fast Clock Available (rev >= 5) */
+-#define B43_TMSHIGH_HAVE_5GHZ_PHY	0x00020000	/* 5 GHz PHY available (rev >= 5) */
+-#define B43_TMSHIGH_HAVE_2GHZ_PHY	0x00010000	/* 2.4 GHz PHY available (rev >= 5) */
++/* 802.11 core specific control flags */
++#define B43_CORECTL_GMODE			0x2000	/* G Mode Enable */
++#define B43_CORECTL_PHY_BANDWIDTH		0x00C0	/* PHY band width and clock speed mask (N-PHY only) */
++#define  B43_CORECTL_PHY_BANDWIDTH_10MHZ	0x0000	/* 10 MHz bandwidth, 40 MHz PHY */
++#define  B43_CORECTL_PHY_BANDWIDTH_20MHZ	0x0040	/* 20 MHz bandwidth, 80 MHz PHY */
++#define  B43_CORECTL_PHY_BANDWIDTH_40MHZ	0x0080	/* 40 MHz bandwidth, 160 MHz PHY */
++#define B43_CORECTL_PLLREFSEL			0x0020	/* PLL Frequency Reference Select (rev >= 5) */
++#define B43_CORECTL_MACPHYCLKEN			0x0010	/* MAC PHY Clock Control Enable (rev >= 5) */
++#define B43_CORECTL_PHYRESET			0x0008	/* PHY Reset */
++#define B43_CORECTL_PHYCLKEN			0x0004	/* PHY Clock Enable */
++
++/* 802.11 core specific state flags */
++#define B43_CORESTAT_DUALBAND_PHY		0x0008	/* Dualband PHY available */
++#define B43_CORESTAT_FCLOCK			0x0004	/* Fast Clock Available (rev >= 5) */
++#define B43_CORESTAT_HAVE_5GHZ_PHY		0x0002	/* 5 GHz PHY available (rev >= 5) */
++#define B43_CORESTAT_HAVE_2GHZ_PHY		0x0001	/* 2.4 GHz PHY available (rev >= 5) */
+ 
+ /* Generic-Interrupt reasons. */
+ #define B43_IRQ_MAC_SUSPENDED		0x00000001
+--- linux-next-20110203.orig/drivers/net/wireless/b43/dma.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43/dma.c	2011-02-08 12:17:03.000000000 +0200
+@@ -786,8 +786,8 @@ static u64 supported_dma_mask(struct b43
+ 	u32 tmp;
+ 	u16 mmio_base;
+ 
+-	tmp = b43_read32(dev, SSB_TMSHIGH);
+-	if (tmp & SSB_TMSHIGH_DMA64)
++	tmp = ssb_core_state_flags(dev->dev, 0, 0);
++	if (tmp & SSB_CORESTAT_DMA64)
+ 		return DMA_BIT_MASK(64);
+ 	mmio_base = b43_dmacontroller_base(0, 0);
+ 	b43_write32(dev, mmio_base + B43_DMA32_TXCTL, B43_DMA32_TXADDREXT_MASK);
+--- linux-next-20110203.orig/drivers/net/wireless/b43/main.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43/main.c	2011-02-08 12:17:03.000000000 +0200
+@@ -1145,26 +1145,20 @@ void b43_power_saving_ctl_bits(struct b4
+ 
+ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+ {
+-	u32 tmslow;
+ 	u32 macctl;
+ 
+-	flags |= B43_TMSLOW_PHYCLKEN;
+-	flags |= B43_TMSLOW_PHYRESET;
++	flags |= B43_CORECTL_PHYCLKEN;
++	flags |= B43_CORECTL_PHYRESET;
+ 	if (dev->phy.type == B43_PHYTYPE_N)
+-		flags |= B43_TMSLOW_PHY_BANDWIDTH_20MHZ; /* Make 20 MHz def */
++		flags |= B43_CORECTL_PHY_BANDWIDTH_20MHZ; /* Make 20 MHz def */
+ 	ssb_device_enable(dev->dev, flags);
+ 	msleep(2);		/* Wait for the PLL to turn on. */
+ 
+ 	/* Now take the PHY out of Reset again */
+-	tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
+-	tmslow |= SSB_TMSLOW_FGC;
+-	tmslow &= ~B43_TMSLOW_PHYRESET;
+-	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
+-	ssb_read32(dev->dev, SSB_TMSLOW);	/* flush */
++	ssb_core_ctl_flags(dev->dev, B43_CORECTL_PHYRESET,
++			   SSB_CORECTL_FGC, NULL);
+ 	msleep(1);
+-	tmslow &= ~SSB_TMSLOW_FGC;
+-	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
+-	ssb_read32(dev->dev, SSB_TMSLOW);	/* flush */
++	ssb_core_ctl_flags(dev->dev, SSB_CORECTL_FGC, 0, NULL);
+ 	msleep(1);
+ 
+ 	/* Turn Analog ON, but only if we already know the PHY-type.
+@@ -1176,7 +1170,7 @@ void b43_wireless_core_reset(struct b43_
+ 
+ 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
+ 	macctl &= ~B43_MACCTL_GMODE;
+-	if (flags & B43_TMSLOW_GMODE)
++	if (flags & B43_CORECTL_GMODE)
+ 		macctl |= B43_MACCTL_GMODE;
+ 	macctl |= B43_MACCTL_IHR_ENABLED;
+ 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
+@@ -2108,11 +2102,11 @@ static int b43_try_request_fw(struct b43
+ 	struct b43_firmware *fw = &ctx->dev->fw;
+ 	const u8 rev = ctx->dev->dev->id.revision;
+ 	const char *filename;
+-	u32 tmshigh;
++	u32 state;
+ 	int err;
+ 
+ 	/* Get microcode */
+-	tmshigh = ssb_read32(dev->dev, SSB_TMSHIGH);
++	state = ssb_core_state_flags(dev->dev, 0, 0);
+ 	if ((rev >= 5) && (rev <= 10))
+ 		filename = "ucode5";
+ 	else if ((rev >= 11) && (rev <= 12))
+@@ -2151,7 +2145,7 @@ static int b43_try_request_fw(struct b43
+ 	switch (dev->phy.type) {
+ 	case B43_PHYTYPE_A:
+ 		if ((rev >= 5) && (rev <= 10)) {
+-			if (tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY)
++			if (state & B43_CORESTAT_HAVE_2GHZ_PHY)
+ 				filename = "a0g1initvals5";
+ 			else
+ 				filename = "a0g0initvals5";
+@@ -2195,7 +2189,7 @@ static int b43_try_request_fw(struct b43
+ 	switch (dev->phy.type) {
+ 	case B43_PHYTYPE_A:
+ 		if ((rev >= 5) && (rev <= 10)) {
+-			if (tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY)
++			if (state & B43_CORESTAT_HAVE_2GHZ_PHY)
+ 				filename = "a0g1bsinitvals5";
+ 			else
+ 				filename = "a0g0bsinitvals5";
+@@ -2841,7 +2835,7 @@ static int b43_chip_init(struct b43_wlde
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	int err;
+-	u32 value32, macctl;
++	u32 macctl;
+ 	u16 value16;
+ 
+ 	/* Initialize the MAC control */
+@@ -2919,9 +2913,7 @@ static int b43_chip_init(struct b43_wlde
+ 	b43_write32(dev, B43_MMIO_DMA4_IRQ_MASK, 0x0000DC00);
+ 	b43_write32(dev, B43_MMIO_DMA5_IRQ_MASK, 0x0000DC00);
+ 
+-	value32 = ssb_read32(dev->dev, SSB_TMSLOW);
+-	value32 |= 0x00100000;
+-	ssb_write32(dev->dev, SSB_TMSLOW, value32);
++	ssb_core_ctl_flags(dev->dev, 0, B43_CORECTL_MACPHYCLKEN, NULL);
+ 
+ 	b43_write16(dev, B43_MMIO_POWERUP_DELAY,
+ 		    dev->dev->bus->chipco.fast_pwrup_delay);
+@@ -3443,19 +3435,12 @@ static void b43_op_set_tsf(struct ieee80
+ static void b43_put_phy_into_reset(struct b43_wldev *dev)
+ {
+ 	struct ssb_device *sdev = dev->dev;
+-	u32 tmslow;
+ 
+-	tmslow = ssb_read32(sdev, SSB_TMSLOW);
+-	tmslow &= ~B43_TMSLOW_GMODE;
+-	tmslow |= B43_TMSLOW_PHYRESET;
+-	tmslow |= SSB_TMSLOW_FGC;
+-	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(sdev, B43_CORECTL_GMODE,
++			   B43_CORECTL_PHYRESET | SSB_CORECTL_FGC, NULL);
+ 	msleep(1);
+ 
+-	tmslow = ssb_read32(sdev, SSB_TMSLOW);
+-	tmslow &= ~SSB_TMSLOW_FGC;
+-	tmslow |= B43_TMSLOW_PHYRESET;
+-	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(sdev, SSB_CORECTL_FGC, B43_CORECTL_PHYRESET, NULL);
+ 	msleep(1);
+ }
+ 
+@@ -4328,7 +4313,7 @@ static int b43_wireless_core_init(struct
+ 	if (err)
+ 		goto out;
+ 	if (!ssb_device_is_enabled(dev->dev)) {
+-		tmp = phy->gmode ? B43_TMSLOW_GMODE : 0;
++		tmp = phy->gmode ? B43_CORECTL_GMODE : 0;
+ 		b43_wireless_core_reset(dev, tmp);
+ 	}
+ 
+@@ -4755,17 +4740,17 @@ static int b43_wireless_core_attach(stru
+ 	}
+ 	/* Get the PHY type. */
+ 	if (dev->dev->id.revision >= 5) {
+-		u32 tmshigh;
++		u32 state;
+ 
+-		tmshigh = ssb_read32(dev->dev, SSB_TMSHIGH);
+-		have_2ghz_phy = !!(tmshigh & B43_TMSHIGH_HAVE_2GHZ_PHY);
+-		have_5ghz_phy = !!(tmshigh & B43_TMSHIGH_HAVE_5GHZ_PHY);
++		state = ssb_core_state_flags(dev->dev, 0, 0);
++		have_2ghz_phy = !!(state & B43_CORESTAT_HAVE_2GHZ_PHY);
++		have_5ghz_phy = !!(state & B43_CORESTAT_HAVE_5GHZ_PHY);
+ 	} else
+ 		B43_WARN_ON(1);
+ 
+ 	dev->phy.gmode = have_2ghz_phy;
+ 	dev->phy.radio_on = 1;
+-	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
++	tmp = dev->phy.gmode ? B43_CORECTL_GMODE : 0;
+ 	b43_wireless_core_reset(dev, tmp);
+ 
+ 	err = b43_phy_versioning(dev);
+@@ -4814,7 +4799,7 @@ static int b43_wireless_core_attach(stru
+ 		goto err_powerdown;
+ 
+ 	dev->phy.gmode = have_2ghz_phy;
+-	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
++	tmp = dev->phy.gmode ? B43_CORECTL_GMODE : 0;
+ 	b43_wireless_core_reset(dev, tmp);
+ 
+ 	err = b43_validate_chipaccess(dev);
+--- linux-next-20110203.orig/drivers/net/wireless/b43/phy_g.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43/phy_g.c	2011-02-08 12:17:03.000000000 +0200
+@@ -2537,7 +2537,7 @@ static int b43_gphy_op_prepare_hardware(
+ 		b43_wireless_core_reset(dev, 0);
+ 		b43_phy_initg(dev);
+ 		phy->gmode = 1;
+-		b43_wireless_core_reset(dev, B43_TMSLOW_GMODE);
++		b43_wireless_core_reset(dev, B43_CORECTL_GMODE);
+ 	}
+ 
+ 	return 0;
+--- linux-next-20110203.orig/drivers/net/wireless/b43/phy_n.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43/phy_n.c	2011-02-08 12:17:03.000000000 +0200
+@@ -604,17 +604,11 @@ static void b43_nphy_tx_lp_fbw(struct b4
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BmacPhyClkFgc */
+ static void b43_nphy_bmac_clock_fgc(struct b43_wldev *dev, bool force)
+ {
+-	u32 tmslow;
+-
+ 	if (dev->phy.type != B43_PHYTYPE_N)
+ 		return;
+ 
+-	tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
+-	if (force)
+-		tmslow |= SSB_TMSLOW_FGC;
+-	else
+-		tmslow &= ~SSB_TMSLOW_FGC;
+-	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(dev->dev, SSB_CORECTL_FGC,
++			   force ? SSB_CORECTL_FGC : 0, NULL);
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/CCA */
+@@ -3387,12 +3381,8 @@ static int b43_nphy_cal_rx_iq(struct b43
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/MacPhyClkSet */
+ static void b43_nphy_mac_phy_clock_set(struct b43_wldev *dev, bool on)
+ {
+-	u32 tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
+-	if (on)
+-		tmslow |= B43_TMSLOW_MACPHYCLKEN;
+-	else
+-		tmslow &= ~B43_TMSLOW_MACPHYCLKEN;
+-	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(dev->dev, B43_CORECTL_MACPHYCLKEN,
++			   on ? B43_CORECTL_MACPHYCLKEN : 0, NULL);
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RxCoreSetState */
+--- linux-next-20110203.orig/drivers/net/wireless/b43legacy/b43legacy.h	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43legacy/b43legacy.h	2011-02-08 12:17:03.000000000 +0200
+@@ -218,16 +218,16 @@
+ #define B43legacy_MACCMD_CCA		0x00000008 /* Clear channel assessment */
+ #define B43legacy_MACCMD_BGNOISE	0x00000010 /* Background noise */
+ 
+-/* 802.11 core specific TM State Low flags */
+-#define B43legacy_TMSLOW_GMODE		0x20000000 /* G Mode Enable */
+-#define B43legacy_TMSLOW_PLLREFSEL	0x00200000 /* PLL Freq Ref Select */
+-#define B43legacy_TMSLOW_MACPHYCLKEN	0x00100000 /* MAC PHY Clock Ctrl Enbl */
+-#define B43legacy_TMSLOW_PHYRESET	0x00080000 /* PHY Reset */
+-#define B43legacy_TMSLOW_PHYCLKEN	0x00040000 /* PHY Clock Enable */
+-
+-/* 802.11 core specific TM State High flags */
+-#define B43legacy_TMSHIGH_FCLOCK	0x00040000 /* Fast Clock Available */
+-#define B43legacy_TMSHIGH_GPHY		0x00010000 /* G-PHY avail (rev >= 5) */
++/* 802.11 core specific control flags */
++#define B43legacy_CORECTL_GMODE		0x2000 /* G Mode Enable */
++#define B43legacy_CORECTL_PLLREFSEL	0x0020 /* PLL Freq Ref Select */
++#define B43legacy_CORECTL_MACPHYCLKEN	0x0010 /* MAC PHY Clock Ctrl Enbl */
++#define B43legacy_CORECTL_PHYRESET	0x0008 /* PHY Reset */
++#define B43legacy_CORECTL_PHYCLKEN	0x0004 /* PHY Clock Enable */
++
++/* 802.11 core specific state flags */
++#define B43legacy_CORESTAT_FCLOCK	0x0004 /* Fast Clock Available */
++#define B43legacy_CORESTAT_GPHY		0x0001 /* G-PHY avail (rev >= 5) */
+ 
+ #define B43legacy_UCODEFLAG_AUTODIV       0x0001
+ 
+--- linux-next-20110203.orig/drivers/net/wireless/b43legacy/dma.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43legacy/dma.c	2011-02-08 12:17:03.000000000 +0200
+@@ -845,8 +845,8 @@ static u64 supported_dma_mask(struct b43
+ 	u32 tmp;
+ 	u16 mmio_base;
+ 
+-	tmp = b43legacy_read32(dev, SSB_TMSHIGH);
+-	if (tmp & SSB_TMSHIGH_DMA64)
++	tmp = ssb_core_state_flags(dev->dev, 0, 0);
++	if (tmp & SSB_CORESTAT_DMA64)
+ 		return DMA_BIT_MASK(64);
+ 	mmio_base = b43legacy_dmacontroller_base(0, 0);
+ 	b43legacy_write32(dev,
+--- linux-next-20110203.orig/drivers/net/wireless/b43legacy/main.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43legacy/main.c	2011-02-08 12:27:40.000000000 +0200
+@@ -697,24 +697,18 @@ static void b43legacy_switch_analog(stru
+ 
+ void b43legacy_wireless_core_reset(struct b43legacy_wldev *dev, u32 flags)
+ {
+-	u32 tmslow;
+ 	u32 macctl;
+ 
+-	flags |= B43legacy_TMSLOW_PHYCLKEN;
+-	flags |= B43legacy_TMSLOW_PHYRESET;
++	flags |= B43legacy_CORECTL_PHYCLKEN;
++	flags |= B43legacy_CORECTL_PHYRESET;
+ 	ssb_device_enable(dev->dev, flags);
+ 	msleep(2); /* Wait for the PLL to turn on. */
+ 
+ 	/* Now take the PHY out of Reset again */
+-	tmslow = ssb_read32(dev->dev, SSB_TMSLOW);
+-	tmslow |= SSB_TMSLOW_FGC;
+-	tmslow &= ~B43legacy_TMSLOW_PHYRESET;
+-	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
+-	ssb_read32(dev->dev, SSB_TMSLOW); /* flush */
++	ssb_core_ctl_flags(dev->dev, B43legacy_CORECTL_PHYRESET,
++			   SSB_CORECTL_FGC, NULL);
+ 	msleep(1);
+-	tmslow &= ~SSB_TMSLOW_FGC;
+-	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
+-	ssb_read32(dev->dev, SSB_TMSLOW); /* flush */
++	ssb_core_ctl_flags(dev->dev, SSB_CORECTL_FGC, 0, NULL);
+ 	msleep(1);
+ 
+ 	/* Turn Analog ON */
+@@ -722,7 +716,7 @@ void b43legacy_wireless_core_reset(struc
+ 
+ 	macctl = b43legacy_read32(dev, B43legacy_MMIO_MACCTL);
+ 	macctl &= ~B43legacy_MACCTL_GMODE;
+-	if (flags & B43legacy_TMSLOW_GMODE) {
++	if (flags & B43legacy_CORECTL_GMODE) {
+ 		macctl |= B43legacy_MACCTL_GMODE;
+ 		dev->phy.gmode = 1;
+ 	} else
+@@ -1564,10 +1558,10 @@ static int b43legacy_request_firmware(st
+ 	struct b43legacy_firmware *fw = &dev->fw;
+ 	const u8 rev = dev->dev->id.revision;
+ 	const char *filename;
+-	u32 tmshigh;
++	u32 state;
+ 	int err;
+ 
+-	tmshigh = ssb_read32(dev->dev, SSB_TMSHIGH);
++	state = ssb_core_state_flags(dev->dev, 0, 0);
+ 	if (!fw->ucode) {
+ 		if (rev == 2)
+ 			filename = "ucode2";
+@@ -2233,9 +2227,7 @@ static int b43legacy_chip_init(struct b4
+ 	b43legacy_write32(dev, B43legacy_MMIO_DMA4_IRQ_MASK, 0x0000DC00);
+ 	b43legacy_write32(dev, B43legacy_MMIO_DMA5_IRQ_MASK, 0x0000DC00);
+ 
+-	value32 = ssb_read32(dev->dev, SSB_TMSLOW);
+-	value32 |= 0x00100000;
+-	ssb_write32(dev->dev, SSB_TMSLOW, value32);
++	ssb_core_ctl_flags(dev->dev, 0, B43legacy_CORECTL_MACPHYCLKEN, NULL);
+ 
+ 	b43legacy_write16(dev, B43legacy_MMIO_POWERUP_DELAY,
+ 			  dev->dev->bus->chipco.fast_pwrup_delay);
+@@ -2525,19 +2517,13 @@ static int find_wldev_for_phymode(struct
+ static void b43legacy_put_phy_into_reset(struct b43legacy_wldev *dev)
+ {
+ 	struct ssb_device *sdev = dev->dev;
+-	u32 tmslow;
+ 
+-	tmslow = ssb_read32(sdev, SSB_TMSLOW);
+-	tmslow &= ~B43legacy_TMSLOW_GMODE;
+-	tmslow |= B43legacy_TMSLOW_PHYRESET;
+-	tmslow |= SSB_TMSLOW_FGC;
+-	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(sdev, B43legacy_CORECTL_GMODE,
++			   B43legacy_CORECTL_PHYRESET | SSB_CORECTL_FGC, NULL);
+ 	msleep(1);
+ 
+-	tmslow = ssb_read32(sdev, SSB_TMSLOW);
+-	tmslow &= ~SSB_TMSLOW_FGC;
+-	tmslow |= B43legacy_TMSLOW_PHYRESET;
+-	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(sdev, SSB_CORECTL_FGC, B43legacy_CORECTL_PHYRESET,
++			   NULL);
+ 	msleep(1);
+ }
+ 
+@@ -3258,7 +3244,7 @@ static int b43legacy_wireless_core_init(
+ 	if (err)
+ 		goto out;
+ 	if (!ssb_device_is_enabled(dev->dev)) {
+-		tmp = phy->gmode ? B43legacy_TMSLOW_GMODE : 0;
++		tmp = phy->gmode ? B43legacy_CORECTL_GMODE : 0;
+ 		b43legacy_wireless_core_reset(dev, tmp);
+ 	}
+ 
+@@ -3640,10 +3626,10 @@ static int b43legacy_wireless_core_attac
+ 	}
+ 	/* Get the PHY type. */
+ 	if (dev->dev->id.revision >= 5) {
+-		u32 tmshigh;
++		u32 state;
+ 
+-		tmshigh = ssb_read32(dev->dev, SSB_TMSHIGH);
+-		have_gphy = !!(tmshigh & B43legacy_TMSHIGH_GPHY);
++		state = ssb_core_state_flags(dev->dev, 0, 0);
++		have_gphy = !!(state & B43legacy_CORESTAT_GPHY);
+ 		if (!have_gphy)
+ 			have_bphy = 1;
+ 	} else if (dev->dev->id.revision == 4)
+@@ -3653,7 +3639,7 @@ static int b43legacy_wireless_core_attac
+ 
+ 	dev->phy.gmode = (have_gphy || have_bphy);
+ 	dev->phy.radio_on = 1;
+-	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
++	tmp = dev->phy.gmode ? B43legacy_CORECTL_GMODE : 0;
+ 	b43legacy_wireless_core_reset(dev, tmp);
+ 
+ 	err = b43legacy_phy_versioning(dev);
+@@ -3679,7 +3665,7 @@ static int b43legacy_wireless_core_attac
+ 		}
+ 	}
+ 	dev->phy.gmode = (have_gphy || have_bphy);
+-	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
++	tmp = dev->phy.gmode ? B43legacy_CORECTL_GMODE : 0;
+ 	b43legacy_wireless_core_reset(dev, tmp);
+ 
+ 	err = b43legacy_validate_chipaccess(dev);
+--- linux-next-20110203.orig/drivers/net/wireless/b43legacy/phy.c	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/net/wireless/b43legacy/phy.c	2011-02-08 12:17:03.000000000 +0200
+@@ -148,7 +148,7 @@ void b43legacy_phy_calibrate(struct b43l
+ 	if (phy->type == B43legacy_PHYTYPE_G && phy->rev == 1) {
+ 		b43legacy_wireless_core_reset(dev, 0);
+ 		b43legacy_phy_initg(dev);
+-		b43legacy_wireless_core_reset(dev, B43legacy_TMSLOW_GMODE);
++		b43legacy_wireless_core_reset(dev, B43legacy_CORECTL_GMODE);
+ 	}
+ 	phy->calibrated = 1;
+ }
+--- linux-next-20110203.orig/drivers/ssb/driver_gige.c	2011-02-08 12:17:09.000000000 +0200
++++ linux-next-20110203/drivers/ssb/driver_gige.c	2011-02-08 12:17:03.000000000 +0200
+@@ -169,7 +169,7 @@ static int ssb_gige_pci_write_config(str
+ static int ssb_gige_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
+ {
+ 	struct ssb_gige *dev;
+-	u32 base, tmslow, tmshigh;
++	u32 base, ctl, state;
+ 
+ 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+ 	if (!dev)
+@@ -217,19 +217,18 @@ static int ssb_gige_probe(struct ssb_dev
+ 
+ 	/* Check if we have an RGMII or GMII PHY-bus.
+ 	 * On RGMII do not bypass the DLLs */
+-	tmslow = ssb_read32(sdev, SSB_TMSLOW);
+-	tmshigh = ssb_read32(sdev, SSB_TMSHIGH);
+-	if (tmshigh & SSB_GIGE_TMSHIGH_RGMII) {
+-		tmslow &= ~SSB_GIGE_TMSLOW_TXBYPASS;
+-		tmslow &= ~SSB_GIGE_TMSLOW_RXBYPASS;
++	state = ssb_core_state_flags(sdev, 0, 0);
++	ctl = SSB_GIGE_CORECTL_DLLEN;
++	if (state & SSB_GIGE_CORESTAT_RGMII) {
+ 		dev->has_rgmii = 1;
+ 	} else {
+-		tmslow |= SSB_GIGE_TMSLOW_TXBYPASS;
+-		tmslow |= SSB_GIGE_TMSLOW_RXBYPASS;
++		ctl |= SSB_GIGE_CORECTL_TXBYPASS;
++		ctl |= SSB_GIGE_CORECTL_RXBYPASS;
+ 		dev->has_rgmii = 0;
+ 	}
+-	tmslow |= SSB_GIGE_TMSLOW_DLLEN;
+-	ssb_write32(sdev, SSB_TMSLOW, tmslow);
++	ssb_core_ctl_flags(sdev, SSB_GIGE_CORECTL_TXBYPASS |
++				 SSB_GIGE_CORECTL_RXBYPASS |
++				 SSB_GIGE_CORECTL_DLLEN, ctl, NULL);
+ 
+ 	ssb_set_drvdata(sdev, dev);
+ 	register_pci_controller(&dev->pci_controller);
+--- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-08 12:17:14.000000000 +0200
++++ linux-next-20110203/drivers/ssb/main.c	2011-02-08 12:19:04.000000000 +0200
+@@ -1154,6 +1154,7 @@ static void ssb_device_enable_sb(struct 
+ 	u32 val;
+ 
+ 	ssb_device_disable(dev, core_specific_flags);
++	core_specific_flags <<= SSB_TMSLOW_FLAGS_SHIFT;
+ 	ssb_write32(dev, SSB_TMSLOW,
+ 		    SSB_TMSLOW_RESET | SSB_TMSLOW_CLOCK |
+ 		    SSB_TMSLOW_FGC | core_specific_flags);
+@@ -1213,6 +1214,9 @@ static void ssb_device_disable_sb(struct
+ 	if (ssb_read32(dev, SSB_TMSLOW) & SSB_TMSLOW_RESET)
+ 		return;
+ 
++	SSB_WARN_ON(core_specific_flags & 0xFFFF0000);
++
++	core_specific_flags <<= SSB_TMSLOW_FLAGS_SHIFT;
+ 	reject = ssb_tmslow_reject_bitmask(dev);
+ 	ssb_write32(dev, SSB_TMSLOW, reject | SSB_TMSLOW_CLOCK);
+ 	ssb_wait_bit(dev, SSB_TMSLOW, reject, 1000, 1);
+@@ -1355,13 +1359,17 @@ static void ssb_core_ctl_flags_sb(struct
+ {
+ 	u32 tmp;
+ 
++	SSB_WARN_ON((mask | val) & 0xFFFF0000);
++
+ 	if (mask || val) {
+-		tmp = (ssb_read32(dev, SSB_TMSLOW) & ~mask) | val;
++		tmp = (ssb_read32(dev, SSB_TMSLOW) &
++		       ~(mask << SSB_TMSLOW_FLAGS_SHIFT)) |
++		       (val << SSB_TMSLOW_FLAGS_SHIFT);
+ 		ssb_write32(dev, SSB_TMSLOW, tmp);
+ 	}
+ 
+ 	/* readback */
+-	tmp = ssb_read32(dev, SSB_TMSLOW);
++	tmp = ssb_read32(dev, SSB_TMSLOW) >> SSB_TMSLOW_FLAGS_SHIFT;
+ 	udelay(1);
+ 
+ 	if (res)
+@@ -1372,13 +1380,17 @@ static u32 ssb_core_state_flags_sb(struc
+ {
+ 	u32 tmp;
+ 
++	SSB_WARN_ON((mask | val) & 0xFFFF0000);
++
+ 	if (mask || val) {
+-		tmp = (ssb_read32(dev, SSB_TMSHIGH) & ~mask) | val;
++		tmp = (ssb_read32(dev, SSB_TMSHIGH) &
++		~(mask << SSB_TMSHIGH_FLAGS_SHIFT)) |
++		(val << SSB_TMSHIGH_FLAGS_SHIFT);
+ 		ssb_write32(dev, SSB_TMSHIGH, tmp);
+ 	}
+ 
+ 	/* readback */
+-	tmp = ssb_read32(dev, SSB_TMSHIGH);
++	tmp = ssb_read32(dev, SSB_TMSHIGH) >> SSB_TMSHIGH_FLAGS_SHIFT;
+ 	udelay(1);
+ 
+ 	return tmp;
+--- linux-next-20110203.orig/drivers/ssb/ssb_private.h	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/drivers/ssb/ssb_private.h	2011-02-08 12:17:03.000000000 +0200
+@@ -206,4 +206,28 @@ static inline void b43_pci_ssb_bridge_ex
+ }
+ #endif /* CONFIG_SSB_B43_PCI_BRIDGE */
+ 
++/* SB-style bus core control and state registers */
++#define SSB_TMSLOW		0x0F98     /* SB Target State Low */
++#define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
++#define  SSB_TMSLOW_REJECT_22	0x00000002 /* Reject (Backplane rev 2.2) */
++#define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
++#define  SSB_TMSLOW_PHYCLK	0x00000010 /* MAC PHY Clock Control Enable */
++#define  SSB_TMSLOW_CLOCK	0x00010000 /* Clock Enable */
++#define  SSB_TMSLOW_FGC		0x00020000 /* Force Gated Clocks On */
++#define  SSB_TMSLOW_PE		0x40000000 /* Power Management Enable */
++#define  SSB_TMSLOW_BE		0x80000000 /* BIST Enable */
++#define  SSB_TMSLOW_FLAGS_SHIFT		16 /* Flags shift for TMSLOW
++					    * register of SB-style buses */
++#define SSB_TMSHIGH		0x0F9C     /* SB Target State High */
++#define  SSB_TMSHIGH_SERR	0x00000001 /* S-error */
++#define  SSB_TMSHIGH_INT	0x00000002 /* Interrupt */
++#define  SSB_TMSHIGH_BUSY	0x00000004 /* Busy */
++#define  SSB_TMSHIGH_TO		0x00000020 /* Timeout. Backplane rev >= 2.3 only */
++#define  SSB_TMSHIGH_DMA64	0x10000000 /* 64bit DMA supported */
++#define  SSB_TMSHIGH_GCR	0x20000000 /* Gated Clock Request */
++#define  SSB_TMSHIGH_BISTF	0x40000000 /* BIST Failed */
++#define  SSB_TMSHIGH_BISTD	0x80000000 /* BIST Done */
++#define  SSB_TMSHIGH_FLAGS_SHIFT	16 /* Flags shift for TMSHIGH
++					    * register of SB-style buses */
++
+ #endif /* LINUX_SSB_PRIVATE_H_ */
+--- linux-next-20110203.orig/drivers/usb/host/ohci-ssb.c	2011-02-08 12:17:09.000000000 +0200
++++ linux-next-20110203/drivers/usb/host/ohci-ssb.c	2011-02-08 12:17:03.000000000 +0200
+@@ -18,7 +18,7 @@
+ #include <linux/ssb/ssb.h>
+ 
+ 
+-#define SSB_OHCI_TMSLOW_HOSTMODE	(1 << 29)
++#define SSB_OHCI_CORECTL_HOSTMODE	(1 << 13)
+ 
+ struct ssb_ohci_device {
+ 	struct ohci_hcd ohci; /* _must_ be at the beginning. */
+@@ -115,7 +115,7 @@ static int ssb_ohci_attach(struct ssb_de
+ 
+ 	if (dev->id.coreid == SSB_DEV_USB11_HOSTDEV) {
+ 		/* Put the device into host-mode. */
+-		flags |= SSB_OHCI_TMSLOW_HOSTMODE;
++		flags |= SSB_OHCI_CORECTL_HOSTMODE;
+ 		ssb_device_enable(dev, flags);
+ 	} else if (dev->id.coreid == SSB_DEV_USB20_HOST) {
+ 		u32 tmp;
+--- linux-next-20110203.orig/include/linux/ssb/ssb_driver_gige.h	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/include/linux/ssb/ssb_driver_gige.h	2011-02-08 12:17:03.000000000 +0200
+@@ -19,12 +19,12 @@
+ #define SSB_GIGE_SHIM_MAOCPSI		0x0C10 /* PCI to OCP: MaocpSI Control (32bit) */
+ #define SSB_GIGE_SHIM_SIOCPMA		0x0C14 /* PCI to OCP: SiocpMa Control (32bit) */
+ 
+-/* TM Status High flags */
+-#define SSB_GIGE_TMSHIGH_RGMII		0x00010000 /* Have an RGMII PHY-bus */
+-/* TM Status Low flags */
+-#define SSB_GIGE_TMSLOW_TXBYPASS	0x00080000 /* TX bypass (no delay) */
+-#define SSB_GIGE_TMSLOW_RXBYPASS	0x00100000 /* RX bypass (no delay) */
+-#define SSB_GIGE_TMSLOW_DLLEN		0x01000000 /* Enable DLL controls */
++/* Gige core control flags */
++#define SSB_GIGE_CORESTAT_RGMII		0x00010000 /* Have an RGMII PHY-bus */
++/* Gige core status flags */
++#define SSB_GIGE_CORECTL_TXBYPASS	0x00080000 /* TX bypass (no delay) */
++#define SSB_GIGE_CORECTL_RXBYPASS	0x00100000 /* RX bypass (no delay) */
++#define SSB_GIGE_CORECTL_DLLEN		0x01000000 /* Enable DLL controls */
+ 
+ /* Boardflags (low) */
+ #define SSB_GIGE_BFL_ROBOSWITCH		0x0010
+--- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-08 12:17:14.000000000 +0200
++++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-08 12:20:04.000000000 +0200
+@@ -468,14 +468,14 @@ static inline int ssb_device_is_enabled(
+ {
+ 	return dev->ops->device_is_enabled(dev);
+ }
+-/* Enable a device and pass device-specific SSB_TMSLOW flags.
++/* Enable a device and pass device-specific SSB_CORECTL flags.
+  * If no device-specific flags are available, use 0. */
+ static inline void ssb_device_enable(struct ssb_device *dev,
+ 				     u32 core_specific_flags)
+ {
+ 	return dev->ops->device_enable(dev, core_specific_flags);
+ }
+-/* Disable a device in hardware and pass SSB_TMSLOW flags (if any). */
++/* Disable a device in hardware and pass SSB_CORECTL flags (if any). */
+ static inline void ssb_device_disable(struct ssb_device *dev,
+ 				      u32 core_specific_flags)
+ {
+--- linux-next-20110203.orig/include/linux/ssb/ssb_regs.h	2011-02-01 05:05:49.000000000 +0200
++++ linux-next-20110203/include/linux/ssb/ssb_regs.h	2011-02-08 12:17:03.000000000 +0200
+@@ -58,6 +58,24 @@
+ 
+ #define SSB_BAR0_MAX_RETRIES	50
+ 
++/* AI/SB independent core control and status flags for use with
++ * core_ctl_flags, core_state_flags, device_enable, device_disable
++ * ssb device helpers.
++ * Use instead of core-dependant SSB_TMSLO_xx and SSB_TMSHIGH_xx defines
++ */
++/* SSB SB TMSLOW/SSB AI IOCTL */
++#define SSB_CORECTL_CLOCK		0x0001 /* Clock Enable */
++#define SSB_CORECTL_FGC			0x0002 /* Force Gated Clocks On */
++#define SSB_CORECTL_PE			0x4000 /* Power Management Enable */
++#define SSB_CORECTL_BE			0x8000 /* BIST Enable */
++#define SSB_CORECTL_CORE_BITS		0x3FFC /* Core-specific flags mask */
++/* SSB SB TMSHIGH/SSB AI IOSTAT */
++#define SSB_CORESTAT_DMA64		0x1000 /* 64-bit DMA engine */
++#define SSB_CORESTAT_GCR		0x2000 /* Gated Clock Request */
++#define SSB_CORESTAT_BISTF		0x4000 /* BIST Failed */
++#define SSB_CORESTAT_BISTD		0x8000 /* BIST Done */
++#define SSB_CORESTAT_CORE_BITS		0x0FFF /* Core-specific flags mask */
++
+ /* Silicon backplane configuration register definitions */
+ #define SSB_IPSFLAG		0x0F08
+ #define	 SSB_IPSFLAG_IRQ1	0x0000003F /* which sbflags get routed to mips interrupt 1 */
+@@ -93,26 +111,10 @@
+ #define  SSB_INTVEC_USB		0x00000010 /* Enable interrupts for usb */
+ #define  SSB_INTVEC_EXTIF	0x00000020 /* Enable interrupts for external i/f */
+ #define  SSB_INTVEC_ENET1	0x00000040 /* Enable interrupts for enet 1 */
+-#define SSB_TMSLOW		0x0F98     /* SB Target State Low */
+-#define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
+-#define  SSB_TMSLOW_REJECT_22	0x00000002 /* Reject (Backplane rev 2.2) */
+-#define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
+-#define  SSB_TMSLOW_PHYCLK	0x00000010 /* MAC PHY Clock Control Enable */
+-#define  SSB_TMSLOW_CLOCK	0x00010000 /* Clock Enable */
+-#define  SSB_TMSLOW_FGC		0x00020000 /* Force Gated Clocks On */
+-#define  SSB_TMSLOW_PE		0x40000000 /* Power Management Enable */
+-#define  SSB_TMSLOW_BE		0x80000000 /* BIST Enable */
+-#define SSB_TMSHIGH		0x0F9C     /* SB Target State High */
+-#define  SSB_TMSHIGH_SERR	0x00000001 /* S-error */
+-#define  SSB_TMSHIGH_INT	0x00000002 /* Interrupt */
+-#define  SSB_TMSHIGH_BUSY	0x00000004 /* Busy */
+-#define  SSB_TMSHIGH_TO		0x00000020 /* Timeout. Backplane rev >= 2.3 only */
+-#define  SSB_TMSHIGH_COREFL	0x1FFF0000 /* Core specific flags */
+-#define  SSB_TMSHIGH_COREFL_SHIFT	16
+-#define  SSB_TMSHIGH_DMA64	0x10000000 /* 64bit DMA supported */
+-#define  SSB_TMSHIGH_GCR	0x20000000 /* Gated Clock Request */
+-#define  SSB_TMSHIGH_BISTF	0x40000000 /* BIST Failed */
+-#define  SSB_TMSHIGH_BISTD	0x80000000 /* BIST Done */
++/*
++ * SSB_TMSLOW and SSB_TMSHIGH registers' definitions moved out to ssb_private.h
++ * use SSB_CORECTL, SSB_CORESTAT or own core-specific flags' defines instead.
++ */
+ #define SSB_BWA0		0x0FA0
+ #define SSB_IMCFGLO		0x0FA8
+ #define  SSB_IMCFGLO_SERTO	0x00000007 /* Service timeout */
 
-Please address this newly introduced warning in a future pull request,
-thanks:
 
-drivers/net/wireless/iwlwifi/iwl-3945.c:411:13: warning: 'iwl3945_good_plcp_health' defined but not used
+
