@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39504 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756906Ab1BKAxV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 19:53:21 -0500
-Date: Thu, 10 Feb 2011 19:52:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH for-2.6.38] p54pci: update receive dma buffers before and
- after processing
-Message-ID: <20110211005250.GF1553@tuxdriver.com>
-References: <201102110148.43155.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201102110148.43155.chunkeey@googlemail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53929 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751075Ab1BIWCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 17:02:45 -0500
+Subject: Re: SSB AI support code ([RFC4/11] SSB core control and state
+ device ops)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: George Kashperko <george@znau.edu.ua>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTi=4TTXEQf-ECRBQTBqv-K5u+9yMke88vpwgrmnG@mail.gmail.com> (sfid-20110209_225600_481400_24506838)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <1297262089.18053.24.camel@dev.znau.edu.ua>
+	 <AANLkTinC+ijSG=qzzk9OWLGRLsxM0dm12YkERxKbwg6t@mail.gmail.com>
+	 <1297285438.11767.28.camel@dev.znau.edu.ua>
+	 <AANLkTi=4TTXEQf-ECRBQTBqv-K5u+9yMke88vpwgrmnG@mail.gmail.com>
+	 (sfid-20110209_225600_481400_24506838)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Feb 2011 23:02:39 +0100
+Message-ID: <1297288959.9734.31.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 11, 2011 at 01:48:42AM +0100, Christian Lamparter wrote:
-> Documentation/DMA-API-HOWTO.txt states:
-> 
-> "DMA transfers need to be synced properly in order for
-> the cpu and device to see the most uptodate and correct
-> copy of the DMA buffer."
-> 
-> Cc: <stable@kernel.org>
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> Embarrassingly, this bug is unique to p54 and has been around
-> since 2.6.25. This tells us something interesting about our
-> userbase.
+On Wed, 2011-02-09 at 22:55 +0100, RafaÅ‚ MiÅ‚ecki wrote: 
+> I aksed about reading, you gave me examples of writing. I want to
+> avoid such a non-readable disasters:
+> u32 tmp;
+> ssb_core_ctl_flags(dev, 0, 0, &tmp);
 
-Most likely it tells us that most people using p54 are using little
-endian boxes with coherent DMA... :-)
+A good function name consists of:
+"WHAT is done and WHERE is it done"
 
-John
+ssb_core_ctl_flags()
+violates both of them. It doesn't specify what is done at all,
+except that it might be something random with ctl flags.
+And it lies about where it does it. It implies that it operates
+on SSB. However, it might operate on SSB or AI.
+
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+Greetings Michael.
+
