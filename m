@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50079 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755188Ab1BORKV (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:37569 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752450Ab1BIPTn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 12:10:21 -0500
-Subject: Re: [RFC/RFT] mac80211: make tx() operation return void
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110215190657.75006zvz1q691rk8@naisho.dyndns.info>
-References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
-	 <20110215190657.75006zvz1q691rk8@naisho.dyndns.info>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 18:10:20 +0100
-Message-ID: <1297789820.8664.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 9 Feb 2011 10:19:43 -0500
+Date: Wed, 9 Feb 2011 10:19:42 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Sujith <m.sujith@gmail.com>
+cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Martin Schleier <drahemmaps@gmx.net>,
+	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
+	<linville@tuxdriver.com>, <kune@deine-taler.de>,
+	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
+Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change
+ endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+In-Reply-To: <19793.64449.344588.240418@gargle.gargle.HOWL>
+Message-ID: <Pine.LNX.4.44L0.1102091017370.2050-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-15 at 19:06 +0200, Jussi Kivilinna wrote:
+On Wed, 9 Feb 2011, Sujith wrote:
 
-> > -static int b43_op_tx(struct ieee80211_hw *hw,
-> > +static void b43_op_tx(struct ieee80211_hw *hw,
-> >  		     struct sk_buff *skb)
-> >  {
-> >  	struct b43_wl *wl = hw_to_b43_wl(hw);
-> > @@ -3211,14 +3211,11 @@ static int b43_op_tx(struct ieee80211_hw
-> >  	if (unlikely(skb->len < 2 + 2 + 6)) {
-> >  		/* Too short, this can't be a valid frame. */
-> >  		dev_kfree_skb_any(skb);
-> > -		return NETDEV_TX_OK;
-> >  	}
+> > The first two problems are the device's fault, and the third is the 
+> > driver's fault.  None of them are the fault of usbcore.
 > 
-> Return missing.
+> Indeed, which is why this dirty hack is done in the driver.
+> And it was done to fix a similar issue - high CPU usage when scanning.
+> 
+> But do you have any suggestion for such broken devices ?
+> The FW changes the type from Interrupt to Bulk, but can the host
+> driver continue to use Interrupt URBs and use the URB_NO_INTERRUPT trick
+> that you have mentioned ?
 
-Right, thanks.
+Yes.  And it's not a trick; that is exactly what URB_NO_INTERRUPT was 
+intended for.
 
-johannes
+Alan Stern
 
