@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43461 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984Ab1BVWWn (ORCPT
+Received: from w1.fi ([128.177.27.249]:45455 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754203Ab1BIRvc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:22:43 -0500
-Received: by wwb39 with SMTP id 39so765282wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:42 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 1/8] wl12xx: fix potential race condition with TX queue watermark
-Date: Wed, 23 Feb 2011 00:22:24 +0200
-Message-Id: <1298413351-15462-2-git-send-email-arik@wizery.com>
-In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
-References: <1298413351-15462-1-git-send-email-arik@wizery.com>
+	Wed, 9 Feb 2011 12:51:32 -0500
+Date: Wed, 9 Feb 2011 19:50:44 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Chaoxing Lin <CLin@3eti.com>
+Cc: "'John W. Linville'" <linville@tuxdriver.com>,
+	"'Zefir Kurtisi'" <zefir.kurtisi@neratec.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] DFS userspace handler
+Message-ID: <20110209175044.GA13242@jm.kir.nu>
+References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
+ <4D52B7DB.8000000@neratec.com>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC34@RockMX01.rock.corp>
+ <20110209163030.GD2494@tuxdriver.com>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D0571DD3A@RockMX01.rock.corp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DD3A@RockMX01.rock.corp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the conditions for the high/low TX queue watermarks when the
-spin-lock is taken. This prevents race conditions as tx_queue_count and
-the flag checked are only modified when the spin-lock is taken.
+On Wed, Feb 09, 2011 at 05:09:49PM +0000, Chaoxing Lin wrote:
+> Do we have to choose between hostapd and wpa_supplicant?
 
-The following race was in mind:
-- Queues are almost full and wl1271_op_tx() will stop the queues, but it
-  doesn't get the spin-lock yet.
-- (on another CPU) tx_work_locked() dequeues 15 skbs from this queue and
-  tx_queue_count is updated to reflect this
-- wl1271_op_tx() does not check tx_queue_count after taking the
-  spin-lock and incorrectly stops the queue.
+No, but it should be noted that either one of those is most likely going
+to be present on the system anyway if any sort of security is used in
+AP/WDS/mesh/IBSS/STA.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   24 +++++++++++-------------
- 1 files changed, 11 insertions(+), 13 deletions(-)
+> Why not a new daemon, e.g. DFSd or radard? So that it can be used intuitively for all master or IBSS modes.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 61dea73..4d64cef 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -983,6 +983,17 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	wl->tx_queue_count++;
-+
-+	/*
-+	 * The workqueue is slow to process the tx_queue and we need stop
-+	 * the queue here, otherwise the queue will get too long.
-+	 */
-+	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
-+		ieee80211_stop_queues(wl->hw);
-+		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+	}
-+
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	/* queue the packet */
-@@ -997,19 +1008,6 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags))
- 		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
--	/*
--	 * The workqueue is slow to process the tx_queue and we need stop
--	 * the queue here, otherwise the queue will get too long.
--	 */
--	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
--		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
--
--		spin_lock_irqsave(&wl->wl_lock, flags);
--		ieee80211_stop_queues(wl->hw);
--		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
--		spin_unlock_irqrestore(&wl->wl_lock, flags);
--	}
--
- 	return NETDEV_TX_OK;
- }
- 
+One more interface to define and implement (user space between that new
+daemon and hostapd/wpa_supplicant).. I'm not strongly against this, but
+I would expect it to increase the total amount of work needed.
+
 -- 
-1.7.1
-
+Jouni Malinen                                            PGP id EFC895FA
