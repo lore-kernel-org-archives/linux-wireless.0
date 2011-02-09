@@ -1,52 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38426 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106Ab1BOPPe (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:44524 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039Ab1BIRAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 10:15:34 -0500
-Date: Tue, 15 Feb 2011 10:12:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 9 Feb 2011 12:00:54 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000020044.msg
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 19:00:18 +0200
+Subject: Re: SSB AI support code ([RFC9/11] SSB modify irqflag treatment)
+From: George Kashperko <george@znau.edu.ua>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: chunkeey@web.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54: Fix compile warning
-Message-ID: <20110215151251.GB2557@tuxdriver.com>
-References: <4d5a00d2./P3aAY/moiXTWkG7%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4d5a00d2./P3aAY/moiXTWkG7%Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D52BF9F.3010900@lwfinger.net>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <1297262500.18053.36.camel@dev.znau.edu.ua> <4D52BF9F.3010900@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 09 Feb 2011 18:53:24 +0200
+Message-Id: <1297270404.6911.5.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 10:28:02PM -0600, Larry Finger wrote:
-> If any of the p54-based drivers are built with CONFIG_P54_LEDS not
-> defined, the following warning is generated:
-> 
->   CC [M]  drivers/net/wireless/p54/main.o
-> drivers/net/wireless/p54/main.c: In function ‘p54_register_common’:
-> drivers/net/wireless/p54/main.c:614:21: warning: unused variable ‘priv’
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/p54/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/p54/main.c
-> +++ wireless-testing/drivers/net/wireless/p54/main.c
-> @@ -611,7 +611,9 @@ EXPORT_SYMBOL_GPL(p54_init_common);
->  
->  int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
->  {
-> +#ifdef CONFIG_P54_LEDS
->  	struct p54_common *priv = dev->priv;
-> +#endif /* CONFIG_P54_LEDS */
->  	int err;
->  
->  	err = ieee80211_register_hw(dev);
-> 
 
-Use __maybe_unused instead?
+В Срд, 09/02/2011 в 10:23 -0600, Larry Finger пишет:
+> On 02/09/2011 08:41 AM, George Kashperko wrote:
+> > From: George Kashperko <george@znau.edu.ua>
+> > 
+> > Modify irqflag routine to reuse tpsflag value rather than
+> > reading TPSFLAG register once again. Change default "not
+> > supported" value from 0x3F to -1.
+> > Signed-off-by: George Kashperko <george@znau.edu.ua>
+> > ---
+> >  drivers/ssb/driver_mipscore.c |    2 +-
+> >  drivers/ssb/ssb_sb.c          |    4 ++--
+> >  2 files changed, 3 insertions(+), 3 deletions(-)
+> > --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-08 16:14:57.000000000 +0200
+> > +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-08 16:15:24.000000000 +0200
+> > @@ -75,7 +75,7 @@ unsigned int ssb_mips_irq(struct ssb_dev
+> >  	unsigned int irq;
+> >  
+> >  	irqflag = ssb_irqflag(dev);
+> > -	if (irqflag == 0x3f)
+> > +	if (irqflag == -1)
+> >  		return 6;
+> >  	ipsflag = ssb_read32(bus->mipscore.dev, SSB_IPSFLAG);
+> >  	for (irq = 1; irq <= 4; irq++) {
+> > --- linux-next-20110203.orig/drivers/ssb/ssb_sb.c	2011-02-08 16:14:57.000000000 +0200
+> > +++ linux-next-20110203/drivers/ssb/ssb_sb.c	2011-02-08 16:15:24.000000000 +0200
+> > @@ -175,10 +175,10 @@ static u32 ssb_irqflag_sb(struct ssb_dev
+> >  {
+> >  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
+> >  	if (tpsflag)
+> > -		return ssb_read32(dev, SSB_TPSFLAG) & SSB_TPSFLAG_BPFLAG;
+> > +		return tpsflag & SSB_TPSFLAG_BPFLAG;
+> >  	else
+> >  		/* not irq supported */
+> > -		return 0x3f;
+> > +		return -1;
+> >  }
+> >  
+> >  static void ssb_core_ctl_flags_sb(struct ssb_device *dev, u32 mask,
+> 
+> This one does not apply with the following:
+> 
+> finger@larrylap:~/wireless-testing> quilt push
+> Applying patch patches/ssb_AI_9
+> patching file drivers/ssb/driver_mipscore.c
+> Hunk #1 succeeded at 85 (offset 10 lines).
+> can't find file to patch at input line 35
+> Perhaps you used the wrong -p or --strip option?
+> The text leading up to this was:
+> --------------------------
+> |--- linux-next-20110203.orig/drivers/ssb/ssb_sb.c      2011-02-08
+> 16:14:57.000000000 +0200
+> |+++ linux-next-20110203/drivers/ssb/ssb_sb.c   2011-02-08 16:15:24.000000000 +0200
+> --------------------------
+> No file to patch.  Skipping patch.
+> 1 out of 1 hunk ignored
+> Patch patches/ssb_AI_9 does not apply (enforce with -f)
+> 
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+My apologises for that. Already posted that <[RFC9/11] SSB modify
+irqflag treatment> is my fault - it should be 10/11 not 9/11. You might
+be missed my post with this note. Again sorry. I've reposted it right
+after with proper sequence number. Please just rm it. 9th in sequence
+should be <[RFC9/11] SSB separate SB-specific code>
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regarding issues with 3/11 and 11/11 - im looking into right now. Might
+we have different git state.
+
+Have nice day,
+George
+
+
