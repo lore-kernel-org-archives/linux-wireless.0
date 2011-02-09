@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:35503 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977Ab1BSHEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 02:04:04 -0500
-Date: Fri, 18 Feb 2011 23:03:58 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Naveen Singh <Naveen.Singh@Atheros.com>,
-	Jack Yang <Jack.Yang@Atheros.com>,
-	Samuel Chang <Samuel.Chang@Atheros.com>,
-	Joe Perches <joe@perches.com>, Jerry Hu <Jerry.Hu@Atheros.com>,
-	Maggie Huang <Maggie.Huang@Atheros.com>,
-	Vipin Mehta <Vipin.Mehta@Atheros.com>,
-	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, mcgrof@gmail.com
-Subject: Re: ath6kl - coordination of development
-Message-ID: <20110219070358.GA3871@kroah.com>
-References: <20110219013001.GM15610@tux>
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:33305 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755036Ab1BIAyj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Feb 2011 19:54:39 -0500
+Received: by mail-qw0-f42.google.com with SMTP id 4so4796030qwe.29
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 16:54:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110219013001.GM15610@tux>
+In-Reply-To: <1296633577-15199-1-git-send-email-eliad@wizery.com>
+References: <1296633577-15199-1-git-send-email-eliad@wizery.com>
+Date: Tue, 8 Feb 2011 22:54:37 -0200
+Message-ID: <AANLkTim=+LT7bj_1gD2=oEMWzmL=UuwU2H9TdKOQ8c_4@mail.gmail.com>
+Subject: Re: [PATCH v3 0/4] wl12xx: move to new firmware (6.1.3.50.49)
+From: "Coelho, Luciano" <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 18, 2011 at 05:30:01PM -0800, Luis R. Rodriguez wrote:
-> Joe -- I know you have a large series pending, but perhaps we can
-> coordinate to only send batches in 20 ? Or Greg do you have any preference?
+On Wed, Feb 2, 2011 at 5:59 AM, Eliad Peller <eliad@wizery.com> wrote:
+> Make the wl12xx driver start working with the latest
+> wl12xx firmware (6.1.3.50.49).
+>
+> The patchset only migrates exisiting functionality.
+> (i.e. it doesn't contain the new firmware features)
+>
+> Note that this new firmware is not backward compatible with the
+> current firmware, so a new firmware name is being used.
 
-20 sounds reasonable, if not pushing it a bit.  Let's start with that
-and see how it goes.  If they apply cleanly, and are easy to review,
-maybe we can do more the next round.
+Applied and pushed.  Thanks, Eliad!
 
-thanks,
-
-greg k-h
+--
+Cheers,
+Luca.
