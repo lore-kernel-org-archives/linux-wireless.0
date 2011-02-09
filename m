@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45080 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab1BDHDV (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65302 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825Ab1BIUfa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 02:03:21 -0500
-Date: Fri, 4 Feb 2011 08:05:46 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Keith Packard <keithp@keithp.com>, Dave Airlie <airlied@gmail.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-Message-ID: <20110204070546.GA12621@linux-yscl.site>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
- <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
- <s5haaid3xos.wl%tiwai@suse.de>
- <201102032009.17100.rjw@sisk.pl>
- <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
- <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
- <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
- <AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
- <yund3n88v7x.fsf@aiko.keithp.com>
- <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
+	Wed, 9 Feb 2011 15:35:30 -0500
+Received: by qwa26 with SMTP id 26so469914qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 12:35:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
+In-Reply-To: <1297262089.18053.24.camel@dev.znau.edu.ua>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	<1297262089.18053.24.camel@dev.znau.edu.ua>
+Date: Wed, 9 Feb 2011 21:35:29 +0100
+Message-ID: <AANLkTinC+ijSG=qzzk9OWLGRLsxM0dm12YkERxKbwg6t@mail.gmail.com>
+Subject: Re: SSB AI support code ([RFC4/11] SSB core control and state device ops)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu  3.Feb'11 at 17:11:14 -0800, Linus Torvalds wrote:
-> On Thu, Feb 3, 2011 at 5:05 PM, Keith Packard <keithp@keithp.com> wrote:
-> >
-> > The goal is to make it so that when you *do* set a mode, DPMS gets set
-> > to ON (as the monitor will actually be "on" at that point). Here's a
-> > patch which does the DPMS_ON precisely when setting a mode.
-> 
-> Ok, patch looks sane, but it does leave me with the "what about the
-> 'fb_changed' case?" question. Is that case basically guaranteed to not
-> change any existing dpms state?
-> 
-> > (note, this patch compiles, but is otherwise only lightly tested).
-> 
-> Carlos? Takashi? Ignore my crazy patch, try this one instead. Does it
-> fix things for you?
+2011/2/9 George Kashperko <george@znau.edu.ua>:
+> From: George Kashperko <george@znau.edu.ua>
+>
+> Introduce handlers for SB core control and state flags' management. SB-style
+> buses provide access to these flags at two high octets of TMSLOW and TMSHIGH
+> registers whereas AI-ones implement these flags in two low octets of IOCTRL
+> and IOSTAT registers.
+> Signed-off-by: George Kashperko <george@znau.edu.ua>
+> ---
+>  drivers/ssb/main.c      |   36 ++++++++++++++++++++++++++++++++++++
+>  include/linux/ssb/ssb.h |   14 +++++++++++++-
+>  2 files changed, 49 insertions(+), 1 deletion(-)
+> --- linux-next-20110203.orig/drivers/ssb/main.c 2011-02-07 16:58:50.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/main.c      2011-02-07 17:07:11.000000000 +0200
+> @@ -1350,6 +1350,40 @@ static u32 ssb_admatch_size_sb(struct ss
+>        return size;
+>  }
+>
+> +static void ssb_core_ctl_flags_sb(struct ssb_device *dev, u32 mask,
+> +                                 u32 val, u32 *res)
+> +{
+> +       u32 tmp;
+> +
+> +       if (mask || val) {
+> +               tmp = (ssb_read32(dev, SSB_TMSLOW) & ~mask) | val;
+> +               ssb_write32(dev, SSB_TMSLOW, tmp);
+> +       }
 
-Yes! (tested on top of 2.6.38-rc3+).
+Are you going to use that function for just reading SSB_TMSLOW? Why
+won't you use separated function then? Do you need separated function
+for sth so simple as "ssb_read32(dev, SSB_TMSLOW);" at all?
 
-Thanks to everyone involved!
 
+> +       /* readback */
+> +       tmp = ssb_read32(dev, SSB_TMSLOW);
+> +       udelay(1);
+> +
+> +       if (res)
+> +               *res = tmp;
+> +}
+
+Why are you returning value by writing to pointed place? Can't you
+simply return it? Does returning complicate code so much, it is worth
+using that non-common solution?
+
+-- 
+Rafał
