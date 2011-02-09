@@ -1,112 +1,722 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58433 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756732Ab1BJTXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 14:23:09 -0500
-Message-ID: <4D543B18.5000404@openwrt.org>
-Date: Thu, 10 Feb 2011 20:23:04 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55128 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586Ab1BIQYh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 11:24:37 -0500
+Received: by vws16 with SMTP id 16so201596vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 08:24:37 -0800 (PST)
+Message-ID: <4D52BFFF.3040205@lwfinger.net>
+Date: Wed, 09 Feb 2011 10:25:35 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k and pktgen generate WARNings.
-References: <4D531CA6.8010903@candelatech.com> <201102100931.38777.helmut.schaa@googlemail.com> <4D541E1B.5030707@candelatech.com> <201102101854.41627.helmut.schaa@googlemail.com> <4D5427A0.20806@candelatech.com>
-In-Reply-To: <4D5427A0.20806@candelatech.com>
+To: George Kashperko <george@znau.edu.ua>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: SSB AI support code ([RFC11/11] SSB add AI-bus support)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua> <1297262780.18053.44.camel@dev.znau.edu.ua>
+In-Reply-To: <1297262780.18053.44.camel@dev.znau.edu.ua>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-02-10 7:00 PM, Ben Greear wrote:
-> On 02/10/2011 09:54 AM, Helmut Schaa wrote:
->> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
->>> On 02/10/2011 12:31 AM, Helmut Schaa wrote:
->>>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
->>>>> I see this warning when I generate traffic with a hacked version
->>>>> of pktgen.  This works with various other interfaces w/out problems,
->>>>> so I think it's probably an ath9k and/or mac80211 bug.
->>>>>
->>>>>
->>>>> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
->>>>> Hardware name: To Be Filled By O.E.M.
->>>>> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss
->>>>> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath
->>>>> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit
->>>>> video [last unloaded: lockd]
->>>>> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
->>>>> Call Trace:
->>>>>     [<c043091b>] ? warn_slowpath_common+0x65/0x7a
->>>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
->>>>>     [<c043093f>] ? warn_slowpath_null+0xf/0x13
->>>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
->>>>>     [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
->>>>>     [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
->>>>>     [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
->>>>>     [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
->>>>>     [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
->>>>>     [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
->>>>>     [<c0440000>] ? rescuer_thread+0x25/0x1c8
->>>>>     [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
->>>>>     [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
->>>>>     [<c042d612>] ? default_wake_function+0xb/0xd
->>>>>     [<c04254c7>] ? __wake_up_common+0x34/0x5c
->>>>>     [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
->>>>>     [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
->>>>>     [<c044371a>] ? kthread+0x62/0x67
->>>>>     [<c04436b8>] ? kthread+0x0/0x67
->>>>>     [<c04035f6>] ? kernel_thread_helper+0x6/0x10
->>>>>
->>>>>
->>>>> /* FIXME: tx power */
->>>>> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
->>>>> 			     struct ath_tx_control *txctl)
->>>>> {
->>>>> 	struct sk_buff *skb = bf->bf_mpdu;
->>>>> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
->>>>> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->>>>> 	struct list_head bf_head;
->>>>> 	struct ath_atx_tid *tid = NULL;
->>>>> 	u8 tidno;
->>>>>
->>>>> 	spin_lock_bh(&txctl->txq->axq_lock);
->>>>>
->>>>> 	if (ieee80211_is_data_qos(hdr->frame_control)&&   txctl->an) {
->>>>> 		tidno = ieee80211_get_qos_ctl(hdr)[0]&
->>>>> 			IEEE80211_QOS_CTL_TID_MASK;
->>>>> 		tid = ATH_AN_2_TID(txctl->an, tidno);
->>>>>
->>>>> 		WARN_ON(tid->ac->txq != txctl->txq);
->>>>> 	}
->>>>>
->>>>> Anyone have any ideas on this one?
->>>>
->>>> pktgen seems to directly inject frames via the xmit callback and hence
->>>> mac80211's select_queue callback isn't used for proper queue assignment.
->>>>
->>>> However, you should be able to specify the queue manuelly with
->>>> "cur_queue_map".
->>>
->>> Yes, but I don't think I should have to know this detail.
->>>
->>> Once you send pkts with queue-map of 0 to ath9k, it spews
->>> kernel warnings and then you have to rmmod the NIC before
->>> it will start working again (because it's queues are
->>> messed up probably).
->>>
->>> I'm not sure my patch is the correct way to fix it, but
->>> we need to do _something_ in mac80211 and/or ath9k I think.
->>
->> Why not make pktgen use the select_queue callback instead?
+On 02/09/2011 08:46 AM, George Kashperko wrote:
+> From: Bernhard Loos <bernhardloos@googlemail.com>
+> Add support for AI-style ssb bus.
+> Signed-off-by: George Kashperko <george@znau.edu.ua>
+> ---
+>  drivers/ssb/Kconfig                       |   13 
+>  drivers/ssb/Makefile                      |    1 
+>  drivers/ssb/main.c                        |    2 
+>  drivers/ssb/scan.c                        |   42 +-
+>  drivers/ssb/ssb_ai.c                      |  381 ++++++++++++++++++++
+>  drivers/ssb/ssb_ai.h                      |   61 +++
+>  drivers/ssb/ssb_private.h                 |    9 
+>  include/linux/ssb/ssb.h                   |   12 
+>  include/linux/ssb/ssb_driver_chipcommon.h |    3 
+>  9 files changed, 516 insertions(+), 8 deletions(-)
+> --- linux-next-20110203.orig/drivers/ssb/Kconfig	2011-02-08 16:14:57.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/Kconfig	2011-02-08 21:01:34.000000000 +0200
+> @@ -9,7 +9,7 @@ menu "Sonics Silicon Backplane"
+>  config SSB
+>  	tristate "Sonics Silicon Backplane support"
+>  	depends on SSB_POSSIBLE
+> -	select SSB_BUS_SB
+> +	select SSB_BUS_SB if !SSB_BUS_AI
+>  	help
+>  	  Support for the Sonics Silicon Backplane bus.
+>  	  You only need to enable this option, if you are
+> @@ -32,6 +32,17 @@ config SSB_BUS_SB
+>  	help
+>  	  Sonics Silicon Backplane SB-style bus
+>  
+> +config SSB_BUS_AI_POSSIBLE
+> +	bool
+> +	default y if SSB && EXPERIMENTAL
+> +
+> +config SSB_BUS_AI
+> +	bool "AI style bus"
+> +	depends on SSB_BUS_AI_POSSIBLE
+> +	default n
+> +	help
+> +	  Sonics Silicon Backplane AI-style bus
+> +
+>  # Common SPROM support routines
+>  config SSB_SPROM
+>  	bool
+> --- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-08 18:55:26.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/main.c	2011-02-08 21:01:34.000000000 +0200
+> @@ -842,6 +842,8 @@ static const char *ssb_chipco_chiptype_n
+>  	switch (bus->chipco.chiptype) {
+>  	case SSB_CHIPCO_SB:
+>  		return "SB";
+> +	case SSB_CHIPCO_AI:
+> +		return "AI";
+>  	default:
+>  		return "UNKNOWN";
+>  	}
+> --- linux-next-20110203.orig/drivers/ssb/Makefile	2011-02-08 16:14:57.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/Makefile	2011-02-08 21:01:34.000000000 +0200
+> @@ -1,6 +1,7 @@
+>  # core
+>  ssb-y					+= main.o scan.o
+>  ssb-$(CONFIG_SSB_BUS_SB)		+= ssb_sb.o
+> +ssb-$(CONFIG_SSB_BUS_AI)		+= ssb_ai.o
+>  ssb-$(CONFIG_SSB_EMBEDDED)		+= embedded.o
+>  ssb-$(CONFIG_SSB_SPROM)			+= sprom.o
+>  
+> --- linux-next-20110203.orig/drivers/ssb/scan.c	2011-02-08 18:33:58.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/scan.c	2011-02-08 21:01:34.000000000 +0200
+> @@ -212,6 +212,10 @@ void ssb_iounmap(struct ssb_bus *bus)
+>  	case SSB_BUSTYPE_SSB:
+>  	case SSB_BUSTYPE_PCMCIA:
+>  		iounmap(bus->mmio);
+> +#ifdef CONFIG_SSB_BUS_AI
+> +		if (bus->ai_mmio)
+> +			iounmap(bus->ai_mmio);
+> +#endif
+>  		break;
+>  	case SSB_BUSTYPE_PCI:
+>  #ifdef CONFIG_SSB_PCIHOST
+> @@ -364,18 +368,39 @@ int ssb_bus_check_core(struct ssb_device
+>  /* Detect bus type and major bus information */
+>  static int ssb_bus_detect(struct ssb_bus *bus)
+>  {
+> -	u32 idhi, cc, rev, tmp;
+> +	u32 idhi, rev, tmp;
+> +	bool have_chipcommon = true;
+>  	enum ssb_chipco_chiptype chiptype = SSB_CHIPCO_SB;
+>  
+> -	idhi = scan_read32(bus, 0, SSB_IDHIGH);
+> -	cc = (idhi & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
+> -	rev = (idhi & SSB_IDHIGH_RCLO);
+> -	rev |= (idhi & SSB_IDHIGH_RCHI) >> SSB_IDHIGH_RCHI_SHIFT;
+> +	/* the problem goes like this:
+> +	 *  if we access the normal core id backplane registers on an AI soc,
+> +	 *   the thing hangs.
+> +	 *  To figure out, if we have an AI soc, we have to look in a
+> +	 *   chipcommon register.
+> +	 *  The 4710 doesn't have a chipcommon but we can't figure this out
+> +	 *   without scanning the cores, and we don't know, if we have to use
+> +	 *   the AI or normal method.
+> +	 *  All known AI socs have a 74k cpu, so let's take this as an
+> +	 *   indicator that we have a chipcommon core and hope for the best.
+> +	 */
+> +	rev = 0;
+> +	if (cpu_data[0].cputype != CPU_74K) {
+> +		idhi = scan_read32(bus, 0, SSB_IDHIGH);
+> +		if (((idhi & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT) !=
+> +		    SSB_DEV_CHIPCOMMON) {
+> +			have_chipcommon = false;
+> +		} else {
+> +			rev = (idhi & SSB_IDHIGH_RCLO);
+> +			rev |= (idhi & SSB_IDHIGH_RCHI) >>
+> +			       SSB_IDHIGH_RCHI_SHIFT;
+> +		}
+> +	}
+>  
+>  	bus->nr_devices = 0;
+> -	if (cc == SSB_DEV_CHIPCOMMON) {
+> +	if (have_chipcommon) {
+>  		tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPID);
+>  
+> +		chiptype = SSB_CHIPCO_TYPE(tmp);
+>  		bus->chip_id = (tmp & SSB_CHIPCO_IDMASK);
+>  		bus->chip_rev = (tmp & SSB_CHIPCO_REVMASK) >>
+>  				SSB_CHIPCO_REVSHIFT;
+> @@ -409,7 +434,7 @@ static int ssb_bus_detect(struct ssb_bus
+>  	}
+>  
+>  	bus->chipco.chiptype = chiptype;
+> -	return chiptype != SSB_CHIPCO_SB;
+> +	return (chiptype != SSB_CHIPCO_SB && chiptype != SSB_CHIPCO_AI);
+>  }
+>  
+>  int ssb_bus_scan(struct ssb_bus *bus,
+> @@ -451,6 +476,9 @@ int ssb_bus_scan(struct ssb_bus *bus,
+>  	case SSB_CHIPCO_SB:
+>  		err = ssb_bus_scan_sb(bus, baseaddr);
+>  		break;
+> +	case SSB_CHIPCO_AI:
+> +		err = ssb_bus_scan_ai(bus);
+> +		break;
+>  	default:
+>  		SSB_WARN_ON(1);
+>  		err = -ENODEV;
+> --- linux-next-20110203.orig/drivers/ssb/ssb_ai.c	1970-01-01 03:00:00.000000000 +0300
+> +++ linux-next-20110203/drivers/ssb/ssb_ai.c	2011-02-08 21:01:58.000000000 +0200
+> @@ -0,0 +1,381 @@
+> +/*
+> + * Sonics Silicon Backplane
+> + * AI Specific Subsystem core
+> + *
+> + * Copyright 2010, Bernhard Loos <bernhardloos@googlemail.com>
+> + * Copyright (C) 2006 Broadcom Corporation.
+> + *
+> + * Licensed under the GNU/GPL. See COPYING for details.
+> + */
+> +
+> +#include <linux/delay.h>
+> +#include <linux/ssb/ssb.h>
+> +#include <linux/ssb/ssb_regs.h>
+> +
+> +#include "ssb_private.h"
+> +#include "ssb_ai.h"
+> +
+> +
+> +static void ssb_ai_write32(struct ssb_device *dev, u16 offset, u32 value)
+> +{
+> +	struct ssb_bus *bus = dev->bus;
+> +
+> +	offset += dev->core_index * SSB_CORE_SIZE;
+> +	return writel(value, bus->ai_mmio + offset);
+> +}
+> +
+> +static u32 ssb_ai_read32(struct ssb_device *dev, u16 offset)
+> +{
+> +	struct ssb_bus *bus = dev->bus;
+> +
+> +	offset += dev->core_index * SSB_CORE_SIZE;
+> +	return readl(bus->ai_mmio + offset);
+> +}
+> +
+> +/* The 47162a0 hangs when reading its registers */
+> +static inline bool ssb_bcm47162a0_quirk(struct ssb_device *dev)
+> +{
+> +	return dev->bus->chip_id == 47162 && dev->bus->chip_rev == 0 &&
+> +	       dev->id.coreid == SSB_DEV_MIPS_74K;
+> +}
+> +
+> +static void ssb_core_ctl_flags_ai(struct ssb_device *dev, u32 mask,
+> +				  u32 val, u32 *res)
+> +{
+> +	if (ssb_bcm47162a0_quirk(dev)) {
+> +		printk("%s: Accessing MIPS DMP register (IOCTL) on 47162a0",
+> +		       __FUNCTION__);
+> +		if (res)
+> +			*res = 0;
+> +		return;
+> +	}
+> +
+> +	if (mask || val) {
+> +		u32 tmp = (ssb_ai_read32(dev, SSB_AI_IOCTL) & ~mask) | val;
+> +		ssb_ai_write32(dev, SSB_AI_IOCTL, tmp);
+> +	}
+> +
+> +	if (res)
+> +		*res = ssb_ai_read32(dev, SSB_AI_IOCTL);
+> +}
+> +
+> +static u32 ssb_core_state_flags_ai(struct ssb_device *dev, u32 mask, u32 val)
+> +{
+> +	if (ssb_bcm47162a0_quirk(dev)) {
+> +		printk("%s: Accessing MIPS DMP register (IOSTAT) on 47162a0",
+> +		       __FUNCTION__);
+> +		return 0;
+> +	}
+> +
+> +	if (mask || val) {
+> +		u32 tmp = (ssb_ai_read32(dev, SSB_AI_IOSTAT) & ~mask) | val;
+> +		ssb_ai_write32(dev, SSB_AI_IOSTAT, tmp);
+> +	}
+> +
+> +	return ssb_ai_read32(dev, SSB_AI_IOSTAT);
+> +}
+> +
+> +/* return -1 if no irq is supported */
+> +static u32 ssb_irqflag_ai(struct ssb_device *dev)
+> +{
+> +	u32 flag;
+> +
+> +	/* The 47162a0 hangs when reading its registers */
+> +	if (ssb_bcm47162a0_quirk(dev))
+> +		return dev->core_index;
+> +
+> +	flag = ssb_ai_read32(dev, SSB_AI_oobselouta30);
+> +
+> +	if (flag)
+> +		return flag & 0x1F;
+> +	else
+> +		/* not irq supported */
+> +		return -1;
+> +}
+> +
+> +static int ssb_device_is_enabled_ai(struct ssb_device *dev)
+> +{
+> +	return (ssb_ai_read32(dev, SSB_AI_RESETCTL) &
+> +		SSB_AI_RESETCTL_RESET) == 0;
+> +}
+> +
+> +static void ssb_ai_ioctl_write(struct ssb_device *dev, u32 flags)
+> +{
+> +	u32 dummy;
+> +	ssb_ai_write32(dev, SSB_AI_IOCTL, flags);
+> +	dummy = ssb_ai_read32(dev, SSB_AI_IOCTL);
+> +	udelay(1);
+> +}
+> +
+> +static void ssb_device_disable_ai(struct ssb_device *dev,
+> +				  u32 core_specific_flags)
+> +{
+> +	SSB_WARN_ON(core_specific_flags & 0xFFFF0000);
+> +	if (ssb_ai_read32(dev, SSB_AI_RESETCTL) & SSB_AI_RESETCTL_RESET)
+> +		return;
+> +	ssb_ai_ioctl_write(dev, core_specific_flags);
+> +	udelay(9);
+> +	ssb_ai_write32(dev, SSB_AI_RESETCTL, SSB_AI_RESETCTL_RESET);
+> +	udelay(1);
+> +}
+> +
+> +static void ssb_device_enable_ai(struct ssb_device *dev,
+> +				 u32 core_specific_flags)
+> +{
+> +	ssb_device_disable_ai(dev, core_specific_flags);
+> +
+> +	ssb_ai_ioctl_write(dev, core_specific_flags | SSB_CORECTL_FGC |
+> +				SSB_CORECTL_CLOCK);
+> +	ssb_ai_write32(dev, SSB_AI_RESETCTL, 0);
+> +	udelay(1);
+> +
+> +	ssb_ai_ioctl_write(dev, core_specific_flags | SSB_CORECTL_CLOCK);
+> +}
+> +
+> +static u32 ssb_admatch_base_ai(struct ssb_device *dev, u32 adm)
+> +{
+> +	switch (adm) {
+> +	case SSB_ADMATCH0:
+> +		return dev->coresba;
+> +	case SSB_ADMATCH1:
+> +		return dev->coresba2;
+> +	default:
+> +		printk(KERN_ERR PFX "Need to parse the erom again "
+> +				    "to find addr space %d\n",
+> +				    adm & SSB_ADM_TYPE);
+> +		return 0;
+> +	}
+> +}
+> +
+> +static u32 ssb_admatch_size_ai(struct ssb_device *dev, u32 adm)
+> +{
+> +	switch (adm) {
+> +	case SSB_ADMATCH0:
+> +		return dev->coresba_size;
+> +	case SSB_ADMATCH1:
+> +		return dev->coresba2_size;
+> +	default:
+> +		printk(KERN_ERR PFX "Need to parse the erom again "
+> +				    "to find addr space %d size\n",
+> +				    adm & SSB_ADM_TYPE);
+> +		return 0;
+> +	}
+> +}
+> +
+> +/* Ops for the plain SSB bus without a host-device (no PCI or PCMCIA). */
+> +static struct ssb_bus_ops ssb_ops_ai = {
+> +	.read8			= ssb_ssb_read8,
+> +	.read16			= ssb_ssb_read16,
+> +	.read32			= ssb_ssb_read32,
+> +	.write8			= ssb_ssb_write8,
+> +	.write16		= ssb_ssb_write16,
+> +	.write32		= ssb_ssb_write32,
+> +#ifdef CONFIG_SSB_BLOCKIO
+> +	.block_read		= ssb_ssb_block_read,
+> +	.block_write		= ssb_ssb_block_write,
+> +#endif
+> +	.device_is_enabled	= ssb_device_is_enabled_ai,
+> +	.device_enable		= ssb_device_enable_ai,
+> +	.device_disable		= ssb_device_disable_ai,
+> +	.admatch_base		= ssb_admatch_base_ai,
+> +	.admatch_size		= ssb_admatch_size_ai,
+> +	.irqflag		= ssb_irqflag_ai,
+> +	.core_ctl_flags		= ssb_core_ctl_flags_ai,
+> +	.core_state_flags	= ssb_core_state_flags_ai,
+> +};
+> +
+> +static u32 get_erom_ent(struct ssb_bus *bus, u32 **eromptr, u32 mask, u32 match)
+> +{
+> +	u32 ent;
+> +
+> +	while (1) {
+> +		ent = readl(*eromptr);
+> +		(*eromptr)++;
+> +
+> +		if (mask == 0)
+> +			break;
+> +
+> +		if ((ent & SSB_EROM_VALID) == 0)
+> +			continue;
+> +
+> +		if (ent == (SSB_EROM_END | SSB_EROM_VALID))
+> +			break;
+> +
+> +		if ((ent & mask) == match)
+> +			break;
+> +	}
+> +	return ent;
+> +}
+> +
+> +static u32 get_adress_space_descriptor(struct ssb_bus *bus, u32 **eromptr,
+> +				       uint st, u32 *addrl, u32 *sizel)
+> +{
+> +	u32 asd, sz, szd, expect;
+> +
+> +	expect = SSB_EROM_ASD | st;
+> +	if (st == SSB_EROM_ASD_ST_SWRAP)
+> +		expect |= 1 << SSB_EROM_ASD_SP_SHIFT;
+> +
+> +	asd = get_erom_ent(bus, eromptr, SSB_EROM_ASD_SP_MASK | SSB_EROM_TAG |
+> +			   SSB_EROM_ASD_ST_MASK, expect);
+> +
+> +	*addrl = asd & SSB_EROM_ASD_ADDR_MASK;
+> +
+> +	/* 64bit addresses are not supported */
+> +	BUG_ON(asd & SSB_EROM_ASD_AG32);
+> +
+> +	sz = asd & SSB_EROM_ASD_SZ_MASK;
+> +	if (sz == SSB_EROM_ASD_SZ_SZD) {
+> +		szd = get_erom_ent(bus, eromptr, 0, 0);
+> +		*sizel = szd & SSB_EROM_ASD_SZ_MASK;
+> +	} else
+> +		*sizel = SSB_EROM_ASD_SZ_BASE << (sz >> SSB_EROM_ASD_SZ_SHIFT);
+> +
+> +	return asd;
+> +}
+> +
+> +int ssb_bus_scan_ai(struct ssb_bus *bus)
+> +{
+> +	int dev_i = 0;
+> +	struct ssb_device *dev;
+> +	int nr_80211_cores = 0;
+> +	void __iomem *mmio;
+> +	u32 __iomem *eromptr;
+> +	u32 __iomem *eromend;
+> +
+> +	bus->ops = &ssb_ops_ai;
+> +
+> +	mmio = ioremap(SSB_AI_BASE, SSB_CORE_SIZE * bus->nr_devices);
+> +	if (!mmio)
+> +		return -ENOMEM;
+> +	bus->ai_mmio = mmio;
+> +
+> +	eromptr = ioremap(scan_read32(bus, 0, SSB_CHIPCO_EROM), SSB_CORE_SIZE);
+> +	if (!eromptr)
+> +		return -ENOMEM;
+> +
+> +	eromend = eromptr + SSB_CORE_SIZE / sizeof(u32);
+> +
+> +	while (eromptr < eromend) {
+> +		u32 cia, cib, asd, sizel, addrl, nmw, nsp;
+> +
+> +		dev = &(bus->devices[dev_i]);
+> +
+> +		cia = get_erom_ent(bus, &eromptr, SSB_EROM_TAG, SSB_EROM_CI);
+> +		if (cia == (SSB_EROM_END | SSB_EROM_VALID)) {
+> +			ssb_dprintk(KERN_INFO PFX
+> +				    "Found END of erom after %d cores\n",
+> +				    dev_i);
+> +			if (dev_i != bus->nr_devices)
+> +				ssb_printk(KERN_WARNING PFX
+> +					   "Expected %d cores but got %d\n",
+> +					   bus->nr_devices, dev_i);
+> +			break;
+> +		}
+> +		cib = get_erom_ent(bus, &eromptr, 0, 0);
+> +		if ((cib & SSB_EROM_TAG) != SSB_EROM_CI) {
+> +			ssb_printk(KERN_ERR PFX "CIA not followed by CIB\n");
+> +			return -EIO;
+> +		}
+> +
+> +		dev->id.coreid = SSB_EROM_CIA_CID(cia);
+> +		dev->id.vendor = SSB_EROM_CIA_MFG(cia);
+> +		dev->id.revision = SSB_EROM_CIB_REV(cib);
+> +		dev->core_index = dev_i;
+> +		dev->bus = bus;
+> +		dev->ops = bus->ops;
+> +
+> +		nmw = SSB_EROM_CIB_NMW(cib);
+> +		nsp = SSB_EROM_CIB_NSP(cib);
+> +
+> +		if (((dev->id.coreid == SSB_DEV_DEFAULT) &&
+> +		     (dev->id.vendor == SSB_VENDOR_ARM)) ||
+> +			(nmw == 0 && SSB_EROM_CIB_NSW(cib) == 0) || (nsp == 0))
+> +			continue;
+> +
+> +		/* see if it is a bridge */
+> +		if ((SSB_EROM_ASD_ST_MASK &
+> +		    get_erom_ent(bus, &eromptr, SSB_EROM_TAG, SSB_EROM_ASD)) ==
+> +		    SSB_EROM_ASD_ST_BRIDGE)
+> +			/* don't record bridges */
+> +			continue;
+> +		else
+> +			eromptr--;
+> +
+> +		/* First Slave Address Descriptor should be port 0:
+> +		 * the main register space for the core
+> +		 */
+> +		asd = get_adress_space_descriptor(bus, &eromptr,
+> +						  SSB_EROM_ASD_ST_SLAVE,
+> +						  &addrl, &sizel);
+> +		if (sizel != SSB_CORE_SIZE ||
+> +		    addrl != SSB_ENUM_BASE + SSB_CORE_SIZE * dev_i) {
+> +			ssb_printk(KERN_ERR PFX
+> +				   "Malformed or unsupported register address "
+> +				   "space descriptor for core %d:\n"
+> +				   "\texpected 0x%x, got 0x%x, size 0x%x\n",
+> +				   dev_i, SSB_ENUM_BASE + SSB_CORE_SIZE * dev_i,
+> +				   addrl, sizel);
+> +			return -EIO;
+> +		}
+> +
+> +		dev->coresba = addrl;
+> +		dev->coresba_size = sizel;
+> +
+> +		/* Try to get one more Slave Address Descriptor in port 0 */
+> +		asd = get_erom_ent(bus, &eromptr, SSB_EROM_VALID,
+> +				   SSB_EROM_VALID) & (SSB_EROM_ASD_SP_MASK |
+> +						      SSB_EROM_ASD_ST_MASK |
+> +						      SSB_EROM_TAG);
+> +		eromptr--;
+> +		if (asd == SSB_EROM_ASD) {
+> +			asd = get_adress_space_descriptor(bus, &eromptr,
+> +							  SSB_EROM_ASD_ST_SLAVE,
+> +							  &addrl, &sizel);
+> +			if (sizel != SSB_CORE_SIZE) {
+> +				ssb_printk(KERN_ERR PFX
+> +					   "Malformed or unsupported ai "
+> +					   "address space descriptor for "
+> +					   "core %d:\n\texpected 0x%x size, "
+> +					   "got 0x%x size\n",
+> +					   dev_i, SSB_CORE_SIZE, sizel);
+> +				return -EIO;
+> +			}
+> +			dev->coresba2 = addrl;
+> +			dev->coresba2_size = sizel;
+> +		}
+> +
+> +		if (nmw)
+> +			asd = get_adress_space_descriptor(bus, &eromptr,
+> +							  SSB_EROM_ASD_ST_MWRAP,
+> +							  &addrl, &sizel);
+> +		else
+> +			asd = get_adress_space_descriptor(bus, &eromptr,
+> +							  SSB_EROM_ASD_ST_SWRAP,
+> +							  &addrl, &sizel);
+> +
+> +		if (sizel != SSB_CORE_SIZE ||
+> +		    addrl != SSB_AI_BASE + SSB_CORE_SIZE * dev_i) {
+> +			ssb_printk(KERN_ERR PFX
+> +				   "Malformed or unsupported ai "
+> +				   "address space descriptor for "
+> +				   "core %d:\n\texpected 0x%x, "
+> +				   "got 0x%x, size 0x%x\n",
+> +				   dev_i, SSB_AI_BASE + SSB_CORE_SIZE * dev_i,
+> +				   addrl, sizel);
+> +			return -EIO;
+> +		}
+> +
+> +		if (ssb_bus_check_core(dev, &nr_80211_cores, dev_i) < 0)
+> +			continue;
+> +
+> +		dev_i++;
+> +	}
+> +	bus->nr_devices = dev_i;
+> +
+> +	if (eromptr >= eromend)
+> +		ssb_printk(KERN_WARNING PFX
+> +			   "Reached end of erom without finding END");
+> +
+> +	return 0;
+> +}
+> --- linux-next-20110203.orig/drivers/ssb/ssb_ai.h	1970-01-01 03:00:00.000000000 +0300
+> +++ linux-next-20110203/drivers/ssb/ssb_ai.h	2011-02-08 21:01:34.000000000 +0200
+> @@ -0,0 +1,61 @@
+> +#ifndef LINUX_SSB_AI_H_
+> +#define LINUX_SSB_AI_H_
+> +
+> +#define SSB_AI_BASE			0x18100000 /* base for AI registers */
+> +
+> +/* EROM parsing defines */
+> +#define SSB_EROM_VALID			1
+> +#define SSB_EROM_END			0x0E
+> +#define SSB_EROM_TAG			0x0E
+> +
+> +/* Adress Space Descriptor */
+> +#define SSB_EROM_ASD			0x4
+> +#define  SSB_EROM_ASD_SP_MASK		0x00000F00
+> +#define  SSB_EROM_ASD_SP_SHIFT		8
+> +#define  SSB_EROM_ASD_ST_MASK		0x000000c0
+> +#define  SSB_EROM_ASD_ST_SLAVE		0x00000000
+> +#define  SSB_EROM_ASD_ST_BRIDGE		0x00000040
+> +#define  SSB_EROM_ASD_ST_MWRAP		0x000000C0
+> +#define  SSB_EROM_ASD_ST_SWRAP		0x00000080
+> +#define  SSB_EROM_ASD_ADDR_MASK		0xFFFFF000
+> +#define  SSB_EROM_ASD_AG32		0x00000008
+> +#define  SSB_EROM_ASD_SZ_MASK		0x00000030
+> +#define  SSB_EROM_ASD_SZ_SZD		0x00000030
+> +#define  SSB_EROM_ASD_SZ_SHIFT		4
+> +#define  SSB_EROM_ASD_SZ_BASE		0x00001000
+> +#define SSB_EROM_CI			0
+> +#define  SSB_EROM_CIA_CID_MASK		0x000FFF00
+> +#define  SSB_EROM_CIA_CID_SHIFT		8
+> +#define  SSB_EROM_CIA_MFG_MASK		0xFFF00000
+> +#define  SSB_EROM_CIA_MFG_SHIFT		20
+> +#define  SSB_EROM_CIB_REV_MASK		0xFF000000
+> +#define  SSB_EROM_CIB_REV_SHIFT		24
+> +#define  SSB_EROM_CIB_NMW_MASK		0x0007C000
+> +#define  SSB_EROM_CIB_NMW_SHIFT		14
+> +#define  SSB_EROM_CIB_NSW_MASK		0x00F80000
+> +#define  SSB_EROM_CIB_NSW_SHIFT		19
+> +#define  SSB_EROM_CIB_NSP_MASK		0x00003E00
+> +#define SSB_EROM_CIB_NSP_SHIFT		9
+> +
+> +/* Adress Space Descriptor macro defs */
+> +#define SSB_EROM_CIA_CID(cia) (((cia) & SSB_EROM_CIA_CID_MASK) >> \
+> +			       SSB_EROM_CIA_CID_SHIFT)
+> +#define SSB_EROM_CIA_MFG(cia) (((cia) & SSB_EROM_CIA_MFG_MASK) >> \
+> +			       SSB_EROM_CIA_MFG_SHIFT)
+> +#define SSB_EROM_CIB_REV(cib) (((cib) & SSB_EROM_CIB_REV_MASK) >> \
+> +			       SSB_EROM_CIB_REV_SHIFT)
+> +#define SSB_EROM_CIB_NMW(cib) (((cib) & SSB_EROM_CIB_NMW_MASK) >> \
+> +			       SSB_EROM_CIB_NMW_SHIFT)
+> +#define SSB_EROM_CIB_NSW(cib) (((cib) & SSB_EROM_CIB_NSW_MASK) >> \
+> +			       SSB_EROM_CIB_NSW_SHIFT)
+> +#define SSB_EROM_CIB_NSP(cib) (((cib) & SSB_EROM_CIB_NSP_MASK) >> \
+> +			       SSB_EROM_CIB_NSP_SHIFT)
+> +
+> +/* AI config space registers */
+> +#define SSB_AI_oobselouta30		0x100
+> +#define SSB_AI_IOCTL			0x408 /* maybe 0x40C for big endian */
+> +#define SSB_AI_IOSTAT			0x500
+> +#define SSB_AI_RESETCTL			0x800 /* maybe 0x804 for big endian */
+> +#define  SSB_AI_RESETCTL_RESET		1
+> +
+> +#endif /* LINUX_SSB_AI_H_ */
+> --- linux-next-20110203.orig/drivers/ssb/ssb_private.h	2011-02-08 16:14:57.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/ssb_private.h	2011-02-08 21:01:34.000000000 +0200
+> @@ -236,4 +236,13 @@ static inline int ssb_bus_scan_sb(struct
+>  }
+>  #endif /* CONFIG_SSB_BUS_SB */
+>  
+> +#ifdef CONFIG_SSB_BUS_AI
+> +extern int ssb_bus_scan_ai(struct ssb_bus *bus);
+> +#else /* CONFIG_SSB_BUS_AI */
+> +static inline int ssb_bus_scan_ai(struct ssb_bus *bus)
+> +{
+> +	return -ENODEV;
+> +}
+> +#endif /* CONFIG_SSB_BUS_AI */
+> +
+>  #endif /* LINUX_SSB_PRIVATE_H_ */
+> --- linux-next-20110203.orig/include/linux/ssb/ssb_driver_chipcommon.h	2011-02-08 13:49:32.000000000 +0200
+> +++ linux-next-20110203/include/linux/ssb/ssb_driver_chipcommon.h	2011-02-08 21:01:34.000000000 +0200
+> @@ -19,6 +19,7 @@
+>  #define  SSB_CHIPCO_TYPE_MASK		0xF0000000
+>  #define  SSB_CHIPCO_TYPE_SHIFT		28
+>  #define   SSB_CHIPCO_TYPE_SB		0
+> +#define   SSB_CHIPCO_TYPE_AI		0x10000000
+>  #define  SSB_CHIPCO_IDMASK		0x0000FFFF
+>  #define  SSB_CHIPCO_REVMASK		0x000F0000
+>  #define  SSB_CHIPCO_REVSHIFT		16
+> @@ -173,6 +174,7 @@
+>  #define  SSB_CHIPCO_SYSCLKCTL_CLKDIV	0xFFFF0000	/* ClkDiv  (ILP = 1/(4+divisor)) */
+>  #define  SSB_CHIPCO_SYSCLKCTL_CLKDIV_SHIFT	16
+>  #define SSB_CHIPCO_CLKSTSTR		0x00C4		/* Rev >= 3 only */
+> +#define SSB_CHIPCO_EROM			0x00FC		/* erom for AI socs */
+>  #define SSB_CHIPCO_PCMCIA_CFG		0x0100
+>  #define SSB_CHIPCO_PCMCIA_MEMWAIT	0x0104
+>  #define SSB_CHIPCO_PCMCIA_ATTRWAIT	0x0108
+> @@ -584,6 +586,7 @@ struct ssb_chipcommon_pmu {
+>  /* Chipcommon implementation type */
+>  enum ssb_chipco_chiptype {
+>  	SSB_CHIPCO_SB = SSB_CHIPCO_TYPE(SSB_CHIPCO_TYPE_SB), /* SB-style bus */
+> +	SSB_CHIPCO_AI = SSB_CHIPCO_TYPE(SSB_CHIPCO_TYPE_AI), /* AI-style bus */
+>  };
+>  
+>  struct ssb_chipcommon {
+> --- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-08 18:33:58.000000000 +0200
+> +++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-08 21:01:34.000000000 +0200
+> @@ -168,9 +168,11 @@ struct ssb_bus_ops {
+>  #define SSB_DEV_MIPS_74K	0x82C
+>  #define SSB_DEV_DDR_CTRLR	0x82E
+>  #define SSB_DEV_I2S		0x834
+> +#define SSB_DEV_DEFAULT		0xFFF
+>  
+>  /* Vendor-ID values */
+>  #define SSB_VENDOR_BROADCOM	0x4243
+> +#define SSB_VENDOR_ARM		0x043B
+>  
+>  /* Some kernel subsystems poke with dev->drvdata, so we must use the
+>   * following ugly workaround to get from struct device to struct ssb_device */
+> @@ -192,6 +194,13 @@ struct ssb_device {
+>  	u8 core_index;
+>  	unsigned int irq;
+>  
+> +#ifdef CONFIG_SSB_BUS_AI
+> +	/* backplane address and size for core */
+> +	u32 coresba, coresba_size;
+> +	/* address and size of core second register set (usbh20) */
+> +	u32 coresba2, coresba2_size;
+> +#endif
+> +
+>  	/* Internal-only stuff follows. */
+>  	void *drvdata;		/* Per-device data */
+>  	void *devtypedata;	/* Per-devicetype (eg 802.11) data */
+> @@ -283,6 +292,9 @@ enum ssb_bustype {
+>  struct ssb_bus {
+>  	/* The MMIO area. */
+>  	void __iomem *mmio;
+> +#ifdef CONFIG_SSB_BUS_AI
+> +	void __iomem *ai_mmio;
+> +#endif
+>  
+>  	const struct ssb_bus_ops *ops;
+>  
 > 
-> It's a test tool and should be able to force queue selection
-> if it wants to.  I'd rather not have special case code to
-> know if underlying interface is wifi (and thus need special
-> queue selection).
 > 
-> I'd rather carry that hack to mac80211 I posted instead,
-> if it comes to that.
-How about adding a patch that makes mac80211 detect a mismatch between
-skb->priority and the queue mapping and then adjust the skb priority
-based on that.
 
-- Felix
+This one also fails to apply:
+
+finger@larrylap:~/wireless-testing> quilt import ssb_AI_12
+Importing patch ssb_AI_12 (stored as patches/ssb_AI_12)
+finger@larrylap:~/wireless-testing> quilt push
+Applying patch patches/ssb_AI_12
+patching file drivers/ssb/Kconfig
+patching file drivers/ssb/main.c
+Hunk #1 succeeded at 841 (offset -1 lines).
+patching file drivers/ssb/Makefile
+patching file drivers/ssb/scan.c
+Hunk #1 succeeded at 204 (offset -8 lines).
+Hunk #2 succeeded at 360 (offset -8 lines).
+Hunk #3 succeeded at 426 (offset -8 lines).
+Hunk #4 succeeded at 468 (offset -8 lines).
+patching file drivers/ssb/ssb_ai.c
+patching file drivers/ssb/ssb_ai.h
+patching file drivers/ssb/ssb_private.h
+patching file include/linux/ssb/ssb_driver_chipcommon.h
+patching file include/linux/ssb/ssb.h
+Hunk #1 FAILED at 168.
+Hunk #2 succeeded at 188 (offset -4 lines).
+Hunk #3 succeeded at 286 (offset -4 lines).
+1 out of 3 hunks FAILED -- rejects in file include/linux/ssb/ssb.h
+Patch patches/ssb_AI_12 does not apply (enforce with -f)
+
+Larry
