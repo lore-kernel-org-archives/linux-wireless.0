@@ -1,74 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1982 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751630Ab1BRCn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 21:43:26 -0500
-Message-ID: <4D5DDCBC.2050501@broadcom.com>
-Date: Thu, 17 Feb 2011 18:43:08 -0800
-From: "Henry Ptasinski" <henryp@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:34627 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab1BIXAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 18:00:55 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p19N0sHj016840
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 9 Feb 2011 15:00:54 -0800
+Message-ID: <4D531CA6.8010903@candelatech.com>
+Date: Wed, 09 Feb 2011 15:00:54 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "George Kashperko" <george@znau.edu.ua>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"=?ISO-8859-2?Q?Rafa=B3?= =?ISO-8859-2?Q?_Mi=B3ecki?="
-	<zajec5@gmail.com>,
-	"=?ISO-8859-2?Q?Michael_?= =?ISO-8859-2?Q?B=FCsch?=" <mb@bu3sch.de>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>
-Subject: Re: [RFC] AI support
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-In-Reply-To: <1297958316.5623.27.camel@dev.znau.edu.ua>
-Content-Type: text/plain;
- charset=iso-8859-2;
- format=flowed
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k and pktgen generate WARNings.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2011 07:58 AM, George Kashperko wrote:
-> Here is dmesg for AI on embeddable (BCM4716):
-> root@OpenWrt:/# dmesg | grep -E "ssb|b43|[Bb]roadcom"
-> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x1F, vendor 0x04BF)
-> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x11, vendor 0x04BF)
-> ssb: Core 2 found: Gigabit MAC (cc 0x82D, rev 0x00, vendor 0x04BF)
-> ssb: Core 3 found: MIPS 74K (cc 0x82C, rev 0x01, vendor 0x04A7)
-> ssb: Core 4 found: USB 2.0 Host (cc 0x819, rev 0x04, vendor 0x04BF)
-> ssb: Core 5 found: PCI-E (cc 0x820, rev 0x0E, vendor 0x04BF)
-> ssb: Core 6 found: DDR1/2 memory controller (cc 0x82E, rev 0x01, vendor 0x04BF)
-> ssb: Core 7 found: Internal Memory (cc 0x80E, rev 0x07, vendor 0x04BF)
-> ssb: Core 8 found: I2S (cc 0x834, rev 0x00, vendor 0x04BF)
-> ssb: Found END of erom after 9 cores
-> ssb: chipcommon status is 0x800
-> ssb: Found rev 5 PMU (capabilities 0x11242C05)
-> ssb: Initializing MIPS core...
-> ssb: ssb_pmu5_clock: p1=1, p2=1, ndiv=48(0x30), m3=8, fc=960, clock=120
-> ssb: set_irq: core 0x0812, irq 3 =>  3
-> ssb: set_irq: core 0x082d, irq 4 =>  4
-> ssb: set_irq: core 0x0819, irq 5 =>  5
-> ssb: after irq reconfiguration
-> ssb: core 0x0800, irq : 2(S)* 3  4  5  6  D  I
-> ssb: core 0x0812, irq : 2(S)  3* 4  5  6  D  I
-> ssb: core 0x082d, irq : 2(S)  3  4* 5  6  D  I
-> ssb: core 0x082c, irq : 2(S)  3  4  5  6  D  I*
-> ssb: core 0x0819, irq : 2(S)  3  4  5* 6  D  I
-> ssb: core 0x0820, irq : 2(S)  3  4  5  6* D  I
-> ssb: core 0x082e, irq : 2(S)* 3  4  5  6  D  I
-> ssb: core 0x080e, irq : 2(S)  3  4  5  6  D  I*
-> ssb: core 0x0834, irq : 2(S)* 3  4  5  6  D  I
-> ssb: Sonics Silicon Backplane (AI type) found at address 0x18000000
+I see this warning when I generate traffic with a hacked version
+of pktgen.  This works with various other interfaces w/out problems,
+so I think it's probably an ath9k and/or mac80211 bug.
 
-This just reinforces what Michael said about name confusion.
 
-Michael's proposal of separating SSB and AXI, and decoupling the device 
-drivers from the bus routines, is going to be much more maintainable in 
-the long run.  AXI is going to be far more widespread than SSB ever was, 
-and it would be really unfortunate if we carry the SSB baggage forward.
+WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
+Hardware name: To Be Filled By O.E.M.
+Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss 
+sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath 
+cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit 
+video [last unloaded: lockd]
+Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+Call Trace:
+  [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+  [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+  [<c043093f>] ? warn_slowpath_null+0xf/0x13
+  [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+  [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+  [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+  [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+  [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+  [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+  [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+  [<c0440000>] ? rescuer_thread+0x25/0x1c8
+  [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+  [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+  [<c042d612>] ? default_wake_function+0xb/0xd
+  [<c04254c7>] ? __wake_up_common+0x34/0x5c
+  [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+  [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+  [<c044371a>] ? kthread+0x62/0x67
+  [<c04436b8>] ? kthread+0x0/0x67
+  [<c04035f6>] ? kernel_thread_helper+0x6/0x10
 
-I've been poking around at disentangling the sb and ai routines in 
-drivers/staging/brcm80211/utils/{aiutils,sbutils,siutils}.c.  I don't 
-have anything to put out for comments yet, but it's enough to convince 
-me that it's the right direction.
 
-- Henry
+/* FIXME: tx power */
+static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+			     struct ath_tx_control *txctl)
+{
+	struct sk_buff *skb = bf->bf_mpdu;
+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+	struct list_head bf_head;
+	struct ath_atx_tid *tid = NULL;
+	u8 tidno;
+
+	spin_lock_bh(&txctl->txq->axq_lock);
+
+	if (ieee80211_is_data_qos(hdr->frame_control) && txctl->an) {
+		tidno = ieee80211_get_qos_ctl(hdr)[0] &
+			IEEE80211_QOS_CTL_TID_MASK;
+		tid = ATH_AN_2_TID(txctl->an, tidno);
+
+		WARN_ON(tid->ac->txq != txctl->txq);
+	}
+
+Anyone have any ideas on this one?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
