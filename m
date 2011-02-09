@@ -1,82 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:41986 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483Ab1BGSc5 convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:62275 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753233Ab1BIQSd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 13:32:57 -0500
-Received: by pxi15 with SMTP id 15so955675pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 10:32:57 -0800 (PST)
+	Wed, 9 Feb 2011 11:18:33 -0500
+Received: by vws16 with SMTP id 16so197860vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 08:18:32 -0800 (PST)
+Message-ID: <4D52BE92.5070503@lwfinger.net>
+Date: Wed, 09 Feb 2011 10:19:30 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4D5033DE.4070701@candelatech.com>
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org>
- <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
- <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
- <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org>
- <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com> <4D5033DE.4070701@candelatech.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, 7 Feb 2011 10:32:37 -0800
-Message-ID: <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com>
-Subject: Re: Scanning and channel types.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: George Kashperko <george@znau.edu.ua>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: SSB AI support code ([RFC3/11] SSB irqflag device op)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua> <1297261973.18053.20.camel@dev.znau.edu.ua>
+In-Reply-To: <1297261973.18053.20.camel@dev.znau.edu.ua>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Start on 2.4 GHz AP with HT Only (not just HT40) set.  That is, AP
-that doesn't allow 1 Mbps packets to be sent.  Scan, make sure 1 mbps
-packets are sent.
-
-Start on 5 GHZ AP with HT Only set.  Scan.  What rate are probes sent
-at for 2.4 GHz?
-
-Dan
-
-On Mon, Feb 7, 2011 at 10:03 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 02/06/2011 09:42 PM, Daniel Halperin wrote:
->>
->> Right. I think there is a function something like "send_rate_low" that
->> sends the lowest entry in the mac80211 enabled rates table for control
->> and mgmt packets.  If the NIC is associated to an HT Only AP then that
->> lowest entry should be HT20 MCS 1, I'd think.
->>
->> Also, does circumventing "set channel type" code work properly across
->> bands?  If you start on 5 GHz will it send 6 Mbps probes or 1 Mbps
->> probes?
->
-> I did some tests with a sniffer set up:
->
-> I have 8 STA vifs.
->
-> 1)  AP is setup to run on channel 11, HT40-
->    Let all associate on channel 11, radio goes to HT40- mode.
->    Run Scan on operating channel:
->    Probe request is reported as 1Mbps data rate on ch 11.
->
-> 2)  Scan on all channels:
->    Probe requests on 2.4Ghz channels are 1Mbps data rate.
->    Probe requests on 5Ghz channels (channel 40 in this case)
->    are reported as 6Mbps data rate.
->
-> 3)  Kill AP, no VIFS are associated (radio goes to NO_HT)
->    Run scan on all channels.
->    Probe request on channel 40 is 6Mbps data rate.
->
->
-> Please note that with my patches, the channel-type is still set to NO_HT
-> if we are scanning off the operating channel.  Since test 1 appears to
-> function properly, I think that verifies that we can safely send NO_HT
-> requests while leaving the radio at HT40-.
->
-> Please let me know if this answers your concerns.  If you can think of
-> other combinations I should try, please let me know that as well.
->
-> Thanks,
-> Ben
->
+On 02/09/2011 08:32 AM, George Kashperko wrote:
+> From: George Kashperko <george@znau.edu.ua>
+> 
+> SB- and AI-style buses read irq flags from different locations.
+> SB-ones read them from TPSFLAG whereas AI-ones from core oob register.
+> In order to support both SB- and AI-style buses transparently
+> irq flag accessor is implemented as ssb device op.
+> Signed-off-by: George Kashperko <george@znau.edu.ua>
+> ---
+>  drivers/ssb/driver_mipscore.c       |    2 +-
+>  drivers/ssb/main.c                  |    1 +
+>  include/linux/ssb/ssb.h             |    5 +++++
+>  include/linux/ssb/ssb_driver_mips.h |    1 +
+>  4 files changed, 8 insertions(+), 1 deletion(-)
+> --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-01 05:05:49.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-07 16:39:46.000000000 +0200
+> @@ -47,7 +47,7 @@ static const u32 ipsflag_irq_shift[] = {
+>  	SSB_IPSFLAG_IRQ4_SHIFT,
+>  };
+>  
+> -static inline u32 ssb_irqflag(struct ssb_device *dev)
+> +u32 ssb_irqflag_sb(struct ssb_device *dev)
+>  {
+>  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
+>  	if (tpsflag)
+> --- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-07 16:35:50.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/main.c	2011-02-07 16:49:40.000000000 +0200
+> @@ -1367,6 +1367,7 @@ static const struct ssb_bus_ops ssb_ssb_
+>  	.device_disable		= ssb_device_disable_sb,
+>  	.admatch_base		= ssb_admatch_base_sb,
+>  	.admatch_size		= ssb_admatch_size_sb,
+> +	.irqflag		= ssb_irqflag_sb,
+>  };
+>  
+>  static int __init ssb_modinit(void)
+> --- linux-next-20110203.orig/include/linux/ssb/ssb_driver_mips.h	2011-02-01 05:05:49.000000000 +0200
+> +++ linux-next-20110203/include/linux/ssb/ssb_driver_mips.h	2011-02-07 16:39:10.000000000 +0200
+> @@ -29,6 +29,7 @@ extern void ssb_mipscore_init(struct ssb
+>  extern u32 ssb_cpu_clock(struct ssb_mipscore *mcore);
+>  
+>  extern unsigned int ssb_mips_irq(struct ssb_device *dev);
+> +extern u32 ssb_irqflag_sb(struct ssb_device *dev);
+>  
+>  
+>  #else /* CONFIG_SSB_DRIVER_MIPS */
+> --- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-07 16:35:50.000000000 +0200
+> +++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-07 16:38:34.000000000 +0200
+> @@ -124,6 +124,7 @@ struct ssb_bus_ops {
+>  	void (*device_disable)(struct ssb_device *dev, u32 core_specific_flags);
+>  	u32 (*admatch_base)(struct ssb_device *dev, u32 adm);
+>  	u32 (*admatch_size)(struct ssb_device *dev, u32 adm);
+> +	u32 (*irqflag)(struct ssb_device *dev);
+>  };
+>  
+>  
+> @@ -485,6 +486,10 @@ static inline u32 ssb_admatch_size(struc
+>  {
+>  	return dev->ops->admatch_size(dev, adm);
+>  }
+> +static inline u32 ssb_irqflag(struct ssb_device *dev)
+> +{
+> +	return dev->ops->irqflag(dev);
+> +}
+>  
+>  
+>  /* The SSB DMA API. Use this API for any DMA operation on the device.
+> 
+> 
+> 
 > --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
->
+
+This one fails to compile with the following error:
+
+drivers/ssb/main.c:1370:14: error: ‘ssb_irqflag_sb’ undeclared here (not in a
+function)
+make[1]: *** [drivers/ssb/main.o] Error 1
+make: *** [drivers/ssb/] Error 2
+
+Larry
