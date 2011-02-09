@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:38983 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756248Ab1BJUZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 15:25:16 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Pnd4k-0007uw-VL
-	for linux-wireless@vger.kernel.org; Thu, 10 Feb 2011 21:25:15 +0100
-Received: from g225013217.adsl.alicedsl.de ([92.225.13.217])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 21:25:14 +0100
-Received: from pommnitz by g225013217.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 21:25:14 +0100
-To: linux-wireless@vger.kernel.org
-From: Joerg <pommnitz@yahoo.com>
-Subject: Re: FW: hostapd problem on reconfig (SIGHUP)
-Date: Thu, 10 Feb 2011 20:25:03 +0000 (UTC)
-Message-ID: <loom.20110210T212302-576@post.gmane.org>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.candelatech.com ([208.74.158.172]:44906 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1BIXgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 18:36:54 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p19Nar3S019393
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 9 Feb 2011 15:36:54 -0800
+Message-ID: <4D532515.6020500@candelatech.com>
+Date: Wed, 09 Feb 2011 15:36:53 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k and pktgen generate WARNings.
+References: <4D531CA6.8010903@candelatech.com>
+In-Reply-To: <4D531CA6.8010903@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chaoxing Lin <CLin@...> writes:
-> I am confused which email address to send. 
-> linux-wireless <at> vger.kernel.org or linux-wireless-owner@vger.kernel.org
-> 
+On 02/09/2011 03:00 PM, Ben Greear wrote:
+> I see this warning when I generate traffic with a hacked version
+> of pktgen. This works with various other interfaces w/out problems,
+> so I think it's probably an ath9k and/or mac80211 bug.
 
-For hostaps it is neither. Use hostap@lists.shmoo.com. 
+This stuff hurts my head..but maybe this will help:
 
-Regards
-  Joerg
+tidno: 0  tid->ac->txq: f050dc5c  txctl->txq: f050db4c
+  tid->ac->txq: mac80211_qnum: 2  axq_qnum: 2
+  txctl->txq: mac80211_qnum: 0  axq_qnum: 0
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
