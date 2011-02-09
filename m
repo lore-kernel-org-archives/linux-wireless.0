@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38331
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750844Ab1BNV13 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:27:29 -0500
-Date: Mon, 14 Feb 2011 13:28:05 -0800 (PST)
-Message-Id: <20110214.132805.48509966.davem@davemloft.net>
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2011-02-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1297717942.3953.9.camel@jlt3.sipsolutions.net>
-References: <20110214.125148.59672184.davem@davemloft.net>
-	<20110214.130056.115934219.davem@davemloft.net>
-	<1297717942.3953.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.19.149.2]:27507 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751663Ab1BIMRB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 07:17:01 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 04:16:41 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 1/2] mac80211: add monitor interface into PS disable list
+Date: Wed, 9 Feb 2011 17:46:38 +0530
+Message-ID: <1297253799-9688-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 14 Feb 2011 22:12:22 +0100
+PS should be disabled in the presence of monitor interface.
 
-> On Mon, 2011-02-14 at 13:00 -0800, David Miller wrote:
-> 
->> Please address this newly introduced warning in a future pull request,
->> thanks:
->> 
->> drivers/net/wireless/iwlwifi/iwl-3945.c:411:13: warning: 'iwl3945_good_plcp_health' defined but not used
-> 
-> The function can simply be deleted.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ net/mac80211/mlme.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-Done.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f77adf1..8fc6d35 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -630,13 +630,13 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+-		if (sdata->vif.type == NL80211_IFTYPE_AP) {
+-			/* If an AP vif is found, then disable PS
+-			 * by setting the count to zero thereby setting
+-			 * ps_sdata to NULL.
++		if ((sdata->vif.type == NL80211_IFTYPE_AP) ||
++		    (sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
++			/* If an AP/monitor vif is found, then disable PS
++			 * by setting ps_sdata to NULL.
+ 			 */
+-			count = 0;
+-			break;
++			local->ps_sdata = NULL;
++			goto change;
+ 		}
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 			continue;
+-- 
+1.7.4
+
