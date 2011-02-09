@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:49451 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755174Ab1BIOjF (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:39238 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753560Ab1BIQag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:39:05 -0500
-Date: Wed, 9 Feb 2011 16:38:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
-Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH 1/1] ath9k: Update comments for not parsing DTIM period
-Message-ID: <20110209143853.GA6519@jm.kir.nu>
-References: <1297093108-28541-1-git-send-email-mshajakhan@atheros.com>
- <AANLkTimXCXW8mT8tPbSuCDpwyyD=NSRyBvFcC2Y+Nq7N@mail.gmail.com>
+	Wed, 9 Feb 2011 11:30:36 -0500
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTimXCXW8mT8tPbSuCDpwyyD=NSRyBvFcC2Y+Nq7N@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19794.49430.480720.290057@gargle.gargle.HOWL>
+Date: Wed, 9 Feb 2011 22:00:14 +0530
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sujith <m.sujith@gmail.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Martin Schleier <drahemmaps@gmx.net>,
+	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
+	<linville@tuxdriver.com>, <kune@deine-taler.de>,
+	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
+Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change
+ endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+In-Reply-To: <Pine.LNX.4.44L0.1102091017370.2050-100000@iolanthe.rowland.org>
+References: <19793.64449.344588.240418@gargle.gargle.HOWL>
+	<Pine.LNX.4.44L0.1102091017370.2050-100000@iolanthe.rowland.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 08, 2011 at 10:22:39PM +0100, Björn Smedman wrote:
-> On Mon, Feb 7, 2011 at 4:38 PM, Mohammed Shafi Shajakhan
-> <mshajakhan@atheros.com> wrote:
-> > -        * Some times we dont parse dtim period from mac80211, in that case
-> > -        * use a default value
-> > +        * We don't parse dtim period from mac80211 during the driver
-> > +        * initialization as it breaks association with hidden-ssid
-> > +        * AP and it causes latency in roaming
+Alan Stern wrote:
+> On Wed, 9 Feb 2011, Sujith wrote:
+> 
+> > > The first two problems are the device's fault, and the third is the 
+> > > driver's fault.  None of them are the fault of usbcore.
+> > 
+> > Indeed, which is why this dirty hack is done in the driver.
+> > And it was done to fix a similar issue - high CPU usage when scanning.
+> > 
+> > But do you have any suggestion for such broken devices ?
+> > The FW changes the type from Interrupt to Bulk, but can the host
+> > driver continue to use Interrupt URBs and use the URB_NO_INTERRUPT trick
+> > that you have mentioned ?
+> 
+> Yes.  And it's not a trick; that is exactly what URB_NO_INTERRUPT was 
+> intended for.
 
-> I realize I'm not the perfect representative for the intended audience
-> but I don't understand that comment at all. The previous one made
-> sense to me, but the new one seems to refer to some logic somewhere
-> else. In ath_beacon_config() I expect AP/IBSS logic but the comment
-> seems to be about some special case for a STA vif associating with a
-> hidden access point, no? I don't understand that special case either
-> but that is more easily attributable to ignorance. :)
+Ok, thanks. Will fix the driver then.
 
-While I agree that the proposed comment is quite confusing, this
-function is actually used even in station mode to set beacon timers for
-when to wake up for receiving beacon frames, etc. However, I don't see
-why this comment should really be here. In addition, this should really
-be fixed by updating DTIM period after the first Beacon frame is
-received. Forcing a wait for that Beacon frame is the one that causes
-the extra latency; I don't remember why exactly this would break
-hidden SSID case unless there is another bug somewhere.
-
-ath9k does not need to know the DTIM period before association and the
-first call to this function may need to handle the 0 -> 1 safety check.
-This should then be followed by another call (likely new code in
-mac80211 needed for this) to update the timers after the DTIM period has
-been learned post-association.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Sujith
