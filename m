@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42619 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753628Ab1BGMJs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 07:09:48 -0500
-Received: by iyj8 with SMTP id 8so2051092iyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 04:09:48 -0800 (PST)
+Received: from mail.neratec.ch ([80.75.119.105]:36610 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751138Ab1BIPuy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 10:50:54 -0500
+Message-ID: <4D52B7DB.8000000@neratec.com>
+Date: Wed, 09 Feb 2011 16:50:51 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Mon, 7 Feb 2011 14:09:28 +0200
-Message-ID: <AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
-To: juuso.oikarinen@nokia.com
-Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+To: Chaoxing Lin <CLin@3eti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] DFS userspace handler
+References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com> <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 7, 2011 at 1:30 PM, <juuso.oikarinen@nokia.com> wrote:
->
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
->
-> Currently the wl12xx interrupts are not configured to wake up the host, which
-> leads to reduced performance.
+On 02/09/2011 04:35 PM, Chaoxing Lin wrote:
+> What about DFS in WDS / Mesh / IBSS mode if DFS is only implemented in hostapd?
+> 
+> Will an instance of hostapd be required for all these modes, too?
+> 
+> Thanks
+> 
+Yes, with this approach you will need to have some userspace component that
+evaluates the reported pulses and handles channels upon radar detection.
 
-Can you elaborate what do you mean ?
+hostapd was taken as the first shot, but one might also think of a dedicated
+DFS deamon that takes this role. Actually that is our intended gain of this
+approach: having a defined interface for pulse events reporting and highest
+flexibility wrt detection and handling.
 
-Today the chip is powered off at system suspend, so it won't trigger
-any interrupts anyway.
+Cheers
 
-When additional suspend modes will be introduced (e.g. WoWL) this will
-be needed of course.
+> -----Original Message-----
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Zefir Kurtisi
+> Sent: Wednesday, February 09, 2011 7:02 AM
+> To: linux-wireless@vger.kernel.org
+> Cc: Zefir Kurtisi
+> Subject: [RFC] DFS userspace handler
+> 
+> Hello DFS folks,
+> 
+> this is a patch series to prove the concept of DFS handling done in userspace.
+> 
+> It moves the radar pattern detector introduced in [1] and documented in [2] 
+> from mac80211 up to hostapd.
+> 
+> The basic concept is:
+> 1) pattern detection
+>  * pulse events detected by HW are passed to hostapd
+>  * hostapd performs per-wiphy DFS pattern matching
+> 2) channel handling: on radar detection hostapd
+>  * updates channel state (NOL handling)
+>  * switches to new operating channel with TX disabled (on all wiphys)
+>  * after CAC period enables TX on that channel
+> 
+> The proposed patches provide part 1) of the concept. The nl80211 interface is
+> extended with functions to pass DFS pulse events to hostapd.
+> 
+> Testing as described in [2] results in identical output, indicating that both
+> approaches (mac80211 and hostapd based) are equivalent from functional point
+> of view.
+> 
+> The testing was done with
+>  * OpenWRT r25417
+>  * Atheros AR9280 Rev:2
+>  * DFS radars generated with R&S vector signal generator
+> 
+> We at our company would prefer this approach over the mac80211 based one as
+> soon as we see that part 2) can be implemented as proposed. 
+> 
+> 
+> 
+> Cheers
+> Zefir
+> 
+> 
+> 
+> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/61868
+> [2] http://linuxwireless.org/en/developers/DFS/DetectorDesignNt
+> ---
 
-Thanks,
-Ohad.
