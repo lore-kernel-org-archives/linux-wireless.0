@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:33324 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758806Ab1BPK04 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42986 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752817Ab1BIKY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 05:26:56 -0500
-Received: by qwa26 with SMTP id 26so1109473qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 02:26:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110216011203.GA5773@linux-mips.org>
-References: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>
-	<4D5AD6A6.8090505@gmail.com>
-	<AANLkTiks9rG2CzM2LabNerK3zgJ+R+weytQgvXxDbNe7@mail.gmail.com>
-	<4D5AE52B.80002@gmail.com>
-	<AANLkTinnCOEXF835yhNeJDfBdKjx_dss6TFeUmjL-Yk2@mail.gmail.com>
-	<4D5AFB3B.6080407@gmail.com>
-	<4D5AFBCB.1090907@gmail.com>
-	<20110216011203.GA5773@linux-mips.org>
-Date: Wed, 16 Feb 2011 10:26:55 +0000
-Message-ID: <AANLkTimP1r1A6nzcfh7kP=Hmcq9Cgha5Du28hE3zOs0x@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
- seqfault on AHB chips
-From: Nikolay Ledovskikh <nledovskikh@gmail.com>
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com, me@bobcopeland.com, linux-mips@linux-mips.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Feb 2011 05:24:56 -0500
+Received: by wwa36 with SMTP id 36so6407wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 02:24:55 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: fix identification of beacon packets (debug)
+Date: Wed,  9 Feb 2011 12:25:14 +0200
+Message-Id: <1297247114-4563-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, the problems are in openwrt platform patches that should be rewriten:
-1. Changes needed to avoid using code like "mem=res->start" without ioremap.
-2. Changes needed to avoid using NULL in first argument of
-dma_alloc_coherent and others.
+for debugging purposes, wl12xx determines whether a rx packet
+is a beacon packet.
 
-Without these changes ahb patch won't get into the kernel and we'll be
-lack of wisoc devices support?
-Is there any chance for the patch to get into the kernel and what
-should be done for it?
+however, it checks only the frame_control subtype without checking
+the actual packet type, which leads to false identification in some
+cases.
 
-(PS: Sorry for my english.)
+use ieee80211_is_beacon instead.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/rx.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index 029597b..1e3616a 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -92,7 +92,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
+ {
+ 	struct wl1271_rx_descriptor *desc;
+ 	struct sk_buff *skb;
+-	u16 *fc;
++	struct ieee80211_hdr *hdr;
+ 	u8 *buf;
+ 	u8 beacon = 0;
+ 
+@@ -118,8 +118,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
+ 	/* now we pull the descriptor out of the buffer */
+ 	skb_pull(skb, sizeof(*desc));
+ 
+-	fc = (u16 *)skb->data;
+-	if ((*fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
++	hdr = (struct ieee80211_hdr *)skb->data;
++	if (ieee80211_is_beacon(hdr->frame_control))
+ 		beacon = 1;
+ 
+ 	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
+-- 
+1.7.0.4
+
