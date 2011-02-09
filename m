@@ -1,61 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45264 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036Ab1BUVHe (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:45552 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039Ab1BIRSU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 16:07:34 -0500
-Subject: Re: [ipw3945-devel] [PATCH wireless-2.6] iwlagn: Support new 5000
- microcode.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
-	stable@kernel.org, linux-wireless@vger.kernel.org,
-	"Fry, Donald H" <donald.h.fry@intel.com>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <AANLkTikFAzdV=A0uEo+5D4ixwgNz0XA3ogA00Wm=r-8t@mail.gmail.com>
-References: <1298318710-23775-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <AANLkTikFAzdV=A0uEo+5D4ixwgNz0XA3ogA00Wm=r-8t@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Feb 2011 22:07:25 +0100
-Message-ID: <1298322445.3836.11.camel@jlt3.sipsolutions.net>
+	Wed, 9 Feb 2011 12:18:20 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000020053.msg
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 19:17:43 +0200
+Subject: Re: SSB AI support code ([RFC3/11] SSB irqflag device op)
+From: George Kashperko <george@znau.edu.ua>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D52BE92.5070503@lwfinger.net>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <1297261973.18053.20.camel@dev.znau.edu.ua> <4D52BE92.5070503@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 09 Feb 2011 19:10:50 +0200
+Message-Id: <1297271450.3361.0.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-21 at 21:29 +0100, Gábor Stefanik wrote:
-> On Mon, Feb 21, 2011 at 9:05 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> > From: Fry, Donald H <donald.h.fry@intel.com>
-> >
-> > New iwlwifi-5000 microcode requires driver support for API version 5.
-> >
-> > Signed-off-by: Don Fry <donald.h.fry@intel.com>
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > CC: stable@kernel.org
+> On 02/09/2011 08:32 AM, George Kashperko wrote:
+> > From: George Kashperko <george@znau.edu.ua>
+> > 
+> > SB- and AI-style buses read irq flags from different locations.
+> > SB-ones read them from TPSFLAG whereas AI-ones from core oob register.
+> > In order to support both SB- and AI-style buses transparently
+> > irq flag accessor is implemented as ssb device op.
+> > Signed-off-by: George Kashperko <george@znau.edu.ua>
 > > ---
-> > these patches are also available from wireless-2.6 branch on
-> >  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-> >
-> >  drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-> > index 79ab0a6..537fb8c 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-> > @@ -51,7 +51,7 @@
-> >  #include "iwl-agn-debugfs.h"
-> >
-> >  /* Highest firmware API version supported */
-> > -#define IWL5000_UCODE_API_MAX 2
-> > +#define IWL5000_UCODE_API_MAX 5
+> >  drivers/ssb/driver_mipscore.c       |    2 +-
+> >  drivers/ssb/main.c                  |    1 +
+> >  include/linux/ssb/ssb.h             |    5 +++++
+> >  include/linux/ssb/ssb_driver_mips.h |    1 +
+> >  4 files changed, 8 insertions(+), 1 deletion(-)
+> > --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-01 05:05:49.000000000 +0200
+> > +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-07 16:39:46.000000000 +0200
+> > @@ -47,7 +47,7 @@ static const u32 ipsflag_irq_shift[] = {
+> >  	SSB_IPSFLAG_IRQ4_SHIFT,
+> >  };
+> >  
+> > -static inline u32 ssb_irqflag(struct ssb_device *dev)
+> > +u32 ssb_irqflag_sb(struct ssb_device *dev)
+> >  {
+> >  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
+> >  	if (tpsflag)
+> > --- linux-next-20110203.orig/drivers/ssb/main.c	2011-02-07 16:35:50.000000000 +0200
+> > +++ linux-next-20110203/drivers/ssb/main.c	2011-02-07 16:49:40.000000000 +0200
+> > @@ -1367,6 +1367,7 @@ static const struct ssb_bus_ops ssb_ssb_
+> >  	.device_disable		= ssb_device_disable_sb,
+> >  	.admatch_base		= ssb_admatch_base_sb,
+> >  	.admatch_size		= ssb_admatch_size_sb,
+> > +	.irqflag		= ssb_irqflag_sb,
+> >  };
+> >  
+> >  static int __init ssb_modinit(void)
+> > --- linux-next-20110203.orig/include/linux/ssb/ssb_driver_mips.h	2011-02-01 05:05:49.000000000 +0200
+> > +++ linux-next-20110203/include/linux/ssb/ssb_driver_mips.h	2011-02-07 16:39:10.000000000 +0200
+> > @@ -29,6 +29,7 @@ extern void ssb_mipscore_init(struct ssb
+> >  extern u32 ssb_cpu_clock(struct ssb_mipscore *mcore);
+> >  
+> >  extern unsigned int ssb_mips_irq(struct ssb_device *dev);
+> > +extern u32 ssb_irqflag_sb(struct ssb_device *dev);
+> >  
+> >  
+> >  #else /* CONFIG_SSB_DRIVER_MIPS */
+> > --- linux-next-20110203.orig/include/linux/ssb/ssb.h	2011-02-07 16:35:50.000000000 +0200
+> > +++ linux-next-20110203/include/linux/ssb/ssb.h	2011-02-07 16:38:34.000000000 +0200
+> > @@ -124,6 +124,7 @@ struct ssb_bus_ops {
+> >  	void (*device_disable)(struct ssb_device *dev, u32 core_specific_flags);
+> >  	u32 (*admatch_base)(struct ssb_device *dev, u32 adm);
+> >  	u32 (*admatch_size)(struct ssb_device *dev, u32 adm);
+> > +	u32 (*irqflag)(struct ssb_device *dev);
+> >  };
+> >  
+> >  
+> > @@ -485,6 +486,10 @@ static inline u32 ssb_admatch_size(struc
+> >  {
+> >  	return dev->ops->admatch_size(dev, adm);
+> >  }
+> > +static inline u32 ssb_irqflag(struct ssb_device *dev)
+> > +{
+> > +	return dev->ops->irqflag(dev);
+> > +}
+> >  
+> >  
+> >  /* The SSB DMA API. Use this API for any DMA operation on the device.
+> > 
+> > 
+> > 
+> > --
 > 
-> Where are versions 3 and 4?
+> This one fails to compile with the following error:
+> 
+> drivers/ssb/main.c:1370:14: error: ‘ssb_irqflag_sb’ undeclared here (not in a
+> function)
+> make[1]: *** [drivers/ssb/main.o] Error 1
+> make: *** [drivers/ssb/] Error 2
+> 
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Well, might the problem here is again caused with mine wrong post of <[RFC9/11] SSB modify irqflag treatment>
+Could you please remove that one and reaply whole set of patches again.
+Sorry for inconveniences.
 
-They don't (and won't) exist. We just went to version 5 wholesale to
-make it easier to distinguish between the new and old file format -- in
-the future new features etc. won't be announced by versions but by TLVs
-in the file format (see the code that loads the ucode file from disk)
-unless the firmware is completely incompatible.
+Have nice day,
+George
 
-johannes
 
