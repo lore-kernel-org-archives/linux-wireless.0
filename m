@@ -1,170 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:53828 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752020Ab1BQMO1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 07:14:27 -0500
-Received: by qyk12 with SMTP id 12so2603190qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 04:14:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297894657.32237.2.camel@maggie>
-References: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
-	<1297894657.32237.2.camel@maggie>
-Date: Thu, 17 Feb 2011 13:14:21 +0100
-Message-ID: <AANLkTi=sVaeizU3xJQQwwKXB5saPgdn9VxNQv0-aoiV7@mail.gmail.com>
-Subject: Re: [RFC] How to rename SSB_TMSLOW_*, B43_TMSLOW_*?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: George Kashperko <george@znau.edu.ua>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: multipart/mixed; boundary=0016363b7e3ea3e5bb049c795615
+Received: from mail.neratec.ch ([80.75.119.105]:41791 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753392Ab1BIMCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 07:02:03 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.neratec.ch (Postfix) with ESMTP id 3F139664001
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Feb 2011 13:02:01 +0100 (CET)
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH 1/2] nl80211: interface update
+Date: Wed,  9 Feb 2011 13:01:41 +0100
+Message-Id: <1297252905-29739-2-git-send-email-zefir.kurtisi@neratec.com>
+In-Reply-To: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016363b7e3ea3e5bb049c795615
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Interface implementation to pass DFS pulse events via nl80211.
 
-W dniu 16 lutego 2011 23:17 u=C5=BCytkownik Michael B=C3=BCsch <mb@bu3sch.d=
-e> napisa=C5=82:
-> On Wed, 2011-02-16 at 14:13 +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
->> Except for following 3 defines:
->> #define =C2=A0SSB_TMSLOW_RESET =C2=A0 =C2=A0 0x00000001 /* Reset */
->> #define =C2=A0SSB_TMSLOW_REJECT_22 0x00000002 /* Reject (Backplane rev 2=
-.2) */
->> #define =C2=A0SSB_TMSLOW_REJECT_23 0x00000004 /* Reject (Backplane rev 2=
-.3) */
->>
->> All our SSB_TMSLOW_* and B43_TMSLOW_* defines are some core control
->> bits. As we now know, core control bits are not SSB specific or TMSLOW
->> specific.
->>
->> Should we (and how) define that names in this situation?
->>
->> For b43 I propose (quite obvious?) B43_CORE_CTL_*.
->>
->> However what about SSB_TMSLOW_*? George proposed SSB_CORECTL_*, but it
->> contains "SSB", while that bits are not SSB specific. Same bits are
->> used on AI bus. Should we use some SSBAI_CORE_CTL_* then? Any other
->> ideas? Some better maybe?
->>
->> P.S.
->> Personally I prefer CORE_CTL over CORECTL (George). Which one should we =
-use?
->
-> Let's simply put those bits into the drivers and call them
-> DRIVERNAME_TMSLOW_FOOBAR
+Includes
+ * new command NL80211_CMD_SET_DFS_EVENT
+ * new attributes NL80211_DFSEVENT_ATTR_{FREQ,TS,WIDTH}
+ * functions to pass DFS pulse events through netlink interface
+---
+ include/linux/nl80211.h |    6 +++++
+ include/net/cfg80211.h  |    6 +++++
+ net/wireless/core.c     |   11 ++++++++++
+ net/wireless/nl80211.c  |   48 ++++++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/nl80211.h  |    3 ++
+ 5 files changed, 73 insertions(+), 1 deletions(-)
 
-That's what we already have...
-B43_TMSLOW_GMODE
-B43_TMSLOW_PLLREFSEL
-B43_TMSLOW_MACPHYCLKEN
-B43_TMSLOW_PHYRESET
-B43_TMSLOW_PHYCLKEN
-And it's fine for now, but not if we want to have AI support in b43.
-See my next comment.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 821ffb9..ae3f6ae 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -524,6 +524,8 @@ enum nl80211_commands {
+ 
+ 	/* add new commands above here */
+ 
++	NL80211_CMD_SET_DFS_EVENT,
++
+ 	/* used to define NL80211_CMD_MAX below */
+ 	__NL80211_CMD_AFTER_LAST,
+ 	NL80211_CMD_MAX = __NL80211_CMD_AFTER_LAST - 1
+@@ -1076,6 +1078,10 @@ enum nl80211_attrs {
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
++	NL80211_DFSEVENT_ATTR_FREQ,
++	NL80211_DFSEVENT_ATTR_TS,
++	NL80211_DFSEVENT_ATTR_WIDTH,
++
+ 	__NL80211_ATTR_AFTER_LAST,
+ 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
+ };
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 679a049..59ced7a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2715,6 +2715,12 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
+ 				 const u8 *peer, u32 num_packets, gfp_t gfp);
+ 
++
++/**
++ * DFS radar pulse reporting
++ */
++void ieee80211_add_radar_pulse(struct wiphy *wiphy, u16 freq, u64 ts, u8 width);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index fe01de2..4e62d37 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -944,3 +944,14 @@ static void __exit cfg80211_exit(void)
+ 	destroy_workqueue(cfg80211_wq);
+ }
+ module_exit(cfg80211_exit);
++
++
++/**
++ * DFS
++ */
++
++void ieee80211_add_radar_pulse(struct wiphy *wiphy, u16 freq, u64 ts, u8 width)
++{
++	return nl80211_send_dfs_event(wiphy, freq, ts, width);
++}
++EXPORT_SYMBOL(ieee80211_add_radar_pulse);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 864ddfb..8e75f40 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4015,7 +4015,6 @@ __cfg80211_testmode_alloc_skb(struct cfg80211_registered_device *rdev,
+ 	skb = nlmsg_new(approxlen + 100, gfp);
+ 	if (!skb)
+ 		return NULL;
+-
+ 	hdr = nl80211hdr_put(skb, pid, seq, 0, NL80211_CMD_TESTMODE);
+ 	if (!hdr) {
+ 		kfree_skb(skb);
+@@ -6191,3 +6190,50 @@ void nl80211_exit(void)
+ 	netlink_unregister_notifier(&nl80211_netlink_notifier);
+ 	genl_unregister_family(&nl80211_fam);
+ }
++
++
++void nl80211_send_dfs_event(struct wiphy *wiphy, u16 freq, u64 ts, u8 width)
++{
++	struct sk_buff *msg;
++	void *hdr;
++	int wiphy_idx = 0;
++
++	if (wiphy == NULL) {
++		printk(KERN_WARNING "nl80211_send_dfs_event: wiphy=0\n");
++		return;
++	}
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_ATOMIC);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_SET_DFS_EVENT);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	wiphy_idx = get_wiphy_idx(wiphy);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, wiphy_idx);
++	NLA_PUT_U16(msg, NL80211_DFSEVENT_ATTR_FREQ, freq);
++	NLA_PUT_U64(msg, NL80211_DFSEVENT_ATTR_TS, ts);
++	NLA_PUT_U8(msg, NL80211_DFSEVENT_ATTR_WIDTH, width);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	rcu_read_lock();
++	genlmsg_multicast_netns(wiphy_net(wiphy), msg, 0,
++			nl80211_regulatory_mcgrp.id, GFP_ATOMIC);
++	rcu_read_unlock();
++
++	return;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index e3f7fa8..3d3bbc4 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -98,4 +98,7 @@ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
+ 				u32 num_packets, gfp_t gfp);
+ 
++void nl80211_send_dfs_event(struct wiphy *wiphy, u16 freq, u64 ts, u8 width);
++
++
+ #endif /* __NET_WIRELESS_NL80211_H */
+-- 
+1.7.1
 
-
-> The "TMSLOW" part seems rather important to me, because that makes it
-> obvious what register these bits belong to. Note that's there's also
-> TMSHIGH. It also follows current naming convention.
-
-I skip TMSHIGH for now, to simplify discussion.
-
-Your proposal is fine as long as we use that flags for TMSLOW only.
-But we may need to use that for AI boards in future, which does not
-contain TMSLOW. So that way we would finish with something so ugly:
-
-#define B43_SSB_TMSLOW_GMODE			0x20000000	/* G Mode Enable */
-#define B43_SSB_TMSLOW_PHY_BANDWIDTH		0x00C00000	/* PHY band width and
-clock speed mask (N-PHY only) */
-#define  B43_SSB_TMSLOW_PHY_BANDWIDTH_10MHZ	0x00000000	/* 10 MHz
-bandwidth, 40 MHz PHY */
-#define  B43_SSB_TMSLOW_PHY_BANDWIDTH_20MHZ	0x00400000	/* 20 MHz
-bandwidth, 80 MHz PHY */
-#define  B43_SSB_TMSLOW_PHY_BANDWIDTH_40MHZ	0x00800000	/* 40 MHz
-bandwidth, 160 MHz PHY */
-#define B43_SSB_TMSLOW_PLLREFSEL		0x00200000	/* PLL Frequency
-Reference Select (rev >=3D 5) */
-#define B43_SSB_TMSLOW_MACPHYCLKEN		0x00100000	/* MAC PHY Clock
-Control Enable (rev >=3D 5) */
-#define B43_SSB_TMSLOW_PHYRESET			0x00080000	/* PHY Reset */
-#define B43_SSB_TMSLOW_PHYCLKEN			0x00040000	/* PHY Clock Enable */
-
-#define B43_AI_REGNAME_GMODE			0x2000	/* G Mode Enable */
-#define B43_AI_REGNAME_BANDWIDTH		0x00C0	/* PHY band width and clock
-speed mask (N-PHY only) */
-#define  B43_AI_REGNAME_BANDWIDTH_10MHZ		0x0000	/* 10 MHz bandwidth,
-40 MHz PHY */
-#define  B43_AI_REGNAME_BANDWIDTH_20MHZ		0x0040	/* 20 MHz bandwidth,
-80 MHz PHY */
-#define  B43_AI_REGNAME_BANDWIDTH_40MHZ		0x0080	/* 40 MHz bandwidth,
-160 MHz PHY */
-#define B43_AI_REGNAME_PLLREFSEL		0x0020	/* PLL Frequency Reference
-Select (rev >=3D 5) */
-#define B43_AI_REGNAME_MACPHYCLKEN		0x0010	/* MAC PHY Clock Control
-Enable (rev >=3D 5) */
-#define B43_AI_REGNAME_RESET			0x0008	/* PHY Reset */
-#define B43_AI_REGNAME_CLKEN			0x0004	/* PHY Clock Enable */
-
-if (boardtype =3D=3D SSB) {
-	flags |=3D B43_SSB_TMSLOW_PHYCLKEN;
-	flags |=3D B43_SSB_TMSLOW_PHYRESET;
-	if (dev->phy.type =3D=3D B43_PHYTYPE_N)
-		flags |=3D B43_SSB_TMSLOW_PHY_BANDWIDTH_20MHZ; /* Make 20 MHz def */
-} else if (boardtype =3D=3D AI) {
-	flags |=3D B43_AI_REGNAME_PHYCLKEN;
-	flags |=3D B43_AI_REGNAME_PHYRESET;
-	if (dev->phy.type =3D=3D B43_PHYTYPE_N)
-		flags |=3D B43_AI_REGNAME_PHY_BANDWIDTH_20MHZ; /* Make 20 MHz def */
-}
-
-That's why I wanted to introduce some SSBAI_CORECTL_FOOBAR and make
-b43 unaware it that flags are going to be written in register A or B.
-I wanted b43 to just pass flags to correct function and do not care
-about place where they are getting written.
-
---=20
-Rafa=C5=82
-
---0016363b7e3ea3e5bb049c795615
-Content-Type: text/plain; charset=US-ASCII; name="ugly.code.txt"
-Content-Disposition: attachment; filename="ugly.code.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gk9mtsha0
-
-I2RlZmluZSBCNDNfU1NCX1RNU0xPV19HTU9ERQkJCTB4MjAwMDAwMDAJLyogRyBNb2RlIEVuYWJs
-ZSAqLwojZGVmaW5lIEI0M19TU0JfVE1TTE9XX1BIWV9CQU5EV0lEVEgJCTB4MDBDMDAwMDAJLyog
-UEhZIGJhbmQgd2lkdGggYW5kIGNsb2NrIHNwZWVkIG1hc2sgKE4tUEhZIG9ubHkpICovCiNkZWZp
-bmUgIEI0M19TU0JfVE1TTE9XX1BIWV9CQU5EV0lEVEhfMTBNSFoJMHgwMDAwMDAwMAkvKiAxMCBN
-SHogYmFuZHdpZHRoLCA0MCBNSHogUEhZICovCiNkZWZpbmUgIEI0M19TU0JfVE1TTE9XX1BIWV9C
-QU5EV0lEVEhfMjBNSFoJMHgwMDQwMDAwMAkvKiAyMCBNSHogYmFuZHdpZHRoLCA4MCBNSHogUEhZ
-ICovCiNkZWZpbmUgIEI0M19TU0JfVE1TTE9XX1BIWV9CQU5EV0lEVEhfNDBNSFoJMHgwMDgwMDAw
-MAkvKiA0MCBNSHogYmFuZHdpZHRoLCAxNjAgTUh6IFBIWSAqLwojZGVmaW5lIEI0M19TU0JfVE1T
-TE9XX1BMTFJFRlNFTAkJMHgwMDIwMDAwMAkvKiBQTEwgRnJlcXVlbmN5IFJlZmVyZW5jZSBTZWxl
-Y3QgKHJldiA+PSA1KSAqLwojZGVmaW5lIEI0M19TU0JfVE1TTE9XX01BQ1BIWUNMS0VOCQkweDAw
-MTAwMDAwCS8qIE1BQyBQSFkgQ2xvY2sgQ29udHJvbCBFbmFibGUgKHJldiA+PSA1KSAqLwojZGVm
-aW5lIEI0M19TU0JfVE1TTE9XX1BIWVJFU0VUCQkJMHgwMDA4MDAwMAkvKiBQSFkgUmVzZXQgKi8K
-I2RlZmluZSBCNDNfU1NCX1RNU0xPV19QSFlDTEtFTgkJCTB4MDAwNDAwMDAJLyogUEhZIENsb2Nr
-IEVuYWJsZSAqLwoKI2RlZmluZSBCNDNfQUlfUkVHTkFNRV9HTU9ERQkJCTB4MjAwMAkvKiBHIE1v
-ZGUgRW5hYmxlICovCiNkZWZpbmUgQjQzX0FJX1JFR05BTUVfQkFORFdJRFRICQkweDAwQzAJLyog
-UEhZIGJhbmQgd2lkdGggYW5kIGNsb2NrIHNwZWVkIG1hc2sgKE4tUEhZIG9ubHkpICovCiNkZWZp
-bmUgIEI0M19BSV9SRUdOQU1FX0JBTkRXSURUSF8xME1IWgkJMHgwMDAwCS8qIDEwIE1IeiBiYW5k
-d2lkdGgsIDQwIE1IeiBQSFkgKi8KI2RlZmluZSAgQjQzX0FJX1JFR05BTUVfQkFORFdJRFRIXzIw
-TUhaCQkweDAwNDAJLyogMjAgTUh6IGJhbmR3aWR0aCwgODAgTUh6IFBIWSAqLwojZGVmaW5lICBC
-NDNfQUlfUkVHTkFNRV9CQU5EV0lEVEhfNDBNSFoJCTB4MDA4MAkvKiA0MCBNSHogYmFuZHdpZHRo
-LCAxNjAgTUh6IFBIWSAqLwojZGVmaW5lIEI0M19BSV9SRUdOQU1FX1BMTFJFRlNFTAkJMHgwMDIw
-CS8qIFBMTCBGcmVxdWVuY3kgUmVmZXJlbmNlIFNlbGVjdCAocmV2ID49IDUpICovCiNkZWZpbmUg
-QjQzX0FJX1JFR05BTUVfTUFDUEhZQ0xLRU4JCTB4MDAxMAkvKiBNQUMgUEhZIENsb2NrIENvbnRy
-b2wgRW5hYmxlIChyZXYgPj0gNSkgKi8KI2RlZmluZSBCNDNfQUlfUkVHTkFNRV9SRVNFVAkJCTB4
-MDAwOAkvKiBQSFkgUmVzZXQgKi8KI2RlZmluZSBCNDNfQUlfUkVHTkFNRV9DTEtFTgkJCTB4MDAw
-NAkvKiBQSFkgQ2xvY2sgRW5hYmxlICovCgppZiAoYm9hcmR0eXBlID09IFNTQikgewoJZmxhZ3Mg
-fD0gQjQzX1NTQl9UTVNMT1dfUEhZQ0xLRU47CglmbGFncyB8PSBCNDNfU1NCX1RNU0xPV19QSFlS
-RVNFVDsKCWlmIChkZXYtPnBoeS50eXBlID09IEI0M19QSFlUWVBFX04pCgkJZmxhZ3MgfD0gQjQz
-X1NTQl9UTVNMT1dfUEhZX0JBTkRXSURUSF8yME1IWjsgLyogTWFrZSAyMCBNSHogZGVmICovCn0g
-ZWxzZSBpZiAoYm9hcmR0eXBlID09IEFJKSB7CglmbGFncyB8PSBCNDNfQUlfUkVHTkFNRV9QSFlD
-TEtFTjsKCWZsYWdzIHw9IEI0M19BSV9SRUdOQU1FX1BIWVJFU0VUOwoJaWYgKGRldi0+cGh5LnR5
-cGUgPT0gQjQzX1BIWVRZUEVfTikKCQlmbGFncyB8PSBCNDNfQUlfUkVHTkFNRV9QSFlfQkFORFdJ
-RFRIXzIwTUhaOyAvKiBNYWtlIDIwIE1IeiBkZWYgKi8KfQo=
---0016363b7e3ea3e5bb049c795615--
