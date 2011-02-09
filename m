@@ -1,106 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37399 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756498Ab1BXUCL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 15:02:11 -0500
-Received: by vxi39 with SMTP id 39so771542vxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 12:02:10 -0800 (PST)
-Date: Thu, 24 Feb 2011 14:02:03 -0600
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: ath9k-devel@lists.ath9k.org
-Cc: Tony Houghton <h@realh.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <vnatarajan@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re: ath9k causes lockups since kernel 2.6.35
-Message-ID: <20110224200203.GB17412@elie>
-References: <20110224182022.57e32862@toddler>
+Received: from mail.atheros.com ([12.19.149.2]:51054 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750989Ab1BIT6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 14:58:18 -0500
+Date: Wed, 9 Feb 2011 11:58:15 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	Mark Gross <mgross@linux.intel.com>
+Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
+Message-ID: <20110209195815.GB2192@tux>
+References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110224182022.57e32862@toddler>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(just cc-ing some people listed in MAINTAINERS)
-Hi,
-
-Tony Houghton wrote:
-
-> With 2.6.37 I can not use suspend on my Compaq/HP 311c (Intel Atom
-> N270/NVidia Ion LE). Originally the machine just kept locking up without
-> even blanking the display when I tried to suspend (using the GNOME menu
-> or by shutting the lid). I upgraded upower and gnome-power-manager etc
-> to experimental and after that the machine suspended OK but could not
-> resume. The backlight came on but the screen stayed blank and I could
-> not get to a console or anything with Alt+Fn.
-[...]
-> I tried replacing network-manager with wicd but that crashed the system
-> when it connected instead of when disconnected.
-[...]
-> While testing different kernels I found it would crash at different
-> times, usually before the screen turned off for suspending, but
-> sometimes it would crash on resuming and occasionally it locked up while
-> booting, but it's always a complete lock-up ie the keyboard is
-> completely responsive, including caps lock, the mouse won't move if the
-> display is still on, and the only way out is to hold down the power
-> button.
-[...]
-> I haven't tried looking in logs because the crashes are so severe I
-> don't think they'd be able to record anything useful. But using git
-> bisect I think I have tracked down the change that started causing this
-> problem:
->
-> 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f is the first bad commit
-> commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
-> Author: Vivek Natarajan <vnatarajan@atheros.com>
-> Date:   Mon Apr 5 14:48:04 2010 +0530
+On Wed, Feb 09, 2011 at 06:33:27AM -0800, Mohammed Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 > 
->     ath9k: Add support for newer AR9285 chipsets.
->     
->     This patch adds support for a modified newer version of AR9285
->     chipsets.
->     
->     Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> The DMA latency issue is observed only in Intel pinetrail platforms but
+> in the driver we had a default PM-QOS value of 55. This caused
+> unnecessary power consumption and battery drain in other platforms.
+> Address this issue by disabling PM-QOS by default by setting it's value
+> as '0' and making code changes appropriately.This addresses the bug:
+> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+> 	If the user sees some DMA latency issue he can still use the pmqos as a
+> module parameter to trade power for throughput as below:
+> sudo modprobe ath9k pmqos=55
 
-The adaptor is an AR9285[1].
+How many times are we going to write some work around for some
+platform unpatched BIOS bug ?
 
-That commit is based against v2.6.33 and was merged in v2.6.35-rc1
+mcgrof@tux ~/wireless-testing (git::master)$ git grep pm_qos_update_request drivers/
+drivers/net/e1000e/netdev.c:                    pm_qos_update_request(&adapter->netdev->pm_qos_req, 55);
+drivers/net/e1000e/netdev.c:                    pm_qos_update_request(&adapter->netdev->pm_qos_req,
+drivers/net/wireless/ath/ath9k/main.c:  pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
+drivers/net/wireless/ath/ath9k/main.c:  pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+drivers/net/wireless/ipw2x00/ipw2100.c: pm_qos_update_request(&ipw2100_pm_qos_req, 175);
+drivers/net/wireless/ipw2x00/ipw2100.c: pm_qos_update_request(&ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
 
-$ git describe 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
-v2.6.33-3523-g53bc7aa
-$ git name-rev --tags 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
-53bc7aa08b48e5cd745f986731cc7dc24eef2a9f tags/v2.6.35-rc1~473^2~167^2~346
+Can't we punt this crap to userspace?
 
-Any ideas for tracking this down?
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
 
-Thanks,
-Jonathan
+Can distributions just autodetect this issue and call something like this?
 
-[1]
-> 84: udi = '/org/freedesktop/Hal/devices/pci_168c_2b'
->   pci.device_protocol = 0  (0x0)  (int)
->   pci.vendor = 'Atheros Communications Inc.'  (string)
->   info.vendor = 'Atheros Communications Inc.'  (string)
->   pci.product = 'AR9285 Wireless Network Adapter
-> (PCI-Express)'  (string) linux.sysfs_path =
-> '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (strin g)
->   info.parent = '/org/freedesktop/Hal/devices/pci_10de_ac6'  (string)
->   info.linux.driver = 'ath9k'  (string)
->   pci.subsys_vendor = 'Hewlett-Packard Company'  (string)
->   linux.hotplug_type = 2  (0x2)  (int)
->   linux.subsystem = 'pci'  (string)
->   info.subsystem = 'pci'  (string)
->   info.product = 'AR9285 Wireless Network Adapter
-> (PCI-Express)'  (string) info.udi =
-> '/org/freedesktop/Hal/devices/pci_168c_2b'  (string)
-> pci.linux.sysfs_path =
-> '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (string)
-> pci.product_id = 43  (0x2b)  (int) pci.vendor_id = 5772  (0x168c)
-> (int) pci.subsys_product_id = 12352  (0x3040)  (int)
-> pci.subsys_vendor_id = 4156  (0x103c)  (int) pci.device_class = 2
-> (0x2)  (int) pci.device_subclass = 128  (0x80)  (int)
+  Luis
+
+> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h |    4 +++-
+>  drivers/net/wireless/ath/ath9k/init.c  |    9 +++++----
+>  drivers/net/wireless/ath/ath9k/main.c  |    9 +++++----
+>  3 files changed, 13 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 9272278..55fcd01 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -57,7 +57,9 @@ struct ath_node;
+>  
+>  #define A_MAX(a, b) ((a) > (b) ? (a) : (b))
+>  
+> -#define ATH9K_PM_QOS_DEFAULT_VALUE	55
+> +/* By default PM QOS is disabled */
+> +#define ATH9K_PM_QOS_DEFAULT_VALUE	0
+> +
+>  
+>  #define TSF_TO_TU(_h,_l) \
+>  	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index e5c1eea..658ea02 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -43,7 +43,7 @@ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+>  
+>  int ath9k_pm_qos_value = ATH9K_PM_QOS_DEFAULT_VALUE;
+>  module_param_named(pmqos, ath9k_pm_qos_value, int, S_IRUSR | S_IRGRP | S_IROTH);
+> -MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
+> +MODULE_PARM_DESC(pmqos, "User specified PM-QOS value, by default disabled");
+>  
+>  bool is_ath9k_unloaded;
+>  /* We use the hw_value as an index into our private channel structure */
+> @@ -759,8 +759,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+>  
+>  	ath_init_leds(sc);
+>  	ath_start_rfkill_poll(sc);
+> -
+> -	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+> +	if (ath9k_pm_qos_value)
+> +		pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+>  			   PM_QOS_DEFAULT_VALUE);
+>  
+>  	return 0;
+> @@ -819,7 +819,8 @@ void ath9k_deinit_device(struct ath_softc *sc)
+>  	ath9k_ps_restore(sc);
+>  
+>  	ieee80211_unregister_hw(hw);
+> -	pm_qos_remove_request(&sc->pm_qos_req);
+> +	if (ath9k_pm_qos_value)
+> +		pm_qos_remove_request(&sc->pm_qos_req);
+>  	ath_rx_cleanup(sc);
+>  	ath_tx_cleanup(sc);
+>  	ath9k_deinit_softc(sc);
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 4ed43b2..3855092 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1119,9 +1119,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
+>  
+>  	/* User has the option to provide pm-qos value as a module
+>  	 * parameter rather than using the default value of
+> -	 * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
+> +	 * 'ATH9K_PM_QOS_DEFAULT_VALUE' which disables PM QOS.
+>  	 */
+> -	pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
+> +	if (ath9k_pm_qos_value)
+> +		pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
+>  
+>  	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
+>  		common->bus_ops->extn_synch_en(common);
+> @@ -1266,8 +1267,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+>  	ath_radio_disable(sc, hw);
+>  
+>  	sc->sc_flags |= SC_OP_INVALID;
+> -
+> -	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+> +	if (ath9k_pm_qos_value)
+> +		pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+>  
+>  	mutex_unlock(&sc->mutex);
+>  
+> -- 
+> 1.7.0.4
+> 
