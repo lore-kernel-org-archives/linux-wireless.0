@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55416 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753573Ab1BFTye (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 14:54:34 -0500
-Message-ID: <4D4EFC76.6090000@candelatech.com>
-Date: Sun, 06 Feb 2011 11:54:30 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Scanning and channel types.
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org>
-In-Reply-To: <4D4EF99D.5020601@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:54778 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753691Ab1BIVO5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 16:14:57 -0500
+Subject: Re: SSB AI support code ([RFC4/11] SSB core control and state
+ device ops)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297285438.11767.28.camel@dev.znau.edu.ua> (sfid-20110209_221147_001764_10FFD7B7)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <1297262089.18053.24.camel@dev.znau.edu.ua>
+	 <AANLkTinC+ijSG=qzzk9OWLGRLsxM0dm12YkERxKbwg6t@mail.gmail.com>
+	 <1297285438.11767.28.camel@dev.znau.edu.ua>
+	 (sfid-20110209_221147_001764_10FFD7B7)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Feb 2011 22:14:52 +0100
+Message-ID: <1297286092.9734.17.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2011 11:42 AM, Felix Fietkau wrote:
-> On 2011-02-06 8:01 PM, Ben Greear wrote:
->> Current code always sets the channel type to NO_HT when scanning.
->>
->>   From what I can tell, we should be able to send NO_HT packets on
->> any channel type, and for passive scanning, it should not matter
->> at all what channel-type we are using.
->>
->> I tested relaxing scanning to use the current channel type
->> when scanning on the operating channel, and it seems to
->> work.
->>
->> Does anyone see any problems with this approach?
-> One thing you should make sure is that once you're done associating to
-> an NO_HT or HT20 AP (and you have no other interfaces to consider), the
-> channel mode must not be HT40 - otherwise it could reduce throughput.
+On Wed, 2011-02-09 at 23:03 +0200, George Kashperko wrote: 
+> 1)
+> if (sb_bus) 
+> 	ssb_write32(dev, (ssb_read32(dev, SSB_TMSLOW) & ~(mask << 16)) | (flags << 16));
+> else
+> 	ssb_write32(dev, (ssb_read32(dev, SSB_AI_IOCTL) & ~mask) | flags));
+> 2)
+> ssb_core_ctl_flags(dev, mask, flags, NULL);
 
-That is currently handled correctly by the ieee80211_set_channel_type
-method, as far as I can tell...
+3) The non-obfuscated way; in the driver:
 
-Regardless of that, in my multi-vif testing, I see lower throughput when
-using HT40- than using HT20 (between 128 ath9k vif machine and 1 VAP ath9k machine).
-The VIFS all claim 300Mbps rate.
-I haven't looked into this any further at this point...
-
-Thanks,
-Ben
-
->
-> - Felix
-
+if (sb_bus) 
+	ssb_write32(dev, (ssb_read32(dev, SSB_TMSLOW) & ~(mask << 16)) | (flags << 16));
+else
+	ai_write32(dev, (ai_read32(dev, AI_IOCTL) & ~mask) | flags));
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Greetings Michael.
+
