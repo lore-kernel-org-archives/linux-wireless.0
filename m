@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:55997 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419Ab1BUCSi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:18:38 -0500
-Received: by yxs7 with SMTP id 7so122851yxs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:18:38 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3522 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752123Ab1BIOtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 09:49:05 -0500
+To: "Ben Greear" <greearb@candelatech.com>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: implicit band switch or not
+References: <op.vqmzowhl3ri7v4@arend-laptop>
+ <4D52A328.3010009@candelatech.com>
+Date: Wed, 9 Feb 2011 15:48:51 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52080.359089.399509@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:48:24 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 05/23] ath9k_htc: Remove OP_PREAMBLE_SHORT
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vqm4rpz93ri7v4@arend-laptop>
+In-Reply-To: <4D52A328.3010009@candelatech.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Hi Ben,
 
-mac80211's BSS info can be used for this.
+On Wed, 09 Feb 2011 15:22:32 +0100, Ben Greear <greearb@candelatech.com>  
+wrote:
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |   13 ++++++-------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    9 ---------
- 2 files changed, 6 insertions(+), 16 deletions(-)
+>> Any suggestions? Are we have a race condition here?
+>
+> What kernel revision was this happening in?  I just changed the scanning  
+> logic
+> a bit in wireless-testing...I don't think I would have caused this, but  
+> it's possible.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index ab8d1f0..ed6af32 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -335,13 +335,12 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
- #define OP_SCANNING		   BIT(1)
- #define OP_LED_ASSOCIATED	   BIT(2)
- #define OP_LED_ON		   BIT(3)
--#define OP_PREAMBLE_SHORT	   BIT(4)
--#define OP_PROTECT_ENABLE	   BIT(5)
--#define OP_ASSOCIATED		   BIT(6)
--#define OP_ENABLE_BEACON	   BIT(7)
--#define OP_LED_DEINIT		   BIT(8)
--#define OP_BT_PRIORITY_DETECTED    BIT(9)
--#define OP_BT_SCAN                 BIT(10)
-+#define OP_PROTECT_ENABLE	   BIT(4)
-+#define OP_ASSOCIATED		   BIT(5)
-+#define OP_ENABLE_BEACON	   BIT(6)
-+#define OP_LED_DEINIT		   BIT(7)
-+#define OP_BT_PRIORITY_DETECTED    BIT(8)
-+#define OP_BT_SCAN                 BIT(9)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index ebc5dbf..13e9dec 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1524,15 +1524,6 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_htc_beacon_config(priv, vif);
- 	}
- 
--	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
--		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed PREAMBLE %d\n",
--			bss_conf->use_short_preamble);
--		if (bss_conf->use_short_preamble)
--			priv->op_flags |= OP_PREAMBLE_SHORT;
--		else
--			priv->op_flags &= ~OP_PREAMBLE_SHORT;
--	}
--
- 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
- 		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed CTS PROT %d\n",
- 			bss_conf->use_cts_prot);
+I am running 2.6.38-rc3 from the staging-next repository. Last commit on  
+net/mac80211/ is 'eb3e554 mac80211: fix a crash in  
+ieee80211_beacon_get_tim on change_interface'.
+
+> Thanks,
+> Ben
+>
+>>
+>> Gr. AvS
+>
+>
+
+Gr. AvS
 -- 
-1.7.4.1
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
 
