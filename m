@@ -1,49 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53212 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228Ab1BNK03 (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:59251 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab1BIWC4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 05:26:29 -0500
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while
- in powersave mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: RA-Jay Hung <Jay_Hung@ralinktech.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	RA-Dennis Lee <Dennis_Lee@ralinktech.com>,
-	RA-Eddy Tsai <Eddy_Tsai@ralinktech.com>
-In-Reply-To: <AANLkTimRT-2B4G1jC4D+BZURmd_FRGSkLT5MKsEvcS3r@mail.gmail.com>
-References: <201101311600.39486.IvDoorn@gmail.com>
-	 <874o8mbaec.fsf@purkki.adurom.net>
-	 <AANLkTikKevPWkWMu=HLPHt-jACLZLQzqN6thr-2LNk59@mail.gmail.com>
-	 <B7288B2B5878D747BA031EF4B170D7F6092D2727@TWHCMBS01.tw.ralinktech.ad>
-	 <AANLkTimRT-2B4G1jC4D+BZURmd_FRGSkLT5MKsEvcS3r@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 11:25:54 +0100
-Message-ID: <1297679154.3785.24.camel@jlt3.sipsolutions.net>
+	Wed, 9 Feb 2011 17:02:56 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000020133.msg
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 00:02:18 +0200
+Subject: Re: SSB AI support code ([RFC5/11] SSB propagate core control and
+	state ops usage)
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikPzPNo5p7O8xN3ka=0TGcECJB+CVOs8Mo3bXVc@mail.gmail.com>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <1297262161.18053.26.camel@dev.znau.edu.ua>
+	 <AANLkTi=DV6gnbYfBsXeL6rb3Rz0a+NhgmN04hPY12wLY@mail.gmail.com>
+	 <1297286787.11978.12.camel@dev.znau.edu.ua>
+	 <AANLkTikPzPNo5p7O8xN3ka=0TGcECJB+CVOs8Mo3bXVc@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 09 Feb 2011 23:55:15 +0200
+Message-Id: <1297288515.11978.37.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-14 at 11:14 +0100, Ivo Van Doorn wrote:
 
-> Thanks. So I'll add this routine to the rt2800usb driver then. :)
+В Срд, 09/02/2011 в 22:50 +0100, Rafał Miłecki пишет:
+> 2011/2/9 George Kashperko <george@znau.edu.ua>:
+> >> 2011/2/9 George Kashperko <george@znau.edu.ua>:
+> >> > From: George Kashperko <george@znau.edu.ua>
+> >> >
+> >> > Major differences between AI/SB from drivers' perespective is control
+> >> > and state flags handling. These long term used to be TMSLOW/TMSHIGH ones
+> >> > and in order to be handled transparently should be masked under some
+> >> > indirect access handlers. This patch forces use of ssb_core_ctl_flags
+> >> > and ssb_core_state_flags introduced early. TMSLOW/TMSHIGH defines outside
+> >> > ssb code (b43, ssb gige and ohci drivers) were renamed to reflect actual
+> >> > meaning, flags' definitions moved to low two bytes. Common TMSLOW/TMSHIGH
+> >> > defines moved to ssb_private.h in order to limit their use by internal
+> >> > SB-specic code only.
+> >> > Signed-off-by: George Kashperko <george@znau.edu.ua>
+> >> > ---
+> >> >  drivers/net/b44.c                          |    2
+> >> >  drivers/net/wireless/b43/b43.h             |   32 ++++-----
+> >> >  drivers/net/wireless/b43/dma.c             |    4 -
+> >> >  drivers/net/wireless/b43/main.c            |   61 +++++++------------
+> >> >  drivers/net/wireless/b43/phy_g.c           |    2
+> >> >  drivers/net/wireless/b43/phy_n.c           |   18 +----
+> >> >  drivers/net/wireless/b43legacy/b43legacy.h |   20 +++---
+> >> >  drivers/net/wireless/b43legacy/dma.c       |    4 -
+> >> >  drivers/net/wireless/b43legacy/main.c      |   52 +++++-----------
+> >> >  drivers/net/wireless/b43legacy/phy.c       |    2
+> >> >  drivers/ssb/driver_gige.c                  |   19 ++---
+> >> >  drivers/ssb/main.c                         |   20 ++++--
+> >> >  drivers/ssb/ssb_private.h                  |   24 +++++++
+> >> >  drivers/usb/host/ohci-ssb.c                |    4 -
+> >> >  include/linux/ssb/ssb.h                    |    4 -
+> >> >  include/linux/ssb/ssb_driver_gige.h        |   12 +--
+> >> >  include/linux/ssb/ssb_regs.h               |   42 ++++++-------
+> >> >  17 files changed, 160 insertions(+), 162 deletions(-)
+> >> > --- linux-next-20110203.orig/drivers/net/b44.c  2011-02-01 05:05:49.000000000 +0200
+> >> > +++ linux-next-20110203/drivers/net/b44.c       2011-02-08 12:17:03.000000000 +0200
+> >> > @@ -1568,7 +1568,7 @@ static void b44_setup_wol_pci(struct b44
+> >> >        u16 val;
+> >> >
+> >> >        if (bp->sdev->bus->bustype != SSB_BUSTYPE_SSB) {
+> >> > -               bw32(bp, SSB_TMSLOW, br32(bp, SSB_TMSLOW) | SSB_TMSLOW_PE);
+> >> > +               ssb_core_ctl_flags(bp->sdev, 0, SSB_CORECTL_PE, NULL);
+> >> >                pci_read_config_word(bp->sdev->bus->host_pci, SSB_PMCSR, &val);
+> >> >                pci_write_config_word(bp->sdev->bus->host_pci, SSB_PMCSR, val | SSB_PE);
+> >> >        }
+> >> > --- linux-next-20110203.orig/drivers/net/wireless/b43/b43.h     2011-02-01 05:05:49.000000000 +0200
+> >> > +++ linux-next-20110203/drivers/net/wireless/b43/b43.h  2011-02-08 12:17:03.000000000 +0200
+> >> > @@ -414,22 +414,22 @@ enum {
+> >> >  #define B43_MACCMD_CCA                 0x00000008      /* Clear channel assessment */
+> >> >  #define B43_MACCMD_BGNOISE             0x00000010      /* Background noise */
+> >> >
+> >> > -/* 802.11 core specific TM State Low (SSB_TMSLOW) flags */
+> >> > -#define B43_TMSLOW_GMODE               0x20000000      /* G Mode Enable */
+> >> > -#define B43_TMSLOW_PHY_BANDWIDTH       0x00C00000      /* PHY band width and clock speed mask (N-PHY only) */
+> >> > -#define  B43_TMSLOW_PHY_BANDWIDTH_10MHZ        0x00000000      /* 10 MHz bandwidth, 40 MHz PHY */
+> >> > -#define  B43_TMSLOW_PHY_BANDWIDTH_20MHZ        0x00400000      /* 20 MHz bandwidth, 80 MHz PHY */
+> >> > -#define  B43_TMSLOW_PHY_BANDWIDTH_40MHZ        0x00800000      /* 40 MHz bandwidth, 160 MHz PHY */
+> >> > -#define B43_TMSLOW_PLLREFSEL           0x00200000      /* PLL Frequency Reference Select (rev >= 5) */
+> >> > -#define B43_TMSLOW_MACPHYCLKEN         0x00100000      /* MAC PHY Clock Control Enable (rev >= 5) */
+> >> > -#define B43_TMSLOW_PHYRESET            0x00080000      /* PHY Reset */
+> >> > -#define B43_TMSLOW_PHYCLKEN            0x00040000      /* PHY Clock Enable */
+> >> > -
+> >> > -/* 802.11 core specific TM State High (SSB_TMSHIGH) flags */
+> >> > -#define B43_TMSHIGH_DUALBAND_PHY       0x00080000      /* Dualband PHY available */
+> >> > -#define B43_TMSHIGH_FCLOCK             0x00040000      /* Fast Clock Available (rev >= 5) */
+> >> > -#define B43_TMSHIGH_HAVE_5GHZ_PHY      0x00020000      /* 5 GHz PHY available (rev >= 5) */
+> >> > -#define B43_TMSHIGH_HAVE_2GHZ_PHY      0x00010000      /* 2.4 GHz PHY available (rev >= 5) */
+> >> > +/* 802.11 core specific control flags */
+> >> > +#define B43_CORECTL_GMODE                      0x2000  /* G Mode Enable */
+> >> > +#define B43_CORECTL_PHY_BANDWIDTH              0x00C0  /* PHY band width and clock speed mask (N-PHY only) */
+> >> > +#define  B43_CORECTL_PHY_BANDWIDTH_10MHZ       0x0000  /* 10 MHz bandwidth, 40 MHz PHY */
+> >> > +#define  B43_CORECTL_PHY_BANDWIDTH_20MHZ       0x0040  /* 20 MHz bandwidth, 80 MHz PHY */
+> >> > +#define  B43_CORECTL_PHY_BANDWIDTH_40MHZ       0x0080  /* 40 MHz bandwidth, 160 MHz PHY */
+> >> > +#define B43_CORECTL_PLLREFSEL                  0x0020  /* PLL Frequency Reference Select (rev >= 5) */
+> >> > +#define B43_CORECTL_MACPHYCLKEN                        0x0010  /* MAC PHY Clock Control Enable (rev >= 5) */
+> >> > +#define B43_CORECTL_PHYRESET                   0x0008  /* PHY Reset */
+> >> > +#define B43_CORECTL_PHYCLKEN                   0x0004  /* PHY Clock Enable */
+> >> > +
+> >> > +/* 802.11 core specific state flags */
+> >> > +#define B43_CORESTAT_DUALBAND_PHY              0x0008  /* Dualband PHY available */
+> >> > +#define B43_CORESTAT_FCLOCK                    0x0004  /* Fast Clock Available (rev >= 5) */
+> >> > +#define B43_CORESTAT_HAVE_5GHZ_PHY             0x0002  /* 5 GHz PHY available (rev >= 5) */
+> >> > +#define B43_CORESTAT_HAVE_2GHZ_PHY             0x0001  /* 2.4 GHz PHY available (rev >= 5) */
+> >>
+> >> I don't know, I've doubts about it :/ That flags are quite messy, mask
+> >> for them is 0x3FFC0000. Ideally we should shift it by 14 bits, but
+> >> that would make writing code harder. Maaaaybe... Michael what do you
+> >> think about this?
+> >>
+> >>
+> >> > @@ -1213,6 +1214,9 @@ static void ssb_device_disable_sb(struct
+> >> >        if (ssb_read32(dev, SSB_TMSLOW) & SSB_TMSLOW_RESET)
+> >> >                return;
+> >> >
+> >> > +       SSB_WARN_ON(core_specific_flags & 0xFFFF0000);
+> >>
+> >> Make it ~0x00003FFC, value 0x1 is not valid flag.
+> > Actual mask for _core_ flags is 0xFFFF0000 for SB and 0x0000FFFF for AI.
 > 
-> Johannes, if you don't want to add the complexity for checking the
-> "pending MC/BC frames" in
-> a received frame. Would you mind if I add some utility functions to
-> mac80211 then? That way the
-> logic is still shared for the drivers that need it, but it doesn't
-> impact the code paths in mac80211 itself...
+> OK.
+> 
+> 
+> > 0x3FFC is mask for core dependent flags.
+> > SSB_CORECTL_CLOCK | SSB_CORECTL_FGC | SSB_CORECTL_PE | SSB_CORECTL_BE |
+> > 0x3FFC = 0xFFFF
+> > Therefore sanity check for SB is &0xFFFF0000, for AI is &0x0000FFFF
+> > Layout of core flags in these 2 bytes is the same for AI and SB cores.
+> 
+> You created WARN_ON against core_specific_flags, not sth like
+> core_flags. That's why I think test should be against 0x3FFC, not
+> 0xFFFF. Am I wrong? Or if we ever pass not-core-specific flags to
+> ssb_device_disable/ssb_device_enable, we should rename variable from
+> core_specific_flags to core_flags.
+> 
+core_specific_flags is original param name for long time (think from the time ssb_device_enable/disable born but frankly never checked)
+this name never reflected actual flags' meaning before AI, wont reflect
+it after. Core specific flags are e. g. B43_TMSLOW_GMODE or
+B43_TMSLOW_PHYRESET while SSB_TMSLOW_FGC/SSB_TMSLOW_CLOCK are core
+independent ones present for all cores (at least for those with device
+drivers you know :p)
+We pass both core specific and core independent flags to get sertain
+devices enabled/reset therefore just core_flags looks bits cleaner for
+me, but actually see no reason to rename it as this would actually
+change nothing for those who know what that flags are for and again
+nothing for those who have no clue about them ;)
 
-Sure, that's ok I suppose. FWIW, if it makes the implementation a lot
-simpler, adding it in mac80211 would be acceptable, but I'm not
-convinced that CONF_PS is the right hook for it, since mac80211
-throughout assumes CONF_PS will automatically wake up for beacons etc.,
-and changing that would imho exponentially increase the already high
-complexity of the powersaving implementation.
+> >> Why don't you go ahead and make core flags u16?
+> >>
+> > Dont see any problems with this as other 2 bytes aint used currently in
+> > any way.
+> 
+> You do not see problems with making it u16, or problems with it being u32?
+> 
+No problem at all with doing it u16 _if_ modify all the (B43|B44|GIGE|
+etc)_TM(SLOW|HIGH) defines to use 2 bytes instead of 4.
 
-johannes
+
 
