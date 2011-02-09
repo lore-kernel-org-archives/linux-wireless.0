@@ -1,158 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web36102.mail.mud.yahoo.com ([66.163.179.216]:27605 "HELO
-	web36102.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750738Ab1BJG7T convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 01:59:19 -0500
-Message-ID: <930089.13638.qm@web36102.mail.mud.yahoo.com>
-Date: Wed, 9 Feb 2011 22:59:17 -0800 (PST)
-From: Noel Milton Vega <nmvega@computingarchitects.com>
-Reply-To: Noel Milton Vega <nmvega@ComputingArchitects.Com>
-Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-To: =?utf-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Noel Milton Vega <nmvega@ComputingArchitects.Com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from relay2.ukrpost.ua ([195.5.6.22]:59697 "EHLO relay2.ukrpost.ua"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755260Ab1BIOVL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 09:21:11 -0500
+Received: from mail.academy.zt.ua ([82.207.120.245])
+	by relay2.ukrpost.ua with esmtp (Exim 4.72)
+	(envelope-from <george@znau.edu.ua>)
+	id 1PnALx-0007P9-4C
+	for linux-wireless@vger.kernel.org; Wed, 09 Feb 2011 15:45:05 +0200
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000019954.msg
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 15:43:22 +0200
+Subject: SSB AI support code
+From: George Kashperko <george@znau.edu.ua>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Wed, 09 Feb 2011 15:36:30 +0200
+Message-Id: <1297258590.17400.37.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resent because the last messages was rejected due to having HTML formatting.
+Hi guys.
 
-Hello Ozan:
+Starting this thread in order to discuss SSB AI support. Recently there
+were discussion on this matter but unfortunately missed it therefore
+starting new thread.
 
-You know that's actually a great point. You just reminded me of something!
-I have noticed that, while the laptop Bluetooth indicator light does toggle
-On-and-Off each time I press Fn-12; the WiFi laptop indicator light does *not*.
-It has never turned on (*ever*), no matter how many times I press Fn-11
-(the key combination to toggle WiFi On-and-Off). I just assumed it was
-the driver issue I was having (and it may still be).
+Recently was playing around making new kernels work on ASUS RT-N16
+(bcm4716-based with AI style bus). Started with commits by Bernhard Loos
+early 2010, and finally managed to get things work.
+Currently with code modified/added mine bcm4716 have working usb
+ehci/ohci and ethernet. Well, its pretty much everything the box have,
+except wifi - currently i'm half-way done with porting bcm80211 nphy
+code changes to b43 (Hopefully recent commits by Rafal Milecki will save
+me from porting more, but haven't tried it yet).
 
-Here are your rfkill outputs...
+All changes made were tested on SB-based hardware (two old bcm5354-based
+boxes). Unfortunately have no access to other BCM hw I could test things
+on, but I'm pretty much sure old hardware should not be affected by code
+changes while newer ones have some chance to get supported.
+Changes made are based on ASUS GPL sourcecodes for N16, bcm80211 staging
+code and bcm-v4.sipsolutions.net researches.
 
-root# rfkill list goes:
+I will post patches here as soon as get this message back in my emailer
+to keep things in single thread.
 
-root@p170hm# rfkill list  (Run when Bluetooth light was on -- RX/TX enabled; 
-WiFi light is off.)
+Please note these changes are how things work for me. It's not commit
+request or anything alike. Most of the changes are easy, while some
+(well, actually just one - 5th patch with core state/control management
+propagation) should be well thought of before applying. Actually things
+with 5th patch could be done in completely backwards way - keep existing
+TMSLOW/TMSHIGH defines intact with flags in two high bytes and do ">>
+16" things in AI code instead of "<< 16" in SB code but again - its just
+the way things work for me currently, not the way I could insist or
+something on.
 
-   0: hci0: Bluetooth    <--- Note: Don't let this 2nd bluetooth interface 
-beguile you.
-       Soft blocked: no              This is a tiny bluetooth dongle I 
-temporarily attached to
-      Hard blocked: no              a USB port because this same N-6320 card 
-also provides the laptop's
-                                    bluetooth capability. But being connected to 
-a USB port, Fn-12 will
-                                    not affect it showing up in the output of 
-rfkill (see later below  -
-                                    it will remain in the output).
-   1: hci1: Bluetooth    
-      Soft blocked: no              
-      Hard blocked: no              
-
-root@p170hm# rfkill list  (Run when Bluetooth light was off -- RX/TX disabled; 
-WiFi light is off)
-   0: hci0: Bluetooth
-   Soft blocked: no
-   Hard blocked: no
-
-In either case, I see no reference to a WiFi device.
-
-Hope that helps some more.
-
-Regards & Thanks,
-Noel
+This is partial subset of changes to get newer BCM4716s' to work with
+linux. If anyone is interested the whole set of patches will be
+accessible in few hours via http - just left few things to manage with
+them.
 
 
-
-
-
->
->From: Noel Milton Vega <nmvega@computingarchitects.com>
->To: Ozan Çağlayan <ozan@pardus.org.tr>
->Cc: Julian Calaby <julian.calaby@gmail.com>; linux-wireless@vger.kernel.org; 
->Noel Milton Vega <nmvega@ComputingArchitects.Com>
->Sent: Thu, February 10, 2011 1:55:49 AM
->Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation 
->Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
->
->
->Hello Ozan:
->
->You know that's actually a great point. You just reminded me of something!
->I have noticed that, while the laptop Bluetooth indicator light does toggle
->On-and-Off each time I press Fn-12; the WiFi laptop indicator light does *not*.
->It has never turned on (*ever*), no matter how many times I press Fn-11
->(the key combination to toggle WiFi On-and-Off). I just assumed it was
->the driver issue I was having (and it may still be).
->
->Here are your rfkill outputs...
->
->root# rfkill list goes:
->
->root@p170hm# rfkill list  (Run when Bluetooth light was on -- RX/TX enabled; 
->WiFi light is off.)
->
->   0: hci0: Bluetooth    <--- Note: Don't let this 2nd bluetooth interface 
->beguile you.
->       Soft blocked: no              This is a tiny bluetooth dongle I 
->temporarily attached to
->      Hard blocked: no              a USB port because this same N-6320 card 
->also provides the laptop's
->                                    bluetooth capability. But being connected to 
->
->a USB port, Fn-12 will
->                                    not affect it showing up in the output of 
->rfkill (see later below  -
->                                    it will remain in the output).
->   1: hci1: Bluetooth    
->      Soft blocked: no              
->      Hard blocked: no              
->
->root@p170hm# rfkill list  (Run when Bluetooth light was off -- RX/TX disabled; 
->WiFi light is off)
->   0: hci0: Bluetooth
->   Soft blocked: no
->   Hard blocked: no
->
->
->In either case, I see no reference to a WiFi device.
->
->Hope that helps some more.
->
->Regards & Thanks,
->Noel
->
->
->
->
->-----  Original Message ----
->> From: Ozan Çağlayan <ozan@pardus.org.tr>
->> To: Noel Milton Vega <nmvega@computingarchitects.com>
->> Cc: Julian Calaby <julian.calaby@gmail.com>; linux-wireless@vger.kernel.org
->> Sent: Thu, February 10, 2011 1:21:38 AM
->> Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation 
->>Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
->> 
->> Perşembe 10 Şubat 2011 günü (saat 07:25:12) Noel Milton Vega şunları  
->yazmıştı:
->> > Hi Julian,
->> > 
->> > Thank you for the extended reply.  It's appreciated. Your output wish is
->> > my command. Here they are (and  then some):
->> 
->> Can you run
->> 
->> rfkill list
->> 
->> and send the output?  Are there any WLAN toggles on your laptop (a hard switch 
->
->>or Fn + Fx  combination)?
->> If yes try playing with them.
->> 
->> ---
->> Ozan  Çağlayan
->> TUBITAK/UEKAE - Pardus Linux
->> http://www.pardus.org.tr/eng
->> 
