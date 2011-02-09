@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43506 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754657Ab1BWQOd (ORCPT
+Received: from webmail.3eti.com ([65.220.88.141]:30970 "EHLO webmail.3eti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753560Ab1BIRJv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 11:14:33 -0500
-Date: Wed, 23 Feb 2011 10:14:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: sfr@canb.auug.org.au, otavio@ossystems.com.br, w@1wt.eu,
-	george0505@realtek.com, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH V2 3/5] rtlwifi: rtl8192cu: Fix for build error if PCI is
- not present
-Message-ID: <4d65326a.4BU5NCcHR3noU7KS%Larry.Finger@lwfinger.net>
+	Wed, 9 Feb 2011 12:09:51 -0500
+From: Chaoxing Lin <CLin@3eti.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+CC: 'Zefir Kurtisi' <zefir.kurtisi@neratec.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [RFC] DFS userspace handler
+Date: Wed, 9 Feb 2011 17:09:49 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DD3A@RockMX01.rock.corp>
+References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
+ <4D52B7DB.8000000@neratec.com>
+ <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC34@RockMX01.rock.corp>
+ <20110209163030.GD2494@tuxdriver.com>
+In-Reply-To: <20110209163030.GD2494@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Willy Tarreau <w@1wt.eu>
-Date: Sun, 20 Feb 2011 11:43:07 +0100
-Subject: rtlwifi: Let rtlwifi build when PCI is not enabled
+Do we have to choose between hostapd and wpa_supplicant?
 
-On systems where PCI does not exist, a build of rtlwifi will fail. 
-Apply the same fix in case there are systems with PCI but not USB.
+Why not a new daemon, e.g. DFSd or radard? So that it can be used intuitively for all master or IBSS modes.
 
-Signed-off-by: Willy Tarreau <w@1wt.eu>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
 
- drivers/net/wireless/rtlwifi/Makefile |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+-----Original Message-----
+From: John W. Linville [mailto:linville@tuxdriver.com] 
+Sent: Wednesday, February 09, 2011 11:31 AM
+To: Chaoxing Lin
+Cc: 'Zefir Kurtisi'; linux-wireless@vger.kernel.org
+Subject: Re: [RFC] DFS userspace handler
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/Makefile
-+++ wireless-testing/drivers/net/wireless/rtlwifi/Makefile
-@@ -5,12 +5,15 @@ rtlwifi-objs	:=		\
- 		core.o		\
- 		debug.o		\
- 		efuse.o		\
--		pci.o		\
- 		ps.o		\
- 		rc.o		\
- 		regd.o		\
- 		usb.o
- 
-+ifeq ($(CONFIG_PCI),y)
-+rtlwifi-objs	+= pci.o
-+endif
-+
- obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
- obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
- 
+On Wed, Feb 09, 2011 at 04:09:08PM +0000, Chaoxing Lin wrote:
+> I would vote for a dedidate DFS daemon.
+> 
+> Straightforward name is better. 
+> Beginners would be hard to understand why WDS/Mesh/IBSS mode requires a hostapd daemon which intuitively means for AP mode..
+
+Perhaps it can be in wpa_supplicant instead?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
