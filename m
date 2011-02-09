@@ -1,96 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:42670 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755683Ab1BWDkG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56465 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755949Ab1BIOp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 22:40:06 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Greg KH <greg@kroah.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Tue, 22 Feb 2011 19:37:07 -0800
-Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <477F20668A386D41ADCC57781B1F704307F50C44E4@SC-VEXCH1.marvell.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
- <1291380780.3499.119.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291380780.3499.119.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 9 Feb 2011 09:45:27 -0500
+Date: Wed, 9 Feb 2011 09:34:23 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] DFS userspace handler
+Message-ID: <20110209143422.GB2494@tuxdriver.com>
+References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
-ZW50OiBGcmlkYXksIERlY2VtYmVyIDAzLCAyMDEwIDQ6NTMgQU0NCj4gVG86IEJpbmcgWmhhbw0K
-PiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZpbGxlOyBE
-YW4gV2lsbGlhbXM7IERhdmlkIFdvb2Rob3VzZTsgQW1pdGt1bWFyIEthcndhcjsNCj4gS2lyYW4g
-RGl2ZWthcjsgR3JlZyBLSDsgRGF2aWQgUy4gTWlsbGVyDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
-MDAvMzFdIHdpcmVsZXNzOiBNYXJ2ZWxsIG13aWZpZXggZHJpdmVyIGZvciBTRDg3ODcNCj4gDQo+
-IE9uIFdlZCwgMjAxMC0xMi0wMSBhdCAxNzozMSAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+
-IFRoZSBtd2lmaWV4IGRyaXZlciBmb3IgTWFydmVsbCA4MDIuMTFuIGNoaXBzZXQgU0Q4Nzg3IGlz
-IGF2YWlsYWJsZSBhdA0KPiA+IGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9td2lmaWV4LmdpdC4gQm90
-aCBTVEEgbW9kZSBhbmQgTW9iaWxlIGhvdHNwb3QNCj4gPiBtb2RlIGFyZSBzdXBwb3J0ZWQuDQo+
-ID4NCj4gPiBnaXQgcHVsbCBnaXQ6Ly9naXQubWFydmVsbC5jb20vbXdpZmlleC5naXQgbWFzdGVy
-DQo+IA0KPiBQbGVhc2UgcG9zdCBwYXRjaGVzLCBub3QgZ2l0IHRyZWVzLg0KPiANCj4gQnV0IHNp
-bmNlIEpvaG4gaXMgaG9sZGluZyB1cyBzb21ld2hhdCBob3N0YWdlIGJ5IHNheWluZyBoZSdsbCBj
-b25zaWRlcg0KPiBtZXJnaW5nIHRoaXMsIGFuZCBhcHBhcmVudGx5IHlvdSBkb24ndCBoYXZlIHRo
-ZSB0YXN0ZSB0byBldmVuIGNvbnNpZGVyDQo+IHRoZSByZXZpZXcgY29tbWVudHMgeW91IGhhdmUg
-Z290dGVuIGJlZm9yZSwgSSB0b29rIGEgYnJpZWYgbG9vayB0bw0KPiAqcHJvdmUqIHRoYXQgdGhp
-cyBkcml2ZXIgY2Fubm90IGJlIG1lcmdlZCBhcyBpcy4NCj4gDQo+IA0KPiBIZXJlJ3MgYSBzaG9y
-dCBsaXN0IG9mIHRoaW5ncyB0byBmaXg6DQo+ICAqIF9fcGFja2VkDQo+ICAqIEVOVEVSL0xFQVZF
-IG11c3QgZ28NCj4gICogZW51bSBtd2lmaWV4X3N0YXR1cyBtdXN0IGdvIC0tIHVzZSBlcnJubw0K
-PiAgKiBwcml2YXRlIGlvY3RscyB3ZXJlIGdyYW5kZmF0aGVyZWQgaW4sDQo+ICAgIGJ1dCBhcmVu
-J3QgYWxsb3dlZCBpbiBuZXcgZHJpdmVycw0KPiAgKiBkbyB5b3UgcmVhbGx5IG5lZWQgeW91ciBv
-d24gY3J5cHRvIG1vZGUgZGVmaW5pdGlvbnM/DQo+ICAqIHlvdXIgcHNldWRvLWtlcm5lbGRvYyBj
-b21tZW50cyAiLyoqIiBkb24ndCBjb25mb3JtDQo+ICAgIHRvIHRoZSByaWdodCBmb3JtYXQNCj4g
-ICogcHJpdmF0ZSBsb2NraW5nIHdyYXBwZXJzIGFyZSBub3QgYWxsb3dlZCAobXdpZmlleF9zcGlu
-X2xvY2sgZXRjKQ0KPiAgKiBwcml2YXRlIGRlYnVnZ2luZyBsaWtlIFBSSU5UTSBpcyBub3QgYWxs
-b3dlZA0KDQpJcyBpdCBPSyBpZiBJIGNoYW5nZSBQUklOVE0gKGRlYnVnZ2luZyBwcmludGspIHRv
-IHNvbWV0aGluZyBsaWtlIElXTF9ERUJVR18/DQoNCjxkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL2l3bC1kZWJ1Zy5oPg0KLi4uLi4uDQojZGVmaW5lIElXTF9ERUJVR19JTkZPKHAsIGYsIGEu
-Li4pICAgICAgSVdMX0RFQlVHKHAsIElXTF9ETF9JTkZPLCBmLCAjIyBhKQ0KI2RlZmluZSBJV0xf
-REVCVUdfTUFDODAyMTEocCwgZiwgYS4uLikgIElXTF9ERUJVRyhwLCBJV0xfRExfTUFDODAyMTEs
-IGYsICMjIGEpDQojZGVmaW5lIElXTF9ERUJVR19NQUNEVU1QKHAsIGYsIGEuLi4pICAgSVdMX0RF
-QlVHKHAsIElXTF9ETF9NQUNEVU1QLCBmLCAjIyBhKQ0KI2RlZmluZSBJV0xfREVCVUdfVEVNUChw
-LCBmLCBhLi4uKSAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfVEVNUCwgZiwgIyMgYSkNCiNkZWZp
-bmUgSVdMX0RFQlVHX1NDQU4ocCwgZiwgYS4uLikgICAgICBJV0xfREVCVUcocCwgSVdMX0RMX1ND
-QU4sIGYsICMjIGEpDQojZGVmaW5lIElXTF9ERUJVR19SWChwLCBmLCBhLi4uKSAgICAgICAgSVdM
-X0RFQlVHKHAsIElXTF9ETF9SWCwgZiwgIyMgYSkNCiNkZWZpbmUgSVdMX0RFQlVHX1RYKHAsIGYs
-IGEuLi4pICAgICAgICBJV0xfREVCVUcocCwgSVdMX0RMX1RYLCBmLCAjIyBhKQ0KI2RlZmluZSBJ
-V0xfREVCVUdfSVNSKHAsIGYsIGEuLi4pICAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfSVNSLCBm
-LCAjIyBhKQ0KLi4uLi4uDQoNCk9yLCB5b3Ugd2FudCBtZSB0byByZW1vdmUgUFJJTlRNIHN0dWZm
-IGNvbXBsZXRlbHk/DQoNClRoYW5rcywNCg0KQmluZw0KDQo+ICAqIHRoZXJlJ3MgZXhhY3RseSBv
-bmUgc3BhY2UgYWZ0ZXIgIiNpbmNsdWRlIg0KPiAgKiBzdHJ1Y3QgZXRoXzgwM19oZHI/IGFyZSB5
-b3Ugc2VyaW91cz8gYW5kIHlvdSBldmVuIGhhdmUNCj4gICAgaXQgdHdpY2U6IHN0cnVjdCBldGhf
-SUlfaGRyDQo+ICAqIGVudW0gaWVlZV90eXBlc19lbGVtZW50aWRfZSBtdXN0IGdvDQo+ICAqIHNp
-bWlsYXJseSwgYWxtb3N0IGFsbCBvZiBpZWVlLmgNCj4gICogbm8gYml0ZmllbGRzIGFuZCBCSUdf
-RU5ESUFOX0JJVEZJRUxEIGFsbG93ZWQNCj4gICogbm90IGFsbCBhbGxvY2F0aW9ucyBhcmUgR0ZQ
-X0FUT01JQywgdXNlIHdpc2VseSBhbmQNCj4gICAgR0ZQX0tFUk5FTCBpbiBtb3N0IHBsYWNlcw0K
-PiAgKiBhIHdpZmkgZHJpdmVyIHRoYXQncyBkb2luZyBzdHVmZiB3aXRoIHNvY2tldHMgKG5sX3Nr
-LCBza19zb2NrZXQpPw0KPiAgICBleHBsYWluLCBpbiBNVUNIIGRldGFpbCAob3IgcHJlZmVyYWJs
-eSBqdXN0IGdldCByaWQgb2YgaXQpDQo+ICAqIHRoZXJlJ3MgZGVidWdmc19yZW1vdmVfcmVjdXJz
-aXZlDQo+ICAqIHNvbWUgZnVuY3Rpb25zIGxpa2UgbXdpZmlleF9pc19uZXR3b3JrX2NvbXBhdGli
-bGUgbmVlZCB0byBiZSBicm9rZW4NCj4gICAgaW50byBzbWFsbGVyIG9uZXMgdG8gYXZvaWQgdGhl
-IGNyYXAgaW5kZW50YXRpb24gdGhleSBoYXZlDQo+ICAqIG13aWZpZXhfdWFwX2FwX2NmZ19wYXJz
-ZV9kYXRhLiBNdXN0IEkgc2F5IG1vcmU/DQo+ICAqIHN0cnVjdCBtd2lmaWV4X2J1ZmZlciAqbWJ1
-Zj8gSXMgdGhpcyBhIEJTRCBkcml2ZXI/IFdlIGhhdmUgU0tCcywgZ2V0DQo+ICAgIHJpZCBvZiB0
-aGlzLiAoT2ggYW5kIHNrYnMgaGF2ZSBhIENCKQ0KPiAgKiBtd2lmaWV4X2luaXRfbG9jay9td2lm
-aWV4X2ZyZWVfbG9jayAtLSBJJ2QgbGF1Z2ggaW4geW91ciBnZW5lcmFsDQo+ICAgIGRpcmVjdGlv
-biBpZiBpdCB3YXNuJ3Qgc28gc2FkDQo+ICAqIG13aWZpZXhfdXRpbF9wZWVrX2xpc3QgZXRjLjog
-bGVhcm4gYWJvdXQgbGlzdC5oDQo+ICAqIG13aWZpZXhfaW5pdF90aW1lciAtLSBzdGlsbCBzYWQs
-IGR5bmFtaWNhbGx5IGFsbG9jYXRpbmcgdGltZXJzPyBqdXN0DQo+ICAgIGxpa2Ugc3BpbmxvY2tz
-LCB0aGV5IGNhbiBiZSBlbWJlZGRlZCBhbmQgbWFrZSB5b3VyIGNvZGUgc2ltcGxlcg0KPiANCj4g
-T2sgZ29vZCBlbm91Z2gsIHRoYXQgc2hvdWxkIGtlZXAgeW91IGJ1c3kgZm9yIGEgd2hpbGUuLi4N
-Cj4gDQo+IFRoZSBhYm92ZSBpcyBtaWdodCBiZSBhIGdvb2QgYmFzaXMgZm9yIGEgVE9ETyBmaWxl
-IGZvciBzdGFnaW5nLi4uDQo+IA0KPiBqb2hhbm5lcw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3Jp
-YmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVs
-ZXNzIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
-Lm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
-am9yZG9tby1pbmZvLmh0bWwNCg==
+On Wed, Feb 09, 2011 at 01:01:40PM +0100, Zefir Kurtisi wrote:
+> Hello DFS folks,
+> 
+> this is a patch series to prove the concept of DFS handling done in userspace.
+> 
+> It moves the radar pattern detector introduced in [1] and documented in [2] 
+> from mac80211 up to hostapd.
+
+I'll let the smart people comment on the workability of this. :-)
+But from a kernel interface standpoint it seems reasonable to me.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
