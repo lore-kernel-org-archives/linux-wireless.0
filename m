@@ -1,152 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48485 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755576Ab1B1QsR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 11:48:17 -0500
-Received: by fxm17 with SMTP id 17so3915244fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:48:16 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/9] [{mac|nl}80211] Add 2 new radar channel flags
-Date: Mon, 28 Feb 2011 17:47:06 +0100
-Cc: lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
-In-Reply-To: <201102281740.37036.bernhard.schmidt@saxnet.de>
+Received: from mail.atheros.com ([12.19.149.2]:27517 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753829Ab1BIMSL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 07:18:11 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 04:17:50 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 2/2] ath9k: disable beaconing before stopping beacon queue
+Date: Wed, 9 Feb 2011 17:46:39 +0530
+Message-ID: <1297253799-9688-2-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1297253799-9688-1-git-send-email-rmanoharan@atheros.com>
+References: <1297253799-9688-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201102281747.06564.bernhard.schmidt@saxnet.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DFS introduces 2 new flags a channel requiring radar detection
-might take. The interference flag indicates that interference was
-detected either during CAC or in-service monitoring and the
-channel is not to be used for the NOP period. The clear flag
-indicates that during a full CAC no interference was detected and
-it is allowed to open a BSS on that channel. The case were both
-flags are set is used to indicate that interference has been
-detected and we are in progress of closing on that channel.
+Beaconing should be disabled before stopping beacon queue.
+Not doing so could queue up beacons in hw that causes
+failure to stop Tx DMA, due to pending frames in hw
+and also unnecessary beacon tasklet schedule.
 
-Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- include/linux/nl80211.h |    6 ++++++
- include/net/cfg80211.h  |   18 ++++++++++++------
- net/mac80211/cfg.c      |    6 ++++++
- net/mac80211/tx.c       |    6 ++++--
- net/wireless/nl80211.c  |    4 ++++
- 5 files changed, 32 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 +
+ drivers/net/wireless/ath/ath9k/beacon.c |   37 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/main.c   |   35 +++++++++++-----------------
+ 3 files changed, 52 insertions(+), 22 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index e3c9ec7..2282f56 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1371,6 +1371,10 @@ enum nl80211_band_attr {
-  *	(100 * dBm).
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-+ * @NL80211_FREQUENCY_ATTR_RADAR_CLEAR: during a full CAC no interference has
-+ *	been detected.
-+ * @NL80211_FREQUENCY_ATTR_RADAR_INTERFERENCE: either during a CAC or
-+ *	in-service monitoring radar interference was detected.
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-  */
- enum nl80211_frequency_attr {
-@@ -1381,6 +1385,8 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_IBSS,
- 	NL80211_FREQUENCY_ATTR_RADAR,
- 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-+	NL80211_FREQUENCY_ATTR_RADAR_CLEAR,
-+	NL80211_FREQUENCY_ATTR_RADAR_INTERFERENCE,
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9272278..aa9bcff 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -349,6 +349,7 @@ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid
  
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8300699..5636c0a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -98,14 +98,20 @@ enum ieee80211_band {
-  * 	is not permitted.
-  * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
-  * 	is not permitted.
-+ * @IEEE80211_CHAN_RADAR_CLEAR: during a full CAC no interference has
-+ *	been detected.
-+ * @IEEE80211_CHAN_RADAR_INTERFERENCE: either during a CAC or in-service
-+ *	monitoring radar interference was detected.
-  */
- enum ieee80211_channel_flags {
--	IEEE80211_CHAN_DISABLED		= 1<<0,
--	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
--	IEEE80211_CHAN_NO_IBSS		= 1<<2,
--	IEEE80211_CHAN_RADAR		= 1<<3,
--	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
--	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
-+	IEEE80211_CHAN_DISABLED			= 1<<0,
-+	IEEE80211_CHAN_PASSIVE_SCAN		= 1<<1,
-+	IEEE80211_CHAN_NO_IBSS			= 1<<2,
-+	IEEE80211_CHAN_RADAR			= 1<<3,
-+	IEEE80211_CHAN_NO_HT40PLUS		= 1<<4,
-+	IEEE80211_CHAN_NO_HT40MINUS		= 1<<5,
-+	IEEE80211_CHAN_RADAR_CLEAR		= 1<<6,
-+	IEEE80211_CHAN_RADAR_INTERFERENCE	= 1<<7,
- };
+ struct ath_vif {
+ 	int av_bslot;
++	bool is_bslot_active;
+ 	__le64 tsf_adjust; /* TSF adjustment for staggered beacons */
+ 	enum nl80211_iftype av_opmode;
+ 	struct ath_buf *av_bcbuf;
+@@ -403,6 +404,7 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
+ int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp);
+ int ath_beaconq_config(struct ath_softc *sc);
++void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
  
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2a05b31..4a07e67 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -436,11 +436,17 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
- {
- 	struct beacon_data *new, *old;
- 	int new_head_len, new_tail_len;
-+	u32 flags;
- 	int size;
- 	int err = -EINVAL;
+ /*******/
+ /* ANI */
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index fcb36ab..8b42546 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -143,7 +143,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 	avp = (void *)vif->drv_priv;
+ 	cabq = sc->beacon.cabq;
  
- 	old = sdata->u.ap.beacon;
+-	if (avp->av_bcbuf == NULL)
++	if ((avp->av_bcbuf == NULL) || !avp->is_bslot_active)
+ 		return NULL;
  
-+	flags = sdata->local->hw.conf.channel->flags;
-+	if ((flags & IEEE80211_CHAN_RADAR) &&
-+	    !(flags & IEEE80211_CHAN_RADAR_CLEAR))
-+		return -EINVAL;
+ 	/* Release the old beacon first */
+@@ -248,6 +248,7 @@ int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 			for (slot = 0; slot < ATH_BCBUF; slot++)
+ 				if (sc->beacon.bslot[slot] == NULL) {
+ 					avp->av_bslot = slot;
++					avp->is_bslot_active = false;
+ 
+ 					/* NB: keep looking for a double slot */
+ 					if (slot == 0 || !sc->beacon.bslot[slot-1])
+@@ -314,6 +315,7 @@ int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 		ath_err(common, "dma_mapping_error on beacon alloc\n");
+ 		return -ENOMEM;
+ 	}
++	avp->is_bslot_active = true;
+ 
+ 	return 0;
+ }
+@@ -747,3 +749,36 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 
+ 	sc->sc_flags |= SC_OP_BEACONS;
+ }
 +
- 	/* head must not be zero-length */
- 	if (params->head && !params->head_len)
- 		return -EINVAL;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 081dcaf..c8b5e05 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1629,8 +1629,10 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * radar detection by itself. We can do that later by adding a
- 	 * monitor flag interfaces used for AP support.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
--	     IEEE80211_CHAN_PASSIVE_SCAN)))
-+	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS |
-+	    IEEE80211_CHAN_PASSIVE_SCAN)) ||
-+	    ((chan->flags & IEEE80211_CHAN_RADAR) &&
-+	    !(chan->flags & IEEE80211_CHAN_RADAR_CLEAR)))
- 		goto fail;
++void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_vif *avp;
++	int slot;
++	bool found = false;
++
++	ath9k_ps_wakeup(sc);
++	if (status) {
++		for (slot = 0; slot < ATH_BCBUF; slot++) {
++			if (sc->beacon.bslot[slot]) {
++				avp = (void *)sc->beacon.bslot[slot]->drv_priv;
++				if (avp->is_bslot_active) {
++					found = true;
++					break;
++				}
++			}
++		}
++		if (found) {
++			/* Re-enable beaconing */
++			ah->imask |= ATH9K_INT_SWBA;
++			ath9k_hw_set_interrupts(ah, ah->imask);
++		}
++	} else {
++		/* Disable SWBA interrupt */
++		ah->imask &= ~ATH9K_INT_SWBA;
++		ath9k_hw_set_interrupts(ah, ah->imask);
++		tasklet_kill(&sc->bcon_tasklet);
++		ath9k_hw_stoptxdma(ah, sc->beacon.beaconq);
++	}
++	ath9k_ps_restore(sc);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4ed43b2..a61ddc3 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1291,24 +1291,10 @@ static void ath9k_reclaim_beacon(struct ath_softc *sc,
+ {
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
  
- 	/* check for not even having the fixed radiotap header part */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f4facba..52b76e7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -307,6 +307,10 @@ static int nl80211_msg_put_channel(struct sk_buff *msg,
- 		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
- 	if (chan->flags & IEEE80211_CHAN_RADAR)
- 		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
-+	if (chan->flags & IEEE80211_CHAN_RADAR_CLEAR)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR_CLEAR);
-+	if (chan->flags & IEEE80211_CHAN_RADAR_INTERFERENCE)
-+		NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR_INTERFERENCE);
+-	/* Disable SWBA interrupt */
+-	sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
+-	ath9k_ps_wakeup(sc);
+-	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
+-	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+-	tasklet_kill(&sc->bcon_tasklet);
+-	ath9k_ps_restore(sc);
+-
++	ath9k_set_beaconing_status(sc, false);
+ 	ath_beacon_return(sc, avp);
++	ath9k_set_beaconing_status(sc, true);
+ 	sc->sc_flags &= ~SC_OP_BEACONS;
+-
+-	if (sc->nbcnvifs > 0) {
+-		/* Re-enable beaconing */
+-		sc->sc_ah->imask |= ATH9K_INT_SWBA;
+-		ath9k_ps_wakeup(sc);
+-		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
+-		ath9k_ps_restore(sc);
+-	}
+ }
  
- 	NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 		    DBM_TO_MBM(chan->max_power));
+ static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+@@ -1436,16 +1422,17 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
+ 
+ 	if (ath9k_uses_beacons(vif->type)) {
+ 		int error;
+-		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+ 		/* This may fail because upper levels do not have beacons
+ 		 * properly configured yet.  That's OK, we assume it
+ 		 * will be properly configured and then we will be notified
+ 		 * in the info_changed method and set up beacons properly
+ 		 * there.
+ 		 */
++		ath9k_set_beaconing_status(sc, false);
+ 		error = ath_beacon_alloc(sc, vif);
+ 		if (!error)
+ 			ath_beacon_config(sc, vif);
++		ath9k_set_beaconing_status(sc, true);
+ 	}
+ }
+ 
+@@ -1914,10 +1901,11 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	/* Enable transmission of beacons (AP, IBSS, MESH) */
+ 	if ((changed & BSS_CHANGED_BEACON) ||
+ 	    ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon)) {
+-		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++		ath9k_set_beaconing_status(sc, false);
+ 		error = ath_beacon_alloc(sc, vif);
+ 		if (!error)
+ 			ath_beacon_config(sc, vif);
++		ath9k_set_beaconing_status(sc, true);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+@@ -1940,8 +1928,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	/* Disable transmission of beacons */
+-	if ((changed & BSS_CHANGED_BEACON_ENABLED) && !bss_conf->enable_beacon)
+-		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
++	    !bss_conf->enable_beacon) {
++		ath9k_set_beaconing_status(sc, false);
++		avp->is_bslot_active = false;
++		ath9k_set_beaconing_status(sc, true);
++	}
+ 
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		sc->beacon_interval = bss_conf->beacon_int;
+@@ -1951,10 +1943,11 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		 */
+ 		if (vif->type == NL80211_IFTYPE_AP) {
+ 			sc->sc_flags |= SC_OP_TSF_RESET;
+-			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++			ath9k_set_beaconing_status(sc, false);
+ 			error = ath_beacon_alloc(sc, vif);
+ 			if (!error)
+ 				ath_beacon_config(sc, vif);
++			ath9k_set_beaconing_status(sc, true);
+ 		} else {
+ 			ath_beacon_config(sc, vif);
+ 		}
 -- 
-1.7.2.3
+1.7.4
+
