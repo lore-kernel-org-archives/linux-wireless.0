@@ -1,142 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6566 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752729Ab1BDJ5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 04:57:53 -0500
-Date: Fri, 4 Feb 2011 10:57:35 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Wolfgang Kufner <wolfgang.kufner@gmail.com>
-Subject: Re: Missing skb_pad() return value checks in rt2x00 driver
-Message-ID: <20110204095734.GC2222@redhat.com>
-References: <20110131214515.GC6368@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110131214515.GC6368@thinkpad-t410>
+Received: from mail.academy.zt.ua ([82.207.120.245]:21895 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755892Ab1BIOpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 09:45:14 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000019984.msg
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 16:44:38 +0200
+Subject: Re: SSB AI support code ([RFC6/11] SSB introduce bus_check_core
+	routine)
+From: George Kashperko <george@znau.edu.ua>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+Content-Type: text/plain
+Date: Wed, 09 Feb 2011 16:37:45 +0200
+Message-Id: <1297262265.18053.30.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 31, 2011 at 03:45:16PM -0600, Seth Forshee wrote:
-> Commit 739fd94 ("rt2x00: Pad beacon to multiple of 32 bits")
-> added calls to skb_pad() without checking the return value,
-> which could cause problems if any of those calls does happen
-> to fail. Add checks to prevent this from happening and move
-> the padding to the tops of the relevant functions so we can
-> bail out before writing to any registers.
+From: George Kashperko <george@znau.edu.ua>
 
-Make sense for me.
+Move part of the SB-style bus scan code into separate routine
+in order to reuse it later with AI-style bus scan.
+Signed-off-by: George Kashperko <george@znau.edu.ua>
+---
+ drivers/ssb/scan.c        |  172 +++++++++++++++++++-----------------
+ drivers/ssb/ssb_private.h |    6 +
+ 2 files changed, 96 insertions(+), 82 deletions(-)
+--- linux-next-20110203.orig/drivers/ssb/scan.c	2011-02-06 02:39:46.000000000 +0200
++++ linux-next-20110203/drivers/ssb/scan.c	2011-02-06 02:45:21.000000000 +0200
+@@ -265,6 +265,95 @@ static int we_support_multiple_80211_cor
+ 	return 0;
+ }
+ 
++/* returns 0 if the core is ok and -1 if the core should be ignored */
++int ssb_bus_check_core(struct ssb_device *dev, int *nr_80211_cores, int corenum)
++{
++	struct ssb_bus *bus = dev->bus;
++
++	printk(KERN_DEBUG PFX
++		    "Core %d found: %s "
++		    "(cc 0x%03X, rev 0x%02X, vendor 0x%04X)\n",
++		    corenum, ssb_core_name(dev->id.coreid),
++		    dev->id.coreid, dev->id.revision, dev->id.vendor);
++
++	switch (dev->id.coreid) {
++	case SSB_DEV_80211:
++		(*nr_80211_cores)++;
++		if (*nr_80211_cores > 1) {
++			if (!we_support_multiple_80211_cores(bus)) {
++				ssb_dprintk(KERN_INFO PFX "Ignoring additional "
++					    "802.11 core\n");
++				return -1;
++			}
++		}
++		break;
++	case SSB_DEV_EXTIF:
++#ifdef CONFIG_SSB_DRIVER_EXTIF
++		if (bus->extif.dev) {
++			ssb_printk(KERN_WARNING PFX
++				   "WARNING: Multiple EXTIFs found\n");
++			break;
++		}
++		bus->extif.dev = dev;
++#endif /* CONFIG_SSB_DRIVER_EXTIF */
++		break;
++	case SSB_DEV_CHIPCOMMON:
++		if (bus->chipco.dev) {
++			ssb_printk(KERN_WARNING PFX
++				   "WARNING: Multiple ChipCommon found\n");
++			break;
++		}
++		bus->chipco.dev = dev;
++		break;
++	case SSB_DEV_MIPS:
++	case SSB_DEV_MIPS_3302:
++#ifdef CONFIG_SSB_DRIVER_MIPS
++		if (bus->mipscore.dev) {
++			ssb_printk(KERN_WARNING PFX
++				   "WARNING: Multiple MIPS cores found\n");
++			break;
++		}
++		bus->mipscore.dev = dev;
++#endif /* CONFIG_SSB_DRIVER_MIPS */
++		break;
++	case SSB_DEV_PCI:
++	case SSB_DEV_PCIE:
++#ifdef CONFIG_SSB_DRIVER_PCICORE
++		if (bus->bustype == SSB_BUSTYPE_PCI) {
++			/* Ignore PCI cores on PCI-E cards.
++			 * Ignore PCI-E cores on PCI cards. */
++			if (dev->id.coreid == SSB_DEV_PCI) {
++				if (pci_is_pcie(bus->host_pci))
++					return -1;
++			} else {
++				if (!pci_is_pcie(bus->host_pci))
++					return -1;
++			}
++		}
++		if (bus->pcicore.dev) {
++			ssb_printk(KERN_WARNING PFX
++				   "WARNING: Multiple PCI(E) cores found\n");
++			break;
++		}
++		bus->pcicore.dev = dev;
++#endif /* CONFIG_SSB_DRIVER_PCICORE */
++		break;
++	case SSB_DEV_ETHERNET:
++		if (bus->bustype == SSB_BUSTYPE_PCI) {
++			if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
++			    (bus->host_pci->device & 0xFF00) == 0x4300) {
++				/* This is a dangling ethernet core on a
++				 * wireless device. Ignore it. */
++				return -1;
++			}
++		}
++		break;
++	default:
++		break;
++	}
++	return 0;
++}
++
+ int ssb_bus_scan(struct ssb_bus *bus,
+ 		 unsigned long baseaddr)
+ {
+@@ -352,87 +441,8 @@ int ssb_bus_scan(struct ssb_bus *bus,
+ 		dev->bus = bus;
+ 		dev->ops = bus->ops;
+ 
+-		printk(KERN_DEBUG PFX
+-			    "Core %d found: %s "
+-			    "(cc 0x%03X, rev 0x%02X, vendor 0x%04X)\n",
+-			    i, ssb_core_name(dev->id.coreid),
+-			    dev->id.coreid, dev->id.revision, dev->id.vendor);
+-
+-		switch (dev->id.coreid) {
+-		case SSB_DEV_80211:
+-			nr_80211_cores++;
+-			if (nr_80211_cores > 1) {
+-				if (!we_support_multiple_80211_cores(bus)) {
+-					ssb_dprintk(KERN_INFO PFX "Ignoring additional "
+-						    "802.11 core\n");
+-					continue;
+-				}
+-			}
+-			break;
+-		case SSB_DEV_EXTIF:
+-#ifdef CONFIG_SSB_DRIVER_EXTIF
+-			if (bus->extif.dev) {
+-				ssb_printk(KERN_WARNING PFX
+-					   "WARNING: Multiple EXTIFs found\n");
+-				break;
+-			}
+-			bus->extif.dev = dev;
+-#endif /* CONFIG_SSB_DRIVER_EXTIF */
+-			break;
+-		case SSB_DEV_CHIPCOMMON:
+-			if (bus->chipco.dev) {
+-				ssb_printk(KERN_WARNING PFX
+-					   "WARNING: Multiple ChipCommon found\n");
+-				break;
+-			}
+-			bus->chipco.dev = dev;
+-			break;
+-		case SSB_DEV_MIPS:
+-		case SSB_DEV_MIPS_3302:
+-#ifdef CONFIG_SSB_DRIVER_MIPS
+-			if (bus->mipscore.dev) {
+-				ssb_printk(KERN_WARNING PFX
+-					   "WARNING: Multiple MIPS cores found\n");
+-				break;
+-			}
+-			bus->mipscore.dev = dev;
+-#endif /* CONFIG_SSB_DRIVER_MIPS */
+-			break;
+-		case SSB_DEV_PCI:
+-		case SSB_DEV_PCIE:
+-#ifdef CONFIG_SSB_DRIVER_PCICORE
+-			if (bus->bustype == SSB_BUSTYPE_PCI) {
+-				/* Ignore PCI cores on PCI-E cards.
+-				 * Ignore PCI-E cores on PCI cards. */
+-				if (dev->id.coreid == SSB_DEV_PCI) {
+-					if (pci_is_pcie(bus->host_pci))
+-						continue;
+-				} else {
+-					if (!pci_is_pcie(bus->host_pci))
+-						continue;
+-				}
+-			}
+-			if (bus->pcicore.dev) {
+-				ssb_printk(KERN_WARNING PFX
+-					   "WARNING: Multiple PCI(E) cores found\n");
+-				break;
+-			}
+-			bus->pcicore.dev = dev;
+-#endif /* CONFIG_SSB_DRIVER_PCICORE */
+-			break;
+-		case SSB_DEV_ETHERNET:
+-			if (bus->bustype == SSB_BUSTYPE_PCI) {
+-				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
+-				    (bus->host_pci->device & 0xFF00) == 0x4300) {
+-					/* This is a dangling ethernet core on a
+-					 * wireless device. Ignore it. */
+-					continue;
+-				}
+-			}
+-			break;
+-		default:
+-			break;
+-		}
++		if (ssb_bus_check_core(dev, &nr_80211_cores, i) < 0)
++			continue;
+ 
+ 		dev_i++;
+ 	}
+--- linux-next-20110203.orig/drivers/ssb/ssb_private.h	2011-02-06 02:39:46.000000000 +0200
++++ linux-next-20110203/drivers/ssb/ssb_private.h	2011-02-06 02:31:47.000000000 +0200
+@@ -191,7 +191,6 @@ extern int ssb_devices_freeze(struct ssb
+ extern int ssb_devices_thaw(struct ssb_freeze_context *ctx);
+ 
+ 
+-
+ /* b43_pci_bridge.c */
+ #ifdef CONFIG_SSB_B43_PCI_BRIDGE
+ extern int __init b43_pci_ssb_bridge_init(void);
+@@ -206,6 +205,11 @@ static inline void b43_pci_ssb_bridge_ex
+ }
+ #endif /* CONFIG_SSB_B43_PCI_BRIDGE */
+ 
++
++/* Search support routines */
++extern int ssb_bus_check_core(struct ssb_device *dev, int *nr_80211_cores,
++			      int corenum);
++
+ /* SB-style bus core control and state registers */
+ #define SSB_TMSLOW		0x0F98     /* SB Target State Low */
+ #define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
 
-Ivo, Gertjan? 
 
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
->  drivers/net/wireless/rt2x00/rt2800lib.c |   13 +++++++++++--
->  drivers/net/wireless/rt2x00/rt61pci.c   |   13 +++++++++++--
->  drivers/net/wireless/rt2x00/rt73usb.c   |   13 +++++++++++--
->  3 files changed, 33 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index f8ba01c..79d17da 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -776,6 +776,17 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
->  	u32 reg;
->  
->  	/*
-> +	 * Pad out the beacon to a 32-bit boundary
-> +	 */
-> +	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
-> +	if (padding_len && skb_pad(entry->skb, padding_len)) {
-> +		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
-> +		/* skb freed by skb_pad() on failure */
-> +		entry->skb = NULL;
-> +		return;
-> +	}
-> +
-> +	/*
->  	 * Disable beaconing while we are reloading the beacon data,
->  	 * otherwise we might be sending out invalid data.
->  	 */
-> @@ -809,8 +820,6 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
->  	/*
->  	 * Write entire beacon with TXWI and padding to register.
->  	 */
-> -	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
-> -	skb_pad(entry->skb, padding_len);
->  	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
->  	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
->  				   entry->skb->len + padding_len);
-> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-> index 8de44dd..83ac31e 100644
-> --- a/drivers/net/wireless/rt2x00/rt61pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
-> @@ -1965,6 +1965,17 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
->  	u32 reg;
->  
->  	/*
-> +	 * Pad out the beacon to a 32-bit boundary
-> +	 */
-> +	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
-> +	if (padding_len && skb_pad(entry->skb, padding_len)) {
-> +		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
-> +		/* skb freed by skb_pad() on failure */
-> +		entry->skb = NULL;
-> +		return;
-> +	}
-> +
-> +	/*
->  	 * Disable beaconing while we are reloading the beacon data,
->  	 * otherwise we might be sending out invalid data.
->  	 */
-> @@ -1985,8 +1996,6 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
->  	/*
->  	 * Write entire beacon with descriptor and padding to register.
->  	 */
-> -	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
-> -	skb_pad(entry->skb, padding_len);
->  	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
->  	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base,
->  				      entry_priv->desc, TXINFO_SIZE);
-> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-> index 029be3c..5b15609 100644
-> --- a/drivers/net/wireless/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
-> @@ -1550,6 +1550,17 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
->  	u32 reg;
->  
->  	/*
-> +	 * Pad out the beacon to a 32-bit boundary
-> +	 */
-> +	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
-> +	if (padding_len && skb_pad(entry->skb, padding_len)) {
-> +		dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
-> +		/* skb freed by skb_pad() on failure */
-> +		entry->skb = NULL;
-> +		return;
-> +	}
-> +
-> +	/*
->  	 * Disable beaconing while we are reloading the beacon data,
->  	 * otherwise we might be sending out invalid data.
->  	 */
-> @@ -1576,8 +1587,6 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
->  	/*
->  	 * Write entire beacon with descriptor and padding to register.
->  	 */
-> -	padding_len = roundup(entry->skb->len, 4) - entry->skb->len;
-> -	skb_pad(entry->skb, padding_len);
->  	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
->  	rt2x00usb_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
->  				      entry->skb->len + padding_len);
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
