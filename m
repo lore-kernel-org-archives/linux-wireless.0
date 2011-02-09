@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58528 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755190Ab1BGXxm convert rfc822-to-8bit (ORCPT
+Received: from mailout07.t-online.de ([194.25.134.83]:46630 "EHLO
+	mailout07.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586Ab1BIQsZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 18:53:42 -0500
-Received: by iyj8 with SMTP id 8so2719323iyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 15:53:41 -0800 (PST)
+	Wed, 9 Feb 2011 11:48:25 -0500
+Message-ID: <4D52C54A.2010709@t-online.de>
+Date: Wed, 09 Feb 2011 17:48:10 +0100
+From: =?ISO-8859-15?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
 MIME-Version: 1.0
-In-Reply-To: <4D505DDD.8050805@candelatech.com>
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org>
- <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
- <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
- <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org>
- <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
- <4D5033DE.4070701@candelatech.com> <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com>
- <4D50503E.4090007@candelatech.com> <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
- <4D505DDD.8050805@candelatech.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, 7 Feb 2011 15:53:21 -0800
-Message-ID: <AANLkTimybx2pQGsy908ZOKCUndQX55vOQy1aToingWSY@mail.gmail.com>
-Subject: Re: Scanning and channel types.
-To: Ben Greear <greearb@candelatech.com>
-Cc: j@w1.fi, Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com
+Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
+References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 7, 2011 at 1:02 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 02/07/2011 12:10 PM, Daniel Halperin wrote:
->>
->> On Mon, Feb 7, 2011 at 12:04 PM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->>>>
->>>> Start on 5 GHZ AP with HT Only set.  Scan.  What rate are probes sent
->>>> at for 2.4 GHz?
->>
->> No HT20 is not the same as HT-Only.  I'm not sure how to set that. Jouni?
+> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
 >
-> I found a post from a year or so ago that indicates hostapd doesn't
-> support this type of thing (that could have changed, of course).
+> The DMA latency issue is observed only in Intel pinetrail platforms but
+> in the driver we had a default PM-QOS value of 55. This caused
+> unnecessary power consumption and battery drain in other platforms.
+> Address this issue by disabling PM-QOS by default by setting it's value
+> as '0' and making code changes appropriately.This addresses the bug:
+> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+> 	If the user sees some DMA latency issue he can still use the pmqos as a
+> module parameter to trade power for throughput as below:
+> sudo modprobe ath9k pmqos=55
 >
-> Do you know of any commercial APs that support the HT-only feature?
-> (And/Or a general strategy for configuring it?)
->
->>> On 5Ghz channels, they are sent at 6Mbps
->>> On channel 3 (2.4Ghz), they are sent at 1Mbps
->>>
->>>
->>> That seem right?
->>
->> Yes, for a HT20 but not HT Only AP.
->
-> Seems to me that the probe-request is to any/all APs,
-> so how could we possibly know that we should send it
-> at 6Mbps v/s 1Mbps until we discovered and communicated
-> with it?
+> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+Acked-By: Richard Schütz <r.schtz@t-online.de>
 
-Just as there are G-only APs that don't advertise 1-11 Mbps in their
-beacons, there are HT-only APs that don't advertise support for 1-11
-or 6-54 Mbps in their beacons and *only* support MCS rates.
+Looks good to me with the exception of ATH9K_PM_QOS_DEFAULT_VALUE. But 
+John already mentioned that.
 
-Dan
+-- 
+Regards,
+Richard Schütz
