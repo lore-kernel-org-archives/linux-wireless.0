@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59987 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab1BNMSB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 07:18:01 -0500
-Subject: Re: [PATCH 4/5] iwlwifi: auto-tune tx queue size to minimize
- latency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Nathaniel J. Smith" <njs@pobox.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
-In-Reply-To: <1297619803-2832-5-git-send-email-njs@pobox.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
-	 <1297619803-2832-5-git-send-email-njs@pobox.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 13:17:51 +0100
-Message-ID: <1297685871.3785.39.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.neratec.ch ([80.75.119.105]:41779 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753392Ab1BIMCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 07:02:01 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.neratec.ch (Postfix) with ESMTP id 1D908664006
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Feb 2011 13:01:59 +0100 (CET)
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [RFC] DFS userspace handler
+Date: Wed,  9 Feb 2011 13:01:40 +0100
+Message-Id: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
-> We maintain several ring buffers that queue up packets for the
-> hardware to transmit. These buffers can be quite large, and the
-> quality of wireless connections can vary greatly; as a result, it can
-> be that a full queue might take multiple seconds to drain.
-> 
-> For instance, if there is a high-bandwidth outgoing flow, like a large
-> file upload, then it will completely fill the tx queues. Once the
-> queues are full, then any other outgoing packets -- like those sent
-> when a user clicks on an HTTP link, or types into an SSH session --
-> will have to wait at the end of the line, and will not actually be
-> transmitted until multiple seconds have passed.  This results in a
-> suboptimal level of interactive response.
-> 
-> So we really don't want to allow too many packets to get queued up. On
-> the other hand, we do want to queue up *some* packets, to maintain
-> throughput -- and the queue size that maintains interactivity for a
-> degraded 1 Mb/s connection might not be so great for some
-> super-fancy 802.11n 600 Mb/s connection.
-> 
-> This patch estimates how long it takes the hardware to transmit one
-> packet (by comparing each packet's queue residency time to the number
-> of packets it had to wait behind), and then further smooths these
-> estimates with an EWMA. Then, it uses the estimated packet
-> transmission time to choose the maximum queue size that will still
-> produce reasonably bounded queue residency times, given current
-> conditions.
+Hello DFS folks,
 
-This sounds nice -- but couldn't it just as well be implemented in
-mac80211, at least for most devices (that have accurate TX status
-reporting)?
+this is a patch series to prove the concept of DFS handling done in userspace.
 
-johannes
+It moves the radar pattern detector introduced in [1] and documented in [2] 
+from mac80211 up to hostapd.
+
+The basic concept is:
+1) pattern detection
+ * pulse events detected by HW are passed to hostapd
+ * hostapd performs per-wiphy DFS pattern matching
+2) channel handling: on radar detection hostapd
+ * updates channel state (NOL handling)
+ * switches to new operating channel with TX disabled (on all wiphys)
+ * after CAC period enables TX on that channel
+
+The proposed patches provide part 1) of the concept. The nl80211 interface is
+extended with functions to pass DFS pulse events to hostapd.
+
+Testing as described in [2] results in identical output, indicating that both
+approaches (mac80211 and hostapd based) are equivalent from functional point
+of view.
+
+The testing was done with
+ * OpenWRT r25417
+ * Atheros AR9280 Rev:2
+ * DFS radars generated with R&S vector signal generator
+
+We at our company would prefer this approach over the mac80211 based one as
+soon as we see that part 2) can be implemented as proposed. 
+
+
+
+Cheers
+Zefir
+
+
+
+[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/61868
+[2] http://linuxwireless.org/en/developers/DFS/DetectorDesignNt
+---
+-- 
+1.7.1
 
