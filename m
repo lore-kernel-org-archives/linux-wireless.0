@@ -1,101 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24527 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753784Ab1BUTV0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 14:21:26 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/4] iwlwifi: Limit number of firmware reload
-Date: Mon, 21 Feb 2011 11:06:46 -0800
-Message-Id: <1298315209-17986-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58961 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab1BIQXD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 11:23:03 -0500
+Received: by wyb28 with SMTP id 28so351082wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 08:23:01 -0800 (PST)
+Message-ID: <4D52BF9F.3010900@lwfinger.net>
+Date: Wed, 09 Feb 2011 10:23:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: George Kashperko <george@znau.edu.ua>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: SSB AI support code ([RFC9/11] SSB modify irqflag treatment)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua> <1297262500.18053.36.camel@dev.znau.edu.ua>
+In-Reply-To: <1297262500.18053.36.camel@dev.znau.edu.ua>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If device has serious problem and cause firmware can not recover itself.
-Keep reloading firmware will not help, it can only fill up the syslog and
-lock up the system because busy reloading.
+On 02/09/2011 08:41 AM, George Kashperko wrote:
+> From: George Kashperko <george@znau.edu.ua>
+> 
+> Modify irqflag routine to reuse tpsflag value rather than
+> reading TPSFLAG register once again. Change default "not
+> supported" value from 0x3F to -1.
+> Signed-off-by: George Kashperko <george@znau.edu.ua>
+> ---
+>  drivers/ssb/driver_mipscore.c |    2 +-
+>  drivers/ssb/ssb_sb.c          |    4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-08 16:14:57.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-08 16:15:24.000000000 +0200
+> @@ -75,7 +75,7 @@ unsigned int ssb_mips_irq(struct ssb_dev
+>  	unsigned int irq;
+>  
+>  	irqflag = ssb_irqflag(dev);
+> -	if (irqflag == 0x3f)
+> +	if (irqflag == -1)
+>  		return 6;
+>  	ipsflag = ssb_read32(bus->mipscore.dev, SSB_IPSFLAG);
+>  	for (irq = 1; irq <= 4; irq++) {
+> --- linux-next-20110203.orig/drivers/ssb/ssb_sb.c	2011-02-08 16:14:57.000000000 +0200
+> +++ linux-next-20110203/drivers/ssb/ssb_sb.c	2011-02-08 16:15:24.000000000 +0200
+> @@ -175,10 +175,10 @@ static u32 ssb_irqflag_sb(struct ssb_dev
+>  {
+>  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
+>  	if (tpsflag)
+> -		return ssb_read32(dev, SSB_TPSFLAG) & SSB_TPSFLAG_BPFLAG;
+> +		return tpsflag & SSB_TPSFLAG_BPFLAG;
+>  	else
+>  		/* not irq supported */
+> -		return 0x3f;
+> +		return -1;
+>  }
+>  
+>  static void ssb_core_ctl_flags_sb(struct ssb_device *dev, u32 mask,
 
-Introduce the limit reload counter, if the reload reach the maximum within
-the pre-defined duration;stop the reload operation.
+This one does not apply with the following:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   22 ++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    9 +++++++++
- 2 files changed, 31 insertions(+), 0 deletions(-)
+finger@larrylap:~/wireless-testing> quilt push
+Applying patch patches/ssb_AI_9
+patching file drivers/ssb/driver_mipscore.c
+Hunk #1 succeeded at 85 (offset 10 lines).
+can't find file to patch at input line 35
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|--- linux-next-20110203.orig/drivers/ssb/ssb_sb.c      2011-02-08
+16:14:57.000000000 +0200
+|+++ linux-next-20110203/drivers/ssb/ssb_sb.c   2011-02-08 16:15:24.000000000 +0200
+--------------------------
+No file to patch.  Skipping patch.
+1 out of 1 hunk ignored
+Patch patches/ssb_AI_9 does not apply (enforce with -f)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 4ad8938..977ddfb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -948,6 +948,9 @@ EXPORT_SYMBOL(iwl_print_rx_config_cmd);
-  */
- void iwl_irq_handle_error(struct iwl_priv *priv)
- {
-+	unsigned int reload_msec;
-+	unsigned long reload_jiffies;
-+
- 	/* Set the FW error flag -- cleared on iwl_down */
- 	set_bit(STATUS_FW_ERROR, &priv->status);
- 
-@@ -991,6 +994,25 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
- 	 * commands by clearing the INIT status bit */
- 	clear_bit(STATUS_READY, &priv->status);
- 
-+	/*
-+	 * If firmware keep reloading, then it indicate something
-+	 * serious wrong and firmware having problem to recover
-+	 * from it. Instead of keep trying which will fill the syslog
-+	 * and hang the system, let's just stop it
-+	 */
-+	reload_jiffies = jiffies;
-+	reload_msec = jiffies_to_msecs((long) reload_jiffies -
-+				(long) priv->reload_jiffies);
-+	priv->reload_jiffies = reload_jiffies;
-+	if (reload_msec <= IWL_MIN_RELOAD_DURATION) {
-+		priv->reload_count++;
-+		if (priv->reload_count >= IWL_MAX_CONTINUE_RELOAD_CNT) {
-+			IWL_ERR(priv, "BUG_ON, Stop restarting\n");
-+			return;
-+		}
-+	} else
-+		priv->reload_count = 0;
-+
- 	if (!test_bit(STATUS_EXIT_PENDING, &priv->status)) {
- 		IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
- 			  "Restarting adapter due to uCode error.\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index ecfbef4..065615e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1110,6 +1110,11 @@ struct iwl_event_log {
- /* BT Antenna Coupling Threshold (dB) */
- #define IWL_BT_ANTENNA_COUPLING_THRESHOLD	(35)
- 
-+/* Firmware reload counter and Timestamp */
-+#define IWL_MIN_RELOAD_DURATION		1000 /* 1000 ms */
-+#define IWL_MAX_CONTINUE_RELOAD_CNT	4
-+
-+
- enum iwl_reset {
- 	IWL_RF_RESET = 0,
- 	IWL_FW_RESET,
-@@ -1262,6 +1267,10 @@ struct iwl_priv {
- 	/* force reset */
- 	struct iwl_force_reset force_reset[IWL_MAX_FORCE_RESET];
- 
-+	/* firmware reload counter and timestamp */
-+	unsigned long reload_jiffies;
-+	int reload_count;
-+
- 	/* we allocate array of iwl_channel_info for NIC's valid channels.
- 	 *    Access via channel # using indirect index array */
- 	struct iwl_channel_info *channel_info;	/* channel info array */
--- 
-1.7.0.4
-
+Larry
