@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33987 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43586 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751204Ab1BSGNG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 01:13:06 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 22:12:45 -0800
-Date: Sat, 19 Feb 2011 11:42:42 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	id S1751138Ab1BIGpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 01:45:19 -0500
+Date: Wed, 9 Feb 2011 07:45:18 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
-Message-ID: <20110219061241.GA5881@vmraj-lnx.users.atheros.com>
-References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
- <1298027245.3772.3.camel@jlt3.sipsolutions.net>
+Subject: Re: [RFC/RFT] iwl3945: use software scanning by default
+Message-ID: <20110209064517.GE2184@redhat.com>
+References: <1297172211-17448-1-git-send-email-sgruszka@redhat.com>
+ <1297180207.20613.41.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1298027245.3772.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297180207.20613.41.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 18, 2011 at 04:37:25PM +0530, Johannes Berg wrote:
-> On Fri, 2011-02-18 at 14:16 +0530, Vivek Natarajan wrote:
-> > There is a race on sending a data frame before the tx completion
-> > of nullfunc frame for enabling power save. As the data quickly
-> > follows the nullfunc frame, the AP thinks that the station is out
-> > of power save and continues to send the frames. Whereas in the
-> > station, the nullfunc ack will be processed after the tx completion
-> > of data frame and mac80211 goes to powersave. Thus the power
-> > save state mismatch between the station and the AP causes some
-> > data loss and some applications fail because of that. This patch
-> > fixes this issue.
+On Tue, Feb 08, 2011 at 07:50:07AM -0800, wwguy wrote:
+> On Tue, 2011-02-08 at 05:36 -0800, Stanislaw Gruszka wrote:
+> > Looking for some more testing and opinions.
 > > 
-> > Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> > ---
-> >  net/mac80211/mlme.c   |   11 ++++++++++-
-> >  net/mac80211/status.c |    2 --
-> >  2 files changed, 10 insertions(+), 3 deletions(-)
+> > Patch fixes:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=671366
+> > and probably some other "very poor performance" bugs reported
+> > elsewhere.
 > > 
-> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> > index d89e878..91006a2 100644
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -738,8 +738,16 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
-> >  		return;
+> > Sometimes after hardware scanning device is unable to receive frames
+> > at higher rate, what cause that very slow speed is observed by the users.
+> > 
+> > To workaround problem we can use software scanning. Patch remove
+> > "deprecated" warning and make sw scan be used by default on 3945.
+> > 
+> > On older kernels, in particular 2.6.35, software scanning does not
+> > fix problem. On my setup, not affected by bug, I can see slow speed
+> > with software scans on 2.6.35 as well. I'm not quite sure why. Anyway
+> > on upstream patch works good for me and bug reporter.
+
+[snip]
+
+> > -MODULE_PARM_DESC(disable_hw_scan,
+> > -		 "disable hardware scanning (default 0) (deprecated)");
+> > +MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
+> >  module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
+> >  MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
 > >  
-> >  	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-> > -	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
-> > +	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-> > +		netif_tx_stop_all_queues(sdata->dev);
-> > +		/* flush all the frames queued in the driver before
-> > +		 * going to power save
-> > +		 */
-> > +		drv_flush(local, false);
 > 
-> Ok, I should've thought of this earlier -- but can we really do this?
-> 
-> I know we currently don't allow powersave when there's more than one
-> interface, but we still allow it while there are monitor interfaces and
-> a monitor interface could be sending packets, which would violate the
-> flush() contract with the driver -- the driver may expect not to get any
-> packets during flush.
-AFIK we also are not stopping tx queue of monitor iface on offchannel.
-Doing so could help flush().
+> don't have much experience with 3945, but not sure setting sw scan by
+> default is the right choice?
 
-> I'm not sure. Maybe we should disable powersave when there are monitor
-> interfaces after all, even though that would rob us of a way to debug
-> things. Thoughts?
->
-drivers like ath9k receives all frames from any bss on FIF_PROMISC_IN_BSS,
-since there is no specific hw filter for that. So in that case it would be
-better to disable power save.
+Definitely hw scan is bad choice for some users.
 
---
-Rajkumar
+I'll will provide patch for some more users to test, to see if
+it not causing regression. On my laptop with iwl3945 it works
+well with upstream kernel and bad with 2.6.35.
+
+I'm not quite sure, why sw scaning improved currently.
+I thought commit df13cce53a7b28a81460e6bfc4857e9df4956141
+"mac80211: Improve software scan timing" fix things, but that
+commit is also on 2.6.35 .
+
+Stanislaw
+
