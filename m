@@ -1,230 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web36104.mail.mud.yahoo.com ([66.163.179.218]:34461 "HELO
-	web36104.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756856Ab1BJUho (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:40150 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752197Ab1BIUAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 15:37:44 -0500
-Message-ID: <875258.44241.qm@web36104.mail.mud.yahoo.com>
-Date: Thu, 10 Feb 2011 12:31:02 -0800 (PST)
-From: Noel Milton Vega <nmvega@nyceyes.com>
-Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-To: Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr
-Cc: linux-wireless@vger.kernel.org,
-	Noel Milton Vega <nmvega@ComputingArchitects.Com>
+	Wed, 9 Feb 2011 15:00:07 -0500
+Received: by qwa26 with SMTP id 26so443055qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 12:00:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Wed, 9 Feb 2011 21:00:04 +0100
+Message-ID: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
+Subject: Notes on ssb specs and implementation
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev <b43-dev@lists.infradead.org>
+Content-Type: multipart/mixed; boundary=0016e6891d104ac305049bdee9e7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello again all:
+--0016e6891d104ac305049bdee9e7
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-It seems that the bluetooth capability of this card now works.
-I don't know whether this had to do with my installing a missing
-firmware package that Julian pointed out
-(i.e. iwl6000g2b-firmware-17.168.5.1-1.fc14.noarch), or maybe
-that the bluetooth radio was off when I was attempting to pair
-(I do remember turning it on though). In any case, I inserted an
-"rfkill unblock all" statement in /etc/rc.local to automate
-that - at least at a O/S level (thank you Ozan for alerting
-me to that command). 
+Hi,
 
-Anyway, I'd like to post an accurate update to the question I posed on
-the forums (FedoraForum & Linuxforums) for this issue (I will
-not divulge email addresses btw).
+I've N-PHY card that doesn't report any scan results, so after
+checking N-PHY code (it looks fine so far) I decided to dig into ssb.
+Hopefully this will lead to some fixes and maybe working card.
 
-Given the dialogue we had last night, would you guys/gals
-characterize the update shown next as accurate:
+I've dumped MMIO operations performed by wl and ssb/b43, compared
+them, documented with parts from specs and noted differences.
 
-###################################################################
-Hi Friends....
+As you should know, we have to enable wireless core twice: first time
+to get basic information about hardware, second to configure it in
+correct (like PHY specific) way.
 
-UPDATE:
+ssb_device_enable_1 is for first reset
+ssb_device_enable_2 is for second reset
 
-In working with the kernel.org linux-wireless developers, the conclusion
-from one developer was that, though generally speaking the
-"Centrino Advanced-N 6230 AGN" card is supported by the "iwlagn" kernel
-module, it seems that the stock kernel module provided in the
-Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does not
-support the this card.
+Notes from ssb_device_enable_1:
+1) There are few undocumented flushes performed by both drivers. Could
+be nice to document it in specs
+2) wl does not reset PHY (no B43_TMSLOW_PHYRESET and no taking it out
+of reset after enabling wireless core)
+3) After reset (last step in ssb_device_enable) wl doesn't leave core
+specific flags
 
-In other words, though code in the main kernel.org git repository does
-show support for the card (via iwlagn kernel module), Fedora 14's
-rendition/distribution of that does not.
+Notes from ssb_device_enable_2:
+1) ssb does not implement fast disable in case clocks are not enabled
+2) ssb uses different Reject bit than wl
+3) ssb doesn't check for "If the Core ID Low register has the
+"Initiator" bit set"
+4) wl checks for "Busy" bit in IM STATE, not TM as documented in specs
+5) when writing "Force Gated Clocks On", "Clock Enable", and "Reset"
+both drivers keep Reject set, however specs don't mention that
+6) wl checks "If the "Initiator" bit in TM State Low is set" using ff8
+register which is Core ID Low, not TMSLOW
+7) rest differences are duplicated from ssb_device_enable_1
 
-"lspci(8) -v" did show the hardware (Intel Corporation Centrino Advanced-N 6230
-(rev 34)), the necessary driver and firmware packages were installed, and the
-laptop RF toggle switches are set to enable wireless communications.
-Yet manually performing "modprobe(8) iwlagn" does not produce a wlan0
-interface in "ifconfig(8) -a" output; and although "dmesg(8)" shows the
-module being loaded, it does not show it detecting the card.
+Larry: could you care for specs notes I collected?
 
-The two work arounds were suggested (I haven't tried either):
+Michael: was there any reasons why we didn't implement some parts of
+core-disabling code?
+Michael: should we care about the way wl sets core specific flags? I
+didn't dig into that moment in MMIO dumps, but as ssb_device_enable
+implementation ignores flags at the end, it has to set flags somehow
+differently on it's own.
 
-  (1) Update the kernel. Since I have the latest one provided
-      by Fedora for Fedora 14, this implies a manual compile
-      of a kernel.org kernel. Note that if Fedora is not aware of
-      this issue, it's not likely that the next kernel update
-      will remedy this.
+--=20
+Rafa=C5=82
 
-  (2) Using a compat-wireless technique described here,
-      http://wireless.kernel.org/en/users/Download
+--0016e6891d104ac305049bdee9e7
+Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_1.wl.txt"
+Content-Disposition: attachment; filename="ssb_device_enable_1.wl.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjyn7ea40
 
+d2w6Cgo+Pj4gc3NiX2RldmljZV9lbmFibGUgc3RhcnQKPj4+IHNzYl9kZXZpY2VfZGlzYWJsZSBz
+dGFydAkJRGlzYWJsZSB0aGUgQ29yZSB0byBhY2NvdW50IGZvciBhIGNvcmUgaW4gYSByYW5kb20g
+c3RhdGUKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDAwMDAwMwkJSWYgdGhlIGNvcmUgaXMgYWxy
+ZWFkeSBpbiByZXNldCAodGhlICJSZXNldCIgYml0IGluIFRNIFN0YXRlIExvdyBpcyBzZXQpIGl0
+J3MgYWxyZWFkeSBkaXNhYmxlZCwgcmV0dXJuCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwMDAw
+MDMJCUlmIHRoZSBjb3JlIGlzIGFscmVhZHkgaW4gcmVzZXQgKHRoZSAiUmVzZXQiIGJpdCBpbiBU
+TSBTdGF0ZSBMb3cgaXMgc2V0KSBpdCdzIGFscmVhZHkgZGlzYWJsZWQsIHJldHVybgo+Pj4gc3Ni
+X2RldmljZV9kaXNhYmxlIGVuZAoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwNzAwMDEJKHNw
+ZWNpZmljPT1CNDNfVE1TTE9XX1BIWUNMS0VOKSBXcml0ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2Nr
+cyBPbiIsICJDbG9jayBFbmFibGUiLGFuZCAiUmVzZXQiIGJpdHMgYWxvbmcgd2l0aCBhbnkgZGV2
+aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3RlZCwgdG8gdGhlIFRNIFN0YXRlIExvdyByZWdpc3Rl
+ciAodW5zZXQgdGhlIHJlc3QpCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwNzAwMDEJCVBlcmZv
+cm0gYSBkdW1teSByZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNzYl9yZWFkMzIo
+MHhmOWMpIC0+IDB4MTAwYzAwMDAJCUlmIHRoZSBTIEVycm9yIGJpdCBpcyBzZXQgaW4gdGhlIFRN
+IFN0YXRlIEhpZ2ggcmVnaXN0ZXIKc3NiX3JlYWQzMigweGY5MCkgLT4gMHgwMDAwMDAyMAkJVW5z
+ZXQgdGhlICJJbiBCYW5kIEVycm9yIiBvciAiVGltZW91dCIgYml0cyBpZiB0aGUgSU0gU3RhdGUg
+cmVnaXN0ZXIgaGFzIHRoZW0gc2V0Cgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDA3MDAwMAko
+c3BlY2lmaWM9PUI0M19UTVNMT1dfUEhZQ0xLRU4pIFdyaXRlIHRoZSAiRm9yY2UgR2F0ZWQgQ2xv
+Y2tzIE9uIiwgIkNsb2NrIEVuYWJsZSIgYml0cywgYWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNp
+ZmljIGZsYWdzIHJlcXVlc3RlZCwgdG8gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlciAodW5zZXQg
+dGhlIHJlc3QpIApzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAwMDcwMDAwCQlQZXJmb3JtIGEgZHVt
+bXkgcmVhZCBvbiB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyCgpzc2Jfd3JpdGUzMigweGY5OCkg
+PC0gMHgwMDAxMDAwMAkoV2h5IG5vIEI0M19UTVNMT1dfUEhZQ0xLRU4/KSBXcml0ZSB0aGUgIkNs
+b2NrIEVuYWJsZSIgYml0IGFsb25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1
+ZXN0ZWQgdG8gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlciAodW5zZXQgdGhlIHJlc3QpCnNzYl9y
+ZWFkMzIoMHhmOTgpIC0+IDB4MDAwMTAwMDAJCVVuZG9jdW1lbnRlZCBmbHVzaAo+Pj4gc3NiX2Rl
+dmljZV9lbmFibGUgZW5kCg==
+--0016e6891d104ac305049bdee9e7
+Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_1.b43.txt"
+Content-Disposition: attachment; filename="ssb_device_enable_1.b43.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjyn7fh61
 
-Command output during my debugging session with the developers is
-shown below for completeness, and in case the Fedora folks are
-monitoring.
+YjQzL3NzYjoKCj4+PiBzc2JfZGV2aWNlX2VuYWJsZSBzdGFydAo+Pj4gc3NiX2RldmljZV9kaXNh
+YmxlIHN0YXJ0CQlEaXNhYmxlIHRoZSBDb3JlIHRvIGFjY291bnQgZm9yIGEgY29yZSBpbiBhIHJh
+bmRvbSBzdGF0ZQpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAwMDAwMDAxCQlJZiB0aGUgY29yZSBp
+cyBhbHJlYWR5IGluIHJlc2V0ICh0aGUgIlJlc2V0IiBiaXQgaW4gVE0gU3RhdGUgTG93IGlzIHNl
+dCkgaXQncyBhbHJlYWR5IGRpc2FibGVkLCByZXR1cm4KCj4+PiBzc2JfZGV2aWNlX2Rpc2FibGUg
+ZW5kCgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDBmMDAwMQkoc3BlY2lmaWM9PUI0M19UTVNM
+T1dfUEhZQ0xLRU4gfCBCNDNfVE1TTE9XX1BIWVJFU0VUKSBXcml0ZSB0aGUgIkZvcmNlIEdhdGVk
+IENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiLGFuZCAiUmVzZXQiIGJpdHMgYWxvbmcgd2l0aCBh
+bnkgZGV2aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3RlZCwgdG8gdGhlIFRNIFN0YXRlIExvdyBy
+ZWdpc3RlciAodW5zZXQgdGhlIHJlc3QpCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwZjAwMDEJ
+CVBlcmZvcm0gYSBkdW1teSByZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNzYl9y
+ZWFkMzIoMHhmOWMpIC0+IDB4MTAwODAwMDAJCUlmIHRoZSBTIEVycm9yIGJpdCBpcyBzZXQgaW4g
+dGhlIFRNIFN0YXRlIEhpZ2ggcmVnaXN0ZXIKc3NiX3JlYWQzMigweGY5MCkgLT4gMHgwMDAwMDAy
+MAkJVW5zZXQgdGhlICJJbiBCYW5kIEVycm9yIiBvciAiVGltZW91dCIgYml0cyBpZiB0aGUgSU0g
+U3RhdGUgcmVnaXN0ZXIgaGFzIHRoZW0gc2V0Cgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDBm
+MDAwMAkoc3BlY2lmaWM9PUI0M19UTVNMT1dfUEhZQ0xLRU4gfCBCNDNfVE1TTE9XX1BIWVJFU0VU
+KSBXcml0ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiIGJpdHMs
+IGFsb25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQsIHRvIHRoZSBU
+TSBTdGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KSAKc3NiX3JlYWQzMigweGY5OCkg
+LT4gMHgwMDBmMDAwMAkJUGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyBy
+ZWdpc3RlcgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwZDAwMDAJKHNwZWNpZmljPT1CNDNf
+VE1TTE9XX1BIWUNMS0VOIHwgQjQzX1RNU0xPV19QSFlSRVNFVCkgV3JpdGUgdGhlICJDbG9jayBF
+bmFibGUiIGJpdCBhbG9uZyB3aXRoIGFueSBkZXZpY2Ugc3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVk
+IHRvIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KQpzc2JfcmVhZDMy
+KDB4Zjk4KSAtPiAweDAwMGQwMDAwCQlVbmRvY3VtZW50ZWQgZmx1c2gKPj4+IHNzYl9kZXZpY2Vf
+ZW5hYmxlIGVuZAoKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDBkMDAwMAkJVW5zZXQgdGhlIFBI
+WSBSZXNldCBmbGFnIGFuZCBzZXQgdGhlIEZvcmNlIEdhdGVkIENsb2NrcyBmbGFnIGluIFRNIFN0
+YXRlIExvdyBGbGFncwpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDA3MDAwMAlVbnNldCB0aGUg
+UEhZIFJlc2V0IGZsYWcgYW5kIHNldCB0aGUgRm9yY2UgR2F0ZWQgQ2xvY2tzIGZsYWcgaW4gVE0g
+U3RhdGUgTG93IEZsYWdzCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwNzAwMDAJCVVuZG9jdW1l
+bnRlZCBmbHVzaAoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwNTAwMDAJVW5zZXQgdGhlIEZv
+cmNlIEdhdGVkIENsb2NrcyBmbGFnIGluIFRNIFN0YXRlIExvdyBGbGFncwpzc2JfcmVhZDMyKDB4
+Zjk4KSAtPiAweDAwMDUwMDAwCQlVbmRvY3VtZW50ZWQgZmx1c2gK
+--0016e6891d104ac305049bdee9e7
+Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_2.wl.txt"
+Content-Disposition: attachment; filename="ssb_device_enable_2.wl.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjyn7mzl2
 
-Regards,
-Noel
+d2w6Cgo+Pj4gc3NiX2RldmljZV9lbmFibGUgc3RhcnQKPj4+IHNzYl9kZXZpY2VfZGlzYWJsZSBz
+dGFydAkJRGlzYWJsZSB0aGUgQ29yZSB0byBhY2NvdW50IGZvciBhIGNvcmUgaW4gYSByYW5kb20g
+c3RhdGUKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDAxMDAwMAkJSWYgdGhlIGNvcmUgaXMgYWxy
+ZWFkeSBpbiByZXNldCAodGhlICJSZXNldCIgYml0IGluIFRNIFN0YXRlIExvdyBpcyBzZXQpIGl0
+J3MgYWxyZWFkeSBkaXNhYmxlZCwgcmV0dXJuCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwMTAw
+MDAJCUlmIGNsb2NrcyBhcmUgbm90IHlldCBlbmFibGVkICh0aGUgIkNsb2NrIEVuYWJsZWQiIGJp
+dCBpbiBUTSBTdGF0ZSBMb3cKCgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwMTAwMDIJU2V0
+IHRoZSAiUmVqZWN0IiBiaXQgaW4gVE0gU3RhdGUgTG93LCB3aGljaCB3aWxsIGNhdXNlIHRoZSBj
+b3JlIHRvIHJlamVjdCBmdXJ0aGVyIGlucHV0CnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwMTAw
+MDIJCVBlcmZvcm0gYSBkdW1teSByZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNz
+Yl9yZWFkMzIoMHhmOWMpIC0+IDB4MTAwYzAwMDAJCVdhaXQgdW50aWwgdGhlICJCdXN5IiBiaXQg
+aW4gVE0gU3RhdGUgSGlnaCBpcyB1bnNldCAob3IgMTAwMDAwIHVTLCBjaGVja2luZyBldmVyeSAx
+MHVTZWMpCnNzYl9yZWFkMzIoMHhmOWMpIC0+IDB4MTAwYzAwMDAJCVdhaXQgdW50aWwgdGhlICJC
+dXN5IiBiaXQgaW4gVE0gU3RhdGUgSGlnaCBpcyB1bnNldCAob3IgMTAwMDAwIHVTLCBjaGVja2lu
+ZyBldmVyeSAxMHVTZWMpCgogcmVhZDMyIDB4YzAyMDBmZjggLT4gMHg0MTA0MjJjNQlJZiB0aGUg
+Q29yZSBJRCBMb3cgcmVnaXN0ZXIgaGFzIHRoZSAiSW5pdGlhdG9yIiBiaXQgc2V0CnNzYl9yZWFk
+MzIoMHhmOTApIC0+IDB4MDAwMDAwMjAJCVNldCB0aGUgIlJlamVjdCIgYml0IGluIHRoZSBJTSBT
+dGF0ZSByZWdpc3Rlcgpzc2Jfd3JpdGUzMigweGY5MCkgPC0gMHgwMjAwMDAyMAlTZXQgdGhlICJS
+ZWplY3QiIGJpdCBpbiB0aGUgSU0gU3RhdGUgcmVnaXN0ZXIKc3NiX3JlYWQzMigweGY5MCkgLT4g
+MHgwMjAwMDAyMAkJUGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIElNIFN0YXRlIHJlZ2lzdGVy
+CnNzYl9yZWFkMzIoMHhmOTApIC0+IDB4MDIwMDAwMjAJCShUTSAhPSBJTSkgV2FpdCB1bnRpbCB0
+aGUgIkJ1c3kiIGJpdCBpbiBUTSBTdGF0ZSBpcyB1bnNldCAob2YgMTAwMDAwIHVTLCBjaGVja2lu
+ZyBldmVyeSAxMHVTKQoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwNzAwMDMJKFJlamVjdCBp
+cyB3cml0dGVuISkgKHNwZWNpZmljPT1CNDNfVE1TTE9XX1BIWUNMS0VOKSBXcml0ZSB0aGUgIkZv
+cmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiLCBhbmQgIlJlc2V0IiBiaXRzIGFs
+b25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQsIHRvIHRoZSBUTSBT
+dGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KQpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAw
+eDAwMDcwMDAzCQlQZXJmb3JtIGEgZHVtbXkgcmVhZCBvbiB0aGUgVE0gU3RhdGUgTG93IHJlZ2lz
+dGVyCgogcmVhZDMyIDB4YzAyMDBmZjggLT4gMHg0MTA0MjJjNQkoQ29yZSBJRCAhPSBUTVNMT1cp
+IElmIHRoZSAiSW5pdGlhdG9yIiBiaXQgaW4gVE0gU3RhdGUgTG93IGlzIHNldApzc2JfcmVhZDMy
+KDB4ZjkwKSAtPiAweDAyMDAwMDIwCQlDbGVhciB0aGUgIlJlamVjdCIgYml0IGluIHRoZSBJTSBT
+dGF0ZSByZWdpc3Rlcgpzc2Jfd3JpdGUzMigweGY5MCkgPC0gMHgwMDAwMDAyMAlDbGVhciB0aGUg
+IlJlamVjdCIgYml0IGluIHRoZSBJTSBTdGF0ZSByZWdpc3RlcgoKc3NiX3dyaXRlMzIoMHhmOTgp
+IDwtIDB4MDAwNDAwMDMJKHNwZWNpZmljPT1CNDNfVE1TTE9XX1BIWUNMS0VOKSBXcml0ZSB0aGUg
+IlJlc2V0IiBhbmQgIlJlamVjdCIgYml0cyBhbG9uZyB3aXRoIGFueSBkZXZpY2Ugc3BlY2lmaWMg
+ZmxhZ3MgcmVxdWVzdGVkIHRvIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCj4+PiBzc2JfZGV2
+aWNlX2Rpc2FibGUgZW5kCgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDA3MDAwMQkoc3BlY2lm
+aWM9PUI0M19UTVNMT1dfUEhZQ0xLRU4pIFdyaXRlIHRoZSAiRm9yY2UgR2F0ZWQgQ2xvY2tzIE9u
+IiwgIkNsb2NrIEVuYWJsZSIsYW5kICJSZXNldCIgYml0cyBhbG9uZyB3aXRoIGFueSBkZXZpY2Ug
+c3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVkLCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyICh1
+bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDA3MDAwMQkJUGVyZm9ybSBh
+IGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlcgoKc3NiX3JlYWQzMigweGY5
+YykgLT4gMHgxMDBjMDAwMAkJSWYgdGhlIFMgRXJyb3IgYml0IGlzIHNldCBpbiB0aGUgVE0gU3Rh
+dGUgSGlnaCByZWdpc3Rlcgpzc2JfcmVhZDMyKDB4ZjkwKSAtPiAweDAwMDAwMDIwCQlVbnNldCB0
+aGUgIkluIEJhbmQgRXJyb3IiIG9yICJUaW1lb3V0IiBiaXRzIGlmIHRoZSBJTSBTdGF0ZSByZWdp
+c3RlciBoYXMgdGhlbSBzZXQKCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDAwMDcwMDAwCShzcGVj
+aWZpYz09QjQzX1RNU0xPV19QSFlDTEtFTikgV3JpdGUgdGhlICJGb3JjZSBHYXRlZCBDbG9ja3Mg
+T24iLCAiQ2xvY2sgRW5hYmxlIiBiaXRzLCBhbG9uZyB3aXRoIGFueSBkZXZpY2Ugc3BlY2lmaWMg
+ZmxhZ3MgcmVxdWVzdGVkLCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyICh1bnNldCB0aGUg
+cmVzdCkgCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwNzAwMDAJCVBlcmZvcm0gYSBkdW1teSBy
+ZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAw
+eDAwMDEwMDAwCShXaHkgbm8gQjQzX1RNU0xPV19QSFlDTEtFTj8pIFdyaXRlIHRoZSAiQ2xvY2sg
+RW5hYmxlIiBiaXQgYWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3Rl
+ZCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyICh1bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQz
+MigweGY5OCkgLT4gMHgwMDAxMDAwMAkJVW5kb2N1bWVudGVkIGZsdXNoCj4+PiBzc2JfZGV2aWNl
+X2VuYWJsZSBlbmQK
+--0016e6891d104ac305049bdee9e7
+Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_2.b43.txt"
+Content-Disposition: attachment; filename="ssb_device_enable_2.b43.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjyn7q663
 
-###################################################################
-
-Thanks again to all participants on this email list.
-Noel
-
-
-
-
-
-
-
-
-
-________________________________
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Noel Milton Vega <nmvega@computingarchitects.com>
-Cc: linux-wireless@vger.kernel.org
-Sent: Thu, February 10, 2011 1:11:36 AM
-Subject: Re: Need Linux driver (preferably 64 bit)  for "Intel Corporation 
-Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-
-On Thu, Feb 10, 2011 at 16:25, Noel Milton Vega
-<nmvega@computingarchitects.com> wrote:
-> Hi Julian,
->
-> Thank you for the extended reply. It's appreciated. Your output wish is
-> my command. Here they are (and then some):
->
-> #####################################################
-> nmvega@p170hm$ sudo rpm -qa | grep iwl
-> #####################################################
-> iwl1000-firmware-128.50.3.1-2.fc13.noarch
-> iwl6050-firmware-41.28.5.1-2.fc14.noarch
-> iwl5150-firmware-8.24.2.2-1.fc13.noarch
-> python-iwlib-0.1-3.fc14.x86_64
-> iwl4965-firmware-228.61.2.24-2.fc12.noarch
-> iwl6000-firmware-9.221.4.1-1.fc14.noarch
-> iwl3945-firmware-15.32.2.9-4.fc13.noarch
-> iwl5000-firmware-8.24.2.12-3.fc13.noarch
->  iwl6000g2b-firmware-17.168.5.1-1.fc14.noarch  <--- Indeed that was missing, 
->and
-> I just installed it (then rebooted).
-> #####################################################
-
-Ok, if the driver supports your card then it should now work.
-
-> #####################################################
-> nmvega@p170hm$ sudo modprobe -r iwlagn
-> nmvega@p170hm$ lsmod | grep iwl  (the Unix NULL output was provided here)
-> nmvega@-170hm$ sudo modeprobe iwlagn
-> nmvega@p170hm$ sudo dmesg | tail -8
-> #####################################################
-> [  576.353525]     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
-> max_eirp)
-> [  576.353528]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 
-mBm)
-> [  576.353530]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 
-mBm)
-> [  576.353532]      (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 
->mBm)
-> [  576.353534]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 
-mBm)
-> [  576.353536]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 
-mBm)
-> [  576.384224] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,
-> in-tree:d
-> [  576.384227] iwlagn: Copyright(c) 2003-2010 Intel Corporation
-> #####################################################
-
-Not really enough information, but yeah, the first 6 lines are the
-tail end of initialising the wireless subsystem, and the last two are
-printed when the driver loads. Given that nothing mentions the driver
-actually detecting the card, then I'm guessing it isn't supported by
-this version of the driver.
-
-> #####################################################
-> nmvega@p170hm$ ifconfig -a
->  #####################################################
-> eth0      Link encap:Ethernet  HWaddr 00:90:F5:B4:5F:2E
->          inet addr:192.168.0.20  Bcast:192.168.0.255  Mask:255.255.255.0
->          inet6 addr: fe80::290:f5ff:feb4:5f2e/64 Scope:Link
->          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->          RX packets:440 errors:0 dropped:0 overruns:0 frame:0
->          TX packets:49 errors:0 dropped:0 overruns:0 carrier:0
->          collisions:0 txqueuelen:1000
->          RX bytes:33496 (32.7 KiB)  TX bytes:6320 (6.1 KiB)
->          Interrupt:48
->
-> lo        Link encap:Local Loopback
->           inet addr:127.0.0.1  Mask:255.0.0.0
->          inet6 addr: ::1/128 Scope:Host
->          UP LOOPBACK RUNNING  MTU:16436  Metric:1
->          RX packets:4 errors:0 dropped:0 overruns:0 frame:0
->          TX packets:4 errors:0 dropped:0 overruns:0 carrier:0
->          collisions:0 txqueuelen:0
->          RX bytes:240 (240.0 b)  TX bytes:240 (240.0 b)
-> #####################################################
-
-And as it hasn't appeared here, that's definitely the case.
-
-> #####################################################
-> nmvega@p170hm$ sudo lspci -n
-> #####################################################
-> 00:00.0 0600: 8086:0104 (rev 09)
-> 00:01.0 0604: 8086:0101 (rev 09)
-> 00:16.0 0780:  8086:1c3a (rev 04)
-> 00:1a.0 0c03: 8086:1c2d (rev 04)
-> 00:1b.0 0403: 8086:1c20 (rev 04)
-> 00:1c.0 0604: 8086:1c10 (rev b4)
-> 00:1c.1 0604: 8086:1c12 (rev b4)
-> 00:1c.2 0604: 8086:1c14 (rev b4)
-> 00:1c.3 0604: 8086:1c16 (rev b4)
-> 00:1d.0 0c03: 8086:1c26 (rev 04)
-> 00:1f.0 0601: 8086:1c4b (rev 04)
-> 00:1f.2 0106: 8086:1c03 (rev 04)
-> 00:1f.3 0c05: 8086:1c22 (rev 04)
-> 01:00.0 0300: 10de:0e31 (rev a1)
-> 01:00.1 0403: 10de:0beb (rev a1)
-> 02:00.0 0c03: 1033:0194 (rev 03)
-> 03:00.0 0200: 197b:0250 (rev 05)
-> 03:00.1 0880: 197b:2392 (rev 90)
-> 03:00.2 0805: 197b:2391 (rev 90)
-> 03:00.3 0880: 197b:2393 (rev 90)
-> 04:00.0 0280: 8086:0091 (rev 34)  <--- this one.
-> 05:00.0 0c00: 197b:2380 (rev 30)
-> ####################################################
-
-Ok, with this I can determine that the card wasn't added with the
-initial  batch of cards I linked you to, but it appears to be fully
-supported as it was added later.
-
-> With all that provided, the only thing I didn't investigate pursuant to your
-> below
-> email was the "compat-wireless". I will do so via the URL:
-> http://wireless.kernel.org/en/users/Download
-
-This is probably your best option as it appears that the stock driver
-in the F14 2.6.35 kernel doesn't support your card.
-
-I hope that installing compat-wireless goes as smoothly for you as it
-does for me, and that after installing it your card works properly.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
-
+YjQzL3NzYjoKCj4+PiBzc2JfZGV2aWNlX2VuYWJsZSBzdGFydAo+Pj4gc3NiX2RldmljZV9kaXNh
+YmxlIHN0YXJ0CQlEaXNhYmxlIHRoZSBDb3JlIHRvIGFjY291bnQgZm9yIGEgY29yZSBpbiBhIHJh
+bmRvbSBzdGF0ZQpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAwMDUwMDAwCQlJZiB0aGUgY29yZSBp
+cyBhbHJlYWR5IGluIHJlc2V0ICh0aGUgIlJlc2V0IiBiaXQgaW4gVE0gU3RhdGUgTG93IGlzIHNl
+dCkgaXQncyBhbHJlYWR5IGRpc2FibGVkLCByZXR1cm4gCgkJCQkJSWYgY2xvY2tzIGFyZSBub3Qg
+eWV0IGVuYWJsZWQgKHRoZSAiQ2xvY2sgRW5hYmxlZCIgYml0IGluIFRNIFN0YXRlIExvdyAKCQkJ
+CQlXcml0ZSB0aGUgIlJlc2V0IiBhbmQgIlJlamVjdCIgYml0cyBhbG9uZyB3aXRoIGFueSBkZXZp
+Y2Ugc3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVkIHRvIHRoZSBUTSBTdGF0ZSBMb3csIHdhaXQgMXVT
+LCByZWdpc3RlciBhbmQgcmV0dXJuCgogcmVhZDMyIDB4YzAyMDBmZjggLT4gMHg0MTA0MjJjNQlz
+c2JfdG1zbG93X3JlamVjdF9iaXRtYXNrCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDAwMDEwMDA0
+CVNldCB0aGUgIlJlamVjdCIgYml0IGluIFRNIFN0YXRlIExvdywgd2hpY2ggd2lsbCBjYXVzZSB0
+aGUgY29yZSB0byByZWplY3QgZnVydGhlciBpbnB1dApzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAw
+MDEwMDA0CQlQZXJmb3JtIGEgZHVtbXkgcmVhZCBvbiB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVy
+Cgpzc2JfcmVhZDMyKDB4ZjljKSAtPiAweDEwMDgwMDAwCQlXYWl0IHVudGlsIHRoZSAiQnVzeSIg
+Yml0IGluIFRNIFN0YXRlIEhpZ2ggaXMgdW5zZXQgKG9yIDEwMDAwMCB1UywgY2hlY2tpbmcgZXZl
+cnkgMTB1U2VjKQoKCj8JCQkJCUlmIHRoZSBDb3JlIElEIExvdyByZWdpc3RlciBoYXMgdGhlICJJ
+bml0aWF0b3IiIGJpdCBzZXQKCgoKCgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgyMDRmMDAwNQlX
+cml0ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiLCBhbmQgIlJl
+c2V0IiBiaXRzIGFsb25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQs
+IHRvIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KQpzc2JfcmVhZDMy
+KDB4Zjk4KSAtPiAweDIwNGYwMDA1CQlQZXJmb3JtIGEgZHVtbXkgcmVhZCBvbiB0aGUgVE0gU3Rh
+dGUgTG93IHJlZ2lzdGVyCgo/CQkJCQlJZiB0aGUgIkluaXRpYXRvciIgYml0IGluIFRNIFN0YXRl
+IExvdyBpcyBzZXQgCj8JCQkJCUNsZWFyIHRoZSAiUmVqZWN0IiBiaXQgaW4gdGhlIElNIFN0YXRl
+IHJlZ2lzdGVyCgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0YzAwMDUJV3JpdGUgdGhlICJS
+ZXNldCIgYW5kICJSZWplY3QiIGJpdHMgYWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNpZmljIGZs
+YWdzIHJlcXVlc3RlZCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyCnNzYl9yZWFkMzIoMHhm
+OTgpIC0+IDB4MjA0YzAwMDUJCVVuZG9jdW1lbnRlZCBmbHVzaAo+Pj4gc3NiX2RldmljZV9kaXNh
+YmxlIGVuZAoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0ZjAwMDEJKHNwZWNpZmljPT1CNDNf
+VE1TTE9XX1BIWUNMS0VOIHwgQjQzX1RNU0xPV19QSFlSRVNFVCB8IEI0M19UTVNMT1dfR01PREUg
+fCBCNDNfVE1TTE9XX1BIWV9CQU5EV0lEVEhfMjBNSFopIFdyaXRlIHRoZSAiRm9yY2UgR2F0ZWQg
+Q2xvY2tzIE9uIiwgIkNsb2NrIEVuYWJsZSIsYW5kICJSZXNldCIgYml0cyBhbG9uZyB3aXRoIGFu
+eSBkZXZpY2Ugc3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVkLCB0byB0aGUgVE0gU3RhdGUgTG93IHJl
+Z2lzdGVyICh1bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgyMDRmMDAwMQkJ
+UGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlcgoKc3NiX3Jl
+YWQzMigweGY5YykgLT4gMHgxMDA4MDAwMAkJSWYgdGhlIFMgRXJyb3IgYml0IGlzIHNldCBpbiB0
+aGUgVE0gU3RhdGUgSGlnaCByZWdpc3Rlcgpzc2JfcmVhZDMyKDB4ZjkwKSAtPiAweDAwMDAwMDIw
+CQlVbnNldCB0aGUgIkluIEJhbmQgRXJyb3IiIG9yICJUaW1lb3V0IiBiaXRzIGlmIHRoZSBJTSBT
+dGF0ZSByZWdpc3RlciBoYXMgdGhlbSBzZXQKCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDIwNGYw
+MDAwCShzcGVjaWZpYz09QjQzX1RNU0xPV19QSFlDTEtFTiB8IEI0M19UTVNMT1dfUEhZUkVTRVQg
+fCBCNDNfVE1TTE9XX0dNT0RFIHwgQjQzX1RNU0xPV19QSFlfQkFORFdJRFRIXzIwTUhaKSBXcml0
+ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiIGJpdHMsIGFsb25n
+IHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQsIHRvIHRoZSBUTSBTdGF0
+ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KSAKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgy
+MDRmMDAwMAkJUGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyByZWdpc3Rl
+cgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0ZDAwMDAJKHNwZWNpZmljPT1CNDNfVE1TTE9X
+X1BIWUNMS0VOIHwgQjQzX1RNU0xPV19QSFlSRVNFVCB8IEI0M19UTVNMT1dfR01PREUgfCBCNDNf
+VE1TTE9XX1BIWV9CQU5EV0lEVEhfMjBNSFopIFdyaXRlIHRoZSAiQ2xvY2sgRW5hYmxlIiBiaXQg
+YWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3RlZCB0byB0aGUgVE0g
+U3RhdGUgTG93IHJlZ2lzdGVyICh1bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQzMigweGY5OCkgLT4g
+MHgyMDRkMDAwMAkJVW5kb2N1bWVudGVkIGZsdXNoCj4+PiBzc2JfZGV2aWNlX2VuYWJsZSBlbmQK
+CnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MjA0ZDAwMDAJCVVuc2V0IHRoZSBQSFkgUmVzZXQgZmxh
+ZyBhbmQgc2V0IHRoZSBGb3JjZSBHYXRlZCBDbG9ja3MgZmxhZyBpbiBUTSBTdGF0ZSBMb3cgRmxh
+Z3MKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0NzAwMDAJVW5zZXQgdGhlIFBIWSBSZXNldCBm
+bGFnIGFuZCBzZXQgdGhlIEZvcmNlIEdhdGVkIENsb2NrcyBmbGFnIGluIFRNIFN0YXRlIExvdyBG
+bGFncwpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDIwNDcwMDAwCQlVbmRvY3VtZW50ZWQgZmx1c2gK
+CnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDIwNDUwMDAwCVVuc2V0IHRoZSBGb3JjZSBHYXRlZCBD
+bG9ja3MgZmxhZyBpbiBUTSBTdGF0ZSBMb3cgRmxhZ3MKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgy
+MDQ1MDAwMAkJVW5kb2N1bWVudGVkIGZsdXNoCg==
+--0016e6891d104ac305049bdee9e7--
