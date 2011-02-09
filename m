@@ -1,178 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm20-vm0.bullet.mail.ird.yahoo.com ([77.238.189.221]:38058 "HELO
-	nm20-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752056Ab1B1CWB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 21:22:01 -0500
-Message-ID: <99164.32713.qm@web29504.mail.ird.yahoo.com>
-Date: Mon, 28 Feb 2011 02:21:58 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: Change rate-control feedback
-To: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4d6ab798.QpgTB5Dvvt1eieGL%Larry.Finger@lwfinger.net>
+Received: from purkki.adurom.net ([80.68.90.206]:42556 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753829Ab1BIMHe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 07:07:34 -0500
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/7] mac80211:  Make STA disconnect messages warn instead of debug.
+References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+	<87y65q7hc3.fsf@purkki.adurom.net> <4D517908.6020003@candelatech.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 09 Feb 2011 14:07:31 +0200
+In-Reply-To: <4D517908.6020003@candelatech.com> (Ben Greear's message of "Tue\, 08 Feb 2011 09\:10\:32 -0800")
+Message-ID: <87tygd76nw.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ben Greear <greearb@candelatech.com> writes:
 
---- On Sun, 27/2/11, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> Messages like these are in the category "business as usual", which
+>> happens frequently when the device is moved. IMHO they are not really
+>> warnings. I'm worried that making the messages more visible might
+>> scare the users too much.
+>
+> To me it seems more useful than the network up/down messages that
+> are already printed from the networking core.
 
-> The driver for the RTL8187L chips
-> returns IEEE80211_TX_STAT_ACK for all
-> packets, even if the maximum number of retries was
-> exhausted. In addition
-> it fails to setup max_rates in the ieee80211_hw struct,
-> This behavior
-> may be responsible for the problems noted in Bug 14168. As
-> the bug is very
-> old, testers have not been found, and I do not have the
-> case where the
-> indicated signal is less than -70 dBm.
+You are not a normal user :) But what networking core messages are you
+referring to? I don't recall seeing anything like that.
 
+> That said, I don't feel strongly about this change, and it's certainly
+> an easy patch for me to carry in my own tree.
 
-Possibility of division by zero? The while loop dequeues - does this code always get invoked with a non-empty queue? Also it worrys me a little if tmp < retry?
+I also don't have any strong opinion about this, just voiced my
+concern.
 
-> +    avg_retry = (tmp - retry) /
-> skb_queue_len(&priv->b_tx_status.queue);
->      while
-> (skb_queue_len(&priv->b_tx_status.queue) > 0) {
-
-
-
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@kernel.org>
-> ---
-> 
-> Index:
-> wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> ===================================================================
-> ---
-> wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> +++
-> wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> @@ -869,23 +869,29 @@ static void rtl8187_work(struct
-> work_str
->      /* The RTL8187 returns the retry count
-> through register 0xFFFA. In
->       * addition, it appears to be
-> a cumulative retry count, not the
->       * value for the current TX
-> packet. When multiple TX entries are
-> -     * queued, the retry count
-> will be valid for the last one in the queue.
-> -     * The "error" should not
-> matter for purposes of rate setting. */
-> +     * waiting in the queue, the
-> retry count will be the total for all.
-> +     * The "error" may matter for
-> purposes of rate setting, but there is
-> +     * no other choice with this
-> hardware.
-> +     */
->      struct rtl8187_priv *priv =
-> container_of(work, struct rtl8187_priv,
->             
->         work.work);
->      struct ieee80211_tx_info *info;
->      struct ieee80211_hw *dev =
-> priv->dev;
->      static u16 retry;
->      u16 tmp;
-> +    u16 avg_retry;
->  
->      mutex_lock(&priv->conf_mutex);
->      tmp = rtl818x_ioread16(priv, (__le16
-> *)0xFFFA);
-> +    avg_retry = (tmp - retry) /
-> skb_queue_len(&priv->b_tx_status.queue);
->      while
-> (skb_queue_len(&priv->b_tx_status.queue) > 0) {
->          struct sk_buff
-> *old_skb;
->  
->          old_skb =
-> skb_dequeue(&priv->b_tx_status.queue);
->          info =
-> IEEE80211_SKB_CB(old_skb);
-> -       
-> info->status.rates[0].count = tmp - retry + 1;
-> +       
-> info->status.rates[0].count = avg_retry + 1;
-> +        if
-> (info->status.rates[0].count > RETRY_COUNT)
-> +           
-> info->flags &= ~IEEE80211_TX_STAT_ACK;
->         
-> ieee80211_tx_status_irqsafe(dev, old_skb);
->      }
->      retry = tmp;
-> @@ -931,8 +937,8 @@ static int rtl8187_start(struct
-> ieee8021
->         
-> rtl818x_iowrite32(priv, &priv->map->TX_CONF,
->             
->       RTL818X_TX_CONF_HW_SEQNUM |
->             
->       RTL818X_TX_CONF_DISREQQSIZE |
-> -           
->       (7 << 8  /* short retry
-> limit */) |
-> -           
->       (7 << 0  /* long retry
-> limit */) |
-> +           
->       (RETRY_COUNT << 8  /*
-> short retry limit */) |
-> +           
->       (RETRY_COUNT << 0  /*
-> long retry limit */) |
->             
->       (7 << 21 /* MAX TX DMA
-> */));
->         
-> rtl8187_init_urbs(dev);
->         
-> rtl8187b_init_status_urb(dev);
-> @@ -1376,6 +1382,9 @@ static int __devinit
-> rtl8187_probe(struc
->      dev->flags =
-> IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
->           
->    IEEE80211_HW_SIGNAL_DBM |
->           
->    IEEE80211_HW_RX_INCLUDES_FCS;
-> +    /* Initialize rate-control variables
-> */
-> +    dev->max_rates = 1;
-> +    dev->max_rate_tries = RETRY_COUNT;
->  
->      eeprom.data = dev;
->      eeprom.register_read =
-> rtl8187_eeprom_register_read;
-> Index:
-> wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-> ===================================================================
-> ---
-> wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-> +++
-> wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-> @@ -35,6 +35,8 @@
->  #define RFKILL_MASK_8187_89_97    0x2
->  #define RFKILL_MASK_8198    0x4
->  
-> +#define RETRY_COUNT       
-> 7
-> +
->  struct rtl8187_rx_info {
->      struct urb *urb;
->      struct ieee80211_hw *dev;
-> 
-
-
-      
+-- 
+Kalle Valo
