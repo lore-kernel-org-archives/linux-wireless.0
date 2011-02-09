@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43243 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753694Ab1BUTQV convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:54228 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755997Ab1BIC20 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 14:16:21 -0500
-Received: by iwn8 with SMTP id 8so2211388iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 11:16:20 -0800 (PST)
+	Tue, 8 Feb 2011 21:28:26 -0500
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinYnzX_xOCCk44khXrEW_p-6uS4PP2JDTfddPk9@mail.gmail.com>
-References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
- <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
- <4CBF640C.4080405@broadcom.com> <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
- <1287674517.2383.7.camel@dcbw.foobar.com> <AANLkTikLbtV5dLu+Gu=8ibi=ERPiOykN9qBL4rPKS36g@mail.gmail.com>
- <4D5EF0E9.4050908@lwfinger.net> <20110221095957.GA4568@redhat.com> <AANLkTinYnzX_xOCCk44khXrEW_p-6uS4PP2JDTfddPk9@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Feb 2011 11:15:07 -0800
-Message-ID: <AANLkTik-bLy7VFmoyca-Qve_mnM7XfSSR-=ZYUPJkobH@mail.gmail.com>
-Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19793.64449.344588.240418@gargle.gargle.HOWL>
+Date: Wed, 9 Feb 2011 07:58:17 +0530
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Sujith <m.sujith@gmail.com>,
+	Martin Schleier <drahemmaps@gmx.net>,
+	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
+	<linville@tuxdriver.com>, <kune@deine-taler.de>,
+	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
+Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
+In-Reply-To: <Pine.LNX.4.44L0.1102081011030.2100-100000@iolanthe.rowland.org>
+References: <20110208140329.16761adb54ekbcpw@hayate.sektori.org>
+	<Pine.LNX.4.44L0.1102081011030.2100-100000@iolanthe.rowland.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 21, 2011 at 6:23 AM, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
-> On Mon, Feb 21, 2011 at 10:59 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Fri, Feb 18, 2011 at 04:21:29PM -0600, Larry Finger wrote:
->>> On 02/18/2011 03:24 PM, Rafał Miłecki wrote:
->>> >Few months later, is there any progress? Can we expect:
->>> >
->>> >1) Easier licensing of currently provided firmware (see Fedore case)
->>> >2) Firmware for LP-PHY devices
->>> >?
->>>
->>> I think we can forget this whole business. It seems that Broadcom is
->>> content with their business model, even though knowledgeable Linux
->>> users are avoiding their products like the plague.
->>
->> Broadcom will not release old firmware with redistributable license,
->> because of legal concerns, which are ridiculous for everyone except
->> them.
->>
->> http://lists.fedoraproject.org/pipermail/devel/2010-September/142893.html
->>
->> That sucks.
->>
->
-> This looks like the same argument Intel is using to justify long
-> delays before releasing new firmware - it needs to pass regulatory
-> testing to ensure that regulatory restrictions in released FW cannot
-> be circumvented. Both seem rather odd in light of Atheros's
-> open-source firmware projects and general "conformant-by-default, but
-> no "DRM" to prevent regulatory infringement" policy - though I seem to
-> remember that Atheros acquired SDR certification, while Broadcom and
-> Intel both went for regular "part 11" certification only. AFAIK the
-> rules for SDRs are much more lax than those for part-11-only devices.
+Alan Stern wrote:
+> There are at least three problems that I can see.  First, the device 
+> doesn't disconnect from and reconnect to the USB bus when it starts 
+> using new firmware.
 
-Huh ? No, there have been no 802.11 SDR certificiations by Atheros or
-any modern vendor. We're all on the same boat.
+Yes, ath9k_htc has this problem.
 
-  Luis
+> Second, the device loses its firmware when it is 
+> reset.
+
+Agreed again, this is a problem with ath9k_htc.
+
+> The first two problems are the device's fault, and the third is the 
+> driver's fault.  None of them are the fault of usbcore.
+
+Indeed, which is why this dirty hack is done in the driver.
+And it was done to fix a similar issue - high CPU usage when scanning.
+
+But do you have any suggestion for such broken devices ?
+The FW changes the type from Interrupt to Bulk, but can the host
+driver continue to use Interrupt URBs and use the URB_NO_INTERRUPT trick
+that you have mentioned ?
+
+Sujith
