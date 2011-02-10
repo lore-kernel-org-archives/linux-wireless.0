@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:52517 "EHLO mail.neratec.ch"
+Received: from mx1.redhat.com ([209.132.183.28]:58688 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751563Ab1BIPam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 10:30:42 -0500
-Message-ID: <4D52B31E.3030902@neratec.com>
-Date: Wed, 09 Feb 2011 16:30:38 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	id S1751188Ab1BJLip (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 06:38:45 -0500
+Date: Thu, 10 Feb 2011 12:37:16 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	"'Larry Finger'" <Larry.Finger@lwfinger.net>,
+	"'John W Linville'" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?J+WGr+aYpeeHlSc=?= <amyfcy_feng@realsil.com.cn>,
+	=?utf-8?B?J+eGiuWFieWuiSc=?= <guangan_xiong@realsil.com.cn>
+Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI06IOetlA==?= =?utf-8?B?5aSNOg==?=
+ about Mac80211scan issue
+Message-ID: <20110210113715.GA31839@redhat.com>
+References: <4d4eec04.v8FQZqbn2LYPF8zs%Larry.Finger@lwfinger.net>
+ <20110207151209.GG2319@redhat.com>
+ <B84A4806C46340989E2A6AD2EB663300@realsil.com.cn>
+ <20110209105405.GB5528@redhat.com>
+ <B8DE8263FD784AC082CFDB7E9269BAEA@realsil.com.cn>
+ <20110210074140.GA2228@redhat.com>
+ <39A39FA0AD1A481480DE0BD469AAA79E@realsil.com.cn>
+ <20110210095006.GB2228@redhat.com>
+ <86D43C3FD69641C38E7144E721BCC5A6@realsil.com.cn>
 MIME-Version: 1.0
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: pulse detection
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>,<1297252905-29739-3-git-send-email-zefir.kurtisi@neratec.com> <44EE5C37ADC36343B0625A05DD408C4850DAA785D2@CHEXMB-01.global.atheros.com>
-In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4850DAA785D2@CHEXMB-01.global.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <86D43C3FD69641C38E7144E721BCC5A6@realsil.com.cn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2011 04:15 PM, Vasanth Thiagarajan wrote:
-> 
-> +       /* update 64-bit time stamp with that of rs */
-> +       /* TODO: do this per-wiphy */
-> +       ts = rs->rs_tstamp;
-> +       if (ts <= (last_ts & 0xffffffff))
-> 
-> last_ts is not initialized.
-true, but does not really matter since only deltas are relevant.
+On Thu, Feb 10, 2011 at 06:05:20PM +0800, 李朝明 wrote:
+> Sorry,  could you tell me address of  wireless-testing tree.
 
-> +               ts_hi++;
-> +       last_ts = ((u64)ts_hi << 32) | ts;
-> +
-> +
-> +       if (rs->rs_datalen != 0) {
-> +               char *vdata = (char *)ds->ds_vdata + rs->rs_datalen - 3;
-> +               dur = (u32) vdata[0];
-> +       }
-> +
-> +       /* ZKU: reverse measured scaling factor of 2/3 for duration */
-> 
-> ZKU ??
-> 
-thats me :)
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=summary
 
-Sorry letting you read the code. It is meant only to test the proposed 
-approach. I missed to change the prefix to RFC.
+Most kernel trees are hosted on git.kernel.org and are availeble using git.
 
-Zefir
-
-> Vasanth--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Stanislaw
