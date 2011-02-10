@@ -1,91 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:2316 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751758Ab1BPXoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 18:44:30 -0500
-Subject: Re: [PATCH 0/5] iwlwifi: Auto-tune tx queue size to maintain
- latency under load
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Nathaniel Smith <njs@pobox.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-In-Reply-To: <AANLkTimJcGr=L6scJotzKeL+2AEvbHBRi16fo1MpqFJ3@mail.gmail.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
-	 <20110216155011.GC10287@tuxdriver.com>
-	 <AANLkTimJcGr=L6scJotzKeL+2AEvbHBRi16fo1MpqFJ3@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Feb 2011 15:42:36 -0800
-Message-ID: <1297899756.21351.3.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:50505 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751943Ab1BJUGL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 15:06:11 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 64B265405FA
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 15:08:50 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-10 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110210200610.16BD142F5C@repository3.orbit-lab.org>
+Date: Thu, 10 Feb 2011 15:06:09 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-16 at 15:08 -0800, Nathaniel Smith wrote:
-> On Wed, Feb 16, 2011 at 7:50 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Sun, Feb 13, 2011 at 09:56:37AM -0800, Nathaniel J. Smith wrote:
-> >
-> >> This patch series teaches the driver to measure the average rate of
-> >> packet transmission for each tx queue, and adjusts the queue size
-> >> dynamically in an attempt to achieve ~2 ms of added latency.
-> >
-> > How did you pick this number?  Is there research to support this as
-> > the correct target for link latency?
-> 
-> I'm not aware of any such research, no. My reasoning is that in this
-> scheme the ideal latency is based on the kernel's scheduling
-> promptness -- at some moment t0 the hardware sends the packet that
-> drops us below our low water mark, and then it takes some time for the
-> kernel to be informed of this fact, for the driver's tasklet to be
-> scheduled, the TX queue to be restarted, and for packets to get loaded
-> into it, so that eventually at time t1 the queue is refilled. To
-> maintain throughput, we want the queue length to be such that all this
-> can be accomplished before the queue drains completely; to maintain
-> latency, we want it to be no longer than necessary.
-> 
-> So the ideal latency for the TX queue is whatever number L is, say,
-> 95% of the time, greater than (t1 - t0). Note that this is
-> specifically for the driver queue, whose job is just to couple the
-> "real" queue to the hardware; the "real" queue should be larger and
-> smarter to properly handle bursty behavior and such.
-> 
-> I made up "2 ms" out of thin air as a number that seemed plausible to
-> me, and because I don't know how to measure the real number L. Ideally
-> we'd measure it on the fly, since it surely varies somewhat between
-> machines. Maybe someone else has a better idea how to do this?
-> 
-> The queue refill process for iwl3945 looks like:
->   1) hardware transmits a packet, sends a tx notification to the driver
->   2) iwl_isr_legacy receives the interrupt, and tasklet_schedule()s
-> the irq tasklet
->   3) iwl3945_irq_tasklet runs, and eventually from
-> iwl3945_tx_queue_reclaim we wake the queue
->   4) Waking the queue raises a softirq (netif_wake_subqueue -> __netif_schedule)
->   5) The softirq runs, and, if there are packets queued, eventually
-> calls iwl3945_tx_skb
-> 
-> So IIUC there are actually two trips through the scheduler -- between
-> (2) and (3), and between (4) and (5). I assume that these are the only
-> sources of significant latency, so our goal is to measure the time
-> elapsed from (2) to (5).
-> 
-> Complications: (a) In the ISR, I'm not sure we have access to a
-> reliable realtime clock. (b) If there aren't any packets queued and
-> waiting, then we'll never get called in step (5).
-> 
-> The best bet -- assuming access to the clock from the interrupt
-> handler -- might be to measure the time from iwl_isr_legacy being
-> called to the tasklet being scheduled, and then multiply that by 2 + a
-> fudge factor.
-> 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   86702b3..1228fde  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 1e51b82...fe668b0 akpm-end   -> origin/akpm-end  (forced update)
+   100b33c..d3d373e  akpm-start -> origin/akpm-start
+   53b8b03..90bf504  history    -> origin/history
+ + 2a479d2...d409db5 master     -> origin/master  (forced update)
+   100b33c..d3d373e  stable     -> origin/stable
+ * [new tag]         next-20110210 -> next-20110210
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-I believe we need to test this on the newer device and re-think the
-approach, keep in mind the newer iwlagn device has "interrupt
-coalescing" to reduce the power and CPU usage, which will change the
-timing. Also with 11n enable and aggregation is on, the behavior also
-different.
+compat-wireless code metrics
 
-Wey
-
-
+    786829 - Total upstream lines of code being pulled
+      2093 - backport code changes
+      1831 - backport code additions
+       262 - backport code deletions
+      7292 - backport from compat module
+      9385 - total backport code
+    1.1928 - % of code consists of backport work
