@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33296 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677Ab1BBKQZ (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:60549 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188Ab1BJIkZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 05:16:25 -0500
-Subject: Re: [PATCH] wl12xx: declare support for
- IEEE80211_HW_REPORTS_TX_ACK_STATUS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1296638405-28704-1-git-send-email-eliad@wizery.com>
-References: <1296638405-28704-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Feb 2011 11:16:22 +0100
-Message-ID: <1296641782.5671.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 10 Feb 2011 03:40:25 -0500
+From: "Ferraton, Jean RegisX" <jean.regisx.ferraton@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "marcel@holtmann.org" <marcel@holtmann.org>
+Date: Thu, 10 Feb 2011 08:40:03 +0000
+Subject: Advise on how to integrate latest bluetooth updates on linux 2.6.35
+ kernel
+Message-ID: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F56AFD4@irsmsx501.ger.corp.intel.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-02 at 11:20 +0200, Eliad Peller wrote:
-> The wl12xx fw supports ack status reporting for tx frames, so
-> add the IEEE80211_HW_REPORTS_TX_ACK_STATUS flag to our supported
-> features.
-> 
-> Since we do the rate control in the fw, we'll probably want
-> to adjust the STA_LOST_PKT_THRESHOLD heuristics in the future, to
-> account for retransmissions as well.
+Hi all,
 
-I agree, they're very rough -- they don't even account for
-retransmissions now. I also think some timing should be taken into
-account as TCP will quickly stop sending packets.
+I'm working in the bluetooth part in a project based on the 2.6.35 linux kernel.
 
-johannes
+We've found some bugs related to bluetooth, and I've seen that most of these bugs have been solved by latest releases (2.6.36 and 2.6.37).
+
+To implement these modifications, I have the following options:
+
+1- Implement all the patches one by one
+2- Use the bluetooth modules (*.ko) included in the latest compat-wireless release
+3- Overwrite the bluetooth source files in the kernel with the ones coming from compat-wireless  and rebuild
+
+In my opinion, the 2nd solution seems the cleaner and easier way to achieve this. Could you advise me about the best way to proceed?
+Thanks
+
+Regards
+
+Jean Régis Ferraton
+CVE/CWS team
+Jean.RegisX.Ferraton@intel.com
+
+Intel France
+134, av Eisenhower
+BP 73586
+31023 TOULOUSE cedex 1
+
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
