@@ -1,57 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:55671 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754929Ab1BIObU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:31:20 -0500
-Date: Wed, 9 Feb 2011 15:31:15 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Aleksandar Milivojevic <alex@milivojevic.org>
-Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
-	Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: Re: [rt2x00-users] [RFC] rt2x00: Add autowakeup timer for
- receiving beacons while in powersave mode
-Message-ID: <20110209143115.GA6356@sig21.net>
-References: <201101311600.39486.IvDoorn@gmail.com>
- <874o8mbaec.fsf@purkki.adurom.net>
- <20110202212912.GA28687@sig21.net>
- <AANLkTinip3CZ8ZsY95E6dXnvhA_wEPSs4M7B+SmPY-ZM@mail.gmail.com>
- <87mxm69ajp.fsf@purkki.adurom.net>
- <AANLkTikgASqJ_7omn-Z4JWgAJ1dMtOYoSO8oa=GDtB=a@mail.gmail.com>
+Received: from web36108.mail.mud.yahoo.com ([66.163.179.222]:30769 "HELO
+	web36108.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752087Ab1BJDbb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 22:31:31 -0500
+Message-ID: <426364.35269.qm@web36108.mail.mud.yahoo.com>
+Date: Wed, 9 Feb 2011 19:31:30 -0800 (PST)
+From: Noel Milton Vega <nmvega@computingarchitects.com>
+Reply-To: Noel Milton Vega <nmvega@ComputingArchitects.Com>
+Subject: FWD: Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikgASqJ_7omn-Z4JWgAJ1dMtOYoSO8oa=GDtB=a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 08, 2011 at 11:11:26AM -0800, Aleksandar Milivojevic wrote:
-> On Tue, Feb 8, 2011 at 12:48 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> >
-> > There is CONFIG_CFG80211_DEFAULT_PS kconfig option, but I'm not aware
-> > of any other way to globally do this. I can only think of using iw or
-> > iwconfig to disable power save per device.
-> 
-> I'm using iwconfig currently to disable power saving for wireless card
-> on my desktop after it boots up.  However, from user perspective of
-> things, it would be awesome if default was not hard coded in the
-> kernel.
+To (Original mailing list):
+    wey-yi.w.guy@intel.com, (delivered)
+    linux-wireless@vger.kernel.org, (bounced back from here).
+    ilw@linux.intel.com (delivered)
 
-E.g. on Debian you can add iwconfig settings to /etc/network/interfaces,
-see http://linux.die.net/man/7/wireless but I've no idea if that
-works with NetworkManager or wicd etc.
+Hello Developer Friends:
 
-I am not sure a global config setting for PS would not be an improvement
-because you usually want to enable it for the hw which supports it
-(unless you have specific low latency requirements).
+I'm writing because I'm having problems with the WiFi and Bluetooth interfaces
+provided by the "Intel Centrino Advanced-N 6230AGN" card in my laptop. I am
+running Fedora 14 Linux / 64 Bit, with the latest 2.6 kernel provided by their
+repositories (2.6.35.10-74.fc14.x86_64).
 
-But I think on some distributions acpid scripts run iwconfig to change
-PS depending on if you're on AC or battery power.
+Please CORRECT me if I am wrong, but as I understand it, the drivers for this
+(and similar devices) are supposed to be these:
 
-FWIW, I had sent a patch to change the rt2800 USB driver
-to default to PS off but Ivo seemed determined to
-fix power saving instead of disabling it.
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/003017.html
-(This RFC patch only changes the default, if it turns out PS
-really cannot be fixed we should remove IEEE80211_HW_SUPPORTS_PS instead.)
+root# locate iwlwifi
+/lib/modules/2.6.35.10-74.fc14.x86_64/kernel/drivers/net/wireless/iwlwifi/iwl3945.ko
+
+/lib/modules/2.6.35.10-74.fc14.x86_64/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
+
+/lib/modules/2.6.35.10-74.fc14.x86_64/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
 
 
-Johannes
+But these kernel loadable modules do not seem to work. Let me show you why...
+
+An "lspci -k" doesn't show any of these kernel modules bound to my 
+WiFi/Bluetooth
+card hardware (which, again, is a Intel Centrino Advanced-N 6230AGN device).
+See  here....
+
+root# lspci -k
+
+   03:00.0 Ethernet controller: JMC250 PCI Express Gigabit Ethernet Controller 
+(rev 05)
+   Subsystem: CLEVO/KAPOK Computer Device 7100
+   Kernel driver in use: jme  <--- GOOD for the Ethernet device
+   Kernel modules: jme        <--- GOOD
+
+   01:00.0 VGA compatible controller: nVidia Corporation Device 0e31 (rev a1)
+   Subsystem: CLEVO/KAPOK Computer Device 7100
+   Kernel driver in use: nvidia                <--- GOOD for the video 
+controller.
+   Kernel modules: nvidia, nouveau, nvidiafb   <--- GOOD
+
+   04:00.0 Network controller: Intel Corporation Centrino Advanced-N 6230 (rev 
+34)
+   Subsystem: Intel Corporation Centrino Advanced-N 6230 AGN
+   Kernel driver in use:   <---- missing / not bound.   NO GOOD
+   Kernel modules:         <---- missing / not bound.   NO GOOD
+
+This is true even after I manually do a "root# modeprobe iwlagn" (etc.)
+
+So it looks like (1) either these driver are not working for this device and
+needs to be fixed or *enhanced* to support this card; or (2) this is not the
+driver for this Intel Centrino Advanced-N 6230AGNdevice, and one needs to
+be written. So neither Wireless nor Bluetooth work because devices cannot be
+accessed.
+
+Many CLEVO made laptops will ship with this card (if they have not
+already), and will need a working Linux device driver for it.
+
+Btw... Here is my post about this missing driver to the Fedora and other 
+forums...
+
+   http://forums.fedoraforum.org/showthread.php?p=1442632#post1442632
+
+Can someone help me out with this please? Thank you 
+
+Thank you,
+Noel Milton Vega
+212-699-2660
+
