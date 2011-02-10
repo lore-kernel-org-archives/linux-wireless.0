@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58935
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753586Ab1B1Tb6 (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:10951 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957Ab1BJFbz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 14:31:58 -0500
-Date: Mon, 28 Feb 2011 11:32:34 -0800 (PST)
-Message-Id: <20110228.113234.189690963.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: sshtylyov@ru.mvista.com, netdev@vger.kernel.org,
-	jcliburn@gmail.com, chris.snook@gmail.com, jie.yang@atheros.com,
-	romieu@fr.zoreil.com, sorbica@icplus.com.tw,
-	cooldavid@cooldavid.org, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn, e1000-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: use pci_dev->revision, again
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110228191728.GE2515@tuxdriver.com>
-References: <201102282136.44374.sshtylyov@ru.mvista.com>
-	<20110228191728.GE2515@tuxdriver.com>
+	Thu, 10 Feb 2011 00:31:55 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000020256.msg
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 07:31:14 +0200
+Subject: Re: SSB AI support code ([RFC] v2)
+From: George Kashperko <george@znau.edu.ua>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D5320AA.5020405@lwfinger.net>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
+	 <1297288286.9734.28.camel@maggie>
+	 <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
+	 <4D5320AA.5020405@lwfinger.net>
+Content-Type: text/plain
+Date: Thu, 10 Feb 2011 07:24:16 +0200
+Message-Id: <1297315457.12795.40.camel@dev.znau.edu.ua>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 28 Feb 2011 14:17:29 -0500
+Hi again.
 
-> On Mon, Feb 28, 2011 at 09:36:43PM +0300, Sergei Shtylyov wrote:
->> Several more network drivers that read the device's revision ID
->> from the PCI configuration register were merged after the commit
->> 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all drivers
->> to use pci_device->revision), so it's time to do another pass of
->> conversion to using the 'revision' field of 'struct pci_dev'...
->> 
->> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->> 
->> ---
->> The patch is against the recent Linus' tree.
->> 
->>  drivers/net/atl1e/atl1e_main.c          |    2 +-
->>  drivers/net/atlx/atl2.c                 |    2 +-
->>  drivers/net/cnic.c                      |   14 +++++---------
->>  drivers/net/e1000e/ethtool.c            |    6 ++----
->>  drivers/net/igbvf/ethtool.c             |    6 ++----
->>  drivers/net/igbvf/netdev.c              |    3 +--
->>  drivers/net/ipg.c                       |    4 +---
->>  drivers/net/ixgbevf/ixgbevf_main.c      |    2 +-
->>  drivers/net/jme.c                       |    2 +-
->>  drivers/net/vxge/vxge-main.c            |   18 +-----------------
->>  drivers/net/wireless/iwlwifi/iwl-3945.c |    4 +---
->>  drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
->>  drivers/net/wireless/rtlwifi/pci.c      |    4 +---
->>  13 files changed, 19 insertions(+), 50 deletions(-)
-> 
-> ACK
+Here is updated patchset for AI support code.
+ ~ found one more mistake (one more thing I've missed out from patches
+not published yet. serious one - guaranteed kernel oops right after sb
+scan. hopefully will get time to share whole patchwork I've got these
+weekends - mostly mips stuff, but also pmu code, dma/gmac driver, etc);
+ ~ modified ssb_core_state_flags - now its easy and clean;
+ ~ modified ssb_core_ctl_flags - now it accepts mask in way it works in
+other ssb_/b43_ maskset helpers (btw still looking for better name for
+it, maybe ssb_core_ctl_maskset if you like ?);
+ ~ fixed compile time bugs caused by mips deps (again sorry for that,
+Larry) - tested by compiling for x86_64 and cross compiling for mips;
+ ~ cleaned things out to make checkpatch.pl happy;
 
-Ok, I'll take these into net-next-2.6 when I get a chance.
+mask and val for ssb_core_ctl_flags are still u32. Its retval same as
+ssb_core_state_flags is u32 too. Not sure why but I like it in this way
+even considering other 2 bytes of flags/core regs aint used currently by
+any code known to me. Maybe it could be of some use later ? Anyway if
+you insist I will make it u16.
+
+Havent tested it on actual hw yet, just done with patchset and have no
+time left cause of work. Will do this evening right after done with
+working tasks.
+
+In order to avoid wall'o'posts here is the link to .tar.bz2'ed patchset:
+http://www.znau.edu.ua/temp/ssb-ai-linux-wireless-testing/2011-02-10T06-35/2011-02-10T06-35.tar.bz2
+
+Individual patches are available here:
+http://www.znau.edu.ua/temp/ssb-ai-linux-wireless-testing/2011-02-10T06-35/
+
+Have nice day,
+George
+
+P. S.
+Unfortunately will be away from web till evening, got a trip :/
+
+
