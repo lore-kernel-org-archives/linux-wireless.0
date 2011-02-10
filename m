@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56280 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753128Ab1B1UHc (ORCPT
+Received: from mailout10.t-online.de ([194.25.134.21]:58580 "EHLO
+	mailout10.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820Ab1BJRom (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 15:07:32 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 44687540154
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 15:10:49 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-28 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110228200731.97B0746520@repository3.orbit-lab.org>
-Date: Mon, 28 Feb 2011 15:07:31 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 10 Feb 2011 12:44:42 -0500
+Message-ID: <4D542404.5050004@t-online.de>
+Date: Thu, 10 Feb 2011 18:44:36 +0100
+From: =?ISO-8859-1?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
+References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com> <4D52C54A.2010709@t-online.de> <4D53F3DE.4030707@atheros.com> <20110210174127.GA16737@tux>
+In-Reply-To: <20110210174127.GA16737@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   74d6d79..212223d  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   6dae501..6e14c4a  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + fa8596d...3f8c23b akpm-end   -> origin/akpm-end  (forced update)
-   86e2fe9..493f335  akpm-start -> origin/akpm-start
-   b13c9c0..db46904  history    -> origin/history
- + b655770...5cfae13 master     -> origin/master  (forced update)
-   86e2fe9..493f335  stable     -> origin/stable
- * [new tag]         next-20110228 -> next-20110228
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+> Richard, can you test the userspace app as a replacement? Or did your board not
+> exerpience the issue?
 
-compat-wireless code metrics
+I was unaffected. Therefore I was unhappy with losing my C-states for no 
+good reason.
 
-    831345 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1568 - % of code consists of backport work
+-- 
+Regards,
+Richard Schütz
