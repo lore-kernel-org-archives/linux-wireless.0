@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:39978 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab1BJXQ7 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58832 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775Ab1BJShU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 18:16:59 -0500
-Received: by ewy5 with SMTP id 5so1148404ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 15:16:58 -0800 (PST)
-Message-ID: <4D547224.4020306@lwfinger.net>
-Date: Thu, 10 Feb 2011 17:17:56 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 10 Feb 2011 13:37:20 -0500
+Received: by qwa26 with SMTP id 26so970539qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 10:37:20 -0800 (PST)
 MIME-Version: 1.0
-To: Noel Milton Vega <nmvega@nyceyes.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr,
-	linux-wireless@vger.kernel.org
-Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel Corporation
- Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-References: <875258.44241.qm@web36104.mail.mud.yahoo.com> <20110210212508.GA2508@tuxdriver.com> <937938.34583.qm@web36102.mail.mud.yahoo.com>
-In-Reply-To: <937938.34583.qm@web36102.mail.mud.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
+Date: Thu, 10 Feb 2011 19:37:20 +0100
+Message-ID: <AANLkTikQnCfXZ+exMgLpLZxANFxFDkqp8v_HzXWbb=dM@mail.gmail.com>
+Subject: Re: FW: hostapd problem on reconfig (SIGHUP)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Chaoxing Lin <CLin@3eti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2011 05:08 PM, Noel Milton Vega wrote:
-> 
->   > > In working with the kernel.org linux-wireless  developers, the conclusion
->   > > from one developer was that, though generally  speaking the
->   > > "Centrino Advanced-N 6230 AGN" card is supported by the  "iwlagn" kernel
->   > > module, it seems that the stock kernel module provided  in the
->   > > Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does  not
->   > > support the this card.
->   > > 
->   > > In other words, though code  in the main kernel.org git repository does
->   > > show support for the card  (via iwlagn kernel module), Fedora 14's
->   > > rendition/distribution of that  does not.
->   > 
->   > The point you seem to be missing is that your hardware is very  new,
->   > and the current Fedora 14 kernel is an "ancient" 6+ months  old.
->   >
-> The point wasn't missed. In fact I highlighted the Fedora kernel
-> version, and my card model to expressly make the point. Moreover,
-> one of my suggested work-arounds was to try a newer kernel module
-> (via compat-wireless) so as to bridge bridge that gap for this issue.
-> 
->   > > Command  output during my debugging session with the developers is
->   > > shown below  for completeness, and in case the Fedora folks are
->   > >  monitoring.
->   > 
->   > I'm sorry, but your acquisition of bleeding-edge hardware  does not
->   > merit a change in the normal Fedora release  policy.
->   >
-> Nothing in my email asked or expected them to. Still, the community
-> in general should know what's going on. And, I did suggest two
-> work-arounds in my email, neither of which asks anything of Fedora. 
-> 
->   > P.S. I apologize if this seems rude -- that is  not my intent.
->   >
-> Ah... This postscript repairs everything.
+Please, see the wiki at <wireless.kernel.org>, especially [1] and [2].
 
-As an interested reader, he was not being rude. Usually, anyone that writes to
-this list using the tone that you did, and continue to do, get blasted. You,
-however, did not, but I predict that the gloves will soon come off!
+- Sedat -
 
-Larry
+[1] http://wireless.kernel.org/en/users/Support
+[2] http://wireless.kernel.org/en/developers/MailingLists
 
+On Thu, Feb 10, 2011 at 3:55 PM, Chaoxing Lin <CLin@3eti.com> wrote:
+> Sorry if this message is duplicate.
+>
+> I am confused which email address to send.
+> linux-wireless@vger.kernel.org or linux-wireless-owner@vger.kernel.org
+>
+>
+>
+> -----Original Message-----
+> From: Chaoxing Lin
+> Sent: Wednesday, February 09, 2011 5:23 PM
+> To: 'linux-wireless-owner@vger.kernel.org'
+> Subject: hostapd problem on reconfig (SIGHUP)
+>
+>
+> Hello Experts,
+>
+> I see a problem while testing the latest hostapd/kernel/wpa_supplicant. I believe the problem in on hostapd side.
+> It is easy to recreate the problem. So it can be an easy fix for hostapd maintainer.
+>
+> Thanks
+>
+>
+> Problem: hostapd not working after SIGHUP signal
+>
+> Symptoms
+>
+> 1. If there's a client associated, a SIGHUP signal to hostapd can cause problem that no clients can associate (almost 100% reproducible)
+>
+> 2. "segmentation fault" happens a few times(not all the time)  to hostapd by repeating SIGHUP and SIGUSR1 to hostapd.
+>
+> 3. Another minor thing. Actually a suggestion, hostapd does not need to re-config if configuration file is not changed. This is preferred because when hostapd controls multiple radios (e.g hostapd radio1.conf radio2.conf), it’s desirable that service on other radio is not disrupted when one of the conf is changed.
+>
+>
+> Some facts:
+>     a. The already associated client still thinks itself associated. This is verified by "iw wlan0 link" on client side.
+> It timed out later on and can no longer associate.
+>
+>     b. driver (ath9k in kernel 2.6.38-rc4, operate over ar9380) says it has already deauthenticated the clients per
+>            hostapd flush instruction. This is verified by "iw wlan0 station dump" on ap side.
+>         I sniffed the air. Deauthentication packets (as broadcast) were sent out by driver. The associated client does not
+> deauthenticate and re-associate (bug in wpa_supplicant?).
+>
+>     c. hostapd still thinks the associated client is associated, which is wrong. This is verified by "killall -SIGUSR1 hostapd"
+>        followed by "cat /tmp/hostapd.dump"
+>
+>     d. Tried to use new client to associate. No success.
+>        Both old and clients stuck
+>
+> Workaround:
+>
+>          Do NOT use SIGHUP. User has to kill hostapd and restart hostapd.
+>
+> Software version info:
+> 1. hostapd-0.7.3 and the latest unofficial snapshot release 0.8-snapshot
+> 2. Tried both kernel 2.6.38-rc3 and 2.6.38-rc4.
+> 3. ath9k operates over AR9380 chipset
+> 4. wpa_supplicant-0.7.3 is used for client test.
+>
+>
