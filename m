@@ -1,85 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:62786 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066Ab1BYQH0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 11:07:26 -0500
-Received: by pxi15 with SMTP id 15so275050pxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 08:07:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110225144718.63550601@realh.co.uk>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
-	<20110225144718.63550601@realh.co.uk>
-Date: Fri, 25 Feb 2011 21:37:25 +0530
-Message-ID: <AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
-Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
-From: Mohammed Shafi <shafi.ath9k@gmail.com>
-To: Tony Houghton <h@realh.co.uk>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vivek Natarajan <vnatarajan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36771 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750893Ab1BJP0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 10:26:52 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/4] compat-wireless: make patches apply again
+Date: Thu, 10 Feb 2011 16:26:27 +0100
+Message-Id: <1297351590-24019-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
+References: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 25, 2011 at 8:17 PM, Tony Houghton <h@realh.co.uk> wrote:
-> On Fri, 25 Feb 2011 13:21:32 +0530
-> Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
->
->> > Tony Houghton wrote:
->> >
->> >> With 2.6.37 I can not use suspend on my Compaq/HP 311c (Intel Atom
->> >> N270/NVidia Ion LE). Originally the machine just kept locking up without
->> >> even blanking the display when I tried to suspend (using the GNOME menu
->> >> or by shutting the lid).
->
-> [Snip]
->
-> The above was from my original message before I worked out that the
-> problem was in the wireless because disabling and reneabling wireless,
-> killing the ath9k module etc, would often produce similar crashes, but
-> suspend seems to do it more consistently.
 
-Ok.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/16-bluetooth.patch               |   32 +++++++++++++++---------------
+ patches/31-backport-sk_add_backlog.patch |    6 ++--
+ patches/35-fix-makefile-includes.patch   |   14 ++++++------
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
->
->> >> booting, but it's always a complete lock-up ie the keyboard is
->> >> completely responsive, including caps lock, the mouse won't move if the
->
-> I meant *un*responsive of course!
->
->> >> I haven't tried looking in logs because the crashes are so severe I
->> >> don't think they'd be able to record anything useful.
+diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
+index c94528a..d54e517 100644
+--- a/patches/16-bluetooth.patch
++++ b/patches/16-bluetooth.patch
+@@ -547,9 +547,21 @@ here still, but for now we keep this here.
+  {
+  	struct sock *sk;
+  
+---- a/net/bluetooth/l2cap.c
+-+++ b/net/bluetooth/l2cap.c
+-@@ -982,8 +982,12 @@ static struct sock *l2cap_sock_alloc(str
++--- a/net/bluetooth/l2cap_sock.c
+++++ b/net/bluetooth/l2cap_sock.c
++@@ -520,7 +520,11 @@ static int l2cap_sock_getsockopt(struct
++ 	return err;
++ }
++ 
+++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
++ static int l2cap_sock_setsockopt_old(struct socket *sock, int optname, char __user *optval, unsigned int optlen)
+++#else
+++static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, char __user *optval, int optlen)
+++#endif
++ {
++ 	struct sock *sk = sock->sk;
++ 	struct l2cap_options opts;
++@@ -1067,8 +1071,12 @@ struct sock *l2cap_sock_alloc(struct net
+  	return sk;
+  }
+  
+@@ -562,7 +574,7 @@ here still, but for now we keep this here.
+  {
+  	struct sock *sk;
+  
+-@@ -995,7 +999,11 @@ static int l2cap_sock_create(struct net
++@@ -1080,7 +1088,11 @@ static int l2cap_sock_create(struct net
+  			sock->type != SOCK_DGRAM && sock->type != SOCK_RAW)
+  		return -ESOCKTNOSUPPORT;
+  
+@@ -574,15 +586,3 @@ here still, but for now we keep this here.
+  		return -EPERM;
+  
+  	sock->ops = &l2cap_sock_ops;
+-@@ -2043,7 +2051,11 @@ static int l2cap_sock_setsockopt_old(str
+- 	return err;
+- }
+- 
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
+- static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
+-+#else
+-+static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, char __user *optval, int optlen)
+-+#endif
+- {
+- 	struct sock *sk = sock->sk;
+- 	struct bt_security sec;
+diff --git a/patches/31-backport-sk_add_backlog.patch b/patches/31-backport-sk_add_backlog.patch
+index 704c7c6..916d31f 100644
+--- a/patches/31-backport-sk_add_backlog.patch
++++ b/patches/31-backport-sk_add_backlog.patch
+@@ -7,9 +7,9 @@ limitted caller via a3a858ff. The older kernels don't have a
+ size and as such always are successfull when adding to the
+ backlog.
+ 
+---- a/net/bluetooth/l2cap.c
+-+++ b/net/bluetooth/l2cap.c
+-@@ -4449,8 +4449,12 @@ static inline int l2cap_data_channel(str
++--- a/net/bluetooth/l2cap_core.c
+++++ b/net/bluetooth/l2cap_core.c
++@@ -3368,8 +3368,12 @@ static inline int l2cap_data_channel(str
+  		if (!sock_owned_by_user(sk)) {
+  			l2cap_ertm_data_rcv(sk, skb);
+  		} else {
+diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
+index 2142da2..ea5b41d 100644
+--- a/patches/35-fix-makefile-includes.patch
++++ b/patches/35-fix-makefile-includes.patch
+@@ -20,11 +20,11 @@ path the make process will search in the kernel tree for the headers.
+ +ccflags-y += -I$(obj)/..
+ --- a/drivers/staging/brcm80211/brcmfmac/Makefile
+ +++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+-@@ -32,9 +32,9 @@ ccflags-y :=			\
+- 	-DPKT_FILTER_SUPPORT	\
+- 	-DSHOW_EVENTS		\
+- 	-DTOE			\
+--	-Idrivers/staging/brcm80211/brcmfmac		\
++@@ -35,9 +35,9 @@ ccflags-y :=			\
++ ccflags-$(CONFIG_BRCMDBG)	+= -DDHD_DEBUG
++ 
++ ccflags-y += \
++-	-Idrivers/staging/brcm80211/brcmfmac	\
+ -	-Idrivers/staging/brcm80211/include		\
+ -	-Idrivers/staging/brcm80211/util
+ +	-I$(obj)		\
+@@ -35,9 +35,9 @@ path the make process will search in the kernel tree for the headers.
+  	wl_cfg80211.o \
+ --- a/drivers/staging/brcm80211/brcmsmac/Makefile
+ +++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+-@@ -24,10 +24,10 @@ ccflags-y :=					\
++@@ -23,10 +23,10 @@ ccflags-y :=				\
++ 	-DWL11N					\
+  	-DDBAND					\
+- 	-DBCMDMA32				\
+  	-DBCMNVRAMR				\
+ -	-Idrivers/staging/brcm80211/brcmsmac \
+ -	-Idrivers/staging/brcm80211/brcmsmac/phy \
+-- 
+1.7.1
 
-Can you please get those messages with net console ?
-
->
-> If I enable debugging is there a way to get it to sync to disc after
-> every message? I think the developers are going to need at least that
-> information to be able to track this down.
-
-Yes sure, that could narrow down the issue.
-
->
->> is this issue still reproducible ?
->
-> Yes :-(.
-
-It would be highly helpful if this issue is reproducible in the latest
-wireless testing or compat wireless. It will help us to fix it cleanly
-
->
->> Apart from this reporting I have not seen any other  issues for AR9285.
->
-> Strange, isn't it. I can't be the only person trying to use a recent
-> version of Linux on one of these netbooks, but I couldn't find any
-> similar complaints on Google. Maybe mine has an obscure fault which is
-> only triggered by a feature supported in the newer kernels.
->
-
-also need to rule out its a platform independent issue.
