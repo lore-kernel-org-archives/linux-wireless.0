@@ -1,65 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f52.google.com ([209.85.214.52]:57401 "EHLO
-	mail-bw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216Ab1BOTrT (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62017 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab1BJR4K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 14:47:19 -0500
-Received: by bwz4 with SMTP id 4so762811bwz.11
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 11:47:18 -0800 (PST)
-Message-ID: <4D5AD6A6.8090505@gmail.com>
-Date: Tue, 15 Feb 2011 20:40:22 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Thu, 10 Feb 2011 12:56:10 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 20so1729888fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 09:56:10 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: ath9k and pktgen generate WARNings.
+Date: Thu, 10 Feb 2011 18:54:41 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4D531CA6.8010903@candelatech.com> <201102100931.38777.helmut.schaa@googlemail.com> <4D541E1B.5030707@candelatech.com>
+In-Reply-To: <4D541E1B.5030707@candelatech.com>
 MIME-Version: 1.0
-To: Nikolay Ledovskikh <nledovskikh@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com, mickflemm@gmail.com, me@bobcopeland.com
-Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
- seqfault on AHB chips
-References: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>
-In-Reply-To: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201102101854.41627.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2011 08:09 PM, Nikolay Ledovskikh wrote:
-> This patch fixes seqfault on ar2316 and other AHB based chips.
+Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+> On 02/10/2011 12:31 AM, Helmut Schaa wrote:
+> > Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+> >> I see this warning when I generate traffic with a hacked version
+> >> of pktgen.  This works with various other interfaces w/out problems,
+> >> so I think it's probably an ath9k and/or mac80211 bug.
+> >>
+> >>
+> >> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
+> >> Hardware name: To Be Filled By O.E.M.
+> >> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss
+> >> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath
+> >> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit
+> >> video [last unloaded: lockd]
+> >> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+> >> Call Trace:
+> >>    [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+> >>    [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+> >>    [<c043093f>] ? warn_slowpath_null+0xf/0x13
+> >>    [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+> >>    [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+> >>    [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+> >>    [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+> >>    [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+> >>    [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+> >>    [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+> >>    [<c0440000>] ? rescuer_thread+0x25/0x1c8
+> >>    [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+> >>    [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+> >>    [<c042d612>] ? default_wake_function+0xb/0xd
+> >>    [<c04254c7>] ? __wake_up_common+0x34/0x5c
+> >>    [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+> >>    [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+> >>    [<c044371a>] ? kthread+0x62/0x67
+> >>    [<c04436b8>] ? kthread+0x0/0x67
+> >>    [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+> >>
+> >>
+> >> /* FIXME: tx power */
+> >> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+> >> 			     struct ath_tx_control *txctl)
+> >> {
+> >> 	struct sk_buff *skb = bf->bf_mpdu;
+> >> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+> >> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> >> 	struct list_head bf_head;
+> >> 	struct ath_atx_tid *tid = NULL;
+> >> 	u8 tidno;
+> >>
+> >> 	spin_lock_bh(&txctl->txq->axq_lock);
+> >>
+> >> 	if (ieee80211_is_data_qos(hdr->frame_control)&&  txctl->an) {
+> >> 		tidno = ieee80211_get_qos_ctl(hdr)[0]&
+> >> 			IEEE80211_QOS_CTL_TID_MASK;
+> >> 		tid = ATH_AN_2_TID(txctl->an, tidno);
+> >>
+> >> 		WARN_ON(tid->ac->txq != txctl->txq);
+> >> 	}
+> >>
+> >> Anyone have any ideas on this one?
+> >
+> > pktgen seems to directly inject frames via the xmit callback and hence
+> > mac80211's select_queue callback isn't used for proper queue assignment.
+> >
+> > However, you should be able to specify the queue manuelly with
+> > "cur_queue_map".
+> 
+> Yes, but I don't think I should have to know this detail.
+> 
+> Once you send pkts with queue-map of 0 to ath9k, it spews
+> kernel warnings and then you have to rmmod the NIC before
+> it will start working again (because it's queues are
+> messed up probably).
+> 
+> I'm not sure my patch is the correct way to fix it, but
+> we need to do _something_ in mac80211 and/or ath9k I think.
 
-You need to spare few more words on the changelog.
+Why not make pktgen use the select_queue callback instead?
 
-> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-> index 707cde1..35d5273 100644
-> --- a/drivers/net/wireless/ath/ath5k/ahb.c
-> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
-...
-> @@ -92,7 +92,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
->  		goto err_out;
->  	}
->  
-> -	mem = ioremap_nocache(res->start, res->end - res->start + 1);
-> +	mem = res->start;
-
-Looking into the code which fills this, I still don't get the change.
-res->start is a physical address which should be remapped. Care to
-elaborate?
-
->  	if (mem == NULL) {
->  		dev_err(&pdev->dev, "ioremap failed\n");
->  		ret = -ENOMEM;
-> @@ -114,10 +114,11 @@ static int ath_ahb_probe(struct platform_device *pdev)
->  		ret = -ENOMEM;
->  		goto err_out;
->  	}
-> +	SET_IEEE80211_DEV(hw, &pdev->dev);
->  
->  	sc = hw->priv;
->  	sc->hw = hw;
-> -	sc->dev = &pdev->dev;
-> +	sc->dev = NULL;
-
-This I don't understand too. Maybe because of missing changelog...
-
-regards,
--- 
-js
+Helmut
