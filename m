@@ -1,37 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:56600 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751010Ab1BITGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 14:06:52 -0500
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Sujith <m.sujith@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
-References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
-	<19787.47298.50879.401166@gargle.gargle.HOWL>
-	<AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 09 Feb 2011 21:06:50 +0200
-In-Reply-To: <AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com> (Vivek Natarajan's message of "Fri\, 4 Feb 2011 14\:47\:27 +0530")
-Message-ID: <87lj1p6n91.fsf@purkki.adurom.net>
+Received: from web36104.mail.mud.yahoo.com ([66.163.179.218]:34461 "HELO
+	web36104.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756856Ab1BJUho (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 15:37:44 -0500
+Message-ID: <875258.44241.qm@web36104.mail.mud.yahoo.com>
+Date: Thu, 10 Feb 2011 12:31:02 -0800 (PST)
+From: Noel Milton Vega <nmvega@nyceyes.com>
+Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+To: Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr
+Cc: linux-wireless@vger.kernel.org,
+	Noel Milton Vega <nmvega@ComputingArchitects.Com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+Hello again all:
 
-> We were considering yet another approach too:
-> In this case, if a nullfunc frame for PS comes to the driver when
-> there are pending frames in the hw queue(the frames queued before
-> 100ms and still pending because of highly noisy environment), silently
-> drop the frame so that mac80211 will try once again after 100ms to go
-> to PS. The issue that I face here is, ath9k does not know whether this
-> frame is actually for PS or for fake sleep before scanning.
+It seems that the bluetooth capability of this card now works.
+I don't know whether this had to do with my installing a missing
+firmware package that Julian pointed out
+(i.e. iwl6000g2b-firmware-17.168.5.1-1.fc14.noarch), or maybe
+that the bluetooth radio was off when I was attempting to pair
+(I do remember turning it on though). In any case, I inserted an
+"rfkill unblock all" statement in /etc/rc.local to automate
+that - at least at a O/S level (thank you Ozan for alerting
+me to that command). 
 
-There's also a third option. Keep sending the data frames after the
-nullfunc frame but make sure that pm bit is set. But that would need
-hardware support and someway to notify the driver about the pm state.
+Anyway, I'd like to post an accurate update to the question I posed on
+the forums (FedoraForum & Linuxforums) for this issue (I will
+not divulge email addresses btw).
+
+Given the dialogue we had last night, would you guys/gals
+characterize the update shown next as accurate:
+
+###################################################################
+Hi Friends....
+
+UPDATE:
+
+In working with the kernel.org linux-wireless developers, the conclusion
+from one developer was that, though generally speaking the
+"Centrino Advanced-N 6230 AGN" card is supported by the "iwlagn" kernel
+module, it seems that the stock kernel module provided in the
+Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does not
+support the this card.
+
+In other words, though code in the main kernel.org git repository does
+show support for the card (via iwlagn kernel module), Fedora 14's
+rendition/distribution of that does not.
+
+"lspci(8) -v" did show the hardware (Intel Corporation Centrino Advanced-N 6230
+(rev 34)), the necessary driver and firmware packages were installed, and the
+laptop RF toggle switches are set to enable wireless communications.
+Yet manually performing "modprobe(8) iwlagn" does not produce a wlan0
+interface in "ifconfig(8) -a" output; and although "dmesg(8)" shows the
+module being loaded, it does not show it detecting the card.
+
+The two work arounds were suggested (I haven't tried either):
+
+  (1) Update the kernel. Since I have the latest one provided
+      by Fedora for Fedora 14, this implies a manual compile
+      of a kernel.org kernel. Note that if Fedora is not aware of
+      this issue, it's not likely that the next kernel update
+      will remedy this.
+
+  (2) Using a compat-wireless technique described here,
+      http://wireless.kernel.org/en/users/Download
+
+
+Command output during my debugging session with the developers is
+shown below for completeness, and in case the Fedora folks are
+monitoring.
+
+Regards,
+Noel
+
+###################################################################
+
+Thanks again to all participants on this email list.
+Noel
+
+
+
+
+
+
+
+
+
+________________________________
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Noel Milton Vega <nmvega@computingarchitects.com>
+Cc: linux-wireless@vger.kernel.org
+Sent: Thu, February 10, 2011 1:11:36 AM
+Subject: Re: Need Linux driver (preferably 64 bit)  for "Intel Corporation 
+Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+
+On Thu, Feb 10, 2011 at 16:25, Noel Milton Vega
+<nmvega@computingarchitects.com> wrote:
+> Hi Julian,
+>
+> Thank you for the extended reply. It's appreciated. Your output wish is
+> my command. Here they are (and then some):
+>
+> #####################################################
+> nmvega@p170hm$ sudo rpm -qa | grep iwl
+> #####################################################
+> iwl1000-firmware-128.50.3.1-2.fc13.noarch
+> iwl6050-firmware-41.28.5.1-2.fc14.noarch
+> iwl5150-firmware-8.24.2.2-1.fc13.noarch
+> python-iwlib-0.1-3.fc14.x86_64
+> iwl4965-firmware-228.61.2.24-2.fc12.noarch
+> iwl6000-firmware-9.221.4.1-1.fc14.noarch
+> iwl3945-firmware-15.32.2.9-4.fc13.noarch
+> iwl5000-firmware-8.24.2.12-3.fc13.noarch
+>  iwl6000g2b-firmware-17.168.5.1-1.fc14.noarch  <--- Indeed that was missing, 
+>and
+> I just installed it (then rebooted).
+> #####################################################
+
+Ok, if the driver supports your card then it should now work.
+
+> #####################################################
+> nmvega@p170hm$ sudo modprobe -r iwlagn
+> nmvega@p170hm$ lsmod | grep iwl  (the Unix NULL output was provided here)
+> nmvega@-170hm$ sudo modeprobe iwlagn
+> nmvega@p170hm$ sudo dmesg | tail -8
+> #####################################################
+> [  576.353525]     (start_freq - end_freq @ bandwidth), (max_antenna_gain,
+> max_eirp)
+> [  576.353528]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 
+mBm)
+> [  576.353530]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 
+mBm)
+> [  576.353532]      (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 
+>mBm)
+> [  576.353534]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 
+mBm)
+> [  576.353536]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 
+mBm)
+> [  576.384224] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,
+> in-tree:d
+> [  576.384227] iwlagn: Copyright(c) 2003-2010 Intel Corporation
+> #####################################################
+
+Not really enough information, but yeah, the first 6 lines are the
+tail end of initialising the wireless subsystem, and the last two are
+printed when the driver loads. Given that nothing mentions the driver
+actually detecting the card, then I'm guessing it isn't supported by
+this version of the driver.
+
+> #####################################################
+> nmvega@p170hm$ ifconfig -a
+>  #####################################################
+> eth0      Link encap:Ethernet  HWaddr 00:90:F5:B4:5F:2E
+>          inet addr:192.168.0.20  Bcast:192.168.0.255  Mask:255.255.255.0
+>          inet6 addr: fe80::290:f5ff:feb4:5f2e/64 Scope:Link
+>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>          RX packets:440 errors:0 dropped:0 overruns:0 frame:0
+>          TX packets:49 errors:0 dropped:0 overruns:0 carrier:0
+>          collisions:0 txqueuelen:1000
+>          RX bytes:33496 (32.7 KiB)  TX bytes:6320 (6.1 KiB)
+>          Interrupt:48
+>
+> lo        Link encap:Local Loopback
+>           inet addr:127.0.0.1  Mask:255.0.0.0
+>          inet6 addr: ::1/128 Scope:Host
+>          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+>          RX packets:4 errors:0 dropped:0 overruns:0 frame:0
+>          TX packets:4 errors:0 dropped:0 overruns:0 carrier:0
+>          collisions:0 txqueuelen:0
+>          RX bytes:240 (240.0 b)  TX bytes:240 (240.0 b)
+> #####################################################
+
+And as it hasn't appeared here, that's definitely the case.
+
+> #####################################################
+> nmvega@p170hm$ sudo lspci -n
+> #####################################################
+> 00:00.0 0600: 8086:0104 (rev 09)
+> 00:01.0 0604: 8086:0101 (rev 09)
+> 00:16.0 0780:  8086:1c3a (rev 04)
+> 00:1a.0 0c03: 8086:1c2d (rev 04)
+> 00:1b.0 0403: 8086:1c20 (rev 04)
+> 00:1c.0 0604: 8086:1c10 (rev b4)
+> 00:1c.1 0604: 8086:1c12 (rev b4)
+> 00:1c.2 0604: 8086:1c14 (rev b4)
+> 00:1c.3 0604: 8086:1c16 (rev b4)
+> 00:1d.0 0c03: 8086:1c26 (rev 04)
+> 00:1f.0 0601: 8086:1c4b (rev 04)
+> 00:1f.2 0106: 8086:1c03 (rev 04)
+> 00:1f.3 0c05: 8086:1c22 (rev 04)
+> 01:00.0 0300: 10de:0e31 (rev a1)
+> 01:00.1 0403: 10de:0beb (rev a1)
+> 02:00.0 0c03: 1033:0194 (rev 03)
+> 03:00.0 0200: 197b:0250 (rev 05)
+> 03:00.1 0880: 197b:2392 (rev 90)
+> 03:00.2 0805: 197b:2391 (rev 90)
+> 03:00.3 0880: 197b:2393 (rev 90)
+> 04:00.0 0280: 8086:0091 (rev 34)  <--- this one.
+> 05:00.0 0c00: 197b:2380 (rev 30)
+> ####################################################
+
+Ok, with this I can determine that the card wasn't added with the
+initial  batch of cards I linked you to, but it appears to be fully
+supported as it was added later.
+
+> With all that provided, the only thing I didn't investigate pursuant to your
+> below
+> email was the "compat-wireless". I will do so via the URL:
+> http://wireless.kernel.org/en/users/Download
+
+This is probably your best option as it appears that the stock driver
+in the F14 2.6.35 kernel doesn't support your card.
+
+I hope that installing compat-wireless goes as smoothly for you as it
+does for me, and that after installing it your card works properly.
+
+Thanks,
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
+
