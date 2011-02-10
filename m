@@ -1,82 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35262 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167Ab1BAPRZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 10:17:25 -0500
-Message-ID: <4D4823EE.6070109@candelatech.com>
-Date: Tue, 01 Feb 2011 07:17:02 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from web36101.mail.mud.yahoo.com ([66.163.179.215]:41971 "HELO
+	web36101.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750757Ab1BJHV7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 02:21:59 -0500
+Message-ID: <762759.49884.qm@web36101.mail.mud.yahoo.com>
+References: <426364.35269.qm@web36108.mail.mud.yahoo.com> <AANLkTinoaTFbb3yaEmD5B4q+6U+VVtSVxrqnkryVrxeT@mail.gmail.com> <681857.63296.qm@web36106.mail.mud.yahoo.com> <201102100821.39020.ozan@pardus.org.tr>
+Date: Wed, 9 Feb 2011 23:21:57 -0800 (PST)
+From: Noel Milton Vega <nmvega@computingarchitects.com>
+Reply-To: Noel Milton Vega <nmvega@ComputingArchitects.Com>
+Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+To: =?utf-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+Cc: julian.calaby@gmail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <201102100821.39020.ozan@pardus.org.tr>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: do not restart ps timer during scan
-References: <1296570892-7074-1-git-send-email-rmanoharan@atheros.com> <1296571018.3989.9.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1296571018.3989.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2011 06:36 AM, Johannes Berg wrote:
-> On Tue, 2011-02-01 at 20:04 +0530, Rajkumar Manoharan wrote:
->> While leaving oper channel, STA informs sleep state to AP to
->> stop sending data. Before sending ack for the nullfunc, AP is
->> still sending the data to STA which restarts ps_timer that
->> is causing unnecessary nullfunc exchange on timer expiry
->> when the STA is on offchannel. So don't restart ps_timer
->> on data reception during scan. This issue was identified by
->> the following warning.
->>
->> WARNING: at net/mac80211/tx.c:661 invoke_tx_handlers+0xf07/0x1330 [mac80211]
->> wlan0: Dropped data frame as no usable bitrate found while scanning and
->> associated. Target station: 00:03:7f:0b:a6:1b on 5 GHz band
->> Call Trace:
->>    [<ffffffffa0413ba7>] invoke_tx_handlers+0xf07/0x1330 [mac80211]
->>    [<ffffffffa0414056>] ieee80211_tx+0x86/0x2c0 [mac80211]
->>    [<ffffffffa0414345>] ieee80211_xmit+0xb5/0x1d0 [mac80211]
->>    [<ffffffffa04037e0>] ieee80211_dynamic_ps_enable_work+0x0/0xb0 [mac80211]
->>    [<ffffffffa04158cf>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
->>    [<ffffffffa04026e6>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
->>    [<ffffffffa0403885>] ieee80211_dynamic_ps_enable_work+0xa5/0xb0 [mac80211]
->>
->> Signed-off-by: Rajkumar Manoharan<rmanoharan@atheros.com>
->> ---
->>   net/mac80211/rx.c |    4 +++-
->>   1 files changed, 3 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
->> index 7185c93..0e02ce9 100644
->> --- a/net/mac80211/rx.c
->> +++ b/net/mac80211/rx.c
->> @@ -1929,7 +1929,9 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
->>   	dev->stats.rx_bytes += rx->skb->len;
->>
->>   	if (local->ps_sdata&&  local->hw.conf.dynamic_ps_timeout>  0&&
->> -	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
->> +	    !is_multicast_ether_addr(
->> +		    ((struct ethhdr *)rx->skb->data)->h_dest)&&
->> +	    !local->scanning) {
->
-> What if we're off-channel due to other work like P2P?
+One more time... hopefully this one doesn't wrap around
+on anyone on this list (apologies for the repeat send).
 
-And, if I can get the scan-on-channel optimization patch in, this check
-would need to be changed to check for scanning & off-channel instead of
-just scanning.  I have a helper method in my patch to check if we're on
-the oper-channel....
+Hello Ozan:
 
-Thanks,
-Ben
+You know that's actually a great point. You just reminded
+me of something! I have noticed that, while the laptop
+Bluetooth indicator light does toggle On-and-Off each
+time I press Fn-12; the WiFi laptop indicator light does
+*not*. It has never turned on (*ever*), no matter how many
+times I press Fn-11 (the key combination to toggle WiFi
+On-and-Off). I just assumed it was the driver issue I
+was having (and it may still be).
 
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here are your rfkill outputs...
+
+Executed when Bluetooth light was on - RX/TX enabled; WiFi light is off.)
+root@p170hm# rfkill list
+
+   0: hci0: Bluetooth
+      Soft blocked: no
+      Hard blocked: no
+
+        Note: Don't let the above 2nd bluetooth interface
+        beguile you. This is a tiny bluetooth dongle I
+        temporarily attached to a USB port because this
+        same N-6320 card also provides the laptop's bluetooth
+        capability. But being connected to a USB port, Fn-12
+        will not affect it showing up in the output of rfkill
+        (see later below - it will remain in the output).
+
+   1: hci1: Bluetooth    
+      Soft blocked: no              
+      Hard blocked: no              
+
+(Executed when Bluetooth light was off -- RX/TX disabled; WiFi light is off)
+root@# rfkill list
+
+   0: hci0: Bluetooth
+   Soft blocked: no
+   Hard blocked: no
+
+In either case, I see no reference to a WiFi device.
+
+Hope that helps some more.
+Regards & Thanks,
+Noel
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+
+
+
+----- Original Message ----
+> From: Ozan Çağlayan <ozan@pardus.org.tr>
+> To: Noel Milton Vega <nmvega@computingarchitects.com>
+> Cc: Julian Calaby <julian.calaby@gmail.com>; linux-wireless@vger.kernel.org
+> Sent: Thu, February 10, 2011 1:21:38 AM
+> Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation 
+>Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+> 
+> Perşembe 10 Şubat 2011 günü (saat 07:25:12) Noel Milton Vega şunları  
+yazmıştı:
+> > Hi Julian,
+> > 
+> > Thank you for the extended reply.  It's appreciated. Your output wish is
+> > my command. Here they are (and  then some):
+> 
+> Can you run
+> 
+> rfkill list
+> 
+> and send the output?  Are there any WLAN toggles on your laptop (a hard switch 
+>or Fn + Fx  combination)?
+> If yes try playing with them.
+> 
+> ---
+> Ozan  Çağlayan
+> TUBITAK/UEKAE - Pardus Linux
+> http://www.pardus.org.tr/eng
+> 
