@@ -1,73 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23887 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751100Ab1BJHmp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 02:42:45 -0500
-Date: Thu, 10 Feb 2011 08:41:40 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
-Cc: "'Larry Finger'" <Larry.Finger@lwfinger.net>,
-	"'John W Linville'" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	=?utf-8?B?J+WGr+aYpeeHlSc=?= <amyfcy_feng@realsil.com.cn>,
-	=?utf-8?B?J+eGiuWFieWuiSc=?= <guangan_xiong@realsil.com.cn>
-Subject: Re: =?utf-8?B?562U5aSN?= =?utf-8?Q?=3A?= about Mac80211 scan issue
-Message-ID: <20110210074140.GA2228@redhat.com>
-References: <4d4eec04.v8FQZqbn2LYPF8zs%Larry.Finger@lwfinger.net>
- <20110207151209.GG2319@redhat.com>
- <B84A4806C46340989E2A6AD2EB663300@realsil.com.cn>
- <20110209105405.GB5528@redhat.com>
- <B8DE8263FD784AC082CFDB7E9269BAEA@realsil.com.cn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <B8DE8263FD784AC082CFDB7E9269BAEA@realsil.com.cn>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:48848 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753306Ab1BJUHl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 15:07:41 -0500
+Subject: Re: SSB AI support code ([RFC] v2)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297367556.15805.79.camel@dev.znau.edu.ua> (sfid-20110210_210037_888283_50681D32)
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
+	 <1297288286.9734.28.camel@maggie>
+	 <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
+	 <4D5320AA.5020405@lwfinger.net> <1297315457.12795.40.camel@dev.znau.edu.ua>
+	 (sfid-20110210_063153_817778_FFFFFFFFF46A15B5)  <1297333256.30218.10.camel@maggie>
+	 <1297359641.15805.38.camel@dev.znau.edu.ua>
+	 (sfid-20110210_184827_887841_41FA745D)  <1297361481.30218.31.camel@maggie>
+	 <1297362251.15805.51.camel@dev.znau.edu.ua>
+	 (sfid-20110210_193159_907950_6C4B7BA8)  <1297363781.30218.37.camel@maggie>
+	 <1297367556.15805.79.camel@dev.znau.edu.ua>
+	 (sfid-20110210_210037_888283_50681D32)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 10 Feb 2011 21:07:36 +0100
+Message-ID: <1297368456.30218.40.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 10, 2011 at 03:03:57PM +0800, 李朝明 wrote:
-> > I'm not sure if I understand problem you described. Anyway, 
-> > maybe is enaugh to implement ->flush() in rtlwifi to solve 
-> > the problem?
-> 
-> I don't think drv_flush in ieee80211_start_sw_scan is needed, because
-> there's no netif_tx_stop_all_queues before it.
-> And on my test, all queues still send skb to driver in this drv_flush.
+On Thu, 2011-02-10 at 21:52 +0200, George Kashperko wrote: 
+> But yet again not like im scared of amount of if/else stuff this will
+> introduce (most of it could be hidden with proper inliners anyway). Just
 
-Hmm, there must be something wrong ... there is netif_tx_stop_all_queues
-when interface is not MONITOR. Below are corresponding code snippets:
+I don't think the amount of conditionals will be much bigger than the 
+amount in your current approach. Especially not if you use ops.
 
-static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
-                                                    unsigned long *next_delay)
-{
-        /* PS will already be in off-channel mode,
-         * we do that once at the beginning of scanning.
-         */
-        ieee80211_offchannel_stop_vifs(local, false);
+> > I have no idea. You could probably look at brcm80211 for starters?
+> > 
+> Already done with that, unfortunately PCI_VENDOR_ID_BROADCOM with
+> dev_ids 0x4357/0x4353/0x4727 gives me no clue if they are SB or AI
+> based.
 
-        /*
-         * What if the nullfunc frames didn't arrive?
-         */
-        drv_flush(local, false);
+They are all AI based.
 
-....
+-- 
+Greetings Michael.
 
-void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
-                                    bool offchannel_ps_enable)
-{
-        struct ieee80211_sub_if_data *sdata;
-
-        /*
-         * notify the AP about us leaving the channel and stop all
-         * STA interfaces.
-         */
-        mutex_lock(&local->iflist_mtx);
-        list_for_each_entry(sdata, &local->interfaces, list) {
-                if (!ieee80211_sdata_running(sdata))
-                        continue;
-
-                if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-                        set_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
-...
-                if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-                        netif_tx_stop_all_queues(sdata->dev);
-              
