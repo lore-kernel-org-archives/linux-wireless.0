@@ -1,110 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:56550 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426Ab1BOBKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 20:10:10 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Pp9Qb-0002MK-CJ
-	for linux-wireless@vger.kernel.org; Tue, 15 Feb 2011 02:10:05 +0100
-Received: from 75-145-127-229-colorado.hfc.comcastbusiness.net ([75.145.127.229])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 02:10:05 +0100
-Received: from d by 75-145-127-229-colorado.hfc.comcastbusiness.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 02:10:05 +0100
-To: linux-wireless@vger.kernel.org
-From: d@taht.net (Dave =?utf-8?Q?T=C3=A4ht?=)
-Subject: Re: [PATCH 1/5] iwlwifi: Simplify tx queue management
-Date: Mon, 14 Feb 2011 17:15:12 -0700
-Message-ID: <87r5baf90v.fsf@cruithne.co.teklibre.org>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
-	<1297619803-2832-2-git-send-email-njs@pobox.com>
-	<1297677453.3785.4.camel@jlt3.sipsolutions.net>
-	<AANLkTinA0yoF_dU+2B6+rHcE_DvS7yjqu+TqYzhprvZj@mail.gmail.com>
-	<1297723541.4723.22.camel@wwguy-ubuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48103 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757161Ab1BJWMe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 17:12:34 -0500
+Received: by fxm20 with SMTP id 20so1990036fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 14:12:33 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: ath9k and pktgen generate WARNings.
+Date: Thu, 10 Feb 2011 23:11:05 +0100
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4D531CA6.8010903@candelatech.com> <4D5427A0.20806@candelatech.com> <4D543B18.5000404@openwrt.org>
+In-Reply-To: <4D543B18.5000404@openwrt.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201102102311.05493.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wwguy <wey-yi.w.guy@intel.com> writes:
+Am Donnerstag, 10. Februar 2011 schrieb Felix Fietkau:
+> On 2011-02-10 7:00 PM, Ben Greear wrote:
+> > On 02/10/2011 09:54 AM, Helmut Schaa wrote:
+> >> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+> >>> On 02/10/2011 12:31 AM, Helmut Schaa wrote:
+> >>>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+> >>>>> I see this warning when I generate traffic with a hacked version
+> >>>>> of pktgen.  This works with various other interfaces w/out problems,
+> >>>>> so I think it's probably an ath9k and/or mac80211 bug.
+> >>>>>
+> >>>>>
+> >>>>> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
+> >>>>> Hardware name: To Be Filled By O.E.M.
+> >>>>> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss
+> >>>>> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath
+> >>>>> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit
+> >>>>> video [last unloaded: lockd]
+> >>>>> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+> >>>>> Call Trace:
+> >>>>>     [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+> >>>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+> >>>>>     [<c043093f>] ? warn_slowpath_null+0xf/0x13
+> >>>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+> >>>>>     [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+> >>>>>     [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+> >>>>>     [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+> >>>>>     [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+> >>>>>     [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+> >>>>>     [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+> >>>>>     [<c0440000>] ? rescuer_thread+0x25/0x1c8
+> >>>>>     [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+> >>>>>     [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+> >>>>>     [<c042d612>] ? default_wake_function+0xb/0xd
+> >>>>>     [<c04254c7>] ? __wake_up_common+0x34/0x5c
+> >>>>>     [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+> >>>>>     [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+> >>>>>     [<c044371a>] ? kthread+0x62/0x67
+> >>>>>     [<c04436b8>] ? kthread+0x0/0x67
+> >>>>>     [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+> >>>>>
+> >>>>>
+> >>>>> /* FIXME: tx power */
+> >>>>> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+> >>>>> 			     struct ath_tx_control *txctl)
+> >>>>> {
+> >>>>> 	struct sk_buff *skb = bf->bf_mpdu;
+> >>>>> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+> >>>>> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> >>>>> 	struct list_head bf_head;
+> >>>>> 	struct ath_atx_tid *tid = NULL;
+> >>>>> 	u8 tidno;
+> >>>>>
+> >>>>> 	spin_lock_bh(&txctl->txq->axq_lock);
+> >>>>>
+> >>>>> 	if (ieee80211_is_data_qos(hdr->frame_control)&&   txctl->an) {
+> >>>>> 		tidno = ieee80211_get_qos_ctl(hdr)[0]&
+> >>>>> 			IEEE80211_QOS_CTL_TID_MASK;
+> >>>>> 		tid = ATH_AN_2_TID(txctl->an, tidno);
+> >>>>>
+> >>>>> 		WARN_ON(tid->ac->txq != txctl->txq);
+> >>>>> 	}
+> >>>>>
+> >>>>> Anyone have any ideas on this one?
+> >>>>
+> >>>> pktgen seems to directly inject frames via the xmit callback and hence
+> >>>> mac80211's select_queue callback isn't used for proper queue assignment.
+> >>>>
+> >>>> However, you should be able to specify the queue manuelly with
+> >>>> "cur_queue_map".
+> >>>
+> >>> Yes, but I don't think I should have to know this detail.
+> >>>
+> >>> Once you send pkts with queue-map of 0 to ath9k, it spews
+> >>> kernel warnings and then you have to rmmod the NIC before
+> >>> it will start working again (because it's queues are
+> >>> messed up probably).
+> >>>
+> >>> I'm not sure my patch is the correct way to fix it, but
+> >>> we need to do _something_ in mac80211 and/or ath9k I think.
+> >>
+> >> Why not make pktgen use the select_queue callback instead?
+> > 
+> > It's a test tool and should be able to force queue selection
+> > if it wants to.  I'd rather not have special case code to
+> > know if underlying interface is wifi (and thus need special
+> > queue selection).
+> > 
+> > I'd rather carry that hack to mac80211 I posted instead,
+> > if it comes to that.
+> How about adding a patch that makes mac80211 detect a mismatch between
+> skb->priority and the queue mapping and then adjust the skb priority
+> based on that.
 
-> On Mon, 2011-02-14 at 14:17 -0800, Nathaniel Smith wrote:
->> On Mon, Feb 14, 2011 at 1:57 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
->> >> Previously, the iwlwifi driver filled its transmit queue until it
->> >> reached a high-water mark, and then stopped until it had fallen to
->> >> a low-water mark. This basic logic makes sense for interrupt
->> >> mitigation -- you might not want to wake up the CPU after every
->> >> packet, but instead wait until a batch of packets has been sent --
->> >> except the iwlwifi driver doesn't actually do any interrupt
->> >> mitigation; the CPU wakes up after every packet transmitted
->> >> anyway. So we simplify the code to maintain only a single limit on
->> >> total queue length, and whenever we drop below that limit we allow
->> >> more packets in.
->> >>
->> >> This patch should have no user-visible effect.
->> >
->> > I'm pretty sure the devices (but maybe not 3945) implement
->> > interrupt mitigation at least in some cases. How did you arrive at
->> > the conclusion that "the driver doesn't actually do any interrupt
->> > mitigation"?
->> 
->> Two reasons: -- I searched the code and couldn't find any evidence
->> for it -- If I'm wrong then the quickest way to find out is to make
->> loud and confident claims in front of people who know better ;-) I
->> might be wrong.
->> 
->> If so, then it'd be pretty straightforward to extend this approach to
->> handle interrupt mitigation -- you set the low mark to N ms, and the
->> high mark to N+M ms, where N is the amount of time you think you need
->> to refill the queue after it drops, and 1/M is the maximum interrupt
->> rate you're willing to tolerate.
->> 
->> On Mon, Feb 14, 2011 at 7:33 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
->> > Hi Nathaniel,
->> [...]
->> > what device you test this with? I will like to see this changes
->> > with newer device, especially with aggregation.
->> 
->> Hi Wey,
->> 
->> 03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
->> [Golan] Network Connection (rev 02)
->> 
->> Sadly, I don't have access to any newer hardware. I'd be happy to
->> take donations ;-), but probably someone else will need to do the
->> testing?
->> 
->> I wouldn't be surprised if it needed some tweaks to properly handle
->> aggregation (in particular, I'd want to start by clamping the minimum
->> queue size to match our best guess at the number of packets we can
->> currently combine into a single transmission), but I'm not enough of
->> an 802.11 expert to be confident about how to do that either. That
->> number varies with the rate, yes? So we'd need some way to ask the
->> rate control algorithm what rate it plans to use next?
+Sounds reasonable to me. But please also add a WARN_ON_ONCE in that case
+as otherwise we wouldn't detect broken queue selection under "normal"
+conditions anymore.
 
-Concur there may be issues with aggregation. 
-
-However, I'll take two orders of magnitude latency improvement over
-extreme bandwidth, ANY DAY.
-
->> 
->
-> right, I will really like to see those changes being test with agn
-> device first.
-
-Is this modern enough?
-
-03:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN [Kedron] Network Connection (rev 61)
-
-If so, I'll apply Nathans patch series (could you email the latest cut to me?)
-
-
--- 
-Dave Taht
-http://nex-6.taht.net
-
+Helmut
