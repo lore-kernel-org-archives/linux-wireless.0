@@ -1,232 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53137 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754744Ab1BMR5b (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55852 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914Ab1BJTn5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 12:57:31 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so4086972iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 09:57:31 -0800 (PST)
-From: "Nathaniel J. Smith" <njs@pobox.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, "Nathaniel J. Smith" <njs@pobox.com>
-Subject: [PATCH 3/5] iwlwifi: Invert the sense of the queue high_mark
-Date: Sun, 13 Feb 2011 09:56:40 -0800
-Message-Id: <1297619803-2832-4-git-send-email-njs@pobox.com>
-In-Reply-To: <1297619803-2832-1-git-send-email-njs@pobox.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	Thu, 10 Feb 2011 14:43:57 -0500
+Message-ID: <4D543FF7.3060305@candelatech.com>
+Date: Thu, 10 Feb 2011 11:43:51 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k and pktgen generate WARNings.
+References: <4D531CA6.8010903@candelatech.com> <201102100931.38777.helmut.schaa@googlemail.com> <4D541E1B.5030707@candelatech.com> <201102101854.41627.helmut.schaa@googlemail.com> <4D5427A0.20806@candelatech.com> <4D543B18.5000404@openwrt.org>
+In-Reply-To: <4D543B18.5000404@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before, the high_mark was the minimum amount of free space allowed in a
-queue. Now, it's the maximum number of packets which are allowed to be
-in the queue.
+On 02/10/2011 11:23 AM, Felix Fietkau wrote:
+> On 2011-02-10 7:00 PM, Ben Greear wrote:
+>> On 02/10/2011 09:54 AM, Helmut Schaa wrote:
+>>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+>>>> On 02/10/2011 12:31 AM, Helmut Schaa wrote:
+>>>>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+>>>>>> I see this warning when I generate traffic with a hacked version
+>>>>>> of pktgen.  This works with various other interfaces w/out problems,
+>>>>>> so I think it's probably an ath9k and/or mac80211 bug.
+>>>>>>
+>>>>>>
+>>>>>> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
+>>>>>> Hardware name: To Be Filled By O.E.M.
+>>>>>> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss
+>>>>>> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath
+>>>>>> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit
+>>>>>> video [last unloaded: lockd]
+>>>>>> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+>>>>>> Call Trace:
+>>>>>>      [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+>>>>>>      [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+>>>>>>      [<c043093f>] ? warn_slowpath_null+0xf/0x13
+>>>>>>      [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+>>>>>>      [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+>>>>>>      [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+>>>>>>      [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+>>>>>>      [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+>>>>>>      [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+>>>>>>      [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+>>>>>>      [<c0440000>] ? rescuer_thread+0x25/0x1c8
+>>>>>>      [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+>>>>>>      [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+>>>>>>      [<c042d612>] ? default_wake_function+0xb/0xd
+>>>>>>      [<c04254c7>] ? __wake_up_common+0x34/0x5c
+>>>>>>      [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+>>>>>>      [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+>>>>>>      [<c044371a>] ? kthread+0x62/0x67
+>>>>>>      [<c04436b8>] ? kthread+0x0/0x67
+>>>>>>      [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+>>>>>>
+>>>>>>
+>>>>>> /* FIXME: tx power */
+>>>>>> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+>>>>>> 			     struct ath_tx_control *txctl)
+>>>>>> {
+>>>>>> 	struct sk_buff *skb = bf->bf_mpdu;
+>>>>>> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+>>>>>> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>>>>>> 	struct list_head bf_head;
+>>>>>> 	struct ath_atx_tid *tid = NULL;
+>>>>>> 	u8 tidno;
+>>>>>>
+>>>>>> 	spin_lock_bh(&txctl->txq->axq_lock);
+>>>>>>
+>>>>>> 	if (ieee80211_is_data_qos(hdr->frame_control)&&    txctl->an) {
+>>>>>> 		tidno = ieee80211_get_qos_ctl(hdr)[0]&
+>>>>>> 			IEEE80211_QOS_CTL_TID_MASK;
+>>>>>> 		tid = ATH_AN_2_TID(txctl->an, tidno);
+>>>>>>
+>>>>>> 		WARN_ON(tid->ac->txq != txctl->txq);
+>>>>>> 	}
+>>>>>>
+>>>>>> Anyone have any ideas on this one?
+>>>>>
+>>>>> pktgen seems to directly inject frames via the xmit callback and hence
+>>>>> mac80211's select_queue callback isn't used for proper queue assignment.
+>>>>>
+>>>>> However, you should be able to specify the queue manuelly with
+>>>>> "cur_queue_map".
+>>>>
+>>>> Yes, but I don't think I should have to know this detail.
+>>>>
+>>>> Once you send pkts with queue-map of 0 to ath9k, it spews
+>>>> kernel warnings and then you have to rmmod the NIC before
+>>>> it will start working again (because it's queues are
+>>>> messed up probably).
+>>>>
+>>>> I'm not sure my patch is the correct way to fix it, but
+>>>> we need to do _something_ in mac80211 and/or ath9k I think.
+>>>
+>>> Why not make pktgen use the select_queue callback instead?
+>>
+>> It's a test tool and should be able to force queue selection
+>> if it wants to.  I'd rather not have special case code to
+>> know if underlying interface is wifi (and thus need special
+>> queue selection).
+>>
+>> I'd rather carry that hack to mac80211 I posted instead,
+>> if it comes to that.
+> How about adding a patch that makes mac80211 detect a mismatch between
+> skb->priority and the queue mapping and then adjust the skb priority
+> based on that.
 
-No behavioral changes, but this makes the high_mark much easier to reason
-about. (You might think it wouldn't make a difference, but in fact the
-relationship between the number of packets enqueued and the queue free
-space is complicated by the need to distinguish the queue full and queue
-empty conditions. Removing this complication makes the next patches
-simpler.)
+I'd by happy to test one..but I get seriously confused in this code.
 
-Signed-off-by: Nathaniel J. Smith <njs@pobox.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   19 +++++++++++++------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 7 files changed, 27 insertions(+), 19 deletions(-)
+I *think* that maybe this would entail modifying the qos field a few lines
+above my hack..but I'm not sure, and not sure to what value it should
+be set.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 63999ae..f2e9e59 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -294,7 +294,8 @@ static void iwl3945_tx_queue_reclaim(struct iwl_priv *priv,
- 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
- 	}
- 
--	if (iwl_queue_space(q) > atomic_read(&q->high_mark) && (txq_id >= 0) &&
-+	if (iwl_queue_space_used(q) < atomic_read(&q->high_mark) &&
-+			(txq_id >= 0) &&
- 			(txq_id != IWL39_CMD_QUEUE_NUM) &&
- 			priv->mac80211_registered)
- 		iwl_wake_queue(priv, txq);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 548cbe9..6203c45 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2230,7 +2230,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 						       tid, freed);
- 
- 			if (priv->mac80211_registered &&
--			    (iwl_queue_space(&txq->q) > atomic_read(&txq->q.high_mark)) &&
-+			    (iwl_queue_space_used(&txq->q) < atomic_read(&txq->q.high_mark)) &&
- 			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
- 				iwl_wake_queue(priv, txq);
- 		}
-@@ -2255,7 +2255,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 			IWL_DEBUG_TX_REPLY(priv, "Station not known\n");
- 
- 		if (priv->mac80211_registered &&
--		    (iwl_queue_space(&txq->q) > atomic_read(&txq->q.high_mark)))
-+		    (iwl_queue_space_used(&txq->q) < atomic_read(&txq->q.high_mark)))
- 			iwl_wake_queue(priv, txq);
- 	}
- 	if (qc && likely(sta_id != IWL_INVALID_STATION))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index b2b841f..a84b4a7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -445,7 +445,7 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
- 			iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
- 
- 			if (priv->mac80211_registered &&
--			    (iwl_queue_space(&txq->q) > atomic_read(&txq->q.high_mark)) &&
-+			    (iwl_queue_space_used(&txq->q) < atomic_read(&txq->q.high_mark)) &&
- 			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
- 				iwl_wake_queue(priv, txq);
- 		}
-@@ -455,7 +455,7 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
- 		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
- 
- 		if (priv->mac80211_registered &&
--		    (iwl_queue_space(&txq->q) > atomic_read(&txq->q.high_mark)))
-+		    (iwl_queue_space_used(&txq->q) < atomic_read(&txq->q.high_mark)))
- 			iwl_wake_queue(priv, txq);
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 0c808f0..921876d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -638,7 +638,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	txq = &priv->txq[txq_id];
- 	q = &txq->q;
- 
--	if (unlikely(iwl_queue_space(q) <= atomic_read(&q->high_mark))) {
-+	if (unlikely(iwl_queue_space_used(q) >= atomic_read(&q->high_mark))) {
- 		spin_unlock(&priv->sta_lock);
- 		goto drop_unlock;
- 	}
-@@ -789,7 +789,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	if (sta_priv && sta_priv->client && !is_agg)
- 		atomic_inc(&sta_priv->pending_frames);
- 
--	if ((iwl_queue_space(q) <= atomic_read(&q->high_mark))
-+	if ((iwl_queue_space_used(q) >= atomic_read(&q->high_mark))
- 	     && priv->mac80211_registered) {
- 		if (wait_write_ptr) {
- 			spin_lock_irqsave(&priv->lock, flags);
-@@ -1433,7 +1433,7 @@ void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 		int freed = iwlagn_tx_queue_reclaim(priv, scd_flow, index);
- 		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
- 
--		if ((iwl_queue_space(&txq->q) > atomic_read(&txq->q.high_mark)) &&
-+		if ((iwl_queue_space_used(&txq->q) < atomic_read(&txq->q.high_mark)) &&
- 		    priv->mac80211_registered &&
- 		    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
- 			iwl_wake_queue(priv, txq);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index cf9807c..dc6dd5f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -135,8 +135,8 @@ struct iwl_queue {
- 	dma_addr_t dma_addr;   /* physical addr for BD's */
- 	int n_window;	       /* safe queue window */
- 	u32 id;
--	atomic_t high_mark;    /* high watermark, stop queue if free
--				* space less than or equal to this */
-+	atomic_t high_mark;    /* high watermark -- don't queue more than this
-+				* many entries */
- };
- 
- /* One for each TFD */
-@@ -729,7 +729,7 @@ extern void iwl_update_chain_flags(struct iwl_priv *priv);
- extern const u8 iwl_bcast_addr[ETH_ALEN];
- extern int iwl_rxq_stop(struct iwl_priv *priv);
- extern void iwl_txq_ctx_stop(struct iwl_priv *priv);
--extern int iwl_queue_space(const struct iwl_queue *q);
-+extern int iwl_queue_space_used(const struct iwl_queue *q);
- static inline int iwl_queue_used(const struct iwl_queue *q, int i)
- {
- 	return q->write_ptr >= q->read_ptr ?
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 1867f99..ce62981 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -219,7 +219,7 @@ EXPORT_SYMBOL(iwl_cmd_queue_free);
-  * See more detailed info in iwl-4965-hw.h.
-  ***************************************************/
- 
--int iwl_queue_space(const struct iwl_queue *q)
-+static int iwl_queue_space_free(const struct iwl_queue *q)
- {
- 	int s = q->read_ptr - q->write_ptr;
- 
-@@ -234,8 +234,15 @@ int iwl_queue_space(const struct iwl_queue *q)
- 		s = 0;
- 	return s;
- }
--EXPORT_SYMBOL(iwl_queue_space);
- 
-+int iwl_queue_space_used(const struct iwl_queue *q)
-+{
-+	int s = q->write_ptr - q->read_ptr;
-+	if (s < 0)
-+		s += q->n_bd;
-+	return s;
-+}
-+EXPORT_SYMBOL(iwl_queue_space_used);
- 
- /**
-  * iwl_queue_init - Initialize queue's high-water and read/write indexes
-@@ -255,9 +262,9 @@ static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- 	 * get_cmd_index is broken. */
- 	BUG_ON(!is_power_of_2(slots_num));
- 
--	atomic_set(&q->high_mark, q->n_window / 8);
--	if (atomic_read(&q->high_mark) < 2)
--		atomic_set(&q->high_mark, 2);
-+	atomic_set(&q->high_mark, q->n_window - q->n_window / 8);
-+	if (q->n_window - atomic_read(&q->high_mark) < 2)
-+		atomic_set(&q->high_mark, q->n_window - 2);
- 
- 	q->write_ptr = q->read_ptr = 0;
- 
-@@ -445,7 +452,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		return -EIO;
- 	}
- 
--	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
-+	if (iwl_queue_space_free(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
- 		IWL_ERR(priv, "No space in command queue\n");
- 		if (priv->cfg->ops->lib->tt_ops.ct_kill_check) {
- 			is_ct_kill =
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index b3f8f3e..d0aa01c 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -537,7 +537,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	txq = &priv->txq[txq_id];
- 	q = &txq->q;
- 
--	if ((iwl_queue_space(q) <= atomic_read(&q->high_mark)))
-+	if ((iwl_queue_space_used(q) >= atomic_read(&q->high_mark)))
- 		goto drop;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -647,7 +647,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	iwl_txq_update_write_ptr(priv, txq);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	if ((iwl_queue_space(q) <= atomic_read(&q->high_mark))
-+	if ((iwl_queue_space_used(q) >= atomic_read(&q->high_mark))
- 	    && priv->mac80211_registered) {
- 		if (wait_write_ptr) {
- 			spin_lock_irqsave(&priv->lock, flags);
+Thanks,
+Ben
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
