@@ -1,49 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12264 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671Ab1BNMul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 07:50:41 -0500
-Date: Mon, 14 Feb 2011 13:50:47 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix dma mappings and skbs leak
-Message-ID: <20110214125046.GB14827@redhat.com>
-References: <1297683529-4053-1-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297683529-4053-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.academy.zt.ua ([82.207.120.245]:49559 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753883Ab1BJRs0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 12:48:26 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000020428.msg
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 19:47:45 +0200
+Subject: Re: SSB AI support code ([RFC] v2)
+From: George Kashperko <george@znau.edu.ua>
+To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297333256.30218.10.camel@maggie>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
+	 <1297288286.9734.28.camel@maggie>
+	 <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
+	 <4D5320AA.5020405@lwfinger.net> <1297315457.12795.40.camel@dev.znau.edu.ua>
+	 (sfid-20110210_063153_817778_FFFFFFFFF46A15B5)  <1297333256.30218.10.camel@maggie>
+Content-Type: text/plain
+Date: Thu, 10 Feb 2011 19:40:41 +0200
+Message-Id: <1297359641.15805.38.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 12:38:49PM +0100, Stanislaw Gruszka wrote:
-> WARNING: at lib/dma-debug.c:689 dma_debug_device_change+0x15a/0x1b0()
-> Hardware name: HP xw8600 Workstation
-> pci 0000:80:00.0: DMA-API: device driver has pending DMA allocations while released from device [count=444]
-> Modules linked in: iwlagn(-) iwlcore cryptd aes_x86_64 aes_generic fuse autofs4 sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 ext3 jbd dm_mirror dm_region_hash dm_log dm_mod kvm uinput hp_wmi sparse_keymap wmi sg microcode serio_raw iTCO_wdt iTCO_vendor_support tg3 snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm arc4 ecb snd_timer snd soundcore snd_page_alloc i5k_amb hwmon i5400_edac edac_core shpchp mac80211 cfg80211 rfkill ext4 mbcache jbd2 sd_mod crc_t10dif sr_mod cdrom firewire_ohci firewire_core crc_itu_t mptsas mptscsih mptbase scsi_transport_sas pata_acpi ata_generic ata_piix ahci libahci floppy nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: iwlcore]
-> Pid: 7382, comm: rmmod Not tainted 2.6.38-rc3-wl+ #17
-> Call Trace:
->  [<ffffffff81064bef>] ? warn_slowpath_common+0x7f/0xc0
->  [<ffffffff81064ce6>] ? warn_slowpath_fmt+0x46/0x50
->  [<ffffffff8125ea6b>] ? dma_debug_device_change+0xdb/0x1b0
->  [<ffffffff8125eaea>] ? dma_debug_device_change+0x15a/0x1b0
->  [<ffffffff814dfed8>] ? notifier_call_chain+0x58/0xb0
->  [<ffffffff8108e6a0>] ? __blocking_notifier_call_chain+0x60/0x90
->  [<ffffffff8108e6e6>] ? blocking_notifier_call_chain+0x16/0x20
->  [<ffffffff81326fcc>] ? __device_release_driver+0xbc/0xe0
->  [<ffffffff813270c8>] ? driver_detach+0xd8/0xe0
->  [<ffffffff81325e91>] ? bus_remove_driver+0x91/0x100
->  [<ffffffff813278e2>] ? driver_unregister+0x62/0xa0
->  [<ffffffff81269f94>] ? pci_unregister_driver+0x44/0xa0
->  [<ffffffffa0750e75>] ? iwl_exit+0x15/0x1c [iwlagn]
->  [<ffffffff810abd22>] ? sys_delete_module+0x1a2/0x270
->  [<ffffffff814db0d9>] ? trace_hardirqs_on_thunk+0x3a/0x3f
->  [<ffffffff8100bf82>] ? system_call_fastpath+0x16/0x1b
+Evening.
 
-Hmm, I still have this warning after patch applied, so problem is not
-fully fixed.
+> On Thu, 2011-02-10 at 07:24 +0200, George Kashperko wrote: 
+> > Here is updated patchset for AI support code.
+> 
+> So this patchset does only contain code for the embedded-AI case.
+> There's no support for PCI devices so far. Are you going to
+> add this, too? Or does it work with the existing PCI hostcode?
+> Otherwise the argument that "brcm80211 can be ported
+> to it, too" is foobar.
+Well, I was saying about NPhy code from brcm80211 (did I really said
+about brcm80211 awhole ? o.o Btw its good idea to try out - will get to
+it later when get more free time besides work and actual hw to test it
+on)
+SSB embedded - yes until I could proove otherwise (pretty much sure it
+will require some work on) with getting my hands over some AI-base hw.
+Im lacking non-embedded AI hardware to test it on currently. Planning to
+make a BOM with few SSB AI pci/pcmcia wireless cards to play around with
+but this is for mid-spring when I get more free time for experiments.
 
-Plese hold with with that patch for now.
+> You AI ops seem to be wrong, too:
+> 
+> +/* Ops for the plain SSB bus without a host-device (no PCI or PCMCIA).
+> */
+> +static struct ssb_bus_ops ssb_ops_ai = {
+> + .read8 = ssb_ssb_read8,
+> + .read16 = ssb_ssb_read16,
+> + .read32 = ssb_ssb_read32,
+> + .write8 = ssb_ssb_write8,
+> + .write16 = ssb_ssb_write16,
+> + .write32 = ssb_ssb_write32,
+> +#ifdef CONFIG_SSB_BLOCKIO
+> + .block_read = ssb_ssb_block_read,
+> + .block_write = ssb_ssb_block_write,
+> +#endif
+Nothing wrong here. SSB AI bus does provides individual cores registers'
+space access with regular mmio starting at SSB_ENUM_BASE with 0x1000 for
+each core pretty much like SSB SB bus does. ssb_ai_(read|write)
+accessors read bus-specific core registers from the SSB_AI_BASE again
+with 0x1000 per core. Its looks like on SSB AI every core is wrapped by
+AI hw therefore wrapper-to-bus regs (bus specific stuff like
+control/state) are managed by wrapper io, while core specific registers
+(like phy/dma/etc) accessed pretty much the same like for SSB SB.
 
-Stanislaw
+> You're still calling the SSB-embedded routines. The comment also seems
+> wrong. This is not a "plain SSB bus". It's an "AI" bus.
+Here would be much appreciated for short comment on your understanding
+of "plain SSB" term. Sure this would let us better understand each other
+on the topic. Under "plain SSB" I mean SSB AI/SB bus interconnected with
+system without intermediate PCI/SDIO/PCMCIA/etc bus - therefore no core
+switching required and whole mmio addrspace for all the cores can be
+accessed simultaneously. At least it looks as such for me from GPL'ed
+sourcecodes from Broadcom. Unfortunately have no other better source of
+knowledge of how is it working rather than these sources - that one
+bcm5365p.pdf you posted yesterday (btw thanks alot for it - failed
+trying to find it in web and finally gave up) is new for me, just
+started looking through when catch free time.
+
+> My proposal stays the same: If you want this merged, you'll have to
+> maintain it (the whole thing) in the long term.
+If this is the only option then sure but with one precaution - mine
+background requires me to get working trips sometimes. I cant be online
+during hat time due to sertain limitations I cant cover. It newer longs
+more than 2-3 days and happens not really often. If this wont make
+inconveniences for you then I will do my best to keep the thing working
+and developed.
+
+Have nice day,
+George
+
+
