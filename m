@@ -1,67 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45614 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033Ab1BOV6H convert rfc822-to-8bit (ORCPT
+Received: from mailrg3.ecu.edu.au ([139.230.225.75]:60185 "EHLO
+	mailrg3.ecu.edu.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755275Ab1BJMIw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 16:58:07 -0500
-Received: by iwn9 with SMTP id 9so643547iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 13:58:07 -0800 (PST)
+	Thu, 10 Feb 2011 07:08:52 -0500
+From: Sushil DUTT <s.dutt@ecu.edu.au>
+To: "'Felix Fietkau'" <nbd@openwrt.org>,
+	"greearb@candelatech.com" <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 10 Feb 2011 20:02:27 +0800
+Subject: RE: [PATCH 2/2] mac80211: Set up tx-queue-mapping in
+ subif_start_xmit.
+Message-ID: <32CC77D56B9C2944A88AF25AB2E087F84481E8ACCB@XCHG-MS2.ads.ecu.edu.au>
+References: <1297299951-25604-1-git-send-email-greearb@candelatech.com>
+ <1297299951-25604-2-git-send-email-greearb@candelatech.com>
+ <23538c71c3504e4885f42f007d03016f@SINPRD0102HT006.apcprd01.prod.exchangelabs.com>
+In-Reply-To: <23538c71c3504e4885f42f007d03016f@SINPRD0102HT006.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1297760106.3935.0.camel@jlt3.sipsolutions.net>
-References: <1297351797-35031-1-git-send-email-nbd@openwrt.org>
- <1297677974.3785.9.camel@jlt3.sipsolutions.net> <AANLkTi=wkmAeBKXv8PKhVRJXFdY_NO7jS+vwFJueuBpL@mail.gmail.com>
- <1297760106.3935.0.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 15 Feb 2011 13:57:47 -0800
-Message-ID: <AANLkTime+EGHkWBEmN-6BZNQ=zhjtq-XT4NCWyj+3gGT@mail.gmail.com>
-Subject: Re: [PATCH 1/2] cfg80211: add a field for the bitrate of the last rx
- data packet from a station
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 12:55 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-02-14 at 23:08 -0800, Luis R. Rodriguez wrote:
->> On Mon, Feb 14, 2011 at 2:06 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2011-02-10 at 16:29 +0100, Felix Fietkau wrote:
->> >> Also fix a typo in the STATION_INFO_TX_BITRATE description
->> >>
->> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> >> ---
->> >>  include/linux/nl80211.h |    3 ++
->> >>  include/net/cfg80211.h  |    5 +++-
->> >>  net/wireless/nl80211.c  |   56 +++++++++++++++++++++++++++++++----------------
->> >>  3 files changed, 44 insertions(+), 20 deletions(-)
->> >>
->> >> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
->> >> index 821ffb9..35bfec2 100644
->> >> --- a/include/linux/nl80211.h
->> >> +++ b/include/linux/nl80211.h
->> >> @@ -1243,6 +1243,8 @@ enum nl80211_rate_info {
->> >>   * @NL80211_STA_INFO_LLID: the station's mesh LLID
->> >>   * @NL80211_STA_INFO_PLID: the station's mesh PLID
->> >>   * @NL80211_STA_INFO_PLINK_STATE: peer link state for the station
->> >> + * @NL80211_STA_INFO_RX_BITRATE: last unicast rx rate, nested attribute
->> >> + *   containing info as possible, see &enum nl80211_sta_info_txrate.
->> >
->> > I think it would make sense to restrict this to data frames, as mgmt
->> > frames will often be sent with a low rate.
->>
->> Would it be useful to show both? How about per AC?
+Hi Felix,
+
+I can also see some mismatch in ath9k hardware queue and mac80211 queue definition.
+
+I am not very much expert on openwrt as I just started working with openwrt couple of months back but I can trace that data is sent to ath9k hw queue(q= skb_get_queue_mapping()) which is equal to mac80211 queue. Now problem is that mac80211 & ath9k queue priorities are reverse e.g. mac80211_q=0(AC_VO) is highest priority and ath9k hardware queue_0 is init as AC_BE(i.e. lowest priority).
+
+Your help is appreciated.
+
+Kind Regards,
+Sushil
+
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Felix Fietkau
+Sent: Thursday, 10 February 2011 9:15 AM
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Set up tx-queue-mapping in subif_start_xmit.
+
+On 2011-02-10 2:05 AM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 >
-> Why would anyone care about mgmt frames unless they're debugging
-> something (in which case I recommend monitor interface)?
+> Otherwise, ath9k gets confused about which queue to use
+> and spews a warning like this when driving traffic with
+> pktgen.
+>
+> WARNING: at drivers/net/wireless/ath/ath9k/xmit.c:1748 ath_tx_start+0x4a2/0x662 [ath9k]()
+> Hardware name: To Be Filled By O.E.M.
+> Modules linked in: ath5k arc4 ath9k mac80211 ath9k_common ath9k_hw ath cfg80211 nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp l]
+> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+> Call Trace:
+>  [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+>  [<fabe784e>] ? ath_tx_start+0x4a2/0x662 [ath9k]
+>  [<c043093f>] ? warn_slowpath_null+0xf/0x13
+>  [<fabe784e>] ? ath_tx_start+0x4a2/0x662 [ath9k]
+>  [<fabe14d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+>  [<fab9026d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+>  [<fab90397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+>  [<fab905f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+>  [<fab8ecc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+>  [<fab9148b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+>  [<c0440000>] ? rescuer_thread+0x25/0x1c8
+>  [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+>  [<fab90e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+>  [<c042d612>] ? default_wake_function+0xb/0xd
+>  [<c04254c7>] ? __wake_up_common+0x34/0x5c
+>  [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+>  [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+>  [<c044371a>] ? kthread+0x62/0x67
+>  [<c04436b8>] ? kthread+0x0/0x67
+>  [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>
+> NOTE:  This needs review by someone who actually understands this code.
+>
+> :100644 100644 17ef4f4... 95eb4fa... M        net/mac80211/tx.c
+>  net/mac80211/tx.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 17ef4f4..95eb4fa 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -2028,6 +2028,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>       } else
+>               memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
+>
+> +     skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
+I think this is wrong - it's up to the network stack to set up the queue
+mapping. The bug you're looking for is probably in pktgen - I think
+there was a similar issue in the bridge code at some point, which was
+also fixed.
 
-I was thinking enhancing/debugging multicast traffic.
+- Felix
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> And normally
-> rate control shouldn't care about the AC so that seems pointless?
+This e-mail is confidential. If you are not the intended recipient you must not disclose or use the information contained within. If you have received it in error please return it to the sender via reply e-mail and delete any record of it from your system. The information contained within is not the opinion of Edith Cowan University in general and the University accepts no liability for the accuracy of the information provided.
 
-Again, this would just informational. But sure, mon0 works too.
-
- Luis
+CRICOS IPC 00279B
