@@ -1,59 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:40838 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751968Ab1BNWBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 17:01:25 -0500
-Subject: Re: Notes on ssb specs and implementation
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com> (sfid-20110214_205318_109392_FFFFFFFFAA87CB50)
-References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
-	 <1297282621.9734.5.camel@maggie>
-	 <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com>
-	 (sfid-20110214_205318_109392_FFFFFFFFAA87CB50)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 23:01:17 +0100
-Message-ID: <1297720877.5683.3.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57658 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550Ab1BJEPc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Feb 2011 23:15:32 -0500
+Received: by iyj8 with SMTP id 8so896929iyj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 20:15:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <426364.35269.qm@web36108.mail.mud.yahoo.com>
+References: <426364.35269.qm@web36108.mail.mud.yahoo.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 10 Feb 2011 15:15:11 +1100
+Message-ID: <AANLkTinoaTFbb3yaEmD5B4q+6U+VVtSVxrqnkryVrxeT@mail.gmail.com>
+Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation
+ Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+To: Noel Milton Vega <nmvega@computingarchitects.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-14 at 20:51 +0100, Rafał Miłecki wrote: 
-> W dniu 9 lutego 2011 21:17 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> > On Wed, 2011-02-09 at 21:00 +0100, Rafał Miłecki wrote:
-> >> Michael: was there any reasons why we didn't implement some parts of
-> >> core-disabling code?
-> >
-> > The function are complete as of latest reverse engineering efforts.
-> > Broadcom added stuff, if they do more stuff in latest code.
-> 
-> Nothing has changed in specs since 2006:
-> http://bcm-v4.sipsolutions.net/Backplane?action=info
-> For some reason routines that were present even in 2006 was not implemented.
+On Thu, Feb 10, 2011 at 14:31, Noel Milton Vega
+<nmvega@computingarchitects.com> wrote:
+> I'm writing because I'm having problems with the WiFi and Bluetooth interfaces
+> provided by the "Intel Centrino Advanced-N 6230AGN" card in my laptop. I am
+> running Fedora 14 Linux / 64 Bit, with the latest 2.6 kernel provided by their
+> repositories (2.6.35.10-74.fc14.x86_64).
 
-Well, so the function was implemented prior to 2006. Which doesn't
-surprise me. It was one of the first ones.
+[snip]
 
-> I've just written missing parts,
+> So it looks like (1) either these driver are not working for this device and
+> needs to be fixed or *enhanced* to support this card; or (2) this is not the
+> driver for this Intel Centrino Advanced-N 6230AGNdevice, and one needs to
+> be written. So neither Wireless nor Bluetooth work because devices cannot be
+> accessed.
 
-May I see them?
+Nothing needs to be done, these devices are already supported.
 
-> tested and it still does not work :|
-> The only advantage discovered so far is that ssb detects sth is wrong
-> with IM state:
-> [ 2661.449647] ssb: Timeout waiting for bitmask 01800000 on register
-> 0F90 to clear.
-> 
-> I can see wl experiencing the same problems after loading b43. It
-> reads 0xf90 dozen of times in a row.
+See the linked line in:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/net/wireless/iwlwifi/iwl-6000.c;h=af505bcd7ae0977f1095fc02ce8b9553f70dd86d;hb=HEAD#l601
 
-And that's the thing why I always avoid touching that function.
-There's so much magic going on, so that completely weird things happen
-all the time. :D
+They have been supported since the 6th of May last year.
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1808972f16adba592ceb10a47dee42ef8ee39cee
+
+This support hit mainline in 2.6.36.
+
+May I suggest that you upgrade your kernel or, failing that, use
+compat-wireless. You should also make sure that you have the firmware
+installed, it's in the iwl6000g2b-firmware package. (See:
+https://admin.fedoraproject.org/pkgdb/acls/name/iwl6000g2b-firmware)
+
+That said, given that F14 ships the firmware for this device, I'm
+guessing it's supported somehow. You *did* install the firmware,
+right?
+
+Next time you submit a bug report like this, make sure that you:
+1. Include the dmesg output for an attempt to load the driver. In your
+case the output of "dmesg | grep iwl" would be a good start.
+Completely unloading the driver and then re-loading it while recording
+the output would be better.
+2. Include lspci-n output as this means that we can match up your card
+with the list supported in the driver - given the number of PCI ids
+out there, we cannot match a text description like you provided to an
+actual card as there's likely to be several different versions out
+there with the same name, but differing IDs. If yours has a slightly
+different ID than the officially supported ones, then it won't work.
+3. Don't treat us like idiots.
+
+Hope that helps,
 
 -- 
-Greetings Michael.
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
