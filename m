@@ -1,587 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22489 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753955Ab1B1Ndv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 08:33:51 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 5/5] iwlwifi: move remaining iwl-agn-rx.c code into iwl-rx.c
-Date: Mon, 28 Feb 2011 14:33:17 +0100
-Message-Id: <1298899997-2372-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
-References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63102 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261Ab1BJIdH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 03:33:07 -0500
+Received: by fxm20 with SMTP id 20so1183231fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 00:33:06 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: ath9k and pktgen generate WARNings.
+Date: Thu, 10 Feb 2011 09:31:38 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4D531CA6.8010903@candelatech.com>
+In-Reply-To: <4D531CA6.8010903@candelatech.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201102100931.38777.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to have separate iwl-agn-rx.c file after iwlegacy
-split.
+Hi Ben,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/Makefile     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c |  264 -----------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h   |    2 -
- drivers/net/wireless/iwlwifi/iwl-rx.c     |  226 ++++++++++++++++++++++++-
- 4 files changed, 225 insertions(+), 269 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+> I see this warning when I generate traffic with a hacked version
+> of pktgen.  This works with various other interfaces w/out problems,
+> so I think it's probably an ath9k and/or mac80211 bug.
+> 
+> 
+> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
+> Hardware name: To Be Filled By O.E.M.
+> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss 
+> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath 
+> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit 
+> video [last unloaded: lockd]
+> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+> Call Trace:
+>   [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+>   [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+>   [<c043093f>] ? warn_slowpath_null+0xf/0x13
+>   [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+>   [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+>   [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+>   [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+>   [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+>   [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+>   [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+>   [<c0440000>] ? rescuer_thread+0x25/0x1c8
+>   [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+>   [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+>   [<c042d612>] ? default_wake_function+0xb/0xd
+>   [<c04254c7>] ? __wake_up_common+0x34/0x5c
+>   [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+>   [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+>   [<c044371a>] ? kthread+0x62/0x67
+>   [<c04436b8>] ? kthread+0x0/0x67
+>   [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+> 
+> 
+> /* FIXME: tx power */
+> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+> 			     struct ath_tx_control *txctl)
+> {
+> 	struct sk_buff *skb = bf->bf_mpdu;
+> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> 	struct list_head bf_head;
+> 	struct ath_atx_tid *tid = NULL;
+> 	u8 tidno;
+> 
+> 	spin_lock_bh(&txctl->txq->axq_lock);
+> 
+> 	if (ieee80211_is_data_qos(hdr->frame_control) && txctl->an) {
+> 		tidno = ieee80211_get_qos_ctl(hdr)[0] &
+> 			IEEE80211_QOS_CTL_TID_MASK;
+> 		tid = ATH_AN_2_TID(txctl->an, tidno);
+> 
+> 		WARN_ON(tid->ac->txq != txctl->txq);
+> 	}
+> 
+> Anyone have any ideas on this one?
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index aab7d15..9d6ee83 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -2,7 +2,7 @@
- obj-$(CONFIG_IWLAGN)	+= iwlagn.o
- iwlagn-objs		:= iwl-agn.o iwl-agn-rs.o iwl-agn-led.o
- iwlagn-objs		+= iwl-agn-ucode.o iwl-agn-tx.o
--iwlagn-objs		+= iwl-agn-lib.o iwl-agn-rx.o iwl-agn-calib.o
-+iwlagn-objs		+= iwl-agn-lib.o iwl-agn-calib.o
- iwlagn-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-eeprom.o
- 
- iwlagn-objs 		+= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-deleted file mode 100644
-index 7a89a55..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ /dev/null
-@@ -1,264 +0,0 @@
--/******************************************************************************
-- *
-- * GPL LICENSE SUMMARY
-- *
-- * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-- * The full GNU General Public License is included in this distribution
-- * in the file called LICENSE.GPL.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- *****************************************************************************/
--
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/init.h>
--#include <linux/sched.h>
--
--#include "iwl-dev.h"
--#include "iwl-core.h"
--#include "iwl-agn-calib.h"
--#include "iwl-sta.h"
--#include "iwl-io.h"
--#include "iwl-helpers.h"
--#include "iwl-agn-hw.h"
--#include "iwl-agn.h"
--
--void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
--				struct iwl_rx_mem_buffer *rxb)
--
--{
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_missed_beacon_notif *missed_beacon;
--
--	missed_beacon = &pkt->u.missed_beacon;
--	if (le32_to_cpu(missed_beacon->consecutive_missed_beacons) >
--	    priv->missed_beacon_threshold) {
--		IWL_DEBUG_CALIB(priv,
--		    "missed bcn cnsq %d totl %d rcd %d expctd %d\n",
--		    le32_to_cpu(missed_beacon->consecutive_missed_beacons),
--		    le32_to_cpu(missed_beacon->total_missed_becons),
--		    le32_to_cpu(missed_beacon->num_recvd_beacons),
--		    le32_to_cpu(missed_beacon->num_expected_beacons));
--		if (!test_bit(STATUS_SCANNING, &priv->status))
--			iwl_init_sensitivity(priv);
--	}
--}
--
--/* Calculate noise level, based on measurements during network silence just
-- *   before arriving beacon.  This measurement can be done only if we know
-- *   exactly when to expect beacons, therefore only when we're associated. */
--static void iwl_rx_calc_noise(struct iwl_priv *priv)
--{
--	struct statistics_rx_non_phy *rx_info;
--	int num_active_rx = 0;
--	int total_silence = 0;
--	int bcn_silence_a, bcn_silence_b, bcn_silence_c;
--	int last_rx_noise;
--
--	if (iwl_bt_statistics(priv))
--		rx_info = &(priv->_agn.statistics_bt.rx.general.common);
--	else
--		rx_info = &(priv->_agn.statistics.rx.general);
--	bcn_silence_a =
--		le32_to_cpu(rx_info->beacon_silence_rssi_a) & IN_BAND_FILTER;
--	bcn_silence_b =
--		le32_to_cpu(rx_info->beacon_silence_rssi_b) & IN_BAND_FILTER;
--	bcn_silence_c =
--		le32_to_cpu(rx_info->beacon_silence_rssi_c) & IN_BAND_FILTER;
--
--	if (bcn_silence_a) {
--		total_silence += bcn_silence_a;
--		num_active_rx++;
--	}
--	if (bcn_silence_b) {
--		total_silence += bcn_silence_b;
--		num_active_rx++;
--	}
--	if (bcn_silence_c) {
--		total_silence += bcn_silence_c;
--		num_active_rx++;
--	}
--
--	/* Average among active antennas */
--	if (num_active_rx)
--		last_rx_noise = (total_silence / num_active_rx) - 107;
--	else
--		last_rx_noise = IWL_NOISE_MEAS_NOT_AVAILABLE;
--
--	IWL_DEBUG_CALIB(priv, "inband silence a %u, b %u, c %u, dBm %d\n",
--			bcn_silence_a, bcn_silence_b, bcn_silence_c,
--			last_rx_noise);
--}
--
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--/*
-- *  based on the assumption of all statistics counter are in DWORD
-- *  FIXME: This function is for debugging, do not deal with
-- *  the case of counters roll-over.
-- */
--static void iwl_accumulative_statistics(struct iwl_priv *priv,
--					__le32 *stats)
--{
--	int i, size;
--	__le32 *prev_stats;
--	u32 *accum_stats;
--	u32 *delta, *max_delta;
--	struct statistics_general_common *general, *accum_general;
--	struct statistics_tx *tx, *accum_tx;
--
--	if (iwl_bt_statistics(priv)) {
--		prev_stats = (__le32 *)&priv->_agn.statistics_bt;
--		accum_stats = (u32 *)&priv->_agn.accum_statistics_bt;
--		size = sizeof(struct iwl_bt_notif_statistics);
--		general = &priv->_agn.statistics_bt.general.common;
--		accum_general = &priv->_agn.accum_statistics_bt.general.common;
--		tx = &priv->_agn.statistics_bt.tx;
--		accum_tx = &priv->_agn.accum_statistics_bt.tx;
--		delta = (u32 *)&priv->_agn.delta_statistics_bt;
--		max_delta = (u32 *)&priv->_agn.max_delta_bt;
--	} else {
--		prev_stats = (__le32 *)&priv->_agn.statistics;
--		accum_stats = (u32 *)&priv->_agn.accum_statistics;
--		size = sizeof(struct iwl_notif_statistics);
--		general = &priv->_agn.statistics.general.common;
--		accum_general = &priv->_agn.accum_statistics.general.common;
--		tx = &priv->_agn.statistics.tx;
--		accum_tx = &priv->_agn.accum_statistics.tx;
--		delta = (u32 *)&priv->_agn.delta_statistics;
--		max_delta = (u32 *)&priv->_agn.max_delta;
--	}
--	for (i = sizeof(__le32); i < size;
--	     i += sizeof(__le32), stats++, prev_stats++, delta++,
--	     max_delta++, accum_stats++) {
--		if (le32_to_cpu(*stats) > le32_to_cpu(*prev_stats)) {
--			*delta = (le32_to_cpu(*stats) -
--				le32_to_cpu(*prev_stats));
--			*accum_stats += *delta;
--			if (*delta > *max_delta)
--				*max_delta = *delta;
--		}
--	}
--
--	/* reset accumulative statistics for "no-counter" type statistics */
--	accum_general->temperature = general->temperature;
--	accum_general->temperature_m = general->temperature_m;
--	accum_general->ttl_timestamp = general->ttl_timestamp;
--	accum_tx->tx_power.ant_a = tx->tx_power.ant_a;
--	accum_tx->tx_power.ant_b = tx->tx_power.ant_b;
--	accum_tx->tx_power.ant_c = tx->tx_power.ant_c;
--}
--#endif
--
--#define REG_RECALIB_PERIOD (60)
--
--void iwl_rx_statistics(struct iwl_priv *priv,
--			      struct iwl_rx_mem_buffer *rxb)
--{
--	int change;
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--
--	if (iwl_bt_statistics(priv)) {
--		IWL_DEBUG_RX(priv,
--			     "Statistics notification received (%d vs %d).\n",
--			     (int)sizeof(struct iwl_bt_notif_statistics),
--			     le32_to_cpu(pkt->len_n_flags) &
--			     FH_RSCSR_FRAME_SIZE_MSK);
--
--		change = ((priv->_agn.statistics_bt.general.common.temperature !=
--			   pkt->u.stats_bt.general.common.temperature) ||
--			   ((priv->_agn.statistics_bt.flag &
--			   STATISTICS_REPLY_FLG_HT40_MODE_MSK) !=
--			   (pkt->u.stats_bt.flag &
--			   STATISTICS_REPLY_FLG_HT40_MODE_MSK)));
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--		iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats_bt);
--#endif
--
--	} else {
--		IWL_DEBUG_RX(priv,
--			     "Statistics notification received (%d vs %d).\n",
--			     (int)sizeof(struct iwl_notif_statistics),
--			     le32_to_cpu(pkt->len_n_flags) &
--			     FH_RSCSR_FRAME_SIZE_MSK);
--
--		change = ((priv->_agn.statistics.general.common.temperature !=
--			   pkt->u.stats.general.common.temperature) ||
--			   ((priv->_agn.statistics.flag &
--			   STATISTICS_REPLY_FLG_HT40_MODE_MSK) !=
--			   (pkt->u.stats.flag &
--			   STATISTICS_REPLY_FLG_HT40_MODE_MSK)));
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--		iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats);
--#endif
--
--	}
--
--	iwl_recover_from_statistics(priv, pkt);
--
--	if (iwl_bt_statistics(priv))
--		memcpy(&priv->_agn.statistics_bt, &pkt->u.stats_bt,
--			sizeof(priv->_agn.statistics_bt));
--	else
--		memcpy(&priv->_agn.statistics, &pkt->u.stats,
--			sizeof(priv->_agn.statistics));
--
--	set_bit(STATUS_STATISTICS, &priv->status);
--
--	/* Reschedule the statistics timer to occur in
--	 * REG_RECALIB_PERIOD seconds to ensure we get a
--	 * thermal update even if the uCode doesn't give
--	 * us one */
--	mod_timer(&priv->statistics_periodic, jiffies +
--		  msecs_to_jiffies(REG_RECALIB_PERIOD * 1000));
--
--	if (unlikely(!test_bit(STATUS_SCANNING, &priv->status)) &&
--	    (pkt->hdr.cmd == STATISTICS_NOTIFICATION)) {
--		iwl_rx_calc_noise(priv);
--		queue_work(priv->workqueue, &priv->run_time_calib_work);
--	}
--	if (priv->cfg->ops->lib->temp_ops.temperature && change)
--		priv->cfg->ops->lib->temp_ops.temperature(priv);
--}
--
--void iwl_reply_statistics(struct iwl_priv *priv,
--			      struct iwl_rx_mem_buffer *rxb)
--{
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--
--	if (le32_to_cpu(pkt->u.stats.flag) & UCODE_STATISTICS_CLEAR_MSK) {
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--		memset(&priv->_agn.accum_statistics, 0,
--			sizeof(struct iwl_notif_statistics));
--		memset(&priv->_agn.delta_statistics, 0,
--			sizeof(struct iwl_notif_statistics));
--		memset(&priv->_agn.max_delta, 0,
--			sizeof(struct iwl_notif_statistics));
--		memset(&priv->_agn.accum_statistics_bt, 0,
--			sizeof(struct iwl_bt_notif_statistics));
--		memset(&priv->_agn.delta_statistics_bt, 0,
--			sizeof(struct iwl_bt_notif_statistics));
--		memset(&priv->_agn.max_delta_bt, 0,
--			sizeof(struct iwl_bt_notif_statistics));
--#endif
--		IWL_DEBUG_RX(priv, "Statistics have been cleared\n");
--	}
--	iwl_rx_statistics(priv, rxb);
--}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 22dc435..c025769 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -515,8 +515,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
- /* Handlers */
- void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
- 					  struct iwl_rx_mem_buffer *rxb);
--void iwl_recover_from_statistics(struct iwl_priv *priv,
--				struct iwl_rx_packet *pkt);
- void iwl_chswitch_done(struct iwl_priv *priv, bool is_success);
- void iwl_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index feee761..566e2d9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -37,6 +37,7 @@
- #include "iwl-sta.h"
- #include "iwl-io.h"
- #include "iwl-helpers.h"
-+#include "iwl-agn-calib.h"
- /************************** RX-FUNCTIONS ****************************/
- /*
-  * Rx theory of operation
-@@ -210,7 +211,6 @@ err_bd:
- 	return -ENOMEM;
- }
- 
--
- void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
- 					  struct iwl_rx_mem_buffer *rxb)
- {
-@@ -378,7 +378,7 @@ static bool iwl_good_plcp_health(struct iwl_priv *priv, struct iwl_rx_packet *pk
- 	return rc;
- }
- 
--void iwl_recover_from_statistics(struct iwl_priv *priv, struct iwl_rx_packet *pkt)
-+static void iwl_recover_from_statistics(struct iwl_priv *priv, struct iwl_rx_packet *pkt)
- {
- 	const struct iwl_mod_params *mod_params = priv->cfg->mod_params;
- 
-@@ -396,6 +396,228 @@ void iwl_recover_from_statistics(struct iwl_priv *priv, struct iwl_rx_packet *pk
- 		iwl_force_reset(priv, IWL_RF_RESET, false);
- }
- 
-+/* Calculate noise level, based on measurements during network silence just
-+ *   before arriving beacon.  This measurement can be done only if we know
-+ *   exactly when to expect beacons, therefore only when we're associated. */
-+static void iwl_rx_calc_noise(struct iwl_priv *priv)
-+{
-+	struct statistics_rx_non_phy *rx_info;
-+	int num_active_rx = 0;
-+	int total_silence = 0;
-+	int bcn_silence_a, bcn_silence_b, bcn_silence_c;
-+	int last_rx_noise;
-+
-+	if (iwl_bt_statistics(priv))
-+		rx_info = &(priv->_agn.statistics_bt.rx.general.common);
-+	else
-+		rx_info = &(priv->_agn.statistics.rx.general);
-+	bcn_silence_a =
-+		le32_to_cpu(rx_info->beacon_silence_rssi_a) & IN_BAND_FILTER;
-+	bcn_silence_b =
-+		le32_to_cpu(rx_info->beacon_silence_rssi_b) & IN_BAND_FILTER;
-+	bcn_silence_c =
-+		le32_to_cpu(rx_info->beacon_silence_rssi_c) & IN_BAND_FILTER;
-+
-+	if (bcn_silence_a) {
-+		total_silence += bcn_silence_a;
-+		num_active_rx++;
-+	}
-+	if (bcn_silence_b) {
-+		total_silence += bcn_silence_b;
-+		num_active_rx++;
-+	}
-+	if (bcn_silence_c) {
-+		total_silence += bcn_silence_c;
-+		num_active_rx++;
-+	}
-+
-+	/* Average among active antennas */
-+	if (num_active_rx)
-+		last_rx_noise = (total_silence / num_active_rx) - 107;
-+	else
-+		last_rx_noise = IWL_NOISE_MEAS_NOT_AVAILABLE;
-+
-+	IWL_DEBUG_CALIB(priv, "inband silence a %u, b %u, c %u, dBm %d\n",
-+			bcn_silence_a, bcn_silence_b, bcn_silence_c,
-+			last_rx_noise);
-+}
-+
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+/*
-+ *  based on the assumption of all statistics counter are in DWORD
-+ *  FIXME: This function is for debugging, do not deal with
-+ *  the case of counters roll-over.
-+ */
-+static void iwl_accumulative_statistics(struct iwl_priv *priv,
-+					__le32 *stats)
-+{
-+	int i, size;
-+	__le32 *prev_stats;
-+	u32 *accum_stats;
-+	u32 *delta, *max_delta;
-+	struct statistics_general_common *general, *accum_general;
-+	struct statistics_tx *tx, *accum_tx;
-+
-+	if (iwl_bt_statistics(priv)) {
-+		prev_stats = (__le32 *)&priv->_agn.statistics_bt;
-+		accum_stats = (u32 *)&priv->_agn.accum_statistics_bt;
-+		size = sizeof(struct iwl_bt_notif_statistics);
-+		general = &priv->_agn.statistics_bt.general.common;
-+		accum_general = &priv->_agn.accum_statistics_bt.general.common;
-+		tx = &priv->_agn.statistics_bt.tx;
-+		accum_tx = &priv->_agn.accum_statistics_bt.tx;
-+		delta = (u32 *)&priv->_agn.delta_statistics_bt;
-+		max_delta = (u32 *)&priv->_agn.max_delta_bt;
-+	} else {
-+		prev_stats = (__le32 *)&priv->_agn.statistics;
-+		accum_stats = (u32 *)&priv->_agn.accum_statistics;
-+		size = sizeof(struct iwl_notif_statistics);
-+		general = &priv->_agn.statistics.general.common;
-+		accum_general = &priv->_agn.accum_statistics.general.common;
-+		tx = &priv->_agn.statistics.tx;
-+		accum_tx = &priv->_agn.accum_statistics.tx;
-+		delta = (u32 *)&priv->_agn.delta_statistics;
-+		max_delta = (u32 *)&priv->_agn.max_delta;
-+	}
-+	for (i = sizeof(__le32); i < size;
-+	     i += sizeof(__le32), stats++, prev_stats++, delta++,
-+	     max_delta++, accum_stats++) {
-+		if (le32_to_cpu(*stats) > le32_to_cpu(*prev_stats)) {
-+			*delta = (le32_to_cpu(*stats) -
-+				le32_to_cpu(*prev_stats));
-+			*accum_stats += *delta;
-+			if (*delta > *max_delta)
-+				*max_delta = *delta;
-+		}
-+	}
-+
-+	/* reset accumulative statistics for "no-counter" type statistics */
-+	accum_general->temperature = general->temperature;
-+	accum_general->temperature_m = general->temperature_m;
-+	accum_general->ttl_timestamp = general->ttl_timestamp;
-+	accum_tx->tx_power.ant_a = tx->tx_power.ant_a;
-+	accum_tx->tx_power.ant_b = tx->tx_power.ant_b;
-+	accum_tx->tx_power.ant_c = tx->tx_power.ant_c;
-+}
-+#endif
-+
-+#define REG_RECALIB_PERIOD (60)
-+
-+void iwl_rx_statistics(struct iwl_priv *priv,
-+			      struct iwl_rx_mem_buffer *rxb)
-+{
-+	int change;
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+
-+	if (iwl_bt_statistics(priv)) {
-+		IWL_DEBUG_RX(priv,
-+			     "Statistics notification received (%d vs %d).\n",
-+			     (int)sizeof(struct iwl_bt_notif_statistics),
-+			     le32_to_cpu(pkt->len_n_flags) &
-+			     FH_RSCSR_FRAME_SIZE_MSK);
-+
-+		change = ((priv->_agn.statistics_bt.general.common.temperature !=
-+			   pkt->u.stats_bt.general.common.temperature) ||
-+			   ((priv->_agn.statistics_bt.flag &
-+			   STATISTICS_REPLY_FLG_HT40_MODE_MSK) !=
-+			   (pkt->u.stats_bt.flag &
-+			   STATISTICS_REPLY_FLG_HT40_MODE_MSK)));
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+		iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats_bt);
-+#endif
-+
-+	} else {
-+		IWL_DEBUG_RX(priv,
-+			     "Statistics notification received (%d vs %d).\n",
-+			     (int)sizeof(struct iwl_notif_statistics),
-+			     le32_to_cpu(pkt->len_n_flags) &
-+			     FH_RSCSR_FRAME_SIZE_MSK);
-+
-+		change = ((priv->_agn.statistics.general.common.temperature !=
-+			   pkt->u.stats.general.common.temperature) ||
-+			   ((priv->_agn.statistics.flag &
-+			   STATISTICS_REPLY_FLG_HT40_MODE_MSK) !=
-+			   (pkt->u.stats.flag &
-+			   STATISTICS_REPLY_FLG_HT40_MODE_MSK)));
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+		iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats);
-+#endif
-+
-+	}
-+
-+	iwl_recover_from_statistics(priv, pkt);
-+
-+	if (iwl_bt_statistics(priv))
-+		memcpy(&priv->_agn.statistics_bt, &pkt->u.stats_bt,
-+			sizeof(priv->_agn.statistics_bt));
-+	else
-+		memcpy(&priv->_agn.statistics, &pkt->u.stats,
-+			sizeof(priv->_agn.statistics));
-+
-+	set_bit(STATUS_STATISTICS, &priv->status);
-+
-+	/* Reschedule the statistics timer to occur in
-+	 * REG_RECALIB_PERIOD seconds to ensure we get a
-+	 * thermal update even if the uCode doesn't give
-+	 * us one */
-+	mod_timer(&priv->statistics_periodic, jiffies +
-+		  msecs_to_jiffies(REG_RECALIB_PERIOD * 1000));
-+
-+	if (unlikely(!test_bit(STATUS_SCANNING, &priv->status)) &&
-+	    (pkt->hdr.cmd == STATISTICS_NOTIFICATION)) {
-+		iwl_rx_calc_noise(priv);
-+		queue_work(priv->workqueue, &priv->run_time_calib_work);
-+	}
-+	if (priv->cfg->ops->lib->temp_ops.temperature && change)
-+		priv->cfg->ops->lib->temp_ops.temperature(priv);
-+}
-+
-+void iwl_reply_statistics(struct iwl_priv *priv,
-+			      struct iwl_rx_mem_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+
-+	if (le32_to_cpu(pkt->u.stats.flag) & UCODE_STATISTICS_CLEAR_MSK) {
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+		memset(&priv->_agn.accum_statistics, 0,
-+			sizeof(struct iwl_notif_statistics));
-+		memset(&priv->_agn.delta_statistics, 0,
-+			sizeof(struct iwl_notif_statistics));
-+		memset(&priv->_agn.max_delta, 0,
-+			sizeof(struct iwl_notif_statistics));
-+		memset(&priv->_agn.accum_statistics_bt, 0,
-+			sizeof(struct iwl_bt_notif_statistics));
-+		memset(&priv->_agn.delta_statistics_bt, 0,
-+			sizeof(struct iwl_bt_notif_statistics));
-+		memset(&priv->_agn.max_delta_bt, 0,
-+			sizeof(struct iwl_bt_notif_statistics));
-+#endif
-+		IWL_DEBUG_RX(priv, "Statistics have been cleared\n");
-+	}
-+	iwl_rx_statistics(priv, rxb);
-+}
-+
-+void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
-+				struct iwl_rx_mem_buffer *rxb)
-+
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_missed_beacon_notif *missed_beacon;
-+
-+	missed_beacon = &pkt->u.missed_beacon;
-+	if (le32_to_cpu(missed_beacon->consecutive_missed_beacons) >
-+	    priv->missed_beacon_threshold) {
-+		IWL_DEBUG_CALIB(priv,
-+		    "missed bcn cnsq %d totl %d rcd %d expctd %d\n",
-+		    le32_to_cpu(missed_beacon->consecutive_missed_beacons),
-+		    le32_to_cpu(missed_beacon->total_missed_becons),
-+		    le32_to_cpu(missed_beacon->num_recvd_beacons),
-+		    le32_to_cpu(missed_beacon->num_expected_beacons));
-+		if (!test_bit(STATUS_SCANNING, &priv->status))
-+			iwl_init_sensitivity(priv);
-+	}
-+}
-+
- /*
-  * returns non-zero if packet should be dropped
-  */
--- 
-1.7.1
+pktgen seems to directly inject frames via the xmit callback and hence
+mac80211's select_queue callback isn't used for proper queue assignment.
+
+However, you should be able to specify the queue manuelly with
+"cur_queue_map".
+
+Helmut
 
