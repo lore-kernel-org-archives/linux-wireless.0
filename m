@@ -1,38 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62412 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872Ab1BGO5m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 09:57:42 -0500
-Received: by iyj8 with SMTP id 8so2210641iyj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 06:57:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297083534.2064.19.camel@wimaxnb.nmp.nokia.com>
-References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
- <AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com>
- <1297081781.2064.12.camel@wimaxnb.nmp.nokia.com> <AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
- <1297083534.2064.19.camel@wimaxnb.nmp.nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Mon, 7 Feb 2011 16:56:20 +0200
-Message-ID: <AANLkTim6J9yizLPcj-ERwVEcp=VXSymXBfFdszHUMp80@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: coelho@ti.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:60101 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751162Ab1BJPaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 10:30:07 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 2/2] mac80211: add support for showing the last rx bitrate
+Date: Thu, 10 Feb 2011 16:29:57 +0100
+Message-Id: <1297351797-35031-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1297351797-35031-1-git-send-email-nbd@openwrt.org>
+References: <1297351797-35031-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 7, 2011 at 2:58 PM, Juuso Oikarinen
-<juuso.oikarinen@nokia.com> wrote:
-> Actually this I don't see any performance impact for better or worse of
-> this patch on brief testing. I was instructed by some of our other
-> kernel-dudes that this is actually needed for the cpuidle path too, or
-> there might be some implications.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/cfg.c      |   31 ++++++++++++++++++++++---------
+ net/mac80211/rx.c       |   11 ++++++++++-
+ net/mac80211/sta_info.h |    4 ++++
+ 3 files changed, 36 insertions(+), 10 deletions(-)
 
-It might mean your platforms are configured to hit retention (assuming
-omap) or even off mode in the cpuidle path as well, and in that case
-it can explain the enable_irq_wake..
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 140503d..35eb53f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -316,6 +316,17 @@ static int ieee80211_config_default_mgmt_key(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, int idx)
++{
++	if (!(rate->flags & RATE_INFO_FLAGS_MCS)) {
++		struct ieee80211_supported_band *sband;
++		sband = sta->local->hw.wiphy->bands[
++				sta->local->hw.conf.channel->band];
++		rate->legacy = sband->bitrates[idx].bitrate;
++	} else
++		rate->mcs = idx;
++}
++
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -330,6 +341,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 			STATION_INFO_TX_RETRIES |
+ 			STATION_INFO_TX_FAILED |
+ 			STATION_INFO_TX_BITRATE |
++			STATION_INFO_RX_BITRATE |
+ 			STATION_INFO_RX_DROP_MISC;
+ 
+ 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
+@@ -355,15 +367,16 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+ 	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
+ 		sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-
+-	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
+-		struct ieee80211_supported_band *sband;
+-		sband = sta->local->hw.wiphy->bands[
+-				sta->local->hw.conf.channel->band];
+-		sinfo->txrate.legacy =
+-			sband->bitrates[sta->last_tx_rate.idx].bitrate;
+-	} else
+-		sinfo->txrate.mcs = sta->last_tx_rate.idx;
++	rate_idx_to_bitrate(&sinfo->txrate, sta, sta->last_tx_rate.idx);
++
++	sinfo->rxrate.flags = 0;
++	if (sta->last_rx_rate_flag & RX_FLAG_HT)
++		sinfo->rxrate.flags |= RATE_INFO_FLAGS_MCS;
++	if (sta->last_rx_rate_flag & RX_FLAG_40MHZ)
++		sinfo->rxrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (sta->last_rx_rate_flag & RX_FLAG_SHORT_GI)
++		sinfo->rxrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++	rate_idx_to_bitrate(&sinfo->rxrate, sta, sta->last_rx_rate_idx);
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 045b2fe..0324315 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1166,14 +1166,23 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	if (rx->sdata->vif.type == NL80211_IFTYPE_ADHOC) {
+ 		u8 *bssid = ieee80211_get_bssid(hdr, rx->skb->len,
+ 						NL80211_IFTYPE_ADHOC);
+-		if (compare_ether_addr(bssid, rx->sdata->u.ibss.bssid) == 0)
++		if (compare_ether_addr(bssid, rx->sdata->u.ibss.bssid) == 0) {
+ 			sta->last_rx = jiffies;
++			if (ieee80211_is_data(hdr->frame_control)) {
++				sta->last_rx_rate_idx = status->rate_idx;
++				sta->last_rx_rate_flag = status->flag;
++			}
++		}
+ 	} else if (!is_multicast_ether_addr(hdr->addr1)) {
+ 		/*
+ 		 * Mesh beacons will update last_rx when if they are found to
+ 		 * match the current local configuration when processed.
+ 		 */
+ 		sta->last_rx = jiffies;
++		if (ieee80211_is_data(hdr->frame_control)) {
++			sta->last_rx_rate_idx = status->rate_idx;
++			sta->last_rx_rate_flag = status->flag;
++		}
+ 	}
+ 
+ 	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index ca0b690..5768114 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -209,6 +209,8 @@ enum plink_state {
+  * @rate_ctrl_priv: rate control private per-STA pointer
+  * @last_tx_rate: rate used for last transmit, to report to userspace as
+  *	"the" transmit rate
++ * @last_rx_rate_idx: rx status rate index of the last data packet
++ * @last_rx_rate_flag: rx status flag of the last data packet
+  * @lock: used for locking all fields that require locking, see comments
+  *	in the header file.
+  * @flaglock: spinlock for flags accesses
+@@ -311,6 +313,8 @@ struct sta_info {
+ 	unsigned long tx_bytes;
+ 	unsigned long tx_fragments;
+ 	struct ieee80211_tx_rate last_tx_rate;
++	int last_rx_rate_idx;
++	int last_rx_rate_flag;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
+ 
+ 	/*
+-- 
+1.7.3.2
 
-> I'm currently trying to find out if this is really needed or not.
-
-Sure, thanks.
