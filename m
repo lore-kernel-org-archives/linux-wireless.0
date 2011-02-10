@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45803 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753551Ab1BBIDA (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:53921 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756512Ab1BJRl2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 03:03:00 -0500
-Subject: Re: Support for Android for mac80211 / cfg80211 802.11 drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Amod Bodas <Amod.Bodas@atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Xin Jin <Xin.Jin@atheros.com>
-In-Reply-To: <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
-References: <AANLkTikbrzLeeY8Gosw+7Aic1=V=5f+sD382sXwGDWbA@mail.gmail.com>
-	 <AANLkTi=_gHfEKKC2rsA0pc6Otu5FU4CtVKA2UR85b+GV@mail.gmail.com>
-	 <AANLkTim9uNH8BzjDM5Ekt3ayBe+7QfE4vnXR0bc-=-Yn@mail.gmail.com>
-	 <AANLkTikasAe2H+HyoWDr=NbuxW6LJAET-JqATWMmMmq0@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Feb 2011 09:02:52 +0100
-Message-ID: <1296633772.3624.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 10 Feb 2011 12:41:28 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 09:41:08 -0800
+Date: Thu, 10 Feb 2011 09:41:27 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
+CC: Richard =?iso-8859-1?Q?Sch=FCtz?= <r.schtz@t-online.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
+Message-ID: <20110210174127.GA16737@tux>
+References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com>
+ <4D52C54A.2010709@t-online.de>
+ <4D53F3DE.4030707@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <4D53F3DE.4030707@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-01 at 21:41 -0500, Bob Copeland wrote:
-> On Tue, Feb 1, 2011 at 7:50 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> 
-> >> I don't think it's good to advocate a custom driver.  They should be able
-> >> to use stock wpa_supplicant w/ nl80211 and put the extensions in the
-> >> hardware layer.
-> >
-> > Can you elaborate?
-> 
-> From the wiki:
-> 
-> "The proper approach would be to provide a custom driver_nl80211_android.c
-> wrapper for the modified wpa_supplicant in Android."
-> 
-> I just don't think it's strictly necessary to ship a modified wpa_s.
-> Why is Android special when bog standard Linux gets by ok with
-> driver_nl80211?
+On Thu, Feb 10, 2011 at 06:19:10AM -0800, Mohammed Shajakhan wrote:
+> On Wednesday 09 February 2011 10:18 PM, Richard Schütz wrote:
+> >> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >>
+> >> The DMA latency issue is observed only in Intel pinetrail platforms but
+> >> in the driver we had a default PM-QOS value of 55. This caused
+> >> unnecessary power consumption and battery drain in other platforms.
+> >> Address this issue by disabling PM-QOS by default by setting it's value
+> >> as '0' and making code changes appropriately.This addresses the bug:
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+> >> 	If the user sees some DMA latency issue he can still use the pmqos as a
+> >> module parameter to trade power for throughput as below:
+> >> sudo modprobe ath9k pmqos=55
+> >>
+> >> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >>      
+> > Acked-By: Richard Schütz<r.schtz@t-online.de>
+> >    
+> Thanks, but we got to consider user space approach which Luis had mentioned.
 
-Agree, that is a dumb idea. What's that driver going to do? Use custom
-nl80211 extensions?! That way lies insanity.
+Richard, can you test the userspace app as a replacement? Or did your board not
+exerpience the issue?
 
-johannes
-
+  Luis
