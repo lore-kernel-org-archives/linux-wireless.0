@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:59948 "EHLO purkki.adurom.net"
+Received: from mail.atheros.com ([12.19.149.2]:47937 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828Ab1BAGjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 01:39:18 -0500
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
-References: <4D45A583.3060605@davizone.at> <4D45B7B2.40001@davizone.at>
-	<87r5btdsb8.fsf@purkki.adurom.net> <4D473E72.3050307@davizone.at>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 01 Feb 2011 08:39:14 +0200
-In-Reply-To: <4D473E72.3050307@davizone.at> (David Gnedt's message of "Mon\, 31 Jan 2011 23\:57\:54 +0100")
-Message-ID: <87wrlkcl7x.fsf@purkki.adurom.net>
+	id S1756436Ab1BJOTQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 09:19:16 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 06:18:55 -0800
+Message-ID: <4D53F3DE.4030707@atheros.com>
+Date: Thu, 10 Feb 2011 19:49:10 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?ISO-8859-15?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
+References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com> <4D52C54A.2010709@t-online.de>
+In-Reply-To: <4D52C54A.2010709@t-online.de>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Gnedt <david.gnedt@davizone.at> writes:
-
-> One thing I haven't included in this patchset is the netlink
-> interface from the fremantle code for NVS loading because I thought
-> it wouldn't be accepted anyway.
-
-Correct, it's definitely not for upstream. nl80211 now has testmode
-interface which can be used for that, but as wl1251 hardware is so old
-already I doubt anyone has any interest on.
-
-I have now read and commented some of your patches, I will go through
-the rest today. But 18 patches in a patchset is quite a lot. To make
-it easier to review and manage the patches I would recommend to split
-them to smaller and logical patchsets.
-
--- 
-Kalle Valo
+On Wednesday 09 February 2011 10:18 PM, Richard Schütz wrote:
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>
+>> The DMA latency issue is observed only in Intel pinetrail platforms but
+>> in the driver we had a default PM-QOS value of 55. This caused
+>> unnecessary power consumption and battery drain in other platforms.
+>> Address this issue by disabling PM-QOS by default by setting it's value
+>> as '0' and making code changes appropriately.This addresses the bug:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+>> 	If the user sees some DMA latency issue he can still use the pmqos as a
+>> module parameter to trade power for throughput as below:
+>> sudo modprobe ath9k pmqos=55
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>      
+> Acked-By: Richard Schütz<r.schtz@t-online.de>
+>    
+Thanks, but we got to consider user space approach which Luis had mentioned.
+> Looks good to me with the exception of ATH9K_PM_QOS_DEFAULT_VALUE. But
+> John already mentioned that.
+>
+>    
