@@ -1,215 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:42497 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758045Ab1BQVSM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 16:18:12 -0500
-Date: Thu, 17 Feb 2011 15:18:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: george0505@realtek.com, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/14] rtlwifi: Make changes in rtlwifi/rtl8192ce/def.h to
- support rtl8192cu
-Message-ID: <4d5d9092.1V0vnWMrMHmaQ/0o%Larry.Finger@lwfinger.net>
+Received: from webmail.3eti.com ([65.220.88.141]:58405 "EHLO webmail.3eti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756679Ab1BJSFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 13:05:49 -0500
+From: Chaoxing Lin <CLin@3eti.com>
+To: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
+Subject: FW: hostapd problem on reconfig (SIGHUP)
+Date: Thu, 10 Feb 2011 14:55:14 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change modifies rtlwifi/rtl8192ce/def.h to handle rtl8192cu. In
-addition, a couple of routines needed for both drivers are converted
-to be inline.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-@@ -121,11 +121,37 @@
- #define CHIP_92C			0x01
- #define CHIP_88C			0x00
- 
-+/* Add vendor information into chip version definition.
-+ * Add UMC B-Cut and RTL8723 chip info definition.
-+ *
-+ * BIT 7	Reserved
-+ * BIT 6	UMC BCut
-+ * BIT 5	Manufacturer(TSMC/UMC)
-+ * BIT 4	TEST/NORMAL
-+ * BIT 3	8723 Version
-+ * BIT 2	8723?
-+ * BIT 1	1T2R?
-+ * BIT 0	88C/92C
-+*/
-+
- enum version_8192c {
- 	VERSION_A_CHIP_92C = 0x01,
- 	VERSION_A_CHIP_88C = 0x00,
- 	VERSION_B_CHIP_92C = 0x11,
- 	VERSION_B_CHIP_88C = 0x10,
-+	VERSION_TEST_CHIP_88C = 0x00,
-+	VERSION_TEST_CHIP_92C = 0x01,
-+	VERSION_NORMAL_TSMC_CHIP_88C = 0x10,
-+	VERSION_NORMAL_TSMC_CHIP_92C = 0x11,
-+	VERSION_NORMAL_TSMC_CHIP_92C_1T2R = 0x13,
-+	VERSION_NORMAL_UMC_CHIP_88C_A_CUT = 0x30,
-+	VERSION_NORMAL_UMC_CHIP_92C_A_CUT = 0x31,
-+	VERSION_NORMAL_UMC_CHIP_92C_1T2R_A_CUT = 0x33,
-+	VERSION_NORMA_UMC_CHIP_8723_1T1R_A_CUT = 0x34,
-+	VERSION_NORMA_UMC_CHIP_8723_1T1R_B_CUT = 0x3c,
-+	VERSION_NORMAL_UMC_CHIP_88C_B_CUT = 0x70,
-+	VERSION_NORMAL_UMC_CHIP_92C_B_CUT = 0x71,
-+	VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT = 0x73,
- 	VERSION_UNKNOWN = 0x88,
- };
- 
-@@ -254,4 +280,122 @@ struct h2c_cmd_8192c {
- 	u8 *p_cmdbuffer;
- };
- 
-+static inline u8 _rtl92c_get_chnl_group(u8 chnl)
-+{
-+	u8 group = 0;
-+
-+	if (chnl < 3)
-+		group = 0;
-+	else if (chnl < 9)
-+		group = 1;
-+	else
-+		group = 2;
-+
-+	return group;
-+}
-+
-+/* NOTE: reference to rtl8192c_rates struct */
-+static inline int _rtl92c_rate_mapping(struct ieee80211_hw *hw, bool isHT,
-+				       u8 desc_rate, bool first_ampdu)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	int rate_idx = 0;
-+
-+	if (first_ampdu) {
-+		if (false == isHT) {
-+			switch (desc_rate) {
-+			case DESC92C_RATE1M:
-+				rate_idx = 0;
-+				break;
-+			case DESC92C_RATE2M:
-+				rate_idx = 1;
-+				break;
-+			case DESC92C_RATE5_5M:
-+				rate_idx = 2;
-+				break;
-+			case DESC92C_RATE11M:
-+				rate_idx = 3;
-+				break;
-+			case DESC92C_RATE6M:
-+				rate_idx = 4;
-+				break;
-+			case DESC92C_RATE9M:
-+				rate_idx = 5;
-+				break;
-+			case DESC92C_RATE12M:
-+				rate_idx = 6;
-+				break;
-+			case DESC92C_RATE18M:
-+				rate_idx = 7;
-+				break;
-+			case DESC92C_RATE24M:
-+				rate_idx = 8;
-+				break;
-+			case DESC92C_RATE36M:
-+				rate_idx = 9;
-+				break;
-+			case DESC92C_RATE48M:
-+				rate_idx = 10;
-+				break;
-+			case DESC92C_RATE54M:
-+				rate_idx = 11;
-+				break;
-+			default:
-+				RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
-+					 ("Rate %d is not support, set to "
-+					"1M rate.\n", desc_rate));
-+				rate_idx = 0;
-+				break;
-+			}
-+		} else {
-+			rate_idx = 11;
-+		}
-+		return rate_idx;
-+	}
-+	switch (desc_rate) {
-+	case DESC92C_RATE1M:
-+		rate_idx = 0;
-+		break;
-+	case DESC92C_RATE2M:
-+		rate_idx = 1;
-+		break;
-+	case DESC92C_RATE5_5M:
-+		rate_idx = 2;
-+		break;
-+	case DESC92C_RATE11M:
-+		rate_idx = 3;
-+		break;
-+	case DESC92C_RATE6M:
-+		rate_idx = 4;
-+		break;
-+	case DESC92C_RATE9M:
-+		rate_idx = 5;
-+		break;
-+	case DESC92C_RATE12M:
-+		rate_idx = 6;
-+		break;
-+	case DESC92C_RATE18M:
-+		rate_idx = 7;
-+		break;
-+	case DESC92C_RATE24M:
-+		rate_idx = 8;
-+		break;
-+	case DESC92C_RATE36M:
-+		rate_idx = 9;
-+		break;
-+	case DESC92C_RATE48M:
-+		rate_idx = 10;
-+		break;
-+	case DESC92C_RATE54M:
-+		rate_idx = 11;
-+		break;
-+	/* TODO: How to mapping MCS rate? */
-+	/*  NOTE: referenc to __ieee80211_rx */
-+	default:
-+		rate_idx = 11;
-+		break;
-+	}
-+	return rate_idx;
-+}
-+
- #endif
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1335,19 +1335,6 @@ void rtl92ce_update_interrupt_mask(struc
- 	rtl92ce_enable_interrupt(hw);
- }
- 
--static u8 _rtl92c_get_chnl_group(u8 chnl)
--{
--	u8 group;
--
--	if (chnl < 3)
--		group = 0;
--	else if (chnl < 9)
--		group = 1;
--	else
--		group = 2;
--	return group;
--}
--
- static void _rtl92ce_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
- 						 bool autoload_fail,
- 						 u8 *hwinfo)
+U29ycnkgaWYgdGhpcyBtZXNzYWdlIGlzIGR1cGxpY2F0ZS4NCg0KSSBhbSBjb25mdXNlZCB3aGlj
+aCBlbWFpbCBhZGRyZXNzIHRvIHNlbmQuIA0KbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
+IG9yIGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZw0KDQoNCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IENoYW94aW5nIExpbiANClNlbnQ6IFdlZG5lc2RheSwg
+RmVicnVhcnkgMDksIDIwMTEgNToyMyBQTQ0KVG86ICdsaW51eC13aXJlbGVzcy1vd25lckB2Z2Vy
+Lmtlcm5lbC5vcmcnDQpTdWJqZWN0OiBob3N0YXBkIHByb2JsZW0gb24gcmVjb25maWcgKFNJR0hV
+UCkNCg0KDQpIZWxsbyBFeHBlcnRzLA0KDQpJIHNlZSBhIHByb2JsZW0gd2hpbGUgdGVzdGluZyB0
+aGUgbGF0ZXN0IGhvc3RhcGQva2VybmVsL3dwYV9zdXBwbGljYW50LiBJIGJlbGlldmUgdGhlIHBy
+b2JsZW0gaW4gb24gaG9zdGFwZCBzaWRlLg0KSXQgaXMgZWFzeSB0byByZWNyZWF0ZSB0aGUgcHJv
+YmxlbS4gU28gaXQgY2FuIGJlIGFuIGVhc3kgZml4IGZvciBob3N0YXBkIG1haW50YWluZXIuDQoN
+ClRoYW5rcw0KDQoNClByb2JsZW06IGhvc3RhcGQgbm90IHdvcmtpbmcgYWZ0ZXIgU0lHSFVQIHNp
+Z25hbA0KDQpTeW1wdG9tcw0KDQoxLiBJZiB0aGVyZSdzIGEgY2xpZW50IGFzc29jaWF0ZWQsIGEg
+U0lHSFVQIHNpZ25hbCB0byBob3N0YXBkIGNhbiBjYXVzZSBwcm9ibGVtIHRoYXQgbm8gY2xpZW50
+cyBjYW4gYXNzb2NpYXRlIChhbG1vc3QgMTAwJSByZXByb2R1Y2libGUpDQrCoA0KMi4gInNlZ21l
+bnRhdGlvbiBmYXVsdCIgaGFwcGVucyBhIGZldyB0aW1lcyhub3QgYWxsIHRoZSB0aW1lKSDCoHRv
+IGhvc3RhcGQgYnkgcmVwZWF0aW5nIFNJR0hVUCBhbmQgU0lHVVNSMSB0byBob3N0YXBkLg0KDQoz
+LiBBbm90aGVyIG1pbm9yIHRoaW5nLiBBY3R1YWxseSBhIHN1Z2dlc3Rpb24sIGhvc3RhcGQgZG9l
+cyBub3QgbmVlZCB0byByZS1jb25maWcgaWYgY29uZmlndXJhdGlvbiBmaWxlIGlzIG5vdCBjaGFu
+Z2VkLiBUaGlzIGlzIHByZWZlcnJlZCBiZWNhdXNlIHdoZW4gaG9zdGFwZCBjb250cm9scyBtdWx0
+aXBsZSByYWRpb3MgKGUuZyBob3N0YXBkIHJhZGlvMS5jb25mIHJhZGlvMi5jb25mKSwgaXTigJlz
+IGRlc2lyYWJsZSB0aGF0IHNlcnZpY2Ugb24gb3RoZXIgcmFkaW8gaXMgbm90IGRpc3J1cHRlZCB3
+aGVuIG9uZSBvZiB0aGUgY29uZiBpcyBjaGFuZ2VkLiANCg0KDQpTb21lIGZhY3RzOg0KwqDCoMKg
+IGEuIFRoZSBhbHJlYWR5IGFzc29jaWF0ZWQgY2xpZW50IHN0aWxsIHRoaW5rcyBpdHNlbGYgYXNz
+b2NpYXRlZC4gVGhpcyBpcyB2ZXJpZmllZCBieSAiaXcgd2xhbjAgbGluayIgb24gY2xpZW50IHNp
+ZGUuIA0K44CA44CASXQgdGltZWQgb3V0IGxhdGVyIG9uIGFuZCBjYW4gbm8gbG9uZ2VyIGFzc29j
+aWF0ZS4NCuOAgOOAgA0KwqDCoMKgIGIuIGRyaXZlciAoYXRoOWsgaW4ga2VybmVsIDIuNi4zOC1y
+YzQsIG9wZXJhdGUgb3ZlciBhcjkzODApIHNheXMgaXQgaGFzIGFscmVhZHkgZGVhdXRoZW50aWNh
+dGVkIHRoZSBjbGllbnRzIHBlciANCsKgwqDCoMKgwqDCoMKgwqDCoMKgIGhvc3RhcGQgZmx1c2gg
+aW5zdHJ1Y3Rpb24uIFRoaXMgaXMgdmVyaWZpZWQgYnkgIml3IHdsYW4wIHN0YXRpb24gZHVtcCIg
+b24gYXAgc2lkZS4NCsKgwqDCoCDCoMKgwqAgSSBzbmlmZmVkIHRoZSBhaXIuIERlYXV0aGVudGlj
+YXRpb24gcGFja2V0cyAoYXMgYnJvYWRjYXN0KSB3ZXJlIHNlbnQgb3V0IGJ5IGRyaXZlci4gVGhl
+IGFzc29jaWF0ZWQgY2xpZW50IGRvZXMgbm90IA0K44CA44CAZGVhdXRoZW50aWNhdGUgYW5kIHJl
+LWFzc29jaWF0ZSAoYnVnIGluIHdwYV9zdXBwbGljYW50PykuDQoNCsKgwqDCoCBjLiBob3N0YXBk
+IHN0aWxsIHRoaW5rcyB0aGUgYXNzb2NpYXRlZCBjbGllbnQgaXMgYXNzb2NpYXRlZCwgd2hpY2gg
+aXMgd3JvbmcuIFRoaXMgaXMgdmVyaWZpZWQgYnkgImtpbGxhbGwgLVNJR1VTUjEgaG9zdGFwZCIN
+CsKgwqDCoCDCoMKgIGZvbGxvd2VkIGJ5ICJjYXQgL3RtcC9ob3N0YXBkLmR1bXAiDQoNCsKgwqDC
+oCBkLiBUcmllZCB0byB1c2UgbmV3IGNsaWVudCB0byBhc3NvY2lhdGUuIE5vIHN1Y2Nlc3MuDQrC
+oMKgwqDCoMKgwqAgQm90aCBvbGQgYW5kIGNsaWVudHMgc3R1Y2sgDQoNCldvcmthcm91bmQ6DQoN
+CsKgwqDCoMKgwqDCoMKgwqAgRG8gTk9UIHVzZSBTSUdIVVAuIFVzZXIgaGFzIHRvIGtpbGwgaG9z
+dGFwZCBhbmQgcmVzdGFydCBob3N0YXBkLiANCg0KU29mdHdhcmUgdmVyc2lvbiBpbmZvOg0KMS4g
+aG9zdGFwZC0wLjcuMyBhbmQgdGhlIGxhdGVzdCB1bm9mZmljaWFsIHNuYXBzaG90IHJlbGVhc2Ug
+MC44LXNuYXBzaG90DQoyLiBUcmllZCBib3RoIGtlcm5lbCAyLjYuMzgtcmMzIGFuZCAyLjYuMzgt
+cmM0LiANCjMuIGF0aDlrIG9wZXJhdGVzIG92ZXIgQVI5MzgwIGNoaXBzZXQNCjQuIHdwYV9zdXBw
+bGljYW50LTAuNy4zIGlzIHVzZWQgZm9yIGNsaWVudCB0ZXN0Lg0KDQo=
