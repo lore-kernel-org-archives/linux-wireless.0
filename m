@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60074 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086Ab1BBIGl (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39978 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab1BJXQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 03:06:41 -0500
-Received: by qyk12 with SMTP id 12so8487491qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 00:06:41 -0800 (PST)
+	Thu, 10 Feb 2011 18:16:59 -0500
+Received: by ewy5 with SMTP id 5so1148404ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 15:16:58 -0800 (PST)
+Message-ID: <4D547224.4020306@lwfinger.net>
+Date: Thu, 10 Feb 2011 17:17:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20110128075211.26919.39228.stgit@localhost6.localdomain6>
-References: <20110128075211.26919.39228.stgit@localhost6.localdomain6>
-Date: Wed, 2 Feb 2011 09:06:40 +0100
-Message-ID: <AANLkTim2MBSMSDxyokEWWDC=bwzMCO92qd4_i3Cm0h29@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: Fix short and long retry configuration
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8
+To: Noel Milton Vega <nmvega@nyceyes.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr,
+	linux-wireless@vger.kernel.org
+Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel Corporation
+ Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+References: <875258.44241.qm@web36104.mail.mud.yahoo.com> <20110210212508.GA2508@tuxdriver.com> <937938.34583.qm@web36102.mail.mud.yahoo.com>
+In-Reply-To: <937938.34583.qm@web36102.mail.mud.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 28, 2011 at 8:52 AM, Bruno Randolf <br1@einfach.org> wrote:
-> The register definition for retry configuration on AR5212 was wrong, and simply
-> copied over from AR5210. Update the register definitions from the documentation.
->
-> Let the short and long retries be configured from mac80211 and use the standard
-> values of 7 and 4 by default. Also we need to make sure we don't export more
-> retries than we are configured for to mac80211 (and the rate module) in
-> hw->max_rate_tries.
->
-> Also clean up the code by removing unused defines and variables and drop the
-> different values for "station retries" - if these need to be different it can
-> be handled tru ah_retry_long/short.
->
+On 02/10/2011 05:08 PM, Noel Milton Vega wrote:
+> 
+>   > > In working with the kernel.org linux-wireless  developers, the conclusion
+>   > > from one developer was that, though generally  speaking the
+>   > > "Centrino Advanced-N 6230 AGN" card is supported by the  "iwlagn" kernel
+>   > > module, it seems that the stock kernel module provided  in the
+>   > > Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does  not
+>   > > support the this card.
+>   > > 
+>   > > In other words, though code  in the main kernel.org git repository does
+>   > > show support for the card  (via iwlagn kernel module), Fedora 14's
+>   > > rendition/distribution of that  does not.
+>   > 
+>   > The point you seem to be missing is that your hardware is very  new,
+>   > and the current Fedora 14 kernel is an "ancient" 6+ months  old.
+>   >
+> The point wasn't missed. In fact I highlighted the Fedora kernel
+> version, and my card model to expressly make the point. Moreover,
+> one of my suggested work-arounds was to try a newer kernel module
+> (via compat-wireless) so as to bridge bridge that gap for this issue.
+> 
+>   > > Command  output during my debugging session with the developers is
+>   > > shown below  for completeness, and in case the Fedora folks are
+>   > >  monitoring.
+>   > 
+>   > I'm sorry, but your acquisition of bleeding-edge hardware  does not
+>   > merit a change in the normal Fedora release  policy.
+>   >
+> Nothing in my email asked or expected them to. Still, the community
+> in general should know what's going on. And, I did suggest two
+> work-arounds in my email, neither of which asks anything of Fedora. 
+> 
+>   > P.S. I apologize if this seems rude -- that is  not my intent.
+>   >
+> Ah... This postscript repairs everything.
 
-As I saw your patch in linux-next/wireless-next-2.6, I wanted to ask
-what's up with Bob's
-"mac80211-minstrel-honor-max-retry-counts-from-cfg80211.patch" (see
-[1])?
-Is this patch obsolete, now?
-Will it go in one of the wireless trees?
+As an interested reader, he was not being rude. Usually, anyone that writes to
+this list using the tone that you did, and continue to do, get blasted. You,
+however, did not, but I predict that the gloves will soon come off!
 
+Larry
 
-- Sedat -
-
-[1] https://patchwork.kernel.org/patch/359722/
