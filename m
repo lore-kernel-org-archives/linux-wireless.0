@@ -1,173 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53193 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753624Ab1BMOlF (ORCPT
+Received: from web36102.mail.mud.yahoo.com ([66.163.179.216]:27926 "HELO
+	web36102.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757171Ab1BJXIk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 09:41:05 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 15so4702333bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 06:41:04 -0800 (PST)
-From: Stanislav Fomichev <kernel@fomichev.me>
-To: linux-wireless@vger.kernel.org
-Cc: brudley@broadcom.com, gregkh@suse.de
-Subject: [PATCH 7/8] brcm80211: replace ether_header with ethhdr
-Date: Sun, 13 Feb 2011 17:40:42 +0300
-Message-Id: <1297608043-18381-7-git-send-email-kernel@fomichev.me>
-In-Reply-To: <1297608043-18381-1-git-send-email-kernel@fomichev.me>
-References: <1297608043-18381-1-git-send-email-kernel@fomichev.me>
+	Thu, 10 Feb 2011 18:08:40 -0500
+Message-ID: <937938.34583.qm@web36102.mail.mud.yahoo.com>
+References: <875258.44241.qm@web36104.mail.mud.yahoo.com> <20110210212508.GA2508@tuxdriver.com>
+Date: Thu, 10 Feb 2011 15:08:38 -0800 (PST)
+From: Noel Milton Vega <nmvega@nyceyes.com>
+Reply-To: Noel Milton Vega <nmvega@nyceyes.com>
+Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>, ozan@pardus.org.tr,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110210212508.GA2508@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use native linux interfaces instead of brcm80211 specific ones.
 
-Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
-Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
----
- drivers/staging/brcm80211/brcmfmac/dhd_common.c    |    2 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   12 +++---
- drivers/staging/brcm80211/include/proto/bcmevent.h |    4 +-
- drivers/staging/brcm80211/include/proto/ethernet.h |   36 --------------------
- drivers/staging/brcm80211/sys/wlc_mac80211.c       |    2 +-
- 5 files changed, 10 insertions(+), 46 deletions(-)
+  > > In working with the kernel.org linux-wireless  developers, the conclusion
+  > > from one developer was that, though generally  speaking the
+  > > "Centrino Advanced-N 6230 AGN" card is supported by the  "iwlagn" kernel
+  > > module, it seems that the stock kernel module provided  in the
+  > > Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does  not
+  > > support the this card.
+  > > 
+  > > In other words, though code  in the main kernel.org git repository does
+  > > show support for the card  (via iwlagn kernel module), Fedora 14's
+  > > rendition/distribution of that  does not.
+  > 
+  > The point you seem to be missing is that your hardware is very  new,
+  > and the current Fedora 14 kernel is an "ancient" 6+ months  old.
+  >
+The point wasn't missed. In fact I highlighted the Fedora kernel
+version, and my card model to expressly make the point. Moreover,
+one of my suggested work-arounds was to try a newer kernel module
+(via compat-wireless) so as to bridge bridge that gap for this issue.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 01943f3..077ccc7 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -868,7 +868,7 @@ wl_host_event(struct dhd_info *dhd, int *ifidx, void *pktdata,
- 				if (ifevent->action == WLC_E_IF_ADD)
- 					dhd_add_if(dhd, ifevent->ifidx,
- 						   NULL, event->ifname,
--						   pvt_data->eth.ether_dhost,
-+						   pvt_data->eth.h_dest,
- 						   ifevent->flags,
- 						   ifevent->bssidx);
- 				else
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index c09e9a5..a3db566 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -1030,11 +1030,11 @@ int dhd_sendpkt(dhd_pub_t *dhdp, int ifidx, struct sk_buff *pktbuf)
- 	/* Update multicast statistic */
- 	if (pktbuf->len >= ETH_ALEN) {
- 		u8 *pktdata = (u8 *) (pktbuf->data);
--		struct ether_header *eh = (struct ether_header *)pktdata;
-+		struct ethhdr *eh = (struct ethhdr *)pktdata;
- 
--		if (is_multicast_ether_addr(eh->ether_dhost))
-+		if (is_multicast_ether_addr(eh->h_dest))
- 			dhdp->tx_multicast++;
--		if (ntoh16(eh->ether_type) == ETH_P_PAE)
-+		if (ntoh16(eh->h_proto) == ETH_P_PAE)
- 			atomic_inc(&dhd->pend_8021x_cnt);
- 	}
- 
-@@ -1254,13 +1254,13 @@ void dhd_txcomplete(dhd_pub_t *dhdp, struct sk_buff *txp, bool success)
- {
- 	uint ifidx;
- 	dhd_info_t *dhd = (dhd_info_t *) (dhdp->info);
--	struct ether_header *eh;
-+	struct ethhdr *eh;
- 	u16 type;
- 
- 	dhd_prot_hdrpull(dhdp, &ifidx, txp);
- 
--	eh = (struct ether_header *)(txp->data);
--	type = ntoh16(eh->ether_type);
-+	eh = (struct ethhdr *)(txp->data);
-+	type = ntoh16(eh->h_proto);
- 
- 	if (type == ETH_P_PAE)
- 		atomic_dec(&dhd->pend_8021x_cnt);
-diff --git a/drivers/staging/brcm80211/include/proto/bcmevent.h b/drivers/staging/brcm80211/include/proto/bcmevent.h
-index 865d157..f61c048 100644
---- a/drivers/staging/brcm80211/include/proto/bcmevent.h
-+++ b/drivers/staging/brcm80211/include/proto/bcmevent.h
-@@ -40,13 +40,13 @@ typedef BWL_PRE_PACKED_STRUCT struct {
- 
- #ifdef BRCM_FULLMAC
- typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
--	struct ether_header eth;
-+	struct ethhdr eth;
- 	bcmeth_hdr_t		bcm_hdr;
- 	wl_event_msg_t		event;
- } BWL_POST_PACKED_STRUCT bcm_event_t;
- #endif
- #define BCM_MSG_LEN	(sizeof(bcm_event_t) - sizeof(bcmeth_hdr_t) - \
--	sizeof(struct ether_header))
-+	sizeof(struct ethhdr))
- 
- #define WLC_E_SET_SSID		0
- #define WLC_E_JOIN		1
-diff --git a/drivers/staging/brcm80211/include/proto/ethernet.h b/drivers/staging/brcm80211/include/proto/ethernet.h
-index 567407d..1176df9 100644
---- a/drivers/staging/brcm80211/include/proto/ethernet.h
-+++ b/drivers/staging/brcm80211/include/proto/ethernet.h
-@@ -21,52 +21,16 @@
- 
- #include <packed_section_start.h>
- 
--#define	ETHER_TYPE_LEN		2
--#define	ETHER_CRC_LEN		4
--#define	ETHER_MIN_LEN		64
--#define	ETHER_MIN_DATA		46
- #define	ETHER_MAX_LEN		1518
--#define	ETHER_MAX_DATA		1500
- 
- #define	ETHER_TYPE_BRCM		0x886c
- 
--#define ETHER_DEST_OFFSET	(0 * ETH_ALEN)
--#define ETHER_SRC_OFFSET	(1 * ETH_ALEN)
--#define ETHER_TYPE_OFFSET	(2 * ETH_ALEN)
--
--#define	ETHER_IS_VALID_LEN(foo)	\
--	((foo) >= ETHER_MIN_LEN && (foo) <= ETHER_MAX_LEN)
--
--#define ETHER_FILL_MCAST_ADDR_FROM_IP(ea, mgrp_ip) {		\
--		((u8 *)ea)[0] = 0x01;			\
--		((u8 *)ea)[1] = 0x00;			\
--		((u8 *)ea)[2] = 0x5e;			\
--		((u8 *)ea)[3] = ((mgrp_ip) >> 16) & 0x7f;	\
--		((u8 *)ea)[4] = ((mgrp_ip) >>  8) & 0xff;	\
--		((u8 *)ea)[5] = ((mgrp_ip) >>  0) & 0xff;	\
--}
--
--BWL_PRE_PACKED_STRUCT struct ether_header {
--	u8 ether_dhost[ETH_ALEN];
--	u8 ether_shost[ETH_ALEN];
--	u16 ether_type;
--} BWL_POST_PACKED_STRUCT;
--
- BWL_PRE_PACKED_STRUCT struct ether_addr {
- 	u8 octet[ETH_ALEN];
- } BWL_POST_PACKED_STRUCT;
- 
--#define ETHER_SET_UNICAST(ea)	(((u8 *)(ea))[0] = (((u8 *)(ea))[0] & ~1))
--
- static const struct ether_addr ether_bcast = { {255, 255, 255, 255, 255, 255} };
- 
--#define ETHER_MOVE_HDR(d, s) \
--do { \
--	struct ether_header t; \
--	t = *(struct ether_header *)(s); \
--	*(struct ether_header *)(d) = t; \
--} while (0)
--
- #include <packed_section_end.h>
- 
- #endif				/* _NET_ETHERNET_H_ */
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index ddca7ff..8083244 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -1729,7 +1729,7 @@ void *wlc_attach(void *wl, u16 vendor, u16 device, uint unit, bool piomode,
- 
- 	/* some code depends on packed structures */
- 	ASSERT(sizeof(struct ether_addr) == ETH_ALEN);
--	ASSERT(sizeof(struct ether_header) == ETH_HLEN);
-+	ASSERT(sizeof(struct ethhdr) == ETH_HLEN);
- 	ASSERT(sizeof(d11regs_t) == SI_CORE_SIZE);
- 	ASSERT(sizeof(ofdm_phy_hdr_t) == D11_PHY_HDR_LEN);
- 	ASSERT(sizeof(cck_phy_hdr_t) == D11_PHY_HDR_LEN);
--- 
-1.7.1
+  > > Command  output during my debugging session with the developers is
+  > > shown below  for completeness, and in case the Fedora folks are
+  > >  monitoring.
+  > 
+  > I'm sorry, but your acquisition of bleeding-edge hardware  does not
+  > merit a change in the normal Fedora release  policy.
+  >
+Nothing in my email asked or expected them to. Still, the community
+in general should know what's going on. And, I did suggest two
+work-arounds in my email, neither of which asks anything of Fedora. 
 
+  > P.S. I apologize if this seems rude -- that is  not my intent.
+  >
+Ah... This postscript repairs everything.
+
+
+
+
+
+----- Original Message ----
+> From: John W. Linville <linville@tuxdriver.com>
+> To: Noel Milton Vega <nmvega@nyceyes.com>
+> Cc: Julian Calaby <julian.calaby@gmail.com>; ozan@pardus.org.tr; 
+>linux-wireless@vger.kernel.org; Noel Milton Vega 
+><nmvega@ComputingArchitects.Com>
+> Sent: Thu, February 10, 2011 4:25:08 PM
+> Subject: Re: UPDATE -- Need Linux driver (preferably 64 bit) for "Intel 
+>Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+> 
+> On Thu, Feb 10, 2011 at 12:31:02PM -0800, Noel Milton Vega wrote:
+> 
+> > Hi  Friends....
+> > 
+> > UPDATE:
+> > 
+> > In working with the kernel.org linux-wireless  developers, the conclusion
+> > from one developer was that, though generally  speaking the
+> > "Centrino Advanced-N 6230 AGN" card is supported by the  "iwlagn" kernel
+> > module, it seems that the stock kernel module provided  in the
+> > Fedora 14 kernel package (circa 2.6.35.10-74.fc14.x86_64), does  not
+> > support the this card.
+> > 
+> > In other words, though code  in the main kernel.org git repository does
+> > show support for the card  (via iwlagn kernel module), Fedora 14's
+> > rendition/distribution of that  does not.
+> 
+> The point you seem to be missing is that your hardware is very  new,
+> and the current Fedora 14 kernel is an "ancient" 6+ months  old.
+> 
+> > "lspci(8) -v" did show the hardware (Intel Corporation Centrino  Advanced-N 
+>6230
+> > (rev 34)), the necessary driver and firmware packages  were installed, and 
+>the
+> > laptop RF toggle switches are set to enable  wireless communications.
+> > Yet manually performing "modprobe(8) iwlagn"  does not produce a wlan0
+> > interface in "ifconfig(8) -a" output; and  although "dmesg(8)" shows the
+> > module being loaded, it does not show it  detecting the card.
+> > 
+> > The two work arounds were suggested (I  haven't tried either):
+> > 
+> >   (1) Update the kernel. Since I  have the latest one provided
+> >       by Fedora for Fedora  14, this implies a manual compile
+> >       of a kernel.org  kernel. Note that if Fedora is not aware of
+> >       this  issue, it's not likely that the next kernel update
+> >        will remedy this.
+> 
+> You could update to a Fedora Rawhide kernel.
+> 
+> As  root:
+> 
+>     yum install  fedora-release-rawhide
+> 
+>     yum --enablerepo=rawhide  install kernel
+> 
+> Please note that Rawhide is not known for its  stability...
+> 
+> >   (2) Using a compat-wireless technique described  here,
+> >        http://wireless.kernel.org/en/users/Download
+> > 
+> > 
+> > Command  output during my debugging session with the developers is
+> > shown below  for completeness, and in case the Fedora folks are
+> >  monitoring.
+> 
+> I'm sorry, but your acquisition of bleeding-edge hardware  does not
+> merit a change in the normal Fedora release  policy.
+> 
+> John
+> 
+> P.S.  I apologize if this seems rude -- that is  not my intent.
+> -- 
+> John W. Linville         Someday the world will need a hero, and you
+> linville@tuxdriver.com             might be all we have.  Be ready.
+> 
