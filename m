@@ -1,196 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36882 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971Ab1B1Q6S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 11:58:18 -0500
-Received: by fxm17 with SMTP id 17so3925969fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:58:17 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 7/9] [cfg80211] abide channel closing time
-Date: Mon, 28 Feb 2011 17:50:45 +0100
-Cc: lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
-In-Reply-To: <201102281740.37036.bernhard.schmidt@saxnet.de>
+Received: from nbd.name ([46.4.11.11]:58433 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756732Ab1BJTXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 14:23:09 -0500
+Message-ID: <4D543B18.5000404@openwrt.org>
+Date: Thu, 10 Feb 2011 20:23:04 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201102281750.46424.bernhard.schmidt@saxnet.de>
+To: Ben Greear <greearb@candelatech.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k and pktgen generate WARNings.
+References: <4D531CA6.8010903@candelatech.com> <201102100931.38777.helmut.schaa@googlemail.com> <4D541E1B.5030707@candelatech.com> <201102101854.41627.helmut.schaa@googlemail.com> <4D5427A0.20806@candelatech.com>
+In-Reply-To: <4D5427A0.20806@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DFS requires that if interference has been detected, transmission on
-a channel is stopped latest after the channel closing time. During
-this period it must still be possible to at least send beacons, e.g.
-for CSAs.
+On 2011-02-10 7:00 PM, Ben Greear wrote:
+> On 02/10/2011 09:54 AM, Helmut Schaa wrote:
+>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+>>> On 02/10/2011 12:31 AM, Helmut Schaa wrote:
+>>>> Am Donnerstag, 10. Februar 2011 schrieb Ben Greear:
+>>>>> I see this warning when I generate traffic with a hacked version
+>>>>> of pktgen.  This works with various other interfaces w/out problems,
+>>>>> so I think it's probably an ath9k and/or mac80211 bug.
+>>>>>
+>>>>>
+>>>>> WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1735 ath_tx_start+0x43c/0x607 [ath9k]()
+>>>>> Hardware name: To Be Filled By O.E.M.
+>>>>> Modules linked in: bridge nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp llc fuse macvlan pktgen coretemp hwmon fscache nfs_acl auth_rpcgss
+>>>>> sunrpc ipv6 uinput arc4 ecb snd_hda_codec_realtek ath9k snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_seq snd_seq_device ath9k_common ath9k_hw snd_pcm ath
+>>>>> cfg80211 microcode snd_timer iTCO_wdt snd iTCO_vendor_support i2c_i801 serio_raw pcspkr soundcore r8169 snd_page_alloc mii i915 drm_kms_helper drm i2c_algo_bit
+>>>>> video [last unloaded: lockd]
+>>>>> Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
+>>>>> Call Trace:
+>>>>>     [<c043091b>] ? warn_slowpath_common+0x65/0x7a
+>>>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+>>>>>     [<c043093f>] ? warn_slowpath_null+0xf/0x13
+>>>>>     [<f8ded7e8>] ? ath_tx_start+0x43c/0x607 [ath9k]
+>>>>>     [<f8de74d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
+>>>>>     [<f8d1326d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
+>>>>>     [<f8d13397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
+>>>>>     [<f8d135f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
+>>>>>     [<f8d11cc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
+>>>>>     [<f8d1448b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
+>>>>>     [<c0440000>] ? rescuer_thread+0x25/0x1c8
+>>>>>     [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
+>>>>>     [<f8d13e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
+>>>>>     [<c042d612>] ? default_wake_function+0xb/0xd
+>>>>>     [<c04254c7>] ? __wake_up_common+0x34/0x5c
+>>>>>     [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
+>>>>>     [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
+>>>>>     [<c044371a>] ? kthread+0x62/0x67
+>>>>>     [<c04436b8>] ? kthread+0x0/0x67
+>>>>>     [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+>>>>>
+>>>>>
+>>>>> /* FIXME: tx power */
+>>>>> static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+>>>>> 			     struct ath_tx_control *txctl)
+>>>>> {
+>>>>> 	struct sk_buff *skb = bf->bf_mpdu;
+>>>>> 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+>>>>> 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+>>>>> 	struct list_head bf_head;
+>>>>> 	struct ath_atx_tid *tid = NULL;
+>>>>> 	u8 tidno;
+>>>>>
+>>>>> 	spin_lock_bh(&txctl->txq->axq_lock);
+>>>>>
+>>>>> 	if (ieee80211_is_data_qos(hdr->frame_control)&&   txctl->an) {
+>>>>> 		tidno = ieee80211_get_qos_ctl(hdr)[0]&
+>>>>> 			IEEE80211_QOS_CTL_TID_MASK;
+>>>>> 		tid = ATH_AN_2_TID(txctl->an, tidno);
+>>>>>
+>>>>> 		WARN_ON(tid->ac->txq != txctl->txq);
+>>>>> 	}
+>>>>>
+>>>>> Anyone have any ideas on this one?
+>>>>
+>>>> pktgen seems to directly inject frames via the xmit callback and hence
+>>>> mac80211's select_queue callback isn't used for proper queue assignment.
+>>>>
+>>>> However, you should be able to specify the queue manuelly with
+>>>> "cur_queue_map".
+>>>
+>>> Yes, but I don't think I should have to know this detail.
+>>>
+>>> Once you send pkts with queue-map of 0 to ath9k, it spews
+>>> kernel warnings and then you have to rmmod the NIC before
+>>> it will start working again (because it's queues are
+>>> messed up probably).
+>>>
+>>> I'm not sure my patch is the correct way to fix it, but
+>>> we need to do _something_ in mac80211 and/or ath9k I think.
+>>
+>> Why not make pktgen use the select_queue callback instead?
+> 
+> It's a test tool and should be able to force queue selection
+> if it wants to.  I'd rather not have special case code to
+> know if underlying interface is wifi (and thus need special
+> queue selection).
+> 
+> I'd rather carry that hack to mac80211 I posted instead,
+> if it comes to that.
+How about adding a patch that makes mac80211 detect a mismatch between
+skb->priority and the queue mapping and then adjust the skb priority
+based on that.
 
-Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
----
- net/wireless/radar.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/radar.h |    7 ++++
- 2 files changed, 99 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/radar.c b/net/wireless/radar.c
-index 5a1ceab..df2d03b 100644
---- a/net/wireless/radar.c
-+++ b/net/wireless/radar.c
-@@ -129,6 +129,89 @@ static void radar_cac(struct work_struct *work)
- }
- static DECLARE_WORK(cac_work, radar_cac);
- 
-+static int cc_add_chan(u16 freq)
-+{
-+	struct radar_cc_list *cc;
-+
-+	printk(KERN_INFO "DFS: enable CC for freq %u MHz\n", freq);
-+
-+	mutex_lock(&radar.lock);
-+	list_for_each_entry(cc, &radar.cc_list, list) {
-+		if (cc->freq == freq) {
-+			mutex_unlock(&radar.lock);
-+			return 0;
-+		}
-+	}
-+	mutex_unlock(&radar.lock);
-+
-+	cc = kmalloc(sizeof(struct radar_cc_list), GFP_KERNEL);
-+	if (cc == NULL)
-+		return -ENOMEM;
-+
-+	mutex_lock(&radar.lock);
-+	cc->freq = freq;
-+	cc->timeout = jiffies + msecs_to_jiffies(radar.params->close_time);
-+	list_add_tail(&cc->list, &radar.cc_list);
-+	mutex_unlock(&radar.lock);
-+	return 0;
-+}
-+
-+static void close_channel(u16 freq)
-+{
-+	struct cfg80211_registered_device *rdev;
-+
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-+		struct wireless_dev *wdev;
-+		struct ieee80211_channel *chan, *c;
-+
-+		chan = ieee80211_get_channel(&rdev->wiphy, freq);
-+		if (chan == NULL)
-+			continue;
-+		chan->flags &= ~IEEE80211_CHAN_RADAR_CLEAR;
-+
-+		c = rdev->ops->get_channel(&rdev->wiphy);
-+		if (c->center_freq != chan->center_freq)
-+			continue;
-+
-+		list_for_each_entry(wdev, &rdev->netdev_list, list) {
-+			if (wdev->iftype == NL80211_IFTYPE_ADHOC ||
-+			    wdev->iftype == NL80211_IFTYPE_AP ||
-+			    wdev->iftype == NL80211_IFTYPE_AP_VLAN ||
-+			    wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
-+			    wdev->iftype == NL80211_IFTYPE_P2P_GO)
-+				rdev->ops->del_beacon(&rdev->wiphy,
-+						      wdev->netdev);
-+		}
-+	}
-+}
-+
-+static void radar_cc(struct work_struct *work)
-+{
-+	struct radar_cc_list *cc, *tmp;
-+
-+	mutex_lock(&radar.lock);
-+	list_for_each_entry_safe(cc, tmp, &radar.cc_list, list) {
-+		unsigned long timeout = cc->timeout;
-+
-+		/* the next interation might already be to late. */
-+		cc->timeout -= msecs_to_jiffies(100);
-+
-+		if (time_is_before_jiffies(timeout)) {
-+			printk(KERN_INFO "DFS: transmission close time "
-+			       "on freq %u MHz reached\n", cc->freq);
-+
-+			close_channel(cc->freq);
-+			list_del(&cc->list);
-+			mutex_unlock(&radar.lock);
-+
-+			kfree(cc);
-+			return;
-+		}
-+	}
-+	mutex_unlock(&radar.lock);
-+}
-+static DECLARE_WORK(cc_work, radar_cc);
-+
- static void update_all_interference_flags(u16 freq, bool set)
- {
- 	struct cfg80211_registered_device *rdev;
-@@ -237,10 +320,13 @@ static void radar_timer(unsigned long data)
- {
- 	if (!list_empty(&radar.cac_list))
- 		schedule_work(&cac_work);
-+	if (!list_empty(&radar.cc_list))
-+		schedule_work(&cc_work);
- 	if (!list_empty(&radar.nol_list))
- 		schedule_work(&nol_work);
- 
- 	if (!list_empty(&radar.cac_list) ||
-+	    !list_empty(&radar.cc_list) ||
- 	    !list_empty(&radar.nol_list))
- 		mod_timer(&radar.timer, jiffies + msecs_to_jiffies(100));
- }
-@@ -255,6 +341,7 @@ void radar_init(void)
- 
- 	mutex_init(&radar.lock);
- 	INIT_LIST_HEAD(&radar.cac_list);
-+	INIT_LIST_HEAD(&radar.cc_list);
- 	INIT_LIST_HEAD(&radar.nol_list);
- 	setup_timer(&radar.timer, radar_timer, (unsigned long)0);
- }
-@@ -262,6 +349,7 @@ void radar_init(void)
- void radar_deinit(void)
- {
- 	struct radar_cac_list *cac, *cactmp;
-+	struct radar_cc_list *cc, *cctmp;
- 	struct radar_nol_list *nol, *noltmp;
- 
- 	del_timer_sync(&radar.timer);
-@@ -270,6 +358,10 @@ void radar_deinit(void)
- 		list_del(&cac->list);
- 		kfree(cac);
- 	}
-+	list_for_each_entry_safe(cc, cctmp, &radar.cac_list, list) {
-+		list_del(&cc->list);
-+		kfree(cc);
-+	}
- 	list_for_each_entry_safe(nol, noltmp, &radar.nol_list, list) {
- 		list_del(&nol->list);
- 		kfree(nol);
-diff --git a/net/wireless/radar.h b/net/wireless/radar.h
-index 4ec1aae..23214dd 100644
---- a/net/wireless/radar.h
-+++ b/net/wireless/radar.h
-@@ -33,6 +33,12 @@ struct radar_cac_list {
- 	struct list_head list;
- };
- 
-+struct radar_cc_list {
-+	u16 freq;
-+	unsigned long timeout;
-+	struct list_head list;
-+};
-+
- struct radar_nol_list {
- 	u16 freq;
- 	unsigned long timeout;
-@@ -44,6 +50,7 @@ struct radar {
- 	struct mutex lock;
- 	struct timer_list timer;
- 	struct list_head cac_list;
-+	struct list_head cc_list;
- 	struct list_head nol_list;
- };
- 
--- 
-1.7.2.3
+- Felix
