@@ -1,93 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42493 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984Ab1BGVo4 (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:54641 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756844Ab1BJUAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 16:44:56 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 4/7] mac80211:  Allow scanning on existing channel-type.
-Date: Mon,  7 Feb 2011 13:44:35 -0800
-Message-Id: <1297115078-27773-4-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
-References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
+	Thu, 10 Feb 2011 15:00:34 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000020458.msg
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 21:59:55 +0200
+Subject: Re: SSB AI support code ([RFC] v2)
+From: George Kashperko <george@znau.edu.ua>
+To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297363781.30218.37.camel@maggie>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	 <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
+	 <1297288286.9734.28.camel@maggie>
+	 <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
+	 <4D5320AA.5020405@lwfinger.net> <1297315457.12795.40.camel@dev.znau.edu.ua>
+	 (sfid-20110210_063153_817778_FFFFFFFFF46A15B5)  <1297333256.30218.10.camel@maggie>
+	 <1297359641.15805.38.camel@dev.znau.edu.ua>
+	 (sfid-20110210_184827_887841_41FA745D)  <1297361481.30218.31.camel@maggie>
+	 <1297362251.15805.51.camel@dev.znau.edu.ua>
+	 (sfid-20110210_193159_907950_6C4B7BA8)  <1297363781.30218.37.camel@maggie>
+Content-Type: text/plain
+Date: Thu, 10 Feb 2011 21:52:36 +0200
+Message-Id: <1297367556.15805.79.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Arrgh.... Tired to hell but can't sleep...
+So im back ! ;)
 
-Previous code set the channel type to NO_HT, but it
-appears that NO_HT packets can be sent on any channel
-type, so we do not need to change the channel type
-as long as the channel is correct.
+> On Thu, 2011-02-10 at 20:24 +0200, George Kashperko wrote: 
+> > > code in drivers. Let's call it "hndbackplane" or something like that.
+> > hndbackplane... nevah!!1 :p Since some time I started hating hnd abbreviation dunno why.
+> 
+> Well, it's just a name I made up right now.
+> It obviously is not a good one. ;)
+> It was just my way to explain the idea of a thin layer between
+> SSB (or AI) and drivers. That thin layer can be a mostly-inline function
+> layer with if()..else or a function table layer.
+Yes, I got your idea. But to be honest the more I think about actual
+implementation the more I beleive mine initial proposal is less
+intrusive one but might need to be redesigned slightly to avoid
+confusion with original SSB and guarantee proper support with hosted AI
+later on.
+Anyway as I've already said I'm going to take a break for few days to
+plan things with separate bus driver. Its not like I gave up and will
+start on bus code right away. Just want to see the whole picture. As
+soon as I finish with my paintings and if only I see at least 1ne more
+advantage for separate bus driver rather than ssb+ai driver I will start
+with this way ofcourse.
+But yet again not like im scared of amount of if/else stuff this will
+introduce (most of it could be hidden with proper inliners anyway). Just
+looks like AI bus driver is either to replicate the whole ssb_bus struct
+layout or whole ssb-based code subset with device drivers as well will
+be flooded with those if/else or inline ssb_gimme_bus(). Replicating (or
+including in first place) the whole ssb_bus makes me think AI is much
+more SSB than just AI, while all those if/else even inlined look for me
+less desirable and clean than ssb_core_(ctl|state)_flags. Wrapping
+required ssb codebase with some bcmai_zzz() will require ssb_bus struct
+replication yet again. There might be some other way I dont see atm,
+hopefully I will after get some rest.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 c155c0b... 86562ce... M	net/mac80211/main.c
-:100644 100644 93da164... 1f277c9... M	net/mac80211/scan.c
- net/mac80211/main.c |   16 ++++++++++++++--
- net/mac80211/scan.c |    6 ++----
- 2 files changed, 16 insertions(+), 6 deletions(-)
+> > Any chance someone can share alike .pdf for AI socs ?
+> 
+> I think that's pretty much the only one available.
+> Broadcom doesn't really distribute docs on HND, but only code.
+Maybe some kind Broadcom guy could comment on this ? -.-
+Might not, but I was to try anyway.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index c155c0b..86562ce 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -112,7 +112,13 @@ bool ieee80211_cfg_on_oper_channel(struct ieee80211_local *local)
- 	/* This logic needs to match logic in ieee80211_hw_config */
- 	if (local->scan_channel) {
- 		chan = local->scan_channel;
--		channel_type = NL80211_CHAN_NO_HT;
-+		/* If scanning on oper channel, use whatever channel-type
-+		 * is currently in use.
-+		 */
-+		if (chan == local->oper_channel)
-+			channel_type = local->_oper_channel_type;
-+		else
-+			channel_type = NL80211_CHAN_NO_HT;
- 	} else if (local->tmp_channel) {
- 		chan = scan_chan = local->tmp_channel;
- 		channel_type = local->tmp_channel_type;
-@@ -151,7 +157,13 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 	if (scan_chan) {
- 		chan = scan_chan;
--		channel_type = NL80211_CHAN_NO_HT;
-+		/* If scanning on oper channel, use whatever channel-type
-+		 * is currently in use.
-+		 */
-+		if (chan == local->oper_channel)
-+			channel_type = local->_oper_channel_type;
-+		else
-+			channel_type = NL80211_CHAN_NO_HT;
- 	} else if (local->tmp_channel) {
- 		chan = scan_chan = local->tmp_channel;
- 		channel_type = local->tmp_channel_type;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 93da164..1f277c9 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -574,8 +574,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 
- 	if (ieee80211_cfg_on_oper_channel(local)) {
- 		/* We're currently on operating channel. */
--		if ((next_chan == local->oper_channel) &&
--		    (local->_oper_channel_type == NL80211_CHAN_NO_HT))
-+		if (next_chan == local->oper_channel)
- 			/* We don't need to move off of operating channel. */
- 			local->next_scan_state = SCAN_SET_CHANNEL;
- 		else
-@@ -677,8 +676,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	local->scan_channel = chan;
- 
- 	/* Only call hw-config if we really need to change channels. */
--	if ((chan != local->hw.conf.channel) ||
--	    (local->hw.conf.channel_type != NL80211_CHAN_NO_HT))
-+	if (chan != local->hw.conf.channel)
- 		if (ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL))
- 			skip = 1;
- 
--- 
-1.7.2.3
+> > Also would be much
+> > appreciated if you could help me with finding out non-embedded bcm
+> > ai-based hw part-numbers.
+> 
+> I have no idea. You could probably look at brcm80211 for starters?
+> 
+Already done with that, unfortunately PCI_VENDOR_ID_BROADCOM with
+dev_ids 0x4357/0x4353/0x4727 gives me no clue if they are SB or AI
+based. Must back again dig deep into bcm80211 but I'm already tired to
+hell with all those sih, sii and osh stuff :/
+
+Have nice day,
+George
+
 
