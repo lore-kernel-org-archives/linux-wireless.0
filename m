@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:46582 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab1BBHv7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 02:51:59 -0500
-Received: by qyk12 with SMTP id 12so8475733qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 23:51:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D490746.9070207@zebulon.org.uk>
-References: <4D490746.9070207@zebulon.org.uk>
-Date: Wed, 2 Feb 2011 07:51:58 +0000
-Message-ID: <AANLkTimt-j-CkHB9GTRpqhgjEnhSrHL0hcNZW5BMhMrN@mail.gmail.com>
-Subject: Re: Re: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
-From: Eric Fernandez <zeb@zebulon.org.uk>
-To: Johannes Stezenbach <js@sig21.net>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36790 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750893Ab1BJP06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 10:26:58 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/4] compat-wireless: activate BRCMFMAC
+Date: Thu, 10 Feb 2011 16:26:30 +0100
+Message-Id: <1297351590-24019-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
+References: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> proprietary modules :-(
->
+It is now possible to build BRCMFMAC and BRCMSMAC.
 
-This is probably nvidia.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-> Can you double check rfkill module is from compat-wireless
-> and not from you kernel?
+diff --git a/config.mk b/config.mk
+index 9a206d9..e7f04ea 100644
+--- a/config.mk
++++ b/config.mk
+@@ -557,9 +557,7 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+ CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+ CONFIG_ATH6K_LEGACY=m
+ 
+-# It is not possible to compile CONFIG_BRCMSMAC and CONFIG_BRCMFMAC as
+-# module at the same time
+-# CONFIG_BRCMFMAC=y
++CONFIG_BRCMFMAC=y
+ 
+ endif #CONFIG_WIRELESS_EXT
+ endif #CONFIG_MMC
+-- 
+1.7.1
 
-You may be right, I cannot find rfkill in /updates. It should be
-compiled with the compat-wireless building?
-
-Actually this problem starts to be reported by others, with other
-adapters. I'll try to see what is going on with Arch devs.
-
-Anyway, I still have the original issue of unstability and crashes
-(and this is reported too for several distributions that distribute
-2.6.37).
-
-Many thanks !
-Eric
