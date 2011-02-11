@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61281 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728Ab1BCVxB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 16:53:01 -0500
-Received: by wyb28 with SMTP id 28so1628838wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 13:53:00 -0800 (PST)
-Message-Id: <cb1597685120e228d2c66a7eafc07aed1466f7dd.1296769444.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Thu, 3 Feb 2011 22:22:55 +0100
-Subject: [PATCH] carl9170: fix typo in PS code
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Received: from mx1.redhat.com ([209.132.183.28]:19918 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755130Ab1BKKXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Feb 2011 05:23:44 -0500
+Date: Fri, 11 Feb 2011 11:22:14 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	"'Larry Finger'" <Larry.Finger@lwfinger.net>,
+	"'John W Linville'" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?J+WGr+aYpeeHlSc=?= <amyfcy_feng@realsil.com.cn>,
+	=?utf-8?B?J+eGiuWFieWuiSc=?= <guangan_xiong@realsil.com.cn>
+Subject: Re: [RFC] mac80211: cisco 1252 HT bw20, sta->ht_cap.cap bw is wrong
+Message-ID: <20110211102213.GA2231@redhat.com>
+References: <20110207151209.GG2319@redhat.com>
+ <B84A4806C46340989E2A6AD2EB663300@realsil.com.cn>
+ <20110209105405.GB5528@redhat.com>
+ <B8DE8263FD784AC082CFDB7E9269BAEA@realsil.com.cn>
+ <20110210074140.GA2228@redhat.com>
+ <39A39FA0AD1A481480DE0BD469AAA79E@realsil.com.cn>
+ <20110210095006.GB2228@redhat.com>
+ <86D43C3FD69641C38E7144E721BCC5A6@realsil.com.cn>
+ <20110210113715.GA31839@redhat.com>
+ <3734EB1DAE3E49A1867FDE1C680A296D@realsil.com.cn>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3734EB1DAE3E49A1867FDE1C680A296D@realsil.com.cn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a off-by-one bug which bugged
-the driver's PS-POLL capability.
+On Fri, Feb 11, 2011 at 10:26:13AM +0800, 李朝明 wrote:
+> Dear Stanislaw:
+"Hi" would be enough ;-)
 
-Cc: <stable@kernel.org>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
+> 	I find for cisco 1252 11N mode bandwith-20,
+> ieee80211_sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40
+> 	was wrong in bss_info_changed, I have to check 20/40 MHZ based on
+> hw->conf.channel_type.
+> 
+> 	All other APs will be ok, So may be it's AP IE's issue, But I think
+> mac80211 should also check hw->conf.channel_type
+> 	before set ieee80211_sta->ht_cap.cap &
+> IEEE80211_HT_CAP_SUP_WIDTH_20_40.
+Perhaps you could send patch with fix?
 
-Note: Even with this patch, powersave is still "troublesome".
-So the functionality remains disabled [by default].
----
- drivers/net/wireless/ath/carl9170/rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index 939a0e9..84866a4 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -564,7 +564,7 @@ static void carl9170_ps_beacon(struct ar9170 *ar, void *data, unsigned int len)
- 	cam = ieee80211_check_tim(tim_ie, tim_len, ar->common.curaid);
- 
- 	/* 2. Maybe the AP wants to send multicast/broadcast data? */
--	cam = !!(tim_ie->bitmap_ctrl & 0x01);
-+	cam |= !!(tim_ie->bitmap_ctrl & 0x01);
- 
- 	if (!cam) {
- 		/* back to low-power land. */
--- 
-1.7.2.3
-
+Stanislaw
