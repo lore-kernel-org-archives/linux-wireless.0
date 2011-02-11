@@ -1,65 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52132 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753088Ab1BAPFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 10:05:07 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 07:04:48 -0800
-Message-ID: <4D482115.3090504@atheros.com>
-Date: Tue, 1 Feb 2011 20:34:53 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39504 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756906Ab1BKAxV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Feb 2011 19:53:21 -0500
+Date: Thu, 10 Feb 2011 19:52:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH for-2.6.38] p54pci: update receive dma buffers before and
+ after processing
+Message-ID: <20110211005250.GF1553@tuxdriver.com>
+References: <201102110148.43155.chunkeey@googlemail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Fix memory leak due to failed PAPRD frames
-References: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com> <AANLkTimbtr8zKf6Nj0GmTccKU2u2ubTkL3a5BVSGfUK0@mail.gmail.com> <4D478F12.1070404@atheros.com> <20110201140538.GA2560@tuxdriver.com>
-In-Reply-To: <20110201140538.GA2560@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201102110148.43155.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 February 2011 07:35 PM, John W. Linville wrote:
-> On Tue, Feb 01, 2011 at 10:11:54AM +0530, Mohammed Shafi wrote:
->    
->> On Tuesday 01 February 2011 12:13 AM, Luis R. Rodriguez wrote:
->>      
->>> On Sun, Jan 30, 2011 at 11:55 PM, Mohammed Shafi Shajakhan
->>> <mshajakhan@atheros.com>   wrote:
->>>        
->>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>
->>>> free the skb's when the Tx of PAPRD frames fails and also add a debug
->>>> message indicating that.
->>>>
->>>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>          
->>> Is this a stable fix?
->>>        
->> No Luis, this problem came from some recent changes in PAPRD before
->> that it was Ok.
->>      
-> The patch applied to wireless-2.6 without changes, and the error
-> handling for ath_tx_start matched existing usage.  So, I have it
-> queued now in wireless-2.6 with an added "Cc: stable@kernel.org".
->
-> Should I not?
->    
-John this will be applicable for only 2.6.38 stable kernel.
-The issue fixes for 2.6.37-rc5+  and this problem is not handled in the 
-following commit id:
+On Fri, Feb 11, 2011 at 01:48:42AM +0100, Christian Lamparter wrote:
+> Documentation/DMA-API-HOWTO.txt states:
+> 
+> "DMA transfers need to be synced properly in order for
+> the cpu and device to see the most uptodate and correct
+> copy of the DMA buffer."
+> 
+> Cc: <stable@kernel.org>
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> Embarrassingly, this bug is unique to p54 and has been around
+> since 2.6.25. This tells us something interesting about our
+> userbase.
 
-commit 7607cbe2ad6931400c5d15ced342ab329ab8f92c
-Date:   Mon Dec 13 08:40:52 2010 +0100
+Most likely it tells us that most people using p54 are using little
+endian boxes with coherent DMA... :-)
 
-This will not be even applicable for 2.6.37. It will introduce a 
-regression of double freeing skb's.
-
-thanks,
-shafi
-
-
-> John
->    
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
