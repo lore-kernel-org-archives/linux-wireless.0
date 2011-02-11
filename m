@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3522 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752123Ab1BIOtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:49:05 -0500
-To: "Ben Greear" <greearb@candelatech.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: implicit band switch or not
-References: <op.vqmzowhl3ri7v4@arend-laptop>
- <4D52A328.3010009@candelatech.com>
-Date: Wed, 9 Feb 2011 15:48:51 +0100
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vqm4rpz93ri7v4@arend-laptop>
-In-Reply-To: <4D52A328.3010009@candelatech.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Received: from external1.orbit-lab.org ([128.6.192.131]:34395 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756989Ab1BKUH1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Feb 2011 15:07:27 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id D991454003E
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2011 15:10:08 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110211200726.6E76442F5C@repository3.orbit-lab.org>
+Date: Fri, 11 Feb 2011 15:07:26 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + fe668b0...f26e68f akpm-end   -> origin/akpm-end  (forced update)
+   d3d373e..67d0195  akpm-start -> origin/akpm-start
+   90bf504..13a1f7a  history    -> origin/history
+ + d409db5...c71f8b8 master     -> origin/master  (forced update)
+   d3d373e..67d0195  stable     -> origin/stable
+ * [new tag]         next-20110211 -> next-20110211
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-On Wed, 09 Feb 2011 15:22:32 +0100, Ben Greear <greearb@candelatech.com>  
-wrote:
+compat-wireless code metrics
 
->> Any suggestions? Are we have a race condition here?
->
-> What kernel revision was this happening in?  I just changed the scanning  
-> logic
-> a bit in wireless-testing...I don't think I would have caused this, but  
-> it's possible.
->
-
-I am running 2.6.38-rc3 from the staging-next repository. Last commit on  
-net/mac80211/ is 'eb3e554 mac80211: fix a crash in  
-ieee80211_beacon_get_tim on change_interface'.
-
-> Thanks,
-> Ben
->
->>
->> Gr. AvS
->
->
-
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
-
+    786829 - Total upstream lines of code being pulled
+      2093 - backport code changes
+      1831 - backport code additions
+       262 - backport code deletions
+      7292 - backport from compat module
+      9385 - total backport code
+    1.1928 - % of code consists of backport work
