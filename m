@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:39473 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419Ab1BUCUP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60026 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756611Ab1BKQaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:20:15 -0500
-Received: by yib18 with SMTP id 18so2360641yib.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:20:14 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 11 Feb 2011 11:30:14 -0500
+Date: Fri, 11 Feb 2011 11:29:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH] ath9k: make use of slot time macros
+Message-ID: <20110211162944.GD2224@tuxdriver.com>
+References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com>
+ <4D553107.3020402@openwrt.org>
+ <20110211161551.GA2224@tuxdriver.com>
+ <4D5561F2.3050404@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52177.65660.815952@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:50:01 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 18/23] ath9k_htc: Fix TBTT calculation for IBSS mode
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4D5561F2.3050404@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
+> On 2011-02-11 5:15 PM, John W. Linville wrote:
+> > On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
+> >> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
+> >> > From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> >> > 
+> >> > Instead of using raw numbers to assign slot time it would be better to
+> >> > make use of predefined slot time macros
+> >> How does this make it better?
+> > 
+> > Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
+> Well, neither the unit of this variable, nor the values that can be used
+> are ath9k specific.
 
-The target beacon transmission time has to be synced with the HW
-TSF when configuring beacon timers in Adhoc mode. Failing to do this
-would cause erroneous beacon transmission, for example, on completion
-of a scan run to check for IBSS merges.
+True -- the patch is probably an unnecessarily zealous attempt to avoid
+"magic numbers" in the code. :-)
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index e897a56..007b99f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -188,20 +188,31 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	enum ath9k_int imask = 0;
--	u32 nexttbtt, intval;
-+	u32 nexttbtt, intval, tsftu;
- 	__be32 htc_imask = 0;
- 	int ret;
- 	u8 cmd_rsp;
-+	u64 tsf;
- 
- 	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
- 	nexttbtt = intval;
-+
-+	/*
-+	 * Pull nexttbtt forward to reflect the current TSF.
-+	 */
-+	tsf = ath9k_hw_gettsf64(priv->ah);
-+	tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
-+	do {
-+		nexttbtt += intval;
-+	} while (nexttbtt < tsftu);
-+
- 	intval |= ATH9K_BEACON_ENA;
- 	if (priv->op_flags & OP_ENABLE_BEACON)
- 		imask |= ATH9K_INT_SWBA;
- 
--	ath_dbg(common, ATH_DBG_BEACON,
--		"IBSS Beacon config, intval: %d, imask: 0x%x\n",
--		bss_conf->beacon_interval, imask);
-+	ath_dbg(common, ATH_DBG_CONFIG,
-+		"IBSS Beacon config, intval: %d, nexttbtt: %u, imask: 0x%x\n",
-+		bss_conf->beacon_interval, nexttbtt, imask);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
+John
 -- 
-1.7.4.1
-
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
