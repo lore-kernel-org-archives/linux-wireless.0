@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49464 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749Ab1BDApU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33454 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757726Ab1BKQTg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 19:45:20 -0500
+	Fri, 11 Feb 2011 11:19:36 -0500
+Date: Fri, 11 Feb 2011 11:15:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH] ath9k: make use of slot time macros
+Message-ID: <20110211161551.GA2224@tuxdriver.com>
+References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com>
+ <4D553107.3020402@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
-	<AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
-	<s5haaid3xos.wl%tiwai@suse.de>
-	<201102032009.17100.rjw@sisk.pl>
-	<AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
-	<AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
-	<AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
-	<AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
-Date: Fri, 4 Feb 2011 10:45:19 +1000
-Message-ID: <AANLkTi=RQZ4fN9rZQRhiza5Nd9LkBO=tO1AWjSstRjV1@mail.gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-From: Dave Airlie <airlied@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Carlos Mafra <crmafra2@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4D553107.3020402@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 4, 2011 at 10:30 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Feb 3, 2011 at 4:06 PM, Dave Airlie <airlied@gmail.com> wrote:
->>
->> If we are setting a mode on a connector it automatically will end up
->> in a DPMS on state,
->> so this seemed correct from what I can see.
->
-> The more I look at that function, the more I disagree with you and
-> with that patch.
->
-> The code is just crazy.
+On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
+> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
+> > From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> > 
+> > Instead of using raw numbers to assign slot time it would be better to
+> > make use of predefined slot time macros
+> How does this make it better?
 
-Good point, I'm just trying to get -rc3 onto a machine where I can
-reproduce this now, unfortunately that looks like the machine with the
-1.8" disk, so this could take a little while.
+Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
 
-hopefully Keith will decloak and tell us more.
-
-Dave.
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
