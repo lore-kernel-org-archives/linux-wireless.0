@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:45826 "EHLO mail.neratec.ch"
+Received: from nbd.name ([46.4.11.11]:35903 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751378Ab1BRMGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 07:06:47 -0500
-Date: Fri, 18 Feb 2011 13:06:42 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: Simon Morgenthaler <s.morgenthaler@students.unibe.ch>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <29482921.30.1298030799163.JavaMail.wlan@500181>
-In-Reply-To: <10437684.20.1298030296565.JavaMail.wlan@500181>
-Subject: [PATCH] ath5k: Enable AR2315 chipset recognition
+	id S1756811Ab1BKQVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Feb 2011 11:21:09 -0500
+Message-ID: <4D5561F2.3050404@openwrt.org>
+Date: Fri, 11 Feb 2011 17:21:06 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH] ath9k: make use of slot time macros
+References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com>
+In-Reply-To: <20110211161551.GA2224@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2011-02-11 5:15 PM, John W. Linville wrote:
+> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
+>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
+>> > From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>> > 
+>> > Instead of using raw numbers to assign slot time it would be better to
+>> > make use of predefined slot time macros
+>> How does this make it better?
+> 
+> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
+Well, neither the unit of this variable, nor the values that can be used
+are ath9k specific.
 
-Enable recognition of AR2315 chipsets in ath5k driver.
-
-Reported-by: Simon Morgenthaler <s.morgenthaler@students.unibe.ch>
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index c71fdbb..bc82405 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -220,7 +220,8 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 			ah->ah_radio = AR5K_RF5112;
- 			ah->ah_single_chip = false;
- 			ah->ah_radio_5ghz_revision = AR5K_SREV_RAD_5112B;
--		} else if (ah->ah_mac_version == (AR5K_SREV_AR2415 >> 4)) {
-+		} else if (ah->ah_mac_version == (AR5K_SREV_AR2415 >> 4) ||
-+			ah->ah_mac_version == (AR5K_SREV_AR2315_R6 >> 4)) {
- 			ah->ah_radio = AR5K_RF2316;
- 			ah->ah_single_chip = true;
- 			ah->ah_radio_5ghz_revision = AR5K_SREV_RAD_2316;
---
-1.7.1
+- Felix
