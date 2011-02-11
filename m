@@ -1,66 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42191 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752789Ab1BRLHa (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:36288 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758079Ab1BKU2B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 06:07:30 -0500
-Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
-References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Feb 2011 12:07:25 +0100
-Message-ID: <1298027245.3772.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 11 Feb 2011 15:28:01 -0500
+Date: Fri, 11 Feb 2011 14:27:58 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: sgruszka@redhat.com, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5 V2] rtlwifi: rtl8192ce: Rework rtl8192ce/phy.c
+Message-ID: <4d559bce.m1Ve7xVlc5cH8tBV%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-02-18 at 14:16 +0530, Vivek Natarajan wrote:
-> There is a race on sending a data frame before the tx completion
-> of nullfunc frame for enabling power save. As the data quickly
-> follows the nullfunc frame, the AP thinks that the station is out
-> of power save and continues to send the frames. Whereas in the
-> station, the nullfunc ack will be processed after the tx completion
-> of data frame and mac80211 goes to powersave. Thus the power
-> save state mismatch between the station and the AP causes some
-> data loss and some applications fail because of that. This patch
-> fixes this issue.
-> 
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> ---
->  net/mac80211/mlme.c   |   11 ++++++++++-
->  net/mac80211/status.c |    2 --
->  2 files changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index d89e878..91006a2 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -738,8 +738,16 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
->  		return;
->  
->  	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-> -	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
-> +	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-> +		netif_tx_stop_all_queues(sdata->dev);
-> +		/* flush all the frames queued in the driver before
-> +		 * going to power save
-> +		 */
-> +		drv_flush(local, false);
+Make the phy.c codes for rtl8192ce and rtl8192cu be as alike as possible.
 
-Ok, I should've thought of this earlier -- but can we really do this?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I know we currently don't allow powersave when there's more than one
-interface, but we still allow it while there are monitor interfaces and
-a monitor interface could be sending packets, which would violate the
-flush() contract with the driver -- the driver may expect not to get any
-packets during flush.
+V2 - incorporate the comments by Stanislaw Gruszka.
 
-I'm not sure. Maybe we should disable powersave when there are monitor
-interfaces after all, even though that would rob us of a way to debug
-things. Thoughts?
-
-johannes
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+@@ -37,6 +37,9 @@
+ #include "dm.h"
+ #include "table.h"
+ 
++/* Define macro to shorten lines */
++#define MCS_TXPWR	mcs_txpwrlevel_origoffset
++
+ static u32 _rtl92c_phy_fw_rf_serial_read(struct ieee80211_hw *hw,
+ 					 enum radio_path rfpath, u32 offset);
+ static void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
+@@ -480,161 +485,129 @@ static void _rtl92c_store_pwrIndex_diffr
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 
+ 	if (regaddr == RTXAGC_A_RATE18_06) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][0] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][0]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0]));
+ 	}
+ 	if (regaddr == RTXAGC_A_RATE54_24) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][1]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1]));
+ 	}
+ 	if (regaddr == RTXAGC_A_CCK1_MCS32) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][6]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6]));
+ 	}
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][7]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS03_MCS00) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][2]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS07_MCS04) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][3]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS11_MCS08) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][4]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4]));
+ 	}
+ 	if (regaddr == RTXAGC_A_MCS15_MCS12) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][5]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5]));
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE18_06) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8] = data;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][8]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8]));
+ 	}
+ 	if (regaddr == RTXAGC_B_RATE54_24) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][9]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][14]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0x000000ff) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][15]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS03_MCS00) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][10]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS07_MCS04) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][11]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS11_MCS08) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][12]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12]));
+ 	}
+ 
+ 	if (regaddr == RTXAGC_B_MCS15_MCS12) {
+-		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13] =
+-		    data;
++		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13] = data;
+ 
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+ 			 ("MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+ 			  rtlphy->pwrgroup_cnt,
+-			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
+-							    pwrgroup_cnt][13]));
++			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13]));
+ 
+ 		rtlphy->pwrgroup_cnt++;
+ 	}
 
