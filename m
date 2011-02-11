@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36869 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218Ab1BFTBZ (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:61398 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab1BKLGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 14:01:25 -0500
-Received: from [71.112.48.101] (pool-71-112-48-101.sttlwa.dsl-w.verizon.net [71.112.48.101])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p16J1OX0027157
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 6 Feb 2011 11:01:25 -0800
-Message-ID: <4D4EF004.3040109@candelatech.com>
-Date: Sun, 06 Feb 2011 11:01:24 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 11 Feb 2011 06:06:38 -0500
+Received: by wyb28 with SMTP id 28so2345974wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2011 03:06:37 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Scanning and channel types.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Fri, 11 Feb 2011 14:06:37 +0300
+Message-ID: <AANLkTinOMu1yr+XYqhRiaBfHut4jUL-ZXbP9-PFyamKG@mail.gmail.com>
+Subject: 802.11s power save improvement
+From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current code always sets the channel type to NO_HT when scanning.
+Hi all!
 
- From what I can tell, we should be able to send NO_HT packets on
-any channel type, and for passive scanning, it should not matter
-at all what channel-type we are using.
+We have noticed that Linux kernel does not implement power save in a mesh
+networking (802.11s). We have compared Linux kernel sources and IEEE 802.11s
+standard and discovered next issues in power save mesh implementation:
 
-I tested relaxing scanning to use the current channel type
-when scanning on the operating channel, and it seems to
-work.
+1. Add peer-plink power mode (See 11C.13.2).
+Add nl80211 interface and cfg80211 parameter, accessible via iw:
+   * iw dev <devname> station set <MAC address> plink_power <active|light|deep>
+   * iw dev <devname> station get <MAC address> plink_power
 
-Does anyone see any problems with this approach?
+2. Indicate non-peer power mode in relevant frames (11C.13.3):
+   * beacon
+   * probe response
+   * QoS control field in group addressed mesh data
 
-Thanks,
-Ben
+3. Indicate link-specific power mode in relevant frames (11C.13.4.1):
+   * individually addressed mesh data
+   * QoS Null
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+4. Track mesh peer power mode in sta_info.
+Use indication in acknowledged unicast mesh data/QoS Null frames to record
+current peer power mode.
+
+5. Buffer mesh data frames for sleeping peers.
+Make indication for unicast frames in TIM bitmap.
+Deliver group addressed frames after DTIM.
+
+6. Indicate mesh awake window in beacon/probe response frames (11C.13.7).
+
+7. Implement peer service periods (11C.13.10)
+
+We are going to fix this problems.
+Has someone looked into the issue before, what was the major problem that
+is preventing this from being fixed?
+May be someone is already working in this area?
+Also all commentaries, advices and tips are appreciated.
+
+Thank you.
+
+Ivan Bezyazychnyy,
+Open Source & Linux Lab
