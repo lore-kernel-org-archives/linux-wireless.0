@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38962 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41766 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755260Ab1BNAdS (ORCPT
+	with ESMTP id S1752386Ab1BKAT2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 19:33:18 -0500
-Received: by iwn9 with SMTP id 9so4286332iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 16:33:17 -0800 (PST)
+	Thu, 10 Feb 2011 19:19:28 -0500
+Received: by iwn9 with SMTP id 9so1881042iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 16:19:27 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1297619803-2832-1-git-send-email-njs@pobox.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+In-Reply-To: <971463.73333.qm@web36106.mail.mud.yahoo.com>
+References: <875258.44241.qm@web36104.mail.mud.yahoo.com> <971463.73333.qm@web36106.mail.mud.yahoo.com>
 From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 14 Feb 2011 11:32:57 +1100
-Message-ID: <AANLkTin4MkMrz6Aa7g6JrB+QsNRHFvc26MFQ4UzcUM_L@mail.gmail.com>
-Subject: Re: [PATCH 0/5] iwlwifi: Auto-tune tx queue size to maintain latency
- under load
-To: "Nathaniel J. Smith" <njs@pobox.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+Date: Fri, 11 Feb 2011 11:19:07 +1100
+Message-ID: <AANLkTimbnJG5WkdRZvAoZZ_isnrMUDicnw_B24SP7EKF@mail.gmail.com>
+Subject: Re: compat-wireless trial :: Need Linux driver (preferably 64 bit)
+ for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth
+ card ...
+To: Noel Milton Vega <nmvega@nyceyes.com>
+Cc: ozan@pardus.org.tr, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 04:56, Nathaniel J. Smith <njs@pobox.com> wrote:
-> I have an iwl3945 in my laptop, and find that whenever I saturate the
-> outgoing connection -- which happens daily when my rsync backup kicks
-> in -- then latency becomes astronomical (what Jim Gettys calls
-> "bufferbloat"). I've measured 12-13 second ping times to my router. As
-> you can imagine, this makes web browsing or interactive SSH somewhat
-> uncomfortable.
+On Fri, Feb 11, 2011 at 11:05, Noel Milton Vega <nmvega@nyceyes.com> wrote:
+> Hello:
+>
+> As someone suggested, I tried the stable version of the compat-wireless solution
+> (http://wireless.kernel.org/en/users/Download/stable). Because I'm
+> running FC14 kernel version "2.6.35.10-74.fc14.x86_64", I
+> selected "compat-wireless-2.6.35-1.tar.bz2" (if that logic is
+> flawed for selecting a compat version, please let me know. Thanks. Note
+> that I acknowledge seeing the "Bug" citation near the end of the URL above).
 
-For those who aren't aware of this, more info:
-http://gettys.wordpress.com/2010/12/03/introducing-the-criminal-mastermind-bufferbloat/
+The version for compat-wireless indicates the version of the wireless
+stack that it contains, not the version of the kernel it's for.
 
-Re-(re-)stating the issue in question: When a network link is
-congested, packets are being buffered for a "long" time in an attempt
-to not drop any traffic; despite almost all protocols being either
-built on TCP or designed to deal with packet loss. This causes latency
-issues as the sender is not receiving any indication that the network
-is congested and hence continuing to send as fast as it can, filling
-these buffers and causing high latencies as they are emptied out over
-the congested link.
-
-The short term solution (but not an overall solution by any means) is
-to reduce these buffers so that packets are dropped when links are
-congested.
-
-> This patch series teaches the driver to measure the average rate of
-> packet transmission for each tx queue, and adjusts the queue size
-> dynamically in an attempt to achieve ~2 ms of added latency.
-
-IMHO, I'm not sure that this is the best method of implementing this
-solution: most wireless (and ethernet) devices have some form of
-buffer for the same reason, so implementing a solution for iwlwifi is
-not an overall solution - we need some method of doing this for *all*
-network devices, not just iwlwifi.
-
-That said, your reasoning for the queue management simplification
-seems sound - but as I don't know the iwlwifi code so I can't really
-comment on it any further than that.
-
-Finally, your numbers are damn impressive, and this is the first
-attempt that I'm aware of to solve this problem.
+You should download the latest version and try that.
 
 Thanks,
 
 -- 
-
 Julian Calaby
 
 Email: julian.calaby@gmail.com
