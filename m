@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38253 "EHLO purkki.adurom.net"
+Received: from mga09.intel.com ([134.134.136.24]:15768 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753140Ab1BHKNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 05:13:36 -0500
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: ext Ohad Ben-Cohen <ohad@wizery.com>, coelho@ti.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
-References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
-	<AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com>
-	<1297081781.2064.12.camel@wimaxnb.nmp.nokia.com>
-	<AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
-	<1297083534.2064.19.camel@wimaxnb.nmp.nokia.com>
-	<AANLkTim6J9yizLPcj-ERwVEcp=VXSymXBfFdszHUMp80@mail.gmail.com>
-	<1297151826.2064.68.camel@wimaxnb.nmp.nokia.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 08 Feb 2011 12:13:32 +0200
-In-Reply-To: <1297151826.2064.68.camel@wimaxnb.nmp.nokia.com> (Juuso Oikarinen's message of "Tue\, 08 Feb 2011 09\:57\:06 +0200")
-Message-ID: <87aai696lv.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1758079Ab1BKUUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Feb 2011 15:20:38 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/2] iwlagn: donot process bt update when bt coex disable
+Date: Fri, 11 Feb 2011 12:07:00 -0800
+Message-Id: <1297454821-14904-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1297454821-14904-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1297454821-14904-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+If bt coex is disabled, do not process any bt related information
+from uCode even received.
 
->> > I'm currently trying to find out if this is really needed or not.
->> 
->> Sure, thanks.
->
-> They are saying this is needed for OMAP's retention mode too, so AFAIK
-> this is needed, not just for suspend.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-Why make this change in the driver? Doesn't it mean that all drivers
-need to be changed so that they will work in your platform? I would
-have expected that this is done automatically somewhere in the core
-kernel and without any changes to the driver.
-
-To me platform specific changes in drivers are always problematic.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3aa4864..325ff5c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1832,7 +1832,7 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
+ 	 * IBSS mode (no proper uCode support for coex then).
+ 	 */
+ 	if (!bt_coex_active || priv->iw_mode == NL80211_IFTYPE_ADHOC) {
+-		bt_cmd.flags = 0;
++		bt_cmd.flags = IWLAGN_BT_FLAG_COEX_MODE_DISABLED;
+ 	} else {
+ 		bt_cmd.flags = IWLAGN_BT_FLAG_COEX_MODE_3W <<
+ 					IWLAGN_BT_FLAG_COEX_MODE_SHIFT;
+@@ -1869,6 +1869,11 @@ static void iwlagn_bt_traffic_change_work(struct work_struct *work)
+ 	struct iwl_rxon_context *ctx;
+ 	int smps_request = -1;
+ 
++	if (priv->bt_enable_flag == IWLAGN_BT_FLAG_COEX_MODE_DISABLED) {
++		/* bt coex disabled */
++		return;
++	}
++
+ 	/*
+ 	 * Note: bt_traffic_load can be overridden by scan complete and
+ 	 * coex profile notifications. Ignore that since only bad consequence
+@@ -2022,6 +2027,11 @@ void iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+ 	struct iwl_bt_coex_profile_notif *coex = &pkt->u.bt_coex_profile_notif;
+ 	struct iwl_bt_uart_msg *uart_msg = &coex->last_bt_uart_msg;
+ 
++	if (priv->bt_enable_flag == IWLAGN_BT_FLAG_COEX_MODE_DISABLED) {
++		/* bt coex disabled */
++		return;
++	}
++
+ 	IWL_DEBUG_NOTIF(priv, "BT Coex notification:\n");
+ 	IWL_DEBUG_NOTIF(priv, "    status: %d\n", coex->bt_status);
+ 	IWL_DEBUG_NOTIF(priv, "    traffic load: %d\n", coex->bt_traffic_load);
 -- 
-Kalle Valo
+1.7.0.4
+
