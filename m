@@ -1,76 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52704 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979Ab1BDTmd convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61641 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794Ab1BKAsn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 14:42:33 -0500
-Received: by bwz15 with SMTP id 15so3066750bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 11:42:31 -0800 (PST)
+	Thu, 10 Feb 2011 19:48:43 -0500
+Received: by fxm20 with SMTP id 20so2116442fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 16:48:42 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH for-2.6.38] p54pci: update receive dma buffers before and after processing
+Date: Fri, 11 Feb 2011 01:48:42 +0100
+Cc: linville@tuxdriver.com
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikNUv2VuL8ftQAF_x4R-ccB0Y_aPFFdF52UBnBt@mail.gmail.com>
-References: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>
-	<AANLkTikNUv2VuL8ftQAF_x4R-ccB0Y_aPFFdF52UBnBt@mail.gmail.com>
-Date: Fri, 4 Feb 2011 14:42:30 -0500
-Message-ID: <AANLkTikxhPHQ_50cKoJn920n9A0hVssoZZfJRCsw=CH+@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
-From: Mark Mentovai <mark@moxienet.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201102110148.43155.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Sun, Jan 30, 2011 at 9:01 AM, Mark Mentovai <mark@moxienet.com> wrote:
->> Your patch also doesn’t work properly for me using the ath9k driver.
->> With your patch, I wind up with an artificial power limit of 20dBm
->> across the board, although the hardware limit is actually 25dBm on the
->> AR9223 I’m testing with. This stems from the fact that ath9k doesn’t
->> know how to properly compute the hardware limit.
->> ath9k_init_txpower_limits is implemented on top of
->> ath9k_hw_set_txpowerlimit, which uses a channel’s current max_power
->> value as a basis for its computation. This means that it will either
->> use the hard-coded initial value of 20dBm from CHAN2G and CHAN5G in
->> drivers/net/wireless/ath/ath9k/init.c, or it will use world regulatory
->> domain values (also 20dBm) set by ath_regd_init_wiphy calling
->> wiphy_apply_custom_regulatory.
->
-> The real limit on ath9k comes from analyzing the CTLs from the EEPROM,
-> and using that as a max when a CTL is present. The value from cfg80211
-> is simply a local regulatory one, the CTLs take this one step further
-> and are calibration specific to help optimize performance on every
-> frequency range.
+Documentation/DMA-API-HOWTO.txt states:
 
-Of course. My point was merely that the CTL-based calculations that
-ath9k does in ath9k_init_txpower_limits when it tries to set a better
-.max_power don’t even come out correctly, because they’re based on the
-initial values or on regdomain values. They’re not actually the
-hardware’s limits. I’m not even positive that there’s a single right
-“hardware transmit power limit per channel” value, unless you were to
-examine all of the possible rates and perhaps antenna configurations
-and other parameters. ath9k_init_txpower_limits doesn’t do this.
-That’s why I saw the patch restricting transmit power to be 20dBm even
-though the CTL data would allow higher power.
+"DMA transfers need to be synced properly in order for
+the cpu and device to see the most uptodate and correct
+copy of the DMA buffer."
 
-In other words, I think babcbc295fee766ca710235e431686fef744d9a6 was wrong.
-
-Felix Fietkau wrote:
-> What I'm observing is that with the first regdomain setting it sets
-> orig_power to something that exceeds the tx power value that the
-> hardware is capable of using.
-
-But orig_mpwr is only supposed to be the maximum transmit power for
-the channel in the driver’s requested regulatory domain. It’s not
-supposed to have anything to do with the hardware.
-
-If you can come up with a good way to compute the hardware maximum per
-channel (overcoming ath9k_init_txpower_limits’s current faults), then
-I think this can be accommodated with another field, but I don’t think
-orig_mpwr should be overloaded. Maybe renamed to better reflect its
-purpose, though.
-
-> Because of that, the tx power setting reported to the user is wrong.
-
-I don’t think that a good way for a driver to reflect the transmit
-power it has actually put into effect (after taking the effects of CTL
-limits) back to user space currently exists.
+Cc: <stable@kernel.org>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Embarrassingly, this bug is unique to p54 and has been around
+since 2.6.25. This tells us something interesting about our
+userbase.
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 1eacba4..0494d7b 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -199,6 +199,7 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
+ 	while (i != idx) {
+ 		u16 len;
+ 		struct sk_buff *skb;
++		dma_addr_t dma_addr;
+ 		desc = &ring[i];
+ 		len = le16_to_cpu(desc->len);
+ 		skb = rx_buf[i];
+@@ -216,17 +217,20 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
+ 
+ 			len = priv->common.rx_mtu;
+ 		}
++		dma_addr = le32_to_cpu(desc->host_addr);
++		pci_dma_sync_single_for_cpu(priv->pdev, dma_addr,
++			priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
+ 		skb_put(skb, len);
+ 
+ 		if (p54_rx(dev, skb)) {
+-			pci_unmap_single(priv->pdev,
+-					 le32_to_cpu(desc->host_addr),
+-					 priv->common.rx_mtu + 32,
+-					 PCI_DMA_FROMDEVICE);
++			pci_unmap_single(priv->pdev, dma_addr,
++				priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
+ 			rx_buf[i] = NULL;
+-			desc->host_addr = 0;
++			desc->host_addr = cpu_to_le32(0);
+ 		} else {
+ 			skb_trim(skb, 0);
++			pci_dma_sync_single_for_device(priv->pdev, dma_addr,
++				priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
+ 			desc->len = cpu_to_le16(priv->common.rx_mtu + 32);
+ 		}
+ 
