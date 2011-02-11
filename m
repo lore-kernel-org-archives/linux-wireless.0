@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:46809 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684Ab1BBT5R (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:56386 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757749Ab1BKU1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 14:57:17 -0500
-Received: by qwa26 with SMTP id 26so348895qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 11:57:16 -0800 (PST)
+	Fri, 11 Feb 2011 15:27:46 -0500
+Date: Fri, 11 Feb 2011 14:27:43 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: sgruszka@redhat.com, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] rtlwifi: rtl8192ce: Patches to prepare for addition
+ of rtl8192cu
+Message-ID: <4d559bbf.GVswEooEZC6lIahx%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Wed, 2 Feb 2011 19:57:15 +0000
-Message-ID: <AANLkTi=bfq+2jev3YGCi0GwfZTkeKa9t2gfuQ8DkbB9p@mail.gmail.com>
-Subject: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
-From: Eric Fernandez <zeb@zebulon.org.uk>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This series of patches will prepare the rtlwifi core to receive the driver
+for the RTL8192CU (USB) device, and to make some changes to the RTL8192CE
+(PCI) code to facilitate the new driver.
 
-This follows the issue I reported two days ago. I have had two crashes
-tonight using kernel 2.6.37-5 on Archlinux 64. Unfortunately, this
-leads to no log in the kernel log whatsoever. The machine freezes
-completely, if sound is played it loops. I cannot confirm if I can ssh
-to the box (have only one computer), however, this is linked to the
-usage of my wireless adapter, since switching to wired ethernet does
-not lead to this issue.
-One thing: when I reboot (hard reset), I need to unplug my adapter so
-that it works after login. Otherwise, it seems to associate fine with
-the router, but strangely I cannot download anything. Using gkrellm, I
-can see that it sends some packets to the router at regular interval,
-but does not download. I don't know if this is significant and if this
-can help identify the issue.
+1/5: Changes to rtlwifi core
+2/5: Add usb driver to rtlwifi
+3/5: Refactor rtl8192ce/dm.c to be able to use common code
+4/5: Refactor rtl8192ce/fw.c to be able to use common code
+5/5: Small changes to rtl8192ce/phy.c
 
-I would be very keen to help, but without log messages I am stuck. Any
-suggestions?
+All of these changes are for 2.6.39.
 
-Thanks in advance.
-Eric
+V2 addresses all comments from V1.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
