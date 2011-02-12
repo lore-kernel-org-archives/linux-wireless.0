@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42986 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247Ab1BVGwW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 01:52:22 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 22:52:00 -0800
-Date: Tue, 22 Feb 2011 12:21:58 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: =?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] ath9k: configure opmode sepecific beacon timers
- dynamically
-Message-ID: <20110222065157.GA14252@vmraj-lnx.users.atheros.com>
-References: <1297877604-8084-1-git-send-email-rmanoharan@atheros.com>
- <AANLkTi=Kpib=BbwmTpOREinsN7mOjKEVs_Z5Fueftsm8@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36135 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751469Ab1BLNDe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Feb 2011 08:03:34 -0500
+Message-ID: <4D56851D.7000509@hauke-m.de>
+Date: Sat, 12 Feb 2011 14:03:25 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTi=Kpib=BbwmTpOREinsN7mOjKEVs_Z5Fueftsm8@mail.gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: SSB AI support code
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 21, 2011 at 11:15:36PM +0530, Björn Smedman wrote:
-> On Wed, Feb 16, 2011 at 6:33 PM, Rajkumar Manoharan
-> <rmanoharan@atheros.com> wrote:
-> > Current ath9k code does not handle beacon timers on opmode
-> > specific. One such example is that a STA beacon config overwrites
-> > already configured AP vif's beacon timers during scan.
-> >
-> > So select a vif as primary based on opmode and configure that
-> > vif's bss and beacon config in hw and update the primary vif
-> > on opmode change, interface up/down and bss info change.
-> >
-> > And also while moving back to single STA vif from multi STA vifs,
-> > power save is enabled and hw has to be reconfigured with proper
-> > beacon and bssid. Otherwise connection poll will be triggered
-> > so frequently due to beacon loss.
-> 
-> It's really nice to see multi-vif beacons get some attention, thanks. :)
+Hi,
 
-Thanks.
-> Just one thought: Is the "opmode" concept really necessary? It's been
-> discussed previously and I think the conclusion is often that it would
-> be better to iterate all the current vifs and do something logical
-> based on that instead of setting an "opmode".
->
-Yes. currently opmode is set based on vif iteration and the changes were
-merged under "ath9k: Fix up hardware mode and beacons with multiple vifs".
-And beacon config is filled by doing vif iteration againgt matching opmode.
+After rethinking this I came to the same result as Michael that it would
+bet better to have a extra module for the AI bus separated from the ssb.
+I grepped for ssb_ in the b43 driver code and it should be doable to
+change the api of ssb so that adding an other bus can be done without
+any changes to ssb. After the SSB API was changed once.
 
---
-Rajkumar
-> Do you think it would be possible to remove the "opmode" construct
-> from your patch? Do you think it would be an improvement?
->
-> Björn Smedman
+Most of the ssb_* methods calls in the b43 driver are getting an
+ssb_device struct so just a common struct for ssb and the ai bus is
+needed and it must contain some function pointers to the needed functions.
+
+Then the drivers integrated in the drivers/ssb must be extracted and
+unbundled from the ssb code. One common header file with some common
+structs for ssb and AI is needed and the rest can be separated.
+
+If you need help with something, I would like to help you with these
+things. I just ordered an Netgear WNR3500L. ;-)
+
+Hauke
