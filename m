@@ -1,153 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:51037 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755477Ab1BUCSH (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:37442 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411Ab1BLSns (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:18:07 -0500
-Received: by yib18 with SMTP id 18so2360152yib.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:18:06 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sat, 12 Feb 2011 13:43:48 -0500
+Subject: [PATCH 3/4] zd1211rw: move async iowrite16v up to callers
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Sat, 12 Feb 2011 20:43:42 +0200
+Message-ID: <20110212184342.2062.34436.stgit@fate.lan>
+In-Reply-To: <20110212184254.2062.33710.stgit@fate.lan>
+References: <20110212184254.2062.33710.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52048.322098.184826@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:47:52 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 01/23] ath9k_htc: Handle storage devices
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Writing beacon to device happen through multiple write command calls.
+zd_usb_iowrite16v uses synchronous urb call and with multiple write
+commands in row causes high CPU usage.
 
-Some AR7010 based devices are recognized as storage media.
-Sending a CD-EJECT command to the device will 'convert' it into
-a WLAN device. Do this within the driver itself, removing the
-dependancy on an external program (usb_modeswitch).
+Make asynchronous zd_usb_iowrite16v_async available outside zd_usb.c
+and use where possible.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+This lower CPU usage from ~10% to ~2% on Intel Atom when running
+AP-mode with 100 TU beacon interval.
+
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |   74 +++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/reg.h     |    1 +
- 2 files changed, 69 insertions(+), 6 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_chip.c |   35 +++++++++++++++++++++++++------
+ drivers/net/wireless/zd1211rw/zd_usb.c  |   11 ++++------
+ drivers/net/wireless/zd1211rw/zd_usb.h  |    4 ++++
+ 3 files changed, 37 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 5ab3084..fde5444 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -52,6 +52,9 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x083A, 0xA704),
- 	  .driver_info = AR9280_USB },  /* SMC Networks */
- 
-+	{ USB_DEVICE(0x0cf3, 0x20ff),
-+	  .driver_info = STORAGE_DEVICE },
-+
- 	{ },
- };
- 
-@@ -934,6 +937,61 @@ static void ath9k_hif_usb_dev_deinit(struct hif_device_usb *hif_dev)
- 		release_firmware(hif_dev->firmware);
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 54f68f1..a73a305 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -142,8 +142,9 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+ 	return 0;
  }
  
-+/*
-+ * An exact copy of the function from zd1211rw.
-+ */
-+static int send_eject_command(struct usb_interface *interface)
+-int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
+-	           unsigned int count)
++static int _zd_iowrite32v_async_locked(struct zd_chip *chip,
++				       const struct zd_ioreq32 *ioreqs,
++				       unsigned int count)
+ {
+ 	int i, j, r;
+ 	struct zd_ioreq16 ioreqs16[USB_MAX_IOWRITE32_COUNT * 2];
+@@ -170,7 +171,7 @@ int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
+ 		ioreqs16[j+1].addr  = ioreqs[i].addr;
+ 	}
+ 
+-	r = zd_usb_iowrite16v(&chip->usb, ioreqs16, count16);
++	r = zd_usb_iowrite16v_async(&chip->usb, ioreqs16, count16);
+ #ifdef DEBUG
+ 	if (r) {
+ 		dev_dbg_f(zd_chip_dev(chip),
+@@ -180,6 +181,20 @@ int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
+ 	return r;
+ }
+ 
++int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
++			  unsigned int count)
 +{
-+	struct usb_device *udev = interface_to_usbdev(interface);
-+	struct usb_host_interface *iface_desc = &interface->altsetting[0];
-+	struct usb_endpoint_descriptor *endpoint;
-+	unsigned char *cmd;
-+	u8 bulk_out_ep;
 +	int r;
 +
-+	/* Find bulk out endpoint */
-+	for (r = 1; r >= 0; r--) {
-+		endpoint = &iface_desc->endpoint[r].desc;
-+		if (usb_endpoint_dir_out(endpoint) &&
-+		    usb_endpoint_xfer_bulk(endpoint)) {
-+			bulk_out_ep = endpoint->bEndpointAddress;
-+			break;
-+		}
-+	}
-+	if (r == -1) {
-+		dev_err(&udev->dev,
-+			"ath9k_htc: Could not find bulk out endpoint\n");
-+		return -ENODEV;
-+	}
-+
-+	cmd = kzalloc(31, GFP_KERNEL);
-+	if (cmd == NULL)
-+		return -ENODEV;
-+
-+	/* USB bulk command block */
-+	cmd[0] = 0x55;	/* bulk command signature */
-+	cmd[1] = 0x53;	/* bulk command signature */
-+	cmd[2] = 0x42;	/* bulk command signature */
-+	cmd[3] = 0x43;	/* bulk command signature */
-+	cmd[14] = 6;	/* command length */
-+
-+	cmd[15] = 0x1b;	/* SCSI command: START STOP UNIT */
-+	cmd[19] = 0x2;	/* eject disc */
-+
-+	dev_info(&udev->dev, "Ejecting storage device...\n");
-+	r = usb_bulk_msg(udev, usb_sndbulkpipe(udev, bulk_out_ep),
-+		cmd, 31, NULL, 2000);
-+	kfree(cmd);
-+	if (r)
++	zd_usb_iowrite16v_async_start(&chip->usb);
++	r = _zd_iowrite32v_async_locked(chip, ioreqs, count);
++	if (r) {
++		zd_usb_iowrite16v_async_end(&chip->usb, 0);
 +		return r;
-+
-+	/* At this point, the device disconnects and reconnects with the real
-+	 * ID numbers. */
-+
-+	usb_set_intfdata(interface, NULL);
-+	return 0;
++	}
++	return zd_usb_iowrite16v_async_end(&chip->usb, 50 /* ms */);
 +}
 +
- static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 			       const struct usb_device_id *id)
+ int zd_iowrite16a_locked(struct zd_chip *chip,
+                   const struct zd_ioreq16 *ioreqs, unsigned int count)
  {
-@@ -941,6 +999,9 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 	struct hif_device_usb *hif_dev;
- 	int ret = 0;
+@@ -187,6 +202,8 @@ int zd_iowrite16a_locked(struct zd_chip *chip,
+ 	unsigned int i, j, t, max;
  
-+	if (id->driver_info == STORAGE_DEVICE)
-+		return send_eject_command(interface);
+ 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
++	zd_usb_iowrite16v_async_start(&chip->usb);
 +
- 	hif_dev = kzalloc(sizeof(struct hif_device_usb), GFP_KERNEL);
- 	if (!hif_dev) {
- 		ret = -ENOMEM;
-@@ -1027,12 +1088,13 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- 	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
- 	bool unplugged = (udev->state == USB_STATE_NOTATTACHED) ? true : false;
+ 	for (i = 0; i < count; i += j + t) {
+ 		t = 0;
+ 		max = count-i;
+@@ -199,8 +216,9 @@ int zd_iowrite16a_locked(struct zd_chip *chip,
+ 			}
+ 		}
  
--	if (hif_dev) {
--		ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
--		ath9k_htc_hw_free(hif_dev->htc_handle);
--		ath9k_hif_usb_dev_deinit(hif_dev);
--		usb_set_intfdata(interface, NULL);
--	}
-+	if (!hif_dev)
-+		return;
+-		r = zd_usb_iowrite16v(&chip->usb, &ioreqs[i], j);
++		r = zd_usb_iowrite16v_async(&chip->usb, &ioreqs[i], j);
+ 		if (r) {
++			zd_usb_iowrite16v_async_end(&chip->usb, 0);
+ 			dev_dbg_f(zd_chip_dev(chip),
+ 				  "error zd_usb_iowrite16v. Error number %d\n",
+ 				  r);
+@@ -208,7 +226,7 @@ int zd_iowrite16a_locked(struct zd_chip *chip,
+ 		}
+ 	}
+ 
+-	return 0;
++	return zd_usb_iowrite16v_async_end(&chip->usb, 50 /* ms */);
+ }
+ 
+ /* Writes a variable number of 32 bit registers. The functions will split
+@@ -221,6 +239,8 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
+ 	int r;
+ 	unsigned int i, j, t, max;
+ 
++	zd_usb_iowrite16v_async_start(&chip->usb);
 +
-+	ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
-+	ath9k_htc_hw_free(hif_dev->htc_handle);
-+	ath9k_hif_usb_dev_deinit(hif_dev);
-+	usb_set_intfdata(interface, NULL);
+ 	for (i = 0; i < count; i += j + t) {
+ 		t = 0;
+ 		max = count-i;
+@@ -233,8 +253,9 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
+ 			}
+ 		}
  
- 	if (!unplugged && (hif_dev->flags & HIF_USB_START))
- 		ath9k_hif_usb_reboot(udev);
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 64b226a..8fa8acf 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -878,6 +878,7 @@
- enum ath_usb_dev {
- 	AR9280_USB = 1, /* AR7010 + AR9280, UB94 */
- 	AR9287_USB = 2, /* AR7010 + AR9287, UB95 */
-+	STORAGE_DEVICE = 3,
- };
+-		r = _zd_iowrite32v_locked(chip, &ioreqs[i], j);
++		r = _zd_iowrite32v_async_locked(chip, &ioreqs[i], j);
+ 		if (r) {
++			zd_usb_iowrite16v_async_end(&chip->usb, 0);
+ 			dev_dbg_f(zd_chip_dev(chip),
+ 				"error _zd_iowrite32v_locked."
+ 				" Error number %d\n", r);
+@@ -242,7 +263,7 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
+ 		}
+ 	}
  
- #define AR_DEVID_7010(_ah) \
--- 
-1.7.4.1
+-	return 0;
++	return zd_usb_iowrite16v_async_end(&chip->usb, 50 /* ms */);
+ }
+ 
+ int zd_ioread16(struct zd_chip *chip, zd_addr_t addr, u16 *value)
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index c98f6e7..81e8048 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1674,7 +1674,7 @@ static void iowrite16v_urb_complete(struct urb *urb)
+ 
+ static int zd_submit_waiting_urb(struct zd_usb *usb, bool last)
+ {
+-	int r;
++	int r = 0;
+ 	struct urb *urb = usb->urb_async_waiting;
+ 
+ 	if (!urb)
+@@ -1700,7 +1700,7 @@ error:
+ 	return r;
+ }
+ 
+-static void zd_usb_iowrite16v_async_start(struct zd_usb *usb)
++void zd_usb_iowrite16v_async_start(struct zd_usb *usb)
+ {
+ 	ZD_ASSERT(usb_anchor_empty(&usb->submitted_cmds));
+ 	ZD_ASSERT(usb->urb_async_waiting == NULL);
+@@ -1713,7 +1713,7 @@ static void zd_usb_iowrite16v_async_start(struct zd_usb *usb)
+ 	usb->urb_async_waiting = NULL;
+ }
+ 
+-static int zd_usb_iowrite16v_async_end(struct zd_usb *usb, unsigned int timeout)
++int zd_usb_iowrite16v_async_end(struct zd_usb *usb, unsigned int timeout)
+ {
+ 	int r;
+ 
+@@ -1749,9 +1749,8 @@ error:
+ 	return r;
+ }
+ 
+-static int zd_usb_iowrite16v_async(struct zd_usb *usb,
+-				   const struct zd_ioreq16 *ioreqs,
+-				   unsigned int count)
++int zd_usb_iowrite16v_async(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
++			    unsigned int count)
+ {
+ 	int r;
+ 	struct usb_device *udev;
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
+index 9291426..b3df2c8 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.h
++++ b/drivers/net/wireless/zd1211rw/zd_usb.h
+@@ -273,6 +273,10 @@ static inline int zd_usb_ioread16(struct zd_usb *usb, u16 *value,
+ 	return zd_usb_ioread16v(usb, value, (const zd_addr_t *)&addr, 1);
+ }
+ 
++void zd_usb_iowrite16v_async_start(struct zd_usb *usb);
++int zd_usb_iowrite16v_async_end(struct zd_usb *usb, unsigned int timeout);
++int zd_usb_iowrite16v_async(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
++			    unsigned int count);
+ int zd_usb_iowrite16v(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
+ 	              unsigned int count);
+ 
 
