@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:44202 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab1B1QwE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 11:52:04 -0500
-Received: by wwb22 with SMTP id 22so3289449wwb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:52:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
-References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
-	<20110228142243.GB25724@kroah.com>
-	<AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
-Date: Mon, 28 Feb 2011 22:22:02 +0530
-Message-ID: <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com>
-Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU to
- enter C3 state.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Greg KH <greg@kroah.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from lo.gmane.org ([80.91.229.12]:39928 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752298Ab1BLAIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Feb 2011 19:08:19 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Po329-00057t-T2
+	for linux-wireless@vger.kernel.org; Sat, 12 Feb 2011 01:08:17 +0100
+Received: from f052169174.adsl.alicedsl.de ([78.52.169.174])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 01:08:17 +0100
+Received: from pommnitz by f052169174.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 01:08:17 +0100
+To: linux-wireless@vger.kernel.org
+From: jpo <pommnitz@yahoo.com>
+Subject: Re: WPA for Ethernet?
+Date: Sat, 12 Feb 2011 00:08:05 +0000 (UTC)
+Message-ID: <loom.20110212T010038-60@post.gmane.org>
+References: <loom.20110211T163104-102@post.gmane.org> <20110211162845.GC2224@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 8:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
->> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
->>> The default qos value of 55 causes higher power consumption
->>> and the battery drains out quickly. So, remove the pm_qos request
->>> in the driver and the throughout issue in the Intel Pinetrail
->>> platforms in which the DMA latency is seen can be fixed with
->>> the following script:
->>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
->>> http://johannes.sipsolutions.net/files/netlatency.c.txt
->>>
->>> More details can be found in the following bugzilla link:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->>>
->>> Cc: stable@kernel.org
->>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
->>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->>
->> Why did you send me 3 copies of this patch, when I don't need any copies
->> of it?
->>
->> Totally confused,
->
-> Vivek, please only ask John to send this to David as stable so it can
-> get into 2.6.38-rc, then once there you can refer the sha1sum from
-> Linus' tree and justify propagating into the stable series.
->
-I had sent separate patches for v2.6.37 and for v2.6.38 since the
-patch could not be applied directly to previous versions. So, should I
-send this rebased patch for v2.6.37 only after it makes it into
-v2.6.38?
+John W. Linville <linville@...> writes:
+> I believe wpa_supplicant can do the 802.1x authentication to gain
+> access to a port on a supporting switch.  However, I am not aware
+> of any standard for "encrypted ethernet" that would build upon that.
 
-Vivek.
+John, thanks for taking the time to answer. An untested idea I had was
+bridging the mac80211 hwsim device to an ethernet device. Could this work
+and would it do what I want? I suspect not, but maybe...
+Alternatively, is it somehow possible to connect the lower layer input/output
+of hwsim to another network interface? 
+
+> You might consider implementing your own code on top of the TUN/TAP
+> driver for point-to-point encrypted links?
+
+How would this differ from OpenVPN?
+
+> John
+
+
+
+
