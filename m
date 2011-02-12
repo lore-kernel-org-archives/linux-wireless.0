@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:23055 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859Ab1BFVxd (ORCPT
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:33152 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751571Ab1BLSnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 16:53:33 -0500
-Date: Sun, 6 Feb 2011 22:52:17 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: devel@driverdev.osuosl.org
-cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>, trivial@kernel.org
-Subject: [PATCH][trivial] Remove duplicate inclusion of wlc_event.h in
- drivers/staging/brcm80211/sys/wlc_mac80211.c
-Message-ID: <alpine.LNX.2.00.1102062249180.13593@swampdragon.chaosbits.net>
+	Sat, 12 Feb 2011 13:43:20 -0500
+Subject: [PATCH 0/4] Fix high CPU usage in AP-mode
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Sat, 12 Feb 2011 20:43:13 +0200
+Message-ID: <20110212184254.2062.33710.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include wlc_event.h twice in 
-drivers/staging/brcm80211/sys/wlc_mac80211.c
-Once is enough.
+Series fix high CPU usage noticed in AP-mode. On Intel Atom AP-mode with
+100 TU beacon interval was causing CPU usage of ~10%. With these patches 
+CPU usage goes down to ~2%.
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
- wlc_mac80211.c |    1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index a130386..0a46d44 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -47,7 +47,6 @@
- #include <wlc_antsel.h>
- #include <wlc_stf.h>
- #include <wlc_ampdu.h>
--#include <wlc_event.h>
- #include <wl_export.h>
- #include "d11ucode_ext.h"
- #include <wlc_alloc.h>
+Jussi Kivilinna (4):
+      zd1211rw: correct use of usb_bulk_msg on interrupt endpoints
+      zd1211rw: use async urb for write command
+      zd1211rw: move async iowrite16v up to callers
+      zd1211rw: add unlikely to ZD_ASSERT
 
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Plain text mails only, please.
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-
+ drivers/net/wireless/zd1211rw/zd_chip.c |   35 +++++-
+ drivers/net/wireless/zd1211rw/zd_def.h  |    2 
+ drivers/net/wireless/zd1211rw/zd_usb.c  |  177 +++++++++++++++++++++++++------
+ drivers/net/wireless/zd1211rw/zd_usb.h  |    9 +-
+ 4 files changed, 182 insertions(+), 41 deletions(-)
