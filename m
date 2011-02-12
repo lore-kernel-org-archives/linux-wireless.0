@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:48029 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754722Ab1BBR2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 12:28:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 09:28:24 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] mac80211: do not restart ps timer during scan or offchannel
-Date: Wed, 2 Feb 2011 22:57:53 +0530
-Message-ID: <1296667673-4773-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60854 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752803Ab1BLPBF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Feb 2011 10:01:05 -0500
+Received: by bwz15 with SMTP id 15so4128018bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 07:00:40 -0800 (PST)
+Date: Sat, 12 Feb 2011 18:00:33 +0300
+From: Stanislav Fomichev <kernel@fomichev.me>
+To: brudley@broadcom.com, gregkh@suse.de
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] brcm80211: remove multiple calls to wl_release_fw
+Message-ID: <20110212150033.GA1941@sdf-MacBook>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While leaving oper channel, STA informs sleep state to AP to
-stop sending data. Till sending ack for the nullfunc, AP
-continues to send the data to STA which restarts ps_timer that
-is causing unnecessary nullfunc exchange on timer expiry
-when the STA was already moved to offchannel. So don't restart ps_timer
-on data reception during scan. This issue was identified by
-the following warning.
+This causes an oops when the bcm43xx_hdr-0.fw binary is not found.
 
-WARNING: at net/mac80211/tx.c:661 invoke_tx_handlers+0xf07/0x1330 [mac80211]
-wlan0: Dropped data frame as no usable bitrate found while scanning and
-associated. Target station: 00:03:7f:0b:a6:1b on 5 GHz band
-Call Trace:
-  [<ffffffffa0413ba7>] invoke_tx_handlers+0xf07/0x1330 [mac80211]
-  [<ffffffffa0414056>] ieee80211_tx+0x86/0x2c0 [mac80211]
-  [<ffffffffa0414345>] ieee80211_xmit+0xb5/0x1d0 [mac80211]
-  [<ffffffffa04037e0>] ieee80211_dynamic_ps_enable_work+0x0/0xb0 [mac80211]
-  [<ffffffffa04158cf>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
-  [<ffffffffa04026e6>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
-  [<ffffffffa0403885>] ieee80211_dynamic_ps_enable_work+0xa5/0xb0 [mac80211]
-
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Stanislav Fomichev <s@fomichev.me>
 ---
- net/mac80211/rx.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/sys/wl_mac80211.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 7185c93..f88ca98 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1929,7 +1929,10 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	dev->stats.rx_bytes += rx->skb->len;
- 
- 	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 &&
--	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
-+	    !is_multicast_ether_addr(
-+		    ((struct ethhdr *)rx->skb->data)->h_dest) &&
-+	    (!local->scanning &&
-+	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))) {
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
+diff --git a/drivers/staging/brcm80211/sys/wl_mac80211.c b/drivers/staging/brcm80211/sys/wl_mac80211.c
+index cd8392b..5faa521 100644
+--- a/drivers/staging/brcm80211/sys/wl_mac80211.c
++++ b/drivers/staging/brcm80211/sys/wl_mac80211.c
+@@ -1767,7 +1767,6 @@ static int wl_request_fw(struct wl_info *wl, struct pci_dev *pdev)
+ 		if (status) {
+ 			printf("%s: fail to load firmware %s\n",
+ 				KBUILD_MODNAME, fw_name);
+-			wl_release_fw(wl);
+ 			return status;
+ 		}
+ 		WL_NONE("request fw %s\n", fw_name);
+@@ -1777,7 +1776,6 @@ static int wl_request_fw(struct wl_info *wl, struct pci_dev *pdev)
+ 		if (status) {
+ 			printf("%s: fail to load firmware %s\n",
+ 				KBUILD_MODNAME, fw_name);
+-			wl_release_fw(wl);
+ 			return status;
+ 		}
+ 		wl->fw.hdr_num_entries[i] =
 -- 
-1.7.4
-
+1.7.1
