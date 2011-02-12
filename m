@@ -1,117 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38273 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928Ab1BFUMl (ORCPT
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:60628 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751571Ab1BLSn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 15:12:41 -0500
-From: greearb@candelatech.com
+	Sat, 12 Feb 2011 13:43:29 -0500
+Subject: [PATCH 1/4] zd1211rw: correct use of usb_bulk_msg on interrupt
+	endpoints
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 5/5] mac80211:  Allow work items to use existing channel type.
-Date: Sun,  6 Feb 2011 12:11:58 -0800
-Message-Id: <1297023118-24363-5-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
-References: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Sat, 12 Feb 2011 20:43:23 +0200
+Message-ID: <20110212184323.2062.75645.stgit@fate.lan>
+In-Reply-To: <20110212184254.2062.33710.stgit@fate.lan>
+References: <20110212184254.2062.33710.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+zd1211rw is using usb_bulk_msg() with usb_sndbulkpipe() on interrupt endpoint.
+However usb_bulk_msg() internally corrects this and makes interrupt URB.
 
-Narrow channel types can function within larger channel types.
-So, use existing channel type for work items when possible.
-This decreases hardware channel changes significantly when
-using non NO_HT channel types on the operating channel.
+It's better to change usb_bulk_msgs in zd1211rw to usb_interrupt_msg for less
+confusion.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-:100644 100644 6bf787a... 64f2b28... M	net/mac80211/work.c
- net/mac80211/work.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 50 insertions(+), 3 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_usb.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 6bf787a..64f2b28 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -874,6 +874,44 @@ static void ieee80211_work_rx_queued_mgmt(struct ieee80211_local *local,
- 	kfree_skb(skb);
- }
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index f6df366..7346512 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1634,15 +1634,15 @@ int zd_usb_ioread16v(struct zd_usb *usb, u16 *values,
  
-+static bool ieee80211_work_ct_coexists(enum nl80211_channel_type wk_ct,
-+				       enum nl80211_channel_type oper_ct)
-+{
-+	switch (wk_ct) {
-+	case NL80211_CHAN_NO_HT:
-+		return true;
-+	case NL80211_CHAN_HT20:
-+		if (oper_ct != NL80211_CHAN_NO_HT)
-+			return true;
-+		return false;
-+	case NL80211_CHAN_HT40MINUS:
-+	case NL80211_CHAN_HT40PLUS:
-+		return (wk_ct == oper_ct);
-+	}
-+	WARN_ON(1); /* shouldn't get here */
-+	return false;
-+}
-+
-+static enum nl80211_channel_type
-+ieee80211_calc_ct(enum nl80211_channel_type wk_ct,
-+		  enum nl80211_channel_type oper_ct)
-+{
-+	switch (wk_ct) {
-+	case NL80211_CHAN_NO_HT:
-+		return oper_ct;
-+	case NL80211_CHAN_HT20:
-+		if (oper_ct != NL80211_CHAN_NO_HT)
-+			return oper_ct;
-+		return wk_ct;
-+	case NL80211_CHAN_HT40MINUS:
-+	case NL80211_CHAN_HT40PLUS:
-+		return wk_ct;
-+	}
-+	WARN_ON(1); /* shouldn't get here */
-+	return wk_ct;
-+}
-+
-+
- static void ieee80211_work_timer(unsigned long data)
- {
- 	struct ieee80211_local *local = (void *) data;
-@@ -927,14 +965,22 @@ static void ieee80211_work_work(struct work_struct *work)
- 			bool on_oper_chan;
- 			bool tmp_chan_changed = false;
- 			bool on_oper_chan2;
-+			enum nl80211_channel_type wk_ct;
- 			on_oper_chan = ieee80211_cfg_on_oper_channel(local);
-+
-+			/* Work with existing channel type if possible. */
-+			wk_ct = wk->chan_type;
-+			if (wk->chan == local->hw.conf.channel)
-+				wk_ct = ieee80211_calc_ct(wk->chan_type,
-+						local->hw.conf.channel_type);
-+
- 			if (local->tmp_channel)
- 				if ((local->tmp_channel != wk->chan) ||
--				    (local->tmp_channel_type != wk->chan_type))
-+				    (local->tmp_channel_type != wk_ct))
- 					tmp_chan_changed = true;
- 
- 			local->tmp_channel = wk->chan;
--			local->tmp_channel_type = wk->chan_type;
-+			local->tmp_channel_type = wk_ct;
- 			/*
- 			 * Leave the station vifs in awake mode if they
- 			 * happen to be on the same channel as
-@@ -1031,7 +1077,8 @@ static void ieee80211_work_work(struct work_struct *work)
- 			continue;
- 		if (wk->chan != local->tmp_channel)
- 			continue;
--		if (wk->chan_type != local->tmp_channel_type)
-+		if (ieee80211_work_ct_coexists(wk->chan_type,
-+					       local->tmp_channel_type))
- 			continue;
- 		remain_off_channel = true;
+ 	udev = zd_usb_to_usbdev(usb);
+ 	prepare_read_regs_int(usb);
+-	r = usb_bulk_msg(udev, usb_sndbulkpipe(udev, EP_REGS_OUT),
+-			 req, req_len, &actual_req_len, 50 /* ms */);
++	r = usb_interrupt_msg(udev, usb_sndintpipe(udev, EP_REGS_OUT),
++			      req, req_len, &actual_req_len, 50 /* ms */);
+ 	if (r) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+-			"error in usb_bulk_msg(). Error number %d\n", r);
++			"error in usb_interrupt_msg(). Error number %d\n", r);
+ 		goto error;
  	}
--- 
-1.7.2.3
+ 	if (req_len != actual_req_len) {
+-		dev_dbg_f(zd_usb_dev(usb), "error in usb_bulk_msg()\n"
++		dev_dbg_f(zd_usb_dev(usb), "error in usb_interrupt_msg()\n"
+ 			" req_len %d != actual_req_len %d\n",
+ 			req_len, actual_req_len);
+ 		r = -EIO;
+@@ -1705,16 +1705,16 @@ int zd_usb_iowrite16v(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
+ 	}
+ 
+ 	udev = zd_usb_to_usbdev(usb);
+-	r = usb_bulk_msg(udev, usb_sndbulkpipe(udev, EP_REGS_OUT),
+-			 req, req_len, &actual_req_len, 50 /* ms */);
++	r = usb_interrupt_msg(udev, usb_sndintpipe(udev, EP_REGS_OUT),
++			      req, req_len, &actual_req_len, 50 /* ms */);
+ 	if (r) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+-			"error in usb_bulk_msg(). Error number %d\n", r);
++			"error in usb_interrupt_msg(). Error number %d\n", r);
+ 		goto error;
+ 	}
+ 	if (req_len != actual_req_len) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+-			"error in usb_bulk_msg()"
++			"error in usb_interrupt_msg()"
+ 			" req_len %d != actual_req_len %d\n",
+ 			req_len, actual_req_len);
+ 		r = -EIO;
+@@ -1794,15 +1794,15 @@ int zd_usb_rfwrite(struct zd_usb *usb, u32 value, u8 bits)
+ 	}
+ 
+ 	udev = zd_usb_to_usbdev(usb);
+-	r = usb_bulk_msg(udev, usb_sndbulkpipe(udev, EP_REGS_OUT),
+-			 req, req_len, &actual_req_len, 50 /* ms */);
++	r = usb_interrupt_msg(udev, usb_sndintpipe(udev, EP_REGS_OUT),
++			      req, req_len, &actual_req_len, 50 /* ms */);
+ 	if (r) {
+ 		dev_dbg_f(zd_usb_dev(usb),
+-			"error in usb_bulk_msg(). Error number %d\n", r);
++			"error in usb_interrupt_msg(). Error number %d\n", r);
+ 		goto out;
+ 	}
+ 	if (req_len != actual_req_len) {
+-		dev_dbg_f(zd_usb_dev(usb), "error in usb_bulk_msg()"
++		dev_dbg_f(zd_usb_dev(usb), "error in usb_interrupt_msg()"
+ 			" req_len %d != actual_req_len %d\n",
+ 			req_len, actual_req_len);
+ 		r = -EIO;
 
