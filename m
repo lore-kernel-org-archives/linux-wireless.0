@@ -1,132 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43805 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932Ab1BNUpb (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:39467 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752857Ab1BLXBa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 15:45:31 -0500
-Date: Mon, 14 Feb 2011 15:44:06 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2011-02-14
-Message-ID: <20110214204406.GG2722@tuxdriver.com>
+	Sat, 12 Feb 2011 18:01:30 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.38-rc4-git5: Reported regressions from 2.6.37
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <NMZS1i37KEE.A.1eG.6_wVNB@chimera>
+Date: Sat, 12 Feb 2011 23:57:33 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+This message contains a list of some regressions from 2.6.37,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-A handful of fixes intended for 2.6.38...
+If you know of any other unresolved regressions from 2.6.37, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-This includes a couple of bluetooth device IDs, a bluetooth one-liner
-to avoid multiple connection responses, a locking fix to avoid some
-log spam, and a patch to turn off PCLP health checking for iwl3945
-(because the checking has not proven helpful and it kills performance).
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-Please let me know if there are problems!
 
-Thanks,
+Listed regressions statistics:
 
-John
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-02-12       39       20          18
+  2011-02-03       19       11           7
 
----
 
-The following changes since commit ddfdb508866b3c07b295f6c85c271981d88afe4c:
+Unresolved regressions
+----------------------
 
-  net/can/softing: make CAN_SOFTING_CS depend on CAN_SOFTING (2011-02-14 11:44:01 -0800)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28882
+Subject		: Screen corruption and GPU hangs
+Submitter	: Ko Mi <chaostya.test@hotmail.com>
+Date		: 2011-02-11 18:17 (2 days old)
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
-Bao Liang (1):
-      Bluetooth: Set conn state to BT_DISCONN to avoid multiple responses
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28852
+Subject		: [KMS] radeon artifacts when switched to graphics during boot
+Submitter	: Oldřich Jedlička <oldium.pro@seznam.cz>
+Date		: 2011-02-10 21:11 (3 days old)
+Handled-By	: Alex Deucher <alexdeucher@gmail.com>
 
-Cho, Yu-Chen (1):
-      Bluetooth: add Atheros BT AR9285 fw supported
 
-Eliad Peller (1):
-      mac80211: add missing locking in ieee80211_reconfig
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28842
+Subject		: 2.6.38-rc3 regression ipv6 TFTP download with curl failing in getpeername?
+Submitter	: Eric W. Biederman <ebiederm@xmission.com>
+Date		: 2011-02-08 9:41 (5 days old)
+Message-ID	: <m1ei7iamnn.fsf@fess.ebiederm.org>
+References	: http://marc.info/?l=linux-kernel&m=129715811421534&w=2
 
-John W. Linville (1):
-      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-2.6
 
-Stanislaw Gruszka (1):
-      iwl3945: remove plcp check
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28832
+Subject		: [regression][2.6.38-rcX][net][iwlagn] WiFi signal after period of time tanks causing contant drops
+Submitter	: Shawn Starr <shawn.starr@rogers.com>
+Date		: 2011-02-07 3:54 (6 days old)
+Message-ID	: <613373.34172.qm@smtp106.rog.mail.re2.yahoo.com>
+References	: http://marc.info/?l=linux-kernel&m=129705125832718&w=2
 
- drivers/bluetooth/ath3k.c               |    2 ++
- drivers/bluetooth/btusb.c               |    3 +++
- drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
- net/bluetooth/l2cap.c                   |    1 +
- net/mac80211/util.c                     |    2 ++
- 5 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/bluetooth/ath3k.c b/drivers/bluetooth/ath3k.c
-index a126e61..333c212 100644
---- a/drivers/bluetooth/ath3k.c
-+++ b/drivers/bluetooth/ath3k.c
-@@ -39,6 +39,8 @@ static struct usb_device_id ath3k_table[] = {
- 	/* Atheros AR3011 with sflash firmware*/
- 	{ USB_DEVICE(0x0CF3, 0x3002) },
- 
-+	/* Atheros AR9285 Malbec with sflash firmware */
-+	{ USB_DEVICE(0x03F0, 0x311D) },
- 	{ }	/* Terminating entry */
- };
- 
-diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index 1da773f..4cefa91 100644
---- a/drivers/bluetooth/btusb.c
-+++ b/drivers/bluetooth/btusb.c
-@@ -102,6 +102,9 @@ static struct usb_device_id blacklist_table[] = {
- 	/* Atheros 3011 with sflash firmware */
- 	{ USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
- 
-+	/* Atheros AR9285 Malbec with sflash firmware */
-+	{ USB_DEVICE(0x03f0, 0x311d), .driver_info = BTUSB_IGNORE },
-+
- 	/* Broadcom BCM2035 */
- 	{ USB_DEVICE(0x0a5c, 0x2035), .driver_info = BTUSB_WRONG_SCO_MTU },
- 	{ USB_DEVICE(0x0a5c, 0x200a), .driver_info = BTUSB_WRONG_SCO_MTU },
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index a9b852b..3eb14fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2734,7 +2734,6 @@ static struct iwl_lib_ops iwl3945_lib = {
- 	.isr_ops = {
- 		.isr = iwl_isr_legacy,
- 	},
--	.check_plcp_health = iwl3945_good_plcp_health,
- 
- 	.debugfs_ops = {
- 		.rx_stats_read = iwl3945_ucode_rx_stats_read,
-diff --git a/net/bluetooth/l2cap.c b/net/bluetooth/l2cap.c
-index 7550abb..675614e 100644
---- a/net/bluetooth/l2cap.c
-+++ b/net/bluetooth/l2cap.c
-@@ -859,6 +859,7 @@ static void __l2cap_sock_close(struct sock *sk, int reason)
- 				result = L2CAP_CR_SEC_BLOCK;
- 			else
- 				result = L2CAP_CR_BAD_PSM;
-+			sk->sk_state = BT_DISCONN;
- 
- 			rsp.scid   = cpu_to_le16(l2cap_pi(sk)->dcid);
- 			rsp.dcid   = cpu_to_le16(l2cap_pi(sk)->scid);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index cf68700..d036597 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1210,7 +1210,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			changed |= BSS_CHANGED_ASSOC;
-+			mutex_lock(&sdata->u.mgd.mtx);
- 			ieee80211_bss_info_change_notify(sdata, changed);
-+			mutex_unlock(&sdata->u.mgd.mtx);
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
- 			changed |= BSS_CHANGED_IBSS;
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28642
+Subject		: ACPI broken on DELL Latitude E6410 in 2.6.38-rc3
+Submitter	: Adam Kovari <kovariadam@gmail.com>
+Date		: 2011-02-08 22:22 (5 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28562
+Subject		: [BUG] usb problems in .38-rc3+
+Submitter	: Ed Tomlinson <edt@aei.ca>
+Date		: 2011-02-05 19:17 (8 days old)
+Message-ID	: <201102051417.58953.edt@aei.ca>
+References	: http://marc.info/?l=linux-kernel&m=129693391417607&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28522
+Subject		: Unable to mount FAT-formatted floppy on /dev/fd0, plus WARN_ON when using /dev/fd0u1440
+Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
+Date		: 2011-02-07 17:21 (6 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28452
+Subject		: 2.6.38-rc3 regression on parisc: segfaults
+Submitter	: Meelis Roos <mroos@linux.ee>
+Date		: 2011-02-01 22:00 (12 days old)
+Message-ID	: <alpine.SOC.1.00.1102012342200.25944@math.ut.ee>
+References	: http://marc.info/?l=linux-kernel&m=129659763426600&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28442
+Subject		: 2.6.38-rc3: FUSE (sshfs) hangs under load
+Submitter	: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Date		: 2011-02-01 17:54 (12 days old)
+First-Bad-Commit: http://git.kernel.org/linus/4cd06a344db752f513437138953af191cbe9a691
+Message-ID	: <20110201175452.GB518@core.coreip.homeip.net>
+References	: http://marc.info/?l=linux-kernel&m=129658291703679&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28432
+Subject		: khugepaged: gets stuck when writing to USB flash, 2.6.38-rc2
+Submitter	: Jindřich Makovička <makovick@gmail.com>
+Date		: 2011-01-31 19:28 (13 days old)
+Message-ID	: <AANLkTi=uOpN0PwWdGh6iri-vJwuMS+WMPxmaZjv0-TrV@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=129650210516627&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28422
+Subject		: kref and apparmor panic in 2.6.38-rc2.
+Submitter	: Tao Ma <tm@tao.ma>
+Date		: 2011-01-31 10:06 (13 days old)
+Message-ID	: <4D46899B.80302@tao.ma>
+References	: http://marc.info/?l=linux-kernel&m=129646840303149&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28262
+Subject		: Slow resume from suspend/hibernate on Dell Inspiron M301Z
+Submitter	: Luca Ferretti <lferrett@gnome.org>
+Date		: 2011-02-05 12:37 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28232
+Subject		: Kernel panics with 2.6.38 (rc1, rc2, rc3, rc4) and the lzo compression of btrfs
+Submitter	: Juan Francisco Cantero Hurtado <iam@juanfra.info>
+Date		: 2011-02-05 04:44 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28102
+Subject		: New display errors in 2.6.38-rc2-00175-g6fb1b30
+Submitter	: Nico Schottelius <nico-kernel-20110117@schottelius.org>
+Date		: 2011-01-28 20:29 (16 days old)
+Message-ID	: <20110128202905.GB3395@schottelius.org>
+References	: http://marc.info/?l=linux-kernel&m=129624657425949&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28052
+Subject		: [BUG] 2.6.38-rc2: Circular Locking Dependency
+Submitter	: Knut Petersen <Knut_Petersen@t-online.de>
+Date		: 2011-01-24 9:25 (20 days old)
+Message-ID	: <4D3D45A3.7040809@t-online.de>
+References	: http://marc.info/?l=linux-kernel&m=129586118515443&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27762
+Subject		: Brightness Adjustment on Toshiba nb305 Netbooks is non-functional.
+Submitter	: John Mesmon <jmesmon@gmail.com>
+Date		: 2011-01-29 03:47 (15 days old)
+First-Bad-Commit: http://git.kernel.org/linus/44834a67c0082e2cf74b16be91e49108b1432d65
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27382
+Subject		: ath5k phy0: gain calibration timeout
+Submitter	: Nicolas Stransky <Nico@stransky.cx>
+Date		: 2011-01-23 00:18 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27022
+Subject		: [REPORT] BUG: spinlock recursion on CPU#0, init/1
+Submitter	: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Date		: 2011-01-10 15:33 (34 days old)
+Message-ID	: <a7a9bdaa5936630925fb7ffd1a1795b1@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=129467294808655&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28802
+Subject		: commit 5d1d0cc breaks resume from suspend on Thinkpad X201
+Submitter	: Björn Schließmann <chronoss@gmx.de>
+Date		: 2011-02-10 17:23 (3 days old)
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=47172
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27702
+Subject		: regression 2.6.37 -> 2.6.38-rc1: after suspend backlight cannot be adjusted
+Submitter	: Norbert Preining <preining@logic.at>
+Date		: 2011-01-21 1:55 (23 days old)
+Message-ID	: <20110121015529.GD9796@gamma.logic.tuwien.ac.at>
+References	: http://marc.info/?l=linux-kernel&m=129557717826819&w=2
+Handled-By	: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
+Patch		: https://patchwork.kernel.org/patch/499221/
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.37,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=27352
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
+
