@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63055 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751723Ab1BGKMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 05:12:41 -0500
-Date: Mon, 7 Feb 2011 11:11:24 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Don Fry <donald.h.fry@intel.com>
-Subject: Re: [PATCH wireless-2.6.38] iwlagn: Re-enable RF_KILL interrupt when
- down
-Message-ID: <20110207101123.GA2319@redhat.com>
-References: <1297013385-9918-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from saarni.dnainternet.net ([83.102.40.136]:40225 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411Ab1BLSn5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Feb 2011 13:43:57 -0500
+Subject: [PATCH 4/4] zd1211rw: add unlikely to ZD_ASSERT
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Daniel Drake <dsd@gentoo.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Date: Sat, 12 Feb 2011 20:43:51 +0200
+Message-ID: <20110212184351.2062.10473.stgit@fate.lan>
+In-Reply-To: <20110212184254.2062.33710.stgit@fate.lan>
+References: <20110212184254.2062.33710.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297013385-9918-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 06, 2011 at 09:29:45AM -0800, Wey-Yi Guy wrote:
-> From: Don Fry <donald.h.fry@intel.com>
-> 
-> With commit 554d1d027b19265c4aa3f718b3126d2b86e09a08 only one RF_KILL
-> interrupt will be seen by the driver when the interface is down.
-> 
-> Re-enable the interrupt when it occurs to see all transitions.
+Case assert is violated should be quite unlikely.
 
-What practical problem this fix? I'm asking, because my RF_KILL commit
-went to stable, shouldn't this fix go to stable as well?
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/zd1211rw/zd_def.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Stanislaw
+diff --git a/drivers/net/wireless/zd1211rw/zd_def.h b/drivers/net/wireless/zd1211rw/zd_def.h
+index 6ac597f..5463ca9 100644
+--- a/drivers/net/wireless/zd1211rw/zd_def.h
++++ b/drivers/net/wireless/zd1211rw/zd_def.h
+@@ -45,7 +45,7 @@ typedef u16 __nocast zd_addr_t;
+ #ifdef DEBUG
+ #  define ZD_ASSERT(x) \
+ do { \
+-	if (!(x)) { \
++	if (unlikely(!(x))) { \
+ 		pr_debug("%s:%d ASSERT %s VIOLATED!\n", \
+ 			__FILE__, __LINE__, __stringify(x)); \
+ 		dump_stack(); \
+
