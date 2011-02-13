@@ -1,58 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:27817 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752491Ab1BHLNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 06:13:10 -0500
-Subject: Re: [PATCH] wl12xx: Allow wl12xx interrupts to wake up the host
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Kalle Valo <kvalo@adurom.com>
-Cc: ext Ohad Ben-Cohen <ohad@wizery.com>, coelho@ti.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87aai696lv.fsf@purkki.adurom.net>
-References: <1297078254-4664-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <AANLkTinKyrP2fiE-3+nFeHxvKvg_pn02dLc=t-_+VUJS@mail.gmail.com>
-	 <1297081781.2064.12.camel@wimaxnb.nmp.nokia.com>
-	 <AANLkTim2H+s0mM+7HBubEHbYj5O+PRHDkeJefx64zRKx@mail.gmail.com>
-	 <1297083534.2064.19.camel@wimaxnb.nmp.nokia.com>
-	 <AANLkTim6J9yizLPcj-ERwVEcp=VXSymXBfFdszHUMp80@mail.gmail.com>
-	 <1297151826.2064.68.camel@wimaxnb.nmp.nokia.com>
-	 <87aai696lv.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Feb 2011 13:13:02 +0200
-Message-ID: <1297163582.3389.7.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53137 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754744Ab1BMR5P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Feb 2011 12:57:15 -0500
+Received: by mail-iw0-f174.google.com with SMTP id 9so4086972iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 09:57:14 -0800 (PST)
+From: "Nathaniel J. Smith" <njs@pobox.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, "Nathaniel J. Smith" <njs@pobox.com>
+Subject: [PATCH 0/5] iwlwifi: Auto-tune tx queue size to maintain latency under load
+Date: Sun, 13 Feb 2011 09:56:37 -0800
+Message-Id: <1297619803-2832-1-git-send-email-njs@pobox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-08 at 12:13 +0200, ext Kalle Valo wrote:
-> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
-> 
-> >> > I'm currently trying to find out if this is really needed or not.
-> >> 
-> >> Sure, thanks.
-> >
-> > They are saying this is needed for OMAP's retention mode too, so AFAIK
-> > this is needed, not just for suspend.
-> 
-> Why make this change in the driver? Doesn't it mean that all drivers
-> need to be changed so that they will work in your platform? I would
-> have expected that this is done automatically somewhere in the core
-> kernel and without any changes to the driver.
-> 
-> To me platform specific changes in drivers are always problematic.
+I have an iwl3945 in my laptop, and find that whenever I saturate the
+outgoing connection -- which happens daily when my rsync backup kicks
+in -- then latency becomes astronomical (what Jim Gettys calls
+"bufferbloat"). I've measured 12-13 second ping times to my router. As
+you can imagine, this makes web browsing or interactive SSH somewhat
+uncomfortable.
 
-Yeah I tend to agree.
+The problem is the very large TX queue in the iwlwifi driver, which is
+non-adjustable and willing to buffer several hundred packets at a
+time. My pings, HTTP connections, and so on get stuck at the end of
+this line, and have to wait for multiple seconds while all the packets
+ahead of them get sent.
 
-But then for some reason there is this interface in interrupts.h to do
-this, and AFAIU the one requesting the IRQ and controlling enabling and
-disabling of it is supposed to also tune this wakeing on/off. Apparently
-it should even do this when just enabling/disabling the interrupt -
-which are things performed in the driver.
+(A secondary problem is the txqueue in the network layer, but this can
+be fixed via 'ip link set wlan0 txqueuelen $LEN', or by traffic
+shaping. But so long as the driver queue is so huge, neither really
+makes any difference.)
 
-So in this case this would need to be a flag in the interrupt
-registration itself, so that the interrupt enable/disable calls could
-automatically control wake-up. I guess.
+This patch series teaches the driver to measure the average rate of
+packet transmission for each tx queue, and adjusts the queue size
+dynamically in an attempt to achieve ~2 ms of added latency.
 
--Juuso
+Patches are against wireless-testing (0fd54899). All patches tested on
+iwl3945 hardware. I've been running the full patch (against an earlier
+wireless-testing) full time for more than a month, and it's been just
+as reliable as the standard driver.
 
+Hard numbers
+------------
+I made a test file:
+  dd if=/dev/urandom of=/tmp/50-megs bs=1M count=50
+Then ran a test load and a latency measurement, started at the same time:
+  scp /tmp/50-megs 192.168.16.1:/dev/zero
+  sleep 20 && ping -n 192.168.16.1 -c 20 -q
+Measurements are on my home network, which is not the cleanest
+environment, and bandwidth fluctuates enough that it isn't worth
+reporting (scp reports between ~100KB/s and 200KB/s). But at least
+it's realistic... Each test performed twice, in intermixed order.
+
+(numbers are RTT min/avg/max/mdev in ms, as reported by ping)
+
+Baseline: current wireless-testing, with txqueuelen 1000
+  1550.601  5404.818  8672.305  2423.160 ms
+  1484.907  4554.160  6632.850  1326.948 ms
+
+Best currently achievable: current wireless-testing, with txqueuelen 2
+  2196.802  4121.507  6009.160   910.079 ms
+  1092.415  2170.247  3860.628   674.256 ms
+
+New best: patched wireless-testing, with txqueuelen 2
+     3.812    44.419    95.883    26.462 ms
+     1.793    34.926   137.325    33.161 ms
+
+As you can see, this patch achieves something like a 2 order of
+magnitude reduction in RTT, and if there's any effect on throughput
+then it's too subtle to notice in my environment. (The single highest
+observed throughput was actually in the second test of the patched
+kernel.)
+
+Nathaniel J. Smith (5):
+  iwlwifi: Simplify tx queue management
+  iwlwifi: Convert the tx queue high_mark to an atomic_t
+  iwlwifi: Invert the sense of the queue high_mark
+  iwlwifi: auto-tune tx queue size to minimize latency
+  iwlwifi: make current tx queue sizes visible in debugfs
+
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    6 ++-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |   11 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    6 ++-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   20 ++++++--
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |   62 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 ++-
+ 9 files changed, 87 insertions(+), 34 deletions(-)
 
