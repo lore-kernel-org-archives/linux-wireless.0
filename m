@@ -1,143 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48485 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480Ab1B1Qss (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:41850 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968Ab1BMLHe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 11:48:48 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 17so3915244fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:48:47 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/9] [mac80211] enable radar detection
-Date: Mon, 28 Feb 2011 17:47:44 +0100
-Cc: lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
-In-Reply-To: <201102281740.37036.bernhard.schmidt@saxnet.de>
+	Sun, 13 Feb 2011 06:07:34 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201102281747.44842.bernhard.schmidt@saxnet.de>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <NMZS1i37KEE.A.1eG.6_wVNB@chimera>
+References: <NMZS1i37KEE.A.1eG.6_wVNB@chimera>
+Date: Sun, 13 Feb 2011 12:07:33 +0100
+Message-ID: <AANLkTikk_1ywKCMkRgRR20h3ApEhc3kdErMDBx9c9T2f@mail.gmail.com>
+Subject: Re: 2.6.38-rc4-git5: Reported regressions from 2.6.37
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Nicolas Stransky <Nico@stransky.cx>, sgh@sgh.dk,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When switching to channels requiring radar detection, enable it
-if the current mode is one which requires beaconing. In all other
-cases the radar detection is disabled.
+On Sat, Feb 12, 2011 at 11:57 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> This message contains a list of some regressions from 2.6.37,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+>
+> If you know of any other unresolved regressions from 2.6.37, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
+>
+> Each entry from the list will be sent additionally in an automatic reply
+> to this message with CCs to the people involved in reporting and handling
+> the issue.
+>
+>
+> Listed regressions statistics:
+>
+>  Date          Total  Pending  Unresolved
+>  ----------------------------------------
+>  2011-02-12       39       20          18
+>  2011-02-03       19       11           7
+>
+>
+> Unresolved regressions
+> ----------------------
 
-Note, drivers which do not support radar detection are not allowed
-to switch to those channels.
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=27382
+> Subject         : ath5k phy0: gain calibration timeout
+> Submitter       : Nicolas Stransky <Nico@stransky.cx>
+> Date            : 2011-01-23 00:18 (21 days old)
+>
 
-Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
----
- include/net/mac80211.h      |    4 ++++
- net/mac80211/cfg.c          |   15 +++++++++++++++
- net/mac80211/driver-ops.h   |   14 ++++++++++++++
- net/mac80211/driver-trace.h |   21 +++++++++++++++++++++
- 4 files changed, 54 insertions(+), 0 deletions(-)
+As I looked into the BR #27382...
+The patch by Nick Kossifidis from comment #32 (see [1] and [2]) fixed
+the problem for two affected users.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2b072fa..495b0c5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1804,6 +1804,8 @@ enum ieee80211_ampdu_mlme_action {
-  *	return value is 1, then the @remain_on_channel will be used with a
-  *	regular transmission (if supported.)
-  * @offchannel_tx_cancel_wait: cancel wait associated with offchannel TX
-+ *
-+ * @radar_detection: Enable or disable radar detection on current channel.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -1888,6 +1890,8 @@ struct ieee80211_ops {
- 			     enum nl80211_channel_type channel_type,
- 			     unsigned int wait);
- 	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
-+
-+	int (*radar_detection)(struct ieee80211_hw *hw, int enable);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 4a07e67..e50ecaa 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1245,6 +1245,21 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
- 		old_vif_oper_type = sdata->vif.bss_conf.channel_type;
- 	old_oper_type = local->_oper_channel_type;
- 
-+	if (sdata && (sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		      sdata->vif.type == NL80211_IFTYPE_AP ||
-+		      sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-+		      sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
-+		      sdata->vif.type == NL80211_IFTYPE_P2P_GO) &&
-+	    (chan->flags & IEEE80211_CHAN_RADAR)) {
-+		/*
-+		 * Do not allow switching to channels requiring radar
-+		 * detection if hardware doesn't support detection.
-+		 */
-+		if (drv_radar_detection(local, true))
-+			return -EINVAL;
-+	} else
-+		drv_radar_detection(local, false);
-+
- 	if (!ieee80211_set_channel_type(local, sdata, channel_type))
- 		return -EBUSY;
- 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 3729296..a2bef0c 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -526,4 +526,18 @@ static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
- 	return ret;
- }
- 
-+static inline int drv_radar_detection(struct ieee80211_local *local, int enable)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	might_sleep();
-+
-+	trace_drv_radar_detection(local, enable);
-+	if (local->ops->radar_detection)
-+		ret = local->ops->radar_detection(&local->hw, enable);
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 520fe24..aa2c833 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -1150,6 +1150,27 @@ DEFINE_EVENT(local_only_evt, api_remain_on_channel_expired,
- 	TP_ARGS(local)
- );
- 
-+TRACE_EVENT(drv_radar_detection,
-+	TP_PROTO(struct ieee80211_local *local, int enable),
-+
-+	TP_ARGS(local, enable),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(int, enable)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->enable = enable;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " enable:%d",
-+		LOCAL_PR_ARG, __entry->enable
-+	)
-+);
-+
- /*
-  * Tracing for internal functions
-  * (which may also be called in response to driver calls)
--- 
-1.7.2.3
+As I have an ath5k wifi device (but I am not affected) on one of my
+machines, I could test also.
+
+Hey, Nick :-)
+You promised to send a fix to linux-wireless ML (hope, I didn't oversee it).
+
+Raphael, might be good to wait for the promised patch?
+
+- Sedat -
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=27382#c32
+[2] http://www.kernel.org/pub/linux/kernel/people/mickflemm/fastchanfix.patch
