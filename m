@@ -1,207 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18372 "EHLO mx1.redhat.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:41145 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753793Ab1B1Ndo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 08:33:44 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 2/5] iwlegacy: fix dma mappings and skbs leak
-Date: Mon, 28 Feb 2011 14:33:14 +0100
-Message-Id: <1298899997-2372-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
-References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
+	id S1754570Ab1BMXpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Feb 2011 18:45:43 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: sedat.dilek@gmail.com
+Subject: Re: 2.6.38-rc4-git5: Reported regressions from 2.6.37
+Date: Mon, 14 Feb 2011 00:45:05 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Nicolas Stransky <Nico@stransky.cx>, sgh@sgh.dk,
+	John Linville <linville@tuxdriver.com>
+References: <NMZS1i37KEE.A.1eG.6_wVNB@chimera> <AANLkTikk_1ywKCMkRgRR20h3ApEhc3kdErMDBx9c9T2f@mail.gmail.com> <AANLkTinQnH7YEeuHj3zAZo1RReXSxcQqUxTw1ocTp4R2@mail.gmail.com>
+In-Reply-To: <AANLkTinQnH7YEeuHj3zAZo1RReXSxcQqUxTw1ocTp4R2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201102140045.05455.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix possible dma mappings and skbs introduced by commit
-470058e0ad82fcfaaffd57307d8bf8c094e8e9d7 "iwlwifi: avoid Tx queue
-memory allocation in interface down".
+On Sunday, February 13, 2011, Sedat Dilek wrote:
+> On Sun, Feb 13, 2011 at 12:07 PM, Sedat Dilek
+> <sedat.dilek@googlemail.com> wrote:
+> > On Sat, Feb 12, 2011 at 11:57 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> This message contains a list of some regressions from 2.6.37,
+> >> for which there are no fixes in the mainline known to the tracking team.
+> >> If any of them have been fixed already, please let us know.
+> >>
+> >> If you know of any other unresolved regressions from 2.6.37, please let us
+> >> know either and we'll add them to the list.  Also, please let us know
+> >> if any of the entries below are invalid.
+> >>
+> >> Each entry from the list will be sent additionally in an automatic reply
+> >> to this message with CCs to the people involved in reporting and handling
+> >> the issue.
+> >>
+> >>
+> >> Listed regressions statistics:
+> >>
+> >>  Date          Total  Pending  Unresolved
+> >>  ----------------------------------------
+> >>  2011-02-12       39       20          18
+> >>  2011-02-03       19       11           7
+> >>
+> >>
+> >> Unresolved regressions
+> >> ----------------------
+> >
+> >> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=27382
+> >> Subject         : ath5k phy0: gain calibration timeout
+> >> Submitter       : Nicolas Stransky <Nico@stransky.cx>
+> >> Date            : 2011-01-23 00:18 (21 days old)
+> >>
+> >
+> > As I looked into the BR #27382...
+> > The patch by Nick Kossifidis from comment #32 (see [1] and [2]) fixed
+> > the problem for two affected users.
+> >
+> > As I have an ath5k wifi device (but I am not affected) on one of my
+> > machines, I could test also.
+> >
+> > Hey, Nick :-)
+> > You promised to send a fix to linux-wireless ML (hope, I didn't oversee it).
+> >
+> > Raphael, might be good to wait for the promised patch?
+> >
+> > - Sedat -
+> >
+> > [1] https://bugzilla.kernel.org/show_bug.cgi?id=27382#c32
+> > [2] http://www.kernel.org/pub/linux/kernel/people/mickflemm/fastchanfix.patch
+> >
+> 
+> Oops, shame on me... Nick's patch was already sent to l-w ML.
+> 
+> See "[PATCH] ath5k: Fix fast channel switching" [1].
+> 
+> Raphael, can you add the reference to the patch to the entry/list?
+> Thanks.
+> 
+> The patch is already in linux-next [2], but I am not sure if it is in
+> Linus-tree, already.
+> 
+> - Sedat -
+> 
+> [1] https://patchwork.kernel.org/patch/530811/
+> [2] http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commit;h=c210de8f88215db31cf3529c9763fc3124d6e09d
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-4965-tx.c |   12 ++++-
- drivers/net/wireless/iwlegacy/iwl-core.h    |    2 +
- drivers/net/wireless/iwlegacy/iwl-tx.c      |   75 +++++++++++++++++---------
- 3 files changed, 62 insertions(+), 27 deletions(-)
+Updated status information, thanks.
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-index 829db91..5c40502 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-@@ -698,7 +698,7 @@ void iwl4965_txq_ctx_reset(struct iwl_priv *priv)
-  */
- void iwl4965_txq_ctx_stop(struct iwl_priv *priv)
- {
--	int ch;
-+	int ch, txq_id;
- 	unsigned long flags;
- 
- 	/* Turn off all Tx DMA fifos */
-@@ -719,6 +719,16 @@ void iwl4965_txq_ctx_stop(struct iwl_priv *priv)
- 					FH_TSSR_TX_STATUS_REG));
- 	}
- 	spin_unlock_irqrestore(&priv->lock, flags);
-+
-+	if (!priv->txq)
-+		return;
-+
-+	/* Unmap DMA from host system and free skb's */
-+	for (txq_id = 0; txq_id < priv->hw_params.max_txq_num; txq_id++)
-+		if (txq_id == priv->cmd_queue)
-+			iwl_legacy_cmd_queue_unmap(priv);
-+		else
-+			iwl_legacy_tx_queue_unmap(priv, txq_id);
- }
- 
- /*
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.h b/drivers/net/wireless/iwlegacy/iwl-core.h
-index c6d12d7..f03b463 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.h
-@@ -388,6 +388,7 @@ void iwl_legacy_rx_reply_error(struct iwl_priv *priv,
- /*****************************************************
- * RX
- ******************************************************/
-+void iwl_legacy_cmd_queue_unmap(struct iwl_priv *priv);
- void iwl_legacy_cmd_queue_free(struct iwl_priv *priv);
- int iwl_legacy_rx_queue_alloc(struct iwl_priv *priv);
- void iwl_legacy_rx_queue_update_write_ptr(struct iwl_priv *priv,
-@@ -415,6 +416,7 @@ int iwl_legacy_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- void iwl_legacy_tx_queue_reset(struct iwl_priv *priv,
- 			struct iwl_tx_queue *txq,
- 			int slots_num, u32 txq_id);
-+void iwl_legacy_tx_queue_unmap(struct iwl_priv *priv, int txq_id);
- void iwl_legacy_tx_queue_free(struct iwl_priv *priv, int txq_id);
- void iwl_legacy_setup_watchdog(struct iwl_priv *priv);
- /*****************************************************
-diff --git a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
-index 7db8340..a227773 100644
---- a/drivers/net/wireless/iwlegacy/iwl-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-tx.c
-@@ -82,6 +82,24 @@ iwl_legacy_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- EXPORT_SYMBOL(iwl_legacy_txq_update_write_ptr);
- 
- /**
-+ * iwl_legacy_tx_queue_unmap -  Unmap any remaining DMA mappings and free skb's
-+ */
-+void iwl_legacy_tx_queue_unmap(struct iwl_priv *priv, int txq_id)
-+{
-+	struct iwl_tx_queue *txq = &priv->txq[txq_id];
-+	struct iwl_queue *q = &txq->q;
-+
-+	if (q->n_bd == 0)
-+		return;
-+
-+	while (q->write_ptr != q->read_ptr) {
-+		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
-+		q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd);
-+	}
-+}
-+EXPORT_SYMBOL(iwl_legacy_tx_queue_unmap);
-+
-+/**
-  * iwl_legacy_tx_queue_free - Deallocate DMA queue.
-  * @txq: Transmit queue to deallocate.
-  *
-@@ -92,17 +110,10 @@ EXPORT_SYMBOL(iwl_legacy_txq_update_write_ptr);
- void iwl_legacy_tx_queue_free(struct iwl_priv *priv, int txq_id)
- {
- 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
--	struct iwl_queue *q = &txq->q;
- 	struct device *dev = &priv->pci_dev->dev;
- 	int i;
- 
--	if (q->n_bd == 0)
--		return;
--
--	/* first, empty all BD's */
--	for (; q->write_ptr != q->read_ptr;
--	     q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd))
--		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
-+	iwl_legacy_tx_queue_unmap(priv, txq_id);
- 
- 	/* De-alloc array of command/tx buffers */
- 	for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
-@@ -129,39 +140,33 @@ void iwl_legacy_tx_queue_free(struct iwl_priv *priv, int txq_id)
- EXPORT_SYMBOL(iwl_legacy_tx_queue_free);
- 
- /**
-- * iwl_legacy_cmd_queue_free - Deallocate DMA queue.
-- * @txq: Transmit queue to deallocate.
-- *
-- * Empty queue by removing and destroying all BD's.
-- * Free all buffers.
-- * 0-fill, but do not free "txq" descriptor structure.
-+ * iwl_cmd_queue_unmap - Unmap any remaining DMA mappings from command queue
-  */
--void iwl_legacy_cmd_queue_free(struct iwl_priv *priv)
-+void iwl_legacy_cmd_queue_unmap(struct iwl_priv *priv)
- {
- 	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
- 	struct iwl_queue *q = &txq->q;
--	struct device *dev = &priv->pci_dev->dev;
--	int i;
- 	bool huge = false;
-+	int i;
- 
- 	if (q->n_bd == 0)
- 		return;
- 
--	for (; q->read_ptr != q->write_ptr;
--	     q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd)) {
-+	while (q->read_ptr != q->write_ptr) {
- 		/* we have no way to tell if it is a huge cmd ATM */
- 		i = iwl_legacy_get_cmd_index(q, q->read_ptr, 0);
- 
--		if (txq->meta[i].flags & CMD_SIZE_HUGE) {
-+		if (txq->meta[i].flags & CMD_SIZE_HUGE)
- 			huge = true;
--			continue;
--		}
-+		else
-+			pci_unmap_single(priv->pci_dev,
-+					 dma_unmap_addr(&txq->meta[i], mapping),
-+					 dma_unmap_len(&txq->meta[i], len),
-+					 PCI_DMA_BIDIRECTIONAL);
- 
--		pci_unmap_single(priv->pci_dev,
--				 dma_unmap_addr(&txq->meta[i], mapping),
--				 dma_unmap_len(&txq->meta[i], len),
--				 PCI_DMA_BIDIRECTIONAL);
-+		q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd);
- 	}
-+
- 	if (huge) {
- 		i = q->n_window;
- 		pci_unmap_single(priv->pci_dev,
-@@ -169,6 +174,24 @@ void iwl_legacy_cmd_queue_free(struct iwl_priv *priv)
- 				 dma_unmap_len(&txq->meta[i], len),
- 				 PCI_DMA_BIDIRECTIONAL);
- 	}
-+}
-+EXPORT_SYMBOL(iwl_legacy_cmd_queue_unmap);
-+
-+/**
-+ * iwl_legacy_cmd_queue_free - Deallocate DMA queue.
-+ * @txq: Transmit queue to deallocate.
-+ *
-+ * Empty queue by removing and destroying all BD's.
-+ * Free all buffers.
-+ * 0-fill, but do not free "txq" descriptor structure.
-+ */
-+void iwl_legacy_cmd_queue_free(struct iwl_priv *priv)
-+{
-+	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
-+	struct device *dev = &priv->pci_dev->dev;
-+	int i;
-+
-+	iwl_legacy_cmd_queue_unmap(priv);
- 
- 	/* De-alloc array of command/tx buffers */
- 	for (i = 0; i <= TFD_CMD_SLOTS; i++)
--- 
-1.7.1
-
+Rafael
