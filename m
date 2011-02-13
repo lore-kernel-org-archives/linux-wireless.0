@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:35077 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328Ab1BBLB2 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53137 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790Ab1BMR5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 06:01:28 -0500
-Received: by pzk35 with SMTP id 35so1206132pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Feb 2011 03:01:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87r5btdsb8.fsf@purkki.adurom.net>
-References: <4D45A583.3060605@davizone.at>
-	<4D45B7B2.40001@davizone.at>
-	<87r5btdsb8.fsf@purkki.adurom.net>
-Date: Wed, 2 Feb 2011 13:01:27 +0200
-Message-ID: <AANLkTimto_rYQfePQG8d2wJHeHwyoFSZLO_U4o+-ro=F@mail.gmail.com>
-Subject: Re: [PATCH 00/18] wl1251: feature ports / monitor mode / packet injection
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: David Gnedt <david.gnedt@davizone.at>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
-	Yuri Ershov <ext-yuri.ershov@nokia.com>,
-	Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 13 Feb 2011 12:57:50 -0500
+Received: by mail-iw0-f174.google.com with SMTP id 9so4086972iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 09:57:50 -0800 (PST)
+From: "Nathaniel J. Smith" <njs@pobox.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, "Nathaniel J. Smith" <njs@pobox.com>
+Subject: [PATCH 5/5] iwlwifi: make current tx queue sizes visible in debugfs
+Date: Sun, 13 Feb 2011 09:56:43 -0800
+Message-Id: <1297619803-2832-7-git-send-email-njs@pobox.com>
+In-Reply-To: <1297619803-2832-1-git-send-email-njs@pobox.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Nathaniel J. Smith <njs@pobox.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-On Mon, Jan 31, 2011 at 5:08 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> Hi David,
->
-> David Gnedt <david.gnedt@davizone.at> writes:
->
->> Patch 01-03 fix some bugs.
->> Patch 04-09 contain some feature ports from Maemo Fremantle and wl1271.
->> Patch 10-18 implement (mainly) monitor mode and packet injection.
->
-> How did you test the patches? For example, what hardware did you use
-> etc.
->
-> About the code from fremantle kernels. Few weeks ago nokia sent me
-> privately the original patches from their internal git tree, I gave
-> some comments and never heard back. So, in theory I should have all
-> the fremantle patches somewhere in my email archives. I would just
-> need to clean them up and send them here. I'll go over your patches
-> and let's see what we should do.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index bc7a965..31c58fe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -980,7 +980,7 @@ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
+ 	int pos = 0;
+ 	int cnt;
+ 	int ret;
+-	const size_t bufsz = sizeof(char) * 64 *
++	const size_t bufsz = sizeof(char) * 128 *
+ 				priv->cfg->base_params->num_of_queues;
+ 
+ 	if (!priv->txq) {
+@@ -995,9 +995,11 @@ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
+ 		txq = &priv->txq[cnt];
+ 		q = &txq->q;
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+-				"hwq %.2d: read=%u write=%u stop=%d"
++				"hwq %.2d: read=%u write=%u"
++				" high_mark=%u stop=%d"
+ 				" swq_id=%#.2x (ac %d/hwq %d)\n",
+ 				cnt, q->read_ptr, q->write_ptr,
++				atomic_read(&q->high_mark),
+ 				!!test_bit(cnt, priv->queue_stopped),
+ 				txq->swq_id, txq->swq_id & 3,
+ 				(txq->swq_id >> 2) & 0x1f);
+-- 
+1.7.1
 
-I was the one trying to organize this, Luciano managed this from Nokia
-side and Yuri (CCed) did the porting to newer kernels. However several
-patches were missing attribution and things somehow got stuck there.
-
-As for this series, I'll try to test them on pandora hardware over this week.
