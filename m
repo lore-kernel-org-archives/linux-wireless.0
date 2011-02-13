@@ -1,48 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web161612.mail.bf1.yahoo.com ([98.139.211.134]:38468 "HELO
-	web161612.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752728Ab1BJMvq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 07:51:46 -0500
-Message-ID: <456817.14949.qm@web161612.mail.bf1.yahoo.com>
-Date: Thu, 10 Feb 2011 04:45:06 -0800 (PST)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Advise on how to integrate latest bluetooth updates on linux 2.6.35 kernel
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jean RegisXFerraton <jean.regisx.ferraton@intel.com>
-Cc: "marcel@holtmann.org" <marcel@holtmann.org>
-In-Reply-To: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F56AFD4@irsmsx501.ger.corp.intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37791 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab1BMLVS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Feb 2011 06:21:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <AANLkTikk_1ywKCMkRgRR20h3ApEhc3kdErMDBx9c9T2f@mail.gmail.com>
+References: <NMZS1i37KEE.A.1eG.6_wVNB@chimera>
+	<AANLkTikk_1ywKCMkRgRR20h3ApEhc3kdErMDBx9c9T2f@mail.gmail.com>
+Date: Sun, 13 Feb 2011 12:21:17 +0100
+Message-ID: <AANLkTinQnH7YEeuHj3zAZo1RReXSxcQqUxTw1ocTp4R2@mail.gmail.com>
+Subject: Re: 2.6.38-rc4-git5: Reported regressions from 2.6.37
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Nicolas Stransky <Nico@stransky.cx>, sgh@sgh.dk,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm working in the bluetooth part in a project based on the
-> 2.6.35 linux kernel.
-> 
-> We've found some bugs related to bluetooth, and I've seen
-> that most of these bugs have been solved by latest releases
-> (2.6.36 and 2.6.37).
-> 
-> To implement these modifications, I have the following
-> options:
-> 
-> 1- Implement all the patches one by one
-> 2- Use the bluetooth modules (*.ko) included in the latest
-> compat-wireless release
-> 3- Overwrite the bluetooth source files in the kernel with
-> the ones coming from compat-wireless �and rebuild
-> 
-> In my opinion, the 2nd solution seems the cleaner and
-> easier way to achieve this. Could you advise me about the
-> best way to proceed?
-> Thanks
-> 
-> Regards
+On Sun, Feb 13, 2011 at 12:07 PM, Sedat Dilek
+<sedat.dilek@googlemail.com> wrote:
+> On Sat, Feb 12, 2011 at 11:57 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> This message contains a list of some regressions from 2.6.37,
+>> for which there are no fixes in the mainline known to the tracking team.
+>> If any of them have been fixed already, please let us know.
+>>
+>> If you know of any other unresolved regressions from 2.6.37, please let us
+>> know either and we'll add them to the list.  Also, please let us know
+>> if any of the entries below are invalid.
+>>
+>> Each entry from the list will be sent additionally in an automatic reply
+>> to this message with CCs to the people involved in reporting and handling
+>> the issue.
+>>
+>>
+>> Listed regressions statistics:
+>>
+>>  Date          Total  Pending  Unresolved
+>>  ----------------------------------------
+>>  2011-02-12       39       20          18
+>>  2011-02-03       19       11           7
+>>
+>>
+>> Unresolved regressions
+>> ----------------------
+>
+>> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=27382
+>> Subject         : ath5k phy0: gain calibration timeout
+>> Submitter       : Nicolas Stransky <Nico@stransky.cx>
+>> Date            : 2011-01-23 00:18 (21 days old)
+>>
+>
+> As I looked into the BR #27382...
+> The patch by Nick Kossifidis from comment #32 (see [1] and [2]) fixed
+> the problem for two affected users.
+>
+> As I have an ath5k wifi device (but I am not affected) on one of my
+> machines, I could test also.
+>
+> Hey, Nick :-)
+> You promised to send a fix to linux-wireless ML (hope, I didn't oversee it).
+>
+> Raphael, might be good to wait for the promised patch?
+>
+> - Sedat -
+>
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=27382#c32
+> [2] http://www.kernel.org/pub/linux/kernel/people/mickflemm/fastchanfix.patch
+>
 
-Compat-wireless is your best bet. Noninvasive solution to your problem.
+Oops, shame on me... Nick's patch was already sent to l-w ML.
 
-Walter
+See "[PATCH] ath5k: Fix fast channel switching" [1].
 
+Raphael, can you add the reference to the patch to the entry/list?
+Thanks.
 
-      
+The patch is already in linux-next [2], but I am not sure if it is in
+Linus-tree, already.
+
+- Sedat -
+
+[1] https://patchwork.kernel.org/patch/530811/
+[2] http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commit;h=c210de8f88215db31cf3529c9763fc3124d6e09d
