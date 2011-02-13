@@ -1,53 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2652 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752311Ab1BUIDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 03:03:32 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org, kernel@lists.fedoraproject.org
-Cc: Kyle McMartin <kmcmartin@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2.6.35] iwl3945: remove plcp check
-Date: Mon, 21 Feb 2011 09:03:36 +0100
-Message-Id: <1298275416-3871-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:36491 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932Ab1BMObe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Feb 2011 09:31:34 -0500
+Received: by bwz15 with SMTP id 15so4697493bwz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 06:31:33 -0800 (PST)
+From: Jordi Pujol <jordipujolp@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] rt2x00: synchronize transmission routines
+Date: Sun, 13 Feb 2011 15:31:29 +0100
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_Bt+VN0iS9l5r2Jn"
+Message-Id: <201102131531.29984.jordipujolp@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit c91d01556f52255a31575be0cb1981c92a2a5028 upstream.
+--Boundary-00=_Bt+VN0iS9l5r2Jn
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-Patch fixes:
-https://bugzilla.redhat.com/show_bug.cgi?id=654599
+Hello,
 
-Many users report very low speed problem on 3945 devices,
-this patch fixes problem, but only for some of them.
+This patch will synchronize the transmission routines of rt2x00lib to avoid 
+processing interferences in systems with multiple execution threads.
+Has been tested on an AMD 64 X2 6000 running Debian unstable
+and a custom x86_64 kernel at version 2.6.37
+The Wireless adapter is a D-Link USB,
+ ID 07d1:3c03 D-Link System AirPlus G DWL-G122 Wireless Adapter(rev.C1) 
+[Ralink RT73]
 
-For unknown reason, sometimes after hw scanning, device is not able
-to receive frames at high rate. Since plcp health check may request
-hw scan to "reset radio", performance problem start to be observable
-after update kernel to .35, where plcp check was introduced.
+Now It works a lot better.
 
-Bug reporter confirmed that removing plcp check fixed problem for him.
+*** BEGIN PATCH
+ rt2x00: synchonize transmission_done routines
 
-Reported-and-tested-by: SilvioTO <silviotoya@yahoo.it>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Signed-off-by: Jordi Pujol <jordipujolp AT gmail DOT com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 2a9480d..7b4fc94 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2837,7 +2837,6 @@ static struct iwl_lib_ops iwl3945_lib = {
- 	.config_ap = iwl3945_config_ap,
- 	.manage_ibss_station = iwl3945_manage_ibss_station,
- 	.recover_from_tx_stall = iwl_bg_monitor_recover,
--	.check_plcp_health = iwl3945_good_plcp_health,
+--- linux-2.6.37-old/drivers/net/wireless/rt2x00/rt2x00dev.c	2011-01-05 
+01:50:19.000000000 +0100
++++ linux-2.6.37/drivers/net/wireless/rt2x00/rt2x00dev.c	2011-02-12 
+14:59:58.043409531 +0100
+@@ -258,6 +258,11 @@ void rt2x00lib_dmadone(struct queue_entr
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_dmadone);
  
- 	.debugfs_ops = {
- 		.rx_stats_read = iwl3945_ucode_rx_stats_read,
--- 
-1.7.1
++/*
++ * rt2x00lib_txdone_mutex: synchonize rt2x00lib_txdone
++ */
++static DEFINE_MUTEX(rt2x00lib_txdone_mutex);
++
+ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		      struct txdone_entry_desc *txdesc)
+ {
+@@ -271,6 +276,8 @@ void rt2x00lib_txdone(struct queue_entry
+ 	unsigned int i;
+ 	bool success;
+ 
++	mutex_lock(&rt2x00lib_txdone_mutex);
++
+ 	/*
+ 	 * Unmap the skb.
+ 	 */
+@@ -415,6 +422,8 @@ void rt2x00lib_txdone(struct queue_entry
+ 	 */
+ 	if (!rt2x00queue_threshold(entry->queue))
+ 		ieee80211_wake_queue(rt2x00dev->hw, qid);
++
++	mutex_unlock(&rt2x00lib_txdone_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
+ 
+@@ -486,6 +486,11 @@ static int rt2x00lib_rxdone_read_signal(
+ 	return 0;
+ }
+ 
++/*
++ * rt2x00lib_rxdone_mutex: synchonize rt2x00lib_rxdone
++ */
++static DEFINE_MUTEX(rt2x00lib_rxdone_mutex);
++
+ void rt2x00lib_rxdone(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -495,6 +500,8 @@ void rt2x00lib_rxdone(struct queue_entry
+ 	unsigned int header_length;
+ 	int rate_idx;
+ 
++	mutex_lock(&rt2x00lib_rxdone_mutex);
++
+ 	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
+ 		goto submit_entry;
+ 
+@@ -582,6 +589,8 @@ submit_entry:
+ 	rt2x00dev->ops->lib->clear_entry(entry);
+ 	rt2x00queue_index_inc(entry->queue, Q_INDEX);
+ 	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
++
++	mutex_unlock(&rt2x00lib_rxdone_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_rxdone);
+ 
+*** END PATCH
 
+Kind regards,
+
+Jordi Pujol
+
+Live never ending Tale
+GNU/Linux Live forever!
+http://livenet.selfip.com
+
+--Boundary-00=_Bt+VN0iS9l5r2Jn
+Content-Type: text/x-patch;
+  charset="UTF-8";
+  name="rt2x00lib_transmission_done_synchronize.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="rt2x00lib_transmission_done_synchronize.patch"
+
+ rt2x00: synchonize transmission_done routines
+
+Signed-off-by: Jordi Pujol <jordipujolp AT gmail DOT com>
+
+--- linux-2.6.37-old/drivers/net/wireless/rt2x00/rt2x00dev.c	2011-01-05 01:50:19.000000000 +0100
++++ linux-2.6.37/drivers/net/wireless/rt2x00/rt2x00dev.c	2011-02-12 14:59:58.043409531 +0100
+@@ -258,6 +258,11 @@ void rt2x00lib_dmadone(struct queue_entr
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_dmadone);
+ 
++/*
++ * rt2x00lib_txdone_mutex: synchonize rt2x00lib_txdone
++ */
++static DEFINE_MUTEX(rt2x00lib_txdone_mutex);
++
+ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		      struct txdone_entry_desc *txdesc)
+ {
+@@ -271,6 +276,8 @@ void rt2x00lib_txdone(struct queue_entry
+ 	unsigned int i;
+ 	bool success;
+ 
++	mutex_lock(&rt2x00lib_txdone_mutex);
++
+ 	/*
+ 	 * Unmap the skb.
+ 	 */
+@@ -415,6 +422,8 @@ void rt2x00lib_txdone(struct queue_entry
+ 	 */
+ 	if (!rt2x00queue_threshold(entry->queue))
+ 		ieee80211_wake_queue(rt2x00dev->hw, qid);
++
++	mutex_unlock(&rt2x00lib_txdone_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
+ 
+@@ -486,6 +486,11 @@ static int rt2x00lib_rxdone_read_signal(
+ 	return 0;
+ }
+ 
++/*
++ * rt2x00lib_rxdone_mutex: synchonize rt2x00lib_rxdone
++ */
++static DEFINE_MUTEX(rt2x00lib_rxdone_mutex);
++
+ void rt2x00lib_rxdone(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+@@ -495,6 +500,8 @@ void rt2x00lib_rxdone(struct queue_entry
+ 	unsigned int header_length;
+ 	int rate_idx;
+ 
++	mutex_lock(&rt2x00lib_rxdone_mutex);
++
+ 	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
+ 		goto submit_entry;
+ 
+@@ -582,6 +589,8 @@ submit_entry:
+ 	rt2x00dev->ops->lib->clear_entry(entry);
+ 	rt2x00queue_index_inc(entry->queue, Q_INDEX);
+ 	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
++
++	mutex_unlock(&rt2x00lib_rxdone_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_rxdone);
+ 
+
+--Boundary-00=_Bt+VN0iS9l5r2Jn--
