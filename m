@@ -1,77 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64027 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750858Ab1BHIcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 03:32:09 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/5] iwlwifi: cleanup iwl_recover_from_statistics
-Date: Tue,  8 Feb 2011 09:31:55 +0100
-Message-Id: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:52342 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751865Ab1BNX7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 18:59:39 -0500
+Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTimjkFJrWpubECRRNybmvYdcAh3UUbMOa0iv166g@mail.gmail.com> (sfid-20110215_004511_709733_4814F921)
+References: <1297725710.5683.17.camel@maggie>
+	 <AANLkTimjkFJrWpubECRRNybmvYdcAh3UUbMOa0iv166g@mail.gmail.com>
+	 (sfid-20110215_004511_709733_4814F921)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Feb 2011 00:59:29 +0100
+Message-ID: <1297727969.5683.21.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No functional change, make recover from statistics code
-easies to read.
+On Tue, 2011-02-15 at 00:44 +0100, Rafał Miłecki wrote: 
+> 2011/2/15 Michael Büsch <mb@bu3sch.de>:
+> > ssb_wait_bit was designed for only one-bit bitmasks.
+> > People start using it for multi-bit bitmasks. Make the "set" case
+> > is safe for this. The "unset" case is already safe.
+> 
+> Thanks :)
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c |   37 ++++++++++----------------------
- 1 files changed, 12 insertions(+), 25 deletions(-)
+This should not change the behavior of your patch, though,
+as you only add an "unset" case, which was already correct.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 87a6fd8..bc89393 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -234,33 +234,20 @@ EXPORT_SYMBOL(iwl_rx_spectrum_measure_notif);
- void iwl_recover_from_statistics(struct iwl_priv *priv,
- 				struct iwl_rx_packet *pkt)
- {
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
-+	    !iwl_is_any_associated(priv))
- 		return;
--	if (iwl_is_any_associated(priv)) {
--		if (priv->cfg->ops->lib->check_ack_health) {
--			if (!priv->cfg->ops->lib->check_ack_health(
--			    priv, pkt)) {
--				/*
--				 * low ack count detected
--				 * restart Firmware
--				 */
--				IWL_ERR(priv, "low ack count detected, "
--					"restart firmware\n");
--				if (!iwl_force_reset(priv, IWL_FW_RESET, false))
--					return;
--			}
--		}
--		if (priv->cfg->ops->lib->check_plcp_health) {
--			if (!priv->cfg->ops->lib->check_plcp_health(
--			    priv, pkt)) {
--				/*
--				 * high plcp error detected
--				 * reset Radio
--				 */
--				iwl_force_reset(priv, IWL_RF_RESET, false);
--			}
--		}
-+
-+	if (priv->cfg->ops->lib->check_ack_health &&
-+	    !priv->cfg->ops->lib->check_ack_health(priv, pkt)) {
-+		IWL_ERR(priv, "low ack count detected, restart firmware\n");
-+		if (!iwl_force_reset(priv, IWL_FW_RESET, false))
-+			return;
- 	}
-+
-+	if (priv->cfg->ops->lib->check_plcp_health &&
-+	    !priv->cfg->ops->lib->check_plcp_health(priv, pkt))
-+		iwl_force_reset(priv, IWL_RF_RESET, false);
- }
- EXPORT_SYMBOL(iwl_recover_from_statistics);
- 
+So this doesn't fix an actual bug but rather hardens the code
+for future use.
+
 -- 
-1.7.1
+Greetings Michael.
 
