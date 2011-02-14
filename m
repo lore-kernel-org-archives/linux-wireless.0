@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:37337 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751833Ab1BVMcp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 07:32:45 -0500
+Received: from web161619.mail.bf1.yahoo.com ([98.139.211.141]:44172 "HELO
+	web161619.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751226Ab1BNSMe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 13:12:34 -0500
+Message-ID: <231638.53646.qm@web161619.mail.bf1.yahoo.com>
+Date: Mon, 14 Feb 2011 10:12:33 -0800 (PST)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Build Error Report(zd1211rw)
+To: linux-wireless@vger.kernel.org,
+	Masahiro Inoue <miyabi.-.inoue@nifty.com>
+In-Reply-To: <20110214101925.9EC3.2E210E2F@nifty.com>
 MIME-Version: 1.0
-In-Reply-To: <20110221202538.GK9650@tuxdriver.com>
-References: <20110217162650.092e77c3.sfr@canb.auug.org.au>
-	<20110218172536.970b5b39.randy.dunlap@oracle.com>
-	<20110221202538.GK9650@tuxdriver.com>
-Date: Tue, 22 Feb 2011 14:32:40 +0200
-Message-ID: <AANLkTi=M77+wuEa1Dc-+vA_-caY9p1Ft_5s4aQ7CDSjQ@mail.gmail.com>
-Subject: Re: [PATCH -next] wl12xx: fix sdio_test kconfig/build errors
-From: "Coelho, Luciano" <coelho@ti.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	akpm <akpm@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 21, 2011 at 10:25 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Luca, I'm merging this one...
+Support for kernels prior to 2.6.29 is currently not available for zd1211rw. Try older compat-wireless version or upgrade your kernel.
 
-Thanks, John!
+Walter.
 
--- 
-Cheers,
-Luca.
+
+> The build error occurs by compat-wireless-2011-02-12.
+> My kernel is 2.6.27. 
+> 
+>   CC [M] 
+> /home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.o
+> /home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.c:
+> In function 'zd_mac_config_beacon':
+> /home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.c:781:
+> error: implicit declaration of function
+> 'usb_queue_reset_device'
+> make[4]: ***
+> [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.o]
+> Error 1
+> make[3]: ***
+> [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw]
+> Error 2
+> make[2]: ***
+> [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless]
+> Error 2
+> make[1]: ***
+> [_module_/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12]
+> Error 2
+> make[1]: Leaving directory
+> `/usr/src/kernels/2.6.27-67vl5-x86_64'
+> make: *** [modules] Error 2
+
+
+
+      
