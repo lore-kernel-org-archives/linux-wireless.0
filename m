@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6886 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755077Ab1BCSyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 13:54:11 -0500
-Subject: Re: [PATCH 0/3] libertas_spi fixes
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Vasily Khoruzhick <anarsoul@gmail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Colin McCabe <colin@cozybit.com>,
-	Marek Vasut <marek.vasut@gmail.com>
-Date: Thu, 03 Feb 2011 12:54:52 -0600
-In-Reply-To: <20110131195227.GB3065@tuxdriver.com>
-References: <1295642690-16646-1-git-send-email-anarsoul@gmail.com>
-	 <20110131195227.GB3065@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1296759294.9471.0.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:47226 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755202Ab1BNNUk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 08:20:40 -0500
+Received: by bwz15 with SMTP id 15so5452752bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 05:20:38 -0800 (PST)
+From: Jordi Pujol <jordipujolp@gmail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: synchronize transmission routines
+Date: Mon, 14 Feb 2011 14:20:30 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201102131531.29984.jordipujolp@gmail.com> <AANLkTik0rEeK6qSc7rWxqDKicdNDEaH=ne+ODS+WwHQx@mail.gmail.com> <201102141157.51656.jordipujolp@gmail.com>
+In-Reply-To: <201102141157.51656.jordipujolp@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201102141420.30383.jordipujolp@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-01-31 at 14:52 -0500, John W. Linville wrote:
-> On Fri, Jan 21, 2011 at 10:44:47PM +0200, Vasily Khoruzhick wrote:
-> > This series attempts to fix libertas_spi bug (it calls functions that
-> > may sleep from atomic context) and add pm support to libertas_spi.
-> > Tested on Zipit Z2 device.
+A Dilluns 14 Febrer 2011 11:57:51, Jordi Pujol va escriure:
+> > Could you try the compat-wireless package? There are a lot
+> > of queue-related patches in there which were submitted after 2.6.37.
 > 
-> Are the libertas folks OK with this series?
+> this afternoon will try that,
 
-1 & 2 yes, I'll ack them if you like.  But I think we were waiting on a
-response from Vasily about #3, specifically Marek's question about "can
-this be done from the resume handler instead of a workqueue".
+Yes, compat-wireless (yesterday version level) works well and has good 
+performance also,
+Observing that there is a lot of new code about queue management,
 
-Dan
+Jordi Pujol
 
-
+Live never ending Tale
+GNU/Linux Live forever!
+http://livenet.selfip.com
