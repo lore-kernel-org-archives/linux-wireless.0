@@ -1,70 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:15286 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005Ab1BRXQA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 18:16:00 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000022484.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:15:22 +0200
-Subject: Re: [RFC] AI support (13/14 ssb add AI support)
-From: George Kashperko <george@znau.edu.ua>
-To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>
-In-Reply-To: <1298069145.23801.29.camel@maggie>
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
-	 <1297981882.23381.38.camel@dev.znau.edu.ua>
-	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>
-Content-Type: text/plain
-Date: Sat, 19 Feb 2011 01:07:23 +0200
-Message-Id: <1298070443.25739.23.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:14039 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753647Ab1BNNqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 08:46:17 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 05:45:56 -0800
+Date: Mon, 14 Feb 2011 19:15:53 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: add monitor interface into PS disable list
+Message-ID: <20110214134553.GA31074@vmraj-lnx.users.atheros.com>
+References: <1297253799-9688-1-git-send-email-rmanoharan@atheros.com>
+ <1297685187.3785.30.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1297685187.3785.30.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Feb 14, 2011 at 05:36:27PM +0530, Johannes Berg wrote:
+> On Wed, 2011-02-09 at 17:46 +0530, Rajkumar Manoharan wrote:
+> > PS should be disabled in the presence of monitor interface.
+> 
+> I'm not really sure -- should it? You can have monitors with no flags to
+> do see what you're receiving locally, so I prefer the current behaviour.
+I just confued with multi-vif behaviour where we are disabling PS.
+> If you really want to monitor everything you pretty much need to
+> disconnect anyway, I think?
+Fine.
 
-> On Fri, 2011-02-18 at 00:31 +0200, George Kashperko wrote: 
-> > +#define SSB_AI_BASE			0x18100000U /* base for AI registers */
-> 
-> #define MOON_EARTH_BASE 1337
-> 
-> That probably is my major point against this patchset. It just
-> merges things that don't belong to each other.
-> Is this the base on moon or earth?
-> If it's the earth base, why the hell do we prefix the define with MOON?
-> 
-> That naming confusion continues throughout the whole patchset.
-> 
-> SSB is end of life, so we should not try to support the new AI hardware
-> by making SSB AI aware. Just fork SSB and let legacy SSB die as the
-> existing hardware dies. It deserves it. Mercy killing for software!
-> 
-> _Currently_ it may look like a good idea to use one software base
-> for the two busses, but the cruft will hurt you in the future.
-> And the future begins one day after this hack was merged.
-> 
-Well, if that was year ago I would agree with you. Now I doubt it.
-Starting from the clean page means another months of no support for
-AI-based hw. Going cp ssb bcmai; sed s/ssb/bcmai way will make whole
-messup. Making AI over SSB causing confusion.
-Either way here for me looks wrong, but among them I would better choose
-on going 1+3 rather just 1st one alone.
-Ah, well, there might is another 4th way to go if Broadcom will finally
-support their bus with their brand code but honestly (no offence to
-Broadcom here, just my personal subjective opinion) I dont think I will
-be happy to see this code after all that I've already seen.
-
-Clean page is the best. The best is the enemy for the good.
-
-Have nice day,
-George
-
-
+--
+Rajkumar
