@@ -1,101 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39627 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43242 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751717Ab1BWJlg (ORCPT
+	with ESMTP id S1755207Ab1BNOIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 04:41:36 -0500
-Subject: Re: [PATCH] mac80211: Fix a race on enabling power save.
+	Mon, 14 Feb 2011 09:08:19 -0500
+Subject: Re: [RFC v2 1/2] mac80211: add a function for setting the TIM bit
+ for a specific station
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi==e0fMRJQPC-++Vgx9H2iO5ruVzMDoVNhbppOz@mail.gmail.com>
-References: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
-	 <1298450837.3747.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTi==e0fMRJQPC-++Vgx9H2iO5ruVzMDoVNhbppOz@mail.gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, lrodriguez@atheros.com,
+	m.sujith@gmail.com
+In-Reply-To: <4D5936D8.3030906@openwrt.org>
+References: <1297207937-88528-1-git-send-email-nbd@openwrt.org>
+	 <1297685367.3785.33.camel@jlt3.sipsolutions.net>
+	 <4D5936D8.3030906@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Feb 2011 10:41:31 +0100
-Message-ID: <1298454091.3697.1.camel@jlt3.sipsolutions.net>
+Date: Mon, 14 Feb 2011 15:08:14 +0100
+Message-ID: <1297692494.3953.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-23 at 15:03 +0530, Vivek Natarajan wrote:
-> On Wed, Feb 23, 2011 at 2:17 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2011-02-23 at 13:04 +0530, Vivek Natarajan wrote:
-> >> There is a race on sending a data frame before the tx completion
-> >> of nullfunc frame for enabling power save. As the data quickly
-> >> follows the nullfunc frame, the AP thinks that the station is out
-> >> of power save and continues to send the frames. Whereas in the
-> >> station, the nullfunc ack will be processed after the tx completion
-> >> of data frame and mac80211 goes to powersave. Thus the power
-> >> save state mismatch between the station and the AP causes some
-> >> data loss and some applications fail because of that. This patch
-> >> fixes this issue.
-> >>
-> >> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> >> ---
-> >>  net/mac80211/mlme.c   |   14 +++++++++++++-
-> >>  net/mac80211/status.c |    2 --
-> >>  2 files changed, 13 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> >> index 7b3f9df..abb0116 100644
-> >> --- a/net/mac80211/mlme.c
-> >> +++ b/net/mac80211/mlme.c
-> >> @@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
-> >>               return;
-> >>
-> >>       if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-> >> -         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
-> >> +         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-> >> +             netif_tx_stop_all_queues(sdata->dev);
-> >> +             /*
-> >> +              * Flush all the frames queued in the driver before
-> >> +              * going to power save
-> >> +              */
-> >> +             drv_flush(local, false);
-> >>               ieee80211_send_nullfunc(local, sdata, 1);
-> >>
-> >> +             /* Flush once again to get the tx status of nullfunc frame */
-> >> +             drv_flush(local, false);
-> >> +     }
-> >> +
-> >>       if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
-> >>             (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
-> >>           (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
-> >> @@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
-> >>               local->hw.conf.flags |= IEEE80211_CONF_PS;
-> >>               ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-> >>       }
-> >> +
-> >> +     netif_tx_start_all_queues(sdata->dev);
-> >>  }
-> >>
-> >>  void ieee80211_dynamic_ps_timer(unsigned long data)
-> >> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-> >> index 010a559..8651851 100644
-> >> --- a/net/mac80211/status.c
-> >> +++ b/net/mac80211/status.c
-> >> @@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
-> >>               if (info->flags & IEEE80211_TX_STAT_ACK) {
-> >>                       local->ps_sdata->u.mgd.flags |=
-> >>                                       IEEE80211_STA_NULLFUNC_ACKED;
-> >> -                     ieee80211_queue_work(&local->hw,
-> >> -                                     &local->dynamic_ps_enable_work);
-> >
-> > Is the patch still correct if you don't remove this? I realise it won't
-> > usually be necessary, but I think we don't flush the TX status tasklet
-> > on flush right now so in theory there could be a race there that this
-> > code would clean up after, right?
-> 
-> If this is not removed, dynamic_ps_enable work would be queued once
-> again. And if a new frame is transmitted before this work is executed,
-> mac80211 tries to go to PS immediately in this work instead of
-> actually waiting for the dynamic_ps_timeout.
+On Mon, 2011-02-14 at 15:06 +0100, Felix Fietkau wrote:
+> On 2011-02-14 1:09 PM, Johannes Berg wrote:
+> > On Wed, 2011-02-09 at 00:32 +0100, Felix Fietkau wrote:
+> >> When a driver wants to buffer some frames internally without feeding them
+> >> back to mac80211, this allows it to still wake up the station
+> > 
+> > Why would the driver want to do this though?
+> If a station enters powersave and the AP still has buffered frames for
+> aggregation, those frames need to stay in the queue, since the driver
+> controls the block ack window and keeps some state per frame (e.g.
+> number of software retransmissions).
+> If ath9k would send those frames back to mac80211, and mac80211 would
+> drop some of them, then the client's reorder window would get messed up
+> when the client comes back. This would also make managing frame sequence
+> numbers more complicated, since the driver would have to skip assigning
+> sequence numbers for frames where tx_info->flags has the
+> IEEE80211_TX_INTFL_RETRANSMISSION bit set, but then also look for gaps
+> caused by expired frames.
 
-Ok, thanks for the clarification.
+Ok, that makes sense. In fact, I think iwlwifi will have the same issue
+since it buffers in hw queues... will have to check that.
 
 johannes
 
