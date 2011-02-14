@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932196Ab1BYPt0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 10:49:26 -0500
-Subject: Re: [PATCH 2/2] iwlagn: fix iwlagn_check_needed_chains
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	Swati Rallapalli <swati@cs.utexas.edu>
-In-Reply-To: <1298647873.28351.10.camel@wwguy-huron>
-References: <20110225112409.977212647@sipsolutions.net>
-	 <20110225112620.515442527@sipsolutions.net>
-	 <1298648166.2603.11.camel@wwguy-ubuntu>
-	 <1298648386.4329.18.camel@jlt3.sipsolutions.net>
-	 <1298647873.28351.10.camel@wwguy-huron>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:34750 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751799Ab1BNXWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 18:22:04 -0500
+Subject: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Feb 2011 16:49:21 +0100
-Message-ID: <1298648961.4329.19.camel@jlt3.sipsolutions.net>
+Date: Tue, 15 Feb 2011 00:21:50 +0100
+Message-ID: <1297725710.5683.17.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-02-25 at 07:31 -0800, Guy, Wey-Yi wrote:
-> On Fri, 2011-02-25 at 07:39 -0800, Johannes Berg wrote:
-> > On Fri, 2011-02-25 at 07:36 -0800, wwguy wrote:
-> > 
-> > > > @@ -503,7 +488,46 @@ static void iwlagn_check_needed_chains(s
-> > > >  			 * will soon tell us about that.
-> > > >  			 */
-> > > >  			need_multiple = false;
-> > > > +			rcu_read_unlock();
-> > > > +			break;
-> > > 
-> > > why unlock and break here instead stay do it later like before?
-> > 
-> > Only because the indentation there was getting so deep it was annoying
-> > to fit into 80 cols :-)
-> 
-> how you want to submit this patch? through iwlagn, or yo uwill send it
-> along with mac80211 to John?
+ssb_wait_bit was designed for only one-bit bitmasks.
+People start using it for multi-bit bitmasks. Make the "set" case
+is safe for this. The "unset" case is already safe.
 
-Don't really care. I just sent them both here to keep them together and
-for Daniel and Swati ... First though, I'd like them to test it maybe.
+This does not change behavior of the current code.
 
-johannes
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+Index: wireless-testing/drivers/ssb/main.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/main.c	2010-12-30 15:49:39.235946210 +0100
++++ wireless-testing/drivers/ssb/main.c	2011-02-15 00:17:35.727816704 +0100
+@@ -1192,10 +1192,10 @@ void ssb_device_enable(struct ssb_device
+ }
+ EXPORT_SYMBOL(ssb_device_enable);
+ 
+-/* Wait for a bit in a register to get set or unset.
++/* Wait for bitmask in a register to get set or cleared.
+  * timeout is in units of ten-microseconds */
+-static int ssb_wait_bit(struct ssb_device *dev, u16 reg, u32 bitmask,
+-			int timeout, int set)
++static int ssb_wait_bits(struct ssb_device *dev, u16 reg, u32 bitmask,
++			 int timeout, int set)
+ {
+ 	int i;
+ 	u32 val;
+@@ -1203,7 +1203,7 @@ static int ssb_wait_bit(struct ssb_devic
+ 	for (i = 0; i < timeout; i++) {
+ 		val = ssb_read32(dev, reg);
+ 		if (set) {
+-			if (val & bitmask)
++			if ((val & bitmask) == bitmask)
+ 				return 0;
+ 		} else {
+ 			if (!(val & bitmask))
+@@ -1227,8 +1227,8 @@ void ssb_device_disable(struct ssb_devic
+ 
+ 	reject = ssb_tmslow_reject_bitmask(dev);
+ 	ssb_write32(dev, SSB_TMSLOW, reject | SSB_TMSLOW_CLOCK);
+-	ssb_wait_bit(dev, SSB_TMSLOW, reject, 1000, 1);
+-	ssb_wait_bit(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
++	ssb_wait_bits(dev, SSB_TMSLOW, reject, 1000, 1);
++	ssb_wait_bits(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
+ 	ssb_write32(dev, SSB_TMSLOW,
+ 		    SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
+ 		    reject | SSB_TMSLOW_RESET |
+
+-- 
+Greetings Michael.
 
