@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43279 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754485Ab1BPM6N (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:59391 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753393Ab1BNLoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 07:58:13 -0500
-Received: by eye27 with SMTP id 27so730276eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 04:58:11 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: =?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	=?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-Subject: [PATCH 2/2] ssb: remove invalid define SSB_TMSLOW_PHYCLK
-Date: Wed, 16 Feb 2011 13:58:26 +0100
-Message-Id: <1297861106-18739-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1297861106-18739-1-git-send-email-zajec5@gmail.com>
-References: <1297861106-18739-1-git-send-email-zajec5@gmail.com>
+	Mon, 14 Feb 2011 06:44:23 -0500
+Received: by qyj19 with SMTP id 19so1318704qyj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 03:44:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <201102141157.51656.jordipujolp@gmail.com>
+References: <201102131531.29984.jordipujolp@gmail.com>
+	<201102141047.48790.jordipujolp@gmail.com>
+	<AANLkTik0rEeK6qSc7rWxqDKicdNDEaH=ne+ODS+WwHQx@mail.gmail.com>
+	<201102141157.51656.jordipujolp@gmail.com>
+Date: Mon, 14 Feb 2011 12:44:22 +0100
+Message-ID: <AANLkTik0h-eQTaXvSR7t0rsBiWjssvjromGR+-=dnErY@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: synchronize transmission routines
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Jordi Pujol <jordipujolp@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was incorrectly introduced in d2730b2a6a019d14455556019d744ab051e6554b. We
-have already fixed function to use correct define, but forgot remove old one.
+Hi,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Cc: Gábor Stefanik <netrolller.3d@gmail.com>
----
- include/linux/ssb/ssb_regs.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+>> >> Both rxdone as txdone are for USB devices on a singlethreaded
+>> >> workqueue. So it the work items will be scheduled only once...
+>
+> guess (maybe) the problem is in the usb workqueues, I have found also an
+> erratic behaviour in the usb mouse.
 
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index 489f7b6..01253c6 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -97,7 +97,6 @@
- #define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
- #define  SSB_TMSLOW_REJECT_22	0x00000002 /* Reject (Backplane rev 2.2) */
- #define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
--#define  SSB_TMSLOW_PHYCLK	0x00000010 /* MAC PHY Clock Control Enable */
- #define  SSB_TMSLOW_CLOCK	0x00010000 /* Clock Enable */
- #define  SSB_TMSLOW_FGC		0x00020000 /* Force Gated Clocks On */
- #define  SSB_TMSLOW_PE		0x40000000 /* Power Management Enable */
--- 
-1.7.1
+Even then, as soon as the USB fires the completion callback function,
+rt2x00 will schedule the txdone and rxdone handlers to the mac80211
+workqueue. So even when the USB layer has problems with the scheduling,
+the txdone and rxdone paths are not affected.
 
+>> Could you try the compat-wireless package? There are a lot
+>> of queue-related patches in there which were submitted after 2.6.37.
+>
+> this afternoon will try that,
+
+Ok
+
+Ivo
