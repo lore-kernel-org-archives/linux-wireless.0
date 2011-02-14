@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34066 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710Ab1BNLU0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59092 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752758Ab1BNVPa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 06:20:26 -0500
-Subject: mac80211: reply to directed probes in IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi <shafi.wireless@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 12:20:22 +0100
-Message-ID: <1297682422.3785.29.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 14 Feb 2011 16:15:30 -0500
+Date: Mon, 14 Feb 2011 16:05:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
+Message-ID: <20110214210516.GH2722@tuxdriver.com>
+References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1297677349.3785.3.camel@jlt3.sipsolutions.net>
+ <1297697139.4723.4.camel@wwguy-ubuntu>
+ <1297697334.3953.7.camel@jlt3.sipsolutions.net>
+ <1297698486.4723.15.camel@wwguy-ubuntu>
+ <1297698872.3953.8.camel@jlt3.sipsolutions.net>
+ <1297699053.4723.17.camel@wwguy-ubuntu>
+ <20110214201052.GE2722@tuxdriver.com>
+ <1297715460.4723.18.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297715460.4723.18.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Feb 14, 2011 at 12:31:00PM -0800, wwguy wrote:
+> On Mon, 2011-02-14 at 12:10 -0800, John W. Linville wrote:
+> > On Mon, Feb 14, 2011 at 07:57:33AM -0800, wwguy wrote:
+> > > On Mon, 2011-02-14 at 07:54 -0800, Johannes Berg wrote:
+> > > > On Mon, 2011-02-14 at 07:48 -0800, wwguy wrote:
+> > > > > On Mon, 2011-02-14 at 07:28 -0800, Johannes Berg wrote:
+> > > > > > On Mon, 2011-02-14 at 07:25 -0800, wwguy wrote:
+> > > > > > > On Mon, 2011-02-14 at 01:55 -0800, Johannes Berg wrote:
+> > > > > > > > On Thu, 2011-02-10 at 08:16 -0800, Wey-Yi Guy wrote:
+> > > > > > > > > remove plcp check for 3945, mark the function __maybe_unused
+> > > > > > > > 
+> > > > > > > > Why not remove the function instead?
+> > > > > > > > 
+> > > > > > > I guess we can remove it in legacy driver
+> > > > > > 
+> > > > > > But it's a 3945 specific function, and never used, so ...??
+> > > > > > 
+> > > > > I mean we should remove this function in legacy driver after driver
+> > > > > split
+> > > > 
+> > > > I just don't see why we can't remove it right now?
+> > > > 
+> > > we can do it for _stable, for mainstream, all 3945 will move to separate
+> > > driver anyway.
+> > 
+> > ...where it will still be unused.  No?
+> > 
+> we will remove it from our legacy driver
 
-WFA certification and the WMM spec require that we
-always reply to unicast probe requests, so do that.
+I don't really see any reason to wait, so let's just remove it now. :-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ibss.c	2011-02-14 11:22:15.000000000 +0100
-+++ wireless-testing/net/mac80211/ibss.c	2011-02-14 11:32:43.000000000 +0100
-@@ -664,12 +664,13 @@ static void ieee80211_sta_find_ibss(stru
- }
- 
- static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
--					struct ieee80211_mgmt *mgmt,
--					size_t len)
-+					struct sk_buff *req)
- {
-+	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(req);
-+	struct ieee80211_mgmt *mgmt = (void *)req->data;
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
--	int tx_last_beacon;
-+	int tx_last_beacon, len = req->len;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *resp;
- 	u8 *pos, *end;
-@@ -689,7 +690,7 @@ static void ieee80211_rx_mgmt_probe_req(
- 	       mgmt->bssid, tx_last_beacon);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 
--	if (!tx_last_beacon)
-+	if (!tx_last_beacon && !(rx_status->rx_flags & IEEE80211_RX_RA_MATCH))
- 		return;
- 
- 	if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
-@@ -786,7 +787,7 @@ void ieee80211_ibss_rx_queued_mgmt(struc
- 
- 	switch (fc & IEEE80211_FCTL_STYPE) {
- 	case IEEE80211_STYPE_PROBE_REQ:
--		ieee80211_rx_mgmt_probe_req(sdata, mgmt, skb->len);
-+		ieee80211_rx_mgmt_probe_req(sdata, skb);
- 		break;
- 	case IEEE80211_STYPE_PROBE_RESP:
- 		ieee80211_rx_mgmt_probe_resp(sdata, mgmt, skb->len,
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
