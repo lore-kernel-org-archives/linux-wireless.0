@@ -1,80 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50465 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753490Ab1BDAbT (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:52371 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274Ab1BNK2S convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 19:31:19 -0500
+	Mon, 14 Feb 2011 05:28:18 -0500
+Received: by wwa36 with SMTP id 36so4701485wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 02:28:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
- <s5haaid3xos.wl%tiwai@suse.de> <201102032009.17100.rjw@sisk.pl>
- <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
- <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com> <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 3 Feb 2011 16:30:56 -0800
-Message-ID: <AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-To: Dave Airlie <airlied@gmail.com>
-Cc: Carlos Mafra <crmafra2@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+In-Reply-To: <1297678357.3785.14.camel@jlt3.sipsolutions.net>
+References: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
+	<AANLkTimEDvmp2RbLXdOf8vRrjzBKd+rLwqoreX+x3EdB@mail.gmail.com>
+	<1297678357.3785.14.camel@jlt3.sipsolutions.net>
+Date: Mon, 14 Feb 2011 15:58:16 +0530
+Message-ID: <AANLkTimnx9sz0gUmzd1-yj7Y-CQh4MOQWYxe4=LfeStp@mail.gmail.com>
+Subject: Re: [RFC] mac80211: reply to directed probes in IBSS
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 3, 2011 at 4:06 PM, Dave Airlie <airlied@gmail.com> wrote:
+On Mon, Feb 14, 2011 at 3:42 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2011-02-08 at 16:41 +0530, Mohammed Shafi wrote:
+>> On Tue, Feb 1, 2011 at 6:19 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > At least the WMM spec says we should reply to
+>> > unicast probe request frames that go to us.
+>> >
+>> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> > ---
+>> >  net/mac80211/ibss.c |    2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >
+>> > --- wireless-testing.orig/net/mac80211/ibss.c   2011-02-01 12:58:16.000000000 +0100
+>> > +++ wireless-testing/net/mac80211/ibss.c        2011-02-01 13:47:44.000000000 +0100
+>> > @@ -689,7 +689,7 @@ static void ieee80211_rx_mgmt_probe_req(
+>> >               mgmt->bssid, tx_last_beacon);
+>> >  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>> >
+>> > -       if (!tx_last_beacon)
+>> > +       if (!tx_last_beacon && !(status->rx_flags & IEEE80211_RX_RA_MATCH))
+>> >                return;
+>> >
+>> >        if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
+>>
+>> Hi Johannes,
+>>              tested with the same thing (in addition of passing the
+>> rx_status structure) and it is working fine.
 >
-> If we are setting a mode on a connector it automatically will end up
-> in a DPMS on state,
-> so this seemed correct from what I can see.
-
-The more I look at that function, the more I disagree with you and
-with that patch.
-
-The code is just crazy.
-
-First off, it isn't even necessarily setting a mode to begin with,
-because as far as I can tell. If the mode doesn't change, neither
-mode_changed nor fb_changed will be true, afaik. There seems to be a
-fair amount of code there explicitly to avoid changing modes if not
-necessary.
-
-But even _if_ we are setting a mode, if I read the code correctly, the
-mode may be set to NULL - which seems to mean "turn it off". In which
-case it looks to me that drm_helper_disable_unused_functions() will
-actually do a
-
-   (*crtc_funcs->dpms)(crtc, DRM_MODE_DPMS_OFF);
-
-call on the crtc in question. So then blindly just saying "it's mode
-DRM_MODE_DPMS_ON" afterwards looks rather bogus to me.
-
-_Maybe_ it would work if it was done before that whole
-"disable_unused" logic. Or maybe it should just be done in
-drm_crtc_helper_set_mode(), which is what actually sets the mode (but
-there's the 'fb_changed' case too)
-
-> A future mode set shouldn't ever not turn the connector on, since
-> modesetting is an implicit
-> DPMS,
+> Yeah, I clearly missed that, guess I wasn't paying attention.
 >
-> It sounds like something more subtle than that, though I'm happy to
-> revert this for now, and let Keith
-> think about it a bit more.
+> The real question though is -- do we want/need this? I can only find
+> reference to this behaviour in the WMM spec.
 
-So I haven't heard anything from Keith. Keith? Just revert it? Or do
-you have a patch for people to try?
+Yes, Test Engineers say this is necessary for IBSS test case-5.3.1 to pass.
+thanks,
+shafi
 
-                               Linus
+>
+> johannes
+>
+>
