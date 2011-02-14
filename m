@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.3eti.com ([65.220.88.141]:58405 "EHLO webmail.3eti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756679Ab1BJSFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 13:05:49 -0500
-From: Chaoxing Lin <CLin@3eti.com>
-To: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Subject: FW: hostapd problem on reconfig (SIGHUP)
-Date: Thu, 10 Feb 2011 14:55:14 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:40272 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903Ab1BNVUW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 16:20:22 -0500
+Received: by bwz15 with SMTP id 15so5917447bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 13:20:21 -0800 (PST)
+Date: Tue, 15 Feb 2011 00:20:05 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Roland Vossen <rvossen@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	gregkh@suse.de, linux-wireless@vger.kernel.org, s@fomichev.me
+Subject: Re: [PATCH] brcm80211: remove multiple calls to wl_release_fw
+Message-ID: <20110214212005.GL4384@bicker>
+References: <20110212150033.GA1941@sdf-MacBook>
+ <4D598993.4020900@broadcom.com>
+ <20110214202249.GK4384@bicker>
+ <20110214210755.GB26387@sdf-MacBook>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110214210755.GB26387@sdf-MacBook>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-U29ycnkgaWYgdGhpcyBtZXNzYWdlIGlzIGR1cGxpY2F0ZS4NCg0KSSBhbSBjb25mdXNlZCB3aGlj
-aCBlbWFpbCBhZGRyZXNzIHRvIHNlbmQuIA0KbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-IG9yIGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZw0KDQoNCg0KLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IENoYW94aW5nIExpbiANClNlbnQ6IFdlZG5lc2RheSwg
-RmVicnVhcnkgMDksIDIwMTEgNToyMyBQTQ0KVG86ICdsaW51eC13aXJlbGVzcy1vd25lckB2Z2Vy
-Lmtlcm5lbC5vcmcnDQpTdWJqZWN0OiBob3N0YXBkIHByb2JsZW0gb24gcmVjb25maWcgKFNJR0hV
-UCkNCg0KDQpIZWxsbyBFeHBlcnRzLA0KDQpJIHNlZSBhIHByb2JsZW0gd2hpbGUgdGVzdGluZyB0
-aGUgbGF0ZXN0IGhvc3RhcGQva2VybmVsL3dwYV9zdXBwbGljYW50LiBJIGJlbGlldmUgdGhlIHBy
-b2JsZW0gaW4gb24gaG9zdGFwZCBzaWRlLg0KSXQgaXMgZWFzeSB0byByZWNyZWF0ZSB0aGUgcHJv
-YmxlbS4gU28gaXQgY2FuIGJlIGFuIGVhc3kgZml4IGZvciBob3N0YXBkIG1haW50YWluZXIuDQoN
-ClRoYW5rcw0KDQoNClByb2JsZW06IGhvc3RhcGQgbm90IHdvcmtpbmcgYWZ0ZXIgU0lHSFVQIHNp
-Z25hbA0KDQpTeW1wdG9tcw0KDQoxLiBJZiB0aGVyZSdzIGEgY2xpZW50IGFzc29jaWF0ZWQsIGEg
-U0lHSFVQIHNpZ25hbCB0byBob3N0YXBkIGNhbiBjYXVzZSBwcm9ibGVtIHRoYXQgbm8gY2xpZW50
-cyBjYW4gYXNzb2NpYXRlIChhbG1vc3QgMTAwJSByZXByb2R1Y2libGUpDQrCoA0KMi4gInNlZ21l
-bnRhdGlvbiBmYXVsdCIgaGFwcGVucyBhIGZldyB0aW1lcyhub3QgYWxsIHRoZSB0aW1lKSDCoHRv
-IGhvc3RhcGQgYnkgcmVwZWF0aW5nIFNJR0hVUCBhbmQgU0lHVVNSMSB0byBob3N0YXBkLg0KDQoz
-LiBBbm90aGVyIG1pbm9yIHRoaW5nLiBBY3R1YWxseSBhIHN1Z2dlc3Rpb24sIGhvc3RhcGQgZG9l
-cyBub3QgbmVlZCB0byByZS1jb25maWcgaWYgY29uZmlndXJhdGlvbiBmaWxlIGlzIG5vdCBjaGFu
-Z2VkLiBUaGlzIGlzIHByZWZlcnJlZCBiZWNhdXNlIHdoZW4gaG9zdGFwZCBjb250cm9scyBtdWx0
-aXBsZSByYWRpb3MgKGUuZyBob3N0YXBkIHJhZGlvMS5jb25mIHJhZGlvMi5jb25mKSwgaXTigJlz
-IGRlc2lyYWJsZSB0aGF0IHNlcnZpY2Ugb24gb3RoZXIgcmFkaW8gaXMgbm90IGRpc3J1cHRlZCB3
-aGVuIG9uZSBvZiB0aGUgY29uZiBpcyBjaGFuZ2VkLiANCg0KDQpTb21lIGZhY3RzOg0KwqDCoMKg
-IGEuIFRoZSBhbHJlYWR5IGFzc29jaWF0ZWQgY2xpZW50IHN0aWxsIHRoaW5rcyBpdHNlbGYgYXNz
-b2NpYXRlZC4gVGhpcyBpcyB2ZXJpZmllZCBieSAiaXcgd2xhbjAgbGluayIgb24gY2xpZW50IHNp
-ZGUuIA0K44CA44CASXQgdGltZWQgb3V0IGxhdGVyIG9uIGFuZCBjYW4gbm8gbG9uZ2VyIGFzc29j
-aWF0ZS4NCuOAgOOAgA0KwqDCoMKgIGIuIGRyaXZlciAoYXRoOWsgaW4ga2VybmVsIDIuNi4zOC1y
-YzQsIG9wZXJhdGUgb3ZlciBhcjkzODApIHNheXMgaXQgaGFzIGFscmVhZHkgZGVhdXRoZW50aWNh
-dGVkIHRoZSBjbGllbnRzIHBlciANCsKgwqDCoMKgwqDCoMKgwqDCoMKgIGhvc3RhcGQgZmx1c2gg
-aW5zdHJ1Y3Rpb24uIFRoaXMgaXMgdmVyaWZpZWQgYnkgIml3IHdsYW4wIHN0YXRpb24gZHVtcCIg
-b24gYXAgc2lkZS4NCsKgwqDCoCDCoMKgwqAgSSBzbmlmZmVkIHRoZSBhaXIuIERlYXV0aGVudGlj
-YXRpb24gcGFja2V0cyAoYXMgYnJvYWRjYXN0KSB3ZXJlIHNlbnQgb3V0IGJ5IGRyaXZlci4gVGhl
-IGFzc29jaWF0ZWQgY2xpZW50IGRvZXMgbm90IA0K44CA44CAZGVhdXRoZW50aWNhdGUgYW5kIHJl
-LWFzc29jaWF0ZSAoYnVnIGluIHdwYV9zdXBwbGljYW50PykuDQoNCsKgwqDCoCBjLiBob3N0YXBk
-IHN0aWxsIHRoaW5rcyB0aGUgYXNzb2NpYXRlZCBjbGllbnQgaXMgYXNzb2NpYXRlZCwgd2hpY2gg
-aXMgd3JvbmcuIFRoaXMgaXMgdmVyaWZpZWQgYnkgImtpbGxhbGwgLVNJR1VTUjEgaG9zdGFwZCIN
-CsKgwqDCoCDCoMKgIGZvbGxvd2VkIGJ5ICJjYXQgL3RtcC9ob3N0YXBkLmR1bXAiDQoNCsKgwqDC
-oCBkLiBUcmllZCB0byB1c2UgbmV3IGNsaWVudCB0byBhc3NvY2lhdGUuIE5vIHN1Y2Nlc3MuDQrC
-oMKgwqDCoMKgwqAgQm90aCBvbGQgYW5kIGNsaWVudHMgc3R1Y2sgDQoNCldvcmthcm91bmQ6DQoN
-CsKgwqDCoMKgwqDCoMKgwqAgRG8gTk9UIHVzZSBTSUdIVVAuIFVzZXIgaGFzIHRvIGtpbGwgaG9z
-dGFwZCBhbmQgcmVzdGFydCBob3N0YXBkLiANCg0KU29mdHdhcmUgdmVyc2lvbiBpbmZvOg0KMS4g
-aG9zdGFwZC0wLjcuMyBhbmQgdGhlIGxhdGVzdCB1bm9mZmljaWFsIHNuYXBzaG90IHJlbGVhc2Ug
-MC44LXNuYXBzaG90DQoyLiBUcmllZCBib3RoIGtlcm5lbCAyLjYuMzgtcmMzIGFuZCAyLjYuMzgt
-cmM0LiANCjMuIGF0aDlrIG9wZXJhdGVzIG92ZXIgQVI5MzgwIGNoaXBzZXQNCjQuIHdwYV9zdXBw
-bGljYW50LTAuNy4zIGlzIHVzZWQgZm9yIGNsaWVudCB0ZXN0Lg0KDQo=
+On Tue, Feb 15, 2011 at 12:07:55AM +0300, Stanislav Fomichev wrote:
+> > This patch isn't right.  It fixes the oops but it introduces some leaks.
+> > (We still need to release firmware that was allocated successfully).
+> Sorry Dan, but where do you see the leaks? We make a call to
+> wl_request_fw and if returns non-zero call wl_release_fw for a cleanup.
+> 
+> I just removed the call to wl_release_fw in the wl_request_fw itself; so
+> it should not introduce any leak.
+> 
+> Could you pls clarify?
+
+Ah.  Right.  I see what you're saying.  Your patch looks good to me.
+
+regards,
+dan carpenter 
+
