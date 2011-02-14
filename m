@@ -1,51 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52926 "EHLO mx1.suse.de"
+Received: from nbd.name ([46.4.11.11]:37579 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754756Ab1BQPwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 10:52:04 -0500
-Date: Thu, 17 Feb 2011 16:52:02 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH]drivers:wireless:acx.h change initate to initiate
-In-Reply-To: <1296244444.3069.399.camel@pimenta>
-Message-ID: <alpine.LNX.2.00.1102171651530.2160@pobox.suse.cz>
-References: <1296244204-3890-1-git-send-email-justinmattock@gmail.com> <1296244444.3069.399.camel@pimenta>
+	id S1753636Ab1BNO3T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 09:29:19 -0500
+Message-ID: <4D593C3D.4050905@openwrt.org>
+Date: Mon, 14 Feb 2011 15:29:17 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Mohammed Shafi <mshajakhan@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: make use of slot time macros
+References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com> <4D58B25D.4040507@atheros.com> <4D58B39B.9040207@atheros.com> <4D593295.6060800@openwrt.org> <4D5935EF.1060302@atheros.com>
+In-Reply-To: <4D5935EF.1060302@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 28 Jan 2011, Luciano Coelho wrote:
+On 2011-02-14 3:02 PM, Mohammed Shafi wrote:
+> On Monday 14 February 2011 07:18 PM, Felix Fietkau wrote:
+>> On 2011-02-14 5:46 AM, Mohammed Shafi wrote:
+>>    
+>>> On Monday 14 February 2011 10:11 AM, Mohammed Shafi wrote:
+>>>      
+>>>> On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
+>>>>        
+>>>>> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
+>>>>>          
+>>>>>> On 2011-02-11 5:15 PM, John W. Linville wrote:
+>>>>>>            
+>>>>>>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
+>>>>>>>              
+>>>>>>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
+>>>>>>>>                
+>>>>>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>>>>>>
+>>>>>>>>> Instead of using raw numbers to assign slot time it would be
+>>>>>>>>> better to
+>>>>>>>>> make use of predefined slot time macros
+>>>>>>>>>                  
+>>>>>>>> How does this make it better?
+>>>>>>>>                
+>>>>>>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
+>>>>>>>              
+>>>>>> Well, neither the unit of this variable, nor the values that can be
+>>>>>> used
+>>>>>> are ath9k specific.
+>>>>>>            
+>>> Felix  then I don't know why these macros are used here and I followed
+>>> the same thing:
+>>>
+>>> htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
+>>> init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+>>>      
+>> Just because the macros are there doesn't mean that it was a good idea
+>> to use them. As far as I know, these were simply inherited from the
+>> Atheros codebase that ath9k was based on.
+>> I actually consider the code more readable without the redundant
+>> "ATH9K_SLOT_TIME_" part.
+>>    
+> Felix I agree the first part, but I could still see no harm in using 
+> these macros.
+> Initially we  using these values 6,9,20(no other values) for the slot 
+> time and there are macros defined for them. If we are using some other 
+> values I would agree that its wrong.
+> Why not make use of it ?
+> IMHO if we use these macros it will at least people who are reading the 
+> code there are three standard values 6,9 and 20
+How is 6 a standard value? And why use driver specific defines when it's
+really an 802.11 standard thing?
 
-> > Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> > 
-> > ---
-> >  drivers/net/wireless/wl12xx/acx.h |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-> > index 7bd8e4d..c56088b 100644
-> > --- a/drivers/net/wireless/wl12xx/acx.h
-> > +++ b/drivers/net/wireless/wl12xx/acx.h
-> > @@ -987,7 +987,7 @@ struct wl1271_acx_ht_capabilities {
-> >  	 *         Note, driver will still leave space for HT control in packets
-> >  	 *         regardless of the value of this field. FW will be responsible
-> >  	 *         to drop the HT field from any frame when this Bit set to 0.
-> > -	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
-> > +	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initiate RD.
-> >  	 *         Exact policy setting for this feature is TBD.
-> >  	 *         Note, this bit can only be set to 1 if bit 3 is set to 1.
-> >  	 */
-> 
-> Yep, it's a typo.  Thanks for fixing it.
-> 
-> Acked-by: Luciano Coelho <coelho@ti.com>
+Using something like this would make the code more readable:
+#define IEEE80211_SHORT_SLOT_TIME	9
+#define IEEE80211_LONG_SLOT_TIME	20
 
-Applied.
+ATH9K_SLOT_TIME_9 or ATH9K_SLOT_TIME_20? Not so much...
 
--- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+> I am sure it would help us to debug issues easily(just like Fair beacon 
+> distribution thing).
+I really don't see how this is helpful in any way.
+The main reason why I object to stuff like this is because I think that
+"other code is like that" is not a good reason for repeating it,
+especially if what was done on the other code never made much sense to
+begin with. In this case I think it's more of a reason to clean up the
+other code first and then make things more consistent :)
+
+- Felix
