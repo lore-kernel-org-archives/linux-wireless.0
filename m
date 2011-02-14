@@ -1,92 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55251 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556Ab1BRCTp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 21:19:45 -0500
-Received: by ywo7 with SMTP id 7so1403069ywo.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 18:19:44 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:3072 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753551Ab1BNOY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 09:24:28 -0500
+Date: Mon, 14 Feb 2011 15:24:33 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix dma mappings and skbs leak
+Message-ID: <20110214142432.GC14827@redhat.com>
+References: <1297683529-4053-1-git-send-email-sgruszka@redhat.com>
+ <20110214125046.GB14827@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <19805.55087.117572.853090@gargle.gargle.HOWL>
-Date: Fri, 18 Feb 2011 07:49:27 +0530
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wwguy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix conn_mon_timer running after disassociate
-In-Reply-To: <20110216095443.GC2812@redhat.com>
-References: <1297693947-15310-1-git-send-email-sgruszka@redhat.com>
-	<1297698696.4723.16.camel@wwguy-ubuntu>
-	<20110215113444.GC2162@redhat.com>
-	<1297770602.3935.3.camel@jlt3.sipsolutions.net>
-	<20110215130428.GA2515@redhat.com>
-	<1297775393.3935.15.camel@jlt3.sipsolutions.net>
-	<20110215132202.GC2515@redhat.com>
-	<1297776631.3935.16.camel@jlt3.sipsolutions.net>
-	<20110216095443.GC2812@redhat.com>
+In-Reply-To: <20110214125046.GB14827@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka wrote:
-> Low level driver could pass rx frames to us after disassociate, what
-> can lead to run conn_mon_timer by ieee80211_sta_rx_notify(). Thats
-> is obviously wrong, but nothing happens until we unload modules and
-> resources are used after free. If kernel debugging is enabled following
-> warning could be observed:
+On Mon, Feb 14, 2011 at 01:50:47PM +0100, Stanislaw Gruszka wrote:
+> On Mon, Feb 14, 2011 at 12:38:49PM +0100, Stanislaw Gruszka wrote:
+> > WARNING: at lib/dma-debug.c:689 dma_debug_device_change+0x15a/0x1b0()
+> > Hardware name: HP xw8600 Workstation
+> > pci 0000:80:00.0: DMA-API: device driver has pending DMA allocations while released from device [count=444]
+> > Modules linked in: iwlagn(-) iwlcore cryptd aes_x86_64 aes_generic fuse autofs4 sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 ext3 jbd dm_mirror dm_region_hash dm_log dm_mod kvm uinput hp_wmi sparse_keymap wmi sg microcode serio_raw iTCO_wdt iTCO_vendor_support tg3 snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm arc4 ecb snd_timer snd soundcore snd_page_alloc i5k_amb hwmon i5400_edac edac_core shpchp mac80211 cfg80211 rfkill ext4 mbcache jbd2 sd_mod crc_t10dif sr_mod cdrom firewire_ohci firewire_core crc_itu_t mptsas mptscsih mptbase scsi_transport_sas pata_acpi ata_generic ata_piix ahci libahci floppy nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: iwlcore]
+> > Pid: 7382, comm: rmmod Not tainted 2.6.38-rc3-wl+ #17
+> > Call Trace:
+> >  [<ffffffff81064bef>] ? warn_slowpath_common+0x7f/0xc0
+> >  [<ffffffff81064ce6>] ? warn_slowpath_fmt+0x46/0x50
+> >  [<ffffffff8125ea6b>] ? dma_debug_device_change+0xdb/0x1b0
+> >  [<ffffffff8125eaea>] ? dma_debug_device_change+0x15a/0x1b0
+> >  [<ffffffff814dfed8>] ? notifier_call_chain+0x58/0xb0
+> >  [<ffffffff8108e6a0>] ? __blocking_notifier_call_chain+0x60/0x90
+> >  [<ffffffff8108e6e6>] ? blocking_notifier_call_chain+0x16/0x20
+> >  [<ffffffff81326fcc>] ? __device_release_driver+0xbc/0xe0
+> >  [<ffffffff813270c8>] ? driver_detach+0xd8/0xe0
+> >  [<ffffffff81325e91>] ? bus_remove_driver+0x91/0x100
+> >  [<ffffffff813278e2>] ? driver_unregister+0x62/0xa0
+> >  [<ffffffff81269f94>] ? pci_unregister_driver+0x44/0xa0
+> >  [<ffffffffa0750e75>] ? iwl_exit+0x15/0x1c [iwlagn]
+> >  [<ffffffff810abd22>] ? sys_delete_module+0x1a2/0x270
+> >  [<ffffffff814db0d9>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+> >  [<ffffffff8100bf82>] ? system_call_fastpath+0x16/0x1b
+> 
+> Hmm, I still have this warning after patch applied, so problem is not
+> fully fixed.
+> 
+> Plese hold with with that patch for now.
 
-I just hit this issue right after unloading ath9k_htc.
-I haven't tested your patch yet.
+Patch for sure fixes iptables modules unload issue for me. There
+must be some other DMA mapping leaks somewhere, I'm not sure
+where, iwlwifi need to be carefully reviewed in this regard.
 
- general protection fault: 0000 [#1] PREEMPT SMP
- last sysfs file: /sys/devices/platform/regulatory.0/uevent
- CPU 1
- Modules linked in: arc4 ecb mac80211 cfg80211 ipv6 ext2 i915 drm_kms_helper drm i2c_algo_bit mct_u232 usbserial joydev pcmcia uhci_hcd ehci_hcd usbcore psmouse yenta_socket pcmcia_rsrc]
+I'm going to repost with different changelog.
 
- Pid: 0, comm: kworker/0:0 Not tainted 2.6.38-rc5-wl #43 LENOVO 7661GN4/7661GN4
- RIP: 0010:[<ffffffff81073e3b>]  [<ffffffff81073e3b>] __queue_work+0xab/0x480
- RSP: 0018:ffff88007d503d40  EFLAGS: 00010046
- RAX: ffff88003765f0d0 RBX: ffff88007d50f600 RCX: 0000000000000001
- RDX: 0000000000002601 RSI: ffffffff818443c0 RDI: ffff88007d50f600
- RBP: ffff88007d503d80 R08: 000000000005e3c0 R09: 0000000000000000
- R10: 0000000000000001 R11: 0000000000000104 R12: ffff88003765f0c8
- R13: 0000000000000282 R14: 0000000000000001 R15: ffff1000ea433a00
- FS:  0000000000000000(0000) GS:ffff88007d500000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
- CR2: 00007f81dde2c098 CR3: 0000000001573000 CR4: 00000000000006e0
- DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
- DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
- Process kworker/0:0 (pid: 0, threadinfo ffff88007a8c2000, task ffff88007a8b9f60)
- Stack:
-  ffff88007d503dc0 0000000000000002 0000000000000000 ffff88007a8c2000
-  ffff88007a8c3fd8 ffff88007d503e80 0000000000000102 ffff88007a8c3fd8
-  ffff88007d503d90 ffffffff8107425d ffff88007d503dc0 ffffffff810742c6
- Call Trace:
-  <IRQ>
-  [<ffffffff8107425d>] queue_work_on+0x1d/0x30
-  [<ffffffff810742c6>] queue_work+0x36/0x60
-  [<ffffffff810927ad>] ? trace_hardirqs_on_caller+0x5d/0x180
-  [<ffffffffa036757d>] ieee80211_queue_work+0x3d/0x50 [mac80211]
-  [<ffffffffa0351b6f>] ieee80211_sta_conn_mon_timer+0x2f/0x40 [mac80211]
-  [<ffffffff81067f11>] run_timer_softirq+0x1a1/0x430
-  [<ffffffff81067e7c>] ? run_timer_softirq+0x10c/0x430
-  [<ffffffffa0351b40>] ? ieee80211_sta_conn_mon_timer+0x0/0x40 [mac80211]
-  [<ffffffff8105fa89>] __do_softirq+0xd9/0x260
-  [<ffffffff8108a748>] ? tick_dev_program_event+0x48/0x100
-  [<ffffffff8108a81a>] ? tick_program_event+0x1a/0x20
-  [<ffffffff8100cd9c>] call_softirq+0x1c/0x30
-  [<ffffffff8100f0e5>] do_softirq+0xa5/0xe0
-  [<ffffffff8105fd2d>] irq_exit+0x9d/0xa0
-  [<ffffffff81029d6b>] smp_apic_timer_interrupt+0x6b/0xa0
-  [<ffffffff8100c853>] apic_timer_interrupt+0x13/0x20
-  <EOI>
-  [<ffffffff81014605>] ? native_sched_clock+0x15/0x70
-  [<ffffffffa00ed027>] ? acpi_idle_enter_bm+0x261/0x299 [processor]
-  [<ffffffffa00ed020>] ? acpi_idle_enter_bm+0x25a/0x299 [processor]
-  [<ffffffff812c9734>] cpuidle_idle_call+0xc4/0x2f0
-  [<ffffffff8100a23b>] cpu_idle+0xab/0x110
-  [<ffffffff81395c2d>] start_secondary+0x1f6/0x1fd
-
-Sujith
+Stanislaw
