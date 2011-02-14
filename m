@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60694 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50683 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752999Ab1BNKVg (ORCPT
+	with ESMTP id S1753359Ab1BNMJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 05:21:36 -0500
-Subject: Re: [PATCH 1/7] mac80211:  Make STA disconnect messages warn
- instead of debug.
+	Mon, 14 Feb 2011 07:09:30 -0500
+Subject: Re: [RFC v2 1/2] mac80211: add a function for setting the TIM bit
+ for a specific station
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
-In-Reply-To: <87y65q7hc3.fsf@purkki.adurom.net>
-References: <1297115078-27773-1-git-send-email-greearb@candelatech.com>
-	 <87y65q7hc3.fsf@purkki.adurom.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, lrodriguez@atheros.com,
+	m.sujith@gmail.com
+In-Reply-To: <1297207937-88528-1-git-send-email-nbd@openwrt.org>
+References: <1297207937-88528-1-git-send-email-nbd@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 11:21:32 +0100
-Message-ID: <1297678892.3785.21.camel@jlt3.sipsolutions.net>
+Date: Mon, 14 Feb 2011 13:09:27 +0100
+Message-ID: <1297685367.3785.33.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-08 at 16:04 +0200, Kalle Valo wrote:
-> greearb@candelatech.com writes:
-> 
-> > From: Ben Greear <greearb@candelatech.com>
-> >
-> > This makes them more easily seen in /var/log/messages
-> > and the console, for instance.
-> 
-> Messages like these are in the category "business as usual", which
-> happens frequently when the device is moved. IMHO they are not really
-> warnings. I'm worried that making the messages more visible might
-> scare the users too much.
+On Wed, 2011-02-09 at 00:32 +0100, Felix Fietkau wrote:
+> When a driver wants to buffer some frames internally without feeding them
+> back to mac80211, this allows it to still wake up the station
 
-I agree -- this will happen all the time unless you have a really really
-good roaming algorithm or never move around.
+Why would the driver want to do this though?
 
 johannes
 
