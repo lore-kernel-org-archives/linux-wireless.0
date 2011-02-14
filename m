@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46547 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755886Ab1BXOV3 (ORCPT
+Received: from w1.fi ([128.177.27.249]:51837 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753359Ab1BNMKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 09:21:29 -0500
-Subject: Re: IBSS and 802.11i (RSN) with mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 14 Feb 2011 07:10:17 -0500
+Date: Mon, 14 Feb 2011 14:10:13 +0200
+From: Jouni Malinen <j@w1.fi>
 To: jpo234 <pommnitz@yahoo.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1298557108.4775.12.camel@jlt3.sipsolutions.net>
-References: <loom.20110224T145652-996@post.gmane.org>
-	 <1298557108.4775.12.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Feb 2011 15:21:27 +0100
-Message-ID: <1298557287.4775.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Subject: Re: WPA for Ethernet?
+Message-ID: <20110214121013.GA6431@jm.kir.nu>
+References: <loom.20110211T163104-102@post.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20110211T163104-102@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-02-24 at 15:18 +0100, Johannes Berg wrote:
-> On Thu, 2011-02-24 at 14:01 +0000, jpo234 wrote:
+On Fri, Feb 11, 2011 at 03:39:03PM +0000, jpo234 wrote:
+> is it possible to use the mac80211 (software) encryption infrastructure to
+> encrypt data over non 802.11 interfaces? If not, how hard would this be?
 > 
-> > Can somebody please either point me to some existing documentation on the topic 
-> > or write a small HOWTO?
-> 
-> 1) Check that iw reports that you can do it (I just now committed code
->    to iw to report it since you asked, so use git version, which will
->    become 0.9.23 at some point in the future)
+> IPsec and other VPN solutions are "tunnel centric" instead of "interface
+> centric". I'm looking for a way to say "All inbound and outbound traffic through
+> this interface must be encrypted with the following key.", just like WPA-PSK.
 
-FWIW, I think iwlwifi is still the only driver that has hw crypto and
-supports it right now.
+Are you looking for a custom solution that would not work with anyone
+else or a standard solutions like MACsec that Henry already mentioned?
+You could obviously make the kernel do some custom hacks like trying to
+fit IEEE 802.11 encryption into other network types, but it would sound
+more reasonable to work on a standard solution..
 
-johannes
+CCMP is designed for IEEE 802.11 header and as such, it does not really
+work as-is with other network types. WPA-PSK 4-way handshake could be
+used to manage keys with some small changes, but this would be very much
+a custom solution.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
