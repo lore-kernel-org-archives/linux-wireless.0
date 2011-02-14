@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57587 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753538Ab1BYGPk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33120 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268Ab1BNJ5i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 01:15:40 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 18/21]include:net:mac80211.h remove one to many l's in the word.
-Date: Thu, 24 Feb 2011 22:15:22 -0800
-Message-Id: <1298614522-4153-1-git-send-email-justinmattock@gmail.com>
+	Mon, 14 Feb 2011 04:57:38 -0500
+Subject: Re: [PATCH 1/5] iwlwifi: Simplify tx queue management
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Nathaniel J. Smith" <njs@pobox.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+In-Reply-To: <1297619803-2832-2-git-send-email-njs@pobox.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	 <1297619803-2832-2-git-send-email-njs@pobox.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 10:57:33 +0100
+Message-ID: <1297677453.3785.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch below removes an extra "l" in the word.
+On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
+> Previously, the iwlwifi driver filled its transmit queue until it
+> reached a high-water mark, and then stopped until it had fallen to a
+> low-water mark. This basic logic makes sense for interrupt mitigation
+> -- you might not want to wake up the CPU after every packet, but
+> instead wait until a batch of packets has been sent -- except the
+> iwlwifi driver doesn't actually do any interrupt mitigation; the CPU
+> wakes up after every packet transmitted anyway. So we simplify the
+> code to maintain only a single limit on total queue length, and
+> whenever we drop below that limit we allow more packets in.
+> 
+> This patch should have no user-visible effect.
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+I'm pretty sure the devices (but maybe not 3945) implement interrupt
+mitigation at least in some cases. How did you arrive at the conclusion
+that "the driver doesn't actually do any interrupt mitigation"?
 
----
- include/net/mac80211.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+johannes
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 62c0ce2..04c3fe5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1349,7 +1349,7 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
-  * DOC: Beacon filter support
-  *
-  * Some hardware have beacon filter support to reduce host cpu wakeups
-- * which will reduce system power consumption. It usuallly works so that
-+ * which will reduce system power consumption. It usually works so that
-  * the firmware creates a checksum of the beacon but omits all constantly
-  * changing elements (TSF, TIM etc). Whenever the checksum changes the
-  * beacon is forwarded to the host, otherwise it will be just dropped. That
--- 
-1.7.4.1
 
