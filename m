@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:49360 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194Ab1BPUEO (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:43975 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753461Ab1BNXo7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 15:04:14 -0500
-Date: Wed, 16 Feb 2011 17:04:08 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth-2.6 2011-02-16
-Message-ID: <20110216200407.GI14085@joana>
+	Mon, 14 Feb 2011 18:44:59 -0500
+Received: by qyk12 with SMTP id 12so4338929qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 15:44:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297725710.5683.17.camel@maggie>
+References: <1297725710.5683.17.camel@maggie>
+Date: Tue, 15 Feb 2011 00:44:58 +0100
+Message-ID: <AANLkTimjkFJrWpubECRRNybmvYdcAh3UUbMOa0iv166g@mail.gmail.com>
+Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+2011/2/15 Michael Büsch <mb@bu3sch.de>:
+> ssb_wait_bit was designed for only one-bit bitmasks.
+> People start using it for multi-bit bitmasks. Make the "set" case
+> is safe for this. The "unset" case is already safe.
 
-Here goes new fixes to the Bluetooth subsystem for 2.6.38. We have here
-support for firmware dowloading for the Atheros AR5BBU12 device. Also a fix
-for btusb a crash from Oliver Neukum and a system freeze fix due to not
-releasing the Big TTY Mutex in RFCOMM from Vladislav P.
-
-Please pull! :)
-
-The following changes since commit a7b545f7fe753ca3dc1b51ca57f90cd59d974e44:
-
-  mac80211: add missing locking in ieee80211_reconfig (2011-02-09 15:35:13 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
-
-Cho, Yu-Chen (1):
-      Bluetooth: Add Atheros BT AR5BBU12 fw supported
-
-Oliver Neukum (1):
-      Bluetooth: fix crash with quirky dongles doing sound
-
-Vladislav P (1):
-      Bluetooth: Release BTM while sleeping to avoid deadlock
-
- drivers/bluetooth/ath3k.c  |    3 +++
- drivers/bluetooth/btusb.c  |    7 +++++--
- net/bluetooth/rfcomm/tty.c |    2 ++
- 3 files changed, 10 insertions(+), 2 deletions(-)
+Thanks :)
 
 -- 
-Gustavo F. Padovan
-http://profusion.mobi
+Rafał
