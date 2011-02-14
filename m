@@ -1,88 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139Ab1BWIrV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 03:47:21 -0500
-Subject: Re: [PATCH] mac80211: Fix a race on enabling power save.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
-References: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Feb 2011 09:47:17 +0100
-Message-ID: <1298450837.3747.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:12264 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751671Ab1BNMul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 07:50:41 -0500
+Date: Mon, 14 Feb 2011 13:50:47 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix dma mappings and skbs leak
+Message-ID: <20110214125046.GB14827@redhat.com>
+References: <1297683529-4053-1-git-send-email-sgruszka@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297683529-4053-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-23 at 13:04 +0530, Vivek Natarajan wrote:
-> There is a race on sending a data frame before the tx completion
-> of nullfunc frame for enabling power save. As the data quickly
-> follows the nullfunc frame, the AP thinks that the station is out
-> of power save and continues to send the frames. Whereas in the
-> station, the nullfunc ack will be processed after the tx completion
-> of data frame and mac80211 goes to powersave. Thus the power
-> save state mismatch between the station and the AP causes some
-> data loss and some applications fail because of that. This patch
-> fixes this issue.
-> 
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> ---
->  net/mac80211/mlme.c   |   14 +++++++++++++-
->  net/mac80211/status.c |    2 --
->  2 files changed, 13 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 7b3f9df..abb0116 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
->  		return;
->  
->  	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-> -	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
-> +	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-> +		netif_tx_stop_all_queues(sdata->dev);
-> +		/*
-> +		 * Flush all the frames queued in the driver before
-> +		 * going to power save
-> +		 */
-> +		drv_flush(local, false);
->  		ieee80211_send_nullfunc(local, sdata, 1);
->  
-> +		/* Flush once again to get the tx status of nullfunc frame */
-> +		drv_flush(local, false);
-> +	}
-> +
->  	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
->  	      (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
->  	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
-> @@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
->  		local->hw.conf.flags |= IEEE80211_CONF_PS;
->  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
->  	}
-> +
-> +	netif_tx_start_all_queues(sdata->dev);
->  }
->  
->  void ieee80211_dynamic_ps_timer(unsigned long data)
-> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-> index 010a559..8651851 100644
-> --- a/net/mac80211/status.c
-> +++ b/net/mac80211/status.c
-> @@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
->  		if (info->flags & IEEE80211_TX_STAT_ACK) {
->  			local->ps_sdata->u.mgd.flags |=
->  					IEEE80211_STA_NULLFUNC_ACKED;
-> -			ieee80211_queue_work(&local->hw,
-> -					&local->dynamic_ps_enable_work);
+On Mon, Feb 14, 2011 at 12:38:49PM +0100, Stanislaw Gruszka wrote:
+> WARNING: at lib/dma-debug.c:689 dma_debug_device_change+0x15a/0x1b0()
+> Hardware name: HP xw8600 Workstation
+> pci 0000:80:00.0: DMA-API: device driver has pending DMA allocations while released from device [count=444]
+> Modules linked in: iwlagn(-) iwlcore cryptd aes_x86_64 aes_generic fuse autofs4 sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 ext3 jbd dm_mirror dm_region_hash dm_log dm_mod kvm uinput hp_wmi sparse_keymap wmi sg microcode serio_raw iTCO_wdt iTCO_vendor_support tg3 snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm arc4 ecb snd_timer snd soundcore snd_page_alloc i5k_amb hwmon i5400_edac edac_core shpchp mac80211 cfg80211 rfkill ext4 mbcache jbd2 sd_mod crc_t10dif sr_mod cdrom firewire_ohci firewire_core crc_itu_t mptsas mptscsih mptbase scsi_transport_sas pata_acpi ata_generic ata_piix ahci libahci floppy nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: iwlcore]
+> Pid: 7382, comm: rmmod Not tainted 2.6.38-rc3-wl+ #17
+> Call Trace:
+>  [<ffffffff81064bef>] ? warn_slowpath_common+0x7f/0xc0
+>  [<ffffffff81064ce6>] ? warn_slowpath_fmt+0x46/0x50
+>  [<ffffffff8125ea6b>] ? dma_debug_device_change+0xdb/0x1b0
+>  [<ffffffff8125eaea>] ? dma_debug_device_change+0x15a/0x1b0
+>  [<ffffffff814dfed8>] ? notifier_call_chain+0x58/0xb0
+>  [<ffffffff8108e6a0>] ? __blocking_notifier_call_chain+0x60/0x90
+>  [<ffffffff8108e6e6>] ? blocking_notifier_call_chain+0x16/0x20
+>  [<ffffffff81326fcc>] ? __device_release_driver+0xbc/0xe0
+>  [<ffffffff813270c8>] ? driver_detach+0xd8/0xe0
+>  [<ffffffff81325e91>] ? bus_remove_driver+0x91/0x100
+>  [<ffffffff813278e2>] ? driver_unregister+0x62/0xa0
+>  [<ffffffff81269f94>] ? pci_unregister_driver+0x44/0xa0
+>  [<ffffffffa0750e75>] ? iwl_exit+0x15/0x1c [iwlagn]
+>  [<ffffffff810abd22>] ? sys_delete_module+0x1a2/0x270
+>  [<ffffffff814db0d9>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+>  [<ffffffff8100bf82>] ? system_call_fastpath+0x16/0x1b
 
-Is the patch still correct if you don't remove this? I realise it won't
-usually be necessary, but I think we don't flush the TX status tasklet
-on flush right now so in theory there could be a race there that this
-code would clean up after, right?
+Hmm, I still have this warning after patch applied, so problem is not
+fully fixed.
 
-johannes
+Plese hold with with that patch for now.
 
+Stanislaw
