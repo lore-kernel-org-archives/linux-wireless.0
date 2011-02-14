@@ -1,74 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:40307 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754710Ab1BOQD0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 11:03:26 -0500
-Received: by pxi15 with SMTP id 15so44285pxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 08:03:26 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19802.41912.909410.520385@gargle.gargle.HOWL>
-Date: Tue, 15 Feb 2011 21:33:04 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC/RFT] mac80211: make tx() operation return void
-In-Reply-To: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
-References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
+Received: from mga09.intel.com ([134.134.136.24]:16332 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752145Ab1BNWrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 17:47:47 -0500
+Subject: Re: [PATCH 1/5] iwlwifi: Simplify tx queue management
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Nathaniel Smith <njs@pobox.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+In-Reply-To: <AANLkTinA0yoF_dU+2B6+rHcE_DvS7yjqu+TqYzhprvZj@mail.gmail.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	 <1297619803-2832-2-git-send-email-njs@pobox.com>
+	 <1297677453.3785.4.camel@jlt3.sipsolutions.net>
+	 <AANLkTinA0yoF_dU+2B6+rHcE_DvS7yjqu+TqYzhprvZj@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 14:45:41 -0800
+Message-ID: <1297723541.4723.22.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2011-02-14 at 14:17 -0800, Nathaniel Smith wrote:
+> On Mon, Feb 14, 2011 at 1:57 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
+> >> Previously, the iwlwifi driver filled its transmit queue until it
+> >> reached a high-water mark, and then stopped until it had fallen to a
+> >> low-water mark. This basic logic makes sense for interrupt mitigation
+> >> -- you might not want to wake up the CPU after every packet, but
+> >> instead wait until a batch of packets has been sent -- except the
+> >> iwlwifi driver doesn't actually do any interrupt mitigation; the CPU
+> >> wakes up after every packet transmitted anyway. So we simplify the
+> >> code to maintain only a single limit on total queue length, and
+> >> whenever we drop below that limit we allow more packets in.
+> >>
+> >> This patch should have no user-visible effect.
+> >
+> > I'm pretty sure the devices (but maybe not 3945) implement interrupt
+> > mitigation at least in some cases. How did you arrive at the conclusion
+> > that "the driver doesn't actually do any interrupt mitigation"?
 > 
-> The return value of the tx operation is commonly
-> misused by drivers, leading to errors. All drivers
-> will drop frames if they fail to TX the frame, and
-> they must also properly manage the queues (if they
-> didn't, mac80211 would already warn).
+> Two reasons:
+>   -- I searched the code and couldn't find any evidence for it
+>   -- If I'm wrong then the quickest way to find out is to make loud
+> and confident claims in front of people who know better ;-)
+> I might be wrong.
 > 
-> Removing the ability for drivers to return a BUSY
-> value also allows significant cleanups of the TX
-> TX handling code in mac80211.
+> If so, then it'd be pretty straightforward to extend this approach to
+> handle interrupt mitigation -- you set the low mark to N ms, and the
+> high mark to N+M ms, where N is the amount of time you think you need
+> to refill the queue after it drops, and 1/M is the maximum interrupt
+> rate you're willing to tolerate.
 > 
-> NB: Also fixes a bug in ath9k_htc.
+> On Mon, Feb 14, 2011 at 7:33 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
+> > Hi Nathaniel,
+> [...]
+> > what device you test this with? I will like to see this changes with
+> > newer device, especially with aggregation.
+> 
+> Hi Wey,
+> 
+> 03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+> [Golan] Network Connection (rev 02)
+> 
+> Sadly, I don't have access to any newer hardware. I'd be happy to take
+> donations ;-), but probably someone else will need to do the testing?
+> 
+> I wouldn't be surprised if it needed some tweaks to properly handle
+> aggregation (in particular, I'd want to start by clamping the minimum
+> queue size to match our best guess at the number of packets we can
+> currently combine into a single transmission), but I'm not enough of
+> an 802.11 expert to be confident about how to do that either. That
+> number varies with the rate, yes? So we'd need some way to ask the
+> rate control algorithm what rate it plans to use next?
+> 
 
-[snip]
+right, I will really like to see those changes being test with agn
+device first.
 
-> --- wireless-testing.orig/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2011-02-15 13:53:38.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2011-02-15 13:55:02.000000000 +0100
-> @@ -903,7 +903,7 @@ set_timer:
->  /* mac80211 Callbacks */
->  /**********************/
->  
-> -static int ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-> +static void ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  {
->  	struct ieee80211_hdr *hdr;
->  	struct ath9k_htc_priv *priv = hw->priv;
-> @@ -916,7 +916,7 @@ static int ath9k_htc_tx(struct ieee80211
->  	padsize = padpos & 3;
->  	if (padsize && skb->len > padpos) {
->  		if (skb_headroom(skb) < padsize)
-> -			return -1;
-> +			goto fail_tx;
->  		skb_push(skb, padsize);
->  		memmove(skb->data, skb->data + padsize, padpos);
->  	}
-> @@ -937,11 +937,10 @@ static int ath9k_htc_tx(struct ieee80211
->  		goto fail_tx;
->  	}
->  
-> -	return 0;
-> +	return;
->  
->  fail_tx:
->  	dev_kfree_skb_any(skb);
-> -	return 0;
->  }
+btw, we are in the process of splitting 3945/4965 out of iwlwifi into it
+own directory (iwlwifilegacy). The work should be done and upstream in
+the next few days. I will really prefer you wait for us done the split
+works first, then consider those changes.
 
-No problems with this change for ath9k_htc, but if required I can
-send this as a separate patch...
+Thanks
+Wey
 
-Sujith
+
