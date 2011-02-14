@@ -1,111 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36167 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932988Ab1BYXJc (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39339 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059Ab1BNPfM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 18:09:32 -0500
-Date: Fri, 25 Feb 2011 17:22:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net
-Subject: ANNOUNCE: debloat-testing kernel git tree
-Message-ID: <20110225222210.GA3618@tuxdriver.com>
+	Mon, 14 Feb 2011 10:35:12 -0500
+Message-ID: <4D594BA2.5080905@candelatech.com>
+Date: Mon, 14 Feb 2011 07:34:58 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211:  Make some mlme timers module paramaters.
+References: <1296862224-19489-1-git-send-email-greearb@candelatech.com> <1297685561.3785.36.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1297685561.3785.36.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Announcement
+On 02/14/2011 04:12 AM, Johannes Berg wrote:
+> On Fri, 2011-02-04 at 15:30 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This allows users to tune the connection-loss algorithms
+>> to be more or less lenient.  In particular, larger
+>> null-func retries helps when using lots of virtual
+>> stations on a loaded network.
+>
+> I see this has been merged, but I really think it should be reverted. It
+> doesn't really fix anything, and it makes the behaviour less
+> predictable. Also, even on a loaded network the nullfunc frames should
+> be transmitted quickly as they go out on VO. I'm thinking the fact that
+> it doesn't will also affect other things -- like the bufferbloat
+> discussion -- and fixing the problem would be a much better idea.
 
-The bufferbloat project [1] is pleased to announce the availability
-of the debloat-testing Linux kernel git tree:
+The defaults stay the same, and allowing the values to be set a bit larger
+lets 128 stations associate, where without this, they constantly fail the
+null-func retries counter.
 
-	git://git.infradead.org/debloat-testing.git
+Imagine 128 stations all trying to associate and auth WPA at the
+same time, and start DHCP and some IPv6 auto-negotiation
+as soon as they are up...  That is quite a lot of packets
+for a bunch of timing-sensitive operations.
 
-The purpose of this tree is to provide a reasonably stable base for
-the development and testing of new algorithms, miscellaneous fixes,
-and maybe a few hacks intended to advance the cause of eliminating
-or at least mitigating bufferbloat in the Linux world.
+I know my particular use is pretty strange, but surely I'm not
+the only one that would like a good way to stress-test APs.
 
-Introduction
+I can also imagine that other users might like their system even more
+trigger happy..perhaps that would speed up roaming in some cases.
+Or users on very poor/congested networks, flakey APs, etc.
 
-Bufferbloat is a term coined by Jim Gettys to describe the increasing
-prevalence of large and (particularly) unmanaged network buffers along
-the network links that comprise the Internet [2].  If you are not aware
-of the problems with network latency under load that the Internet is
-already encountering, we encourage you to visit Jim Gettys' blog [3].
-There Jim has begun to fit together enough puzzle pieces to at least
-frame the issue.
+The default values seem to be chosen arbitrarily to work for most
+users most of the time.  I think it adds way more benefit to allow
+these easily changed than any harm that comes from giving users
+the option.
 
-Jim has also made available slides and an audio recording (edited
-for time) from a presentation on this topic:
+Thanks,
+Ben
 
-	http://mirrors.bufferbloat.net/Talks/BellLabs01192011/
-
-Kernel Bits
-
-The debloat-testing tree is intended to track full and -rc releases
-from linux-2.6, with interesting patches cherry-picked from net-next
-and various experimental bits added on top.  The current stable of
-such patches includes the following:
-
-Eric Dumazet (based on original work by Juliusz Chroboczek):
-      net_sched: SFB flow scheduler
-
-stephen hemminger:
-      sched: CHOKe flow scheduler
-
-John Fastabend:
-      net: implement mechanism for HW based QOS
-      net_sched: implement a root container qdisc sch_mqprio
-
-John W. Linville:
-      mac80211: implement eBDP algorithm to fight bufferbloat
-
-Nathaniel J. Smith:
-      iwlwifi: Simplify tx queue management
-      iwlwifi: Convert the tx queue high_mark to an atomic_t
-      iwlwifi: Invert the sense of the queue high_mark
-      iwlwifi: auto-tune tx queue size to minimize latency
-      iwlwifi: make current tx queue sizes visible in debugfs
-
-Dave Taht:
-      Bufferbloat reduction for the e1000 driver that started it all
-      Reduce bufferbloated default for e1000e, increase dynamic range
-      Smash bufferbloat in the ath9k driver
-
-Userland Bits
-
-Patches for the userspace tc utility incorporating support for both the
-CHOKe AQM and the Stochastic Fair Blue scheduler (SFB) are available:
-
-	https://github.com/dtaht/iproute2bufferbloat
-
-Contributions
-
-Please send any experimental or research-oriented patches related to
-bufferbloat to the bloat-devel@lists.bufferbloat.net list.  Reminders
-of more mainstream patches that may be relevant and/or interesting
-for cherry-picking into debloat-testing are welcome there as well.
-
-Obviously, patches that are ready for normal merge consideration
-should continue to be sent to netdev, linux-wireless, linux-kernel,
-or whatever other existing list is appropriate for them.
-
-Thanks
-
-Finally, we want to offer a huge thanks to the 130+ new members of
-the bloat mailing list [4] for leaping into the fray, and to David
-Woodhouse for hosting the debloat-testing tree at infradead.
-
-Please help us beat the bloat.  Good luck, and happy debloating!
-
-Notes
-
-[1] http://bufferbloat.net
-[2] http://gettys.wordpress.com/what-is-bufferbloat-anyway/
-[3] http://en.wordpress.com/tag/bufferbloat/
-[4] https://lists.bufferbloat.net
---
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
