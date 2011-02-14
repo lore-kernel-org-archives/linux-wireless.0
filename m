@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38396 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266Ab1BAXsS convert rfc822-to-8bit (ORCPT
+Received: from mail.sv1.nifty.com ([220.209.183.60]:28568 "EHLO
+	defg302.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755315Ab1BNBXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 18:48:18 -0500
-Received: by bwz15 with SMTP id 15so31636bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 15:48:17 -0800 (PST)
+	Sun, 13 Feb 2011 20:23:14 -0500
+Received: from pbsg500.nifty.com (pbsg500p.nifty.com [172.22.128.70])by defg302.nifty.com with ESMTP id p1E1K0Y0011820
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 10:20:00 +0900
+Received: from [127.0.0.1] (himob2-p36.iem.hi-ho.ne.jp [203.180.25.36]) (authenticated)
+	by pbsg500.nifty.com with ESMTP id p1E1JWgh032501
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 10:19:34 +0900
+Date: Mon, 14 Feb 2011 10:19:27 +0900
+From: Masahiro Inoue <miyabi.-.inoue@nifty.com>
+To: linux-wireless@vger.kernel.org
+Subject: Build Error Report(zd1211rw)
+Message-Id: <20110214101925.9EC3.2E210E2F@nifty.com>
 MIME-Version: 1.0
-Date: Tue, 1 Feb 2011 18:48:17 -0500
-Message-ID: <AANLkTi=T4QEE2OPyd9mNmNd++vSVGPj_PBm6a4aX5dEx@mail.gmail.com>
-Subject: how to get PHY error codes from AR9382 / HB116
-From: George Nychis <gnychis@cmu.edu>
-To: linux-wireless@vger.kernel.org, Eric Rozner <erozner@cs.utexas.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hello,
 
-I have an Atheros AR9382 chipset, on the 2x2 HB116.
+The build error occurs by compat-wireless-2011-02-12.
+My kernel is 2.6.27. 
 
-I was wondering if anyone knows how to enable PHY error codes on this
-card/chipset being passed up.  Including synchronization errors, like
-in the PLCP.
+  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.o
+/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.c: In function 'zd_mac_config_beacon':
+/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.c:781: error: implicit declaration of function 'usb_queue_reset_device'
+make[4]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw/zd_mac.o] Error 1
+make[3]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless/zd1211rw] Error 2
+make[2]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12/drivers/net/wireless] Error 2
+make[1]: *** [_module_/home/miyabi/test/compat-wireless/compat-wireless-2011-02-12] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.27-67vl5-x86_64'
+make: *** [modules] Error 2
 
-In: drivers/net/wireless/ath/ath9k/hw.c, and function: void
-ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
-... I did a REG_WRITE(ah, AR_PHY_ERR, 0xffffffff); to enable all phy
-error packets upwards in terms of the RX filter.
 
-I am also setting the following in ath9k_hw_ani_init
-(drivers/net/wireless/ath/ath9k/ani.c)
-  REG_WRITE(ah, AR_PHY_ERR_1, ah->ani[0].ofdmPhyErrBase);
-  REG_WRITE(ah, AR_PHY_ERR_2, ah->ani[0].cckPhyErrBase);
-
-I am also commented this out in drivers/net/wireless/ath/ath9k/recv.c:
-  rfilt |= ATH9K_RX_FILTER_PHYERR;
-
-I've also tried forcing the card in to promiscuous mode.
-
-However, when I get errored packets up from the card, they all have
-the same error type which is 0x00, which makes me believe that the
-actual error bits are not being set, or something along these lines.
-
-Does anyone know what I might be missing?  I'd greatly appreciate any help.
-
-- George
