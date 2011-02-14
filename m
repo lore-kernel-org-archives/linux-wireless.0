@@ -1,145 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39224 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757Ab1BDTJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 14:09:32 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2] ath9k: add additional checks for the baseband hang detection
-Date: Fri,  4 Feb 2011 20:09:25 +0100
-Message-Id: <1296846565-90650-1-git-send-email-nbd@openwrt.org>
+Received: from mail.3eti.com ([65.220.88.139]:42633 "EHLO 3eSpam.3eti.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750948Ab1BNUdy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 15:33:54 -0500
+Received: from webmail.3eti.com (rockmx01.rock.corp [192.168.200.4]) by 3eSpam.3eti.com with ESMTP id LfrqG6QFG06A8sHf (version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 15:33:52 -0500 (EST)
+From: Chaoxing Lin <CLin@3eti.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: wpa_supplicant wrong behavior
+Date: Mon, 14 Feb 2011 20:33:51 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D0571E695@RockMX01.rock.corp>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since even with the latest changes the false positive issue of the baseband
-hang check is not fully solved yet, additional checks are needed.
-If the baseband hang occurs, the rx_clear signal will be stuck to high, so
-we can use the cycle counters to confirm it.
-With this patch, a hardware reset is only triggered if the baseband hang
-check returned true three times in a row, with a beacon interval between
-each check and if the busy time was also 99% or more during the check
-intervals.
+Linux wireless experts,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/main.c  |   45 +++++++++++++++++++++++++------
- 2 files changed, 38 insertions(+), 9 deletions(-)
+When testing hostapd MAC address filtering, I see a problem on wpa_supplicant. I am hoping that maintainer can put a quick fix for this.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bd85e31..7c8409e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -602,6 +602,8 @@ struct ath_softc {
- 	struct completion paprd_complete;
- 	bool paprd_pending;
- 
-+	unsigned int hw_busy_count;
-+
- 	u32 intrstatus;
- 	u32 sc_flags; /* SC_OP_* */
- 	u16 ps_flags; /* PS_* */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1447b55..c6177bc 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -177,7 +177,12 @@ static void ath_update_survey_nf(struct ath_softc *sc, int channel)
- 	}
- }
- 
--static void ath_update_survey_stats(struct ath_softc *sc)
-+/*
-+ * Updates the survey statistics and returns the busy time since last
-+ * update in %, if the measurement duration was long enough for the
-+ * result to be useful, -1 otherwise.
-+ */
-+static int ath_update_survey_stats(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -185,9 +190,10 @@ static void ath_update_survey_stats(struct ath_softc *sc)
- 	struct survey_info *survey = &sc->survey[pos];
- 	struct ath_cycle_counters *cc = &common->cc_survey;
- 	unsigned int div = common->clockrate * 1000;
-+	int ret = 0;
- 
- 	if (!ah->curchan)
--		return;
-+		return -1;
- 
- 	if (ah->power_mode == ATH9K_PM_AWAKE)
- 		ath_hw_cycle_counters_update(common);
-@@ -202,9 +208,18 @@ static void ath_update_survey_stats(struct ath_softc *sc)
- 		survey->channel_time_rx += cc->rx_frame / div;
- 		survey->channel_time_tx += cc->tx_frame / div;
- 	}
-+
-+	if (cc->cycles < div)
-+		return -1;
-+
-+	if (cc->cycles > 0)
-+		ret = cc->rx_busy * 100 / cc->cycles;
-+
- 	memset(cc, 0, sizeof(*cc));
- 
- 	ath_update_survey_nf(sc, pos);
-+
-+	return ret;
- }
- 
- /*
-@@ -226,6 +241,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return -EIO;
- 
-+	sc->hw_busy_count = 0;
-+
- 	del_timer_sync(&common->ani.timer);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
-@@ -592,17 +609,25 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
- void ath_hw_check(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
--	int i;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	unsigned long flags;
-+	int busy;
- 
- 	ath9k_ps_wakeup(sc);
-+	if (ath9k_hw_check_alive(sc->sc_ah))
-+		goto out;
- 
--	for (i = 0; i < 3; i++) {
--		if (ath9k_hw_check_alive(sc->sc_ah))
--			goto out;
-+	spin_lock_irqsave(&common->cc_lock, flags);
-+	busy = ath_update_survey_stats(sc);
-+	spin_unlock_irqrestore(&common->cc_lock, flags);
- 
--		msleep(1);
--	}
--	ath_reset(sc, true);
-+	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
-+		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
-+	if (busy >= 99) {
-+		if (++sc->hw_busy_count >= 3)
-+			ath_reset(sc, true);
-+	} else if (busy >= 0)
-+		sc->hw_busy_count = 0;
- 
- out:
- 	ath9k_ps_restore(sc);
-@@ -952,6 +977,8 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	struct ieee80211_hw *hw = sc->hw;
- 	int r;
- 
-+	sc->hw_busy_count = 0;
-+
- 	/* Stop ANI */
- 	del_timer_sync(&common->ani.timer);
- 
--- 
-1.7.3.2
+Thanks
+
+Symptom:
+
+wpa_supplicant does not check other available APs when its association to first AP is denied by MAC address filtering.
+Also exact same problems happens to wpa_supplicant when client reaches "max_num_sta" in hostapd.conf.
+
+Procedures to recreate the problem.
+
+1. AP-1 and AP-2 are configured with exactly same SSID, security, etc. The only difference is the AP-1 has MAC address filtering configured to deny access from client-1.
+2. Power on AP-1, configure client-1 to have same SSID, security, etc so that it would be able to connect to AP-1 if there were no MAC filtering against it.
+3. Verify that client-1 can't NOT associate to to AP-1. The console message is "SME: Authentication failed (status code 1)"
+4. Now, power on AP-2. The intuitive behavior for wpa_supplicant is to associate to AP-2 at some point (certain period of timeout is acceptable).
+5. See the problem that client-1 never switch to AP-2. 
+
+Facts: 
+1. AP-2 is configured well. If I stop AP-1 and restart wpa_supplicant at Client-1, Client-1 associates to AP-2 successfully. Or if I specify "bssid=AP-2-mac", Client-1 can associate to AP-2. So AP-2 configuration is out of the question.
+2. It's not related signal strength, either. The fact is that after AP-2 is powered on, Client-1 won't associate even when AP-1 is powered off.  This eliminates the possibility that WPA_supplicant picks stronger signal to connect.
+3. Windows driver of Intel Ultimate 6300N can switch to AP-2 easily without any user intervention.
+
+Version info
+1. hostapd 0.8.snapshot
+2. wpa_supplicant 0.8.snapshot, tried on both ar9280 and Intel 6300 ultimate N
+3. kernel 2.6.38-rc4
 
