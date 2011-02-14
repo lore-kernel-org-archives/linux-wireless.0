@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39745 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754524Ab1BGVC2 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48023 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341Ab1BNVIB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 16:02:28 -0500
-Message-ID: <4D505DDD.8050805@candelatech.com>
-Date: Mon, 07 Feb 2011 13:02:21 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 14 Feb 2011 16:08:01 -0500
+Received: by bwz15 with SMTP id 15so5906042bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 13:08:00 -0800 (PST)
+Date: Tue, 15 Feb 2011 00:07:55 +0300
+From: Stanislav Fomichev <kernel@fomichev.me>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	gregkh@suse.de, linux-wireless@vger.kernel.org, s@fomichev.me
+Subject: Re: [PATCH] brcm80211: remove multiple calls to wl_release_fw
+Message-ID: <20110214210755.GB26387@sdf-MacBook>
+References: <20110212150033.GA1941@sdf-MacBook>
+ <4D598993.4020900@broadcom.com>
+ <20110214202249.GK4384@bicker>
 MIME-Version: 1.0
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-CC: j@w1.fi, Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Scanning and channel types.
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org> <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com> <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org> <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com> <4D5033DE.4070701@candelatech.com> <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com> <4D50503E.4090007@candelatech.com> <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
-In-Reply-To: <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110214202249.GK4384@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2011 12:10 PM, Daniel Halperin wrote:
-> On Mon, Feb 7, 2011 at 12:04 PM, Ben Greear<greearb@candelatech.com>  wrote:
->>> Start on 5 GHZ AP with HT Only set.  Scan.  What rate are probes sent
->>> at for 2.4 GHz?
->
-> No HT20 is not the same as HT-Only.  I'm not sure how to set that. Jouni?
+> This patch isn't right.  It fixes the oops but it introduces some leaks.
+> (We still need to release firmware that was allocated successfully).
+Sorry Dan, but where do you see the leaks? We make a call to
+wl_request_fw and if returns non-zero call wl_release_fw for a cleanup.
 
-I found a post from a year or so ago that indicates hostapd doesn't
-support this type of thing (that could have changed, of course).
+I just removed the call to wl_release_fw in the wl_request_fw itself; so
+it should not introduce any leak.
 
-Do you know of any commercial APs that support the HT-only feature?
-(And/Or a general strategy for configuring it?)
-
->> On 5Ghz channels, they are sent at 6Mbps
->> On channel 3 (2.4Ghz), they are sent at 1Mbps
->>
->>
->> That seem right?
->
-> Yes, for a HT20 but not HT Only AP.
-
-Seems to me that the probe-request is to any/all APs,
-so how could we possibly know that we should send it
-at 6Mbps v/s 1Mbps until we discovered and communicated
-with it?
-
-Thanks,
-Ben
+Could you pls clarify?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+	Stas
