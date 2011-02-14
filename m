@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:8371 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344Ab1BFRnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 12:43:02 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:40838 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751968Ab1BNWBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 17:01:25 -0500
+Subject: Re: Notes on ssb specs and implementation
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH wireless-2.6.38] iwlagn: Re-enable RF_KILL interrupt when down
-Date: Sun,  6 Feb 2011 09:29:45 -0800
-Message-Id: <1297013385-9918-1-git-send-email-wey-yi.w.guy@intel.com>
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com> (sfid-20110214_205318_109392_FFFFFFFFAA87CB50)
+References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
+	 <1297282621.9734.5.camel@maggie>
+	 <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com>
+	 (sfid-20110214_205318_109392_FFFFFFFFAA87CB50)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 23:01:17 +0100
+Message-ID: <1297720877.5683.3.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Mon, 2011-02-14 at 20:51 +0100, Rafał Miłecki wrote: 
+> W dniu 9 lutego 2011 21:17 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> > On Wed, 2011-02-09 at 21:00 +0100, Rafał Miłecki wrote:
+> >> Michael: was there any reasons why we didn't implement some parts of
+> >> core-disabling code?
+> >
+> > The function are complete as of latest reverse engineering efforts.
+> > Broadcom added stuff, if they do more stuff in latest code.
+> 
+> Nothing has changed in specs since 2006:
+> http://bcm-v4.sipsolutions.net/Backplane?action=info
+> For some reason routines that were present even in 2006 was not implemented.
 
-With commit 554d1d027b19265c4aa3f718b3126d2b86e09a08 only one RF_KILL
-interrupt will be seen by the driver when the interface is down.
+Well, so the function was implemented prior to 2006. Which doesn't
+surprise me. It was one of the first ones.
 
-Re-enable the interrupt when it occurs to see all transitions.
+> I've just written missing parts,
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch is also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+May I see them?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f13a83a..a236b8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1157,6 +1157,9 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
- 	/* only Re-enable if diabled by irq */
- 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
- 		iwl_enable_interrupts(priv);
-+	/* Re-enable RF_KILL if it occurred */
-+	else if (handled & CSR_INT_BIT_RF_KILL)
-+		iwl_enable_rfkill_int(priv);
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	if (iwl_get_debug_level(priv) & (IWL_DL_ISR)) {
-@@ -1371,6 +1374,9 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 	/* only Re-enable if diabled by irq */
- 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
- 		iwl_enable_interrupts(priv);
-+	/* Re-enable RF_KILL if it occurred */
-+	else if (handled & CSR_INT_BIT_RF_KILL)
-+		iwl_enable_rfkill_int(priv);
- }
- 
- /* the threshold ratio of actual_ack_cnt to expected_ack_cnt in percent */
+> tested and it still does not work :|
+> The only advantage discovered so far is that ssb detects sth is wrong
+> with IM state:
+> [ 2661.449647] ssb: Timeout waiting for bitmask 01800000 on register
+> 0F90 to clear.
+> 
+> I can see wl experiencing the same problems after loading b43. It
+> reads 0xf90 dozen of times in a row.
+
+And that's the thing why I always avoid touching that function.
+There's so much magic going on, so that completely weird things happen
+all the time. :D
+
 -- 
-1.7.0.4
+Greetings Michael.
 
