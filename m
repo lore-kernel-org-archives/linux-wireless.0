@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52613 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752510Ab1BGGuH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 01:50:07 -0500
-Received: by wwa36 with SMTP id 36so4462607wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Feb 2011 22:50:06 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:2161 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752243Ab1BNUk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 15:40:56 -0500
+Message-ID: <4D59934D.2020600@broadcom.com>
+Date: Mon, 14 Feb 2011 21:40:45 +0100
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <19791.38178.247980.202528@gargle.gargle.HOWL>
-References: <1297057905-2518-1-git-send-email-vnatarajan@atheros.com>
-	<19791.38178.247980.202528@gargle.gargle.HOWL>
-Date: Mon, 7 Feb 2011 12:20:06 +0530
-Message-ID: <AANLkTimLJepiVQzTaCw7jU_xioyNHdVMogF8tTb5=mrc@mail.gmail.com>
-Subject: Re: [PATCH] Update ar9271.fw
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>,
-	David.Woodhouse@intel.com, dwmw2@infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Dan Carpenter" <error27@gmail.com>,
+	"s@fomichev.me" <s@fomichev.me>
+cc: "gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: remove multiple calls to wl_release_fw
+References: <20110212150033.GA1941@sdf-MacBook>
+ <4D598993.4020900@broadcom.com> <20110214202249.GK4384@bicker>
+In-Reply-To: <20110214202249.GK4384@bicker>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 7, 2011 at 12:15 PM, Sujith <m.sujith@gmail.com> wrote:
-> Vivek Natarajan wrote:
->> * Enable bluetooth coexistence.
->> * Fix disconnection issue with WEP and TKIP noticed in some APs.
+Hello Dan and Stanislav,
+
+I already had a patch in the making that is a superset of Stanislav's 
+patch. It fixes the leak issue. I agreed with Stanislav's patch since, I 
+made the same (but: more) changes. Stanislav, can we agree that we wait 
+for my patch (I plan on delivering this tomorrow) ?
+
+Thanks, Roland.
+
+On 02/14/2011 09:22 PM, Dan Carpenter wrote:
+>> On 02/12/2011 04:00 PM, Stanislav Fomichev wrote:
+>>> This causes an oops when the bcm43xx_hdr-0.fw binary is not found.
+>>>
 >
-> Have you increased the ram segment size/offset in this patch ?
+> This patch isn't right.  It fixes the oops but it introduces some leaks.
+> (We still need to release firmware that was allocated successfully).
+>
+> regards,
+> dan carpenter
+>
 
-Nope. RAM segment offset has not been changed.
 
-Vivek.
