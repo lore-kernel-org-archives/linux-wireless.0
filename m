@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:15471 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755751Ab1BRXvK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53212 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228Ab1BNK03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 18:51:10 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000022500.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:50:32 +0200
-Subject: Re: [RFC] AI support (13/14 ssb add AI support)
-From: George Kashperko <george@znau.edu.ua>
-To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1298071637.23801.40.camel@maggie>
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
-	 <1297981882.23381.38.camel@dev.znau.edu.ua>
-	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>
-	 <1298070443.25739.23.camel@dev.znau.edu.ua>
-	 (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA)  <1298071637.23801.40.camel@maggie>
-Content-Type: text/plain
-Date: Sat, 19 Feb 2011 01:42:29 +0200
-Message-Id: <1298072549.25739.50.camel@dev.znau.edu.ua>
+	Mon, 14 Feb 2011 05:26:29 -0500
+Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while
+ in powersave mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: RA-Jay Hung <Jay_Hung@ralinktech.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	RA-Dennis Lee <Dennis_Lee@ralinktech.com>,
+	RA-Eddy Tsai <Eddy_Tsai@ralinktech.com>
+In-Reply-To: <AANLkTimRT-2B4G1jC4D+BZURmd_FRGSkLT5MKsEvcS3r@mail.gmail.com>
+References: <201101311600.39486.IvDoorn@gmail.com>
+	 <874o8mbaec.fsf@purkki.adurom.net>
+	 <AANLkTikKevPWkWMu=HLPHt-jACLZLQzqN6thr-2LNk59@mail.gmail.com>
+	 <B7288B2B5878D747BA031EF4B170D7F6092D2727@TWHCMBS01.tw.ralinktech.ad>
+	 <AANLkTimRT-2B4G1jC4D+BZURmd_FRGSkLT5MKsEvcS3r@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 11:25:54 +0100
+Message-ID: <1297679154.3785.24.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2011-02-14 at 11:14 +0100, Ivo Van Doorn wrote:
 
-> Oh, wait a second right here. That's not how Linux development works.
-> We want the technically superior solution, not just something that
-> works to get stuff working no matter what.
+> Thanks. So I'll add this routine to the rt2800usb driver then. :)
 > 
-> If your patchset works, that's pretty cool. So thanks a lot for getting
-> something to the users that works. Nothing stops distributions from
-> picking up those patches and distributing it to endusers.
-> That doesn't mean we have to adopt it to the mainline, though.
-Well, my point here is somewhat different. As I've wrote earlier few
-days ago till the time when (or better say if?) we get some tech. docs
-on AI, software wise it look very much similat to SB.
-Yes, it might be not SSB at all, and might more AMBA or some other
-hardware solution. 
+> Johannes, if you don't want to add the complexity for checking the
+> "pending MC/BC frames" in
+> a received frame. Would you mind if I add some utility functions to
+> mac80211 then? That way the
+> logic is still shared for the drivers that need it, but it doesn't
+> impact the code paths in mac80211 itself...
 
-Actually, software wise at current level of knowledge that goes from
-sources available it pretty much the same backplanes where whole num of
-registers used to control bus itself 4 for SSB and 2 for AI (I omit here
-regs used for identification but they are more chipcommon core ones'
-rather than bus property, and also omit those we don't use at all cause
-we don't need em or just dont know wth they are).
+Sure, that's ok I suppose. FWIW, if it makes the implementation a lot
+simpler, adding it in mac80211 would be acceptable, but I'm not
+convinced that CONF_PS is the right hook for it, since mac80211
+throughout assumes CONF_PS will automatically wake up for beacons etc.,
+and changing that would imho exponentially increase the already high
+complexity of the powersaving implementation.
 
-There are much more differences between PCI and PCIE but we still dont
-have two different buses, and here honestly I don't know if PCI project
-was forked when PCIE support was added or not.
-
-I wish Broadcom could get us more tech. details on AI or if not then
-just name it SSB2 to avoid arguing on confusion caused by <SSB AI> ;)
-
-
-Have nice day,
-George
-
+johannes
 
