@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52482 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501Ab1BOHIy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 02:08:54 -0500
-Received: by vxb37 with SMTP id 37so3211633vxb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 23:08:53 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:63955 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751041Ab1BNElH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Feb 2011 23:41:07 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 20:40:46 -0800
+Message-ID: <4D58B25D.4040507@atheros.com>
+Date: Mon, 14 Feb 2011 10:11:01 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1297677974.3785.9.camel@jlt3.sipsolutions.net>
-References: <1297351797-35031-1-git-send-email-nbd@openwrt.org> <1297677974.3785.9.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 14 Feb 2011 23:08:32 -0800
-Message-ID: <AANLkTi=wkmAeBKXv8PKhVRJXFdY_NO7jS+vwFJueuBpL@mail.gmail.com>
-Subject: Re: [PATCH 1/2] cfg80211: add a field for the bitrate of the last rx
- data packet from a station
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: make use of slot time macros
+References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com>
+In-Reply-To: <20110211162944.GD2224@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 2:06 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-02-10 at 16:29 +0100, Felix Fietkau wrote:
->> Also fix a typo in the STATION_INFO_TX_BITRATE description
->>
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  include/linux/nl80211.h |    3 ++
->>  include/net/cfg80211.h  |    5 +++-
->>  net/wireless/nl80211.c  |   56 +++++++++++++++++++++++++++++++----------------
->>  3 files changed, 44 insertions(+), 20 deletions(-)
->>
->> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
->> index 821ffb9..35bfec2 100644
->> --- a/include/linux/nl80211.h
->> +++ b/include/linux/nl80211.h
->> @@ -1243,6 +1243,8 @@ enum nl80211_rate_info {
->>   * @NL80211_STA_INFO_LLID: the station's mesh LLID
->>   * @NL80211_STA_INFO_PLID: the station's mesh PLID
->>   * @NL80211_STA_INFO_PLINK_STATE: peer link state for the station
->> + * @NL80211_STA_INFO_RX_BITRATE: last unicast rx rate, nested attribute
->> + *   containing info as possible, see &enum nl80211_sta_info_txrate.
->
-> I think it would make sense to restrict this to data frames, as mgmt
-> frames will often be sent with a low rate.
+On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
+> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
+>    
+>> On 2011-02-11 5:15 PM, John W. Linville wrote:
+>>      
+>>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
+>>>        
+>>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
+>>>>          
+>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>>
+>>>>> Instead of using raw numbers to assign slot time it would be better to
+>>>>> make use of predefined slot time macros
+>>>>>            
+>>>> How does this make it better?
+>>>>          
+>>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
+>>>        
+>> Well, neither the unit of this variable, nor the values that can be used
+>> are ath9k specific.
+>>      
+> True -- the patch is probably an unnecessarily zealous attempt to avoid
+> "magic numbers" in the code. :-)
+>    
+John there are two instances where these macros are used:
 
-Would it be useful to show both? How about per AC?
+htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
+  init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
 
-  Luis
+
+> John
+>    
