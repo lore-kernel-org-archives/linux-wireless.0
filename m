@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 124-197-1-37.callplus.net.nz ([124.197.1.37]:36162 "EHLO
-	elm.torus.co.nz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754617Ab1BOWFq (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48051 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467Ab1BNV6I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 17:05:46 -0500
-Message-ID: <4D5AF8B5.10100@davenport.net.nz>
-Date: Wed, 16 Feb 2011 11:05:41 +1300
-From: Hugh Davenport <hugh@davenport.net.nz>
+	Mon, 14 Feb 2011 16:58:08 -0500
+Received: by bwz15 with SMTP id 15so5956280bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 13:58:06 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?0J3QuNC60L7Qu9Cw0Lkg0JvQtdC00L7QstGB0LrQuNGF?=
-	<nledovskikh@gmail.com>
-CC: linville@tuxdriver.com, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Use mips generic dma-mapping functions
- to avoid seqfault on AHB chips
-References: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com>
-In-Reply-To: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com>
+In-Reply-To: <1297685871.3785.39.camel@jlt3.sipsolutions.net>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	<1297619803-2832-5-git-send-email-njs@pobox.com>
+	<1297685871.3785.39.camel@jlt3.sipsolutions.net>
+Date: Mon, 14 Feb 2011 13:58:05 -0800
+Message-ID: <AANLkTinuvxEuuz3-xWkhQ1fA8s7QumJHJQKpd1C48CV1@mail.gmail.com>
+Subject: Re: [PATCH 4/5] iwlwifi: auto-tune tx queue size to minimize latency
+From: Nathaniel Smith <njs@pobox.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Mon, Feb 14, 2011 at 4:17 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
+>> This patch estimates how long it takes the hardware to transmit one
+>> packet (by comparing each packet's queue residency time to the number
+>> of packets it had to wait behind), and then further smooths these
+>> estimates with an EWMA. Then, it uses the estimated packet
+>> transmission time to choose the maximum queue size that will still
+>> produce reasonably bounded queue residency times, given current
+>> conditions.
+>
+> This sounds nice -- but couldn't it just as well be implemented in
+> mac80211, at least for most devices (that have accurate TX status
+> reporting)?
 
-On 16/02/11 03:29, Николай Ледовских wrote:
-> This patch fixes seqfault on ar2316 and other AHB based chips.
-> 
+I don't know. I take it you're imagining a scheme where mac80211 keeps
+a hash table or similar of all packets that have been queued to the
+device, and does its own tx rate estimation and calls start/stop_queue
+as needed? If that works, then it would be lovely. (Heck, it should
+probably go in the generic net layer eventually; ethernet cards have
+the same problem.) But there are enough complications around
+multiqueue devices, packet aggregation strategies, interrupt
+mitigation, etc., that I don't think I sit down and write this fully
+general solution myself, at least not without a lot more experience
+with the needs of different devices. So this patch is intended as a
+start.
 
-This could fix the issues I have been having with my ubiquiti bullet 2.
-It segfaults all the time :P
+On Mon, Feb 14, 2011 at 7:46 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
+> Hi Nathaniel,
+[...]
+> should the high_mark get reset when interface up or queue reset.
 
-Cheers,
+Hi Wey,
 
-Hugh
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+I thought about that, but I can't see what difference it would make.
+If we have no information about connection quality, then any high_mark
+is as good as any other (and if anything, the previous connection's
+quality is probably as good an estimate as we have, since people often
+reconnect to the same network repeatedly after suspend, etc.). And in
+any case, once connected, we should adapt quite quickly (esp. when
+using the uplink heavily, which is the only time when the queue size
+has an effect), so our starting value should hardly matter. But I have
+no objection to resetting it if that seems cleaner somehow.
 
-iQEcBAEBAgAGBQJNWvi1AAoJEBwrtoQ2Ia06JfUIAIMAYYjFp5n1081UfEQ8BUhJ
-3QZiwEleuND+OKGOyCUbA+Ua6Pq9FOZRwpKmPus1p94a3PI5e5hVBtYVgNE+ENJg
-M4S7Rc7YPCIGie3OdjztdIR9rscWzV7Z8s1MUt/cFrUqlncIfRE5bpDe8qboXjX8
-uSpelqP7EAE6QlS7bKRc40t2ysInPgjsHNURr1uoUkhprsYrxsIvVM9oZtWcqkFq
-9GwW/+81cEUS8+d04xrEuF4Upu/9mcP3POFGaCmesdnRPl16ZrSNfK53Fc08v6rG
-pT2oYknuUSzFBRl9NBsjwOaZkYVifGvRWpWBLvhMv4og3ylEOw2qtksVFFnRvgc=
-=buhf
------END PGP SIGNATURE-----
+-- Nathaniel
