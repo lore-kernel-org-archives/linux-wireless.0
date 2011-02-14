@@ -1,96 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54543 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327Ab1B0QB3 convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38962 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755260Ab1BNAdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 11:01:29 -0500
+	Sun, 13 Feb 2011 19:33:18 -0500
+Received: by iwn9 with SMTP id 9so4286332iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 16:33:17 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <8739n9ii7z.fsf@cruithne.co.teklibre.org>
-References: <20110225222210.GA3618@tuxdriver.com>
-	<AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
-	<87fwr9jxya.fsf@cruithne.co.teklibre.org>
-	<AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
-	<8739n9ii7z.fsf@cruithne.co.teklibre.org>
-Date: Sun, 27 Feb 2011 17:01:27 +0100
-Message-ID: <AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
-Subject: Re: ANNOUNCE: debloat-testing kernel git tree
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: =?UTF-8?Q?Dave_T=C3=A4ht?= <d@taht.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	bloat-devel@lists.bufferbloat.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1297619803-2832-1-git-send-email-njs@pobox.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 14 Feb 2011 11:32:57 +1100
+Message-ID: <AANLkTin4MkMrz6Aa7g6JrB+QsNRHFvc26MFQ4UzcUM_L@mail.gmail.com>
+Subject: Re: [PATCH 0/5] iwlwifi: Auto-tune tx queue size to maintain latency
+ under load
+To: "Nathaniel J. Smith" <njs@pobox.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 27, 2011 at 4:56 PM, Dave Täht <d@taht.net> wrote:
-> Sedat Dilek <sedat.dilek@googlemail.com> writes:
->
->> On Sun, Feb 27, 2011 at 4:31 PM, Dave Täht <d@taht.net> wrote:
->>>
->>> Sedat Dilek <sedat.dilek@googlemail.com> writes:
->>>
->>>> On Fri, Feb 25, 2011 at 11:22 PM, John W. Linville
->>>> <linville@tuxdriver.com> wrote:
->>>>> Announcement
->>>>>
->>>>> The bufferbloat project [1] is pleased to announce the availability
->>>>> of the debloat-testing Linux kernel git tree:
->>>>>
->>>>>   git://git.infradead.org/debloat-testing.git
->>>
->>> ----snip----
->
->>> Excellent. At moment I would recommend building "low latency preempt
->>> desktop" kernels with a high HZ value (400 or 1000), enabling highres
->>> timers, and compiling in SFB as a module. (I'd like the default for SFB
->>> to be "m" rather than "n", too)
->>>
->
->> These "debloat guys" are fast :-).  I was just preparing my
->> build-system (which I normally use to debianize linux-next kernels).
->> Any other recommendation for kernel-config options?  For example:
->> linux-next has already CONFIG_NET_SCH_CHOKE (but I have unset it).
->
-> Enable CHOKe.
->
-> The HZ value change is due to my worry that we've smashed latency so
-> much in the driver/mac layer that it's interacting with the higher
-> layers somewhat badly... So we need to add more hooks to the servo loops
-> involved in order to have a normal HZ.
->
->> Which commits are in debloat-testing GIT but not in linux-next tree?
->
-> The current list was in the release announcement. More on the way
-> (mostly embedded drivers at this point) git pull early and often!
->
->> Are you planning debloat feature for 2.6.39?
->
-> Depends on how many testers we get and what the results are.
->
-> I feel the eBDP stuff will not be ready during this release cycle. SFB
-> and CHOKe are in net-next, so, probably. Various driver patches -
-> particularly those that increase the available dynamic range via
-> ethtool, (e.g lowering the bottommost TX queue limit to, like, 4,
-> especially for home gateways) may make it out if people look harder into
-> the issue.
->
->>
->> - Sedat -
->
-> --
-> Dave Taht
-> http://nex-6.taht.net
->
+On Mon, Feb 14, 2011 at 04:56, Nathaniel J. Smith <njs@pobox.com> wrote:
+> I have an iwl3945 in my laptop, and find that whenever I saturate the
+> outgoing connection -- which happens daily when my rsync backup kicks
+> in -- then latency becomes astronomical (what Jim Gettys calls
+> "bufferbloat"). I've measured 12-13 second ping times to my router. As
+> you can imagine, this makes web browsing or interactive SSH somewhat
+> uncomfortable.
 
-OK, thanks for the explanations.
+For those who aren't aware of this, more info:
+http://gettys.wordpress.com/2010/12/03/introducing-the-criminal-mastermind-bufferbloat/
 
-Concerning "more drivers":
-What would I have to do to modify ath5k?
-I looked into the ath9k patch in debloat-testing GIT and it was to mod
-some (TX/BUF) values only.
-Not sure if ath9k is/was "well" prepared or only a good choice by the
-testers/committers as they own such a device.
+Re-(re-)stating the issue in question: When a network link is
+congested, packets are being buffered for a "long" time in an attempt
+to not drop any traffic; despite almost all protocols being either
+built on TCP or designed to deal with packet loss. This causes latency
+issues as the sender is not receiving any indication that the network
+is congested and hence continuing to send as fast as it can, filling
+these buffers and causing high latencies as they are emptied out over
+the congested link.
 
-- Sedat -
+The short term solution (but not an overall solution by any means) is
+to reduce these buffers so that packets are dropped when links are
+congested.
+
+> This patch series teaches the driver to measure the average rate of
+> packet transmission for each tx queue, and adjusts the queue size
+> dynamically in an attempt to achieve ~2 ms of added latency.
+
+IMHO, I'm not sure that this is the best method of implementing this
+solution: most wireless (and ethernet) devices have some form of
+buffer for the same reason, so implementing a solution for iwlwifi is
+not an overall solution - we need some method of doing this for *all*
+network devices, not just iwlwifi.
+
+That said, your reasoning for the queue management simplification
+seems sound - but as I don't know the iwlwifi code so I can't really
+comment on it any further than that.
+
+Finally, your numbers are damn impressive, and this is the first
+attempt that I'm aware of to solve this problem.
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
