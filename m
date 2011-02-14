@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29043 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751987Ab1BXJjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 04:39:31 -0500
-Date: Thu, 24 Feb 2011 10:39:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] ath9k: correct ath9k_hw_set_interrupts
-Message-ID: <20110224093912.GA2222@redhat.com>
-References: <20110221140210.GA5996@redhat.com>
- <20110223212132.GC2729@tuxdriver.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:34828 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491Ab1BNIvT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 03:51:19 -0500
+Received: by qwa26 with SMTP id 26so2929443qwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 00:51:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110223212132.GC2729@tuxdriver.com>
+In-Reply-To: <201102140943.13801.jordipujolp@gmail.com>
+References: <201102131531.29984.jordipujolp@gmail.com>
+	<201102140943.13801.jordipujolp@gmail.com>
+Date: Mon, 14 Feb 2011 09:51:18 +0100
+Message-ID: <AANLkTi=057tQL07iBit=uZnckXVs4V+1=2pMCBpha+RU@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: synchronize transmission routines
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Jordi Pujol <jordipujolp@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 23, 2011 at 04:21:32PM -0500, John W. Linville wrote:
-> On Mon, Feb 21, 2011 at 03:02:41PM +0100, Stanislaw Gruszka wrote:
-> > Commit 4df3071ebd92ef7115b409da64d0eb405d24a631 "ath9k_hw: optimize
-> > interrupt mask changes", changed ath9k_hw_set_interrupts function to
-> > enable interrupts regardless of function argument, what could possibly
-> > be wrong. Correct that behaviour and check "ints" arguments before
-> > enabling interrupts, also disable interrupts if ints do not have
-> > ATH9K_INT_GLOBAL flag set.
-> > 
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> Should this be Cc: stable@kernel.org?
+> A new version of this patch to synchronize transmission and receipt for each
+> device,
 
-I think no. 4df3071ebd92e is from .38-rc1 , this patch should 
-go to 38 if possible. If not, I'm still not sure about stable.
-It does not fix any pratical issues for me, my ath9k device
-work good with and without patch.
+Well that address my first  major objection against this patch.
+But could you please explain what is working better with this patch?
+Both rxdone as txdone are for USB devices on a singlethreaded
+workqueue. So it the work items will be scheduled only once...
 
-Stanislaw
+And I am not aware of any race conditions on the txdone/rxdone
+paths (my testing environment is a dual-CPU system as well, so
+I am always testing with SMP enabled...)
+
+Ivo
