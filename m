@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Message-Id: <4D5D32630200007800032642@vpn.id2.novell.com>
-Date: Thu, 17 Feb 2011 13:36:19 +0000
-From: "Jan Beulich" <JBeulich@novell.com>
-To: <johannes@sipsolutions.net>
-Cc: <linux-kbuild@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] small adjustment to net/mac80211/Kconfig
+Received: from he.sipsolutions.net ([78.46.109.217]:59979 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418Ab1BNMQG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 07:16:06 -0500
+Subject: Re: [PATCH 2/5] iwlwifi: Convert the tx queue high_mark to an
+ atomic_t
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Nathaniel J. Smith" <njs@pobox.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+In-Reply-To: <1297619803-2832-3-git-send-email-njs@pobox.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	 <1297619803-2832-3-git-send-email-njs@pobox.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 13:16:01 +0100
+Message-ID: <1297685761.3785.38.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"def_bool n" without prompt is pointless, this should be just "bool".
+On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
+> This patch should cause no behavioral change whatsoever.
 
-Signed-off-by: Jan Beulich <jbeulich@novell.com>
+Right -- but it makes the TX path quite a bit more expensive on some
+architectures. Why is this necessary? There should be locking in most
+places already, and where not it should be easy to move this under the
+existing lock.
 
----
- net/mac80211/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- 2.6.38-rc5/net/mac80211/Kconfig
-+++ 2.6.38-rc5-kconfig-mac80211/net/mac80211/Kconfig
-@@ -17,7 +17,7 @@ comment "CFG80211 needs to be enabled fo
- if MAC80211 != n
- 
- config MAC80211_HAS_RC
--	def_bool n
-+	bool
- 
- config MAC80211_RC_PID
- 	bool "PID controller based rate control algorithm" if EXPERT
-
+johannes
 
 
