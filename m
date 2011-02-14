@@ -1,83 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16764 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159Ab1BOSUP convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:64738 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032Ab1BNKsj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 13:20:15 -0500
-From: "Ferraton, Jean RegisX" <jean.regisx.ferraton@intel.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Walter Goldens <goldenstranger@yahoo.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"marcel@holtmann.org" <marcel@holtmann.org>
-Date: Tue, 15 Feb 2011 18:20:11 +0000
-Subject: RE: Advise on how to integrate latest bluetooth updates on linux
- 2.6.35 kernel
-Message-ID: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F71994D@irsmsx501.ger.corp.intel.com>
-References: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F56AFD4@irsmsx501.ger.corp.intel.com>
- <456817.14949.qm@web161612.mail.bf1.yahoo.com>
- <20110210222424.GA24388@khazad-dum.debian.net>
-In-Reply-To: <20110210222424.GA24388@khazad-dum.debian.net>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 14 Feb 2011 05:48:39 -0500
+Received: by wyb28 with SMTP id 28so4562464wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 02:48:38 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <AANLkTimnx9sz0gUmzd1-yj7Y-CQh4MOQWYxe4=LfeStp@mail.gmail.com>
+References: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
+	<AANLkTimEDvmp2RbLXdOf8vRrjzBKd+rLwqoreX+x3EdB@mail.gmail.com>
+	<1297678357.3785.14.camel@jlt3.sipsolutions.net>
+	<AANLkTimnx9sz0gUmzd1-yj7Y-CQh4MOQWYxe4=LfeStp@mail.gmail.com>
+Date: Mon, 14 Feb 2011 16:18:38 +0530
+Message-ID: <AANLkTikP5kTZe06zBd5iUZq7wKZBo4ipX0cZHHmt7xDZ@mail.gmail.com>
+Subject: Re: [RFC] mac80211: reply to directed probes in IBSS
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 14, 2011 at 3:58 PM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Mon, Feb 14, 2011 at 3:42 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2011-02-08 at 16:41 +0530, Mohammed Shafi wrote:
+>>> On Tue, Feb 1, 2011 at 6:19 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> > From: Johannes Berg <johannes.berg@intel.com>
+>>> >
+>>> > At least the WMM spec says we should reply to
+>>> > unicast probe request frames that go to us.
+>>> >
+>>> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>> > ---
+>>> >  net/mac80211/ibss.c |    2 +-
+>>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>>> >
+>>> > --- wireless-testing.orig/net/mac80211/ibss.c   2011-02-01 12:58:16.000000000 +0100
+>>> > +++ wireless-testing/net/mac80211/ibss.c        2011-02-01 13:47:44.000000000 +0100
+>>> > @@ -689,7 +689,7 @@ static void ieee80211_rx_mgmt_probe_req(
+>>> >               mgmt->bssid, tx_last_beacon);
+>>> >  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>>> >
+>>> > -       if (!tx_last_beacon)
+>>> > +       if (!tx_last_beacon && !(status->rx_flags & IEEE80211_RX_RA_MATCH))
+>>> >                return;
+>>> >
+>>> >        if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
+>>>
+>>> Hi Johannes,
+>>>              tested with the same thing (in addition of passing the
+>>> rx_status structure) and it is working fine.
+>>
+>> Yeah, I clearly missed that, guess I wasn't paying attention.
+>>
+>> The real question though is -- do we want/need this? I can only find
+>> reference to this behaviour in the WMM spec.
+>
+> Yes, Test Engineers say this is necessary for IBSS test case-5.3.1 to pass.
 
+Sorry for the incomplete information, few details of the test case is
+5.3.1 IBSS Active Scanning Test
+Purpose and Description
+Active scan tests verify that the STAUT can create an IBSS, respond to
+active scans, and pass data.
 
-> -----Original Message-----
-> From: Henrique de Moraes Holschuh [mailto:hmh@hmh.eng.br]
-> Sent: Thursday, February 10, 2011 11:24 PM
-> To: Walter Goldens
-> Cc: linux-wireless@vger.kernel.org; Ferraton, Jean RegisX;
-> marcel@holtmann.org
-> Subject: Re: Advise on how to integrate latest bluetooth updates on
-> linux 2.6.35 kernel
-> 
-> On Thu, 10 Feb 2011, Walter Goldens wrote:
-> > > I'm working in the bluetooth part in a project based on the
-> > > 2.6.35 linux kernel.
-> > >
-> > > We've found some bugs related to bluetooth, and I've seen
-> > > that most of these bugs have been solved by latest releases
-> > > (2.6.36 and 2.6.37).
-> 
-> ...
-> 
-> > Compat-wireless is your best bet. Noninvasive solution to your
-> problem.
-> 
-> There is a 2.6.35 longterm, as well as stable 2.6.36.  If these are
-> real
-> fixes that address bugs users will find on the field, they might well
-> be
-> candidates for the stable (and longterm) releases.  And THAT is always
-> much
-> preferable over compat-wireless, as it would be helpful to a lot more
-> users.
-> 
-> --
+References
+Test case 6.1 in “Wi-Fi 802.11 with WPA2, WPA, and WEP System
+Interoperability Test Plan for IEEE
+802.11a, b & g Devices”
 
-Hi,
+For the Active Probe
 
-I've tried to use the compat-wireless solution, but it is impossible, as in our case we are using a BT driver bt_drv which is in the kernel and depends on bluetooth.h and is incompatible with the compat version. So it is impossible to use the compat solution.
+STAUT responds with
+Basic rate enumerated in beacon message is per default
+channel is correct
+record BSSID for
+alter comparison to ensure
+that it is a random value
 
-Now I'm trying to use the bluetooth-next tree, replacing the Bluetooth stuff in my kernel. Technically, it works fine.
-
-Do you think this kind of implementation is acceptable?
-If not, what would you recommend?
-
-Regards
-
-Jean
----------------------------------------------------------------------
-Intel Corporation SAS (French simplified joint stock company)
-Registered headquarters: "Les Montalets"- 2, rue de Paris, 
-92196 Meudon Cedex, France
-Registration Number:  302 456 199 R.C.S. NANTERRE
-Capital: 4,572,000 Euros
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+> thanks,
+> shafi
+>
+>>
+>> johannes
+>>
+>>
+>
