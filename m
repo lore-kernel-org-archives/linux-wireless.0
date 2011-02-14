@@ -1,88 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53980 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751023Ab1BAVN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 16:13:56 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: remove compat for threaded_irq in rt2x00
-Date: Tue,  1 Feb 2011 22:13:46 +0100
-Message-Id: <1296594827-30742-1-git-send-email-hauke@hauke-m.de>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:33319 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751192Ab1BNXIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 18:08:41 -0500
+Subject: Re: Notes on ssb specs and implementation
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <AANLkTinnY2EzNBReVPqHYzi9xDvZNXFZqbUm66e9vTOM@mail.gmail.com> (sfid-20110215_000306_559821_FFFFFFFF9C6FCD67)
+References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
+	 <1297282621.9734.5.camel@maggie>
+	 <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com>
+	 <1297720877.5683.3.camel@maggie>
+	 <AANLkTi=ayavFKJw9s-n-AvMDrtMxXdDcjV+BnoxO-qkE@mail.gmail.com>
+	 <1297723925.5683.11.camel@maggie>
+	 <AANLkTinnY2EzNBReVPqHYzi9xDvZNXFZqbUm66e9vTOM@mail.gmail.com>
+	 (sfid-20110215_000306_559821_FFFFFFFF9C6FCD67)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Feb 2011 00:08:33 +0100
+Message-ID: <1297724913.5683.12.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00 does not use threaded_irq any more.
+On Tue, 2011-02-15 at 00:02 +0100, Rafał Miłecki wrote: 
+> W dniu 14 lutego 2011 23:52 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> > On Mon, 2011-02-14 at 23:32 +0100, Rafał Miłecki wrote:
+> >> Sure. It's not for submission, so you have to expect magic values.
+> >
+> > That patch doesn't look too bad.
+> 
+> Should we commit such a patch? Even if we didn't notice it to improve anything?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/09-threaded-irq.patch |   56 -----------------------------------------
- 1 files changed, 0 insertions(+), 56 deletions(-)
+I think it should wait until you got the device working.
+But once it works, it should be committed.
 
-diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
-index 059e58e..df164e9 100644
---- a/patches/09-threaded-irq.patch
-+++ b/patches/09-threaded-irq.patch
-@@ -61,59 +61,3 @@ thread in process context as well.
-  };
-  
-  /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
----- a/drivers/net/wireless/rt2x00/rt2x00.h
--+++ b/drivers/net/wireless/rt2x00/rt2x00.h
--@@ -901,6 +901,10 @@ struct rt2x00_dev {
-- 	 * Tasklet for processing tx status reports (rt2800pci).
-- 	 */
-- 	struct tasklet_struct txstatus_tasklet;
--+
--+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
--+	struct compat_threaded_irq irq_compat;
--+#endif
-- };
-- 
-- /*
----- a/drivers/net/wireless/rt2x00/rt2x00pci.c
--+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
--@@ -160,10 +160,18 @@ int rt2x00pci_initialize(struct rt2x00_d
-- 	/*
-- 	 * Register interrupt handler.
-- 	 */
--+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
--+	status = compat_request_threaded_irq(&rt2x00dev->irq_compat,
--+					  rt2x00dev->irq,
--+					  rt2x00dev->ops->lib->irq_handler,
--+					  rt2x00dev->ops->lib->irq_handler_thread,
--+					  IRQF_SHARED, rt2x00dev->name, rt2x00dev);
--+#else
-- 	status = request_threaded_irq(rt2x00dev->irq,
-- 				      rt2x00dev->ops->lib->irq_handler,
-- 				      rt2x00dev->ops->lib->irq_handler_thread,
-- 				      IRQF_SHARED, rt2x00dev->name, rt2x00dev);
--+#endif
-- 	if (status) {
-- 		ERROR(rt2x00dev, "IRQ %d allocation failed (error %d).\n",
-- 		      rt2x00dev->irq, status);
--@@ -187,7 +195,11 @@ void rt2x00pci_uninitialize(struct rt2x0
-- 	/*
-- 	 * Free irq line.
-- 	 */
--+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
--+	compat_free_threaded_irq(&rt2x00dev->irq_compat);
--+#else
-- 	free_irq(rt2x00dev->irq, rt2x00dev);
--+#endif
-- 
-- 	/*
-- 	 * Free DMA
--@@ -202,6 +214,9 @@ EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize
--  */
-- static void rt2x00pci_free_reg(struct rt2x00_dev *rt2x00dev)
-- {
--+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
--+	compat_destroy_threaded_irq(&rt2x00dev->irq_compat);
--+#endif
-- 	kfree(rt2x00dev->rf);
-- 	rt2x00dev->rf = NULL;
-- 
 -- 
-1.7.1
+Greetings Michael.
 
