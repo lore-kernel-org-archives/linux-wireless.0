@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47468 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752323Ab1BWHaS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 02:30:18 -0500
-Received: by wwb39 with SMTP id 39so1207069wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 23:30:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1298379745.3773.1.camel@jlt3.sipsolutions.net>
-References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
-	<1298027245.3772.3.camel@jlt3.sipsolutions.net>
-	<20110219061241.GA5881@vmraj-lnx.users.atheros.com>
-	<1298106890.3725.7.camel@jlt3.sipsolutions.net>
-	<AANLkTinP96mRkqCz-HgE3ePR-g2pFveR6HL2QoNw=E_r@mail.gmail.com>
-	<1298379745.3773.1.camel@jlt3.sipsolutions.net>
-Date: Wed, 23 Feb 2011 13:00:15 +0530
-Message-ID: <AANLkTi=0hUr8xKfwmkkp84DHvs1Sr1gWk1oVkLCZB+pZ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:48413 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752059Ab1BNP27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 10:28:59 -0500
+Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20110214090620.GE2327@redhat.com>
+References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110211144951.GA2278@redhat.com>
+	 <1297437769.20613.1300.camel@wwguy-ubuntu>
+	 <20110214090620.GE2327@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 07:27:08 -0800
+Message-ID: <1297697228.4723.5.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 22, 2011 at 6:32 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> If the device queues are stopped, we have to find some other fix for
->> this power save issue since null func frame will be queued to pending
->> frames as I mentioned earlier. Can we have this patch merged and fix
->> the monitor vif issue for this case and the scanning case later? I
->> have also sent a RFC patch earlier with stopping device queues and a
->> new PS_PENDING flag for this
->> (http://marc.info/?l=linux-wireless&m=129775059910372&w=3) That patch
->> also addresses this race.
->
-> I think for a first solution we can probably get away not worrying about
-> monitor injection frames, since typically they'd be used by P2P things
-> that disable powersave anyway. Right? And we already have the monitor
-> vs. flush problem anyway.
+On Mon, 2011-02-14 at 01:06 -0800, Stanislaw Gruszka wrote:
+> Hi Wey
+> 
+> On Fri, Feb 11, 2011 at 07:22:49AM -0800, wwguy wrote:
+> > On Fri, 2011-02-11 at 06:49 -0800, Stanislaw Gruszka wrote:
+> > > On Thu, Feb 10, 2011 at 08:16:33AM -0800, Wey-Yi Guy wrote:
+> > > > remove plcp check for 3945, mark the function __maybe_unused
+> > > > 
+> > > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > > Cc: <stable@kernel.org> # .35+: c91d015: iwl3945: remove plcp check
+> > > > Cc: stable@kernel.org  # 2.6.35+
+> > > > ---
+> > > >  drivers/net/wireless/iwlwifi/iwl-3945.c |    2 +-
+> > > >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > > > 
+> > I see your point, but I also think it des not mean other driver doing
+> > bad, so we can do it too. do you agree?
+> 
+> Fully agree :-)
+> 
+> > I like to see the iwlwifi driver
+> > as clean as possible (do our best :-))
+> > hope it is ok for you.
+> 
+> Of course it is. But I do not complained about fixing warning, but about
+> posting it to -stable. Thats clearly not -stable fix as stated in
+> Documentation/stable_kernel_rules.txt .
+> 
+> I should have add that __maybe_unused to my patch, but I didn't.
+> What we could do now is fix warning in upstream and live with it
+> in -stable .
+> 
+yeap, I agree with you , no need to go to _stable
 
-Thanks. I will resend the patch rebased to current wireless-testing.
+Wey
 
-Vivek.
+
