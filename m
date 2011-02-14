@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.24]:17656 "EHLO mgw-da01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756072Ab1BCK3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 05:29:42 -0500
-Subject: Re: [PATCH] wl12xx: Add channel 14 to list of supported 2ghz
- channels
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1294775357-10821-1-git-send-email-arik@wizery.com>
-References: <1294775357-10821-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 08:03:05 +0200
-Message-ID: <1294812185.18570.44.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48156 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877Ab1BNUPe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 15:15:34 -0500
+Date: Mon, 14 Feb 2011 15:10:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
+Message-ID: <20110214201052.GE2722@tuxdriver.com>
+References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1297677349.3785.3.camel@jlt3.sipsolutions.net>
+ <1297697139.4723.4.camel@wwguy-ubuntu>
+ <1297697334.3953.7.camel@jlt3.sipsolutions.net>
+ <1297698486.4723.15.camel@wwguy-ubuntu>
+ <1297698872.3953.8.camel@jlt3.sipsolutions.net>
+ <1297699053.4723.17.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297699053.4723.17.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-01-11 at 21:49 +0200, ext Arik Nemtsov wrote:
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
-> drivers/net/wireless/wl12xx/main.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 062247e..a7afdca 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -2305,6 +2305,7 @@ static struct ieee80211_channel wl1271_channels[] = {
->  	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
->  	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
->  	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
-> +	{ .hw_value = 14, .center_freq = 2484, .max_power = 25 },
->  };
->  
->  /* mapping to indexes for wl1271_rates */
+On Mon, Feb 14, 2011 at 07:57:33AM -0800, wwguy wrote:
+> On Mon, 2011-02-14 at 07:54 -0800, Johannes Berg wrote:
+> > On Mon, 2011-02-14 at 07:48 -0800, wwguy wrote:
+> > > On Mon, 2011-02-14 at 07:28 -0800, Johannes Berg wrote:
+> > > > On Mon, 2011-02-14 at 07:25 -0800, wwguy wrote:
+> > > > > On Mon, 2011-02-14 at 01:55 -0800, Johannes Berg wrote:
+> > > > > > On Thu, 2011-02-10 at 08:16 -0800, Wey-Yi Guy wrote:
+> > > > > > > remove plcp check for 3945, mark the function __maybe_unused
+> > > > > > 
+> > > > > > Why not remove the function instead?
+> > > > > > 
+> > > > > I guess we can remove it in legacy driver
+> > > > 
+> > > > But it's a 3945 specific function, and never used, so ...??
+> > > > 
+> > > I mean we should remove this function in legacy driver after driver
+> > > split
+> > 
+> > I just don't see why we can't remove it right now?
+> > 
+> we can do it for _stable, for mainstream, all 3945 will move to separate
+> driver anyway.
 
-Do the radio-parameter structs (i.e. the INI-file) already have a field
-for channel 14? If not, does not adding this channel introduce strange
-problems?
+...where it will still be unused.  No?
 
-We used to have some 4.9GHz channels on the 11a band, which are
-theoretically supported but were lacking the respective radio-parameter
-fields, which caused some issues and they had to be removed until the
-radio-parameter interface is updated.
-
--Juuso
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
