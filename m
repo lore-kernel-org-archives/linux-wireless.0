@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:45779 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756148Ab1BCKar (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 05:30:47 -0500
-Subject: Re: [PATCH 1/2] mac80211: add hw configuration for max ampdu
- buffer size
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Luciano Coelho <coelho@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1294837512.2097.34.camel@pimenta>
-References: <1294836052-16828-1-git-send-email-coelho@ti.com>
-	 <1294837049.18570.63.camel@wimaxnb.nmp.nokia.com>
-	 <1294837512.2097.34.camel@pimenta>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 Jan 2011 15:10:56 +0200
-Message-ID: <1294837856.18570.64.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:42164 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752999Ab1BNK6A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 05:58:00 -0500
+Received: by yxt3 with SMTP id 3so1988268yxt.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 02:57:59 -0800 (PST)
+From: Jordi Pujol <jordipujolp@gmail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: synchronize transmission routines
+Date: Mon, 14 Feb 2011 11:57:51 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201102131531.29984.jordipujolp@gmail.com> <201102141047.48790.jordipujolp@gmail.com> <AANLkTik0rEeK6qSc7rWxqDKicdNDEaH=ne+ODS+WwHQx@mail.gmail.com>
+In-Reply-To: <AANLkTik0rEeK6qSc7rWxqDKicdNDEaH=ne+ODS+WwHQx@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201102141157.51656.jordipujolp@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-01-12 at 15:05 +0200, ext Luciano Coelho wrote:
-> On Wed, 2011-01-12 at 13:57 +0100, Juuso Oikarinen wrote:
-> > On Wed, 2011-01-12 at 14:40 +0200, ext coelho@ti.com wrote:
-> > > From: Luciano Coelho <coelho@ti.com>
-> > > 
-> > > Some devices don't support the maximum AMDPU buffer size of 64, so we
-> > > need to add an option to configure this in the hardware configuration.
-> > > This value will be used in the ADDBA response instead of the value
-> > > suggested in the request, if the latter is greater than the max
-> > > supported.
-> > > 
-> > > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > > ---
-> > 
-> > Tested-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Thanks a lot for testing this for me, Juuso! I owe you one beer...
-> hrmmm... coke!
-> 
+A Dilluns 14 Febrer 2011 10:54:17, Ivo Van Doorn va escriure:
+> >> Both rxdone as txdone are for USB devices on a singlethreaded
+> >> workqueue. So it the work items will be scheduled only once...
 
-Yeah, vanilla-coke even ;)
+guess (maybe) the problem is in the usb workqueues, I have found also an 
+erratic behaviour in the usb mouse.
 
--Juuso
+> Could you try the compat-wireless package? There are a lot
+> of queue-related patches in there which were submitted after 2.6.37.
 
+this afternoon will try that,
+
+Jordi Pujol
+
+Live never ending Tale
+GNU/Linux Live forever!
+http://livenet.selfip.com
