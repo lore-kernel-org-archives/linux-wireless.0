@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tulikuusama.dnainternet.net ([83.102.40.132]:60867 "EHLO
-	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932994Ab1BPBIN (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61476 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864Ab1BNWRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 20:08:13 -0500
-Message-ID: <20110216030805.34044ohmmyriiwmc@hayate.sektori.org>
-Date: Wed, 16 Feb 2011 03:08:05 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and
- EP_INT_IN from interrupt to bulk
-References: <20110206083522.16858.24185.stgit@fate.lan>
- <20110215184945.GF2557@tuxdriver.com>
-In-Reply-To: <20110215184945.GF2557@tuxdriver.com>
+	Mon, 14 Feb 2011 17:17:19 -0500
+Received: by bwz15 with SMTP id 15so5974231bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 14:17:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+In-Reply-To: <1297677453.3785.4.camel@jlt3.sipsolutions.net>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	<1297619803-2832-2-git-send-email-njs@pobox.com>
+	<1297677453.3785.4.camel@jlt3.sipsolutions.net>
+Date: Mon, 14 Feb 2011 14:17:17 -0800
+Message-ID: <AANLkTinA0yoF_dU+2B6+rHcE_DvS7yjqu+TqYzhprvZj@mail.gmail.com>
+Subject: Re: [PATCH 1/5] iwlwifi: Simplify tx queue management
+From: Nathaniel Smith <njs@pobox.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "John W. Linville" <linville@tuxdriver.com>:
-
-> On Sun, Feb 06, 2011 at 10:35:22AM +0200, Jussi Kivilinna wrote:
->> This fixes high CPU usage when writing beacon frame to hardware. With this
->> patch CPU usage of kworker on Intel Atom with 100 TU beacon interval goes
->> from ~10% down to <1%.
+On Mon, Feb 14, 2011 at 1:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
+>> Previously, the iwlwifi driver filled its transmit queue until it
+>> reached a high-water mark, and then stopped until it had fallen to a
+>> low-water mark. This basic logic makes sense for interrupt mitigation
+>> -- you might not want to wake up the CPU after every packet, but
+>> instead wait until a batch of packets has been sent -- except the
+>> iwlwifi driver doesn't actually do any interrupt mitigation; the CPU
+>> wakes up after every packet transmitted anyway. So we simplify the
+>> code to maintain only a single limit on total queue length, and
+>> whenever we drop below that limit we allow more packets in.
 >>
->> Checking vendor driver appears it's also ignoring fact that endpoints are
->> interrupt type and is using bulk urbs on these.
->>
->> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>> This patch should have no user-visible effect.
 >
-> This patch led to a lengthy thread.  I'm not 100% clear on the
-> outcome, but it seems like the conclusion was that the driver should
-> be doing something else -- at least that seemed to be the conclusion
-> for ath9k_htc.
->
-> So, is this patch still wanted?
->
-> John
+> I'm pretty sure the devices (but maybe not 3945) implement interrupt
+> mitigation at least in some cases. How did you arrive at the conclusion
+> that "the driver doesn't actually do any interrupt mitigation"?
 
-It's not needed. The patchset [1] that made write command use  
-asynchronous URBs lowers CPU usage the other way.
+Two reasons:
+  -- I searched the code and couldn't find any evidence for it
+  -- If I'm wrong then the quickest way to find out is to make loud
+and confident claims in front of people who know better ;-)
+I might be wrong.
 
--Jussi
+If so, then it'd be pretty straightforward to extend this approach to
+handle interrupt mitigation -- you set the low mark to N ms, and the
+high mark to N+M ms, where N is the amount of time you think you need
+to refill the queue after it drops, and 1/M is the maximum interrupt
+rate you're willing to tolerate.
 
-[1] http://marc.info/?l=linux-wireless&m=129753620103065&w=2
+On Mon, Feb 14, 2011 at 7:33 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
+> Hi Nathaniel,
+[...]
+> what device you test this with? I will like to see this changes with
+> newer device, especially with aggregation.
 
+Hi Wey,
+
+03:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+[Golan] Network Connection (rev 02)
+
+Sadly, I don't have access to any newer hardware. I'd be happy to take
+donations ;-), but probably someone else will need to do the testing?
+
+I wouldn't be surprised if it needed some tweaks to properly handle
+aggregation (in particular, I'd want to start by clamping the minimum
+queue size to match our best guess at the number of packets we can
+currently combine into a single transmission), but I'm not enough of
+an 802.11 expert to be confident about how to do that either. That
+number varies with the rate, yes? So we'd need some way to ask the
+rate control algorithm what rate it plans to use next?
+
+-- Nathaniel
