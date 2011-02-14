@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:41185 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755477Ab1BCQNO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755202Ab1BNPyg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 11:13:14 -0500
-Received: by qyj19 with SMTP id 19so7253105qyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 08:13:14 -0800 (PST)
-Message-ID: <4D4AD44C.4070409@lwfinger.net>
-Date: Thu, 03 Feb 2011 10:14:04 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	zhaoming_li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH] rtlwifi: rtl8192ce: Modify core for inclusion of additional
- drivers
-References: <1296324761-14158-1-git-send-email-Larry.Finger@lwfinger.net> <20110203102331.GA3516@redhat.com>
-In-Reply-To: <20110203102331.GA3516@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Feb 2011 10:54:36 -0500
+Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1297698486.4723.15.camel@wwguy-ubuntu>
+References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1297677349.3785.3.camel@jlt3.sipsolutions.net>
+	 <1297697139.4723.4.camel@wwguy-ubuntu>
+	 <1297697334.3953.7.camel@jlt3.sipsolutions.net>
+	 <1297698486.4723.15.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Feb 2011 16:54:32 +0100
+Message-ID: <1297698872.3953.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/03/2011 04:23 AM, Stanislaw Gruszka wrote:
-> On Sat, Jan 29, 2011 at 12:12:41PM -0600, Larry.Finger@lwfinger.net wrote:
->> From: zhaoming_li <chaoming_li@realsil.com.cn>
-> 
->> Unfortunately, this is a much larger patch than I would like, but the
->> changes are substantial. I tried to keep any white-space changes to a
->> minimum. My attempts to split the patch into separate pieces resulted
->> in compilation errors, which would break bisection.
-> 
-> But zhaoming_li did not change code in one big commit like that,
-> zhaoming_li did you? :-)
-> 
-> It would be better if realsil will send small patches when
-> they are created, instead of develop driver behind closed doors
-> and then post changes in one huge hunk.
+On Mon, 2011-02-14 at 07:48 -0800, wwguy wrote:
+> On Mon, 2011-02-14 at 07:28 -0800, Johannes Berg wrote:
+> > On Mon, 2011-02-14 at 07:25 -0800, wwguy wrote:
+> > > On Mon, 2011-02-14 at 01:55 -0800, Johannes Berg wrote:
+> > > > On Thu, 2011-02-10 at 08:16 -0800, Wey-Yi Guy wrote:
+> > > > > remove plcp check for 3945, mark the function __maybe_unused
+> > > > 
+> > > > Why not remove the function instead?
+> > > > 
+> > > I guess we can remove it in legacy driver
+> > 
+> > But it's a 3945 specific function, and never used, so ...??
+> > 
+> I mean we should remove this function in legacy driver after driver
+> split
 
-I agree; however, the situation is even more complicated. The Realsil group in
-China now has mac80211 drivers for 3 PCI-based devices, and the Realtek group in
-Taiwan has a similar driver for a USB-based device. Drivers for each of the 2
-new PCI devices and the USB device were sent to me as a complete package. I'm
-trying to merge them with as little effort as possible, which resulted in that
-large patch.
+I just don't see why we can't remove it right now?
 
-I'll back off and take it in smaller steps to make it easier to review. Once we
-get these three new drivers merged, then any further changes will be as
-incremental patches.
-
-As these 802.11N devices are starting to appear in late-model laptops,
-particularly those made by Toshiba, it is important to merge these drivers ASAP.
-
-Larry
-
+johannes
 
