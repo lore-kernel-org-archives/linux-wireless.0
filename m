@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:65281 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932071Ab1BUCVT (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:52088 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398Ab1BNS7O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:21:19 -0500
-Received: by gwj23 with SMTP id 23so744531gwj.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:21:19 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Mon, 14 Feb 2011 13:59:14 -0500
+Received: by vxb37 with SMTP id 37so2855770vxb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 10:59:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.51903.862083.544544@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:45:27 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: ath9k_htc patches
+In-Reply-To: <AANLkTimVK9pJXW32EwHoeqF=0_o-L3wmUC8W1Hd6kBO6@mail.gmail.com>
+References: <AANLkTimVK9pJXW32EwHoeqF=0_o-L3wmUC8W1Hd6kBO6@mail.gmail.com>
+Date: Mon, 14 Feb 2011 19:55:45 +0100
+Message-ID: <AANLkTinLNxBkS73=VL=N=0161LSnudVcyHbF-DvwcrVf@mail.gmail.com>
+Subject: Installing compat-wireless modules on an external system
+From: Juan Carlos Garza <juancarlosgarza@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Hi,
+I have a 2.6.24 system running in a separate box (which boots from an
+SD Card), and I want to install compat-wireless in it in order to use
+a driver (and update the wireless subsystem). I compile the kernel for
+the 2.6.24 system in my daily PC.
 
-Here are some cleanups/fixes. These add some preliminary
-code needed to enable AP mode. AP mode is not enabled in this
-series, it would be done later when proper TX status reporting
-and TX filtering is added to the firmware. These patches don't
-require a firmware update and the internal patch queue was growing
-long and unwieldy, so it would be good to have these merged.
+I cross compiled compat-wireless without problems against the 2.6.24
+sources using KLIB=(2.6.24 src path) and KLIB_BUILD=(2.6.24 src path)
 
-Sujith
+My problem is that I am not sure of how to install it in the 2.6.24
+system. As this system can be booted from the SD Card, I can mount it
+in my daily PC and set the DESTDIR and others with destination the
+path. I ran something like:
 
-Sujith Manoharan (23):
-  ath9k_htc: Handle storage devices
-  ath9k_htc: Allow upto two simultaneous interfaces
-  ath9k_htc: Unify target capability updating
-  ath9k_htc: Fix error handling in add_interface
-  ath9k_htc: Remove OP_PREAMBLE_SHORT
-  ath9k_htc: Remove OP_PROTECT_ENABLE
-  ath9k_htc: Remove OP_ASSOCIATED variable
-  ath9k_htc: Set the BSSID mask for multiple interfaces
-  ath9k_htc: Make sequence number calculation per-VIF
-  ath9k_htc: Use VIF from the packet's control data
-  ath9k_htc: Protect ampdu_action with a mutex
-  ath9k_htc: Maintain individual counters for interfaces
-  ath9k_htc: Allow AP interface to be created
-  ath9k_htc: Calculate and set the HW opmode
-  ath9k_htc: Add ANI for AP mode
-  ath9k_htc: Disable powersave if an AP interface is present
-  ath9k_htc: Configure beacon timers in AP mode
-  ath9k_htc: Fix TBTT calculation for IBSS mode
-  ath9k_htc: Handle BSSID/AID for multiple interfaces
-  ath9k_htc: Fix host RX initialization
-  ath9k_htc: Fix RX filters
-  ath9k_htc: Add debug code to print endpoint mapping
-  ath9k_htc: Fix error path in URB allocation
+make KLIB=(2.6.24 src path) KLIB_BUILD=(2.6.24 src path)
+KMODPATH_ARG="INSTALL_MOD_PATH=(2.6.24 mounted in my
+pc/lib/modules/2.6.24/)" DESTDIR=(2.6.24 mounted in my
+pc/lib/modules/2.6.24/) modules_install
 
- drivers/net/wireless/ath/ath9k/hif_usb.c        |   78 ++++-
- drivers/net/wireless/ath/ath9k/htc.h            |   76 ++++-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |  137 +++++++-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |   19 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |  448 ++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   82 +++--
- drivers/net/wireless/ath/ath9k/reg.h            |    1 +
- drivers/net/wireless/ath/ath9k/wmi.c            |    4 -
- 8 files changed, 643 insertions(+), 202 deletions(-)
+Which actually copied the modules into the 2.6.24 system in the SD
+Card. However, when booting the 2.6.24 box, and then trying to do
+insmod /path/driver.ko, it fails to find some symbols. Going through
+the different dependencies (by trying to insert a module, and then
+executing dmesg -c), and trying to insert them, it fails too. I cannot
+insert mac80211.ko or compat.ko or the rfkill module, etc. I think one
+of the last dependences is the function "dev_set_name" which appears
+in compat-2.6.26.c I am not sure if this file is also being compiled
+(as my daily PC has a 2.6.29 kernel and I don't have access to it
+right now).
 
--- 
-1.7.4.1
+Well, maybe missing a dependency somewhere, or the 2.6.24 kernel
+version is not correctly identified. Any hints?
 
+Best regards,
+
+Juan Carlos
