@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37307 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab1B1Aio (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:57850 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755381Ab1BOUHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 19:38:44 -0500
-Date: Mon, 28 Feb 2011 03:38:23 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Alessio Igor Bogani <abogani@kernel.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Bird <tim.bird@am.sony.com>
-Subject: Re: [PATCH] rtlwifi: make gcc happy
-Message-ID: <20110228003734.GA9075@bicker>
-References: <1298841390-1194-1-git-send-email-abogani@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1298841390-1194-1-git-send-email-abogani@kernel.org>
+	Tue, 15 Feb 2011 15:07:20 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 84C0E540110
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 15:10:09 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110215200718.A8F75434BE@repository3.orbit-lab.org>
+Date: Tue, 15 Feb 2011 15:07:18 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 27, 2011 at 10:16:30PM +0100, Alessio Igor Bogani wrote:
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘rtl92ce_rx_query_desc’:
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:255:5: warning: ‘rf_rx_num’ may be used uninitialized in this function
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:257:12: warning: ‘total_rssi’ may be used uninitialized in this function
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:466:6: warning: ‘weighting’ may be used uninitialized in this function
-> 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 6d48219...a57cb3b akpm-end   -> origin/akpm-end  (forced update)
+   091994c..795abaf  akpm-start -> origin/akpm-start
+   c4286b3..1136027  history    -> origin/history
+ + 6a658e2...b7bbcc2 master     -> origin/master  (forced update)
+   091994c..795abaf  stable     -> origin/stable
+ * [new tag]         next-20110215 -> next-20110215
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-These fix actual bugs where uninitialized values are used; it's not
-just a matter of silencing warnings.  The patch title should mention
-that.  Perhaps something like:
+compat-wireless code metrics
 
-[patch] rtlwifi: fix places where uninitialized data is used
-
-regards,
-dan carpenter
+    787333 - Total upstream lines of code being pulled
+      2093 - backport code changes
+      1831 - backport code additions
+       262 - backport code deletions
+      7292 - backport from compat module
+      9385 - total backport code
+    1.1920 - % of code consists of backport work
