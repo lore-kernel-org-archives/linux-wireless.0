@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:39550 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788Ab1BSLzA convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1109 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531Ab1BOOov (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 06:55:00 -0500
-Received: by qwd7 with SMTP id 7so981068qwd.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 03:54:59 -0800 (PST)
+	Tue, 15 Feb 2011 09:44:51 -0500
+Date: Tue, 15 Feb 2011 09:44:45 -0500
+From: me@bobcopeland.com
+To: =?utf-8?B?0J3QuNC60L7Qu9Cw0Lkg0JvQtdC00L7QstGB0LrQuNGF?=
+	<nledovskikh@gmail.com>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com, jirislaby@gmail.com
+Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
+	seqfault on AHB chips
+Message-ID: <20110215144445.GA6066@hash.localnet>
+References: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1297789820.8664.4.camel@jlt3.sipsolutions.net>
-References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
-	<20110215190657.75006zvz1q691rk8@naisho.dyndns.info>
-	<1297789820.8664.4.camel@jlt3.sipsolutions.net>
-Date: Sat, 19 Feb 2011 12:54:59 +0100
-Message-ID: <AANLkTimudqvTM94eNX5cKmJBougPm99beEYFx_ogWPH-@mail.gmail.com>
-Subject: Re: [RFC/RFT] mac80211: make tx() operation return void
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTinqN4MjWz4y5D195f9J8vob42GsG9u39xX-RuJf@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 6:10 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-02-15 at 19:06 +0200, Jussi Kivilinna wrote:
->
->> > -static int b43_op_tx(struct ieee80211_hw *hw,
->> > +static void b43_op_tx(struct ieee80211_hw *hw,
->> >                  struct sk_buff *skb)
->> >  {
->> >     struct b43_wl *wl = hw_to_b43_wl(hw);
->> > @@ -3211,14 +3211,11 @@ static int b43_op_tx(struct ieee80211_hw
->> >     if (unlikely(skb->len < 2 + 2 + 6)) {
->> >             /* Too short, this can't be a valid frame. */
->> >             dev_kfree_skb_any(skb);
->> > -           return NETDEV_TX_OK;
->> >     }
->>
->> Return missing.
->
-> Right, thanks.
->
-> johannes
->
+On Tue, Feb 15, 2011 at 02:29:13PM +0000, Николай Ледовских wrote:
+> This patch fixes seqfault on ar2316 and other AHB based chips.
 
-Hi Johannes,
+Ok, but I'm guessing it also breaks PCI functionality?
 
-what about a v2 of this patch considering the b43 fix and recent ath5k
-(needs a refresh) changes?
+>      struct ath5k_softc *sc = common->priv;
+> -    struct platform_device *pdev = to_platform_device(sc->dev);
+> +    struct platform_device *pdev =
+> to_platform_device(wiphy_dev(sc->hw->wiphy));
 
-ath5k changes introduced by...
+Your patch got wrapped strangely here...
 
-commit 12873372fe1f201813f1cc750a8af7d9193f445c
-ath5k: move external function definitions to a header file
+> -    mem = ioremap_nocache(res->start, res->end - res->start + 1);
+> +    mem = res->start;
 
-...in wireless-next-2.6
+Won't this break iommu platforms?
 
-- Sedat -
+> +    SET_IEEE80211_DEV(hw, &pdev->dev);
+> 
+> -    sc->dev = &pdev->dev;
+> +    sc->dev = NULL;
 
+>      /* Initialize driver private data */
+> -    SET_IEEE80211_DEV(hw, sc->dev);
 
-[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=12873372fe1f201813f1cc750a8af7d9193f445c
+> @@ -216,6 +216,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>          ret = -ENOMEM;
+>          goto err_map;
+>      }
+> +    SET_IEEE80211_DEV(hw, &pdev->dev);
+
+This set of changes needs some rationale...  in other words, what is
+the real problem the patch fixes?
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
