@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39349 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365Ab1BGFnQ convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37868 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab1BOOun convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 00:43:16 -0500
-Received: by iyj8 with SMTP id 8so1782477iyj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Feb 2011 21:43:15 -0800 (PST)
+	Tue, 15 Feb 2011 09:50:43 -0500
+Received: by qwa26 with SMTP id 26so183175qwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 06:50:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4D4F0DFF.9010703@openwrt.org>
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org>
- <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
- <4D4EFF68.9060101@candelatech.com> <AANLkTin6ia8mYsS4LOFTyZoD-dKUgUBGo6uMFt=FjTcY@mail.gmail.com>
- <4D4F0D83.4040401@candelatech.com> <4D4F0DFF.9010703@openwrt.org>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sun, 6 Feb 2011 21:42:55 -0800
-Message-ID: <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
-Subject: Re: Scanning and channel types.
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1297361481.30218.31.camel@maggie>
+References: <1297258590.17400.37.camel@dev.znau.edu.ua>
+	<AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
+	<1297288286.9734.28.camel@maggie>
+	<AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
+	<4D5320AA.5020405@lwfinger.net>
+	<1297315457.12795.40.camel@dev.znau.edu.ua>
+	<1297333256.30218.10.camel@maggie>
+	<1297359641.15805.38.camel@dev.znau.edu.ua>
+	<1297361481.30218.31.camel@maggie>
+Date: Tue, 15 Feb 2011 15:50:42 +0100
+Message-ID: <AANLkTi=vp2cCsSJNv1+G2kWxTOL4Y7Tq8TVAMN_cAGQ6@mail.gmail.com>
+Subject: Re: SSB AI support code ([RFC] v2)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: George Kashperko <george@znau.edu.ua>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Right. I think there is a function something like "send_rate_low" that
-sends the lowest entry in the mac80211 enabled rates table for control
-and mgmt packets.  If the NIC is associated to an HT Only AP then that
-lowest entry should be HT20 MCS 1, I'd think.
+2011/2/10 Michael B√ºsch <mb@bu3sch.de>:
+> You're actually abusing the ops structure. The ops structure is meant
+> to abstract the SSB backplane from its host bus. It is _not_ meant
+> to abstract the SSB backplane itself. Your patches mix that up. It's
+> an abstraction layer violation, which my proposal avoids completely.
 
-Also, does circumventing "set channel type" code work properly across
-bands?  If you start on 5 GHz will it send 6 Mbps probes or 1 Mbps
-probes?
+After some reading, learning, I think I generally agree with Michael.
 
-Dan
+George: I like you consider separated bus driver now. Please let us
+know when you design something!
 
-On Sun, Feb 6, 2011 at 1:09 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-02-06 10:07 PM, Ben Greear wrote:
->> On 02/06/2011 12:23 PM, Daniel Halperin wrote:
->>> Could be rate selection.
->>>
->>> Ben, a sanity check: †is it possible for the device to be associated
->>> to an "HT-Only" AP and thus not be able to sent NO_HT packets? †Could
->>> that be why there might need to be a channel change sometimes?
->>
->> I don't know. †The code and comments in †ieee80211_set_channel_type
->> make me think that it's always possible to send NO_HT packets regardless
->> of hardware's channel type.
->>
->> One thing I haven't figured out yet: †What actually tells the
->> hardware to send NO_HT v/s HT20 v/s HT40, etc. †I have previously tested
->> HT20 STAs concurrent with HT40 stas, and both can send/receive at once
->> while the hardware stays in HT40 mode.
-> mac80211 tx info sets the mode for the transmission (as part of the rate
-> series). Drivers like ath9k translate that to descriptor fields.
-> Rate control selects these things based on peer HT capabilities.
->
-> - Felix
->
+-- 
+Rafa≈Ç
