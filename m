@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55777 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2472 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750775Ab1BRNAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 08:00:47 -0500
-Date: Fri, 18 Feb 2011 14:00:53 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC] ath9k correct interrupts ?
-Message-ID: <20110218125955.GA4209@redhat.com>
+	id S1755249Ab1BOWhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 17:37:52 -0500
+Message-ID: <4D5B0034.3090303@broadcom.com>
+Date: Tue, 15 Feb 2011 14:37:40 -0800
+From: "Henry Ptasinski" <henryp@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: kernel@fomichev.me, "John W. Linville" <linville@tuxdriver.com>,
+	"Greg Korah-Hartman" <gregkh@suse.de>
+cc: devel@linuxdriverproject.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>
+Subject: Re: [PATCH v2 1/4] brcm80211: fix compile issue
+References: <1297721111-20606-1-git-send-email-kernel@fomichev.me>
+ <7A94256FD72B884D9E7C55586C3CBCEE13CDA25D88@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110215221200.GA2087@sdf-MacBook>
+In-Reply-To: <20110215221200.GA2087@sdf-MacBook>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure if that patch is correct or not. It possibly fix
-change from commit 4df3071ebd92ef7115b409da64d0eb405d24a631
-"ath9k_hw: optimize interrupt mask changes" that looks
-suspicious for me. But from other hand this patch
-could be totally wrong. Felix?
+On 02/15/2011 02:12 PM, Stanislav Fomichev wrote:
+> Commit 59eb21a65047 "cfg80211: Extend channel to frequency mapping for 802.11j"
+> changed the definition of the ieee80211_channel_to_frequency; so fix its
+> usage in brcmfmac.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 180170d..2915b11 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -885,7 +885,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (!(ints & ATH9K_INT_GLOBAL))
--		ath9k_hw_enable_interrupts(ah);
-+		ath9k_hw_disable_interrupts(ah);
- 
- 	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
- 
-@@ -963,7 +963,8 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- 			REG_CLR_BIT(ah, AR_IMR_S5, AR_IMR_S5_TIM_TIMER);
- 	}
- 
--	ath9k_hw_enable_interrupts(ah);
-+	if (ints & ATH9K_INT_GLOBAL)
-+		ath9k_hw_enable_interrupts(ah);
- 
- 	return;
- }
+Commit 59eb21a65047 went into wireless-next a few weeks ago, but hasn't 
+made it over to staging-next yet.  Should John pick up this patch for 
+wireless-next now, and it'll eventually migrate over to staging-next?
+
+- Henry
+
+
