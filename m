@@ -1,58 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60143 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414Ab1BDTJ3 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4626 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534Ab1BOOUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 14:09:29 -0500
-Subject: Re: [PATCH v9] mac80211: Optimize scans on current operating
- channel.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4D4C4C61.7060605@candelatech.com>
-References: <1296670694-28596-1-git-send-email-greearb@candelatech.com>
-	 <1296672941.5671.38.camel@jlt3.sipsolutions.net>
-	 <4D4C4C61.7060605@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Feb 2011 20:09:26 +0100
-Message-ID: <1296846566.3671.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Feb 2011 09:20:51 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] ath5k: move external function definitions to a header file
+Date: Tue, 15 Feb 2011 09:19:28 -0500
+Message-Id: <1297779568-32166-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-02-04 at 10:58 -0800, Ben Greear wrote:
-> On 02/02/2011 10:55 AM, Johannes Berg wrote:
-> > On Wed, 2011-02-02 at 10:18 -0800, greearb@candelatech.com wrote:
-> >
-> >> * Do no blindly go off/on channel in work.c  Instead, only call
-> >>    appropriate on/off code when we really need to change channels.
-> >
-> > Based on the powersave comments I had earlier, maybe we should remove
-> > that bit for now? Work items here require powersave is disabled, but we
-> > won't do that right now if we're on the same channel.
-> >
-> > Scan, on the other hand, will still disable powersave (right?)
-> 
-> With regard to scanning and power-save:  If we are scanning on
-> channel, I think we should still be able to receive normal traffic.
-> 
-> The offchannel_ps_enable has this comment:
-> 
-> /*
->   * inform AP that we will go to sleep so that it will buffer the frames
->   * while we scan
->   */
-> static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
-> 
-> 
-> So, do we really need to call this method for on-channel scanning?
-> 
-> My naive assumption is that we would actually want the NIC to disable it's
-> local power-save logic while we are scanning so that it doesn't
-> get sleepy and miss beacons?
+Johannes pointed out the mess of external function prototypes in the
+mac80211-ops.c file.  Woe to anyone who changes these functions...
 
-Right. We don't need this for on-channel stuff. But we do need to
-disable PS for on-channel stuff as you point out.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h        |   20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |   17 -----------------
+ 2 files changed, 20 insertions(+), 17 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index e43175a..70abb61 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1158,6 +1158,26 @@ void ath5k_hw_deinit(struct ath5k_hw *ah);
+ int ath5k_sysfs_register(struct ath5k_softc *sc);
+ void ath5k_sysfs_unregister(struct ath5k_softc *sc);
+ 
++/* base.c */
++struct ath5k_buf;
++struct ath5k_txq;
++
++void set_beacon_filter(struct ieee80211_hw *hw, bool enable);
++bool ath_any_vif_assoc(struct ath5k_softc *sc);
++int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
++		   struct ath5k_txq *txq);
++int ath5k_init_hw(struct ath5k_softc *sc);
++int ath5k_stop_hw(struct ath5k_softc *sc);
++void ath5k_mode_setup(struct ath5k_softc *sc, struct ieee80211_vif *vif);
++void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
++					struct ieee80211_vif *vif);
++int ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan);
++void ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
++int ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
++void ath5k_beacon_config(struct ath5k_softc *sc);
++void ath5k_txbuf_free_skb(struct ath5k_softc *sc, struct ath5k_buf *bf);
++void ath5k_rxbuf_free_skb(struct ath5k_softc *sc, struct ath5k_buf *bf);
++
+ /*Chip id helper functions */
+ const char *ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
+ int ath5k_hw_read_srev(struct ath5k_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index 36a5199..a60a726 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -48,23 +48,6 @@
+ 
+ extern int ath5k_modparam_nohwcrypt;
+ 
+-/* functions used from base.c */
+-void set_beacon_filter(struct ieee80211_hw *hw, bool enable);
+-bool ath_any_vif_assoc(struct ath5k_softc *sc);
+-int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+-		   struct ath5k_txq *txq);
+-int ath5k_init_hw(struct ath5k_softc *sc);
+-int ath5k_stop_hw(struct ath5k_softc *sc);
+-void ath5k_mode_setup(struct ath5k_softc *sc, struct ieee80211_vif *vif);
+-void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
+-					struct ieee80211_vif *vif);
+-int ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan);
+-void ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
+-int ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+-void ath5k_beacon_config(struct ath5k_softc *sc);
+-void ath5k_txbuf_free_skb(struct ath5k_softc *sc, struct ath5k_buf *bf);
+-void ath5k_rxbuf_free_skb(struct ath5k_softc *sc, struct ath5k_buf *bf);
+-
+ /********************\
+ * Mac80211 functions *
+ \********************/
+-- 
+1.5.6.5
+
 
