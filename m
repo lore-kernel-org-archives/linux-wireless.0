@@ -1,101 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50725 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:38034 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754320Ab1BHPry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 10:47:54 -0500
-Subject: Re: [PATCH 5/5] iwlwifi: avoid too frequent recover from statistics
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297153919-18766-5-git-send-email-sgruszka@redhat.com>
-References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
-	 <1297153919-18766-5-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Feb 2011 07:45:53 -0800
-Message-ID: <1297179953.20613.38.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1751323Ab1BOGQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 01:16:48 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 22:16:27 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.net>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+Subject: [RFC 2/2] mac80211: Flush all txq before sending a nullfunc frame.
+Date: Tue, 15 Feb 2011 11:46:29 +0530
+Message-ID: <1297750589-15465-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1297750589-15465-1-git-send-email-vnatarajan@atheros.com>
+References: <1297750589-15465-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+In a highly noisy environment, a data frame which is queued before
+a nullfunc frame on a different hw queue may be sent over the air
+after the tx completion of nullfunc frame. This causes the station
+to enter power save and the AP to see the station as awake and
+continues to send the data traffic. Fix this by flushing all tx
+queues before we send the null function frame with PM bit set.
 
-On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
-> Usually H/W generate statistics notify once per about 100ms, but
-> sometimes we can receive notify in shorter time, even 2 ms.
-> 
-> This can be problem for plcp health and ack health checking.
-> 
-> I.e. with 2 plcp errors happens randomly in 2 ms duration, we
-> exceed plcp delta threshold equal to 100 (2*100/2).
-> 
-> Also checking ack's in short time, can results not necessary false
-> positive and firmware reset, for example when channel is noised and
-> we do not receive ACKs frames or when remote device does not send
-> ACKs at the moment.
-> 
-> Patch change code, to do statistic check and possible recovery only
-> if 99ms elapsed from last check. Forced delay should assure we have
-> good statistic data to estimate hardware state.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-3945.c     |   24 ++++++++------
->  drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |   46 +++++++++++++++++----------
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +
->  drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-core.h     |    4 +-
->  drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 +-
->  drivers/net/wireless/iwlwifi/iwl-rx.c       |    4 +-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
->  8 files changed, 53 insertions(+), 34 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> index f371d42..9646cbc 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> @@ -409,11 +409,9 @@ static void iwl3945_accumulative_statistics(struct iwl_priv *priv,
->   * to improve the throughput.
->   */
->  static bool iwl3945_good_plcp_health(struct iwl_priv *priv,
-> -				struct iwl_rx_packet *pkt)
-> +				struct iwl_rx_packet *pkt, unsigned int msecs)
->  {
->  	__le32 cur_plcp_err, old_plcp_err;
-> -	unsigned int msecs;
-> -	unsigned long stamp;
->  	int delta;
->  	int threshold = priv->cfg->base_params->plcp_delta_threshold;
->  
-> @@ -422,12 +420,7 @@ static bool iwl3945_good_plcp_health(struct iwl_priv *priv,
->  		return true;
->  	}
->  
-> -	stamp = jiffies;
-> -	msecs = jiffies_to_msecs(stamp - priv->plcp_jiffies);
-> -	priv->plcp_jiffies = stamp;
-> -
-> -	if (msecs == 0)
-> -		return true;
-> +	BUG_ON(msecs == 0);
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/mlme.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-why not just return? I understand it should not be "0", but really need
-BUG_ON?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4c58769..79e8f49 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -741,6 +741,9 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED) ||
+ 	     !(ifmgd->flags & IEEE80211_STA_PS_PENDING))) {
+ 		ifmgd->flags |= IEEE80211_STA_PS_PENDING;
++		ieee80211_stop_queues_by_reason(&local->hw,
++						IEEE80211_QUEUE_STOP_REASON_PS);
++		drv_flush(local, false);
+ 		ieee80211_send_nullfunc(local, sdata, 1);
+ 	}
  
->  
-> -	stamp = jiffies;
-> -	msecs = jiffies_to_msecs(stamp - priv->plcp_jiffies);
-> -	priv->plcp_jiffies = stamp;
-> -
-> -	if (msecs == 0)
-> -		return true;
-> +	BUG_ON(msecs == 0);
-Same above
-
-
-Similar question, we are very close to finish driver split, when is the
-best time for this patch?
-
-Thanks
-Wey
+-- 
+1.6.3.3
 
