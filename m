@@ -1,81 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637Ab1BDMdZ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50790 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab1BOSxk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 07:33:25 -0500
-Received: from wireless by sipsolutions.net with local (Exim 4.72)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1PlKqr-0001j4-1U
-	for linux-wireless@vger.kernel.org; Fri, 04 Feb 2011 13:33:25 +0100
-Date: Fri, 04 Feb 2011 13:33:25 +0100
-Message-Id: <E1PlKqr-0001j4-1U@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] iw: v0.9.22
-Reply-to: linux-wireless@vger.kernel.org
-From: wireless@sipsolutions.net
+	Tue, 15 Feb 2011 13:53:40 -0500
+Received: by fxm20 with SMTP id 20so496346fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 10:53:39 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ar9170usb: mark the old driver as obsolete
+Date: Tue, 15 Feb 2011 19:53:21 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201102092213.11681.chunkeey@googlemail.com> <20110215183800.GE2557@tuxdriver.com>
+In-Reply-To: <20110215183800.GE2557@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201102151953.21958.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 15 February 2011 19:38:00 John W. Linville wrote:
+> On Wed, Feb 09, 2011 at 10:13:11PM +0100, Christian Lamparter wrote:
+> > AR9170USB will be replaced by carl9170 in the foreseeable
+> > future [2.6.39].
+>
+> How about if we mark this as 2.6.40 instead?
 
-A new release of iw (v0.9.22) is available at:
+ok, make that "after" 2.6.39. ;)
 
-http://wireless.kernel.org/download/iw/iw-0.9.22.tar.bz2
-
-SHA1 sum: a91226daab473d1aa0b6586c61f1c62db9618b7d
-
-Here is the short log of the changes included in this 
-release:
-
-Bill Jordan (1):
-      iw: new command to set the wds peer
-
-Bruno Randolf (5):
-      iw: print station retry counters
-      iw: Add ibss join parameter for beacon interval
-      iw: Add antenna configuration commands
-      iw: Add antenna configuration
-      iw: Add signal average to station dump information
-
-Felix Fietkau (3):
-      iw: survey: Mark frequency in use
-      iw: Add channel busy time to survey
-      iw: add multicast rates to IBSS join
-
-Jochen Friedrich (1):
-      iw: Implement set 4addr.
-
-Johannes Berg (25):
-      fix NL80211_ATTR_MAX_SCAN_IE_LEN attribute size
-      flush stdout after each event
-      parse RSN IE information on PMKIDs and mgmt cipher suite
-      update nl80211.h
-      add p2p interface types
-      fix some indentation
-      event parsing: remove PARSE_BEACON_CHAN
-      update nl80211.h
-      clean up some messages
-      events: allow relative timestamps
-      genl: include genetlink.h explicitly
-      update nl80211.h
-      allow sub-command selection
-      Revert "update nl80211.h"
-      Revert "iw: Add antenna configuration commands"
-      mesh: allow getting all parameters at once
-      mesh: allow setting multiple parameters at once
-      update nl80211.h
-      mesh: support join/leave
-      mesh: add support for NL80211_MESHCONF_ELEMENT_TTL
-      update nl80211.h
-      parse NL80211_ATTR_CQM_PKT_LOSS_EVENT
-      add unprot events
-      add more command names
-      version 0.9.22
-
-Jouni Malinen (1):
-      iw: parse michael MIC failure event
-
-Luis R. Rodriguez (2):
-      iw: print out eirp for triplets on scan
-      iw: fix country print
-
+Regards,
+	Chr
