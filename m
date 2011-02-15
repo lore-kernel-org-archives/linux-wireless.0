@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53921 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:37657 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756512Ab1BJRl2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 12:41:28 -0500
+	id S1751178Ab1BOGHr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 01:07:47 -0500
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 09:41:08 -0800
-Date: Thu, 10 Feb 2011 09:41:27 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
-CC: Richard =?iso-8859-1?Q?Sch=FCtz?= <r.schtz@t-online.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 22:07:27 -0800
+Message-ID: <4D5A182D.8090903@atheros.com>
+Date: Tue, 15 Feb 2011 11:37:41 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-Message-ID: <20110210174127.GA16737@tux>
-References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com>
- <4D52C54A.2010709@t-online.de>
- <4D53F3DE.4030707@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <4D53F3DE.4030707@atheros.com>
+Subject: Re: [PATCH] ath9k: make use of slot time macros
+References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com> <4D58B25D.4040507@atheros.com> <20110214201429.GF2722@tuxdriver.com>
+In-Reply-To: <20110214201429.GF2722@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 10, 2011 at 06:19:10AM -0800, Mohammed Shajakhan wrote:
-> On Wednesday 09 February 2011 10:18 PM, Richard Schütz wrote:
-> >> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>
-> >> The DMA latency issue is observed only in Intel pinetrail platforms but
-> >> in the driver we had a default PM-QOS value of 55. This caused
-> >> unnecessary power consumption and battery drain in other platforms.
-> >> Address this issue by disabling PM-QOS by default by setting it's value
-> >> as '0' and making code changes appropriately.This addresses the bug:
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=27532
-> >> 	If the user sees some DMA latency issue he can still use the pmqos as a
-> >> module parameter to trade power for throughput as below:
-> >> sudo modprobe ath9k pmqos=55
-> >>
-> >> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>      
-> > Acked-By: Richard Schütz<r.schtz@t-online.de>
-> >    
-> Thanks, but we got to consider user space approach which Luis had mentioned.
-
-Richard, can you test the userspace app as a replacement? Or did your board not
-exerpience the issue?
-
-  Luis
+On Tuesday 15 February 2011 01:44 AM, John W. Linville wrote:
+> On Mon, Feb 14, 2011 at 10:11:01AM +0530, Mohammed Shafi wrote:
+>    
+>> On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
+>>      
+>>> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
+>>>        
+>>>> On 2011-02-11 5:15 PM, John W. Linville wrote:
+>>>>          
+>>>>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
+>>>>>            
+>>>>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
+>>>>>>              
+>>>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>>>>>>
+>>>>>>> Instead of using raw numbers to assign slot time it would be better to
+>>>>>>> make use of predefined slot time macros
+>>>>>>>                
+>>>>>> How does this make it better?
+>>>>>>              
+>>>>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
+>>>>>            
+>>>> Well, neither the unit of this variable, nor the values that can be used
+>>>> are ath9k specific.
+>>>>          
+>>> True -- the patch is probably an unnecessarily zealous attempt to avoid
+>>> "magic numbers" in the code. :-)
+>>>        
+>> John there are two instances where these macros are used:
+>>
+>> htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
+>>   init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+>>      
+> Maybe you should just get rid of those instead?
+>    
+Ok John, thanks.
