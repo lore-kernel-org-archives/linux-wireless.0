@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47804 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753075Ab1BXSxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 13:53:18 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: add rtl8192cu
-Date: Thu, 24 Feb 2011 19:53:07 +0100
-Message-Id: <1298573588-2943-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1298573588-2943-1-git-send-email-hauke@hauke-m.de>
-References: <1298573588-2943-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:43228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539Ab1BOMo3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 07:44:29 -0500
+Subject: Re: [PATCH v2] mac80211: Fix a race on enabling power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTi=eJf+ge7_w1-r1hmZE0aaPzm_NP-Y-v81uctXG@mail.gmail.com>
+References: <1296822326-4878-1-git-send-email-vnatarajan@atheros.com>
+	 <1296824920.3671.4.camel@jlt3.sipsolutions.net>
+	 <1296825156.3671.7.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=eJf+ge7_w1-r1hmZE0aaPzm_NP-Y-v81uctXG@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Feb 2011 13:44:18 +0100
+Message-ID: <1297773858.3935.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2011-02-08 at 15:43 +0530, Vivek Natarajan wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk               |    6 +++++-
- scripts/admin-update.sh |    1 +
- 2 files changed, 6 insertions(+), 1 deletions(-)
+> > Maybe the subif queues should be stopped, then flush, then tx nullfunc,
+> > then stop all queues to configure the HW or something like that?
+> 
+> I tried this sequence:
+> the subif queues stopped, then flush, then tx nullfunc, and wake subif
+> queues,(we cannot have the queues stopped till we receive tx_status
+> because nullfunc might have failed during tx path itself and mac80211
+> will not receive tx_status)
 
-diff --git a/config.mk b/config.mk
-index 1fa16dd..8007708 100644
---- a/config.mk
-+++ b/config.mk
-@@ -369,7 +369,6 @@ endif #CONFIG_PCMCIA
- endif #CONFIG_WIRELESS_EXT
- 
- CONFIG_RTL8192CE=m
--CONFIG_RTLWIFI=m
- 
- endif #CONFIG_PCI
- ## end of PCI
-@@ -488,6 +487,8 @@ CONFIG_BT_HCIBPA10X=m
- CONFIG_BT_HCIBFUSB=m
- CONFIG_BT_ATH3K=m
- 
-+CONFIG_RTL8192CU=m
-+
- endif #CONFIG_USB end of USB driver list
- 
- ifdef CONFIG_SPI_MASTER
-@@ -568,6 +569,9 @@ endif #CONFIG_MMC
- 
- endif # end of SDIO driver list
- 
-+CONFIG_RTLWIFI=m
-+CONFIG_RTL8192C_COMMON=m
-+
- # Common rt2x00 requirements
- ifeq ($(NEED_RT2X00),y)
- CONFIG_RT2X00=y
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index dd88f65..58f3750 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -235,6 +235,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/rtl818x/rtl8187"
- DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi"
- DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192c"
- DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192ce"
-+DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192cu"
- DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
- DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
- DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
--- 
-1.7.1
+I've recently been thinking about this -- I'm thinking that maybe we
+should change this behaviour. Right now the tx() routine basically
+always returns OK (except in at76) and I suppose instead it could return
+whether the frame was queued up successfully...
+
+> After some time interval, once again stop queues on receiving ack for
+> nullfunc, configure the hw and then wake up queues. So, during the
+> above time interval, there is a race of queuing a frame to the hw. I
+> have tested this and the issue is quickly reproducible.
+
+Right. The code that sends the nullfunc -- I think it can probably
+sleep? If so, instead of starting the queue for the TX it could just
+flush TX again after sending the nullfunc -- after that either it had
+status for the frame, or the frame was dropped, no?
+
+johannes
 
