@@ -1,128 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39736 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086Ab1BBH7t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 02:59:49 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so7584286wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 23:59:49 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 3/4] wl12xx: use the conf struct instead of macros for memory configuration
-Date: Wed,  2 Feb 2011 09:59:36 +0200
-Message-Id: <1296633577-15199-4-git-send-email-eliad@wizery.com>
-In-Reply-To: <1296633577-15199-1-git-send-email-eliad@wizery.com>
-References: <1296633577-15199-1-git-send-email-eliad@wizery.com>
+Received: from mail.neratec.ch ([80.75.119.105]:39244 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754363Ab1BOJXZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 04:23:25 -0500
+Message-ID: <4D5A4609.7070702@neratec.com>
+Date: Tue, 15 Feb 2011 10:23:21 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Mahboob Alem <Mahboob.Alem@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Brian Kevin Lee <BrianK.Lee@atheros.com>,
+	Kathy Giori <Kathy.Giori@atheros.com>
+Subject: Re: Review of moving all DFS parameters to userspace
+References: <AANLkTimSV7rHhdjWqfV5ujW6dd==BusmeC8fJOXGxfaT@mail.gmail.com> <20110201173247.GE2560@tuxdriver.com> <4D594CC4.9020906@neratec.com> <AANLkTinCKO_qQ4rnLigYSjnN-MgjrL04qbP4e4mBhQgj@mail.gmail.com>
+In-Reply-To: <AANLkTinCKO_qQ4rnLigYSjnN-MgjrL04qbP4e4mBhQgj@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-make the configuration management more flexible by using the
-conf struct, rather than predefined macros.
+On 02/15/2011 01:48 AM, Luis R. Rodriguez wrote:
+> On Mon, Feb 14, 2011 at 7:39 AM, Zefir Kurtisi
+> <zefir.kurtisi@neratec.com> wrote:
+>> On 02/01/2011 06:32 PM, John W. Linville wrote:
+>>> On Tue, Feb 01, 2011 at 08:38:05AM -0800, Luis R. Rodriguez wrote:
+>>>> I though we had reviewed the possibility of moving DFS parameters to
+>>>> userspace but it seems that's not the case. We now at least know we
+>>>> can keep the DFS regions: US, JP, ETSI, the next step is to determine
+>>>> if the DFS parameters for these regions will come from userspace or
+>>>> kernelspace. I'm inclined to support starting off with moving this to
+>>>> kernelspace just to let us move forward with this support, and once in
+>>>> kernel, review the possibility to move this out to userspace.
+>>>>
+>>>> Thoughts?
+>>>
+>>> Seems like a reasonable approach for the short term...better than
+>>> locking-in userland ABI...
+>>>
+>>> John
+>>
+>> Sorry, I was not aware that the userspace DFS approach was already discussed
+>> and rejected.
+> 
+> 19:14 < *nbd> initially the pulse pattern matching will be somewhat hw specific
+> 19:14 < *nbd> or at least driver specific
+> 
+This discussion I most probably missed or forgot...
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c  |   16 ++++++++--------
- drivers/net/wireless/wl12xx/acx.h  |    4 ----
- drivers/net/wireless/wl12xx/conf.h |   12 ++++++++++++
- drivers/net/wireless/wl12xx/main.c |    4 ++++
- 4 files changed, 24 insertions(+), 12 deletions(-)
+> So ideally if we can generalize things great, I really did not think
+> we'd be able to get there on a first step.
+> 
+Let's see how far we would need to specialise our generalised approach to make 
+it usable in real world environments.
+>> I missed two IRC meetings in January and reading [1] sounded
+>> to me that potential approaches are still evaluated.
+>>
+>> Anyhow, I meanwhile posted both approaches (kernel vs. userspace) that are
+>> equivalent from functional point, assuming that a HW independent pattern
+>> matching is what we need to implement for DFS radar detection.
+>>
+>> This in fact is still an open issue: Atheros claimed that detection is
+>> HW-dependent while we have got up and (maybe not-so-perfectly ;)) running
+>> HW-independen radar pattern detection
+> 
+> That's cool ! However I was told that for some parameters you might
+> see some values programmed into hw which won't immediately make sense
+> given that the programmed values are there in consideration for a
+> hardware quirk of some sort. Mahboob, what parameters were those?
+> 
+For sure some parameters are HW dependent, e.g. the detection of chirping as 
+defined for radar test signal #4 by ETSI 1.5.1. But this can be perfectly 
+encapsuled in the driver: assume the HW detected a chirping pulse with 15us 
+width. This width would be outside the valid range for pulse pattern #4, but 
+since chirping was detected ath9k is quite sure that this was a type 4 pulse 
+and reports a pulse event with a width of e.g. 25us. The pattern detector 
+itself does not care about chirping - its criteria is solely the time stamp 
+and the width of the pulse, so the last provided pulse event will be 
+considered for pattern matching.
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index f2fbda0..6ea19d7 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -961,10 +961,10 @@ int wl1271_acx_ap_mem_cfg(struct wl1271 *wl)
- 	}
- 
- 	/* memory config */
--	mem_conf->num_stations = DEFAULT_NUM_STATIONS;
--	mem_conf->rx_mem_block_num = ACX_RX_MEM_BLOCKS;
--	mem_conf->tx_min_mem_block_num = ACX_TX_MIN_MEM_BLOCKS;
--	mem_conf->num_ssid_profiles = ACX_NUM_SSID_PROFILES;
-+	mem_conf->num_stations = wl->conf.mem.num_stations;
-+	mem_conf->rx_mem_block_num = wl->conf.mem.rx_block_num;
-+	mem_conf->tx_min_mem_block_num = wl->conf.mem.tx_min_block_num;
-+	mem_conf->num_ssid_profiles = wl->conf.mem.ssid_profiles;
- 	mem_conf->total_tx_descriptors = cpu_to_le32(ACX_TX_DESCRIPTORS);
- 
- 	ret = wl1271_cmd_configure(wl, ACX_MEM_CFG, mem_conf,
-@@ -993,10 +993,10 @@ int wl1271_acx_sta_mem_cfg(struct wl1271 *wl)
- 	}
- 
- 	/* memory config */
--	mem_conf->num_stations = DEFAULT_NUM_STATIONS;
--	mem_conf->rx_mem_block_num = ACX_RX_MEM_BLOCKS;
--	mem_conf->tx_min_mem_block_num = ACX_TX_MIN_MEM_BLOCKS;
--	mem_conf->num_ssid_profiles = ACX_NUM_SSID_PROFILES;
-+	mem_conf->num_stations = wl->conf.mem.num_stations;
-+	mem_conf->rx_mem_block_num = wl->conf.mem.rx_block_num;
-+	mem_conf->tx_min_mem_block_num = wl->conf.mem.tx_min_block_num;
-+	mem_conf->num_ssid_profiles = wl->conf.mem.ssid_profiles;
- 	mem_conf->total_tx_descriptors = cpu_to_le32(ACX_TX_DESCRIPTORS);
- 	mem_conf->dyn_mem_enable = wl->conf.mem.dynamic_memory;
- 	mem_conf->tx_free_req = wl->conf.mem.min_req_tx_blocks;
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index ba13d1b..9822e16 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -133,7 +133,6 @@ enum {
- 
- #define DEFAULT_UCAST_PRIORITY          0
- #define DEFAULT_RX_Q_PRIORITY           0
--#define DEFAULT_NUM_STATIONS            1
- #define DEFAULT_RXQ_PRIORITY            0 /* low 0 .. 15 high  */
- #define DEFAULT_RXQ_TYPE                0x07    /* All frames, Data/Ctrl/Mgmt */
- #define TRACE_BUFFER_MAX_SIZE           256
-@@ -797,10 +796,7 @@ struct acx_tx_config_options {
- 	__le16 tx_compl_threshold;   /* number of packets */
- } __packed;
- 
--#define ACX_RX_MEM_BLOCKS     70
--#define ACX_TX_MIN_MEM_BLOCKS 40
- #define ACX_TX_DESCRIPTORS    32
--#define ACX_NUM_SSID_PROFILES 1
- 
- struct wl1271_acx_ap_config_memory {
- 	struct acx_header header;
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index d8c1249..856a8a2 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1152,6 +1152,18 @@ struct conf_ht_setting {
- };
- 
- struct conf_memory_settings {
-+	/* Number of stations supported in IBSS mode */
-+	u8 num_stations;
-+
-+	/* Number of ssid profiles used in IBSS mode */
-+	u8 ssid_profiles;
-+
-+	/* Number of memory buffers allocated to rx pool */
-+	u8 rx_block_num;
-+
-+	/* Minimum number of blocks allocated to tx pool */
-+	u8 tx_min_block_num;
-+
- 	/* Disable/Enable dynamic memory */
- 	u8 dynamic_memory;
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index c8fe2b0..0f6786d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -299,6 +299,10 @@ static struct conf_drv_settings default_conf = {
- 		.inactivity_timeout = 10000,
- 	},
- 	.mem = {
-+		.num_stations                 = 1,
-+		.ssid_profiles                = 1,
-+		.rx_block_num                 = 70,
-+		.tx_min_block_num             = 40,
- 		.dynamic_memory               = 0,
- 		.min_req_tx_blocks            = 104,
- 		.min_req_rx_blocks            = 22,
--- 
-1.7.0.4
+For the generic approach with pulse detection done in the driver and generic 
+pattern matching we assume that HW-dependency will be used to increase the 
+reliability of single pulse detections and that those detections are not 
+inter-dependent. If otherwise there is a dependency, e.g. you need to know 
+the last x pulse events to decide if the current one is also a pulse, then 
+the whole DFS thing is for sure driver dependent.
+
+This is what only you at Atheros definitely know.
+
+>> We are still waiting to get Atheros'
+>> pattern detector source code to evaluate detection performance and finally
+>> prove the benefit of a HW dependent implementation.
+> 
+> That's being baked with legal.
+> 
+Does this legal checks include approval that the DFS source code might be 
+integrated into ath9k?
+
+>> Until then (and since the DFS activities degraded lastly) we will continue
+>> fine-tuning our detectors based on the proposed design
+> 
+> Driver or userspace?
+> 
+Both are working on target, on host we are using the userspace one (since we 
+still fail to write error-free kernel code ;))
+
+>> and move to the
+>> finally chosen architecture as soon as an agreement is reached.
+> 
+> Sorry for my delay on the first set of patches, I hope to send a v2
+> hopefully by tomorrow..
+> 
+Thanks, see you all on Tuesday.
+
+Zefir
+>  Luis
 
