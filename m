@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39533 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750998Ab1BAW0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 17:26:22 -0500
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 07/18] wl1251: implement connection quality monitoring
-References: <4D45A5C1.8050503@davizone.at>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 02 Feb 2011 00:26:19 +0200
-In-Reply-To: <4D45A5C1.8050503@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 18\:54\:09 +0100")
-Message-ID: <87zkqfbddg.fsf@purkki.adurom.net>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37801 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab1BOM6r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 07:58:47 -0500
+Received: by eye27 with SMTP id 27so43467eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 04:58:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimTecR-W7iGzRWB_DxNVJoovK5SCuWfCmt8SUJo@mail.gmail.com>
+References: <AANLkTi=-KJ+OSvDGuxYvDYQZ2ZdS8G8obbvodOXd9zQD@mail.gmail.com> <AANLkTimTecR-W7iGzRWB_DxNVJoovK5SCuWfCmt8SUJo@mail.gmail.com>
+From: Ben Ruijl <benruyl@gmail.com>
+Date: Tue, 15 Feb 2011 13:58:26 +0100
+Message-ID: <AANLkTimx7=kYdWfe8FKL6oMyErE=3=GpXa-YrxkVVBG3@mail.gmail.com>
+Subject: Re: r8712u: packet loss
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Gnedt <david.gnedt@davizone.at> writes:
+I am experiencing packet loss of about 12 percent with the r8712u
+staging driver with my WL-352v2 device. I'm not the only one with this
+problem (https://bbs.archlinux.org/viewtopic.php?id=112120). I haven't
+done a git bisect yet, but I know the problem is in both the 2.6.37
+version and the latest version.
 
-> Implement connection quality monitoring similar to the wl1271 driver.
-> It triggers ieee80211_cqm_rssi_notify with the corresponding event when
-> RSSI drops blow RSSI threshold or rises again above the RSSI threshold.
-> It should be noted that wl1251 doesn't support RSSI hysteresis, instead it
-> uses RSSI averageing and delays events until a certain count of frames
-> proved RSSI change.
+Regards,
 
-Had a quick look and no problems with this one.
-
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-
-Acked-by: Kalle Valo <kvalo@adurom.com>
-
--- 
-Kalle Valo
+Ben
