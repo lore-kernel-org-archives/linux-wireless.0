@@ -1,130 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:42971 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900Ab1BHR2f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 12:28:35 -0500
-Date: Tue, 8 Feb 2011 15:29:06 -0200
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth-next-2.6 2011-02-08
-Message-ID: <20110208172905.GA2160@joana>
+Received: from mx1.redhat.com ([209.132.183.28]:21634 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752960Ab1BOLej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 06:34:39 -0500
+Date: Tue, 15 Feb 2011 12:34:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] iwlwifi: fix dma mappings and skbs leak
+Message-ID: <20110215113444.GC2162@redhat.com>
+References: <1297693947-15310-1-git-send-email-sgruszka@redhat.com>
+ <1297698696.4723.16.camel@wwguy-ubuntu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297698696.4723.16.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, Feb 14, 2011 at 07:51:36AM -0800, wwguy wrote:
+> On Mon, 2011-02-14 at 06:32 -0800, Stanislaw Gruszka wrote:
+> > Since commit commit 470058e0ad82fcfaaffd57307d8bf8c094e8e9d7
+> > "iwlwifi: avoid Tx queue memory allocation in interface down" we do
+> > not unmap dma and free skbs when down device and there is pending
+> > transfer. What in consequence may cause that system hung when
+> > performing shutdown at iptables module unload.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> > v1 -> v2: do not claim patch fixes warning, which is still
+> > observable with patch applied
+> > 
+> >  drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   12 +++++-
+> >  drivers/net/wireless/iwlwifi/iwl-core.h   |    2 +
+> >  drivers/net/wireless/iwlwifi/iwl-tx.c     |   61 ++++++++++++++++++++--------
+> >  3 files changed, 56 insertions(+), 19 deletions(-)
+> 
+> Are you still seeing the "warning"
 
-That is a big one. The major things here are the HCI management interface and
-the l2cap.c file split. On the HCI management interface Johan Hedberg took a
-big step implement support for many HCI commandsi/events in kernel side.
-I did the l2cap.c split, that file was almost 5000 lines big a more code is
-expected to come soon.
-The rest are only bug fixes, expect a patch from Andrei Emeltchenko to add
-support to configure the flushable flag in LMP.
+Today I tried to reproduce problem a few times with
+patch applied and does not see dma warning. Also
+iptables modules still unload fine.
 
-Please pull. Thanks. 
+However during testing, I triggered different warning:
 
+WARNING: at lib/debugobjects.c:259 debug_print_object+0x5c/0x70()
+Hardware name: HP xw8600 Workstation
+ODEBUG: free active (active state 0) object type: timer_list
+Modules linked in: aes_x86_64 aes_generic fuse cpufreq_ondemand acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 ext3 jbd dm_mirror dm_region_hash dm_log dm_mod uinput hp_wmi sparse_keymap floppy wmi sg microcode serio_raw arc4 tg3 ecb shpchp iwlagn(-) iwlcore mac80211 cfg80211 rfkill ext4 mbcache jbd2 sr_mod cdrom sd_mod crc_t10dif firewire_ohci firewire_core crc_itu_t mptsas mptscsih mptbase scsi_transport_sas pata_acpi ata_generic ata_piix ahci libahci nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: scsi_wait_scan]
+Pid: 9139, comm: rmmod Not tainted 2.6.38-rc4-wl+ #21
+Call Trace:
+ [<ffffffff810649cf>] ? warn_slowpath_common+0x7f/0xc0
+ [<ffffffff81064ac6>] ? warn_slowpath_fmt+0x46/0x50
+ [<ffffffff81226eec>] ? debug_print_object+0x5c/0x70
+ [<ffffffff81227585>] ? debug_check_no_obj_freed+0x125/0x210
+ [<ffffffff8109ebd7>] ? debug_check_no_locks_freed+0xf7/0x170
+ [<ffffffff81156092>] ? kfree+0xc2/0x2f0
+ [<ffffffff813ec3c5>] ? netdev_release+0x45/0x60
+ [<ffffffff812f0e67>] ? device_release+0x27/0xa0
+ [<ffffffff81216ddd>] ? kobject_release+0x8d/0x1a0
+ [<ffffffff81216d50>] ? kobject_release+0x0/0x1a0
+ [<ffffffff812183b7>] ? kref_put+0x37/0x70
+ [<ffffffff81216c57>] ? kobject_put+0x27/0x60
+ [<ffffffff813d5b1b>] ? netdev_run_todo+0x1ab/0x270
+ [<ffffffff813e751e>] ? rtnl_unlock+0xe/0x10
+ [<ffffffffa02a5188>] ? ieee80211_unregister_hw+0x58/0x120 [mac80211]
+ [<ffffffffa036ced7>] ? iwl_pci_remove+0xdb/0x22a [iwlagn]
+ [<ffffffff8123cbe2>] ? pci_device_remove+0x52/0x120
+ [<ffffffff812f5005>] ? __device_release_driver+0x75/0xe0
+ [<ffffffff812f5148>] ? driver_detach+0xd8/0xe0
+ [<ffffffff812f3f11>] ? bus_remove_driver+0x91/0x100
+ [<ffffffff812f5962>] ? driver_unregister+0x62/0xa0
+ [<ffffffff8123cf94>] ? pci_unregister_driver+0x44/0xa0
+ [<ffffffffa036cdf5>] ? iwl_exit+0x15/0x1c [iwlagn]
+ [<ffffffff810ab492>] ? sys_delete_module+0x1a2/0x270
+ [<ffffffff81498689>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+ [<ffffffff8100bf42>] ? system_call_fastpath+0x16/0x1b
 
-The following changes since commit 3ad97fbcc233a295f2ccc2c6bdeb32323e360a5e:
+It looks more like mac80211 issue for me.
 
-  mac80211: remove unneeded check (2011-02-07 16:18:28 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
-
-Andrei Emeltchenko (3):
-      Bluetooth: Use non-flushable by default L2CAP data packets
-      Bluetooth: Do not use assignments in IF conditions
-      Bluetooth: fix crash by disabling tasklet in sock accept
-
-Bao Liang (1):
-      Bluetooth: Set conn state to BT_DISCONN to avoid multiple responses
-
-Cho, Yu-Chen (1):
-      Bluetooth: add Atheros BT AR9285 fw supported
-
-Gustavo F. Padovan (19):
-      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-2.6 into wireless
-      Bluetooth: Fix setting of MTU for ERTM and Streaming Mode
-      Bluetooth: Rename l2cap.c to l2cap_core.c
-      Bluetooth: Initial work for L2CAP split.
-      Bluetooth: move l2cap_sock_ops to l2cap_sock.c
-      Bluetooth: move l2cap_sock_release() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_bind()/listen() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_accept() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_getname() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_setsockopt() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_getsockopt() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_connect() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_recvmsg() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_shutdown() to l2cap_sock.c
-      Bluetooth: move l2cap_sock_sendmsg() to l2cap_sock.c
-      Bluetooth: move L2CAP sock timers function to l2cap_sock.c
-      Bluetooth: move l2cap_sock_kill() to l2cap_sock.c
-      Bluetooth: move __l2cap_sock_close() to l2cap_sock.c
-      Bluetooth: update Bluetooth daemon name in Kconfig help
-
-Jesper Juhl (1):
-      Bluetooth: Fix failure to release lock in read_index_list()
-
-Johan Hedberg (25):
-      Bluetooth: Implement automatic setup procedure for local adapters
-      Bluetooth: Add support for management powered event
-      Bluetooth: Add support for set_powered management command
-      Bluetooth: Add support for set_discoverable management command
-      Bluetooth: Add set_connectable management command
-      Bluetooth: Unify mode related management messages to a single struct
-      Bluetooth: Add flag to track managment controlled adapters
-      Bluetooth: Add send_mode_rsp convenience function for mgmt.c
-      Bluetooth: Implement set_pairable managment command
-      Bluetooth: Implement UUID handling through the management interface
-      Bluetooth: Implement debugfs support for listing UUIDs
-      Bluetooth: Reject pairing requests when in non-pairable mode
-      Bluetooth: Add special handling with __hci_request and HCI_INIT
-      Bluetooth: Add controller side link key clearing to hci_init_req
-      Bluetooth: Remove page timeout setting from HCI init sequence
-      Bluetooth: Implement a more complete adapter initialization sequence
-      Bluetooth: Add class of device control to the management interface
-      Bluetooth: Implement link key handling for the management interface
-      Bluetooth: Add connected/disconnected management events
-      Bluetooth: Add disconnect managment command
-      Bluetooth: Add support for connect failed management event
-      Bluetooth: Add get_connections managment interface command
-      Bluetooth: Create common cmd_complete function for mgmt.c
-      Bluetooth: Add support for PIN code handling in the management interface
-      Bluetooth: Add set_io_capability management command
-
-Rogério Brito (1):
-      Bluetooth: ath3k: Avoid duplication of code
-
- drivers/bluetooth/ath3k.c               |   10 +-
- drivers/bluetooth/btusb.c               |    3 +
- include/net/bluetooth/bluetooth.h       |    5 +
- include/net/bluetooth/hci.h             |   57 ++
- include/net/bluetooth/hci_core.h        |   62 ++-
- include/net/bluetooth/l2cap.h           |   32 +
- include/net/bluetooth/mgmt.h            |  142 +++
- net/bluetooth/Kconfig                   |    6 +-
- net/bluetooth/Makefile                  |    1 +
- net/bluetooth/af_bluetooth.c            |   19 +-
- net/bluetooth/cmtp/capi.c               |    3 +-
- net/bluetooth/cmtp/core.c               |    9 +-
- net/bluetooth/hci_conn.c                |    1 +
- net/bluetooth/hci_core.c                |  230 ++++-
- net/bluetooth/hci_event.c               |  457 +++++++++-
- net/bluetooth/hci_sock.c                |    6 +-
- net/bluetooth/hci_sysfs.c               |   52 +
- net/bluetooth/hidp/core.c               |    9 +-
- net/bluetooth/{l2cap.c => l2cap_core.c} | 1618 ++++++-------------------------
- net/bluetooth/l2cap_sock.c              | 1150 ++++++++++++++++++++++
- net/bluetooth/mgmt.c                    | 1310 +++++++++++++++++++++++---
- 21 files changed, 3668 insertions(+), 1514 deletions(-)
- rename net/bluetooth/{l2cap.c => l2cap_core.c} (78%)
- create mode 100644 net/bluetooth/l2cap_sock.c
-
---
-Gustavo F. Padovan
-http://profusion.mobi
+Stanislaw
