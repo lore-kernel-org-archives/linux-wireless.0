@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40508 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754104Ab1BAEmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Jan 2011 23:42:06 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Jan 2011 20:41:46 -0800
-Message-ID: <4D478F12.1070404@atheros.com>
-Date: Tue, 1 Feb 2011 10:11:54 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48275 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068Ab1BOVJD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 16:09:03 -0500
+Received: by bwz15 with SMTP id 15so69398bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 13:09:01 -0800 (PST)
+Message-ID: <4D5AEA3C.4090502@gmail.com>
+Date: Tue, 15 Feb 2011 22:03:56 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Fix memory leak due to failed PAPRD frames
-References: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com> <AANLkTimbtr8zKf6Nj0GmTccKU2u2ubTkL3a5BVSGfUK0@mail.gmail.com>
-In-Reply-To: <AANLkTimbtr8zKf6Nj0GmTccKU2u2ubTkL3a5BVSGfUK0@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Nikolay Ledovskikh <nledovskikh@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com, me@bobcopeland.com
+Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
+ seqfault on AHB chips
+References: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>	<4D5AD6A6.8090505@gmail.com>	<AANLkTiks9rG2CzM2LabNerK3zgJ+R+weytQgvXxDbNe7@mail.gmail.com>	<4D5AE52B.80002@gmail.com> <AANLkTikyneyczm=+XRfjUEVJU-i4d6d=7yF4Lh=8Do_=@mail.gmail.com>
+In-Reply-To: <AANLkTikyneyczm=+XRfjUEVJU-i4d6d=7yF4Lh=8Do_=@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 February 2011 12:13 AM, Luis R. Rodriguez wrote:
-> On Sun, Jan 30, 2011 at 11:55 PM, Mohammed Shafi Shajakhan
-> <mshajakhan@atheros.com>  wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> free the skb's when the Tx of PAPRD frames fails and also add a debug
->> message indicating that.
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>      
-> Is this a stable fix?
->    
-No Luis, this problem came from some recent changes in PAPRD before that 
-it was Ok.
->   Luis
->    
+A: Because it messes up the order in which people normally read text.
+Q: Why is top-posting such a bad thing?
+A: Top-posting.
+Q: What is the most annoying thing in e-mail?
+
+On 02/15/2011 09:57 PM, Nikolay Ledovskikh wrote:
+> Madwifi is a crap, but
+>        #define KSEG1ADDR(addr) (addr)
+> and only difference is in pointer type cast
+>       sc->aps_sc.sc_iobase = (void __iomem *) dev->mem_start;
+> in my case it would be something like this:
+>       sc->aps_sc.sc_iobase = dev->mem_start;
+> and it works.
+
+In that case yes, but KSEG1ADDR should write as:
+#define KSEG1ADDR(a) (CPHYSADDR(a) | KSEG1)
+
+As I wrote, this needs some mips expert. But it definitely shouldn't be
+a plain assignment.
+
+regards,
+-- 
+js
