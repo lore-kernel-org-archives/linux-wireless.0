@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm5.bullet.mail.ukl.yahoo.com ([217.146.182.226]:35834 "HELO
-	nm5.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758199Ab1BLEZx (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:51826 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501Ab1BOHQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 23:25:53 -0500
-Message-ID: <4D560BCC.7070104@users.sourceforge.net>
-Date: Sat, 12 Feb 2011 04:25:48 +0000
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
+	Tue, 15 Feb 2011 02:16:50 -0500
+Received: by iwn9 with SMTP id 9so5636129iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 23:16:49 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Vinicius Piccoli <viniciuspiccoli@gmail.com>,
-	herton@mandriva.com.br, linux-wireless@vger.kernel.org
-Subject: Re: REALTEK 8187SE
-References: <AANLkTin+i0uSqBXNXNfUpMVjwavNAPmPuWVJ1jOHh9D7@mail.gmail.com> <4D55FC96.50305@lwfinger.net>
-In-Reply-To: <4D55FC96.50305@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19802.10321.400306.871734@gargle.gargle.HOWL>
+Date: Tue, 15 Feb 2011 12:46:33 +0530
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: <linville@tuxdriver.net>, <linux-wireless@vger.kernel.org>,
+	<johannes@sipsolutions.net>
+Subject: [RFC v2 1/2] mac80211: Fix a race on enabling power save.
+In-Reply-To: <1297750589-15465-1-git-send-email-vnatarajan@atheros.com>
+References: <1297750589-15465-1-git-send-email-vnatarajan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> On 02/11/2011 08:44 PM, Vinicius Piccoli wrote:
->> Dear Friends
->>
->> I'm newbee in UBUNTU I have install 10.1 in my netbook, I have a 
->> realteck 8187SE,
->> but can not make the wireless work, do you guys have a driver of
->> sofwarecontroler for it?
->>
->> The LAN is working fine!
-> 
-> There is a driver in drivers/staging that has been there for quite a 
-> while. I'm not sure what kernel it first appeared in, but I know it is 
-> in 2.6.34. If Ubuntu does not enable it, then you will have either 
-> change distros, or build your own kernel.
-> 
-> Larry
-> 
+Vivek Natarajan wrote:
+>  	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+> -	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
+> +	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED) ||
+> +	     !(ifmgd->flags & IEEE80211_STA_PS_PENDING))) {
+> +		ifmgd->flags |= IEEE80211_STA_PS_PENDING;
+>  		ieee80211_send_nullfunc(local, sdata, 1);
+> +	}
+>  
+>  	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+>  	      (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
+> -	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
+> +	    ((ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED) &&
+> +	      ifmgd->flags & IEEE80211_STA_PS_PENDING))  {
+>  		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+> +		ifmgd->flags &= ~IEEE80211_STA_PS_PENDING;
+>  		local->hw.conf.flags |= IEEE80211_CONF_PS;
+>  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+>  	}
+> +	ieee80211_wake_queues_by_reason(&local->hw,
+> +					IEEE80211_QUEUE_STOP_REASON_PS);
+>  }
 
-According to wireless-testing's log, the first kernel which a version of the 
-8187se staging driver is included is 2.6.29 .
+The queues are activated when enabling powersave ?
 
-The 8187se staging driver is essentially the same as the Realtek rtl8187se 
-vendor driver which is available as a standard-alone download (i.e. without the 
-rest of the kernel source tree, and build-able as such) from a variety of 
-on-line places, not least Ubuntu's laundpad as attachment to a few 
-bug/enhancement reports.
+>  void ieee80211_dynamic_ps_timer(unsigned long data)
+> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> index 010a559..51caa0d 100644
+> --- a/net/mac80211/status.c
+> +++ b/net/mac80211/status.c
+> @@ -315,7 +315,10 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+>  	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+>  	    local->ps_sdata && !(local->scanning)) {
+> -		if (info->flags & IEEE80211_TX_STAT_ACK) {
+> +		if ((info->flags & IEEE80211_TX_STAT_ACK) &&
+> +		   (local->ps_sdata->u.mgd.flags & IEEE80211_STA_PS_PENDING)) {
+> +			ieee80211_stop_queues_by_reason(&local->hw,
+> +							IEEE80211_QUEUE_STOP_REASON_PS);
 
-AFAIK, the 8187se is quite a different beast and uses the PCI interface and 
-closer to the 8180/8185(?), rather than the USB interface like the 8187L/8187B.
+I am not too familiar with the PS code, but why are the queues being stopped
+after the nullfunc frame has been sent out and acked ? And it is a bit unclear why
+the new flag IEEE80211_STA_PS_PENDING is required at all... Can't IEEE80211_STA_NULLFUNC_ACKED
+be used to fix this race ?
 
-However, I found a few issues concerning your e-mail problematic:
-
-1) You have obviously worked out that the 3 of us are the current 8187/8187B 
-maintainers, which suggests that you are not as newbie as you like us to believe 
-- all the 8187se info are available in the linux-wireless mailing list archive, 
-really, and you could have found the same info we gave you by similiar methods 
-you found our e-mail addresses. I am not your friend. I really do not know you.
-
-2) I can't speak for the others, but I generally do not like people e-mailing me 
-  privately (i.e. without CC'ing a relevant mailing list) on reasonably widely 
-applicable open-source issues. A private answer to a private question benefit 
-nobody else. That's the purpose of having mailing lists and mailing list 
-archives are for. If I want to receive e-mails from random unknown individuals 
-privately, I would charge them for it.
-
-Hin-Tak
+Sujith
