@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47780 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751829Ab1BBEvV (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:38315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755275Ab1BORht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 23:51:21 -0500
-Received: from [71.112.48.101] (pool-71-112-48-101.sttlwa.dsl-w.verizon.net [71.112.48.101])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p124pLPB007147
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 1 Feb 2011 20:51:21 -0800
-Message-ID: <4D48E2C8.5010300@candelatech.com>
-Date: Tue, 01 Feb 2011 20:51:20 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 15 Feb 2011 12:37:49 -0500
+Received: by bwz15 with SMTP id 15so670855bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 09:37:47 -0800 (PST)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rfkill API
-References: <4D48DF01.1010401@candelatech.com>
-In-Reply-To: <4D48DF01.1010401@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1297771723.3935.4.camel@jlt3.sipsolutions.net>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	<1297619803-2832-3-git-send-email-njs@pobox.com>
+	<1297685761.3785.38.camel@jlt3.sipsolutions.net>
+	<AANLkTikmsizzK1J=uf4Rp9fkmDdJQ_oKfZV-jUz2sJ18@mail.gmail.com>
+	<1297771723.3935.4.camel@jlt3.sipsolutions.net>
+Date: Tue, 15 Feb 2011 09:37:47 -0800
+Message-ID: <AANLkTi=m6y0_7z=7P4yUHvGMqiRj=fSRmwYAjuqo_-rt@mail.gmail.com>
+Subject: Re: [PATCH 2/5] iwlwifi: Convert the tx queue high_mark to an atomic_t
+From: Nathaniel Smith <njs@pobox.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2011 08:35 PM, Ben Greear wrote:
-> Hello!
->
-> I was looking at using one rfkill socket in wpa_supplicant, instead
-> of one per vif.
->
-> Current wpa_supplicant code seems to treat the API as if there is only
-> as single rfkill object for the entire kernel. I would assume that
-> instead different NICs could have different rfkill status.
->
-> Is there any way to coorelate a netdevice (or devices)
-> to the rfkill->idx in the
->
-> struct rfkill_event {
-> u32 idx;
-> u8 type;
-> u8 op;
-> u8 soft;
-> u8 hard;
-> } STRUCT_PACKED;
->
->
-> ?
->
-> Thanks,
-> Ben
->
+On Tue, Feb 15, 2011 at 4:08 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Actually, it doesn't really matter. Linux assumes that reads and writes
+> to "unsigned long" are always atomic against each other (i.e. you get
+> either the old or the new value) and that's all you care about here --
+> this never needs anything like atomic_inc/dec etc.
 
-Err, nevermind..looks like you can grub around in sysfs and find the phy,
-and from there, find the devices....
+Excellent point, thank you.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+-- Nathaniel
