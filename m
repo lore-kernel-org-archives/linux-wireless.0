@@ -1,64 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:60789 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:16764 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754486Ab1BARcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 12:32:54 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 09:32:34 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [RFC v2] mac80211: do not restart ps timer during scan or offchannel
-Date: Tue, 1 Feb 2011 23:02:06 +0530
-Message-ID: <1296581526-3004-1-git-send-email-rmanoharan@atheros.com>
+	id S1752159Ab1BOSUP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 13:20:15 -0500
+From: "Ferraton, Jean RegisX" <jean.regisx.ferraton@intel.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Walter Goldens <goldenstranger@yahoo.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"marcel@holtmann.org" <marcel@holtmann.org>
+Date: Tue, 15 Feb 2011 18:20:11 +0000
+Subject: RE: Advise on how to integrate latest bluetooth updates on linux
+ 2.6.35 kernel
+Message-ID: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F71994D@irsmsx501.ger.corp.intel.com>
+References: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F56AFD4@irsmsx501.ger.corp.intel.com>
+ <456817.14949.qm@web161612.mail.bf1.yahoo.com>
+ <20110210222424.GA24388@khazad-dum.debian.net>
+In-Reply-To: <20110210222424.GA24388@khazad-dum.debian.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While leaving oper channel, STA informs sleep state to AP to
-stop sending data. Till sending ack for the nullfunc, AP
-continues to send the data to STA which restarts ps_timer that
-is causing unnecessary nullfunc exchange on timer expiry
-when the STA was already moved to offchannel. So don't restart ps_timer
-on data reception during scan. This issue was identified by
-the following warning.
 
-WARNING: at net/mac80211/tx.c:661 invoke_tx_handlers+0xf07/0x1330 [mac80211]
-wlan0: Dropped data frame as no usable bitrate found while scanning and
-associated. Target station: 00:03:7f:0b:a6:1b on 5 GHz band
-Call Trace:
-  [<ffffffffa0413ba7>] invoke_tx_handlers+0xf07/0x1330 [mac80211]
-  [<ffffffffa0414056>] ieee80211_tx+0x86/0x2c0 [mac80211]
-  [<ffffffffa0414345>] ieee80211_xmit+0xb5/0x1d0 [mac80211]
-  [<ffffffffa04037e0>] ieee80211_dynamic_ps_enable_work+0x0/0xb0 [mac80211]
-  [<ffffffffa04158cf>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
-  [<ffffffffa04026e6>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
-  [<ffffffffa0403885>] ieee80211_dynamic_ps_enable_work+0xa5/0xb0 [mac80211]
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
-v2: handled offchannel case too
- net/mac80211/rx.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+> -----Original Message-----
+> From: Henrique de Moraes Holschuh [mailto:hmh@hmh.eng.br]
+> Sent: Thursday, February 10, 2011 11:24 PM
+> To: Walter Goldens
+> Cc: linux-wireless@vger.kernel.org; Ferraton, Jean RegisX;
+> marcel@holtmann.org
+> Subject: Re: Advise on how to integrate latest bluetooth updates on
+> linux 2.6.35 kernel
+> 
+> On Thu, 10 Feb 2011, Walter Goldens wrote:
+> > > I'm working in the bluetooth part in a project based on the
+> > > 2.6.35 linux kernel.
+> > >
+> > > We've found some bugs related to bluetooth, and I've seen
+> > > that most of these bugs have been solved by latest releases
+> > > (2.6.36 and 2.6.37).
+> 
+> ...
+> 
+> > Compat-wireless is your best bet. Noninvasive solution to your
+> problem.
+> 
+> There is a 2.6.35 longterm, as well as stable 2.6.36.  If these are
+> real
+> fixes that address bugs users will find on the field, they might well
+> be
+> candidates for the stable (and longterm) releases.  And THAT is always
+> much
+> preferable over compat-wireless, as it would be helpful to a lot more
+> users.
+> 
+> --
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 7185c93..f88ca98 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1929,7 +1929,10 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	dev->stats.rx_bytes += rx->skb->len;
- 
- 	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 &&
--	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
-+	    !is_multicast_ether_addr(
-+		    ((struct ethhdr *)rx->skb->data)->h_dest) &&
-+	    (!local->scanning &&
-+	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))) {
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
--- 
-1.7.4
+Hi,
+
+I've tried to use the compat-wireless solution, but it is impossible, as in our case we are using a BT driver bt_drv which is in the kernel and depends on bluetooth.h and is incompatible with the compat version. So it is impossible to use the compat solution.
+
+Now I'm trying to use the bluetooth-next tree, replacing the Bluetooth stuff in my kernel. Technically, it works fine.
+
+Do you think this kind of implementation is acceptable?
+If not, what would you recommend?
+
+Regards
+
+Jean
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
