@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.3eti.com ([65.220.88.141]:27144 "EHLO webmail.3eti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752291Ab1BIPfk convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60444 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab1BOAEh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 10:35:40 -0500
-From: Chaoxing Lin <CLin@3eti.com>
-To: 'Zefir Kurtisi' <zefir.kurtisi@neratec.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] DFS userspace handler
-Date: Wed, 9 Feb 2011 15:35:38 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
-In-Reply-To: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 14 Feb 2011 19:04:37 -0500
+Received: by qwa26 with SMTP id 26so3547006qwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 16:04:36 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1297727969.5683.21.camel@maggie>
+References: <1297725710.5683.17.camel@maggie>
+	<AANLkTimjkFJrWpubECRRNybmvYdcAh3UUbMOa0iv166g@mail.gmail.com>
+	<1297727969.5683.21.camel@maggie>
+Date: Tue, 15 Feb 2011 01:04:36 +0100
+Message-ID: <AANLkTikQx_NTMxQ+XpL-3BKWkZMERs_A-aQf0mKBHaSg@mail.gmail.com>
+Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What about DFS in WDS / Mesh / IBSS mode if DFS is only implemented in hostapd?
+W dniu 15 lutego 2011 00:59 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Tue, 2011-02-15 at 00:44 +0100, Rafał Miłecki wrote:
+>> 2011/2/15 Michael Büsch <mb@bu3sch.de>:
+>> > ssb_wait_bit was designed for only one-bit bitmasks.
+>> > People start using it for multi-bit bitmasks. Make the "set" case
+>> > is safe for this. The "unset" case is already safe.
+>>
+>> Thanks :)
+>
+> This should not change the behavior of your patch, though,
+> as you only add an "unset" case, which was already correct.
+>
+> So this doesn't fix an actual bug but rather hardens the code
+> for future use.
 
-Will an instance of hostapd be required for all these modes, too?
+Yes, I can see that :)
 
-Thanks
-
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Zefir Kurtisi
-Sent: Wednesday, February 09, 2011 7:02 AM
-To: linux-wireless@vger.kernel.org
-Cc: Zefir Kurtisi
-Subject: [RFC] DFS userspace handler
-
-Hello DFS folks,
-
-this is a patch series to prove the concept of DFS handling done in userspace.
-
-It moves the radar pattern detector introduced in [1] and documented in [2] 
-from mac80211 up to hostapd.
-
-The basic concept is:
-1) pattern detection
- * pulse events detected by HW are passed to hostapd
- * hostapd performs per-wiphy DFS pattern matching
-2) channel handling: on radar detection hostapd
- * updates channel state (NOL handling)
- * switches to new operating channel with TX disabled (on all wiphys)
- * after CAC period enables TX on that channel
-
-The proposed patches provide part 1) of the concept. The nl80211 interface is
-extended with functions to pass DFS pulse events to hostapd.
-
-Testing as described in [2] results in identical output, indicating that both
-approaches (mac80211 and hostapd based) are equivalent from functional point
-of view.
-
-The testing was done with
- * OpenWRT r25417
- * Atheros AR9280 Rev:2
- * DFS radars generated with R&S vector signal generator
-
-We at our company would prefer this approach over the mac80211 based one as
-soon as we see that part 2) can be implemented as proposed. 
-
-
-
-Cheers
-Zefir
-
-
-
-[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/61868
-[2] http://linuxwireless.org/en/developers/DFS/DetectorDesignNt
----
 -- 
-1.7.1
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Rafał
