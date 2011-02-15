@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58961 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544Ab1BIQXD (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45614 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755033Ab1BOV6H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 11:23:03 -0500
-Received: by wyb28 with SMTP id 28so351082wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 08:23:01 -0800 (PST)
-Message-ID: <4D52BF9F.3010900@lwfinger.net>
-Date: Wed, 09 Feb 2011 10:23:59 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 15 Feb 2011 16:58:07 -0500
+Received: by iwn9 with SMTP id 9so643547iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 13:58:07 -0800 (PST)
 MIME-Version: 1.0
-To: George Kashperko <george@znau.edu.ua>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: SSB AI support code ([RFC9/11] SSB modify irqflag treatment)
-References: <1297258590.17400.37.camel@dev.znau.edu.ua> <1297262500.18053.36.camel@dev.znau.edu.ua>
-In-Reply-To: <1297262500.18053.36.camel@dev.znau.edu.ua>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1297760106.3935.0.camel@jlt3.sipsolutions.net>
+References: <1297351797-35031-1-git-send-email-nbd@openwrt.org>
+ <1297677974.3785.9.camel@jlt3.sipsolutions.net> <AANLkTi=wkmAeBKXv8PKhVRJXFdY_NO7jS+vwFJueuBpL@mail.gmail.com>
+ <1297760106.3935.0.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 15 Feb 2011 13:57:47 -0800
+Message-ID: <AANLkTime+EGHkWBEmN-6BZNQ=zhjtq-XT4NCWyj+3gGT@mail.gmail.com>
+Subject: Re: [PATCH 1/2] cfg80211: add a field for the bitrate of the last rx
+ data packet from a station
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2011 08:41 AM, George Kashperko wrote:
-> From: George Kashperko <george@znau.edu.ua>
-> 
-> Modify irqflag routine to reuse tpsflag value rather than
-> reading TPSFLAG register once again. Change default "not
-> supported" value from 0x3F to -1.
-> Signed-off-by: George Kashperko <george@znau.edu.ua>
-> ---
->  drivers/ssb/driver_mipscore.c |    2 +-
->  drivers/ssb/ssb_sb.c          |    4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> --- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-08 16:14:57.000000000 +0200
-> +++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-08 16:15:24.000000000 +0200
-> @@ -75,7 +75,7 @@ unsigned int ssb_mips_irq(struct ssb_dev
->  	unsigned int irq;
->  
->  	irqflag = ssb_irqflag(dev);
-> -	if (irqflag == 0x3f)
-> +	if (irqflag == -1)
->  		return 6;
->  	ipsflag = ssb_read32(bus->mipscore.dev, SSB_IPSFLAG);
->  	for (irq = 1; irq <= 4; irq++) {
-> --- linux-next-20110203.orig/drivers/ssb/ssb_sb.c	2011-02-08 16:14:57.000000000 +0200
-> +++ linux-next-20110203/drivers/ssb/ssb_sb.c	2011-02-08 16:15:24.000000000 +0200
-> @@ -175,10 +175,10 @@ static u32 ssb_irqflag_sb(struct ssb_dev
->  {
->  	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
->  	if (tpsflag)
-> -		return ssb_read32(dev, SSB_TPSFLAG) & SSB_TPSFLAG_BPFLAG;
-> +		return tpsflag & SSB_TPSFLAG_BPFLAG;
->  	else
->  		/* not irq supported */
-> -		return 0x3f;
-> +		return -1;
->  }
->  
->  static void ssb_core_ctl_flags_sb(struct ssb_device *dev, u32 mask,
+On Tue, Feb 15, 2011 at 12:55 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-02-14 at 23:08 -0800, Luis R. Rodriguez wrote:
+>> On Mon, Feb 14, 2011 at 2:06 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Thu, 2011-02-10 at 16:29 +0100, Felix Fietkau wrote:
+>> >> Also fix a typo in the STATION_INFO_TX_BITRATE description
+>> >>
+>> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> >> ---
+>> >>  include/linux/nl80211.h |    3 ++
+>> >>  include/net/cfg80211.h  |    5 +++-
+>> >>  net/wireless/nl80211.c  |   56 +++++++++++++++++++++++++++++++----------------
+>> >>  3 files changed, 44 insertions(+), 20 deletions(-)
+>> >>
+>> >> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+>> >> index 821ffb9..35bfec2 100644
+>> >> --- a/include/linux/nl80211.h
+>> >> +++ b/include/linux/nl80211.h
+>> >> @@ -1243,6 +1243,8 @@ enum nl80211_rate_info {
+>> >>   * @NL80211_STA_INFO_LLID: the station's mesh LLID
+>> >>   * @NL80211_STA_INFO_PLID: the station's mesh PLID
+>> >>   * @NL80211_STA_INFO_PLINK_STATE: peer link state for the station
+>> >> + * @NL80211_STA_INFO_RX_BITRATE: last unicast rx rate, nested attribute
+>> >> + *   containing info as possible, see &enum nl80211_sta_info_txrate.
+>> >
+>> > I think it would make sense to restrict this to data frames, as mgmt
+>> > frames will often be sent with a low rate.
+>>
+>> Would it be useful to show both? How about per AC?
+>
+> Why would anyone care about mgmt frames unless they're debugging
+> something (in which case I recommend monitor interface)?
 
-This one does not apply with the following:
+I was thinking enhancing/debugging multicast traffic.
 
-finger@larrylap:~/wireless-testing> quilt push
-Applying patch patches/ssb_AI_9
-patching file drivers/ssb/driver_mipscore.c
-Hunk #1 succeeded at 85 (offset 10 lines).
-can't find file to patch at input line 35
-Perhaps you used the wrong -p or --strip option?
-The text leading up to this was:
---------------------------
-|--- linux-next-20110203.orig/drivers/ssb/ssb_sb.c      2011-02-08
-16:14:57.000000000 +0200
-|+++ linux-next-20110203/drivers/ssb/ssb_sb.c   2011-02-08 16:15:24.000000000 +0200
---------------------------
-No file to patch.  Skipping patch.
-1 out of 1 hunk ignored
-Patch patches/ssb_AI_9 does not apply (enforce with -f)
+> And normally
+> rate control shouldn't care about the AC so that seems pointless?
 
-Larry
+Again, this would just informational. But sure, mon0 works too.
+
+ Luis
