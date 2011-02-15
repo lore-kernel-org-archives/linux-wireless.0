@@ -1,68 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37903 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393Ab1BQDb3 (ORCPT
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:45465 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755427Ab1BORHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 22:31:29 -0500
-Message-ID: <4D5C9679.3060700@candelatech.com>
-Date: Wed, 16 Feb 2011 19:31:05 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 15 Feb 2011 12:07:03 -0500
+Message-ID: <20110215190657.75006zvz1q691rk8@naisho.dyndns.info>
+Date: Tue, 15 Feb 2011 19:06:57 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] mac80211: make tx() operation return void
+References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org, bloat-devel@lists.bufferbloat.net,
-	"Nathaniel J. Smith" <njs@pobox.com>
-Subject: Re: [RFC] mac80211: implement eBDP algorithm to fight bufferbloat
-References: <1297619803-2832-1-git-send-email-njs@pobox.com> <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/16/2011 05:49 PM, John W. Linville wrote:
-> This is an implementation of the eBDP algorithm as documented in
-> Section IV of "Buffer Sizing for 802.11 Based Networks" by Tianji Li,
-> et al.
+Quoting Johannes Berg <johannes@sipsolutions.net>:
+
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> 	http://www.hamilton.ie/tianji_li/buffersizing.pdf
+> The return value of the tx operation is commonly
+> misused by drivers, leading to errors. All drivers
+> will drop frames if they fail to TX the frame, and
+> they must also properly manage the queues (if they
+> didn't, mac80211 would already warn).
 >
-> This implementation timestamps an skb before handing it to the hardware
-> driver, then computes the service time when the transmit status is
-> reported back from the driver.  An exponentially weighted moving
-> average of per packet service times is used to restrict queueing
-> delays in hopes of achieving a target packet transmission latency.
+> Removing the ability for drivers to return a BUSY
+> value also allows significant cleanups of the TX
+> TX handling code in mac80211.
 >
-> Signed-off-by: John W. Linville<linville@tuxdriver.com>
+> NB: Also fixes a bug in ath9k_htc.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
-> This is preliminary, but it seems to put some limits on latencies
-> for me.  I haven't even really done much testing, so YMMV...
+>  drivers/net/wireless/adm8211.c                |    4
+>  drivers/net/wireless/at76c50x-usb.c           |    7 -
+>  drivers/net/wireless/ath/ar9170/ar9170.h      |    2
+>  drivers/net/wireless/ath/ar9170/main.c        |    5
+>  drivers/net/wireless/ath/ath5k/base.c         |    5
+>  drivers/net/wireless/ath/ath5k/mac80211-ops.c |   10 -
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    7 -
+>  drivers/net/wireless/ath/ath9k/main.c         |    6
+>  drivers/net/wireless/ath/carl9170/carl9170.h  |    2
+>  drivers/net/wireless/ath/carl9170/tx.c        |    5
+>  drivers/net/wireless/b43/main.c               |    5
+>  drivers/net/wireless/b43legacy/main.c         |    5
+>  drivers/net/wireless/iwlwifi/iwl-agn.c        |    3
+>  drivers/net/wireless/iwlwifi/iwl-agn.h        |    2
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c   |    3
+>  drivers/net/wireless/libertas_tf/main.c       |    3
+>  drivers/net/wireless/mac80211_hwsim.c         |    5
+>  drivers/net/wireless/mwl8k.c                  |   15 --
+>  drivers/net/wireless/p54/lmac.h               |    2
+>  drivers/net/wireless/p54/main.c               |    2
+>  drivers/net/wireless/p54/txrx.c               |   11 -
+>  drivers/net/wireless/rt2x00/rt2x00.h          |    2
+>  drivers/net/wireless/rt2x00/rt2x00mac.c       |    5
+>  drivers/net/wireless/rtl818x/rtl8180/dev.c    |    8 -
+>  drivers/net/wireless/rtl818x/rtl8187/dev.c    |    6
+>  drivers/net/wireless/rtlwifi/core.c           |    5
+>  drivers/net/wireless/wl1251/main.c            |    4
+>  drivers/net/wireless/wl12xx/main.c            |    4
+>  drivers/net/wireless/zd1211rw/zd_mac.c        |    5
+>  include/net/mac80211.h                        |    2
+>  net/mac80211/driver-ops.h                     |    4
+>  net/mac80211/tx.c                             |  164  
+> ++++++++------------------
+>  32 files changed, 113 insertions(+), 205 deletions(-)
 >
-> I'm sure this isn't ideal.  This should be combined with the ALT
-> algorithm to yield the A* algorithm.  There are parameters that
-> probably should be tunable (or at least better researched).  This may
-> not be ideal for 802.11n -- it may even be detrimental to it.
+
+...
+
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2011-02-15  
+> 13:53:37.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/main.c	2011-02-15  
+> 13:55:02.000000000 +0100
+> @@ -3203,7 +3203,7 @@ static void b43_tx_work(struct work_stru
+>  	mutex_unlock(&wl->mutex);
+>  }
 >
-> Still, it is an attempt at addressing buffer bloat.  Plus, it should
-> pertain to all mac80211-based drivers.  So, feel free to test it,
-> suggest different parameters, report real numbers, post patches,
-> etc... :-)
+> -static int b43_op_tx(struct ieee80211_hw *hw,
+> +static void b43_op_tx(struct ieee80211_hw *hw,
+>  		     struct sk_buff *skb)
+>  {
+>  	struct b43_wl *wl = hw_to_b43_wl(hw);
+> @@ -3211,14 +3211,11 @@ static int b43_op_tx(struct ieee80211_hw
+>  	if (unlikely(skb->len < 2 + 2 + 6)) {
+>  		/* Too short, this can't be a valid frame. */
+>  		dev_kfree_skb_any(skb);
+> -		return NETDEV_TX_OK;
+>  	}
 
-> +		/* test for queue admission qualifications */
-> +		tserv_ns_avg = ewma_read(&sdata->tserv_ns_avg);
-> +		/* constants 2 msec and offset 5 should be tunable? */
-> +		max_enqueued = 2 * NSEC_PER_MSEC / tserv_ns_avg + 5;
-> +		if (atomic_read(&sdata->enqueued)>  max_enqueued) {
-> +			/* silently drop */
-> +			dev_kfree_skb(skb);
-> +			return IEEE80211_TX_OK;
-> +		}
+Return missing.
 
-We should have some visible stat to increment when you drop on xmit,
-  tx-fifo error or similar?
+>  	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
+>
+>  	skb_queue_tail(&wl->tx_queue, skb);
+>  	ieee80211_queue_work(wl->hw, &wl->tx_work);
+> -
+> -	return NETDEV_TX_OK;
+>  }
+>
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
