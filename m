@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52682 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469Ab1BYH5M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 02:57:12 -0500
-Received: by qwd7 with SMTP id 7so1069363qwd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 23:57:11 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20110224200203.GB17412@elie>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-Date: Fri, 25 Feb 2011 08:57:11 +0100
-Message-ID: <AANLkTinv-iP2ugHy2n23jwi2uuyJCoSXtekTj9QYvbXJ@mail.gmail.com>
-Subject: Re: ath9k causes lockups since kernel 2.6.35
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org, Tony Houghton <h@realh.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <vnatarajan@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:12857 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753140Ab1BOUas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 15:30:48 -0500
+Subject: Re: Get/set Sensitivity for a radio?
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4D5AE1B5.8010302@candelatech.com>
+References: <4D5AE1B5.8010302@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Feb 2011 12:28:57 -0800
+Message-ID: <1297801737.4723.25.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just FYI:
+On Tue, 2011-02-15 at 12:27 -0800, Ben Greear wrote:
+> Hello!
+> 
+> I'm having no luck finding where sensitivity is set in
+> net/mac80211.  Anyone know something to grep for?
+> 
+I am not sure mac80211 deal with sensitivity if it's what you referring
+(at least not I am aware of).
 
-(As I know you are on Debian...)
-Debian/experimental provides now 2.6.38-rc6 kernel packages, might be
-worth a test?
+in iwlwifi, driver and uCode take care of sensitivity calibration.
 
-- Sedat -
+Wey
+
+
