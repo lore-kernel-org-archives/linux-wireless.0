@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:46602 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808Ab1BIVfa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 16:35:30 -0500
-Received: by qyj19 with SMTP id 19so1778339qyj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 13:35:29 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:58310 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753598Ab1BOLkJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 06:40:09 -0500
+Date: Tue, 15 Feb 2011 12:39:52 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: zero fill txq->txb on queue reset
+Message-ID: <20110215113951.GD2162@redhat.com>
+References: <1297693999-15342-1-git-send-email-sgruszka@redhat.com>
+ <1297695219.3953.5.camel@jlt3.sipsolutions.net>
+ <1297695325.3953.6.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-Date: Wed, 9 Feb 2011 22:35:29 +0100
-Message-ID: <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
-Subject: Re: SSB AI support code
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297695325.3953.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Switching general discussion to this thread.
+On Mon, Feb 14, 2011 at 03:55:25PM +0100, Johannes Berg wrote:
+> On Mon, 2011-02-14 at 15:53 +0100, Johannes Berg wrote:
+> > On Mon, 2011-02-14 at 15:33 +0100, Stanislaw Gruszka wrote:
+> > > We allocate txq->txb area with kzalloc, but when reseting queue
+> > > during __iwl_down / __iwl_up we we leave old values, let's zero
+> > > initialize in such case as well.
+> > > 
+> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > > ---
+> > >  drivers/net/wireless/iwlwifi/iwl-tx.c |    2 ++
+> > >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> > > index a8935cd..0c8555c 100644
+> > > --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
+> > > +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> > > @@ -418,6 +418,8 @@ void iwl_tx_queue_reset(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+> > >  
+> > >  	if (txq_id == priv->cmd_queue)
+> > >  		actual_slots++;
+> > > +	else
+> > > +		memset(txq->txb, 0, sizeof(txq->txb[0]) * TFD_QUEUE_SIZE_MAX);
+> > 
+> > I don't mind -- but I think the changelog should say that this isn't
+> > necessary since the device will never use any of those entries?
+> 
+> Err, I confused txb and tfds. But it still shouldn't be necessary --
+> aren't the entries reset to NULL when taken out of use?
 
-W dniu 9 lutego 2011 22:12 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Wed, 2011-02-09 at 21:58 +0100, Rafał Miłecki wrote:
->> I don't know, I've doubts about it :/ That flags are quite messy, mask
->> for them is 0x3FFC0000. Ideally we should shift it by 14 bits, but
->> that would make writing code harder. Maaaaybe... Michael what do you
->> think about this?
->
-> I have no idea.
-> I already expressed my opinion on all this stuff.
->
-> One thing is for certain: If this is merged, George has to
-> adopt maintainership.
+There are memset zero before the use in {iwlagn,iwl3945}_tx_skb(),
+so patch is unneeded as well kzalloc in current code (I add replace
+to kmalloc to my todo list).
 
-What about proposed solution? Does it still look ugly for you with
-that pointers to functions? It looks quite fine separated, similarly
-to b43 and PHYs I think. Separated files and structs with pointers.
-
-George: apart from few simple comparisons on beginning (like detecting
-type of device and determining name in switch), do you need any more
-(many?) tests in general code? Do you have many "if ssb_sb) {} else
-{}"?
-
--- 
-Rafał
+Stanislaw
