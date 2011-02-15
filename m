@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63955 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:27006 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751041Ab1BNElH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 23:41:07 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 20:40:46 -0800
-Message-ID: <4D58B25D.4040507@atheros.com>
-Date: Mon, 14 Feb 2011 10:11:01 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+	id S1751093Ab1BONGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 08:06:38 -0500
+Date: Tue, 15 Feb 2011 14:06:22 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: zero fill txq->txb on queue reset
+Message-ID: <20110215130621.GB2515@redhat.com>
+References: <1297693999-15342-1-git-send-email-sgruszka@redhat.com>
+ <1297695219.3953.5.camel@jlt3.sipsolutions.net>
+ <1297695325.3953.6.camel@jlt3.sipsolutions.net>
+ <20110215113951.GD2162@redhat.com>
+ <1297770482.3935.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: make use of slot time macros
-References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com>
-In-Reply-To: <20110211162944.GD2224@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1297770482.3935.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
-> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
->    
->> On 2011-02-11 5:15 PM, John W. Linville wrote:
->>      
->>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
->>>        
->>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
->>>>          
->>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>>
->>>>> Instead of using raw numbers to assign slot time it would be better to
->>>>> make use of predefined slot time macros
->>>>>            
->>>> How does this make it better?
->>>>          
->>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
->>>        
->> Well, neither the unit of this variable, nor the values that can be used
->> are ath9k specific.
->>      
-> True -- the patch is probably an unnecessarily zealous attempt to avoid
-> "magic numbers" in the code. :-)
->    
-John there are two instances where these macros are used:
+On Tue, Feb 15, 2011 at 12:48:02PM +0100, Johannes Berg wrote:
+> On Tue, 2011-02-15 at 12:39 +0100, Stanislaw Gruszka wrote:
+> 
+> > > > >  	if (txq_id == priv->cmd_queue)
+> > > > >  		actual_slots++;
+> > > > > +	else
+> > > > > +		memset(txq->txb, 0, sizeof(txq->txb[0]) * TFD_QUEUE_SIZE_MAX);
+> > > > 
+> > > > I don't mind -- but I think the changelog should say that this isn't
+> > > > necessary since the device will never use any of those entries?
+> > > 
+> > > Err, I confused txb and tfds. But it still shouldn't be necessary --
+> > > aren't the entries reset to NULL when taken out of use?
+> > 
+> > There are memset zero before the use in {iwlagn,iwl3945}_tx_skb(),
+> > so patch is unneeded as well kzalloc in current code (I add replace
+> > to kmalloc to my todo list).
+> 
+> Well, don't worry, the change is fine -- 
 
-htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
-  init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+hmm, I think is not, it just add more confusion
 
-
-> John
->    
+Stanislaw
