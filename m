@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:12492 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301Ab1BPPHD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 10:07:03 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000021884.msg
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 17:06:20 +0200
-Subject: Re: [RFC] How to rename SSB_TMSLOW_*, B43_TMSLOW_*?
-From: George Kashperko <george@znau.edu.ua>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
-References: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 16 Feb 2011 16:58:40 +0200
-Message-Id: <1297868320.24013.18.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:49162 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751406Ab1BOVYj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Feb 2011 16:24:39 -0500
+Message-ID: <4D5AEF0F.6000701@openwrt.org>
+Date: Tue, 15 Feb 2011 22:24:31 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Get/set Sensitivity for a radio?
+References: <4D5AE1B5.8010302@candelatech.com> <1297801737.4723.25.camel@wwguy-ubuntu> <4D5AE56D.6060900@candelatech.com>
+In-Reply-To: <4D5AE56D.6060900@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2011-02-15 9:43 PM, Ben Greear wrote:
+> On 02/15/2011 12:28 PM, wwguy wrote:
+>> On Tue, 2011-02-15 at 12:27 -0800, Ben Greear wrote:
+>>> Hello!
+>>>
+>>> I'm having no luck finding where sensitivity is set in
+>>> net/mac80211.  Anyone know something to grep for?
+>>>
+>> I am not sure mac80211 deal with sensitivity if it's what you referring
+>> (at least not I am aware of).
+>>
+>> in iwlwifi, driver and uCode take care of sensitivity calibration.
+> 
+> I'm messing with ath9k mostly.  Just trying to probe some values
+> for reporting as of now.  In the old days, seems you could
+> set the sensitivity for madwifi though..could help in some
+> cases...
+It doesn't make sense to try to add a single 'sensitivity' knob. There
+are many different radio parameters that are related to that, some
+calibrated, some configured - madwifi never had anything useful for that
+either.
 
-> Except for following 3 defines:
-> #define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
-> #define  SSB_TMSLOW_REJECT_22	0x00000002 /* Reject (Backplane rev 2.2) */
-> #define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
-> 
-> All our SSB_TMSLOW_* and B43_TMSLOW_* defines are some core control
-> bits. As we now know, core control bits are not SSB specific or TMSLOW
-> specific.
-> 
-> Should we (and how) define that names in this situation?
-> 
-> For b43 I propose (quite obvious?) B43_CORE_CTL_*.
-> 
-> However what about SSB_TMSLOW_*? George proposed SSB_CORECTL_*, but it
-> contains "SSB", while that bits are not SSB specific. Same bits are
-> used on AI bus. Should we use some SSBAI_CORE_CTL_* then? Any other
-> ideas? Some better maybe?
-I'm still sure AI us much more SSB rather than lets say BCMAI. In
-current SSB architecture each core software-wise is represented by 4k
-registers' space with own core registers and bus-specific registers in
-that single 4k page. AI cores keep own core registers same as SSB in
-single 4k space whereas bus-specific registers are in separate page and
-have somewhat another layout. But among all the bus specific registers
-for both SSB and AI despite the fact they located in different places
-they either share the same meaning with just different layout
-(TMSLOW/TMSHIGH) or can be abstracted by appropriate handlers
-(admatch/irqflag). It looks to me much like pcie and pci which share
-single software bus ideology rather than introducing two different
-buses. Therefore I still don't really convinced with idea that just for
-that difference in where bus-specific registers are located we should
-introduce one more bus. Actually it looks somewhat similar to
-core-wrappers' technique already in SSB - those admatch thingys used to
-access sub-cores withing SSB core. We don't expose any sw buildups for
-just those, same as we could do for AI if only let it share SSB code
-base.
-
-> 
-> P.S.
-> Personally I prefer CORE_CTL over CORECTL (George). Which one should we use?
-> 
-I decided on CORECTL/CORESTAT over CORE_CTL/CORE_STATE just to get long
-things to be bits shorter.
-
-Have nice day,
-George
-
-
+- Felix
