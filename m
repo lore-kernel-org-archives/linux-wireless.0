@@ -1,34 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33454 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757726Ab1BKQTg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41197 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568Ab1BOMfc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 11:19:36 -0500
-Date: Fri, 11 Feb 2011 11:15:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k: make use of slot time macros
-Message-ID: <20110211161551.GA2224@tuxdriver.com>
-References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com>
- <4D553107.3020402@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4D553107.3020402@openwrt.org>
+	Tue, 15 Feb 2011 07:35:32 -0500
+Subject: ath9k htc bug?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Sujith <Sujith.Manoharan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Feb 2011 13:35:08 +0100
+Message-ID: <1297773308.3935.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
-> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
-> > From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> > 
-> > Instead of using raw numbers to assign slot time it would be better to
-> > make use of predefined slot time macros
-> How does this make it better?
+This code in ath9k_ht_tx looks buggy:
 
-Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
+        if (padsize && skb->len > padpos) {
+                if (skb_headroom(skb) < padsize)
+                        return -1;
+                skb_push(skb, padsize);
+                memmove(skb->data, skb->data + padsize, padpos);
+        }
 
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+-1 isn't a valid netdev tx status code -- I think this should just be
+"goto fail_tx;" instead?
+
+johannes
+
