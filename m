@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:36937 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751843Ab1BFJQf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34587 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755489Ab1BOTAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 04:16:35 -0500
-Received: by pva4 with SMTP id 4so701376pva.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Feb 2011 01:16:34 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 15 Feb 2011 14:00:36 -0500
+Date: Tue, 15 Feb 2011 13:58:10 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nikolay Ledovskikh <nledovskikh@gmail.com>
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com, me@bobcopeland.com,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
+ seqfault on AHB chips
+Message-ID: <20110215185810.GH2557@tuxdriver.com>
+References: <AANLkTi=6jVGZx0oQdMQmndCB9k_xPywfntsB1LS_4ekM@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <19790.26333.573535.551182@gargle.gargle.HOWL>
-Date: Sun, 6 Feb 2011 14:46:13 +0530
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk
-In-Reply-To: <20110206083522.16858.24185.stgit@fate.lan>
-References: <20110206083522.16858.24185.stgit@fate.lan>
+In-Reply-To: <AANLkTi=6jVGZx0oQdMQmndCB9k_xPywfntsB1LS_4ekM@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jussi Kivilinna wrote:
-> +static int usb_endpoint_int_to_bulk(struct usb_device *udev, unsigned int pipe)
-> +{
-> +	struct usb_host_endpoint *ep;
-> +
-> +	ep = usb_pipe_endpoint(udev, pipe);
-> +	if (!ep)
-> +		return -EPIPE;
-> +
-> +	switch (ep->desc.bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) {
-> +	case USB_ENDPOINT_XFER_INT:
-> +		ep->desc.bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
-> +		ep->desc.bmAttributes |= USB_ENDPOINT_XFER_BULK;
-> +		ep->desc.bInterval = 0;
-> +		/* passthru */
+On Tue, Feb 15, 2011 at 09:49:24PM +0300, Nikolay Ledovskikh wrote:
+> This patch fixes seqfault on ar2316 and other AHB based chips.
+> (I don't know why it's not in archives)
+> 
+> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/
+> ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+> index 707cde1..35d5273 100644
+> --- a/drivers/net/wireless/ath/ath5k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
+> @@ -34,7 +34,7 @@ static void ath5k_ahb_read_cachesize(struct ath_common
+> *common, int *csz)
+>  bool ath5k_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+>  {
+>      struct ath5k_softc *sc = common->priv;
+> -    struct platform_device *pdev = to_platform_device(sc->dev);
+> +    struct platform_device *pdev =
+> to_platform_device(wiphy_dev(sc->hw->wiphy));
+>      struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+>      u16 *eeprom, *eeprom_end;
+> 
 
-ath9k_htc does the same thing (see ath/ath9k/hif_usb.c).
-It does seem to be working properly but I am wondering if the
-USB subsystem has to be updated after the driver messes around with bmAttributes.
-(lsusb would still show the endpoint type as INT).
+Please use a mailer that doesn't do whitespace damage to patches --
+I'll never live long enough to make-up for the time I've already
+spent fixing-up broken patches...
 
-You have a usb_reset_configuration() call before changing
-the endpoint type, why is that necessary ? And would that
-reset the endpoints as well ?
-
-Sujith
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
