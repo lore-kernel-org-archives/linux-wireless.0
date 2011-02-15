@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37144 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832Ab1BTAhD convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38833 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755325Ab1BOVL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 19:37:03 -0500
-Received: by bwz15 with SMTP id 15so150702bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 16:37:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
-References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
-	<1298064074-8108-1-git-send-email-linville@tuxdriver.com>
-Date: Sat, 19 Feb 2011 16:37:00 -0800
-Message-ID: <AANLkTinTcdbjSYvt7Z_yOe_8kGZnyp2MBXZYYJ9zGB_D@mail.gmail.com>
-Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
-From: Nathaniel Smith <njs@pobox.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
-	johannes@sipsolutions.net, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Feb 2011 16:11:29 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Add power to debugfs.
+Date: Tue, 15 Feb 2011 13:11:22 -0800
+Message-Id: <1297804282-18415-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Actually, a few more comments just occurred to me...
+From: Ben Greear <greearb@candelatech.com>
 
-On Fri, Feb 18, 2011 at 1:21 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Johannes' comment about tx status reporting being unreliable (and what
-> he was really saying) finally sunk-in.  So, this version uses
-> skb->destructor to track in-flight fragments.  That should handle
-> fragments that get silently dropped in the driver for whatever reason
-> without leaking queue capacity.  Correct me if I'm wrong!
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 1f02e59... 51f0d78... M	net/mac80211/debugfs.c
+ net/mac80211/debugfs.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Should we be somehow filtering out and ignoring the packets that get
-dropped, when we're calculating the average packet transmission rate?
-Presumably they're getting dropped almost instantly, so they don't
-really take up queue space and they have abnormally fast transmission
-times, which will tend to cause us to overestimate max_enqueued? They
-should be rare, though, at least. (And presumably we *should* include
-packets that get dropped because their retry timer ran out, since they
-were sitting in the queue for that long.) Possibly we should just
-ignore any packet that was handled in less than, oh, say, a few
-microseconds?
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 1f02e59..51f0d78 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -60,6 +60,10 @@ static const struct file_operations name## _ops = {			\
+ 	debugfs_create_file(#name, mode, phyd, local, &name## _ops);
+ 
+ 
++DEBUGFS_READONLY_FILE(user_power, "%d",
++		      local->user_power_level);
++DEBUGFS_READONLY_FILE(power, "%d",
++		      local->hw.conf.power_level);
+ DEBUGFS_READONLY_FILE(frequency, "%d",
+ 		      local->hw.conf.channel->center_freq);
+ DEBUGFS_READONLY_FILE(total_ps_buffered, "%d",
+@@ -391,6 +395,8 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(uapsd_queues);
+ 	DEBUGFS_ADD(uapsd_max_sp_len);
+ 	DEBUGFS_ADD(channel_type);
++	DEBUGFS_ADD(user_power);
++	DEBUGFS_ADD(power);
+ 
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 
+-- 
+1.7.2.3
 
-Alternatively, if we aren't worried about those packets, then is there
-any reason this patch should be mac80211 specific?
-
-> +static void ieee80211_tx_skb_free(struct sk_buff *skb)
-> +{
-> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
-> +       struct ieee80211_local *local = sdata->local;
-> +       int q = skb_get_queue_mapping(skb);
-> +
-> +       /* decrement enqueued count */
-> +       atomic_dec(&sdata->qdata[q].enqueued);
-> +
-> +       /* if queue stopped, wake it */
-> +       if (ieee80211_queue_stopped(&local->hw, q))
-> +               ieee80211_wake_queue(&local->hw, q);
-> +}
-
-I think you need to check that .enqueued is < max_enqueued here,
-instead of waking the queue unconditionally.
-
-Suppose the data rate drops while there's a steady flow -- our
-max_enqueued value will drop below the current queue size, but because
-we wake the queue unconditionally after each packet goes out, and then
-only stop it again after we've queued at least one new packet, we
-might get 'stuck' with an over-large queue.
-
--- Nathaniel
