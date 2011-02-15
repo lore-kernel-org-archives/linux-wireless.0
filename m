@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:48186 "EHLO
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49264 "EHLO
 	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753589Ab1BRW3M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 17:29:12 -0500
-Subject: Re: [RFC] AI support (2/14 ssb helpers)
+	id S1751082Ab1BOAUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Feb 2011 19:20:11 -0500
+Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
 From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297980484.23381.4.camel@dev.znau.edu.ua> (sfid-20110217_231646_647052_FFFFFFFFEFB25F2A)
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
-	 <1297980484.23381.4.camel@dev.znau.edu.ua>
-	 (sfid-20110217_231646_647052_FFFFFFFFEFB25F2A)
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTingds9m3sj5bJoExiuoivbRSAtnF2A-4emjYMdJ@mail.gmail.com> (sfid-20110215_011145_942850_24C2EA9B)
+References: <1297725710.5683.17.camel@maggie>
+	 <AANLkTingds9m3sj5bJoExiuoivbRSAtnF2A-4emjYMdJ@mail.gmail.com>
+	 (sfid-20110215_011145_942850_24C2EA9B)
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Feb 2011 23:29:09 +0100
-Message-ID: <1298068149.23801.16.camel@maggie>
+Date: Tue, 15 Feb 2011 01:20:01 +0100
+Message-ID: <1297729201.5683.22.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-02-18 at 00:08 +0200, George Kashperko wrote: 
-> 	const struct ssb_bus_ops *ops;
-> +	const struct ssb_bus_helpers *helpers;
+On Tue, 2011-02-15 at 01:03 +0100, Gábor Stefanik wrote: 
+> > -static int ssb_wait_bit(struct ssb_device *dev, u16 reg, u32 bitmask,
+> > -                       int timeout, int set)
+> > +static int ssb_wait_bits(struct ssb_device *dev, u16 reg, u32 bitmask,
+> > +                        int timeout, int set)
+> 
+> While you are at it, you may want to change this to "bool set".
 
-Uhm, well. "helpers"... . Seems like a pretty generic term.
-
-I think this is still violating abstraction layering. Not as much
-as your previous attempt, but still...
-
-You're putting the ops structure that is supposed to abstract
-the ssb bus into the ssb_device data structure. That should ring a bell.
+Please feel free to submit a separate patch on top of this.
 
 -- 
 Greetings Michael.
