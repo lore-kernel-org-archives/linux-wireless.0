@@ -1,118 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:47980 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755059Ab1BROGf (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:12492 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301Ab1BPPHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 09:06:35 -0500
-Date: Fri, 18 Feb 2011 10:59:56 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth-next-2.6 2011-02-17
-Message-ID: <20110218135956.GA2256@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 16 Feb 2011 10:07:03 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000021884.msg
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 17:06:20 +0200
+Subject: Re: [RFC] How to rename SSB_TMSLOW_*, B43_TMSLOW_*?
+From: George Kashperko <george@znau.edu.ua>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
+References: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 16 Feb 2011 16:58:40 +0200
+Message-Id: <1297868320.24013.18.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi,
 
-Busy times at the Bluetooth subsystem. Here is another big set of patches
-intended to 2.6.39. ;)
+> Except for following 3 defines:
+> #define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
+> #define  SSB_TMSLOW_REJECT_22	0x00000002 /* Reject (Backplane rev 2.2) */
+> #define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
+> 
+> All our SSB_TMSLOW_* and B43_TMSLOW_* defines are some core control
+> bits. As we now know, core control bits are not SSB specific or TMSLOW
+> specific.
+> 
+> Should we (and how) define that names in this situation?
+> 
+> For b43 I propose (quite obvious?) B43_CORE_CTL_*.
+> 
+> However what about SSB_TMSLOW_*? George proposed SSB_CORECTL_*, but it
+> contains "SSB", while that bits are not SSB specific. Same bits are
+> used on AI bus. Should we use some SSBAI_CORE_CTL_* then? Any other
+> ideas? Some better maybe?
+I'm still sure AI us much more SSB rather than lets say BCMAI. In
+current SSB architecture each core software-wise is represented by 4k
+registers' space with own core registers and bus-specific registers in
+that single 4k page. AI cores keep own core registers same as SSB in
+single 4k space whereas bus-specific registers are in separate page and
+have somewhat another layout. But among all the bus specific registers
+for both SSB and AI despite the fact they located in different places
+they either share the same meaning with just different layout
+(TMSLOW/TMSHIGH) or can be abstracted by appropriate handlers
+(admatch/irqflag). It looks to me much like pcie and pci which share
+single software bus ideology rather than introducing two different
+buses. Therefore I still don't really convinced with idea that just for
+that difference in where bus-specific registers are located we should
+introduce one more bus. Actually it looks somewhat similar to
+core-wrappers' technique already in SSB - those admatch thingys used to
+access sub-cores withing SSB core. We don't expose any sw buildups for
+just those, same as we could do for AI if only let it share SSB code
+base.
 
-One of the changes is the end of the L2CAP and SCO kernel modules. We just
-merged them into the main bluetooth.ko module. It really never made sense to
-have them separated. 
+> 
+> P.S.
+> Personally I prefer CORE_CTL over CORECTL (George). Which one should we use?
+> 
+I decided on CORECTL/CORESTAT over CORE_CTL/CORE_STATE just to get long
+things to be bits shorter.
 
-Then we have firmware support to a new Atheros device by Bala Shanmugam.
-The First set of patches for Bluetooth Low Energy(LE) support, by Ville Tervo.
-Low Energy is a new Bluetooth radio that will bring many new use cases to the
-Bluetooth technology. Finally, LE connection update command support by Claudio
-Takahasi. The rest is just bugs fixes and cleanups. 
+Have nice day,
+George
 
-Please pull, or let me know any doubts you have. Thanks.
 
-The following changes since commit a3dc5e881a8a5199bf371fdd4530cfa18280ca83:
-
-  rtlwifi: rtl8192ce: Rework rtl8192ce/phy.c (2011-02-11 16:16:38 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
-
-Andrei Warkentin (1):
-      Bluetooth: Make hci a child of the corresponding tty device.
-
-Bala Shanmugam (1):
-      Bluetooth: Add firmware support for Atheros 3012
-
-Claudio Takahasi (3):
-      Bluetooth: Add LE signaling commands handling
-      Bluetooth: Add connection parameter update response
-      Bluetooth: Send LE Connection Update Command
-
-Gustavo F. Padovan (8):
-      Bluetooth: Merge L2CAP and SCO modules into bluetooth.ko
-      Bluetooth: remove l2cap_load() hack
-      Bluetooth: Add L2CAP mode to debugfs output
-      Bluetooth: Use usb_fill_int_urb()
-      Bluetooth: Fix crash when ioctl(HCIUARTSETPROTO) fails
-      Bluetooth: fix errors reported by checkpatch.pl
-      Bluetooth: Fix errors reported by checkpatch.pl
-      Bluetooth: fix checkpatch errors in af_bluetooth.c
-
-Szymon Janc (5):
-      Bluetooth: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
-      Bluetooth: Clean up hci_sniff_subrate_evt function
-      Bluetooth: Fix some code style issues in hci_core.h
-      Bluetooth: Fix some code style issues in hci_core.c
-      Bluetooth: Fix some code style issues in hci_event.c
-
-Vasiliy Kulikov (3):
-      Bluetooth: l2cap: fix 1 byte infoleak to userspace
-      Bluetooth: bnep: fix buffer overflow
-      Bluetooth: sco: fix information leak to userspace
-
-Ville Tervo (9):
-      Bluetooth: Add low energy commands and events
-      Bluetooth: Add LE connect support
-      Bluetooth: Use LE buffers for LE traffic
-      Bluetooth: Add LE connection support to L2CAP
-      Bluetooth: Add server socket support for LE connection
-      Bluetooth: Do not send disconn comand over LE links
-      Bluetooth: Treat LE and ACL links separately on timeout
-      Bluetooth: Add SMP command structures
-      Bluetooth: Use proper timer for hci command timout
-
-Vinicius Costa Gomes (1):
-      Bluetooth: Fix initiated LE connections
-
- drivers/bluetooth/ath3k.c         |  279 +++++++++++++++++++++++++++++
- drivers/bluetooth/btusb.c         |   13 +-
- drivers/bluetooth/hci_ldisc.c     |    1 +
- include/net/bluetooth/bluetooth.h |   28 +++
- include/net/bluetooth/hci.h       |   65 +++++++
- include/net/bluetooth/hci_core.h  |   92 ++++++----
- include/net/bluetooth/l2cap.h     |   23 +++-
- include/net/bluetooth/smp.h       |   76 ++++++++
- net/bluetooth/Kconfig             |   10 +-
- net/bluetooth/Makefile            |    5 +-
- net/bluetooth/af_bluetooth.c      |   34 ++++-
- net/bluetooth/bnep/core.c         |    2 -
- net/bluetooth/bnep/sock.c         |    1 +
- net/bluetooth/cmtp/core.c         |    2 -
- net/bluetooth/hci_conn.c          |   77 ++++++++-
- net/bluetooth/hci_core.c          |  115 ++++++++++--
- net/bluetooth/hci_event.c         |  165 +++++++++++++++--
- net/bluetooth/hci_sysfs.c         |    6 +-
- net/bluetooth/hidp/core.c         |    2 -
- net/bluetooth/l2cap_core.c        |  355 ++++++++++++++++++++++++++++---------
- net/bluetooth/l2cap_sock.c        |   60 ++++---
- net/bluetooth/mgmt.c              |    2 +-
- net/bluetooth/rfcomm/core.c       |    2 -
- net/bluetooth/sco.c               |   17 +--
- 24 files changed, 1196 insertions(+), 236 deletions(-)
- create mode 100644 include/net/bluetooth/smp.h
-
--- 
-Gustavo F. Padovan
-http://profusion.mobi
