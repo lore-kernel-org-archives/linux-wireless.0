@@ -1,74 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63140 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932581Ab1BYSWE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 13:22:04 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 15so2185147bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 10:22:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110223222842.GA20039@tuxdriver.com>
-References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
-	<1298064074-8108-1-git-send-email-linville@tuxdriver.com>
-	<AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
-	<20110221184716.GD9650@tuxdriver.com>
-	<AANLkTi=LnpFLzKbtaPxSjg9TRU_pY2oRi6tsFg5GkaGK@mail.gmail.com>
-	<20110223222842.GA20039@tuxdriver.com>
-Date: Fri, 25 Feb 2011 10:21:50 -0800
-Message-ID: <AANLkTimahYNo0ZHr9PU217CWJQP6ssuhaxguYVz7dX_-@mail.gmail.com>
-Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
-From: Nathaniel Smith <njs@pobox.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
-	johannes@sipsolutions.net, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:2316 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751758Ab1BPXoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Feb 2011 18:44:30 -0500
+Subject: Re: [PATCH 0/5] iwlwifi: Auto-tune tx queue size to maintain
+ latency under load
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Nathaniel Smith <njs@pobox.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+In-Reply-To: <AANLkTimJcGr=L6scJotzKeL+2AEvbHBRi16fo1MpqFJ3@mail.gmail.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	 <20110216155011.GC10287@tuxdriver.com>
+	 <AANLkTimJcGr=L6scJotzKeL+2AEvbHBRi16fo1MpqFJ3@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Feb 2011 15:42:36 -0800
+Message-ID: <1297899756.21351.3.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 23, 2011 at 2:28 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Feb 21, 2011 at 03:26:32PM -0800, Nathaniel Smith wrote:
->> But for this calculation to make sense, we need T to be the time it
->> takes the card to transmit 1 fragment. In your patch, you're not
->> measuring that. You're measuring the total time between when a packet
->> is enqueued and when it is transmitted; if there were K packets in the
->> queue ahead of it, then this is the time to send *all* of them --
->> you're measuring (K+1)*T. That's why in my patch, I recorded the
->> current size of the queue when each packet is enqueued, so I could
->> compute T = total_time / (K+1).
->
-> Thanks for the math!  I think I see what you are saying now.  Since the
-> measured time is being used to determine the queue size, we need to
-> factor-in the length of the queue that resulted in that measurment.
->
-> Unfortunately, I'm not sure how to apply this with the technique I
-> am using for the timing measurements. :-(  I'll have to think about
-> this some more...
+On Wed, 2011-02-16 at 15:08 -0800, Nathaniel Smith wrote:
+> On Wed, Feb 16, 2011 at 7:50 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Sun, Feb 13, 2011 at 09:56:37AM -0800, Nathaniel J. Smith wrote:
+> >
+> >> This patch series teaches the driver to measure the average rate of
+> >> packet transmission for each tx queue, and adjusts the queue size
+> >> dynamically in an attempt to achieve ~2 ms of added latency.
+> >
+> > How did you pick this number?  Is there research to support this as
+> > the correct target for link latency?
+> 
+> I'm not aware of any such research, no. My reasoning is that in this
+> scheme the ideal latency is based on the kernel's scheduling
+> promptness -- at some moment t0 the hardware sends the packet that
+> drops us below our low water mark, and then it takes some time for the
+> kernel to be informed of this fact, for the driver's tasklet to be
+> scheduled, the TX queue to be restarted, and for packets to get loaded
+> into it, so that eventually at time t1 the queue is refilled. To
+> maintain throughput, we want the queue length to be such that all this
+> can be accomplished before the queue drains completely; to maintain
+> latency, we want it to be no longer than necessary.
+> 
+> So the ideal latency for the TX queue is whatever number L is, say,
+> 95% of the time, greater than (t1 - t0). Note that this is
+> specifically for the driver queue, whose job is just to couple the
+> "real" queue to the hardware; the "real" queue should be larger and
+> smarter to properly handle bursty behavior and such.
+> 
+> I made up "2 ms" out of thin air as a number that seemed plausible to
+> me, and because I don't know how to measure the real number L. Ideally
+> we'd measure it on the fly, since it surely varies somewhat between
+> machines. Maybe someone else has a better idea how to do this?
+> 
+> The queue refill process for iwl3945 looks like:
+>   1) hardware transmits a packet, sends a tx notification to the driver
+>   2) iwl_isr_legacy receives the interrupt, and tasklet_schedule()s
+> the irq tasklet
+>   3) iwl3945_irq_tasklet runs, and eventually from
+> iwl3945_tx_queue_reclaim we wake the queue
+>   4) Waking the queue raises a softirq (netif_wake_subqueue -> __netif_schedule)
+>   5) The softirq runs, and, if there are packets queued, eventually
+> calls iwl3945_tx_skb
+> 
+> So IIUC there are actually two trips through the scheduler -- between
+> (2) and (3), and between (4) and (5). I assume that these are the only
+> sources of significant latency, so our goal is to measure the time
+> elapsed from (2) to (5).
+> 
+> Complications: (a) In the ISR, I'm not sure we have access to a
+> reliable realtime clock. (b) If there aren't any packets queued and
+> waiting, then we'll never get called in step (5).
+> 
+> The best bet -- assuming access to the clock from the interrupt
+> handler -- might be to measure the time from iwl_isr_legacy being
+> called to the tasklet being scheduled, and then multiply that by 2 + a
+> fudge factor.
+> 
 
-I guess an ugly but effective approach would be to steal some bits
-from the timestamp... something like (untested, and probably needs
-some sign-extension bugs fixed):
+I believe we need to test this on the newer device and re-think the
+approach, keep in mind the newer iwlagn device has "interrupt
+coalescing" to reduce the power and CPU usage, which will change the
+timing. Also with 11n enable and aggregation is on, the behavior also
+different.
 
-#define LATENCY_BITS 8
-#define ENQUEUED_BITS 24
-BUILD_BUG_ON(LATENCY_BITS + ENQUEUED_BITS != 32);
+Wey
 
-static ktime_t _ktime_get_and_stash(int enqueued) {
-        timespec now = ktime_to_timespec(ktime_get());
-        now.sec &= (1 << LATENCY_BITS) - 1;
-        BUG_ON(enqueued > (1 << ENQUEUED_BITS));
-        now.sec |= enqueued << LATENCY_BITS;
-        return timespec_to_ktime(now);
-}
 
-static u64 _ktime_diff_to_now_and_unstash(ktime_t then, int * enqueued) {
-
-        timespec ts_then = ktime_to_timespec(then);
-        timespec ts_now = ktime_to_timespec(ktime_get());
-        *enqueued = ts_then.tv_sec >> LATENCY_BITS;
-        ts_then.tv_sec &= (1 << LATENCY_BITS) - 1;
-        ts_now.tv_sec &= (1 << LATENCY_BITS) - 1;
-        if (ts_now.tv_sec < ts_then.tv_sec)
-                ts_now.tv_sec += (1 << LATENCY_BITS);
-         timespec_sub(ts_now, ts_then);
-}
