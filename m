@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:39928 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752298Ab1BLAIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 19:08:19 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Po329-00057t-T2
-	for linux-wireless@vger.kernel.org; Sat, 12 Feb 2011 01:08:17 +0100
-Received: from f052169174.adsl.alicedsl.de ([78.52.169.174])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 01:08:17 +0100
-Received: from pommnitz by f052169174.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 01:08:17 +0100
-To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Re: WPA for Ethernet?
-Date: Sat, 12 Feb 2011 00:08:05 +0000 (UTC)
-Message-ID: <loom.20110212T010038-60@post.gmane.org>
-References: <loom.20110211T163104-102@post.gmane.org> <20110211162845.GC2224@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45293 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759055Ab1BPM21 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Feb 2011 07:28:27 -0500
+Received: by wwa36 with SMTP id 36so1314350wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 04:28:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1297854688.3736.1.camel@jlt3.sipsolutions.net>
+References: <1296822326-4878-1-git-send-email-vnatarajan@atheros.com>
+	<1296824920.3671.4.camel@jlt3.sipsolutions.net>
+	<1296825156.3671.7.camel@jlt3.sipsolutions.net>
+	<AANLkTi=eJf+ge7_w1-r1hmZE0aaPzm_NP-Y-v81uctXG@mail.gmail.com>
+	<1297773858.3935.13.camel@jlt3.sipsolutions.net>
+	<AANLkTinGP+Vxm7502wRmCu5g_Nthz0x-sNQ4NFx9uz1n@mail.gmail.com>
+	<1297778952.8664.2.camel@jlt3.sipsolutions.net>
+	<AANLkTin3V5Ck6vtJshcjG9KxrK8pX3vOYhKGfVjqupxw@mail.gmail.com>
+	<1297854688.3736.1.camel@jlt3.sipsolutions.net>
+Date: Wed, 16 Feb 2011 17:58:25 +0530
+Message-ID: <AANLkTikTVwWPhVvzLk9U_pwyU9pcMs+kMsbNpRSWQkCM@mail.gmail.com>
+Subject: Re: [PATCH v2] mac80211: Fix a race on enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville <linville@...> writes:
-> I believe wpa_supplicant can do the 802.1x authentication to gain
-> access to a port on a supporting switch.  However, I am not aware
-> of any standard for "encrypted ethernet" that would build upon that.
+On Wed, Feb 16, 2011 at 4:41 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-02-16 at 15:01 +0530, Vivek Natarajan wrote:
+>
+>> >> And this is how I understand this:
+>> >> stop queues, then send nullfunc, then do a flush to get the status and
+>> >> wake queues again irrespective of acked or not(but set the ACK_STATUS
+>> >> correspondingly). If tx() routine of nullfunc fails, then also wake
+>> >> the queues.
+>> >
+>> > Yes, but since the flush is there, the latter (tx fails, ...) won't be
+>> > needed.
+>>
+>> If queues are stopped before sending nullfunc, it is added in the
+>> pending frames queue and the flush after nullfunc is ineffective. So,
+>> is it okay to bypass this queue_stop check with REASON_PS if it is a
+>> nullfunc frame? Any more ideas will be helpful.
+>
+> Ah, but I wasn't thinking of stopping the device queues, just the sdata
+> queues, and the nullfunc doesn't go across those.
 
-John, thanks for taking the time to answer. An untested idea I had was
-bridging the mac80211 hwsim device to an ethernet device. Could this work
-and would it do what I want? I suspect not, but maybe...
-Alternatively, is it somehow possible to connect the lower layer input/output
-of hwsim to another network interface? 
+Thanks. It works. I will test it for some more time and send in the patch.
 
-> You might consider implementing your own code on top of the TUN/TAP
-> driver for point-to-point encrypted links?
-
-How would this differ from OpenVPN?
-
-> John
-
-
-
-
+Vivek.
