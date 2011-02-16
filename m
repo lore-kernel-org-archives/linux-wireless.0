@@ -1,39 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44256 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844Ab1BNVDl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33557 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313Ab1BPLKH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:03:41 -0500
-Received: by bwz15 with SMTP id 15so5902545bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 13:03:40 -0800 (PST)
-Date: Tue, 15 Feb 2011 00:03:35 +0300
-From: Stanislav Fomichev <kernel@fomichev.me>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: Dan Carpenter <error27@gmail.com>, "s@fomichev.me" <s@fomichev.me>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"gregkh@suse.de" <gregkh@suse.de>,
+	Wed, 16 Feb 2011 06:10:07 -0500
+Subject: Re: [PATCH] mac80211: fix conn_mon_timer running after disassociate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcm80211: remove multiple calls to wl_release_fw
-Message-ID: <20110214210335.GA26387@sdf-MacBook>
-References: <20110212150033.GA1941@sdf-MacBook>
- <4D598993.4020900@broadcom.com>
- <20110214202249.GK4384@bicker>
- <4D59934D.2020600@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D59934D.2020600@broadcom.com>
+In-Reply-To: <20110216095443.GC2812@redhat.com>
+References: <1297693947-15310-1-git-send-email-sgruszka@redhat.com>
+	 <1297698696.4723.16.camel@wwguy-ubuntu> <20110215113444.GC2162@redhat.com>
+	 <1297770602.3935.3.camel@jlt3.sipsolutions.net>
+	 <20110215130428.GA2515@redhat.com>
+	 <1297775393.3935.15.camel@jlt3.sipsolutions.net>
+	 <20110215132202.GC2515@redhat.com>
+	 <1297776631.3935.16.camel@jlt3.sipsolutions.net>
+	 <20110216095443.GC2812@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Feb 2011 12:10:01 +0100
+Message-ID: <1297854601.3736.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Wed, 2011-02-16 at 10:54 +0100, Stanislaw Gruszka wrote:
+> Low level driver could pass rx frames to us after disassociate, what
+> can lead to run conn_mon_timer by ieee80211_sta_rx_notify(). Thats
+> is obviously wrong, but nothing happens until we unload modules and
+> resources are used after free. If kernel debugging is enabled following
+> warning could be observed:
+> 
+> WARNING: at lib/debugobjects.c:259 debug_print_object+0x65/0x70()
+> Hardware name: HP xw8600 Workstation
+> ODEBUG: free active (active state 0) object type: timer_list
+> Modules linked in: iwlagn(-) iwlcore mac80211 cfg80211 ...
+> Pid: 13827, comm: rmmod Tainted: G        W   2.6.38-rc4-wl+ #22
+> Call Trace:
+>  [<ffffffff810649cf>] ? warn_slowpath_common+0x7f/0xc0
+>  [<ffffffff81064ac6>] ? warn_slowpath_fmt+0x46/0x50
+>  [<ffffffff81226fc5>] ? debug_print_object+0x65/0x70
+>  [<ffffffff81227625>] ? debug_check_no_obj_freed+0x125/0x210
+>  [<ffffffff8109ebd7>] ? debug_check_no_locks_freed+0xf7/0x170
+>  [<ffffffff81156092>] ? kfree+0xc2/0x2f0
+>  [<ffffffff813ec5c5>] ? netdev_release+0x45/0x60
+>  [<ffffffff812f1067>] ? device_release+0x27/0xa0
+>  [<ffffffff81216ddd>] ? kobject_release+0x8d/0x1a0
+>  [<ffffffff81216d50>] ? kobject_release+0x0/0x1a0
+>  [<ffffffff812183b7>] ? kref_put+0x37/0x70
+>  [<ffffffff81216c57>] ? kobject_put+0x27/0x60
+>  [<ffffffff813d5d1b>] ? netdev_run_todo+0x1ab/0x270
+>  [<ffffffff813e771e>] ? rtnl_unlock+0xe/0x10
+>  [<ffffffffa0581188>] ? ieee80211_unregister_hw+0x58/0x120 [mac80211]
+>  [<ffffffffa0377ed7>] ? iwl_pci_remove+0xdb/0x22a [iwlagn]
+>  [<ffffffff8123cde2>] ? pci_device_remove+0x52/0x120
+>  [<ffffffff812f5205>] ? __device_release_driver+0x75/0xe0
+>  [<ffffffff812f5348>] ? driver_detach+0xd8/0xe0
+>  [<ffffffff812f4111>] ? bus_remove_driver+0x91/0x100
+>  [<ffffffff812f5b62>] ? driver_unregister+0x62/0xa0
+>  [<ffffffff8123d194>] ? pci_unregister_driver+0x44/0xa0
+>  [<ffffffffa0377df5>] ? iwl_exit+0x15/0x1c [iwlagn]
+>  [<ffffffff810ab492>] ? sys_delete_module+0x1a2/0x270
+>  [<ffffffff81498889>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+>  [<ffffffff8100bf42>] ? system_call_fastpath+0x16/0x1b
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  net/mac80211/mlme.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index d89e878..7b3f9df 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -1071,6 +1071,12 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+>  	if (is_multicast_ether_addr(hdr->addr1))
+>  		return;
+>  
+> +	/*
+> +	 * In case we receive pending frames after disassociation.
+> +	 */
+> +	if (!sdata->u.mgd.associated)
+> +		return;
+> +
+>  	ieee80211_sta_reset_conn_monitor(sdata);
+>  }
+>  
 
-> I already had a patch in the making that is a superset of
-> Stanislav's patch. It fixes the leak issue. I agreed with
-> Stanislav's patch since, I made the same (but: more) changes.
-> Stanislav, can we agree that we wait for my patch (I plan on
-> delivering this tomorrow) ?
-It's alright with me. I just wanted to point out an error; so I can wait
-for a better fix.
+good catch, thanks.
 
--- 
-	Stas
+johannes
+
