@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64504 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989Ab1BLNSu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42564 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167Ab1BPI7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Feb 2011 08:18:50 -0500
-Received: by bwz15 with SMTP id 15so4072880bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 05:18:49 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Remove superfluous if clause
-Date: Sat, 12 Feb 2011 14:17:15 +0100
-Message-Id: <1297516635-6892-1-git-send-email-helmut.schaa@googlemail.com>
+	Wed, 16 Feb 2011 03:59:33 -0500
+Subject: Re: [PATCH 4/5] iwlwifi: auto-tune tx queue size to minimize
+ latency
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Nathaniel Smith <njs@pobox.com>, linux-wireless@vger.kernel.org,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+In-Reply-To: <20110215150317.GA2557@tuxdriver.com>
+References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	 <1297619803-2832-5-git-send-email-njs@pobox.com>
+	 <1297685871.3785.39.camel@jlt3.sipsolutions.net>
+	 <AANLkTinuvxEuuz3-xWkhQ1fA8s7QumJHJQKpd1C48CV1@mail.gmail.com>
+	 <1297771986.3935.9.camel@jlt3.sipsolutions.net>
+	 <20110215150317.GA2557@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Feb 2011 09:59:25 +0100
+Message-ID: <1297846765.4533.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_rx_h_check returned RX_DROP_MONITOR in case the if statement
-in question was true but the same return value is also used directly
-after the if clause. Hence, we can just drop the whole if clause and as
-such simplify the code.
+On Tue, 2011-02-15 at 10:03 -0500, John W. Linville wrote:
+> On Tue, Feb 15, 2011 at 01:13:06PM +0100, Johannes Berg wrote:
+> 
+> > mac80211 has the advantage that TX status is reported back, so it could
+> > pretty accurately know how many frames are queued up -- more generically
+> > this cannot be done.
+> > 
+> > But since it's not perfectly accurate right now, it may not be the best
+> > idea to do this at this time.
+> 
+> Let's not make the perfect the enemy of the good.  An imperfect
+> implementation at the mac80211 layer is likely better than a somewhat
+> better implementation for one driver and no implementation for
+> the rest.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/rx.c |   12 +-----------
- 1 files changed, 1 insertions(+), 11 deletions(-)
+Well, no, I think the fact that it's not perfect probably means that the
+bandwidth/packet estimate will drift if any packets are dropped etc.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 045b2fe..f502634 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -832,18 +832,8 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 		      ieee80211_is_pspoll(hdr->frame_control)) &&
- 		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
- 		     rx->sdata->vif.type != NL80211_IFTYPE_WDS &&
--		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC)))) {
--		if ((!ieee80211_has_fromds(hdr->frame_control) &&
--		     !ieee80211_has_tods(hdr->frame_control) &&
--		     ieee80211_is_data(hdr->frame_control)) ||
--		    !(status->rx_flags & IEEE80211_RX_RA_MATCH)) {
--			/* Drop IBSS frames and frames for other hosts
--			 * silently. */
--			return RX_DROP_MONITOR;
--		}
--
-+		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC))))
- 		return RX_DROP_MONITOR;
--	}
- 
- 	return RX_CONTINUE;
- }
--- 
-1.7.1
+> Now, someone help me understand how .11n aggregation complicates this... :-)
+
+I'll try ... later :-)
+
+johannes
 
