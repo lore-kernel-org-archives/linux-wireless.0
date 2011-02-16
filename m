@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754512Ab1BOLsI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52046 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758508Ab1BPBvY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 06:48:08 -0500
-Subject: Re: [PATCH] iwlwifi: zero fill txq->txb on queue reset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110215113951.GD2162@redhat.com>
-References: <1297693999-15342-1-git-send-email-sgruszka@redhat.com>
-	 <1297695219.3953.5.camel@jlt3.sipsolutions.net>
-	 <1297695325.3953.6.camel@jlt3.sipsolutions.net>
-	 <20110215113951.GD2162@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 12:48:02 +0100
-Message-ID: <1297770482.3935.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Feb 2011 20:51:24 -0500
+Date: Tue, 15 Feb 2011 20:50:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: kernel@fomichev.me, Greg Korah-Hartman <gregkh@suse.de>,
+	devel@linuxdriverproject.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>
+Subject: Re: [PATCH v2 1/4] brcm80211: fix compile issue
+Message-ID: <20110216015040.GA2349@tuxdriver.com>
+References: <1297721111-20606-1-git-send-email-kernel@fomichev.me>
+ <7A94256FD72B884D9E7C55586C3CBCEE13CDA25D88@SJEXCHCCR01.corp.ad.broadcom.com>
+ <20110215221200.GA2087@sdf-MacBook>
+ <4D5B0034.3090303@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4D5B0034.3090303@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-15 at 12:39 +0100, Stanislaw Gruszka wrote:
-
-> > > >  	if (txq_id == priv->cmd_queue)
-> > > >  		actual_slots++;
-> > > > +	else
-> > > > +		memset(txq->txb, 0, sizeof(txq->txb[0]) * TFD_QUEUE_SIZE_MAX);
-> > > 
-> > > I don't mind -- but I think the changelog should say that this isn't
-> > > necessary since the device will never use any of those entries?
-> > 
-> > Err, I confused txb and tfds. But it still shouldn't be necessary --
-> > aren't the entries reset to NULL when taken out of use?
+On Tue, Feb 15, 2011 at 02:37:40PM -0800, Henry Ptasinski wrote:
+> On 02/15/2011 02:12 PM, Stanislav Fomichev wrote:
+> >Commit 59eb21a65047 "cfg80211: Extend channel to frequency mapping for 802.11j"
+> >changed the definition of the ieee80211_channel_to_frequency; so fix its
+> >usage in brcmfmac.
+> >
 > 
-> There are memset zero before the use in {iwlagn,iwl3945}_tx_skb(),
-> so patch is unneeded as well kzalloc in current code (I add replace
-> to kmalloc to my todo list).
+> Commit 59eb21a65047 went into wireless-next a few weeks ago, but
+> hasn't made it over to staging-next yet.  Should John pick up this
+> patch for wireless-next now, and it'll eventually migrate over to
+> staging-next?
 
-Well, don't worry, the change is fine -- I just wanted to understand if
-I missed something that made it necessary.
+If so, not only let me know but also resend a copy to me -- I haven't
+been tracking these...
 
-johannes
-
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
