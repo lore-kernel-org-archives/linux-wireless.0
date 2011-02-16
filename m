@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61339 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752556Ab1BNKDh convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43279 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab1BPM6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 05:03:37 -0500
-Received: by qwa26 with SMTP id 26so2966246qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 02:03:36 -0800 (PST)
+	Wed, 16 Feb 2011 07:58:13 -0500
+Received: by eye27 with SMTP id 27so730276eye.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 04:58:11 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: =?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	=?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+Subject: [PATCH 2/2] ssb: remove invalid define SSB_TMSLOW_PHYCLK
+Date: Wed, 16 Feb 2011 13:58:26 +0100
+Message-Id: <1297861106-18739-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1297861106-18739-1-git-send-email-zajec5@gmail.com>
+References: <1297861106-18739-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110207195301.GB2430@thinkpad-t410>
-References: <20110131214515.GC6368@thinkpad-t410>
-	<AANLkTikYS1EUdTc9mo2kvoR-S1Cv+WcKqkGaFDA8fR+0@mail.gmail.com>
-	<AANLkTi=mRO99U5t3Z_gscuwix0X+brFhWtC=9nkytE+M@mail.gmail.com>
-	<20110207041007.GA14242@thinkpad-t410>
-	<20110207195301.GB2430@thinkpad-t410>
-Date: Mon, 14 Feb 2011 11:03:36 +0100
-Message-ID: <AANLkTikYJXzkjQKJbjpdS8m3XVjj+SpO8rjE6qhF4WY1@mail.gmail.com>
-Subject: Re: Missing skb_pad() return value checks in rt2x00 driver
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Wolfgang Kufner <wolfgang.kufner@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+It was incorrectly introduced in d2730b2a6a019d14455556019d744ab051e6554b. We
+have already fixed function to use correct define, but forgot remove old one.
 
-Well this patch managed to slip through my list. :S
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+Cc: G√°bor Stefanik <netrolller.3d@gmail.com>
+---
+ include/linux/ssb/ssb_regs.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-> From 4a8b3969775cd233750a1b74b1d4f5fc065932bf Mon Sep 17 00:00:00 2001
-> From: Seth Forshee <seth.forshee@canonical.com>
-> Date: Mon, 7 Feb 2011 13:50:33 -0600
-> Subject: [PATCH] rt2x00: Check for errors from skb_pad() calls
->
-> Commit 739fd94 ("rt2x00: Pad beacon to multiple of 32 bits")
-> added calls to skb_pad() without checking the return value,
-> which could cause problems if any of those calls does happen
-> to fail. Add checks to prevent this from happening.
+diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
+index 489f7b6..01253c6 100644
+--- a/include/linux/ssb/ssb_regs.h
++++ b/include/linux/ssb/ssb_regs.h
+@@ -97,7 +97,6 @@
+ #define  SSB_TMSLOW_RESET	0x00000001 /* Reset */
+ #define  SSB_TMSLOW_REJECT_22	0x00000002 /* Reject (Backplane rev 2.2) */
+ #define  SSB_TMSLOW_REJECT_23	0x00000004 /* Reject (Backplane rev 2.3) */
+-#define  SSB_TMSLOW_PHYCLK	0x00000010 /* MAC PHY Clock Control Enable */
+ #define  SSB_TMSLOW_CLOCK	0x00010000 /* Clock Enable */
+ #define  SSB_TMSLOW_FGC		0x00020000 /* Force Gated Clocks On */
+ #define  SSB_TMSLOW_PE		0x40000000 /* Power Management Enable */
+-- 
+1.7.1
 
-Thanks for the updated patch. I only have one small request.
-
-> + † † † if (padding_len && skb_pad(entry->skb, padding_len)) {
-> + † † † † † † † dev_err(rt2x00dev->dev, "Failure padding beacon, aborting\n");
-
-Please change to:
-  ERROR(rt2x00dev, "Failure padding beacon, aborting\n");
-same for the other changed drivers in this patch.
-
-Thanks,
-
-Ivo
