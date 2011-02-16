@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59834 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400Ab1BGSXX (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:33324 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758806Ab1BPK04 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 13:23:23 -0500
-Message-ID: <4D503897.9040905@candelatech.com>
-Date: Mon, 07 Feb 2011 10:23:19 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 16 Feb 2011 05:26:56 -0500
+Received: by qwa26 with SMTP id 26so1109473qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 02:26:56 -0800 (PST)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Scanning and channel types.
-References: <4D4EF004.3040109@candelatech.com> <4D4EF99D.5020601@openwrt.org> <4D4EFC76.6090000@candelatech.com> <4D4EFD87.4010005@openwrt.org>
-In-Reply-To: <4D4EFD87.4010005@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110216011203.GA5773@linux-mips.org>
+References: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>
+	<4D5AD6A6.8090505@gmail.com>
+	<AANLkTiks9rG2CzM2LabNerK3zgJ+R+weytQgvXxDbNe7@mail.gmail.com>
+	<4D5AE52B.80002@gmail.com>
+	<AANLkTinnCOEXF835yhNeJDfBdKjx_dss6TFeUmjL-Yk2@mail.gmail.com>
+	<4D5AFB3B.6080407@gmail.com>
+	<4D5AFBCB.1090907@gmail.com>
+	<20110216011203.GA5773@linux-mips.org>
+Date: Wed, 16 Feb 2011 10:26:55 +0000
+Message-ID: <AANLkTimP1r1A6nzcfh7kP=Hmcq9Cgha5Du28hE3zOs0x@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
+ seqfault on AHB chips
+From: Nikolay Ledovskikh <nledovskikh@gmail.com>
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com, me@bobcopeland.com, linux-mips@linux-mips.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2011 11:59 AM, Felix Fietkau wrote:
-> On 2011-02-06 8:54 PM, Ben Greear wrote:
->> On 02/06/2011 11:42 AM, Felix Fietkau wrote:
->>> On 2011-02-06 8:01 PM, Ben Greear wrote:
->>>> Current code always sets the channel type to NO_HT when scanning.
->>>>
->>>>    From what I can tell, we should be able to send NO_HT packets on
->>>> any channel type, and for passive scanning, it should not matter
->>>> at all what channel-type we are using.
->>>>
->>>> I tested relaxing scanning to use the current channel type
->>>> when scanning on the operating channel, and it seems to
->>>> work.
->>>>
->>>> Does anyone see any problems with this approach?
->>> One thing you should make sure is that once you're done associating to
->>> an NO_HT or HT20 AP (and you have no other interfaces to consider), the
->>> channel mode must not be HT40 - otherwise it could reduce throughput.
->>
->> That is currently handled correctly by the ieee80211_set_channel_type
->> method, as far as I can tell...
->>
->> Regardless of that, in my multi-vif testing, I see lower throughput when
->> using HT40- than using HT20 (between 128 ath9k vif machine and 1 VAP ath9k machine).
->> The VIFS all claim 300Mbps rate.
->> I haven't looked into this any further at this point...
-> Well, with HT40 you take a hit from not just the busy time of the
-> primary channel, but also from the busy time of the extension channel.
-> If you have other wifi activity on the extension channel, then it's
-> normal that this would reduce throughput.
+So, the problems are in openwrt platform patches that should be rewriten:
+1. Changes needed to avoid using code like "mem=res->start" without ioremap.
+2. Changes needed to avoid using NULL in first argument of
+dma_alloc_coherent and others.
 
-I think you perfectly described the problem.  I had another system that
-had a bunch of STAs configured and was making all sorts of noise.
-With it powered down, latency & throughput looks quite nice
-with 300Mbps HT40- (128 stas, 20kbps per sta tx and rx to other stas).
+Without these changes ahb patch won't get into the kernel and we'll be
+lack of wisoc devices support?
+Is there any chance for the patch to get into the kernel and what
+should be done for it?
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+(PS: Sorry for my english.)
