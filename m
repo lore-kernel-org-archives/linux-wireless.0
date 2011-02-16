@@ -1,89 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:55997 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419Ab1BUCSp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:18:45 -0500
-Received: by mail-yx0-f174.google.com with SMTP id 7so122851yxs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:18:45 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:20866 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758754Ab1BPJtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Feb 2011 04:49:33 -0500
+Date: Wed, 16 Feb 2011 10:49:16 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] iwlwifi: fix dma mappings and skbs leak
+Message-ID: <20110216094913.GB2812@redhat.com>
+References: <1297693947-15310-1-git-send-email-sgruszka@redhat.com>
+ <1297698696.4723.16.camel@wwguy-ubuntu>
+ <20110215113444.GC2162@redhat.com>
+ <1297770602.3935.3.camel@jlt3.sipsolutions.net>
+ <20110215130428.GA2515@redhat.com>
+ <1297775393.3935.15.camel@jlt3.sipsolutions.net>
+ <20110215132202.GC2515@redhat.com>
+ <1297776631.3935.16.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52087.718374.964802@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:48:31 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 06/23] ath9k_htc: Remove OP_PROTECT_ENABLE
+In-Reply-To: <1297776631.3935.16.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Tue, Feb 15, 2011 at 02:30:31PM +0100, Johannes Berg wrote:
+> On Tue, 2011-02-15 at 14:22 +0100, Stanislaw Gruszka wrote:
+> > On Tue, Feb 15, 2011 at 02:09:53PM +0100, Johannes Berg wrote:
+> > > Hmm. That's a bit strange, ieee80211_mgd_deauth() should also call
+> > > ieee80211_set_disassoc()?
+> > 
+> > But only if ifmgd->associated == req->bss
+> 
+> Yeah but that means we're deauthenticating from the BSS we're associated
+> with. How could it be a different one? Maybe you can print them or
+> something, hmm..
 
-CTS protection can be obtained from mac80211 directly.
+I debug it more, ieee80211_sta_rx_notify() can be called after dissasociate 
+from ieee80211_rx_h_sta_process() when device receive frames and I do rmmod.
+I'll post proposed fix in separate email.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |   11 +++++------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   10 ----------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
- 3 files changed, 6 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index ed6af32..4e19e14 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -335,12 +335,11 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
- #define OP_SCANNING		   BIT(1)
- #define OP_LED_ASSOCIATED	   BIT(2)
- #define OP_LED_ON		   BIT(3)
--#define OP_PROTECT_ENABLE	   BIT(4)
--#define OP_ASSOCIATED		   BIT(5)
--#define OP_ENABLE_BEACON	   BIT(6)
--#define OP_LED_DEINIT		   BIT(7)
--#define OP_BT_PRIORITY_DETECTED    BIT(8)
--#define OP_BT_SCAN                 BIT(9)
-+#define OP_ASSOCIATED		   BIT(4)
-+#define OP_ENABLE_BEACON	   BIT(5)
-+#define OP_LED_DEINIT		   BIT(6)
-+#define OP_BT_PRIORITY_DETECTED    BIT(7)
-+#define OP_BT_SCAN                 BIT(8)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 13e9dec..dbde491 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1524,16 +1524,6 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_htc_beacon_config(priv, vif);
- 	}
- 
--	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
--		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed CTS PROT %d\n",
--			bss_conf->use_cts_prot);
--		if (bss_conf->use_cts_prot &&
--		    hw->conf.channel->band != IEEE80211_BAND_5GHZ)
--			priv->op_flags |= OP_PROTECT_ENABLE;
--		else
--			priv->op_flags &= ~OP_PROTECT_ENABLE;
--	}
--
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		if (bss_conf->use_short_slot)
- 			ah->slottime = 9;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index d5f0f41..884deeb 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -156,7 +156,7 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
- 
- 		/* CTS-to-self */
- 		if (!(flags & ATH9K_HTC_TX_RTSCTS) &&
--		    (priv->op_flags & OP_PROTECT_ENABLE))
-+		    (vif && vif->bss_conf.use_cts_prot))
- 			flags |= ATH9K_HTC_TX_CTSONLY;
- 
- 		tx_hdr.flags = cpu_to_be32(flags);
--- 
-1.7.4.1
-
+Stanislaw
