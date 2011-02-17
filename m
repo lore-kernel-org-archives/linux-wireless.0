@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755275Ab1BORht (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:57741 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753002Ab1BQUGk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 12:37:49 -0500
-Received: by bwz15 with SMTP id 15so670855bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 09:37:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297771723.3935.4.camel@jlt3.sipsolutions.net>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
-	<1297619803-2832-3-git-send-email-njs@pobox.com>
-	<1297685761.3785.38.camel@jlt3.sipsolutions.net>
-	<AANLkTikmsizzK1J=uf4Rp9fkmDdJQ_oKfZV-jUz2sJ18@mail.gmail.com>
-	<1297771723.3935.4.camel@jlt3.sipsolutions.net>
-Date: Tue, 15 Feb 2011 09:37:47 -0800
-Message-ID: <AANLkTi=m6y0_7z=7P4yUHvGMqiRj=fSRmwYAjuqo_-rt@mail.gmail.com>
-Subject: Re: [PATCH 2/5] iwlwifi: Convert the tx queue high_mark to an atomic_t
-From: Nathaniel Smith <njs@pobox.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 Feb 2011 15:06:40 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id DE1D95401E4
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 15:09:33 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110217200638.C3EEF434FA@repository3.orbit-lab.org>
+Date: Thu, 17 Feb 2011 15:06:38 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 4:08 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Actually, it doesn't really matter. Linux assumes that reads and writes
-> to "unsigned long" are always atomic against each other (i.e. you get
-> either the old or the new value) and that's all you care about here --
-> this never needs anything like atomic_inc/dec etc.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + b205214...4ce7e17 akpm-end   -> origin/akpm-end  (forced update)
+   b90be86..a264011  akpm-start -> origin/akpm-start
+   47db34d..f77a245  history    -> origin/history
+ + f54bb7e...2846e61 master     -> origin/master  (forced update)
+   b90be86..a264011  stable     -> origin/stable
+ * [new tag]         next-20110217 -> next-20110217
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.38-rc5 -> v2.6.38-rc5
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Excellent point, thank you.
+compat-wireless code metrics
 
--- Nathaniel
+    787931 - Total upstream lines of code being pulled
