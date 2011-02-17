@@ -1,113 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52725 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357Ab1BPPAj (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:26946 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351Ab1BQWeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Feb 2011 10:00:39 -0500
-Date: Wed, 16 Feb 2011 09:52:01 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Takashi Kawamoto <tkawamoto@silex.jp>
-Cc: linux-wireless@vger.kernel.org, Yoshitaka Imura <imura@silex.jp>,
-	Yasuo Bato <bato@silex.jp>, Yuji Sasaki <sasaki@silex.jp>,
-	Ryou Matsuura <matsuura@silex.jp>, ath9k-devel@atheros.com
-Subject: Re: BUG: AR9271 cause a Kernel Panic on ARM11 SMP environment
-Message-ID: <20110216145201.GB10287@tuxdriver.com>
-References: <20110216141657.9270.9AD4E5EB@silex.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110216141657.9270.9AD4E5EB@silex.jp>
+	Thu, 17 Feb 2011 17:34:14 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000022262.msg
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 00:33:36 +0200
+Subject: Re: [RFC] AI support (10/14 ssb bus implementation-specific io
+	unmap)
+From: George Kashperko <george@znau.edu.ua>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297980093.13554.5.camel@maggie>
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+Content-Type: text/plain
+Date: Fri, 18 Feb 2011 00:25:45 +0200
+Message-Id: <1297981545.23381.29.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 16, 2011 at 02:17:07PM +0900, Takashi Kawamoto wrote:
-> Dear all,
-> 
-> 
-> When I make an AR9271 to perform as an iperf client with 
-> compat-wireless-2011-01-30, a Kernel Panic occurs.
-> 
-> [log]
-> =======================================================================
-> BUG: spinlock lockup on CPU#1, iperf/552, 9f9aade4
-> [<80030ca4>] (unwind_backtrace+0x0/0xdc) from [<801835ac>] (do_raw_spin_lock+0x14c/0x168)
-> [<801835ac>] (do_raw_spin_lock+0x14c/0x168) from [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18)
-> [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18) from [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc])
-> [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc]) from [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc])
-> [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc]) from [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc])
-> [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc]) from [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc])
-> [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc]) from [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc])
-> [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc]) from [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211])
-> [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211]) from [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211])
-> [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211]) from [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211])
-> [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211]) from [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0)
-> [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0) from [<8027878c>] (sch_direct_xmit+0x70/0x1c8)
-> [<8027878c>] (sch_direct_xmit+0x70/0x1c8) from [<802696e0>] (dev_queue_xmit+0x290/0x428)
-> [<802696e0>] (dev_queue_xmit+0x290/0x428) from [<80287320>] (ip_finish_output+0x250/0x2a8)
-> [<80287320>] (ip_finish_output+0x250/0x2a8) from [<80285178>] (ip_local_out+0x24/0x28)
-> [<80285178>] (ip_local_out+0x24/0x28) from [<80286cac>] (ip_queue_xmit+0x2f4/0x35c)
-> [<80286cac>] (ip_queue_xmit+0x2f4/0x35c) from [<80299010>] (tcp_transmit_skb+0x74c/0x7b8)
-> [<80299010>] (tcp_transmit_skb+0x74c/0x7b8) from [<8029b5dc>] (tcp_write_xmit+0x860/0x978)
-> [<8029b5dc>] (tcp_write_xmit+0x860/0x978) from [<8029b730>] (tcp_push_one+0x3c/0x48)
-> [<8029b730>] (tcp_push_one+0x3c/0x48) from [<8028f840>] (tcp_sendmsg+0x864/0xaa4)
-> [<8028f840>] (tcp_sendmsg+0x864/0xaa4) from [<80258ecc>] (sock_aio_write+0xe0/0xe8)
-> [<80258ecc>] (sock_aio_write+0xe0/0xe8) from [<800bba20>] (do_sync_write+0x94/0xe0)
-> [<800bba20>] (do_sync_write+0x94/0xe0) from [<800bc460>] (vfs_write+0xc4/0x154)
-> [<800bc460>] (vfs_write+0xc4/0x154) from [<800bc59c>] (sys_write+0x3c/0x68)
-> [<800bc59c>] (sys_write+0x3c/0x68) from [<8002a220>] (ret_fast_syscall+0x0/0x2c)
-> =======================================================================
+From: George Kashperko <george@znau.edu.ua>
 
-My guess would be that somehow you are leaking hif_dev->tx.tx_lock,
-and then hanging when trying to retake it in hif_usb_send_tx.
-Unfortunately, it is not obvious to me how that might happen...
+Introduce iounmap helper for transparent resource
+releasing by bus implementation-specific management code.
+Signed-off-by: George Kashperko <george@znau.edu.ua>
+---
+ drivers/ssb/scan.c        |    2 +-
+ drivers/ssb/ssb_private.h |    6 +++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+--- linux-wireless-testing.orig/drivers/ssb/scan.c	2011-02-17 14:45:04.000000000 +0200
++++ linux-wireless-testing/drivers/ssb/scan.c	2011-02-17 14:45:31.000000000 +0200
+@@ -199,7 +199,7 @@ static int scan_switchcore(struct ssb_bu
+ 	return 0;
+ }
+ 
+-void ssb_iounmap(struct ssb_bus *bus)
++void ssb_iounmap_sb(struct ssb_bus *bus)
+ {
+ 	switch (bus->bustype) {
+ 	case SSB_BUSTYPE_SSB:
+--- linux-wireless-testing.orig/drivers/ssb/ssb_private.h	2011-02-17 14:34:02.000000000 +0200
++++ linux-wireless-testing/drivers/ssb/ssb_private.h	2011-02-17 14:45:31.000000000 +0200
+@@ -159,9 +159,13 @@ static inline int ssb_sdio_init(struct s
+ extern const char *ssb_core_name(u16 coreid);
+ extern int ssb_bus_scan(struct ssb_bus *bus,
+ 			unsigned long baseaddr);
+-extern void ssb_iounmap(struct ssb_bus *ssb);
++extern void ssb_iounmap_sb(struct ssb_bus *bus);
+ extern int ssb_bus_check_core(struct ssb_device *dev, int *nr_80211_cores,
+ 			      int corenum);
++static inline void ssb_iounmap(struct ssb_bus *bus)
++{
++	ssb_iounmap_sb(bus);
++}
+ 
+ 
+ /* sprom.c */
 
-> An environment of AR9271's host is as follows.
-> 
-> [Host Environment]
-> =======================================================================
-> CPU         : ARM11MP
-> Kernel      : 2.6.33 (SMP enabled)
-> Distribution: Zoran Quatro inferno
-> =======================================================================
-> 
-> As long as I see, this panic happens under the following conditions.
-> 
-> (1) When sending a data frame
->     When AR9271 performs as an iperf server, this panic appears less 
->     frequently than as a client.
-> 
-> (1) When transmission throughput is relatively high
->     For example, this panic never seems to appear when Ping 
->     communication is performed.
-> 
-> (2) When multi processor mode is enabled
->     When SMP option of the kernel is disabled (CONFIG_SMP=m), this 
->     panic doesn't occur.
-> 
-> I've not duplicated the same on a x86 environment yet.
-> 
-> I suspect that spinlock usage in Tx routines of ath9k/hif_usb.c must 
-> have something to do with this panic.
-> 
-> Have anyone come across the similar crash as this?
-> 
-> 
-> 
-> Best Regards,
-> Takashi Kawamoto
-> 
-> ==================================================
->  Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
->  silex technology,Inc. 
->  Software Engineering Division
->  Phone:+81-774-98-3877 FAX:+81-774-98-3678
-> ==================================================
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
