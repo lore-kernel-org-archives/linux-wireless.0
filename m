@@ -1,55 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:48538 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822Ab1B0SaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 13:30:11 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PtlNi-0003OL-5O
-	for linux-wireless@vger.kernel.org; Sun, 27 Feb 2011 19:30:10 +0100
-Received: from 91-65-104-167-dynip.superkabel.de ([91.65.104.167])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 19:30:10 +0100
-Received: from feldmann_markus by 91-65-104-167-dynip.superkabel.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 19:30:10 +0100
-To: linux-wireless@vger.kernel.org
-From: Markus Feldmann <feldmann_markus@gmx.de>
-Subject: Re: searching for wireless card
-Date: Sun, 27 Feb 2011 19:30:19 +0100
-Message-ID: <ike577$1cv$1@dough.gmane.org>
-References: <ikc2an$1un$1@dough.gmane.org> <1298819570.2933.2.camel@gnutoo-laptop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-In-Reply-To: <1298819570.2933.2.camel@gnutoo-laptop>
+Received: from mow301.securemx.jp ([210.130.202.49]:33826 "EHLO
+	mow.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520Ab1BQBy2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Feb 2011 20:54:28 -0500
+Date: Thu, 17 Feb 2011 10:54:29 +0900
+From: Takashi Kawamoto <tkawamoto@silex.jp>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: BUG: AR9271 cause a Kernel Panic on ARM11 SMP environment
+Cc: linux-wireless@vger.kernel.org, Yoshitaka Imura <imura@silex.jp>,
+	Yasuo Bato <bato@silex.jp>, Yuji Sasaki <sasaki@silex.jp>,
+	Ryou Matsuura <matsuura@silex.jp>, ath9k-devel@atheros.com
+In-Reply-To: <20110216145201.GB10287@tuxdriver.com>
+References: <20110216141657.9270.9AD4E5EB@silex.jp> <20110216145201.GB10287@tuxdriver.com>
+Message-Id: <20110217104717.6822.9AD4E5EB@silex.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 27.02.2011 16:12, schrieb Denis 'GNUtoo' Carikli:
-> On Sun, 2011-02-27 at 00:28 +0100, Markus Feldmann wrote:
->> Hi All,
->>
->> i am searching for a wireless card with the following attributes:
->> +linux compatible
->> +b/g/n or a/b/g/n network compatible
->> +opensource driver
->> +productive and stable to use under Linux
->> +not to old chip
->> +atheros chip preferred
->> +PCI
->> +usable in Master Mode(Access Point)
-> I'm using an ath9k in AP mode, and it seem to work well for me.
-> My card is a PCI one.
-> altough no a
-> only b/g/n:
-> wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.442 GHz  Tx-Power=20
-> dBm
-> And I use only g, I'm not sure if n works yet.
-Hi,
+Dear John,
 
-i want the n modus and the ath9k driver is needed to get the AP Modus to 
-work as i read.
+Thanks for your comment.
 
-regards Markus
+I also tried to duplicate this on x86 environment, but I've never seen 
+this yet. So this might perhaps have somthing to do with an 
+ARM-specific implementation in the kernel.
+
+> All
+Have you ever experienced something like a crash like this on ARM-based 
+platform when you use AR9271?
+
+
+
+Best Regards,
+Takashi Kawamoto
+
+On Wed, 16 Feb 2011 09:52:01 -0500
+"John W. Linville" <linville@tuxdriver.com> wrote:
+
+> On Wed, Feb 16, 2011 at 02:17:07PM +0900, Takashi Kawamoto wrote:
+> > Dear all,
+> > 
+> > 
+> > When I make an AR9271 to perform as an iperf client with 
+> > compat-wireless-2011-01-30, a Kernel Panic occurs.
+> > 
+> > [log]
+> > =======================================================================
+> > BUG: spinlock lockup on CPU#1, iperf/552, 9f9aade4
+> > [<80030ca4>] (unwind_backtrace+0x0/0xdc) from [<801835ac>] (do_raw_spin_lock+0x14c/0x168)
+> > [<801835ac>] (do_raw_spin_lock+0x14c/0x168) from [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18)
+> > [<802e47c0>] (_raw_spin_lock_irqsave+0x10/0x18) from [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc])
+> > [<7f17218c>] (hif_usb_send+0x34/0x26c [ath9k_htc]) from [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc])
+> > [<7f17153c>] (htc_issue_send+0x64/0x6c [ath9k_htc]) from [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc])
+> > [<7f171564>] (htc_send+0x20/0x24 [ath9k_htc]) from [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc])
+> > [<7f1746d4>] (ath9k_htc_tx_start+0x23c/0x244 [ath9k_htc]) from [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc])
+> > [<7f1751c8>] (ath9k_htc_tx+0x7c/0xcc [ath9k_htc]) from [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211])
+> > [<7f0c50d4>] (__ieee80211_tx+0x124/0x194 [mac80211]) from [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211])
+> > [<7f0c51e4>] (ieee80211_tx+0xa0/0x1e0 [mac80211]) from [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211])
+> > [<7f0c6590>] (ieee80211_subif_start_xmit+0x6c0/0x6f8 [mac80211]) from [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0)
+> > [<80269220>] (dev_hard_start_xmit+0x1f8/0x2e0) from [<8027878c>] (sch_direct_xmit+0x70/0x1c8)
+> > [<8027878c>] (sch_direct_xmit+0x70/0x1c8) from [<802696e0>] (dev_queue_xmit+0x290/0x428)
+> > [<802696e0>] (dev_queue_xmit+0x290/0x428) from [<80287320>] (ip_finish_output+0x250/0x2a8)
+> > [<80287320>] (ip_finish_output+0x250/0x2a8) from [<80285178>] (ip_local_out+0x24/0x28)
+> > [<80285178>] (ip_local_out+0x24/0x28) from [<80286cac>] (ip_queue_xmit+0x2f4/0x35c)
+> > [<80286cac>] (ip_queue_xmit+0x2f4/0x35c) from [<80299010>] (tcp_transmit_skb+0x74c/0x7b8)
+> > [<80299010>] (tcp_transmit_skb+0x74c/0x7b8) from [<8029b5dc>] (tcp_write_xmit+0x860/0x978)
+> > [<8029b5dc>] (tcp_write_xmit+0x860/0x978) from [<8029b730>] (tcp_push_one+0x3c/0x48)
+> > [<8029b730>] (tcp_push_one+0x3c/0x48) from [<8028f840>] (tcp_sendmsg+0x864/0xaa4)
+> > [<8028f840>] (tcp_sendmsg+0x864/0xaa4) from [<80258ecc>] (sock_aio_write+0xe0/0xe8)
+> > [<80258ecc>] (sock_aio_write+0xe0/0xe8) from [<800bba20>] (do_sync_write+0x94/0xe0)
+> > [<800bba20>] (do_sync_write+0x94/0xe0) from [<800bc460>] (vfs_write+0xc4/0x154)
+> > [<800bc460>] (vfs_write+0xc4/0x154) from [<800bc59c>] (sys_write+0x3c/0x68)
+> > [<800bc59c>] (sys_write+0x3c/0x68) from [<8002a220>] (ret_fast_syscall+0x0/0x2c)
+> > =======================================================================
+> 
+> My guess would be that somehow you are leaking hif_dev->tx.tx_lock,
+> and then hanging when trying to retake it in hif_usb_send_tx.
+> Unfortunately, it is not obvious to me how that might happen...
+> 
+> > An environment of AR9271's host is as follows.
+> > 
+> > [Host Environment]
+> > =======================================================================
+> > CPU         : ARM11MP
+> > Kernel      : 2.6.33 (SMP enabled)
+> > Distribution: Zoran Quatro inferno
+> > =======================================================================
+> > 
+> > As long as I see, this panic happens under the following conditions.
+> > 
+> > (1) When sending a data frame
+> >     When AR9271 performs as an iperf server, this panic appears less 
+> >     frequently than as a client.
+> > 
+> > (1) When transmission throughput is relatively high
+> >     For example, this panic never seems to appear when Ping 
+> >     communication is performed.
+> > 
+> > (2) When multi processor mode is enabled
+> >     When SMP option of the kernel is disabled (CONFIG_SMP=m), this 
+> >     panic doesn't occur.
+> > 
+> > I've not duplicated the same on a x86 environment yet.
+> > 
+> > I suspect that spinlock usage in Tx routines of ath9k/hif_usb.c must 
+> > have something to do with this panic.
+> > 
+> > Have anyone come across the similar crash as this?
+> > 
+> > 
+> > 
+> > Best Regards,
+> > Takashi Kawamoto
+> > 
+> > ==================================================
+> >  Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
+> >  silex technology,Inc. 
+> >  Software Engineering Division
+> >  Phone:+81-774-98-3877 FAX:+81-774-98-3678
+> > ==================================================
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+
+==================================================
+ Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
+ silex technology,Inc. 
+ Software Engineering Division
+ Phone:+81-774-98-3877 FAX:+81-774-98-3678
+==================================================
 
