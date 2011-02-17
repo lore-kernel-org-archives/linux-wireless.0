@@ -1,381 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:60917 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751218Ab1BFSnU (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:13550 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131Ab1BQQHQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 13:43:20 -0500
-Date: Sun, 06 Feb 2011 12:44:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: sgruszka@redhat.com, george0505@realtek.com,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/6] rtlwifi: Modify core routines
-Message-ID: <4d4eebff.7tS1Lx4qGh4/R4P2%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 17 Feb 2011 11:07:16 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000022160.msg
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 18:06:35 +0200
+Subject: [RFC] AI support
+From: George Kashperko <george@znau.edu.ua>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Content-Type: text/plain
+Date: Thu, 17 Feb 2011 17:58:36 +0200
+Message-Id: <1297958316.5623.27.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtlwifi core needs some changes before inclusion of a driver
-for the RTL8192CU USB device.
+Hi,
 
-Signed-off-by: Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Here is fixed and reworked proposal on introducing AI support with
+existing SSB bus codebase. Patches are made agains latest
+wireless-testing git as of writing.
+http://www.znau.edu.ua/temp/ssb-ai-linux-wireless-testing/2011-02-17-ssb-add-AI-support.tar.bz2
 
-John,
+I dont anymore abuse bus abstraction with ops (it was plain wrong as I
+see now), just introduced AI over SSB support with appropriate helpers.
+Code presented is tested with SSB on PCIE host, plain SSB, AI on
+embeddables (for these pmu rev.5/6 and mips74k support patches are
+required but that is a whole another story).
+Stil looking for testground to test AI code
+(014-ssb-add-AI-on-pci-host-support.patch) on PCIE host (ordered some hw
+but will get one closely to feb. fall).
 
-V2 - To minimize the changes, I have done this patch for only the changes
-needed for rtl8192cu.
+Here is dmesg for SSB on PCIE host (BCM4312):
+[root@localhost ~]# dmesg | grep -E "[Bb]roadcom|ssb|b43"
+b43-pci-bridge 0000:04:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+b43-pci-bridge 0000:04:00.0: setting latency timer to 64
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
+ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
+ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+ssb: chipcommon status is 0x10
+ssb: Found rev 1 PMU (capabilities 0x02A62F01)
+ssb: SPROM offset is 0x1000
+ssb: SPROM revision 8 detected.
+ssb: Sonics Silicon Backplane (SB type) found on PCI device 0000:04:00.0
+b43-phy0: Broadcom 4312 WLAN found (core revision 15)
+Registered led device: b43-phy0::tx
+Registered led device: b43-phy0::rx
+Registered led device: b43-phy0::radio
+Broadcom 43xx driver loaded [ Features: PNL, Firmware-ID: FW13 ]
 
-Larry
----
+Here is dmesg for SSB on embeddable (BCM5354):
+root@OpenWrt:/# dmesg | grep -E "[Bb]roadcom|ssb|b4[34]"
+CPU revision is: 00029029 (Broadcom BMIPS3300)
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x14, vendor 0x4243)
+ssb: Core 1 found: Fast Ethernet (cc 0x806, rev 0x09, vendor 0x4243)
+ssb: Core 2 found: MIPS 3302 (cc 0x816, rev 0x08, vendor 0x4243)
+ssb: Core 3 found: USB 2.0 Host (cc 0x819, rev 0x02, vendor 0x4243)
+ssb: Core 4 found: MEMC SDRAM (cc 0x80F, rev 0x04, vendor 0x4243)
+ssb: Core 5 found: IEEE 802.11 (cc 0x812, rev 0x0D, vendor 0x4243)
+ssb: Core 6 found: Roboswitch (cc 0x81C, rev 0x02, vendor 0x4243)
+ssb: chipcommon status is 0x0
+ssb: Found rev 0 PMU (capabilities 0x04A63400)
+ssb: Initializing MIPS core...
+ssb: set_irq: core 0x0806, irq 4 => 4
+ssb: set_irq: core 0x0816, irq 5 => 2
+ssb: set_irq: core 0x0812, irq 2 => 5
+ssb: after irq reconfiguration
+ssb: core 0x0800, irq : 2(S)  3* 4  5  6  D  I
+ssb: core 0x0806, irq : 2(S)  3  4* 5  6  D  I
+ssb: core 0x0816, irq : 2(S)* 3  4  5  6  D  I
+ssb: core 0x0819, irq : 2(S)  3  4  5  6* D  I
+ssb: core 0x080f, irq : 2(S)  3  4  5  6  D  I*
+ssb: core 0x0812, irq : 2(S)  3  4  5* 6  D  I
+ssb: core 0x081c, irq : 2(S)  3  4  5  6  D  I*
+ssb: Sonics Silicon Backplane (SB type) found at address 0x18000000
+b44: b44.c:v2.0
+b44 ssb0:0: eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:90:4c:c0:00:00
+b43-phy0: Broadcom 5354 WLAN found (core revision 13)
+Broadcom 43xx driver loaded [ Features: P, Firmware-ID: FW13 ]
+b44 ssb0:0: eth0: Link is up at 100 Mbps, full duplex
+b44 ssb0:0: eth0: Flow control is off for TX and off for RX
+b44 ssb0:0: eth0: powering down PHY
+b44 ssb0:0: eth0: Link is up at 100 Mbps, full duplex
+b44 ssb0:0: eth0: Flow control is off for TX and off for RX
+ehci_hcd ssb0:1: SSB EHCI Controller
+ehci_hcd ssb0:1: new USB bus registered, assigned bus number 1
+ehci_hcd ssb0:1: irq 6, io mem 0x18003800
+ehci_hcd ssb0:1: USB 0.0 started, EHCI 1.00
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/base.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/base.h
-@@ -30,6 +30,7 @@
- #define __RTL_BASE_H__
- 
- #define RTL_DUMMY_OFFSET	0
-+#define RTL_RX_DESC_SIZE	24
- #define RTL_DUMMY_UNIT		8
- #define RTL_TX_DUMMY_SIZE	(RTL_DUMMY_OFFSET * RTL_DUMMY_UNIT)
- #define RTL_TX_DESC_SIZE	32
-Index: wireless-testing/drivers/net/wireless/rtlwifi/debug.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/debug.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/debug.h
-@@ -105,6 +105,7 @@
- #define COMP_MAC80211		BIT(26)
- #define COMP_REGD			BIT(27)
- #define COMP_CHAN			BIT(28)
-+#define COMP_USB			BIT(29)
- 
- /*--------------------------------------------------------------
- 		Define the rt_print components
-Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-@@ -34,6 +34,7 @@
- #include <linux/firmware.h>
- #include <linux/version.h>
- #include <linux/etherdevice.h>
-+#include <linux/usb.h>
- #include <net/mac80211.h>
- #include "debug.h"
- 
-@@ -118,6 +119,9 @@ enum hardware_type {
- 	HARDWARE_TYPE_NUM
- };
- 
-+#define IS_HARDWARE_TYPE_8192CE(rtlhal)			\
-+	(rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
-+
- enum scan_operation_backup_opt {
- 	SCAN_OPT_BACKUP = 0,
- 	SCAN_OPT_RESTORE,
-@@ -768,6 +772,7 @@ struct rtl_tid_data {
- struct rtl_priv;
- struct rtl_io {
- 	struct device *dev;
-+	struct mutex bb_mutex;
- 
- 	/*PCI MEM map */
- 	unsigned long pci_mem_end;	/*shared mem end        */
-@@ -779,10 +784,14 @@ struct rtl_io {
- 	void (*write8_async) (struct rtl_priv *rtlpriv, u32 addr, u8 val);
- 	void (*write16_async) (struct rtl_priv *rtlpriv, u32 addr, u16 val);
- 	void (*write32_async) (struct rtl_priv *rtlpriv, u32 addr, u32 val);
-+	int (*writeN_async) (struct rtl_priv *rtlpriv, u32 addr, u16 len,
-+			     u8 *pdata);
- 
- 	 u8(*read8_sync) (struct rtl_priv *rtlpriv, u32 addr);
- 	 u16(*read16_sync) (struct rtl_priv *rtlpriv, u32 addr);
- 	 u32(*read32_sync) (struct rtl_priv *rtlpriv, u32 addr);
-+	int (*readN_sync) (struct rtl_priv *rtlpriv, u32 addr, u16 len,
-+			    u8 *pdata);
- 
- };
- 
-@@ -1101,6 +1110,7 @@ struct rtl_tcb_desc {
- struct rtl_hal_ops {
- 	int (*init_sw_vars) (struct ieee80211_hw *hw);
- 	void (*deinit_sw_vars) (struct ieee80211_hw *hw);
-+	void (*read_chip_version)(struct ieee80211_hw *hw);
- 	void (*read_eeprom_info) (struct ieee80211_hw *hw);
- 	void (*interrupt_recognized) (struct ieee80211_hw *hw,
- 				      u32 *p_inta, u32 *p_intb);
-@@ -1129,7 +1139,8 @@ struct rtl_hal_ops {
- 	void (*fill_tx_cmddesc) (struct ieee80211_hw *hw, u8 *pdesc,
- 				 bool b_firstseg, bool b_lastseg,
- 				 struct sk_buff *skb);
--	 bool(*query_rx_desc) (struct ieee80211_hw *hw,
-+	bool (*cmd_send_packet)(struct ieee80211_hw *hw, struct sk_buff *skb);
-+	bool(*query_rx_desc) (struct ieee80211_hw *hw,
- 			       struct rtl_stats *stats,
- 			       struct ieee80211_rx_status *rx_status,
- 			       u8 *pdesc, struct sk_buff *skb);
-@@ -1166,6 +1177,7 @@ struct rtl_intf_ops {
- 
- 	int (*adapter_tx) (struct ieee80211_hw *hw, struct sk_buff *skb);
- 	int (*reset_trx_ring) (struct ieee80211_hw *hw);
-+	bool (*waitq_insert) (struct ieee80211_hw *hw, struct sk_buff *skb);
- 
- 	/*pci */
- 	void (*disable_aspm) (struct ieee80211_hw *hw);
-@@ -1179,11 +1191,35 @@ struct rtl_mod_params {
- 	int sw_crypto;
- };
- 
-+struct rtl_hal_usbint_cfg {
-+	/* data - rx */
-+	u32 in_ep_num;
-+	u32 rx_urb_num;
-+	u32 rx_max_size;
-+
-+	/* op - rx */
-+	void (*usb_rx_hdl)(struct ieee80211_hw *, struct sk_buff *);
-+	void (*usb_rx_segregate_hdl)(struct ieee80211_hw *, struct sk_buff *,
-+				     struct sk_buff_head *);
-+
-+	/* tx */
-+	void (*usb_tx_cleanup)(struct ieee80211_hw *, struct sk_buff *);
-+	int (*usb_tx_post_hdl)(struct ieee80211_hw *, struct urb *,
-+			       struct sk_buff *);
-+	struct sk_buff *(*usb_tx_aggregate_hdl)(struct ieee80211_hw *,
-+						struct sk_buff_head *);
-+
-+	/* endpoint mapping */
-+	int (*usb_endpoint_mapping)(struct ieee80211_hw *hw);
-+	u16 (*usb_mq_to_hwq)(u16 fc, u16 mac80211_queue_index);
-+};
-+
- struct rtl_hal_cfg {
- 	char *name;
- 	char *fw_name;
- 	struct rtl_hal_ops *ops;
- 	struct rtl_mod_params *mod_params;
-+	struct rtl_hal_usbint_cfg *usb_interface_cfg;
- 
- 	/*this map used for some registers or vars
- 	   defined int HAL but used in MAIN */
-@@ -1202,6 +1238,7 @@ struct rtl_locks {
- 	spinlock_t rf_ps_lock;
- 	spinlock_t rf_lock;
- 	spinlock_t lps_lock;
-+	spinlock_t tx_urb_lock;
- };
- 
- struct rtl_works {
-@@ -1437,10 +1474,8 @@ Set subfield of little-endian 4-byte val
- 		(_os).octet = (u8 *)(_octet);		\
- 		(_os).length = (_len);
- 
--#define CP_MACADDR(des, src)	\
--	((des)[0] = (src)[0], (des)[1] = (src)[1],\
--	(des)[2] = (src)[2], (des)[3] = (src)[3],\
--	(des)[4] = (src)[4], (des)[5] = (src)[5])
-+#define CP_MACADDR(des, src)		\
-+	memcpy((des), (src), ETH_ALEN)
- 
- static inline u8 rtl_read_byte(struct rtl_priv *rtlpriv, u32 addr)
- {
-Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-@@ -690,75 +690,6 @@ done:
- 
- }
- 
--void _rtl_pci_tx_interrupt(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
--	int prio;
--
--	for (prio = 0; prio < RTL_PCI_MAX_TX_QUEUE_COUNT; prio++) {
--		struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[prio];
--
--		while (skb_queue_len(&ring->queue)) {
--			struct rtl_tx_desc *entry = &ring->desc[ring->idx];
--			struct sk_buff *skb;
--			struct ieee80211_tx_info *info;
--			u8 own;
--
--			/*
--			 *beacon packet will only use the first
--			 *descriptor defautly, and the own may not
--			 *be cleared by the hardware, and
--			 *beacon will free in prepare beacon
--			 */
--			if (prio == BEACON_QUEUE || prio == TXCMD_QUEUE ||
--			    prio == HCCA_QUEUE)
--				break;
--
--			own = (u8)rtlpriv->cfg->ops->get_desc((u8 *)entry,
--							       true,
--							       HW_DESC_OWN);
--
--			if (own)
--				break;
--
--			skb = __skb_dequeue(&ring->queue);
--			pci_unmap_single(rtlpci->pdev,
--					 le32_to_cpu(rtlpriv->cfg->ops->
--						     get_desc((u8 *) entry,
--						     true,
--						     HW_DESC_TXBUFF_ADDR)),
--					 skb->len, PCI_DMA_TODEVICE);
--
--			ring->idx = (ring->idx + 1) % ring->entries;
--
--			info = IEEE80211_SKB_CB(skb);
--			ieee80211_tx_info_clear_status(info);
--
--			info->flags |= IEEE80211_TX_STAT_ACK;
--			/*info->status.rates[0].count = 1; */
--
--			ieee80211_tx_status_irqsafe(hw, skb);
--
--			if ((ring->entries - skb_queue_len(&ring->queue))
--			    == 2 && prio != BEACON_QUEUE) {
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 ("more desc left, wake "
--					  "skb_queue@%d,ring->idx = %d,"
--					  "skb_queue_len = 0x%d\n",
--					  prio, ring->idx,
--					  skb_queue_len(&ring->queue)));
--
--				ieee80211_wake_queue(hw,
--						     skb_get_queue_mapping
--						     (skb));
--			}
--
--			skb = NULL;
--		}
--	}
--}
--
- static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
- {
- 	struct ieee80211_hw *hw = dev_id;
-@@ -1273,7 +1204,7 @@ int rtl_pci_reset_trx_ring(struct ieee80
- 	return 0;
- }
- 
--unsigned int _rtl_mac_to_hwqueue(u16 fc,
-+static unsigned int _rtl_mac_to_hwqueue(u16 fc,
- 		unsigned int mac80211_queue_index)
- {
- 	unsigned int hw_queue_index;
-@@ -1312,7 +1243,7 @@ out:
- 	return hw_queue_index;
- }
- 
--int rtl_pci_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-+static int rtl_pci_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-@@ -1429,7 +1360,7 @@ int rtl_pci_tx(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
--void rtl_pci_deinit(struct ieee80211_hw *hw)
-+static void rtl_pci_deinit(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-@@ -1444,7 +1375,7 @@ void rtl_pci_deinit(struct ieee80211_hw
- 
- }
- 
--int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
-+static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int err;
-@@ -1461,7 +1392,7 @@ int rtl_pci_init(struct ieee80211_hw *hw
- 	return 1;
- }
- 
--int rtl_pci_start(struct ieee80211_hw *hw)
-+static int rtl_pci_start(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -1496,7 +1427,7 @@ int rtl_pci_start(struct ieee80211_hw *h
- 	return 0;
- }
- 
--void rtl_pci_stop(struct ieee80211_hw *hw)
-+static void rtl_pci_stop(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-@@ -1838,7 +1769,7 @@ fail3:
- 	ieee80211_free_hw(hw);
- 
- 	if (rtlpriv->io.pci_mem_start != 0)
--		pci_iounmap(pdev, (void *)rtlpriv->io.pci_mem_start);
-+		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
- 
- fail2:
- 	pci_release_regions(pdev);
-@@ -1888,7 +1819,7 @@ void rtl_pci_disconnect(struct pci_dev *
- 	}
- 
- 	if (rtlpriv->io.pci_mem_start != 0) {
--		pci_iounmap(pdev, (void *)rtlpriv->io.pci_mem_start);
-+		pci_iounmap(pdev, (void __iomem *)rtlpriv->io.pci_mem_start);
- 		pci_release_regions(pdev);
- 	}
- 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/pci.h
-@@ -244,34 +244,34 @@ int rtl_pci_resume(struct pci_dev *pdev)
- 
- static inline u8 pci_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	return 0xff & readb((u8 *) rtlpriv->io.pci_mem_start + addr);
-+	return 0xff & readb((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline u16 pci_read16_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	return readw((u8 *) rtlpriv->io.pci_mem_start + addr);
-+	return readw((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline u32 pci_read32_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	return readl((u8 *) rtlpriv->io.pci_mem_start + addr);
-+	return readl((u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void pci_write8_async(struct rtl_priv *rtlpriv, u32 addr, u8 val)
- {
--	writeb(val, (u8 *) rtlpriv->io.pci_mem_start + addr);
-+	writeb(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void pci_write16_async(struct rtl_priv *rtlpriv,
- 				     u32 addr, u16 val)
- {
--	writew(val, (u8 *) rtlpriv->io.pci_mem_start + addr);
-+	writew(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void pci_write32_async(struct rtl_priv *rtlpriv,
- 				     u32 addr, u32 val)
- {
--	writel(val, (u8 *) rtlpriv->io.pci_mem_start + addr);
-+	writel(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
- static inline void rtl_pci_raw_write_port_ulong(u32 port, u32 val)
+Here is dmesg for AI on embeddable (BCM4716):
+root@OpenWrt:/# dmesg | grep -E "ssb|b43|[Bb]roadcom"
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x1F, vendor 0x04BF)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x11, vendor 0x04BF)
+ssb: Core 2 found: Gigabit MAC (cc 0x82D, rev 0x00, vendor 0x04BF)
+ssb: Core 3 found: MIPS 74K (cc 0x82C, rev 0x01, vendor 0x04A7)
+ssb: Core 4 found: USB 2.0 Host (cc 0x819, rev 0x04, vendor 0x04BF)
+ssb: Core 5 found: PCI-E (cc 0x820, rev 0x0E, vendor 0x04BF)
+ssb: Core 6 found: DDR1/2 memory controller (cc 0x82E, rev 0x01, vendor 0x04BF)
+ssb: Core 7 found: Internal Memory (cc 0x80E, rev 0x07, vendor 0x04BF)
+ssb: Core 8 found: I2S (cc 0x834, rev 0x00, vendor 0x04BF)
+ssb: Found END of erom after 9 cores
+ssb: chipcommon status is 0x800
+ssb: Found rev 5 PMU (capabilities 0x11242C05)
+ssb: Initializing MIPS core...
+ssb: ssb_pmu5_clock: p1=1, p2=1, ndiv=48(0x30), m3=8, fc=960, clock=120
+ssb: set_irq: core 0x0812, irq 3 => 3
+ssb: set_irq: core 0x082d, irq 4 => 4
+ssb: set_irq: core 0x0819, irq 5 => 5
+ssb: after irq reconfiguration
+ssb: core 0x0800, irq : 2(S)* 3  4  5  6  D  I
+ssb: core 0x0812, irq : 2(S)  3* 4  5  6  D  I
+ssb: core 0x082d, irq : 2(S)  3  4* 5  6  D  I
+ssb: core 0x082c, irq : 2(S)  3  4  5  6  D  I*
+ssb: core 0x0819, irq : 2(S)  3  4  5* 6  D  I
+ssb: core 0x0820, irq : 2(S)  3  4  5  6* D  I
+ssb: core 0x082e, irq : 2(S)* 3  4  5  6  D  I
+ssb: core 0x080e, irq : 2(S)  3  4  5  6  D  I*
+ssb: core 0x0834, irq : 2(S)* 3  4  5  6  D  I
+ssb: Sonics Silicon Backplane (AI type) found at address 0x18000000
+ssb: ssb_pmu5_clock: p1=1, p2=1, ndiv=48(0x30), m1=2, fc=960, clock=480
+ssb: ssb_pmu5_clock: p1=1, p2=1, ndiv=48(0x30), m3=8, fc=960, clock=120
+wl0: Broadcom BCM4329 802.11 Wireless Controller 5.10.56.27
+ehci_hcd ssb0:2: SSB EHCI Controller
+ehci_hcd ssb0:2: new USB bus registered, assigned bus number 1
+ehci_hcd ssb0:2: irq 5, io mem 0x18004000
+ehci_hcd ssb0:2: USB 0.0 started, EHCI 1.00
+
+Have nice day,
+George
+
+
