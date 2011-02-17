@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47937 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756436Ab1BJOTQ convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:55823 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668Ab1BQKZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 09:19:16 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 06:18:55 -0800
-Message-ID: <4D53F3DE.4030707@atheros.com>
-Date: Thu, 10 Feb 2011 19:49:10 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+	Thu, 17 Feb 2011 05:25:43 -0500
+Received: by bwz15 with SMTP id 15so1515875bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 02:25:42 -0800 (PST)
+Message-ID: <4D5CF7A3.9040809@gmail.com>
+Date: Thu, 17 Feb 2011 11:25:39 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-To: =?ISO-8859-15?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com> <4D52C54A.2010709@t-online.de>
-In-Reply-To: <4D52C54A.2010709@t-online.de>
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+To: Nikolay Ledovskikh <nledovskikh@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, mickflemm@gmail.com, me@bobcopeland.com
+Subject: Re: [PATCH] ath5k: Correct channel setting for ar2317 chip
+References: <20110217074454.7233f22f.nledovskikh@gmail.com>
+In-Reply-To: <20110217074454.7233f22f.nledovskikh@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 February 2011 10:18 PM, Richard Schütz wrote:
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> The DMA latency issue is observed only in Intel pinetrail platforms but
->> in the driver we had a default PM-QOS value of 55. This caused
->> unnecessary power consumption and battery drain in other platforms.
->> Address this issue by disabling PM-QOS by default by setting it's value
->> as '0' and making code changes appropriately.This addresses the bug:
->> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->> 	If the user sees some DMA latency issue he can still use the pmqos as a
->> module parameter to trade power for throughput as below:
->> sudo modprobe ath9k pmqos=55
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>      
-> Acked-By: Richard Schütz<r.schtz@t-online.de>
->    
-Thanks, but we got to consider user space approach which Luis had mentioned.
-> Looks good to me with the exception of ATH9K_PM_QOS_DEFAULT_VALUE. But
-> John already mentioned that.
->
->    
+On 02/17/2011 05:44 AM, Nikolay Ledovskikh wrote:
+> Use correct channel setting function for AR2317
+
+This is as useless as the one before. Why you didn't add there what you
+already wrote:
+rf2317 handled but not fully, when I tested ahb patch on bullet2 all
+seemed to work fine, but it couldn't connect another host (ibss for
+example). During an analysis I observed that it's transmitting on
+another channel and then I looked into madwifi code and understood that
+the problem is in channel setting function.
+
+This is almost perfect and what people want to know. Especially those
+who deal with distro bug reports and backport patches to distro kernels...
+
+> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 78c26fd..c44111f 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -1253,6 +1253,7 @@ static int ath5k_hw_channel(struct ath5k_hw *ah,
+>  	case AR5K_RF5111:
+>  		ret = ath5k_hw_rf5111_channel(ah, channel);
+>  		break;
+> +	case AR5K_RF2317:
+>  	case AR5K_RF2425:
+>  		ret = ath5k_hw_rf2425_channel(ah, channel);
+>  		break;
+
+thanks,
+-- 
+js
