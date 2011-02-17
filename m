@@ -1,113 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43791 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752601Ab1BGIGm (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:26924 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab1BQWcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 03:06:42 -0500
-Date: Mon, 7 Feb 2011 00:06:35 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Wireless regression (was 2.6.38-rc3: FUSE (sshfs) hangs under
- load)
-Message-ID: <20110207080634.GA11580@core.coreip.homeip.net>
-References: <20110201175452.GB518@core.coreip.homeip.net>
- <E1PkbGG-0005Rf-QL@pomaz-ex.szeredi.hu>
- <20110202165236.GA3178@core.coreip.homeip.net>
- <20110203065541.GB5592@core.coreip.homeip.net>
- <E1Pkx7s-00073l-5B@pomaz-ex.szeredi.hu>
- <20110203194115.GA14159@core.coreip.homeip.net>
- <20110204064952.GA12914@core.coreip.homeip.net>
- <4D4BE5D7.8090202@openwrt.org>
- <4D4BEB99.4060202@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D4BEB99.4060202@openwrt.org>
+	Thu, 17 Feb 2011 17:32:19 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000022260.msg
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 00:31:41 +0200
+Subject: Re: [RFC] AI support (9/14 ssb SB-specific bus scan routine)
+From: George Kashperko <george@znau.edu.ua>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297980093.13554.5.camel@maggie>
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+Content-Type: text/plain
+Date: Fri, 18 Feb 2011 00:23:52 +0200
+Message-Id: <1297981432.23381.26.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 04, 2011 at 01:05:45PM +0100, Felix Fietkau wrote:
-> On 2011-02-04 12:41 PM, Felix Fietkau wrote:
-> > On 2011-02-04 7:49 AM, Dmitry Torokhov wrote:
-> >> On Thu, Feb 03, 2011 at 11:41:15AM -0800, Dmitry Torokhov wrote:
-> >>> On Thu, Feb 03, 2011 at 12:13:24PM +0100, Miklos Szeredi wrote:
-> >>> > On Wed, 2 Feb 2011, Dmitry Torokhov wrote:
-> >>> > > On Wed, Feb 02, 2011 at 08:52:36AM -0800, Dmitry Torokhov wrote:
-> >>> > > > On Wed, Feb 02, 2011 at 12:52:36PM +0100, Miklos Szeredi wrote:
-> >>> > > > > On Tue, 1 Feb 2011, Dmitry Torokhov wrote:
-> >>> > > > > > Hi,
-> >>> > > > > > 
-> >>> > > > > > After installing 2.6.38-rc3 (plus a few input patches) sshfs started to
-> >>> > > > > > misbehave on me under load. It starts off fine but when I try to compile
-> >>> > > > > > a few modules against kernel sources residing on the other box the
-> >>> > > > > > processes go into 'D' state and just sit there doing nothing.
-> >>> > > > > 
-> >>> > > > > Can you please post a stack trace from SysRq-T?
-> >>> > > > > 
-> >>> > > > 
-> >> ...
-> >>> > > 
-> >>> > > OK, so here are the stack traces you requested. First one is snapshot of
-> >>> > > when compile got stuck, the 2nd one is when I interrupted make which
-> >>> > > caused gcc to go to 'D' state.
-> >>> > 
-> >>> > There doesn't appear anything abnormal there.
-> >>> > 
-> >>> > It's going into D state after it has received an interrupt and sent it
-> >>> > along to the userspace filesystem.  Then it will go into
-> >>> > uninterruptible sleep until the answer is received.
-> >>> > 
-> >>> > So the hang is because the answer to an open request is not being
-> >>> > received.  I can't tell where it got stuck, apparently not anywhere on
-> >>> > the local machine.
-> >>> > 
-> >>> > Can you please get a log from sshfs with "-odebug,sshfs_debug" and
-> >>> > redirect stderr to a file?  That might tell a bit more about the
-> >>> > situation.  Or it might not...
-> >>> 
-> >>> Hmm, it might be just the network itself, last night mutt in ssh session
-> >>> froze on me as well. I guess I'll just have to finish my bisect
-> >>> exercise.
-> >>> 
-> >> 
-> >> I finished bisecting and it turned out that the problematic commit
-> >> happened to be in wireless (I have iwl3945):
-> >> 
-> >> commit 4cd06a344db752f513437138953af191cbe9a691
-> >> Author: Felix Fietkau <nbd@openwrt.org>
-> >> Date:   Sat Dec 18 19:30:49 2010 +0100
-> >> 
-> >>     mac80211: skip unnecessary pskb_expand_head calls
-> >> 
-> >>     If the skb is not cloned and we don't need any extra headroom, there
-> >>     is no point in reallocating the skb head.
-> >> 
-> >>     Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> >> 
-> >> With this commit reverted from 2.6.38-rc3 I can not reproduce sshfs
-> >> getting stuck here.
-> > I really don't see how this commit could be causing these issues, and
-> > I'm not aware of any similar issues affecting other drivers.
-> Could you please try this patch to see if it fixes the issue as well?
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index ffc6749..3168eae 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1547,7 +1547,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
->  		skb_orphan(skb);
->  	}
->  
-> -	if (skb_header_cloned(skb))
-> +	if (skb_cloned(skb))
->  		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
->  	else if (head_need || tail_need)
->  		I802_DEBUG_INC(local->tx_expand_skb_head);
+From: George Kashperko <george@znau.edu.ua>
 
-Yes, it does, thank you for fixing it.
+Move piece of code out of ssb_bus_scan to introduce
+SB-specific bus scan routine.
+Signed-off-by: George Kashperko <george@znau.edu.ua>
+---
+ drivers/ssb/scan.c |   67 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 26 deletions(-)
+--- linux-wireless-testing.orig/drivers/ssb/scan.c	2011-02-17 15:51:11.000000000 +0200
++++ linux-wireless-testing/drivers/ssb/scan.c	2011-02-17 15:53:21.000000000 +0200
+@@ -407,14 +407,45 @@ static int ssb_bus_detect(struct ssb_bus
+ 	return chiptype == SSB_CHIPCO_SB ? 0 : -ENODEV;
+ }
+ 
+-int ssb_bus_scan(struct ssb_bus *bus, unsigned long baseaddr)
++static int ssb_bus_scan_sb(struct ssb_bus *bus, unsigned long baseaddr)
+ {
+-	int err = -ENOMEM;
+-	void __iomem *mmio;
+ 	u32 idhi;
+ 	int dev_i, i;
+ 	struct ssb_device *dev;
+ 	int nr_80211_cores = 0;
++	int err;
++
++	/* Fetch basic information about each core/device */
++	for (i = 0, dev_i = 0; i < bus->nr_devices; i++) {
++		err = scan_switchcore(bus, i);
++		if (err)
++			return err;
++		dev = &(bus->devices[dev_i]);
++
++		idhi = scan_read32(bus, i, SSB_IDHIGH);
++		dev->id.coreid = (idhi & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
++		dev->id.revision = (idhi & SSB_IDHIGH_RCLO);
++		dev->id.revision |= (idhi & SSB_IDHIGH_RCHI) >>
++				    SSB_IDHIGH_RCHI_SHIFT;
++		dev->id.vendor = (idhi & SSB_IDHIGH_VC) >> SSB_IDHIGH_VC_SHIFT;
++		dev->core_index = i;
++		dev->bus = bus;
++		dev->ops = bus->ops;
++		dev->helpers = &ssb_helpers_sb;
++
++		if (ssb_bus_check_core(dev, &nr_80211_cores, i) < 0)
++			continue;
++
++		dev_i++;
++	}
++	bus->nr_devices = dev_i;
++	return 0;
++}
++
++int ssb_bus_scan(struct ssb_bus *bus, unsigned long baseaddr)
++{
++	int err = -ENOMEM;
++	void __iomem *mmio;
+ 
+ 	mmio = ssb_ioremap(bus, baseaddr);
+ 	if (!mmio)
+@@ -445,31 +476,15 @@ int ssb_bus_scan(struct ssb_bus *bus, un
+ 		bus->mmio = mmio;
+ 	}
+ 
+-	/* Fetch basic information about each core/device */
+-	for (i = 0, dev_i = 0; i < bus->nr_devices; i++) {
+-		err = scan_switchcore(bus, i);
+-		if (err)
+-			goto err_unmap;
+-		dev = &(bus->devices[dev_i]);
+-
+-		idhi = scan_read32(bus, i, SSB_IDHIGH);
+-		dev->id.coreid = (idhi & SSB_IDHIGH_CC) >> SSB_IDHIGH_CC_SHIFT;
+-		dev->id.revision = (idhi & SSB_IDHIGH_RCLO);
+-		dev->id.revision |= (idhi & SSB_IDHIGH_RCHI) >> SSB_IDHIGH_RCHI_SHIFT;
+-		dev->id.vendor = (idhi & SSB_IDHIGH_VC) >> SSB_IDHIGH_VC_SHIFT;
+-		dev->core_index = i;
+-		dev->bus = bus;
+-		dev->ops = bus->ops;
+-		dev->helpers = &ssb_helpers_sb;
+-
+-		if (ssb_bus_check_core(dev, &nr_80211_cores, i) < 0)
+-			continue;
+-
+-		dev_i++;
++	switch (bus->chipco.chiptype) {
++	case SSB_CHIPCO_SB:
++		err = ssb_bus_scan_sb(bus, baseaddr);
++		break;
++	default:
++		SSB_WARN_ON(1);
++		err = -ENODEV;
+ 	}
+-	bus->nr_devices = dev_i;
+ 
+-	err = 0;
+ out:
+ 	return err;
+ err_unmap:
 
--- 
-Dmitry
+
+
