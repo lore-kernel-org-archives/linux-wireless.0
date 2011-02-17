@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55752 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932539Ab1BYW4K (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47452 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663Ab1BQIYE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 17:56:10 -0500
-Received: by vxi39 with SMTP id 39so1824116vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 14:56:09 -0800 (PST)
-Message-ID: <4D683386.4040407@lwfinger.net>
-Date: Fri, 25 Feb 2011 16:56:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] iwlegacy: change some symbols duplicated from iwlwifi
- directory
-References: <1298670606-1250-1-git-send-email-linville@tuxdriver.com>	 <20110225220504.GI15897@tuxdriver.com> <1298672550.28351.113.camel@wwguy-huron>
-In-Reply-To: <1298672550.28351.113.camel@wwguy-huron>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 Feb 2011 03:24:04 -0500
+Subject: Re: [PATCH v2] mac80211: add missing locking in ieee80211_reconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTincDtRH=uq9H16W4Lyx-Z4WK9+YOZBYf6GEXjJ-@mail.gmail.com>
+References: <1297183399-2296-1-git-send-email-eliad@wizery.com>
+	 <1297678190.3785.13.camel@jlt3.sipsolutions.net>
+	 <AANLkTincDtRH=uq9H16W4Lyx-Z4WK9+YOZBYf6GEXjJ-@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Feb 2011 09:24:00 +0100
+Message-ID: <1297931040.3750.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2011 04:22 PM, Guy, Wey-Yi wrote:
-> On Fri, 2011-02-25 at 14:05 -0800, John W. Linville wrote:
->> Sorry about the SPAM -- either I had some network issues here or I
->> _really_ meant for you to see this!! :-)
->>
->> On Fri, Feb 25, 2011 at 04:50:06PM -0500, John W. Linville wrote:
->>> drivers/net/wireless/iwlegacy/built-in.o:(.rodata+0x29f0): multiple definition of `iwl_rates'
->>> drivers/net/wireless/iwlwifi/built-in.o:(.rodata+0xa68): first defined here
->>> powerpc64-linux-ld: Warning: size of symbol `iwl_rates' changed from 143 in drivers/net/wireless/iwlwifi/built-in.o to 130 in drivers/net/wireless/iwlegacy/built-in.o
->>> drivers/net/wireless/iwlegacy/built-in.o:(.data+0x0): multiple definition of `bt_coex_active'
->>> drivers/net/wireless/iwlwifi/built-in.o:(.data+0x668): first defined here
->>> drivers/net/wireless/iwlegacy/built-in.o:(.rodata+0x750): multiple definition of `iwl_eeprom_band_1'
->>> drivers/net/wireless/iwlwifi/built-in.o:(.rodata+0x27d0): first defined here
->>> drivers/net/wireless/iwlegacy/built-in.o:(.rodata+0x3f0): multiple definition of `iwl_bcast_addr'
->>> drivers/net/wireless/iwlwifi/built-in.o:(.rodata+0x24f8): first defined here
->>> drivers/net/wireless/iwlegacy/built-in.o:(.bss+0x3d48): multiple definition of `iwl_debug_level'
->>> drivers/net/wireless/iwlwifi/built-in.o:(.bss+0x21950): first defined here
->>>
+On Thu, 2011-02-17 at 02:51 +0200, Eliad Peller wrote:
+
+> >>                       changed |= BSS_CHANGED_ASSOC;
+> >> +                     mutex_lock(&sdata->u.mgd.mtx);
+> >>                       ieee80211_bss_info_change_notify(sdata, changed);
+> >> +                     mutex_unlock(&sdata->u.mgd.mtx);
+> >>                       break;
+> >>               case NL80211_IFTYPE_ADHOC:
+> >>                       changed |= BSS_CHANGED_IBSS;
+> >
+> > Oi, this is a complicated locking rule.
+> >
+> > Can you please stick a
+> >
+> > lockdep_assert_held(...)
+> >
+> > in the right place to make sure we catch it even on drivers that don't
+> > use the probe_req function?
+> >
+> well, i'm not sure what is the right place / when this mutex should be taken.
+> when doing something like:
 > 
-> Thank you very much for fix this, we just miss it :-(
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 1c507c6..ab1843d 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -191,6 +191,7 @@ void ieee80211_bss_info_change_notify(struct
+> ieee80211_sub_if_data *sdata,
+>                 return;
+> 
+>         if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+> +               lockdep_assert_held(&sdata->u.mgd.mtx);
+>                 /*
+>                  * While not associated, claim a BSSID of all-zeroes
+>                  * so that drivers don't do any weird things with the
+> 
+> i got several warnings from ieee80211_open, ieee80211_recalc_idle, etc.
+> should this mutex be taken if the psm has been changed (for example)?
+> or should we check the mutex only if certain flags has been changed?
 
-I got hit earlier in the week with a similar issue on a patch of mine. It seems
-that a "make allyesconfig && make" is worthwhile whenever large changes are
-made, particularly when code is being moved.
+Yikes!! So you're saying that the locking is conditional on a certain
+flag? That makes the driver API a lot more complex, and the locking
+rules get really icky. I really don't like that.
 
-Larry
+I think the answer to that is that we must rewrite the entire API. My
+suggestion would be:
+ * remove ieee80211_ap_probereq_get
+ * add a new driver op "void set_ap_probe_req(..., skb)"
+ * call this in the few appropriate places, but not from
+   ieee80211_bss_info_change_notify
+ * make sure the locking for it is correct
+
+johannes
+
