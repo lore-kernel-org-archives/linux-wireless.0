@@ -1,78 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:55510 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550Ab1BVWWw (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:63258 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758045Ab1BQVTM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:22:52 -0500
-Received: by wyg36 with SMTP id 36so264297wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:51 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 4/8] wl12xx: report invalid TX rate when returning non-TX-ed skbs
-Date: Wed, 23 Feb 2011 00:22:27 +0200
-Message-Id: <1298413351-15462-5-git-send-email-arik@wizery.com>
-In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
-References: <1298413351-15462-1-git-send-email-arik@wizery.com>
+	Thu, 17 Feb 2011 16:19:12 -0500
+Date: Thu, 17 Feb 2011 15:19:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: george0505@realtek.com, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 14/14] rtlwifi: Modify buiild system for rtl8192cu
+Message-ID: <4d5d90ce.Q1zVxPLIvJiajY/8%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Report a TX rate idx of -1 and count 0 when returning untransmitted
-skbs to mac80211 using ieee80211_tx_status(). Otherwise mac80211
-tries to use the returned (essentially garbage) status.
+Modify Kconfig and Makefile to build rtl8192cu.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/wl12xx/tx.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 0c96255..e67b68b 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -606,10 +606,14 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
- 	struct sk_buff *skb;
- 	int i, total = 0;
- 	unsigned long flags;
-+	struct ieee80211_tx_info *info;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/Kconfig
++++ wireless-testing/drivers/net/wireless/rtlwifi/Kconfig
+@@ -1,6 +1,6 @@
+ config RTL8192CE
+ 	tristate "Realtek RTL8192CE/RTL8188SE Wireless Network Adapter"
+-	depends on MAC80211 && EXPERIMENTAL
++	depends on MAC80211 && PCI && EXPERIMENTAL
+ 	select FW_LOADER
+ 	select RTLWIFI
+ 	---help---
+@@ -9,7 +9,18 @@ config RTL8192CE
  
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
- 			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
-+			info = IEEE80211_SKB_CB(skb);
-+			info->status.rates[0].idx = -1;
-+			info->status.rates[0].count = 0;
- 			ieee80211_tx_status(wl->hw, skb);
- 			total++;
- 		}
-@@ -627,6 +631,7 @@ void wl1271_tx_reset(struct wl1271 *wl)
- {
- 	int i;
- 	struct sk_buff *skb;
-+	struct ieee80211_tx_info *info;
+ 	If you choose to build it as a module, it will be called rtl8192ce
  
- 	/* TX failure */
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-@@ -639,6 +644,9 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
- 				wl1271_debug(DEBUG_TX, "freeing skb 0x%p",
- 					     skb);
-+				info = IEEE80211_SKB_CB(skb);
-+				info->status.rates[0].idx = -1;
-+				info->status.rates[0].count = 0;
- 				ieee80211_tx_status(wl->hw, skb);
- 			}
- 		}
-@@ -657,6 +665,9 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 			skb = wl->tx_frames[i];
- 			wl1271_free_tx_id(wl, i);
- 			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
-+			info = IEEE80211_SKB_CB(skb);
-+			info->status.rates[0].idx = -1;
-+			info->status.rates[0].count = 0;
- 			ieee80211_tx_status(wl->hw, skb);
- 		}
- }
--- 
-1.7.1
++config RTL8192CU
++	tristate "Realtek RTL8192CU/RTL8188SU USB Wireless Network Adapter"
++	depends on MAC80211 && USB && EXPERIMENTAL
++	select FW_LOADER
++	select RTLWIFI
++	---help---
++	This is the driver for Realtek RTL8192CU/RTL8188CU 802.11n USB
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8192cu
++
+ config RTLWIFI
+ 	tristate
+-	depends on RTL8192CE
++	depends on RTL8192CE || RTL8192CU
+ 	default m
+Index: wireless-testing/drivers/net/wireless/rtlwifi/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/Makefile
++++ wireless-testing/drivers/net/wireless/rtlwifi/Makefile
+@@ -12,3 +12,4 @@ rtlwifi-objs	:=		\
+ 		usb.o
+ 
+ obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
++obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/Makefile
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/Makefile
+@@ -0,0 +1,14 @@
++rtl8192cu-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		mac.o		\
++		phy.o		\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o
++
++obj-$(CONFIG_RTL8192CU) += rtl8192cu.o
++
 
