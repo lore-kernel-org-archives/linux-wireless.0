@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756916Ab1BAOfj (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:61979 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab1BQAiV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 09:35:39 -0500
-Subject: [PATCH] mac80211: allow GO to scan like AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Feb 2011 15:35:36 +0100
-Message-ID: <1296570936.3989.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 16 Feb 2011 19:38:21 -0500
+Received: by pzk35 with SMTP id 35so284867pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 16:38:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110215221313.498d21ed.nledovskikh@gmail.com>
+References: <20110215221313.498d21ed.nledovskikh@gmail.com>
+Date: Thu, 17 Feb 2011 02:38:20 +0200
+Message-ID: <AANLkTinzcoAPYkq1nc--p6z79AEMXau+OEtwY5dpcy3Q@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Right channel setting for ar2317 chip
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Nikolay Ledovskikh <nledovskikh@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, me@bobcopeland.com, jirislaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2011/2/15 Nikolay Ledovskikh <nledovskikh@gmail.com>:
+> Patch that fixes right channel setting when running ar2317 based boards.
+>
+> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 78c26fd..c44111f 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -1253,6 +1253,7 @@ static int ath5k_hw_channel(struct ath5k_hw *ah,
+>        case AR5K_RF5111:
+>                ret = ath5k_hw_rf5111_channel(ah, channel);
+>                break;
+> +       case AR5K_RF2317:
+>        case AR5K_RF2425:
+>                ret = ath5k_hw_rf2425_channel(ah, channel);
+>                break;
+>
+> --
+> Best regards, Nikolay Ledovskikh.
+>
 
-There's no point in disallowing scanning for a
-GO interface when it's not beaconing yet.
+Thanks for catching that, I forgot to add it ;-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
---- wireless-testing.orig/net/mac80211/cfg.c	2011-02-01 15:33:04.000000000 +0100
-+++ wireless-testing/net/mac80211/cfg.c	2011-02-01 15:33:43.000000000 +0100
-@@ -1274,8 +1274,11 @@ static int ieee80211_scan(struct wiphy *
- 	case NL80211_IFTYPE_P2P_GO:
- 		if (sdata->local->ops->hw_scan)
- 			break;
--		/* FIXME: implement NoA while scanning in software */
--		return -EOPNOTSUPP;
-+		/*
-+		 * FIXME: implement NoA while scanning in software,
-+		 * for now fall through to allow scanning only when
-+		 * beaconing hasn't been configured yet
-+		 */
- 	case NL80211_IFTYPE_AP:
- 		if (sdata->u.ap.beacon)
- 			return -EOPNOTSUPP;
+Please resend with a better changelog (eg. "Use correct channel
+setting function for AR2317") so that everyone is happy.
 
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
