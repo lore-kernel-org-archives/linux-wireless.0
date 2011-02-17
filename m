@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:36727 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365Ab1BNXCz convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:62120 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282Ab1BQVSD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 18:02:55 -0500
-Received: by qwa26 with SMTP id 26so3518002qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 15:02:55 -0800 (PST)
+	Thu, 17 Feb 2011 16:18:03 -0500
+Date: Thu, 17 Feb 2011 15:18:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: george0505@realtek.com, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/14] rtlwifi: rtl8192cu: Add driver
+Message-ID: <4d5d9088.+yc+uIIeTakXOvtB%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1297723925.5683.11.camel@maggie>
-References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
-	<1297282621.9734.5.camel@maggie>
-	<AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com>
-	<1297720877.5683.3.camel@maggie>
-	<AANLkTi=ayavFKJw9s-n-AvMDrtMxXdDcjV+BnoxO-qkE@mail.gmail.com>
-	<1297723925.5683.11.camel@maggie>
-Date: Tue, 15 Feb 2011 00:02:54 +0100
-Message-ID: <AANLkTinnY2EzNBReVPqHYzi9xDvZNXFZqbUm66e9vTOM@mail.gmail.com>
-Subject: Re: Notes on ssb specs and implementation
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 lutego 2011 23:52 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Mon, 2011-02-14 at 23:32 +0100, Rafał Miłecki wrote:
->> Sure. It's not for submission, so you have to expect magic values.
->
-> That patch doesn't look too bad.
+Add driver rtl192cu. The individual parts are:
 
-Should we commit such a patch? Even if we didn't notice it to improve anything?
+ 1/14: Make changes in rtlwifi/rtl8192ce/reg.h to support rtl8192cu
+ 2/14: Make changes in rtlwifi/rtl8192ce/def.h to support rtl8192cu
+ 3/14: Modify some rtl8192ce routines for merging rtl8192cu
+ 4/14: Add headers for rtl8187cu
+ 5/14: Modify wifi.h for rtl8192cu
+ 6/14: Move common parts of rtl8192ce/phy.c
+ 7/14: Add routines dm, fw, led and sw
+ 8/14: Add routine hw
+ 9/14: Add routine mac
+10/14: Add routine phy
+11/14: Add routine rf
+12/14: Add routine table
+13/14: Add routine trx
+14/14: Modify buiild system for rtl8192cu
 
--- 
-Rafał
+Signed-off-by: George <george0505@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+This series of patches is intended for 2.6.39.
+
+Larry
+
