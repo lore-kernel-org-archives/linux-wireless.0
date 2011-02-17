@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:51957 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273Ab1BVMTa (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37903 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751393Ab1BQDb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 07:19:30 -0500
-Received: from dlep36.itg.ti.com ([157.170.170.91])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id p1MCJUSe014440
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 06:19:30 -0600
-Received: from dlep26.itg.ti.com (localhost [127.0.0.1])
-	by dlep36.itg.ti.com (8.13.8/8.13.8) with ESMTP id p1MCJUVV023091
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 06:19:30 -0600 (CST)
-Received: from dlee74.ent.ti.com (localhost [127.0.0.1])
-	by dlep26.itg.ti.com (8.13.8/8.13.8) with ESMTP id p1MCJU3V016415
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 06:19:30 -0600 (CST)
-Received: from pimenta.emea.dhcp.ti.com (pimenta.emea.dhcp.ti.com
- [137.167.41.164])	by dlelxv22.itg.ti.com (8.13.8/8.13.8) with ESMTP id
- p1MCJSge026295	for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011
- 06:19:29 -0600
-From: Luciano Coelho <coelho@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: fix MODULE_AUTHOR email address
-Date: Tue, 22 Feb 2011 14:19:28 +0200
-Message-ID: <1298377168-14954-1-git-send-email-coelho@ti.com>
+	Wed, 16 Feb 2011 22:31:29 -0500
+Message-ID: <4D5C9679.3060700@candelatech.com>
+Date: Wed, 16 Feb 2011 19:31:05 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org, bloat-devel@lists.bufferbloat.net,
+	"Nathaniel J. Smith" <njs@pobox.com>
+Subject: Re: [RFC] mac80211: implement eBDP algorithm to fight bufferbloat
+References: <1297619803-2832-1-git-send-email-njs@pobox.com> <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change my old email address to the new one in MODULE_AUTHOR.
+On 02/16/2011 05:49 PM, John W. Linville wrote:
+> This is an implementation of the eBDP algorithm as documented in
+> Section IV of "Buffer Sizing for 802.11 Based Networks" by Tianji Li,
+> et al.
+>
+> 	http://www.hamilton.ie/tianji_li/buffersizing.pdf
+>
+> This implementation timestamps an skb before handing it to the hardware
+> driver, then computes the service time when the transmit status is
+> reported back from the driver.  An exponentially weighted moving
+> average of per packet service times is used to restrict queueing
+> delays in hopes of achieving a target packet transmission latency.
+>
+> Signed-off-by: John W. Linville<linville@tuxdriver.com>
+> ---
+> This is preliminary, but it seems to put some limits on latencies
+> for me.  I haven't even really done much testing, so YMMV...
+>
+> I'm sure this isn't ideal.  This should be combined with the ALT
+> algorithm to yield the A* algorithm.  There are parameters that
+> probably should be tunable (or at least better researched).  This may
+> not be ideal for 802.11n -- it may even be detrimental to it.
+>
+> Still, it is an attempt at addressing buffer bloat.  Plus, it should
+> pertain to all mac80211-based drivers.  So, feel free to test it,
+> suggest different parameters, report real numbers, post patches,
+> etc... :-)
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> +		/* test for queue admission qualifications */
+> +		tserv_ns_avg = ewma_read(&sdata->tserv_ns_avg);
+> +		/* constants 2 msec and offset 5 should be tunable? */
+> +		max_enqueued = 2 * NSEC_PER_MSEC / tserv_ns_avg + 5;
+> +		if (atomic_read(&sdata->enqueued)>  max_enqueued) {
+> +			/* silently drop */
+> +			dev_kfree_skb(skb);
+> +			return IEEE80211_TX_OK;
+> +		}
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 61dea73..a3e15f5 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3412,5 +3412,5 @@ module_param_named(debug_level, wl12xx_debug_level, uint, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(debug_level, "wl12xx debugging level");
- 
- MODULE_LICENSE("GPL");
--MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-+MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+We should have some visible stat to increment when you drop on xmit,
+  tx-fifo error or similar?
+
+Thanks,
+Ben
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
