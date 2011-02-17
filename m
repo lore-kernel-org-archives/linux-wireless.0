@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36630 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751876Ab1B0Nyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 08:54:54 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: change number of patch:
-Date: Sun, 27 Feb 2011 14:54:44 +0100
-Message-Id: <1298814885-11894-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44310 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab1BQWPU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Feb 2011 17:15:20 -0500
+Received: by qwa26 with SMTP id 26so2816633qwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 14:15:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1297980018.13554.4.camel@maggie>
+References: <AANLkTimKE+WqChVf0XpeHsfHxT8=3vbnBh=Lo+1tLSwj@mail.gmail.com>
+	<1297894657.32237.2.camel@maggie>
+	<AANLkTi=sVaeizU3xJQQwwKXB5saPgdn9VxNQv0-aoiV7@mail.gmail.com>
+	<1297980018.13554.4.camel@maggie>
+Date: Thu, 17 Feb 2011 23:15:18 +0100
+Message-ID: <AANLkTi=FYOTt=8bMmH6W5Noeuifd-h9t8HEZB9ovg5ic@mail.gmail.com>
+Subject: Re: [RFC] How to rename SSB_TMSLOW_*, B43_TMSLOW_*?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: George Kashperko <george@znau.edu.ua>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-37-vsnprintk.patch also uses the number 37, so one of them has to be renamed.
+W dniu 17 lutego 2011 23:00 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
+> On Thu, 2011-02-17 at 13:14 +0100, Rafał Miłecki wrote:
+>> That's why I wanted to introduce some SSBAI_CORECTL_FOOBAR and make
+>> b43 unaware it that flags are going to be written in register A or B.
+>> I wanted b43 to just pass flags to correct function and do not care
+>> about place where they are getting written.
+>
+> Ok, well. That's basically what I am talking about for several
+> days now.
+>
+> 1) Keep SSB and AI separated.
+> 2) Introduce an additional thin layer on top of this to abstract the
+> bus to the drivers.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/37-led-max-brightness.patch |   24 ------------------------
- patches/38-led-max-brightness.patch |   24 ++++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 24 deletions(-)
- delete mode 100644 patches/37-led-max-brightness.patch
- create mode 100644 patches/38-led-max-brightness.patch
+OK, but how do you see core flags implemented in such a layout? The
+ugly way I proposed seems to match your idea but... is ugly.
 
-diff --git a/patches/37-led-max-brightness.patch b/patches/37-led-max-brightness.patch
-deleted file mode 100644
-index ca62ca9..0000000
---- a/patches/37-led-max-brightness.patch
-+++ /dev/null
-@@ -1,24 +0,0 @@
----- a/drivers/net/wireless/iwlegacy/iwl-led.c
--+++ b/drivers/net/wireless/iwlegacy/iwl-led.c
--@@ -149,7 +149,9 @@ void iwl_legacy_leds_init(struct iwl_pri
-- 				   wiphy_name(priv->hw->wiphy));
-- 	priv->led.brightness_set = iwl_legacy_led_brightness_set;
-- 	priv->led.blink_set = iwl_legacy_led_blink_set;
--+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-- 	priv->led.max_brightness = 1;
--+#endif
-- 
-- 	switch (mode) {
-- 	case IWL_LED_DEFAULT:
----- a/drivers/net/wireless/iwlwifi/iwl-led.c
--+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
--@@ -149,7 +149,9 @@ void iwl_leds_init(struct iwl_priv *priv
-- 				   wiphy_name(priv->hw->wiphy));
-- 	priv->led.brightness_set = iwl_led_brightness_set;
-- 	priv->led.blink_set = iwl_led_blink_set;
--+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-- 	priv->led.max_brightness = 1;
--+#endif
-- 
-- 	switch (mode) {
-- 	case IWL_LED_DEFAULT:
-diff --git a/patches/38-led-max-brightness.patch b/patches/38-led-max-brightness.patch
-new file mode 100644
-index 0000000..ca62ca9
---- /dev/null
-+++ b/patches/38-led-max-brightness.patch
-@@ -0,0 +1,24 @@
-+--- a/drivers/net/wireless/iwlegacy/iwl-led.c
-++++ b/drivers/net/wireless/iwlegacy/iwl-led.c
-+@@ -149,7 +149,9 @@ void iwl_legacy_leds_init(struct iwl_pri
-+ 				   wiphy_name(priv->hw->wiphy));
-+ 	priv->led.brightness_set = iwl_legacy_led_brightness_set;
-+ 	priv->led.blink_set = iwl_legacy_led_blink_set;
-++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-+ 	priv->led.max_brightness = 1;
-++#endif
-+ 
-+ 	switch (mode) {
-+ 	case IWL_LED_DEFAULT:
-+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
-++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-+@@ -149,7 +149,9 @@ void iwl_leds_init(struct iwl_priv *priv
-+ 				   wiphy_name(priv->hw->wiphy));
-+ 	priv->led.brightness_set = iwl_led_brightness_set;
-+ 	priv->led.blink_set = iwl_led_blink_set;
-++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
-+ 	priv->led.max_brightness = 1;
-++#endif
-+ 
-+ 	switch (mode) {
-+ 	case IWL_LED_DEFAULT:
+Can you say sth more about that? What about such a shared things that
+differs in a minimal way?
+
 -- 
-1.7.1
-
+Rafał
