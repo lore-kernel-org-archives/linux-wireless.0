@@ -1,234 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:36288 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758079Ab1BKU2B (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:63183 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692Ab1BQAqI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 15:28:01 -0500
-Date: Fri, 11 Feb 2011 14:27:58 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: sgruszka@redhat.com, george0505@realtek.com,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5 V2] rtlwifi: rtl8192ce: Rework rtl8192ce/phy.c
-Message-ID: <4d559bce.m1Ve7xVlc5cH8tBV%Larry.Finger@lwfinger.net>
+	Wed, 16 Feb 2011 19:46:08 -0500
+Received: by eye27 with SMTP id 27so1161194eye.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Feb 2011 16:46:07 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] ssb: when needed, reject IM input while disabling device
+Date: Thu, 17 Feb 2011 01:50:50 +0100
+Message-Id: <1297903851-5499-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1297903851-5499-1-git-send-email-zajec5@gmail.com>
+References: <1297903851-5499-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the phy.c codes for rtl8192ce and rtl8192cu be as alike as possible.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
+ drivers/ssb/main.c           |   16 +++++++++++++++-
+ include/linux/ssb/ssb_regs.h |    2 ++
+ 2 files changed, 17 insertions(+), 1 deletions(-)
 
-V2 - incorporate the comments by Stanislaw Gruszka.
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -37,6 +37,9 @@
- #include "dm.h"
- #include "table.h"
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 08fed55..5b6160a 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1220,7 +1220,7 @@ static int ssb_wait_bits(struct ssb_device *dev, u16 reg, u32 bitmask,
  
-+/* Define macro to shorten lines */
-+#define MCS_TXPWR	mcs_txpwrlevel_origoffset
+ void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
+ {
+-	u32 reject;
++	u32 reject, val;
+ 
+ 	if (ssb_read32(dev, SSB_TMSLOW) & SSB_TMSLOW_RESET)
+ 		return;
+@@ -1229,12 +1229,26 @@ void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
+ 	ssb_write32(dev, SSB_TMSLOW, reject | SSB_TMSLOW_CLOCK);
+ 	ssb_wait_bits(dev, SSB_TMSLOW, reject, 1000, 1);
+ 	ssb_wait_bits(dev, SSB_TMSHIGH, SSB_TMSHIGH_BUSY, 1000, 0);
 +
- static u32 _rtl92c_phy_fw_rf_serial_read(struct ieee80211_hw *hw,
- 					 enum radio_path rfpath, u32 offset);
- static void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
-@@ -480,161 +485,129 @@ static void _rtl92c_store_pwrIndex_diffr
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	if (ssb_read32(dev, SSB_IDLOW) & SSB_IDLOW_INITIATOR) {
++		val = ssb_read32(dev, SSB_IMSTATE);
++		val |= SSB_IMSTATE_REJECT;
++		ssb_write32(dev, SSB_IMSTATE, val);
++		ssb_wait_bits(dev, SSB_IMSTATE, SSB_IMSTATE_BUSY, 1000, 0);
++	}
++
+ 	ssb_write32(dev, SSB_TMSLOW,
+ 		    SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
+ 		    reject | SSB_TMSLOW_RESET |
+ 		    core_specific_flags);
+ 	ssb_flush_tmslow(dev);
  
- 	if (regaddr == RTXAGC_A_RATE18_06) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][0] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][0]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0]));
- 	}
- 	if (regaddr == RTXAGC_A_RATE54_24) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][1] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][1]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1]));
- 	}
- 	if (regaddr == RTXAGC_A_CCK1_MCS32) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][6] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][6]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6]));
- 	}
- 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][7] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][7]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7]));
- 	}
- 	if (regaddr == RTXAGC_A_MCS03_MCS00) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][2] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][2]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2]));
- 	}
- 	if (regaddr == RTXAGC_A_MCS07_MCS04) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][3] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][3]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3]));
- 	}
- 	if (regaddr == RTXAGC_A_MCS11_MCS08) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][4] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][4]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4]));
- 	}
- 	if (regaddr == RTXAGC_A_MCS15_MCS12) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][5] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][5]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5]));
- 	}
- 	if (regaddr == RTXAGC_B_RATE18_06) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][8] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][8]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8]));
- 	}
- 	if (regaddr == RTXAGC_B_RATE54_24) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][9] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][9]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9]));
- 	}
- 
- 	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][14] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][14]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14]));
- 	}
- 
- 	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0x000000ff) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][15] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][15]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15]));
- 	}
- 
- 	if (regaddr == RTXAGC_B_MCS03_MCS00) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][10] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][10]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10]));
- 	}
- 
- 	if (regaddr == RTXAGC_B_MCS07_MCS04) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][11] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][11]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11]));
- 	}
- 
- 	if (regaddr == RTXAGC_B_MCS11_MCS08) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][12] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][12]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12]));
- 	}
- 
- 	if (regaddr == RTXAGC_B_MCS15_MCS12) {
--		rtlphy->mcs_txpwrlevel_origoffset[rtlphy->pwrgroup_cnt][13] =
--		    data;
-+		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13] = data;
- 
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 ("MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
- 			  rtlphy->pwrgroup_cnt,
--			  rtlphy->mcs_txpwrlevel_origoffset[rtlphy->
--							    pwrgroup_cnt][13]));
-+			  rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13]));
- 
- 		rtlphy->pwrgroup_cnt++;
- 	}
++	if (ssb_read32(dev, SSB_IDLOW) & SSB_IDLOW_INITIATOR) {
++		val = ssb_read32(dev, SSB_IMSTATE);
++		val &= ~SSB_IMSTATE_REJECT;
++		ssb_write32(dev, SSB_IMSTATE, val);
++	}
++
+ 	ssb_write32(dev, SSB_TMSLOW,
+ 		    reject | SSB_TMSLOW_RESET |
+ 		    core_specific_flags);
+diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
+index 489f7b6..8ac6346 100644
+--- a/include/linux/ssb/ssb_regs.h
++++ b/include/linux/ssb/ssb_regs.h
+@@ -85,6 +85,8 @@
+ #define  SSB_IMSTATE_AP_RSV	0x00000030 /* Reserved */
+ #define  SSB_IMSTATE_IBE	0x00020000 /* In Band Error */
+ #define  SSB_IMSTATE_TO		0x00040000 /* Timeout */
++#define  SSB_IMSTATE_BUSY	0x01800000 /* Busy (Backplane rev >= 2.3 only) */
++#define  SSB_IMSTATE_REJECT	0x02000000 /* Reject (Backplane rev >= 2.3 only) */
+ #define SSB_INTVEC		0x0F94     /* SB Interrupt Mask */
+ #define  SSB_INTVEC_PCI		0x00000001 /* Enable interrupts for PCI */
+ #define  SSB_INTVEC_ENET0	0x00000002 /* Enable interrupts for enet 0 */
+-- 
+1.7.3.4
 
