@@ -1,40 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:58993 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003Ab1BFQQB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 11:16:01 -0500
-From: Sujith <m.sujith@gmail.com>
+Received: from kroah.org ([198.145.64.141]:53359 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752867Ab1BRVEQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 16:04:16 -0500
+Date: Fri, 18 Feb 2011 12:57:31 -0800
+From: Greg KH <greg@kroah.com>
+To: Stanislav Fomichev <kernel@fomichev.me>, brudley@broadcom.com,
+	gregkh@suse.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] brcm80211: fix warnings in wl_check_firmwares
+Message-ID: <20110218205731.GD796@kroah.com>
+References: <20110212174700.GA2058@sdf-MacBook>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <19790.51491.583675.986658@gargle.gargle.HOWL>
-Date: Sun, 6 Feb 2011 21:45:31 +0530
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Sujith <m.sujith@gmail.com>, Martin Schleier <drahemmaps@gmx.net>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	<linux-wireless@vger.kernel.org>, <dsd@gentoo.org>,
-	<linville@tuxdriver.com>, <kune@deine-taler.de>,
-	<linux-usb@vger.kernel.org>, <gregkh@suse.de>
-Subject: Re: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
-In-Reply-To: <Pine.LNX.4.44L0.1102061037060.20379-100000@netrider.rowland.org>
-References: <19790.36590.884287.572619@gargle.gargle.HOWL>
-	<Pine.LNX.4.44L0.1102061037060.20379-100000@netrider.rowland.org>
+In-Reply-To: <20110212174700.GA2058@sdf-MacBook>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Stern wrote:
-> Why do you want to?  Why does changing the endpoint type from interrupt
-> to bulk improve performance?  Yes, the description says that this
-> causes CPU usage to go from 10% to below 1%, but _why_ does it do that?
+On Sat, Feb 12, 2011 at 08:47:00PM +0300, Stanislav Fomichev wrote:
+> Use %zu instead of %d for size_t
 > 
-> Maybe the same effect can be achieved simply by changing the interrupt
-> interval instead.
+> Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
+> ---
+>  drivers/staging/brcm80211/sys/wl_mac80211.c |    4 ++--
 
-Well, when the device is plugged in, the USB core recognizes the endpoints
-as interrupt type. Later, in the probe() callback, the FW is uploaded to the
-target and it patches the endpoints' type to bulk. Please correct me if am
-wrong, but I think this mismatch between the host and the target would be
-the cause for the high CPU usage, when the transmission load for that
-endpoint is high.
+This doesn't apply to linux-next as this file isn't around anymore :(
 
-Sujith
+thanks,
+
+greg k-h
