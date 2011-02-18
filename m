@@ -1,100 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52571 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751706Ab1BAVEW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 16:04:22 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: add support for kernel 2.6.38
-Date: Tue,  1 Feb 2011 22:04:13 +0100
-Message-Id: <1296594253-21273-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1296594253-21273-1-git-send-email-hauke@hauke-m.de>
-References: <1296594253-21273-1-git-send-email-hauke@hauke-m.de>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:45549 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755334Ab1BRX1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 18:27:24 -0500
+Subject: Re: [RFC] AI support (13/14 ssb add AI support)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>
+In-Reply-To: <1298070443.25739.23.camel@dev.znau.edu.ua> (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+	 <1297981882.23381.38.camel@dev.znau.edu.ua>
+	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>
+	 <1298070443.25739.23.camel@dev.znau.edu.ua>
+	 (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Feb 2011 00:27:17 +0100
+Message-ID: <1298071637.23801.40.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2011-02-19 at 01:07 +0200, George Kashperko wrote: 
+> Starting from the clean page means another months of no support for
+> AI-based hw.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.38.h |   17 -----------------
- include/linux/compat-2.6.39.h |   27 +++++++++++++++++++++++++++
- include/linux/compat-2.6.h    |    1 +
- 3 files changed, 28 insertions(+), 17 deletions(-)
- create mode 100644 include/linux/compat-2.6.39.h
+Oh, wait a second right here. That's not how Linux development works.
+We want the technically superior solution, not just something that
+works to get stuff working no matter what.
 
-diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
-index 0521156..004fe27 100644
---- a/include/linux/compat-2.6.38.h
-+++ b/include/linux/compat-2.6.38.h
-@@ -8,23 +8,6 @@
- #include <linux/kernel.h>
- #include <linux/skbuff.h>
- 
--/*
-- * This is not part of The 2.6.37 kernel yet but we
-- * we use it to optimize the backport code we
-- * need to implement. Instead of using ifdefs
-- * to check what version of the check we use
-- * we just replace all checks on current code
-- * with this. I'll submit this upstream too, that
-- * way all we'd have to do is to implement this
-- * for older kernels, then we would not have to
-- * edit the upstrema code for backport efforts.
-- */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
--#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
--#else
--#define br_port_exists(dev)	(dev->br_port)
--#endif
--
- /* rename member in struct mmc_host in include/linux/mmc/host.h */
- #define max_segs	max_hw_segs
- 
-diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
-new file mode 100644
-index 0000000..c0c98fd
---- /dev/null
-+++ b/include/linux/compat-2.6.39.h
-@@ -0,0 +1,27 @@
-+#ifndef LINUX_26_39_COMPAT_H
-+#define LINUX_26_39_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
-+
-+/*
-+ * This is not part of The 2.6.37 kernel yet but we
-+ * we use it to optimize the backport code we
-+ * need to implement. Instead of using ifdefs
-+ * to check what version of the check we use
-+ * we just replace all checks on current code
-+ * with this. I'll submit this upstream too, that
-+ * way all we'd have to do is to implement this
-+ * for older kernels, then we would not have to
-+ * edit the upstrema code for backport efforts.
-+ */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-+#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
-+#else
-+#define br_port_exists(dev)	(dev->br_port)
-+#endif
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
-+
-+#endif /* LINUX_26_39_COMPAT_H */
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 2706797..478f833 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -31,5 +31,6 @@
- #include <linux/compat-2.6.36.h>
- #include <linux/compat-2.6.37.h>
- #include <linux/compat-2.6.38.h>
-+#include <linux/compat-2.6.39.h>
- 
- #endif /* LINUX_26_COMPAT_H */
+If your patchset works, that's pretty cool. So thanks a lot for getting
+something to the users that works. Nothing stops distributions from
+picking up those patches and distributing it to endusers.
+That doesn't mean we have to adopt it to the mainline, though.
+
+> Going cp ssb bcmai; sed s/ssb/bcmai way will make whole
+> messup.
+
+Forking and developing a separate solution is not equivalent
+to applying cp and sed commands to the codebase.
+
+> Ah, well, there might is another 4th way to go if Broadcom will finally
+> support their bus with their brand code but honestly (no offence to
+> Broadcom here, just my personal subjective opinion) I dont think I will
+> be happy to see this code after all that I've already seen.
+
+As Henry already replied to this thread, I'm pretty sure that Broadcom
+is interested in bringing the technically superior solution to the
+mainline.
+
+I do agree, however, that their current "SB" and "BCMAI" code
+doesn't look superior to your patchset, though. ;)
+
 -- 
-1.7.1
+Greetings Michael.
 
