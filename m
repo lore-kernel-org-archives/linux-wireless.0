@@ -1,74 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60024 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235Ab1BJBGO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 20:06:14 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] mac80211: Set up tx-queue-mapping in subif_start_xmit.
-Date: Wed,  9 Feb 2011 17:05:51 -0800
-Message-Id: <1297299951-25604-2-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1297299951-25604-1-git-send-email-greearb@candelatech.com>
-References: <1297299951-25604-1-git-send-email-greearb@candelatech.com>
+Received: from kroah.org ([198.145.64.141]:41557 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754938Ab1BRVbh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 16:31:37 -0500
+Date: Fri, 18 Feb 2011 13:29:38 -0800
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 01/15] staging: ath6kl: Fixing a NULL pointer exception
+Message-ID: <20110218212938.GA21986@kroah.com>
+References: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, Feb 18, 2011 at 01:13:02PM -0800, Vipin Mehta wrote:
+> The driver was dereferencing a NULL pointer because of the device instance
+> being registered via the set_wiphy_dev() function. The function
+> ar6000_avail_ev() was passing the argument as NULL instead of using the one
+> returned by the MMC stack through the probe callback.
 
-Otherwise, ath9k gets confused about which queue to use
-and spews a warning like this when driving traffic with
-pktgen.
+I've applied all of these, but note that some of them add whitespace
+warnings.  In the future, I'll reject those that do this, please always
+run your patches through scripts/checkpatch.pl to not have this happen.
 
-WARNING: at drivers/net/wireless/ath/ath9k/xmit.c:1748 ath_tx_start+0x4a2/0x662 [ath9k]()
-Hardware name: To Be Filled By O.E.M.
-Modules linked in: ath5k arc4 ath9k mac80211 ath9k_common ath9k_hw ath cfg80211 nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp l]
-Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
-Call Trace:
- [<c043091b>] ? warn_slowpath_common+0x65/0x7a
- [<fabe784e>] ? ath_tx_start+0x4a2/0x662 [ath9k]
- [<c043093f>] ? warn_slowpath_null+0xf/0x13
- [<fabe784e>] ? ath_tx_start+0x4a2/0x662 [ath9k]
- [<fabe14d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
- [<fab9026d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
- [<fab90397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
- [<fab905f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
- [<fab8ecc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
- [<fab9148b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
- [<c0440000>] ? rescuer_thread+0x25/0x1c8
- [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
- [<fab90e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
- [<c042d612>] ? default_wake_function+0xb/0xd
- [<c04254c7>] ? __wake_up_common+0x34/0x5c
- [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
- [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
- [<c044371a>] ? kthread+0x62/0x67
- [<c04436b8>] ? kthread+0x0/0x67
- [<c04035f6>] ? kernel_thread_helper+0x6/0x10
+thanks,
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-
-NOTE:  This needs review by someone who actually understands this code.
-
-:100644 100644 17ef4f4... 95eb4fa... M	net/mac80211/tx.c
- net/mac80211/tx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 17ef4f4..95eb4fa 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2028,6 +2028,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	} else
- 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
- 
-+	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
-+
- 	nh_pos += hdrlen;
- 	h_pos += hdrlen;
- 
--- 
-1.7.2.3
-
+greg k-h
