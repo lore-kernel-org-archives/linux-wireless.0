@@ -1,88 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:54641 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756844Ab1BJUAe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 15:00:34 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000020458.msg
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 21:59:55 +0200
-Subject: Re: SSB AI support code ([RFC] v2)
-From: George Kashperko <george@znau.edu.ua>
-To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297363781.30218.37.camel@maggie>
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-	 <AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
-	 <1297288286.9734.28.camel@maggie>
-	 <AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
-	 <4D5320AA.5020405@lwfinger.net> <1297315457.12795.40.camel@dev.znau.edu.ua>
-	 (sfid-20110210_063153_817778_FFFFFFFFF46A15B5)  <1297333256.30218.10.camel@maggie>
-	 <1297359641.15805.38.camel@dev.znau.edu.ua>
-	 (sfid-20110210_184827_887841_41FA745D)  <1297361481.30218.31.camel@maggie>
-	 <1297362251.15805.51.camel@dev.znau.edu.ua>
-	 (sfid-20110210_193159_907950_6C4B7BA8)  <1297363781.30218.37.camel@maggie>
+Received: from mail.atheros.com ([12.19.149.2]:53976 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751378Ab1BRVOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 16:14:02 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 13:13:41 -0800
+From: Vipin Mehta <vmehta@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
+	<devel@driverdev.osuosl.org>
+Subject: [PATCH 02/15] staging: ath6kl: Fixing key settings for WPA/WPA2
+Date: Fri, 18 Feb 2011 13:13:03 -0800
+Message-ID: <1298063596-2096-2-git-send-email-vmehta@atheros.com>
+In-Reply-To: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
+References: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Thu, 10 Feb 2011 21:52:36 +0200
-Message-Id: <1297367556.15805.79.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arrgh.... Tired to hell but can't sleep...
-So im back ! ;)
+A bug was observed during the reconnection phase in the WPA/WPA2-PSK scenario
+where the EAPOL frames were going encrypted during an auto reconnection
+attempt. The initial 4-way handshake would go fine but then the driver
+was getting a command to set default keys sometime later. Setting of an
+incorrect flag (TX_USAGE) in the hadrware was causing the EAPOL frames during
+the subsequent 4-way handshake attempts to go encrypted causing the AP to
+reject the station.
 
-> On Thu, 2011-02-10 at 20:24 +0200, George Kashperko wrote: 
-> > > code in drivers. Let's call it "hndbackplane" or something like that.
-> > hndbackplane... nevah!!1 :p Since some time I started hating hnd abbreviation dunno why.
-> 
-> Well, it's just a name I made up right now.
-> It obviously is not a good one. ;)
-> It was just my way to explain the idea of a thin layer between
-> SSB (or AI) and drivers. That thin layer can be a mostly-inline function
-> layer with if()..else or a function table layer.
-Yes, I got your idea. But to be honest the more I think about actual
-implementation the more I beleive mine initial proposal is less
-intrusive one but might need to be redesigned slightly to avoid
-confusion with original SSB and guarantee proper support with hosted AI
-later on.
-Anyway as I've already said I'm going to take a break for few days to
-plan things with separate bus driver. Its not like I gave up and will
-start on bus code right away. Just want to see the whole picture. As
-soon as I finish with my paintings and if only I see at least 1ne more
-advantage for separate bus driver rather than ssb+ai driver I will start
-with this way ofcourse.
-But yet again not like im scared of amount of if/else stuff this will
-introduce (most of it could be hidden with proper inliners anyway). Just
-looks like AI bus driver is either to replicate the whole ssb_bus struct
-layout or whole ssb-based code subset with device drivers as well will
-be flooded with those if/else or inline ssb_gimme_bus(). Replicating (or
-including in first place) the whole ssb_bus makes me think AI is much
-more SSB than just AI, while all those if/else even inlined look for me
-less desirable and clean than ssb_core_(ctl|state)_flags. Wrapping
-required ssb codebase with some bcmai_zzz() will require ssb_bus struct
-replication yet again. There might be some other way I dont see atm,
-hopefully I will after get some rest.
+Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+---
+ drivers/staging/ath6kl/os/linux/cfg80211.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-> > Any chance someone can share alike .pdf for AI socs ?
-> 
-> I think that's pretty much the only one available.
-> Broadcom doesn't really distribute docs on HND, but only code.
-Maybe some kind Broadcom guy could comment on this ? -.-
-Might not, but I was to try anyway.
-
-> > Also would be much
-> > appreciated if you could help me with finding out non-embedded bcm
-> > ai-based hw part-numbers.
-> 
-> I have no idea. You could probably look at brcm80211 for starters?
-> 
-Already done with that, unfortunately PCI_VENDOR_ID_BROADCOM with
-dev_ids 0x4357/0x4353/0x4727 gives me no clue if they are SB or AI
-based. Must back again dig deep into bcm80211 but I'm already tired to
-hell with all those sih, sii and osh stuff :/
-
-Have nice day,
-George
-
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index 1a4e315..b7742d4 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -983,6 +983,7 @@ ar6k_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev,
+     AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+     struct ar_key *key = NULL;
+     int status = 0;
++    u8 key_usage;
+ 
+     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: index %d\n", __func__, key_index));
+ 
+@@ -1011,8 +1012,13 @@ ar6k_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev,
+ 
+     ar->arDefTxKeyIndex = key_index;
+     key = &ar->keys[ar->arDefTxKeyIndex];
++    key_usage = GROUP_USAGE;
++    if (WEP_CRYPT == ar->arPairwiseCrypto) {
++        key_usage |= TX_USAGE;
++    }
++
+     status = wmi_addKey_cmd(ar->arWmi, ar->arDefTxKeyIndex,
+-                            ar->arPairwiseCrypto, GROUP_USAGE | TX_USAGE,
++                            ar->arPairwiseCrypto, key_usage,
+                             key->key_len, key->seq, key->key, KEY_OP_INIT_VAL,
+                             NULL, SYNC_BOTH_WMIFLAG);
+     if (status) {
+-- 
+1.6.3.3
 
