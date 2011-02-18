@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:64878 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894Ab1BOVjY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 16:39:24 -0500
-Received: by qyj19 with SMTP id 19so2754930qyj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 13:39:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D5AE52B.80002@gmail.com>
-References: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>
-	<4D5AD6A6.8090505@gmail.com>
-	<AANLkTiks9rG2CzM2LabNerK3zgJ+R+weytQgvXxDbNe7@mail.gmail.com>
-	<4D5AE52B.80002@gmail.com>
-Date: Wed, 16 Feb 2011 00:39:24 +0300
-Message-ID: <AANLkTinnCOEXF835yhNeJDfBdKjx_dss6TFeUmjL-Yk2@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
- seqfault on AHB chips
-From: Nikolay Ledovskikh <nledovskikh@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com, me@bobcopeland.com
-Content-Type: text/plain; charset=UTF-8
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:52709 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758719Ab1BRXyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 18:54:19 -0500
+Subject: Re: [RFC] AI support (13/14 ssb add AI support)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1298072549.25739.50.camel@dev.znau.edu.ua> (sfid-20110219_005115_279769_FFFFFFFFC1C82CA4)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+	 <1297981882.23381.38.camel@dev.znau.edu.ua>
+	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>
+	 <1298070443.25739.23.camel@dev.znau.edu.ua>
+	 (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA)  <1298071637.23801.40.camel@maggie>
+	 <1298072549.25739.50.camel@dev.znau.edu.ua>
+	 (sfid-20110219_005115_279769_FFFFFFFFC1C82CA4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Feb 2011 00:54:11 +0100
+Message-ID: <1298073251.23801.45.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Maybe the address you got from the platform side was already ored by
-> KSEG1...
+On Sat, 2011-02-19 at 01:42 +0200, George Kashperko wrote: 
+> I wish Broadcom could get us more tech. details on AI or if not then
+> just name it SSB2 to avoid arguing on confusion caused by <SSB AI> ;)
 
-I took a look at openwrt atheros platform code and suppose you are right.
-So what we should do for now? Add pointer cast (void __iomem *)?
-Because ioremap_nocache doesn't work as expected. I think it's better
-to rewrote the openwrt
-code, but not now.
+You're actually suggesting to name the "AI" implementation "SSB2" to
+avoid a naming confusion? I hope this is a misunderstanding.
+
+-- 
+Greetings Michael.
+
