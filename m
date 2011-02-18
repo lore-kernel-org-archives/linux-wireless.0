@@ -1,28 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51967
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753180Ab1BJTAG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54194 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714Ab1BRLFe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 14:00:06 -0500
-Date: Thu, 10 Feb 2011 11:00:40 -0800 (PST)
-Message-Id: <20110210.110040.193706322.davem@davemloft.net>
-To: helmut.schaa@googlemail.com
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Subject: Re: ath9k and pktgen generate WARNings.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <201102101854.41627.helmut.schaa@googlemail.com>
-References: <201102100931.38777.helmut.schaa@googlemail.com>
-	<4D541E1B.5030707@candelatech.com>
-	<201102101854.41627.helmut.schaa@googlemail.com>
+	Fri, 18 Feb 2011 06:05:34 -0500
+Subject: Re: [PATCH 2/2] mac80211: Clear PS related flag on disabling power
+ save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1298018905-6984-1-git-send-email-vnatarajan@atheros.com>
+References: <1298018905-6984-1-git-send-email-vnatarajan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Feb 2011 12:05:22 +0100
+Message-ID: <1298027122.3772.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Date: Thu, 10 Feb 2011 18:54:41 +0100
+On Fri, 2011-02-18 at 14:18 +0530, Vivek Natarajan wrote:
+> Clear IEEE80211_STA_NULLFUNC_ACKED flag on disabling power
+> save. Without this fix, there is a chance of setting CONF_PS
+> before sending nullfunc frame.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 
-> Why not make pktgen use the select_queue callback instead?
 
-Because the whole point of what pktgen is doing is to allow the
-testing of explicit iteration through the available network queues.
+>  		ieee80211_queue_work(&local->hw,
+>  				     &local->dynamic_ps_disable_work);
+> +		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+
+Shouldn't those be the other way around, just to make reading easier?
+
+johannes
+
