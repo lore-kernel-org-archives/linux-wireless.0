@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:55544 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754704Ab1BSW2p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 17:28:45 -0500
-Date: Sat, 19 Feb 2011 16:28:42 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: george0505@realtek.com, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH V2 0/16] rtlwifi: rtl8192cu: Add driver
-Message-ID: <4d60441a.ZoWCvvdkjWyfVsrI%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:56985 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754392Ab1BRWfK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 17:35:10 -0500
+Subject: Re: [RFC] AI support (8/14 ssb ssb_bus_detect routine)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297981247.23381.22.camel@dev.znau.edu.ua> (sfid-20110217_232921_076422_FFFFFFFFDFD95D3D)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+	 <1297981247.23381.22.camel@dev.znau.edu.ua>
+	 (sfid-20110217_232921_076422_FFFFFFFFDFD95D3D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Feb 2011 23:35:07 +0100
+Message-ID: <1298068507.23801.20.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add driver rtl192cu. The individual parts are:
+On Fri, 2011-02-18 at 00:20 +0200, George Kashperko wrote: 
+> +static const char *ssb_chipco_chiptype_name(struct ssb_bus *bus)
+> +{
+> +	switch (bus->chipco.chiptype) {
+> +	case SSB_CHIPCO_SB:
+> +		return "SB";
+> +	default:
+> +		return "UNKNOWN";
+> +	}
+> +}
 
- 1/16: Make changes in rtlwifi/rtl8192ce/reg.h to support rtl8192cu
- 2/16: Make changes in rtlwifi/rtl8192ce/def.h to support rtl8192cu
- 3/16: Modify some rtl8192ce routines for merging rtl8192cu
- 4/16: Add headers for rtl8187cu
- 5/16: Modify wifi.h for rtl8192cu
- 6/16: Move common parts of rtl8192ce/phy.c
- 7/16: Add routines dm, fw, led and sw
- 8/16: Add routine hw
- 9/16: Add routine mac
-10/16: Add routine phy
-11/16: Add routine rf
-12/16: Add routine table
-13/16: Add routine trx
-14/16: Modify buiild system for rtl8192cu
-15/16: Fix endian warnings
-16/16: Remove obsolete/unused macros
+The term "chip" doesn't seem to be appropriate here.
+SSB (and probably AI, too. I don't know), does not have to be on-chip.
+There are plenty of old SSB based boards where the SSB bus is wired
+across the board.
 
-Signed-off-by: George <george0505@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
 
-John,
-
-This series of patches is intended for 2.6.39.
-
-This material is available from the git repository at
-git://git.kernel.org/pub/scm/linux/kernel/git/lwfinger/rtl8192cu.git
-
-V1 => V2: Fix endian issues in rtl8192cu and rtl8192ce
-	  Added options to Makefile so that sparse tests always include endian issues
-	  Get rid of additional Hungarian notation
-	  Delete obsolete and unused macros
-
-Larry
+-- 
+Greetings Michael.
 
