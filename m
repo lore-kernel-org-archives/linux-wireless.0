@@ -1,133 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50380 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085Ab1BDXa3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 18:30:29 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Make some mlme timers module paramaters.
-Date: Fri,  4 Feb 2011 15:30:24 -0800
-Message-Id: <1296862224-19489-1-git-send-email-greearb@candelatech.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:54065 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753589Ab1BRWVq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 17:21:46 -0500
+Subject: Re: [RFC] AI support
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>
+In-Reply-To: <1298032787.25739.2.camel@dev.znau.edu.ua> (sfid-20110218_134828_009719_FFFFFFFFC55A831E)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 <4D5DDCBC.2050501@broadcom.com> <1298014793.28946.39.camel@dev.znau.edu.ua>
+	 (sfid-20110218_084826_360002_FFFFFFFF9D44E835)  <1298030032.22193.1.camel@maggie>
+	 <1298032787.25739.2.camel@dev.znau.edu.ua>
+	 (sfid-20110218_134828_009719_FFFFFFFFC55A831E)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Feb 2011 23:21:39 +0100
+Message-ID: <1298067699.23801.9.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, 2011-02-18 at 14:39 +0200, George Kashperko wrote: 
+> Does this mean RFC subject in its current state is rejected ?
 
-This allows users to tune the connection-loss algorithms
-to be more or less lenient.  In particular, larger
-null-func retries helps when using lots of virtual
-stations on a loaded network.
+I am not in charge to reject anything.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 e059b3a... f77adf1... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |   34 +++++++++++++++++++++++-----------
- 1 files changed, 23 insertions(+), 11 deletions(-)
+But I just noticed that you sent the patches to the list. So I'll
+have a look at it. You should improve your CC lists in general
+for all your mails. Most of us don't have the time to read all
+mail on the list, so it's always a good idea to maintain a CC list
+of people who already commented on the RFC for patch submissions.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e059b3a..f77adf1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -28,8 +28,15 @@
- #include "rate.h"
- #include "led.h"
- 
--#define IEEE80211_MAX_NULLFUNC_TRIES 2
--#define IEEE80211_MAX_PROBE_TRIES 5
-+static int max_nullfunc_tries = 2;
-+module_param(max_nullfunc_tries, int, 0644);
-+MODULE_PARM_DESC(max_nullfunc_tries,
-+		 "Maximum nullfunc tx tries before disconnecting (reason 4).");
-+
-+static int max_probe_tries = 5;
-+module_param(max_probe_tries, int, 0644);
-+MODULE_PARM_DESC(max_probe_tries,
-+		 "Maximum probe tries before disconnecting (reason 4).");
- 
- /*
-  * Beacon loss timeout is calculated as N frames times the
-@@ -51,7 +58,11 @@
-  * a probe request because of beacon loss or for
-  * checking the connection still works.
-  */
--#define IEEE80211_PROBE_WAIT		(HZ / 2)
-+static int probe_wait_ms = 500;
-+module_param(probe_wait_ms, int, 0644);
-+MODULE_PARM_DESC(probe_wait_ms,
-+		 "Maximum time(ms) to wait for probe response"
-+		 " before disconnecting (reason 4).");
- 
- /*
-  * Weight given to the latest Beacon frame when calculating average signal
-@@ -1116,7 +1127,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	const u8 *ssid;
- 	u8 *dst = ifmgd->associated->bssid;
--	u8 unicast_limit = max(1, IEEE80211_MAX_PROBE_TRIES - 3);
-+	u8 unicast_limit = max(1, max_probe_tries - 3);
- 
- 	/*
- 	 * Try sending broadcast probe requests for the last three
-@@ -1142,7 +1153,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 	}
- 
- 	ifmgd->probe_send_count++;
--	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-+	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
- 	run_again(ifmgd, ifmgd->probe_timeout);
- }
- 
-@@ -1243,7 +1254,8 @@ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
- 
- 	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 
--	printk(KERN_DEBUG "Connection to AP %pM lost.\n", bssid);
-+	printk(KERN_DEBUG "%s: Connection to AP %pM lost.\n",
-+	       sdata->name, bssid);
- 
- 	ieee80211_set_disassoc(sdata, true, true);
- 	mutex_unlock(&ifmgd->mtx);
-@@ -1988,9 +2000,9 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 
- 		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
--			max_tries = IEEE80211_MAX_NULLFUNC_TRIES;
-+			max_tries = max_nullfunc_tries;
- 		else
--			max_tries = IEEE80211_MAX_PROBE_TRIES;
-+			max_tries = max_probe_tries;
- 
- 		/* ACK received for nullfunc probing frame */
- 		if (!ifmgd->probe_send_count)
-@@ -2022,7 +2034,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 				    "%s: Failed to send nullfunc to AP %pM"
- 				    " after %dms, disconnecting.\n",
- 				    sdata->name,
--				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
-+				    bssid, probe_wait_ms);
- #endif
- 			ieee80211_sta_connection_lost(sdata, bssid);
- 		} else if (ifmgd->probe_send_count < max_tries) {
-@@ -2031,7 +2043,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 				    "%s: No probe response from AP %pM"
- 				    " after %dms, try %d/%i\n",
- 				    sdata->name,
--				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ,
-+				    bssid, probe_wait_ms,
- 				    ifmgd->probe_send_count, max_tries);
- #endif
- 			ieee80211_mgd_probe_ap_send(sdata);
-@@ -2044,7 +2056,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 				    "%s: No probe response from AP %pM"
- 				    " after %dms, disconnecting.\n",
- 				    sdata->name,
--				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
-+				    bssid, probe_wait_ms);
- 
- 			ieee80211_sta_connection_lost(sdata, bssid);
- 		}
+> > So I'm supporting Henry in that SSB is legacy and EOL. Let's simply
+> > start over and don't carry old cruft over.
+> > 
+> > Note that this does not mean that we need to duplicate the MIPS,
+> > common and probably pci core drivers. A hybrid module can be done,
+> > if that's desired to avoid code duplication.
+> Well, any plans or even maybe ETA on this ?
+
+No.
+
+> > And I also think that you're worrying _way_ too much about a few
+> > if/else statements in the drivers. (Look at the TMSLOW discussion).
+> > The SSB/AI->driver interface is trivial and tiny. There will be maybe
+> > 10 if/else statements. It's really _not_ worth introducing major
+> > abstraction code in the SSB and AI code to avoid a few if/else
+> > statements in the drivers.
+> > The bulk of the SSB->driver interface _is_ already abstracted inside
+> > of the drivers (b43_read/write...). The rest is negligible.
+> Well, not like I really worry alot about those if/elses :)
+> Just in this particular case of SSB in its current design I don't really
+> see much differences in where bus implementation-specific management
+> must be abstracted if only AI support over SSB is implemented. If there
+> will be just b43 relying on such an abstraction then no doubt lets do it
+> in b43 driver. But its not.
+
+You should also look into the future.
+I don't know what broadcom's plans are, but a rough guess would be
+that AI will diverge more and more from SSB, so that more and more
+hacks will be needed.
+So I'm in favor of making a clean cut.
+
 -- 
-1.7.2.3
+Greetings Michael.
 
