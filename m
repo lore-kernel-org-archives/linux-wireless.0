@@ -1,137 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:49386 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:18025 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755145Ab1BOP7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 10:59:40 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1753508Ab1BRIqW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 03:46:22 -0500
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 07:59:19 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 00:46:01 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-Date: Tue, 15 Feb 2011 21:29:32 +0530
-Message-ID: <1297785572-27955-1-git-send-email-mshajakhan@atheros.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+Subject: [PATCH 1/2] mac80211: Fix a race on enabling power save.
+Date: Fri, 18 Feb 2011 14:16:15 +0530
+Message-ID: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+There is a race on sending a data frame before the tx completion
+of nullfunc frame for enabling power save. As the data quickly
+follows the nullfunc frame, the AP thinks that the station is out
+of power save and continues to send the frames. Whereas in the
+station, the nullfunc ack will be processed after the tx completion
+of data frame and mac80211 goes to powersave. Thus the power
+save state mismatch between the station and the AP causes some
+data loss and some applications fail because of that. This patch
+fixes this issue.
 
-The DMA latency issue is observed only in Intel pinetrail platforms but
-in the driver we had a default PM-QOS value of 55. This caused
-unnecessary power consumption and battery drain in other platforms.
-	Remove the pm-qos thing in the driver code and address the throughput issue in
-Intel pinetrail platfroms in user space using any one of the scripts in below links:
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
-http://johannes.sipsolutions.net/files/netlatency.c.txt
-More details can be found in the following bugzilla link:
-https://bugzilla.kernel.org/show_bug.cgi?id=27532
-
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    5 -----
- drivers/net/wireless/ath/ath9k/init.c  |    7 -------
- drivers/net/wireless/ath/ath9k/main.c  |    8 --------
- 3 files changed, 0 insertions(+), 20 deletions(-)
+ net/mac80211/mlme.c   |   11 ++++++++++-
+ net/mac80211/status.c |    2 --
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index ba436cd..0052f64 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -21,7 +21,6 @@
- #include <linux/device.h>
- #include <linux/leds.h>
- #include <linux/completion.h>
--#include <linux/pm_qos_params.h>
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d89e878..91006a2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -738,8 +738,16 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		return;
  
- #include "debug.h"
- #include "common.h"
-@@ -57,8 +56,6 @@ struct ath_node;
+ 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+-	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
++	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
++		netif_tx_stop_all_queues(sdata->dev);
++		/* flush all the frames queued in the driver before
++		 * going to power save
++		 */
++		drv_flush(local, false);
+ 		ieee80211_send_nullfunc(local, sdata, 1);
++		/* flush once again to get the tx status of nullfunc frame */
++		drv_flush(local, false);
++	}
  
- #define A_MAX(a, b) ((a) > (b) ? (a) : (b))
- 
--#define ATH9K_PM_QOS_DEFAULT_VALUE	55
--
- #define TSF_TO_TU(_h,_l) \
- 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
- 
-@@ -650,7 +647,6 @@ struct ath_softc {
- 
- 	struct ath_ant_comb ant_comb;
- 
--	struct pm_qos_request_list pm_qos_req;
- };
- 
- void ath9k_tasklet(unsigned long data);
-@@ -665,7 +661,6 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- extern struct ieee80211_ops ath9k_ops;
- extern int ath9k_modparam_nohwcrypt;
- extern int led_blink;
--extern int ath9k_pm_qos_value;
- extern bool is_ath9k_unloaded;
- 
- irqreturn_t ath_isr(int irq, void *dev);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e5c1eea..8fed4e4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -41,9 +41,6 @@ static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
- 
--int ath9k_pm_qos_value = ATH9K_PM_QOS_DEFAULT_VALUE;
--module_param_named(pmqos, ath9k_pm_qos_value, int, S_IRUSR | S_IRGRP | S_IROTH);
--MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
- 
- bool is_ath9k_unloaded;
- /* We use the hw_value as an index into our private channel structure */
-@@ -760,9 +757,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	ath_init_leds(sc);
- 	ath_start_rfkill_poll(sc);
- 
--	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
--			   PM_QOS_DEFAULT_VALUE);
--
- 	return 0;
- 
- error_world:
-@@ -819,7 +813,6 @@ void ath9k_deinit_device(struct ath_softc *sc)
- 	ath9k_ps_restore(sc);
- 
- 	ieee80211_unregister_hw(hw);
--	pm_qos_remove_request(&sc->pm_qos_req);
- 	ath_rx_cleanup(sc);
- 	ath_tx_cleanup(sc);
- 	ath9k_deinit_softc(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4f568b8..1d2c7c3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1117,12 +1117,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 			ath9k_btcoex_timer_resume(sc);
+ 	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+ 	      (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
+@@ -748,6 +756,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		local->hw.conf.flags |= IEEE80211_CONF_PS;
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
  	}
++	netif_tx_start_all_queues(sdata->dev);
+ }
  
--	/* User has the option to provide pm-qos value as a module
--	 * parameter rather than using the default value of
--	 * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
--	 */
--	pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
--
- 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
- 		common->bus_ops->extn_synch_en(common);
- 
-@@ -1267,8 +1261,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	sc->sc_flags |= SC_OP_INVALID;
- 
--	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
--
- 	mutex_unlock(&sc->mutex);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG, "Driver halt\n");
+ void ieee80211_dynamic_ps_timer(unsigned long data)
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 010a559..8651851 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		if (info->flags & IEEE80211_TX_STAT_ACK) {
+ 			local->ps_sdata->u.mgd.flags |=
+ 					IEEE80211_STA_NULLFUNC_ACKED;
+-			ieee80211_queue_work(&local->hw,
+-					&local->dynamic_ps_enable_work);
+ 		} else
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 					msecs_to_jiffies(10));
 -- 
-1.7.0.4
+1.6.3.3
 
