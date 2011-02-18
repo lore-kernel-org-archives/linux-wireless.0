@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:23191 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755652Ab1BIOtJ (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:52488 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755158Ab1BRXqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:49:09 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000019994.msg
-	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 16:48:33 +0200
-Subject: Re: SSB AI support code ([RFC9/11] SSB modify irqflag treatment)
-From: George Kashperko <george@znau.edu.ua>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-Content-Type: text/plain
-Date: Wed, 09 Feb 2011 16:41:40 +0200
-Message-Id: <1297262500.18053.36.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Fri, 18 Feb 2011 18:46:14 -0500
+Received: by vws16 with SMTP id 16so2325174vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 15:46:14 -0800 (PST)
+Message-ID: <4D5F04C0.4080707@lwfinger.net>
+Date: Fri, 18 Feb 2011 17:46:08 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+CC: George Kashperko <george@znau.edu.ua>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>
+Subject: Re: [RFC] AI support (13/14 ssb add AI support)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>	 <1297981882.23381.38.camel@dev.znau.edu.ua>	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>	 <1298070443.25739.23.camel@dev.znau.edu.ua>	 (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA) <1298071637.23801.40.camel@maggie>
+In-Reply-To: <1298071637.23801.40.camel@maggie>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: George Kashperko <george@znau.edu.ua>
+On 02/18/2011 05:27 PM, Michael Büsch wrote:
+> On Sat, 2011-02-19 at 01:07 +0200, George Kashperko wrote:
+>> Starting from the clean page means another months of no support for
+>> AI-based hw.
+>
+> Oh, wait a second right here. That's not how Linux development works.
+> We want the technically superior solution, not just something that
+> works to get stuff working no matter what.
+>
+> If your patchset works, that's pretty cool. So thanks a lot for getting
+> something to the users that works. Nothing stops distributions from
+> picking up those patches and distributing it to endusers.
+> That doesn't mean we have to adopt it to the mainline, though.
 
-Modify irqflag routine to reuse tpsflag value rather than
-reading TPSFLAG register once again. Change default "not
-supported" value from 0x3F to -1.
-Signed-off-by: George Kashperko <george@znau.edu.ua>
----
- drivers/ssb/driver_mipscore.c |    2 +-
- drivers/ssb/ssb_sb.c          |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
---- linux-next-20110203.orig/drivers/ssb/driver_mipscore.c	2011-02-08 16:14:57.000000000 +0200
-+++ linux-next-20110203/drivers/ssb/driver_mipscore.c	2011-02-08 16:15:24.000000000 +0200
-@@ -75,7 +75,7 @@ unsigned int ssb_mips_irq(struct ssb_dev
- 	unsigned int irq;
- 
- 	irqflag = ssb_irqflag(dev);
--	if (irqflag == 0x3f)
-+	if (irqflag == -1)
- 		return 6;
- 	ipsflag = ssb_read32(bus->mipscore.dev, SSB_IPSFLAG);
- 	for (irq = 1; irq <= 4; irq++) {
---- linux-next-20110203.orig/drivers/ssb/ssb_sb.c	2011-02-08 16:14:57.000000000 +0200
-+++ linux-next-20110203/drivers/ssb/ssb_sb.c	2011-02-08 16:15:24.000000000 +0200
-@@ -175,10 +175,10 @@ static u32 ssb_irqflag_sb(struct ssb_dev
- {
- 	u32 tpsflag = ssb_read32(dev, SSB_TPSFLAG);
- 	if (tpsflag)
--		return ssb_read32(dev, SSB_TPSFLAG) & SSB_TPSFLAG_BPFLAG;
-+		return tpsflag & SSB_TPSFLAG_BPFLAG;
- 	else
- 		/* not irq supported */
--		return 0x3f;
-+		return -1;
- }
- 
- static void ssb_core_ctl_flags_sb(struct ssb_device *dev, u32 mask,
+I don't want to get involved in the debate over abstraction, but FWIW, the 
+patchset does work for PCI-based SSB devices.
 
-
-
+Larry
