@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:40543 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837Ab1BLAF1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 19:05:27 -0500
-Received: by gxk9 with SMTP id 9so1313092gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2011 16:05:26 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org
-Subject: [PATCH 1/2] mwl8k: fix rf_antenna rx argument for AP
-Date: Fri, 11 Feb 2011 16:03:50 -0800
-Message-Id: <1297469031-21004-1-git-send-email-thomas@cozybit.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:38240 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756032Ab1BRX3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 18:29:44 -0500
+Subject: Re: [RFC] AI support (2/14 ssb helpers)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1298070945.25739.31.camel@dev.znau.edu.ua> (sfid-20110219_002424_959914_4197FDC7)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+	 <1297980484.23381.4.camel@dev.znau.edu.ua>
+	 (sfid-20110217_231646_647052_FFFFFFFFEFB25F2A)  <1298068149.23801.16.camel@maggie>
+	 <1298070945.25739.31.camel@dev.znau.edu.ua>
+	 (sfid-20110219_002424_959914_4197FDC7)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Feb 2011 00:29:37 +0100
+Message-ID: <1298071777.23801.42.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nishant Sarmukadam <nishants@marvell.com>
+On Sat, 2011-02-19 at 01:15 +0200, George Kashperko wrote: 
+> > On Fri, 2011-02-18 at 00:08 +0200, George Kashperko wrote: 
+> > > 	const struct ssb_bus_ops *ops;
+> > > +	const struct ssb_bus_helpers *helpers;
+> > 
+> > Uhm, well. "helpers"... . Seems like a pretty generic term.
+> > 
+> > I think this is still violating abstraction layering. Not as much
+> > as your previous attempt, but still...
+> > 
+> > You're putting the ops structure that is supposed to abstract
+> > the ssb bus into the ssb_device data structure. That should ring a bell.
+> > 
+> Reconsidered it already while arranging patches for Openwrt (the reason
+> helpers were in device struct was to speedup access but these aint
+> called often therefore they are in ssb_bus now). Also moved
 
-When configuring rx antennas using CMD_RF_ANTENNA_,
-the argument input is the number of antennas to be enabled. For AP,
-we support 3 rx antennas and hence set the field to 3. For tx antennas,
-value is a bitmap, so 0x7 enables all three.
+I should probably note that in my opinion ssb_bus is not the right place
+to put ops that are supposed to abstract the SSB bus, too. ;)
+_No_ SSB structure is the right place to put an ops pointer that is
+supposed to abstract the SSB bus.
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/mwl8k.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index af4f2c6..f79da1b 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3945,9 +3945,13 @@ static int mwl8k_config(struct ieee80211_hw *hw, u32 changed)
- 		if (rc)
- 			goto out;
- 
--		rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_RX, 0x7);
--		if (!rc)
--			rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_TX, 0x7);
-+		rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_RX, 0x3);
-+		if (rc)
-+			wiphy_warn(hw->wiphy, "failed to set # of RX antennas");
-+		rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_TX, 0x7);
-+		if (rc)
-+			wiphy_warn(hw->wiphy, "failed to set # of TX antennas");
-+
- 	} else {
- 		rc = mwl8k_cmd_rf_tx_power(hw, conf->power_level);
- 		if (rc)
 -- 
-1.7.0.4
+Greetings Michael.
 
