@@ -1,27 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33108 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694Ab1BNJzy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 04:55:54 -0500
-Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 10:55:49 +0100
-Message-ID: <1297677349.3785.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.neratec.ch ([80.75.119.105]:45826 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751378Ab1BRMGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 07:06:47 -0500
+Date: Fri, 18 Feb 2011 13:06:42 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linville@tuxdriver.com
+Cc: Simon Morgenthaler <s.morgenthaler@students.unibe.ch>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <29482921.30.1298030799163.JavaMail.wlan@500181>
+In-Reply-To: <10437684.20.1298030296565.JavaMail.wlan@500181>
+Subject: [PATCH] ath5k: Enable AR2315 chipset recognition
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-02-10 at 08:16 -0800, Wey-Yi Guy wrote:
-> remove plcp check for 3945, mark the function __maybe_unused
 
-Why not remove the function instead?
+Enable recognition of AR2315 chipsets in ath5k driver.
 
-johannes
-
+Reported-by: Simon Morgenthaler <s.morgenthaler@students.unibe.ch>
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index c71fdbb..bc82405 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -220,7 +220,8 @@ int ath5k_hw_init(struct ath5k_softc *sc)
+ 			ah->ah_radio = AR5K_RF5112;
+ 			ah->ah_single_chip = false;
+ 			ah->ah_radio_5ghz_revision = AR5K_SREV_RAD_5112B;
+-		} else if (ah->ah_mac_version == (AR5K_SREV_AR2415 >> 4)) {
++		} else if (ah->ah_mac_version == (AR5K_SREV_AR2415 >> 4) ||
++			ah->ah_mac_version == (AR5K_SREV_AR2315_R6 >> 4)) {
+ 			ah->ah_radio = AR5K_RF2316;
+ 			ah->ah_single_chip = true;
+ 			ah->ah_radio_5ghz_revision = AR5K_SREV_RAD_2316;
+--
+1.7.1
