@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:39992 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751266Ab1BAUGg (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:15335 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791Ab1BRXYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 15:06:36 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 2DAEB54080C
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Feb 2011 15:08:56 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-01 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110201200634.D002740F97@repository3.orbit-lab.org>
-Date: Tue,  1 Feb 2011 15:06:34 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 18 Feb 2011 18:24:20 -0500
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000022487.msg
+	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:23:42 +0200
+Subject: Re: [RFC] AI support (2/14 ssb helpers)
+From: George Kashperko <george@znau.edu.ua>
+To: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1298068149.23801.16.camel@maggie>
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+	 <1297980484.23381.4.camel@dev.znau.edu.ua>
+	 (sfid-20110217_231646_647052_FFFFFFFFEFB25F2A)  <1298068149.23801.16.camel@maggie>
+Content-Type: text/plain
+Date: Sat, 19 Feb 2011 01:15:45 +0200
+Message-Id: <1298070945.25739.31.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new branch]      linux-2.6.38.y -> origin/linux-2.6.38.y
-   8db1608..100cb85  master     -> origin/master
- * [new tag]         compat-wireless-2011-01-31 -> compat-wireless-2011-01-31
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + c1649b7...d2627ce akpm-end   -> origin/akpm-end  (forced update)
-   1f0324c..7921127  akpm-start -> origin/akpm-start
-   c68e951..7911a84  history    -> origin/history
- + 89d343a...906227e master     -> origin/master  (forced update)
-   1f0324c..7921127  stable     -> origin/stable
- * [new tag]         next-20110201 -> next-20110201
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+Hi,
 
-compat-wireless code metrics
+> On Fri, 2011-02-18 at 00:08 +0200, George Kashperko wrote: 
+> > 	const struct ssb_bus_ops *ops;
+> > +	const struct ssb_bus_helpers *helpers;
+> 
+> Uhm, well. "helpers"... . Seems like a pretty generic term.
+> 
+> I think this is still violating abstraction layering. Not as much
+> as your previous attempt, but still...
+> 
+> You're putting the ops structure that is supposed to abstract
+> the ssb bus into the ssb_device data structure. That should ring a bell.
+> 
+Reconsidered it already while arranging patches for Openwrt (the reason
+helpers were in device struct was to speedup access but these aint
+called often therefore they are in ssb_bus now). Also moved
+chipco.chipid into ssb_bus struct, could rename it also right away if
+only I get up fresh and with good idea how to name it properly or maybe
+you will suggest nice one. 
 
-    786110 - Total upstream lines of code being pulled
+Have nice day,
+George
+
+
