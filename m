@@ -1,100 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web36101.mail.mud.yahoo.com ([66.163.179.215]:41971 "HELO
-	web36101.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750757Ab1BJHV7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 02:21:59 -0500
-Message-ID: <762759.49884.qm@web36101.mail.mud.yahoo.com>
-References: <426364.35269.qm@web36108.mail.mud.yahoo.com> <AANLkTinoaTFbb3yaEmD5B4q+6U+VVtSVxrqnkryVrxeT@mail.gmail.com> <681857.63296.qm@web36106.mail.mud.yahoo.com> <201102100821.39020.ozan@pardus.org.tr>
-Date: Wed, 9 Feb 2011 23:21:57 -0800 (PST)
-From: Noel Milton Vega <nmvega@computingarchitects.com>
-Reply-To: Noel Milton Vega <nmvega@ComputingArchitects.Com>
-Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
-To: =?utf-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
-Cc: julian.calaby@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <201102100821.39020.ozan@pardus.org.tr>
+Received: from mx1.redhat.com ([209.132.183.28]:32463 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754005Ab1BRLd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 06:33:59 -0500
+Date: Fri, 18 Feb 2011 12:32:55 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/14] rtlwifi: rtl8192cu: Add driver
+Message-ID: <20110218113254.GB2270@redhat.com>
+References: <4d5d9088.+yc+uIIeTakXOvtB%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4d5d9088.+yc+uIIeTakXOvtB%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One more time... hopefully this one doesn't wrap around
-on anyone on this list (apologies for the repeat send).
-
-Hello Ozan:
-
-You know that's actually a great point. You just reminded
-me of something! I have noticed that, while the laptop
-Bluetooth indicator light does toggle On-and-Off each
-time I press Fn-12; the WiFi laptop indicator light does
-*not*. It has never turned on (*ever*), no matter how many
-times I press Fn-11 (the key combination to toggle WiFi
-On-and-Off). I just assumed it was the driver issue I
-was having (and it may still be).
-
-Here are your rfkill outputs...
-
-Executed when Bluetooth light was on - RX/TX enabled; WiFi light is off.)
-root@p170hm# rfkill list
-
-   0: hci0: Bluetooth
-      Soft blocked: no
-      Hard blocked: no
-
-        Note: Don't let the above 2nd bluetooth interface
-        beguile you. This is a tiny bluetooth dongle I
-        temporarily attached to a USB port because this
-        same N-6320 card also provides the laptop's bluetooth
-        capability. But being connected to a USB port, Fn-12
-        will not affect it showing up in the output of rfkill
-        (see later below - it will remain in the output).
-
-   1: hci1: Bluetooth    
-      Soft blocked: no              
-      Hard blocked: no              
-
-(Executed when Bluetooth light was off -- RX/TX disabled; WiFi light is off)
-root@# rfkill list
-
-   0: hci0: Bluetooth
-   Soft blocked: no
-   Hard blocked: no
-
-In either case, I see no reference to a WiFi device.
-
-Hope that helps some more.
-Regards & Thanks,
-Noel
-
-
-
-
-
------ Original Message ----
-> From: Ozan Çağlayan <ozan@pardus.org.tr>
-> To: Noel Milton Vega <nmvega@computingarchitects.com>
-> Cc: Julian Calaby <julian.calaby@gmail.com>; linux-wireless@vger.kernel.org
-> Sent: Thu, February 10, 2011 1:21:38 AM
-> Subject: Re: Need Linux driver (preferably 64 bit) for "Intel Corporation 
->Centrino Advanced-N 6230 (rev 34)" WiFI & Bluetooth card ...
+On Thu, Feb 17, 2011 at 03:18:00PM -0600, Larry Finger wrote:
+> Add driver rtl192cu. The individual parts are:
 > 
-> Perşembe 10 Şubat 2011 günü (saat 07:25:12) Noel Milton Vega şunları  
-yazmıştı:
-> > Hi Julian,
-> > 
-> > Thank you for the extended reply.  It's appreciated. Your output wish is
-> > my command. Here they are (and  then some):
+>  1/14: Make changes in rtlwifi/rtl8192ce/reg.h to support rtl8192cu
+>  2/14: Make changes in rtlwifi/rtl8192ce/def.h to support rtl8192cu
+>  3/14: Modify some rtl8192ce routines for merging rtl8192cu
+>  4/14: Add headers for rtl8187cu
+>  5/14: Modify wifi.h for rtl8192cu
+>  6/14: Move common parts of rtl8192ce/phy.c
+>  7/14: Add routines dm, fw, led and sw
+>  8/14: Add routine hw
+>  9/14: Add routine mac
+> 10/14: Add routine phy
+> 11/14: Add routine rf
+> 12/14: Add routine table
+> 13/14: Add routine trx
+> 14/14: Modify buiild system for rtl8192cu
 > 
-> Can you run
-> 
-> rfkill list
-> 
-> and send the output?  Are there any WLAN toggles on your laptop (a hard switch 
->or Fn + Fx  combination)?
-> If yes try playing with them.
-> 
-> ---
-> Ozan  Çağlayan
-> TUBITAK/UEKAE - Pardus Linux
-> http://www.pardus.org.tr/eng
-> 
+> Signed-off-by: George <george0505@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+There are big parts that need serious cleanup i.e. they are
+at staging quality, but I'm fine for accept patches (after
+fixing endianes problem, I wrote in other email), and cleanup
+driver lately. I'll probably send some cleanup patches for
+things I dislike the most.
+
+Thanks for fixing Hungarian notation.
+Stanislaw
