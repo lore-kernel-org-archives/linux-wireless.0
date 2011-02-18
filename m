@@ -1,57 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:56483 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755060Ab1BOO3B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 09:29:01 -0500
-Received: by eye27 with SMTP id 27so91729eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 06:29:00 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:55680 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751182Ab1BRSEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 13:04:47 -0500
+Message-ID: <4D5EB4BC.5030009@openwrt.org>
+Date: Fri, 18 Feb 2011 19:04:44 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=oExUyV0VCmJL7QEr2fWXBmhmTXZj43muGw-O-@mail.gmail.com>
-References: <1296822326-4878-1-git-send-email-vnatarajan@atheros.com>
-	<1296824920.3671.4.camel@jlt3.sipsolutions.net>
-	<1296825156.3671.7.camel@jlt3.sipsolutions.net>
-	<AANLkTim+g=qT1JHyK9--Tqw=NfE_ccFL+hiYzwz-m-V_@mail.gmail.com>
-	<1296828506.3671.8.camel@jlt3.sipsolutions.net>
-	<AANLkTi=oExUyV0VCmJL7QEr2fWXBmhmTXZj43muGw-O-@mail.gmail.com>
-Date: Tue, 15 Feb 2011 19:58:59 +0530
-Message-ID: <AANLkTimVKannDe7Xc_hXhQioZd7UFOnt4f1_jHfFVXxO@mail.gmail.com>
-Subject: Re: [PATCH v2] mac80211: Fix a race on enabling power save.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] ath9k correct interrupts ?
+References: <20110218125955.GA4209@redhat.com>
+In-Reply-To: <20110218125955.GA4209@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 4, 2011 at 7:58 PM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
-> On Fri, Feb 4, 2011 at 7:38 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Fri, 2011-02-04 at 18:58 +0530, Vivek Natarajan wrote:
->>> On Fri, Feb 4, 2011 at 6:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>> > On Fri, 2011-02-04 at 14:08 +0100, Johannes Berg wrote:
->>> > Ok maybe I see how this helps -- but I don't think it's race-free. When
->>> > the PS-pending flag is cleared here, the code above that checks it might
->>> > already have passed and be in the driver callback or so.
->>>
->>> When it is in the driver callback, IEEE80211_CONF_PS would have been
->>> set and when this is set, ieee80211_tx_h_dynamic_ps will disable PS
->>> and there wont be any discrepancy in power save states between AP and
->>> the station.
->>
->> Indeed, but the trace still exists between checking PS_PENDING and
->> setting CONF_PS.
->
-> Agreed. :)
-> I will try this out and test a bit:
->>
->> Maybe the subif queues should be stopped, then flush, then tx nullfunc,
->> then stop all queues to configure the HW or something like that?
->>
+On 2011-02-18 2:00 PM, Stanislaw Gruszka wrote:
+> I'm not sure if that patch is correct or not. It possibly fix
+> change from commit 4df3071ebd92ef7115b409da64d0eb405d24a631
+> "ath9k_hw: optimize interrupt mask changes" that looks
+> suspicious for me. But from other hand this patch
+> could be totally wrong. Felix?
+Looks good to me
 
-The subif queues are stopped on receiving ACK_STATUS and the wake up
-is done after setting CONF_PS in the newer version that I had sent.
-This may help in preventing the above mentioned race. And the
-PS_PENDING flag will take care of the actual race in between queuing
-the nullfunc frame and receiving ack_status for that.
-
-Vivek.
+- Felix
