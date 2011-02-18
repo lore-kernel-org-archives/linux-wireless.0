@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64181 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754994Ab1BUC0J (ORCPT
+Received: from mail.platinumzone24.at ([88.198.159.93]:42364 "EHLO
+	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598Ab1BRVBV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:26:09 -0500
-Received: by ywj3 with SMTP id 3so600977ywj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:26:08 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Fri, 18 Feb 2011 16:01:21 -0500
+Message-ID: <4D5EDE0E.9060004@davizone.at>
+Date: Fri, 18 Feb 2011 22:01:02 +0100
+From: David Gnedt <david.gnedt@davizone.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52072.748100.382094@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:48:16 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 04/23] ath9k_htc: Fix error handling in add_interface
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 17/18] wl1251: enable tx path in monitor mode if necessary
+ for packet injection
+References: <4D45A79A.1030102@davizone.at> <4D45B7DC.3060303@davizone.at>	<8762t5dptt.fsf@purkki.adurom.net> <4D473F16.4010102@davizone.at> <87bp2vbcem.fsf@purkki.adurom.net>
+In-Reply-To: <87bp2vbcem.fsf@purkki.adurom.net>
+Content-Type: multipart/mixed;
+ boundary="------------050401010909040305030007"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+This is a multi-part message in MIME format.
+--------------050401010909040305030007
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Addition of a station might fail - handle this error
-properly by removing the VAP on the target.
-Also, bail out immediately if the max. no of interfaces
-has been reached.
+Am 2011-02-01 23:47, schrieb Kalle Valo:
+> What frames are we talking about exactly? (I can't test this right now.)
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+They look to me like CTS-to-Self frames. I have attached a sample of them. There
+is no other RTS/CTS traffic on the same channel.
+I have done further testing for channel switching in monitor mode and there are
+some promising results. It looks like the CTS-to-self frames are not sent if
+JOIN is used as usual but DISABLE_TX is issued first. Moreover the TX path
+remains enabled with this combination.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 4ced5cd..ebc5dbf 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1140,7 +1140,8 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 
- 	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
- 		ret = -ENOBUFS;
--		goto out;
-+		mutex_unlock(&priv->mutex);
-+		return ret;
- 	}
- 
- 	ath9k_htc_ps_wakeup(priv);
-@@ -1168,18 +1169,19 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out;
- 
--	priv->nvifs++;
--
- 	/*
- 	 * We need a node in target to tx mgmt frames
- 	 * before association.
- 	 */
- 	ret = ath9k_htc_add_station(priv, vif, NULL);
--	if (ret)
-+	if (ret) {
-+		WMI_CMD_BUF(WMI_VAP_REMOVE_CMDID, &hvif);
- 		goto out;
-+	}
- 
- 	priv->ah->opmode = vif->type;
- 	priv->vif_slot |= (1 << avp->index);
-+	priv->nvifs++;
- 	priv->vif = vif;
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
--- 
-1.7.4.1
+I thought it would be best to implement it in the following way:
+Start with disabled TX path. I found that enabling TX path at least once is
+necessary, so it will be ENABLE_TX followed by DISABLE_TX.
+It looks to me like managed mode also works after DISABLE_TX, but just to be
+sure I will add a ENABLE_TX in wl1251_op_add_interface and a DISABLE_TX in
+wl1251_op_remove_interface.
 
+You can find the complete results here: http://wiki.maemo.org/Wl1251/Development
+
+--------------050401010909040305030007
+Content-Type: application/cap;
+ name="wl1251_join_cts_frames.cap"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="wl1251_join_cts_frames.cap"
+
+1MOyoQIABAAAAAAAAAAAAP//AAB/AAAAt0VPTUqeAQAuAAAALgAAAAAAIAAvSAAAJDxJTgAA
+AAAQApkJoAD4AQAAAAAAAAAAxABkAAAf3x+15KFZV3O3RU9NBqABAC4AAAAuAAAAAAAgAC9I
+AAD9PUlOAAAAABACmQmgAPcBAAAAAAAAAADEAKQ4AB/fH7Xko/V9kg==
+--------------050401010909040305030007--
