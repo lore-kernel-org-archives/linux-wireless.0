@@ -1,162 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47928 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57034 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756387Ab1BJOSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 09:18:16 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Feb 2011 06:17:55 -0800
-Message-ID: <4D53F3A0.6050900@atheros.com>
-Date: Thu, 10 Feb 2011 19:48:08 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+	id S1752519Ab1BRIFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 03:05:04 -0500
+Date: Fri, 18 Feb 2011 09:05:08 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH repost] mac80211: fix conn_mon_timer running after
+ disassociate
+Message-ID: <20110218080451.GA2643@redhat.com>
 MIME-Version: 1.0
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Mark Gross <mgross@linux.intel.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com> <20110209195815.GB2192@tux>
-In-Reply-To: <20110209195815.GB2192@tux>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 10 February 2011 01:28 AM, Luis Rodriguez wrote:
-> On Wed, Feb 09, 2011 at 06:33:27AM -0800, Mohammed Shajakhan wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> The DMA latency issue is observed only in Intel pinetrail platforms but
->> in the driver we had a default PM-QOS value of 55. This caused
->> unnecessary power consumption and battery drain in other platforms.
->> Address this issue by disabling PM-QOS by default by setting it's value
->> as '0' and making code changes appropriately.This addresses the bug:
->> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->> 	If the user sees some DMA latency issue he can still use the pmqos as a
->> module parameter to trade power for throughput as below:
->> sudo modprobe ath9k pmqos=55
->>      
-> How many times are we going to write some work around for some
-> platform unpatched BIOS bug ?
->
-> mcgrof@tux ~/wireless-testing (git::master)$ git grep pm_qos_update_request drivers/
-> drivers/net/e1000e/netdev.c:                    pm_qos_update_request(&adapter->netdev->pm_qos_req, 55);
-> drivers/net/e1000e/netdev.c:                    pm_qos_update_request(&adapter->netdev->pm_qos_req,
-> drivers/net/wireless/ath/ath9k/main.c:  pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
-> drivers/net/wireless/ath/ath9k/main.c:  pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
-> drivers/net/wireless/ipw2x00/ipw2100.c: pm_qos_update_request(&ipw2100_pm_qos_req, 175);
-> drivers/net/wireless/ipw2x00/ipw2100.c: pm_qos_update_request(&ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
->
-> Can't we punt this crap to userspace?
->    
-Luis thanks for the script and sorry I missed it in the bugzilla. Luis I 
-agree these workarounds are better placed to be in user place and the 
-only thing is those have issues must be aware of the script.
-I am ccing Senthil to have his views.
+Low level driver could pass rx frames to us after disassociate, what
+can lead to run conn_mon_timer by ieee80211_sta_rx_notify(). That
+is obviously wrong, but nothing happens until we unload modules and
+resources are used after free. If kernel debugging is enabled following
+warning could be observed:
 
-thanks,
-shafi
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
->
-> Can distributions just autodetect this issue and call something like this?
->
->    Luis
->
->    
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/ath9k.h |    4 +++-
->>   drivers/net/wireless/ath/ath9k/init.c  |    9 +++++----
->>   drivers/net/wireless/ath/ath9k/main.c  |    9 +++++----
->>   3 files changed, 13 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
->> index 9272278..55fcd01 100644
->> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
->> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
->> @@ -57,7 +57,9 @@ struct ath_node;
->>
->>   #define A_MAX(a, b) ((a)>  (b) ? (a) : (b))
->>
->> -#define ATH9K_PM_QOS_DEFAULT_VALUE	55
->> +/* By default PM QOS is disabled */
->> +#define ATH9K_PM_QOS_DEFAULT_VALUE	0
->> +
->>
->>   #define TSF_TO_TU(_h,_l) \
->>   	((((u32)(_h))<<  22) | (((u32)(_l))>>  10))
->> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
->> index e5c1eea..658ea02 100644
->> --- a/drivers/net/wireless/ath/ath9k/init.c
->> +++ b/drivers/net/wireless/ath/ath9k/init.c
->> @@ -43,7 +43,7 @@ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
->>
->>   int ath9k_pm_qos_value = ATH9K_PM_QOS_DEFAULT_VALUE;
->>   module_param_named(pmqos, ath9k_pm_qos_value, int, S_IRUSR | S_IRGRP | S_IROTH);
->> -MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
->> +MODULE_PARM_DESC(pmqos, "User specified PM-QOS value, by default disabled");
->>
->>   bool is_ath9k_unloaded;
->>   /* We use the hw_value as an index into our private channel structure */
->> @@ -759,8 +759,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
->>
->>   	ath_init_leds(sc);
->>   	ath_start_rfkill_poll(sc);
->> -
->> -	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
->> +	if (ath9k_pm_qos_value)
->> +		pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
->>   			   PM_QOS_DEFAULT_VALUE);
->>
->>   	return 0;
->> @@ -819,7 +819,8 @@ void ath9k_deinit_device(struct ath_softc *sc)
->>   	ath9k_ps_restore(sc);
->>
->>   	ieee80211_unregister_hw(hw);
->> -	pm_qos_remove_request(&sc->pm_qos_req);
->> +	if (ath9k_pm_qos_value)
->> +		pm_qos_remove_request(&sc->pm_qos_req);
->>   	ath_rx_cleanup(sc);
->>   	ath_tx_cleanup(sc);
->>   	ath9k_deinit_softc(sc);
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index 4ed43b2..3855092 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -1119,9 +1119,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
->>
->>   	/* User has the option to provide pm-qos value as a module
->>   	 * parameter rather than using the default value of
->> -	 * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
->> +	 * 'ATH9K_PM_QOS_DEFAULT_VALUE' which disables PM QOS.
->>   	 */
->> -	pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
->> +	if (ath9k_pm_qos_value)
->> +		pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
->>
->>   	if (ah->caps.pcie_lcr_extsync_en&&  common->bus_ops->extn_synch_en)
->>   		common->bus_ops->extn_synch_en(common);
->> @@ -1266,8 +1267,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
->>   	ath_radio_disable(sc, hw);
->>
->>   	sc->sc_flags |= SC_OP_INVALID;
->> -
->> -	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
->> +	if (ath9k_pm_qos_value)
->> +		pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
->>
->>   	mutex_unlock(&sc->mutex);
->>
->> -- 
->> 1.7.0.4
->>
->>      
-> .
->
->    
+WARNING: at lib/debugobjects.c:259 debug_print_object+0x65/0x70()
+Hardware name: HP xw8600 Workstation
+ODEBUG: free active (active state 0) object type: timer_list
+Modules linked in: iwlagn(-) iwlcore mac80211 cfg80211 aes_x86_64 aes_generic fuse cpufreq_ondemand acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 ext3 jbd dm_mirror dm_region_hash dm_log dm_mod uinput hp_wmi sparse_keymap sg wmi arc4 microcode serio_raw ecb tg3 shpchp rfkill ext4 mbcache jbd2 sr_mod cdrom sd_mod crc_t10dif firewire_ohci firewire_core crc_itu_t mptsas mptscsih mptbase scsi_transport_sas ahci libahci pata_acpi ata_generic ata_piix floppy nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded: cfg80211]
+Pid: 13827, comm: rmmod Tainted: G        W   2.6.38-rc4-wl+ #22
+Call Trace:
+ [<ffffffff810649cf>] ? warn_slowpath_common+0x7f/0xc0
+ [<ffffffff81064ac6>] ? warn_slowpath_fmt+0x46/0x50
+ [<ffffffff81226fc5>] ? debug_print_object+0x65/0x70
+ [<ffffffff81227625>] ? debug_check_no_obj_freed+0x125/0x210
+ [<ffffffff8109ebd7>] ? debug_check_no_locks_freed+0xf7/0x170
+ [<ffffffff81156092>] ? kfree+0xc2/0x2f0
+ [<ffffffff813ec5c5>] ? netdev_release+0x45/0x60
+ [<ffffffff812f1067>] ? device_release+0x27/0xa0
+ [<ffffffff81216ddd>] ? kobject_release+0x8d/0x1a0
+ [<ffffffff81216d50>] ? kobject_release+0x0/0x1a0
+ [<ffffffff812183b7>] ? kref_put+0x37/0x70
+ [<ffffffff81216c57>] ? kobject_put+0x27/0x60
+ [<ffffffff813d5d1b>] ? netdev_run_todo+0x1ab/0x270
+ [<ffffffff813e771e>] ? rtnl_unlock+0xe/0x10
+ [<ffffffffa0581188>] ? ieee80211_unregister_hw+0x58/0x120 [mac80211]
+ [<ffffffffa0377ed7>] ? iwl_pci_remove+0xdb/0x22a [iwlagn]
+ [<ffffffff8123cde2>] ? pci_device_remove+0x52/0x120
+ [<ffffffff812f5205>] ? __device_release_driver+0x75/0xe0
+ [<ffffffff812f5348>] ? driver_detach+0xd8/0xe0
+ [<ffffffff812f4111>] ? bus_remove_driver+0x91/0x100
+ [<ffffffff812f5b62>] ? driver_unregister+0x62/0xa0
+ [<ffffffff8123d194>] ? pci_unregister_driver+0x44/0xa0
+ [<ffffffffa0377df5>] ? iwl_exit+0x15/0x1c [iwlagn]
+ [<ffffffff810ab492>] ? sys_delete_module+0x1a2/0x270
+ [<ffffffff81498889>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+ [<ffffffff8100bf42>] ? system_call_fastpath+0x16/0x1b
+
+Looks-good-for: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/mlme.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d89e878..7b3f9df 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1071,6 +1071,12 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 	if (is_multicast_ether_addr(hdr->addr1))
+ 		return;
+ 
++	/*
++	 * In case we receive frames after disassociation.
++	 */
++	if (!sdata->u.mgd.associated)
++		return;
++
+ 	ieee80211_sta_reset_conn_monitor(sdata);
+ }
+ 
+-- 
+1.7.1
+
