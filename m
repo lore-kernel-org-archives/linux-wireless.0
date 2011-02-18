@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36575 "EHLO purkki.adurom.net"
+Received: from mail.atheros.com ([12.19.149.2]:18038 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751023Ab1BAWfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 17:35:04 -0500
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 11/18] wl1251: configure hardware en-/decryption for monitor mode
-References: <4D45A5DE.70507@davizone.at> <87ipx5dqom.fsf@purkki.adurom.net>
-	<4D473E9A.9050106@davizone.at>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 02 Feb 2011 00:35:00 +0200
-In-Reply-To: <4D473E9A.9050106@davizone.at> (David Gnedt's message of "Mon\, 31 Jan 2011 23\:58\:34 +0100")
-Message-ID: <87oc6vbcyz.fsf@purkki.adurom.net>
+	id S1756071Ab1BRIsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 03:48:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 00:48:10 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+Subject: [PATCH 2/2] mac80211: Clear PS related flag on disabling power save.
+Date: Fri, 18 Feb 2011 14:18:25 +0530
+Message-ID: <1298018905-6984-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Gnedt <david.gnedt@davizone.at> writes:
+Clear IEEE80211_STA_NULLFUNC_ACKED flag on disabling power
+save. Without this fix, there is a chance of setting CONF_PS
+before sending nullfunc frame.
 
-> Am 2011-01-31 16:43, schrieb Kalle Valo:
->>> Disable hardware encryption (DF_ENCRYPTION_DISABLE) and decryption
->>> (DF_SNIFF_MODE_ENABLE) via wl1251_acx_feature_cfg while monitor interface is
->>> present.
->> 
->> Why? To be able to receive encrypted frames when associated or
->> something else?
->
-> DF_SNIFF_MODE_ENABLE is set for receiving encrypted frames when associated.
-> DF_ENCRYPTION_DISABLE is set to allow packet injection at all, as my testing
-> showed that disabling encryption per-packet doesn't work.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/tx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-But doesn't this break the case when you are connected to a network
-with encryption and you have a separate monitor interface at the same
-time? Or even worse, as Johannes pointed out, will the frames sent
-unencrypted?
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 17ef4f4..4b88edf 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -238,6 +238,7 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 						IEEE80211_QUEUE_STOP_REASON_PS);
+ 		ieee80211_queue_work(&local->hw,
+ 				     &local->dynamic_ps_disable_work);
++		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+ 	}
+ 
+ 	mod_timer(&local->dynamic_ps_timer, jiffies +
 -- 
-Kalle Valo
+1.6.3.3
+
