@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53992 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753517Ab1BRVOM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 16:14:12 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 13:13:51 -0800
-From: Vipin Mehta <vmehta@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	<devel@driverdev.osuosl.org>
-Subject: [PATCH 08/15] staging: ath6kl: Fixing a memory leak
-Date: Fri, 18 Feb 2011 13:13:09 -0800
-Message-ID: <1298063596-2096-8-git-send-email-vmehta@atheros.com>
-In-Reply-To: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
-References: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:2465 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999Ab1BRS1Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 13:27:24 -0500
+Date: Fri, 18 Feb 2011 13:27:23 -0500
+From: me@bobcopeland.com
+To: Nikolay Ledovskikh <nledovskikh@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, mickflemm@gmail.com, jirislaby@gmail.com
+Subject: Re: [PATCH] ath5k: Correct channel setting for AR2317 chip
+Message-ID: <20110218182723.GF6066@hash.localnet>
+References: <20110218195953.cf4e349f.nledovskikh@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110218195953.cf4e349f.nledovskikh@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Virtual Scatter Gather Lists not getting freed during the HTCStop(). The
-patch adds some clean up code in the code path.
+On Fri, Feb 18, 2011 at 07:59:53PM +0300, Nikolay Ledovskikh wrote:
+> Correct channel setting function must be used for AR2317.
+> When I tested ahb patch on bullet2 all seemed to work fine, 
+> but it couldn't connect another host (using ibss for example). 
+> During an analysis I observed that it's transmitting on another 
+> channel. I looked into madwifi code and understood that
+> the problem is in channel setting function. So atheros RF2317 not 
+> fully handled in the current ath5k version and must be patched.
+> 
+> Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
 
-Signed-off-by: Vipin Mehta <vmehta@atheros.com>
----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.c |    9 +++++++++
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    2 ++
- drivers/staging/ath6kl/htc2/htc.c         |    2 ++
- 3 files changed, 13 insertions(+), 0 deletions(-)
+Thanks!
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-index 6083231..ff0480b 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-@@ -810,6 +810,15 @@ static int DevSetupVirtualScatterSupport(AR6K_DEVICE *pDev)
-     return status;
- }
- 
-+int DevCleanupMsgBundling(AR6K_DEVICE *pDev)
-+{
-+    if(NULL != pDev)
-+    {
-+        DevCleanupVirtualScatterSupport(pDev);
-+    }
-+
-+    return 0;
-+}
- 
- int DevSetupMsgBundling(AR6K_DEVICE *pDev, int MaxMsgsPerTransfer)
- {
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index d3b6b30..19d8e70 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -297,6 +297,8 @@ static INLINE int DEV_PREPARE_SCATTER_OPERATION(HIF_SCATTER_REQ *pReq)  {
-         
-     
- int DevSetupMsgBundling(AR6K_DEVICE *pDev, int MaxMsgsPerTransfer);
-+
-+int DevCleanupMsgBundling(AR6K_DEVICE *pDev);
-                                   
- #define DEV_GET_MAX_MSG_PER_BUNDLE(pDev)        (pDev)->HifScatterInfo.MaxScatterEntries
- #define DEV_GET_MAX_BUNDLE_LENGTH(pDev)         (pDev)->HifScatterInfo.MaxTransferSizePerScatterReq
-diff --git a/drivers/staging/ath6kl/htc2/htc.c b/drivers/staging/ath6kl/htc2/htc.c
-index 684eca9..e7adc45 100644
---- a/drivers/staging/ath6kl/htc2/htc.c
-+++ b/drivers/staging/ath6kl/htc2/htc.c
-@@ -486,6 +486,8 @@ void HTCStop(HTC_HANDLE HTCHandle)
-         /* flush all recv buffers */
-     HTCFlushRecvBuffers(target);
- 
-+    DevCleanupMsgBundling(&target->Device);
-+
-     ResetEndpointStates(target);
-    
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("-HTCStop \n"));
+Acked-by: Bob Copeland <me@bobcopeland.com>
+
 -- 
-1.6.3.3
+Bob Copeland %% www.bobcopeland.com
 
