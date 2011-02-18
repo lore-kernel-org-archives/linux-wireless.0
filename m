@@ -1,88 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:48627 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab1BDGt7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 01:49:59 -0500
-Date: Thu, 3 Feb 2011 22:49:52 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Miklos Szeredi <miklos@szeredi.hu>, Felix Fietkau <nbd@openwrt.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Wireless regression (was 2.6.38-rc3: FUSE (sshfs) hangs under load)
-Message-ID: <20110204064952.GA12914@core.coreip.homeip.net>
-References: <20110201175452.GB518@core.coreip.homeip.net>
- <E1PkbGG-0005Rf-QL@pomaz-ex.szeredi.hu>
- <20110202165236.GA3178@core.coreip.homeip.net>
- <20110203065541.GB5592@core.coreip.homeip.net>
- <E1Pkx7s-00073l-5B@pomaz-ex.szeredi.hu>
- <20110203194115.GA14159@core.coreip.homeip.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110203194115.GA14159@core.coreip.homeip.net>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:35192 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754029Ab1BRLym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 06:54:42 -0500
+Subject: Re: [RFC] AI support
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>
+In-Reply-To: <1298014793.28946.39.camel@dev.znau.edu.ua> (sfid-20110218_084826_360002_FFFFFFFF9D44E835)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 <4D5DDCBC.2050501@broadcom.com> <1298014793.28946.39.camel@dev.znau.edu.ua>
+	 (sfid-20110218_084826_360002_FFFFFFFF9D44E835)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Feb 2011 12:53:51 +0100
+Message-ID: <1298030032.22193.1.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 03, 2011 at 11:41:15AM -0800, Dmitry Torokhov wrote:
-> On Thu, Feb 03, 2011 at 12:13:24PM +0100, Miklos Szeredi wrote:
-> > On Wed, 2 Feb 2011, Dmitry Torokhov wrote:
-> > > On Wed, Feb 02, 2011 at 08:52:36AM -0800, Dmitry Torokhov wrote:
-> > > > On Wed, Feb 02, 2011 at 12:52:36PM +0100, Miklos Szeredi wrote:
-> > > > > On Tue, 1 Feb 2011, Dmitry Torokhov wrote:
-> > > > > > Hi,
-> > > > > > 
-> > > > > > After installing 2.6.38-rc3 (plus a few input patches) sshfs started to
-> > > > > > misbehave on me under load. It starts off fine but when I try to compile
-> > > > > > a few modules against kernel sources residing on the other box the
-> > > > > > processes go into 'D' state and just sit there doing nothing.
-> > > > > 
-> > > > > Can you please post a stack trace from SysRq-T?
-> > > > > 
-> > > > 
-...
-> > > 
-> > > OK, so here are the stack traces you requested. First one is snapshot of
-> > > when compile got stuck, the 2nd one is when I interrupted make which
-> > > caused gcc to go to 'D' state.
+On Fri, 2011-02-18 at 09:39 +0200, George Kashperko wrote: 
+> > This just reinforces what Michael said about name confusion.
 > > 
-> > There doesn't appear anything abnormal there.
+> > Michael's proposal of separating SSB and AXI, and decoupling the device 
+> > drivers from the bus routines, is going to be much more maintainable in 
+> > the long run.  AXI is going to be far more widespread than SSB ever was, 
+> > and it would be really unfortunate if we carry the SSB baggage forward.
 > > 
-> > It's going into D state after it has received an interrupt and sent it
-> > along to the userspace filesystem.  Then it will go into
-> > uninterruptible sleep until the answer is received.
-> > 
-> > So the hang is because the answer to an open request is not being
-> > received.  I can't tell where it got stuck, apparently not anywhere on
-> > the local machine.
-> > 
-> > Can you please get a log from sshfs with "-odebug,sshfs_debug" and
-> > redirect stderr to a file?  That might tell a bit more about the
-> > situation.  Or it might not...
-> 
-> Hmm, it might be just the network itself, last night mutt in ssh session
-> froze on me as well. I guess I'll just have to finish my bisect
-> exercise.
-> 
+> > I've been poking around at disentangling the sb and ai routines in 
+> > drivers/staging/brcm80211/utils/{aiutils,sbutils,siutils}.c.  I don't 
+> > have anything to put out for comments yet, but it's enough to convince 
+> > me that it's the right direction.
 
-I finished bisecting and it turned out that the problematic commit
-happened to be in wireless (I have iwl3945):
+> Yes, AI, lets say, over SBB, makes some confusion and this confusion
+> could be avoided with separate SSB/AI bus drivers but in current SSB
+> design state its 99% of copy-pasting SSB code with changing nothing
+> other than &ops pointers and ssb_ prefixes with something like bcmai_ or
+> similar which honestly makes no sense to me considering than the goal is
+> to <avoid confusion>. Pretty much sure there will be even more confusion
+> than before.
 
-commit 4cd06a344db752f513437138953af191cbe9a691
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Sat Dec 18 19:30:49 2010 +0100
+There are plenty of examples in the kernel where code was simply forked
+for the development of a new technology. Look at b43/b43legacy or
+ext2/3/4 just for a few examples. The forks were made on purpose
+to avoid maintainability nightmares. Yes, at first sight, some code had
+to be duplicated. But I don't see that as an issue. The two codebases
+will diverge quickly from each other as development is done.
 
-    mac80211: skip unnecessary pskb_expand_head calls
+So I'm supporting Henry in that SSB is legacy and EOL. Let's simply
+start over and don't carry old cruft over.
 
-    If the skb is not cloned and we don't need any extra headroom, there
-    is no point in reallocating the skb head.
+Note that this does not mean that we need to duplicate the MIPS,
+common and probably pci core drivers. A hybrid module can be done,
+if that's desired to avoid code duplication.
 
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+And I also think that you're worrying _way_ too much about a few
+if/else statements in the drivers. (Look at the TMSLOW discussion).
+The SSB/AI->driver interface is trivial and tiny. There will be maybe
+10 if/else statements. It's really _not_ worth introducing major
+abstraction code in the SSB and AI code to avoid a few if/else
+statements in the drivers.
+The bulk of the SSB->driver interface _is_ already abstracted inside
+of the drivers (b43_read/write...). The rest is negligible.
 
-With this commit reverted from 2.6.38-rc3 I can not reproduce sshfs
-getting stuck here.
+And if it turns out _afterwards_ that we could avoid a few if/else
+statements by introducing some additional abstraction layer, this
+thing can be introduced _afterwards_.
 
-Thanks.
+PS: Could you please stop stripping the CC list.
 
 -- 
-Dmitry
+Greetings Michael.
+
+
