@@ -1,88 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37579 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753636Ab1BNO3T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 09:29:19 -0500
-Message-ID: <4D593C3D.4050905@openwrt.org>
-Date: Mon, 14 Feb 2011 15:29:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Mohammed Shafi <mshajakhan@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: make use of slot time macros
-References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com> <4D58B25D.4040507@atheros.com> <4D58B39B.9040207@atheros.com> <4D593295.6060800@openwrt.org> <4D5935EF.1060302@atheros.com>
-In-Reply-To: <4D5935EF.1060302@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:59763 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753670Ab1BROue (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 09:50:34 -0500
+Subject: Re: [PATCH 13/14] rtlwifi: rtl8192cu: Add routine trx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	John W Linville <linville@tuxdriver.com>,
+	george0505@realtek.com, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4D5E838F.1020707@lwfinger.net>
+References: <4d5d90c9.sN3PKFogcRQR8mbQ%Larry.Finger@lwfinger.net>
+	 <20110218112633.GA2270@redhat.com>  <4D5E838F.1020707@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Feb 2011 15:50:14 +0100
+Message-ID: <1298040614.4039.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-02-14 3:02 PM, Mohammed Shafi wrote:
-> On Monday 14 February 2011 07:18 PM, Felix Fietkau wrote:
->> On 2011-02-14 5:46 AM, Mohammed Shafi wrote:
->>    
->>> On Monday 14 February 2011 10:11 AM, Mohammed Shafi wrote:
->>>      
->>>> On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
->>>>        
->>>>> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
->>>>>          
->>>>>> On 2011-02-11 5:15 PM, John W. Linville wrote:
->>>>>>            
->>>>>>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
->>>>>>>              
->>>>>>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
->>>>>>>>                
->>>>>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>>>>>>
->>>>>>>>> Instead of using raw numbers to assign slot time it would be
->>>>>>>>> better to
->>>>>>>>> make use of predefined slot time macros
->>>>>>>>>                  
->>>>>>>> How does this make it better?
->>>>>>>>                
->>>>>>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
->>>>>>>              
->>>>>> Well, neither the unit of this variable, nor the values that can be
->>>>>> used
->>>>>> are ath9k specific.
->>>>>>            
->>> Felix  then I don't know why these macros are used here and I followed
->>> the same thing:
->>>
->>> htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
->>> init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
->>>      
->> Just because the macros are there doesn't mean that it was a good idea
->> to use them. As far as I know, these were simply inherited from the
->> Atheros codebase that ath9k was based on.
->> I actually consider the code more readable without the redundant
->> "ATH9K_SLOT_TIME_" part.
->>    
-> Felix I agree the first part, but I could still see no harm in using 
-> these macros.
-> Initially we  using these values 6,9,20(no other values) for the slot 
-> time and there are macros defined for them. If we are using some other 
-> values I would agree that its wrong.
-> Why not make use of it ?
-> IMHO if we use these macros it will at least people who are reading the 
-> code there are three standard values 6,9 and 20
-How is 6 a standard value? And why use driver specific defines when it's
-really an 802.11 standard thing?
+On Fri, 2011-02-18 at 08:34 -0600, Larry Finger wrote:
 
-Using something like this would make the code more readable:
-#define IEEE80211_SHORT_SLOT_TIME	9
-#define IEEE80211_LONG_SLOT_TIME	20
+> Thanks for the comment. Unfortunately, sparse (C=2) does not find this error. 
+> That test had been done and was clean. After reading your comment, I went back 
+> to Documentation/sparse.txt and found the magic CF="-D__CHECK_ENDIAN__" 
+> argument.
 
-ATH9K_SLOT_TIME_9 or ATH9K_SLOT_TIME_20? Not so much...
+FWIW, I've been adding it to things by default -- see the bottom of
+net/mac80211/Makefile for example.
 
-> I am sure it would help us to debug issues easily(just like Fair beacon 
-> distribution thing).
-I really don't see how this is helpful in any way.
-The main reason why I object to stuff like this is because I think that
-"other code is like that" is not a good reason for repeating it,
-especially if what was done on the other code never made much sense to
-begin with. In this case I think it's more of a reason to clean up the
-other code first and then make things more consistent :)
+johannes
 
-- Felix
