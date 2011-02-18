@@ -1,88 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41113 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755402Ab1BXTjJ (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35012 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab1BROfC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 14:39:09 -0500
-Subject: [PATCH v2] rtl8192c: fix compilation errors
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1298576230.4251.5.camel@jlt3.sipsolutions.net>
-References: <1298576230.4251.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Feb 2011 20:39:05 +0100
-Message-ID: <1298576345.4251.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 18 Feb 2011 09:35:02 -0500
+Received: by wyb28 with SMTP id 28so3724623wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 06:35:00 -0800 (PST)
+Message-ID: <4D5E838F.1020707@lwfinger.net>
+Date: Fri, 18 Feb 2011 08:34:55 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 13/14] rtlwifi: rtl8192cu: Add routine trx
+References: <4d5d90c9.sN3PKFogcRQR8mbQ%Larry.Finger@lwfinger.net> <20110218112633.GA2270@redhat.com>
+In-Reply-To: <20110218112633.GA2270@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/18/2011 05:26 AM, Stanislaw Gruszka wrote:
+> On Thu, Feb 17, 2011 at 03:19:05PM -0600, Larry Finger wrote:
+>> +static enum rtl_desc_qsel _rtl8192cu_mq_to_descq(struct ieee80211_hw *hw,
+>> +					 u16 fc, u16 mac80211_queue_index)
+>> +{
+>> +	enum rtl_desc_qsel qsel;
+>> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>> +
+>> +	if (unlikely(ieee80211_is_beacon(fc))) {
+>> +		qsel = QSLT_BEACON;
+>> +		goto out;
+>> +	}
+>> +	if (ieee80211_is_mgmt(fc)) {
+> [snip]
+>> +	u16 fc = le16_to_cpu(hdr->frame_control);
+>> +	enum rtl_desc_qsel fw_qsel = _rtl8192cu_mq_to_descq(hw, fc,
+>
+> We have that bug on all over the code, ieee80211_is_* expect le16 value
+> whereas we pass cpu endian value. Driver is completely broken on that
+> respect, it will not work on big endian machines.
+>
+> What should be done is use "sparse" (i.e. make C=1) and fix all
+> endian bugs. That will not assure driver will work on BE machines,
+> but at least we will fix obvious bugs.
 
-On my G5 this fails to compile with
+Thanks for the comment. Unfortunately, sparse (C=2) does not find this error. 
+That test had been done and was clean. After reading your comment, I went back 
+to Documentation/sparse.txt and found the magic CF="-D__CHECK_ENDIAN__" 
+argument. This argument results in multiple warnings that will be fixed for V2.
 
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:701: error: __ksymtab__rtl92c_phy_txpwr_idx_to_dbm causes a section type conflict
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:701: error: __ksymtab__rtl92c_phy_txpwr_idx_to_dbm causes a section type conflict
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:677: error: __ksymtab__rtl92c_phy_dbm_to_txpwr_Idx causes a section type conflict
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:677: error: __ksymtab__rtl92c_phy_dbm_to_txpwr_Idx causes a section type conflict
+Do you have any suggestions regarding an inexpensive BE platform that I might 
+acquire for testing? Ideally, this box would have the capability to support PCIe 
+mini cards as well as USB.
 
-since you can't export static functions.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   12 ++++++------
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h |   12 ++++++------
- 2 files changed, 12 insertions(+), 12 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c	2011-02-24 20:35:47.398280074 +0100
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c	2011-02-24 20:35:58.536168754 +0100
-@@ -644,9 +644,9 @@ void rtl92c_phy_set_beacon_hw_reg(struct
- }
- EXPORT_SYMBOL(rtl92c_phy_set_beacon_hw_reg);
- 
--static u8 _rtl92c_phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
--				       enum wireless_mode wirelessmode,
--				       long power_indbm)
-+u8 _rtl92c_phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
-+				enum wireless_mode wirelessmode,
-+				long power_indbm)
- {
- 	u8 txpwridx;
- 	long offset;
-@@ -676,9 +676,9 @@ static u8 _rtl92c_phy_dbm_to_txpwr_Idx(s
- }
- EXPORT_SYMBOL(_rtl92c_phy_dbm_to_txpwr_Idx);
- 
--static long _rtl92c_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
--					 enum wireless_mode wirelessmode,
--					 u8 txpwridx)
-+long _rtl92c_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
-+				  enum wireless_mode wirelessmode,
-+				  u8 txpwridx)
- {
- 	long offset;
- 	long pwrout_dbm;
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h	2011-02-24 20:37:58.401971070 +0100
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h	2011-02-24 20:38:15.513800156 +0100
-@@ -228,12 +228,12 @@ void rtl92ce_phy_set_rf_on(struct ieee80
- void rtl92c_phy_set_io(struct ieee80211_hw *hw);
- void rtl92c_bb_block_on(struct ieee80211_hw *hw);
- u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask);
--static long _rtl92c_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
--					 enum wireless_mode wirelessmode,
--					 u8 txpwridx);
--static u8 _rtl92c_phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
--				       enum wireless_mode wirelessmode,
--				       long power_indbm);
-+long _rtl92c_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
-+				  enum wireless_mode wirelessmode,
-+				  u8 txpwridx);
-+u8 _rtl92c_phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
-+				enum wireless_mode wirelessmode,
-+				long power_indbm);
- void _rtl92c_phy_init_bb_rf_register_definition(struct ieee80211_hw *hw);
- static bool _rtl92c_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 					     u32 cmdtableidx, u32 cmdtablesz,
-
-
+Larry
