@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54177 "EHLO nbd.name"
+Received: from mail.atheros.com ([12.19.149.2]:20008 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753090Ab1BDV2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 16:28:54 -0500
-Message-ID: <4D4C6F94.2070709@openwrt.org>
-Date: Fri, 04 Feb 2011 22:28:52 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1754198Ab1BRLsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 06:48:09 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 03:47:48 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: Clear PS related flag on disabling power save.
+Date: Fri, 18 Feb 2011 17:18:03 +0530
+Message-ID: <1298029683-14997-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-To: Mark Mentovai <mark@moxienet.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
-References: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>	<AANLkTikNUv2VuL8ftQAF_x4R-ccB0Y_aPFFdF52UBnBt@mail.gmail.com>	<AANLkTikxhPHQ_50cKoJn920n9A0hVssoZZfJRCsw=CH+@mail.gmail.com>	<AANLkTikn2XSROW0V42FcBoRgBBd74WXMOmvdoToJGqfe@mail.gmail.com> <AANLkTim7cnHNsYqezre3AGaEmnPkjafqmHcpk=1hw7gr@mail.gmail.com>
-In-Reply-To: <AANLkTim7cnHNsYqezre3AGaEmnPkjafqmHcpk=1hw7gr@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-02-04 9:19 PM, Mark Mentovai wrote:
-> That would work for ath9k. I still think it’d be prudent to examine a
-> handful of rates. I also seem to remember that some other values that
-> were being used within ath9k_init_txpower_limits were invalid. I think
-> ntxchains was invalid during that early phase of initialization, for
-> example. That might not have any ultimate effect on the result, but
-> it’s not right to hit that ath_debug claiming "Invalid chainmask
-> configuration" once for every supported channel every time the driver
-> initializes.
-I'll take a look at fixing all of that stuff soon, then we can go back
-to treating the driver's tx power values as a limit afterwards.
+Clear IEEE80211_STA_NULLFUNC_ACKED flag on disabling power
+save. Without this fix, there is a chance of setting CONF_PS
+before sending nullfunc frame.
 
-- Felix
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/tx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 17ef4f4..34edf7f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -236,6 +236,7 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		ieee80211_stop_queues_by_reason(&local->hw,
+ 						IEEE80211_QUEUE_STOP_REASON_PS);
++		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+ 		ieee80211_queue_work(&local->hw,
+ 				     &local->dynamic_ps_disable_work);
+ 	}
+-- 
+1.6.3.3
+
