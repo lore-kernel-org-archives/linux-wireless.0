@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44284 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988Ab1BFMHf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 07:07:35 -0500
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19790.36590.884287.572619@gargle.gargle.HOWL>
-Date: Sun, 6 Feb 2011 17:37:10 +0530
-To: "Martin Schleier" <drahemmaps@gmx.net>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	linville@tuxdriver.com, kune@deine-taler.de,
-	linux-usb@vger.kernel.org, stern@rowland.harvard.edu,
-	gregkh@suse.de
-Subject: Override endpoint attributes (was: RE: [PATCH] zd1211rw: change endpoint types of EP_REGS_OUT and EP_INT_IN from interrupt to bulk)
-In-Reply-To: <20110206102710.152130@gmx.net>
-References: <20110206102710.152130@gmx.net>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59752 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750891Ab1BRWpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 17:45:50 -0500
+Subject: Re: [RFC] AI support (13/14 ssb add AI support)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1297981882.23381.38.camel@dev.znau.edu.ua> (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)
+References: <1297958316.5623.27.camel@dev.znau.edu.ua>
+	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
+	 <1297981882.23381.38.camel@dev.znau.edu.ua>
+	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Feb 2011 23:45:45 +0100
+Message-ID: <1298069145.23801.29.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Schleier wrote:
-> Interesting, I know that interrupt and bulk endpoints share a lot of
-> common logic so I can see how this should work. But is it really
-> possible [and more to the point: sane?!] to override the endpoint
-> descriptors?
-> 
-> I know that usb_submit_urb checks [when config_usb_debug is enabled]
-> if the xfertype of the submitted urb matches the one of the endpoint,
-> so I wonder I started to wonder if we are fooling "just" the code
-> here, or ourselves in the process?
->  
-> > ath9k_htc does the same thing (see ath/ath9k/hif_usb.c).
-> > It does seem to be working properly but I am wondering if the
-> > USB subsystem has to be updated after the driver messes around with bmAttributes.
-> > (lsusb would still show the endpoint type as INT).
-> > 
-> > You have a usb_reset_configuration() call before changing
-> > the endpoint type, why is that necessary ? And would that
-> > reset the endpoints as well ?
-> Huh, has this already catched on?
+On Fri, 2011-02-18 at 00:31 +0200, George Kashperko wrote: 
+> +#define SSB_AI_BASE			0x18100000U /* base for AI registers */
 
-Well, for ath9k_htc, the FW changes the descriptor type after it is
-transferred to the target. The USB devs suggested that usb_device_reset()
-should be called by the driver in such cases, but in ath9k_htc's case,
-the device is disconnected and the error message "device firmware changed"
-is displayed.
+#define MOON_EARTH_BASE 1337
 
-Agreed, this is a dirty hack - but is there any way for a driver to make the USB
-subsystem re-configure the endpoints ?
+That probably is my major point against this patchset. It just
+merges things that don't belong to each other.
+Is this the base on moon or earth?
+If it's the earth base, why the hell do we prefix the define with MOON?
 
-Sujith
+That naming confusion continues throughout the whole patchset.
+
+SSB is end of life, so we should not try to support the new AI hardware
+by making SSB AI aware. Just fork SSB and let legacy SSB die as the
+existing hardware dies. It deserves it. Mercy killing for software!
+
+_Currently_ it may look like a good idea to use one software base
+for the two busses, but the cruft will hurt you in the future.
+And the future begins one day after this hack was merged.
+
+-- 
+Greetings Michael.
+
