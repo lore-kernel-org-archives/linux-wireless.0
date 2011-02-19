@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38924 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752377Ab1BZUDY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51185 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751838Ab1BSJEo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Feb 2011 15:03:24 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id C8AA7540186
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Feb 2011 15:06:36 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110226200323.2FA4E46520@repository3.orbit-lab.org>
-Date: Sat, 26 Feb 2011 15:03:23 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sat, 19 Feb 2011 04:04:44 -0500
+Subject: Re: [PATCH v2] iwlwifi: fix dma mappings and skbs leak
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110215130428.GA2515@redhat.com>
+References: <1297693947-15310-1-git-send-email-sgruszka@redhat.com>
+	 <1297698696.4723.16.camel@wwguy-ubuntu> <20110215113444.GC2162@redhat.com>
+	 <1297770602.3935.3.camel@jlt3.sipsolutions.net>
+	 <20110215130428.GA2515@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Feb 2011 10:04:40 +0100
+Message-ID: <1298106280.3725.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+On Tue, 2011-02-15 at 14:04 +0100, Stanislaw Gruszka wrote:
 
-compat-wireless code metrics
+> > Agree, but I wish the timer objects had a name so we'd know what it
+> > was ... hmm, how can we figure out which timer this is?
+> 
+> By patching kernel :-)
+> http://people.redhat.com/sgruszka/debugobj-add-timer-name.patch
 
-    831210 - Total upstream lines of code being pulled
-      2163 - backport code changes
-      1881 - backport code additions
-       282 - backport code deletions
-      7438 - backport from compat module
-      9601 - total backport code
-    1.1551 - % of code consists of backport work
+Btw, I think you should consider submitting that or a similar patch into
+the kernel proper. I'm sure other subsystems could also benefit from
+having this information.
+
+Should be "const char *name" though throughout :-)
+
+johannes
+
