@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:28672 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755366Ab1BIOuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 09:50:14 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 06:49:54 -0800
-Message-ID: <4D52A99A.9020908@atheros.com>
-Date: Wed, 9 Feb 2011 20:20:02 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [RFC] ath9k: Fix ath9k prevents CPU to enter C3 states
-References: <1297262007-15128-1-git-send-email-mshajakhan@atheros.com> <20110209144225.GC2494@tuxdriver.com>
-In-Reply-To: <20110209144225.GC2494@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:59564 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534Ab1BSJ4g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Feb 2011 04:56:36 -0500
+Subject: Re: [PATCH] ath9k: Implement op_flush()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110219094943.GA16465@vasanth-laptop>
+References: <1298106822-9411-1-git-send-email-vasanth@atheros.com>
+	 <1298107440.3725.8.camel@jlt3.sipsolutions.net>
+	 <20110219094943.GA16465@vasanth-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Feb 2011 10:56:30 +0100
+Message-ID: <1298109390.3725.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 February 2011 08:12 PM, John W. Linville wrote:
-> On Wed, Feb 09, 2011 at 08:03:27PM +0530, Mohammed Shafi Shajakhan wrote:
->    
->> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>
->> The DMA latency issue is observed only in Intel pinetrail platforms but
->> in the driver we had a default PM-QOS value of 55. This caused
->> unnecessary power consumption and battery drain in other platforms.
->> Address this issue by disabling PM-QOS by default by setting it's value
->> as '0' and making code changes appropriately.This addresses the bug:
->> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->> 	If the user sees some DMA latency issue he can still use the pmqos as a
->> module parameter to trade power for throughput as below:
->> sudo modprobe ath9k pmqos=55
->>
->> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>      
-> Seems a bit unclear to me -- if you have ath9k_pm_qos_value then why
-> use ATH9K_PM_QOS_DEFAULT_VALUE at all?
->    
-Yes thanks, I think that macro is not needed at all with the current 
-approach
-> John
->    
+On Sat, 2011-02-19 at 15:19 +0530, Vasanthakumar Thiagarajan wrote:
+> On Sat, Feb 19, 2011 at 02:54:00PM +0530, Johannes Berg wrote:
+> > On Sat, 2011-02-19 at 01:13 -0800, Vasanthakumar Thiagarajan wrote:
+> > > When op_flush() is called with no drop (drop=false), the driver
+> > > tries to tx as many frames as possible in about 100ms on every
+> > > hw queue. During this time period frames from sw queue are also
+> > > scheduled on to respective hw queue.
+> > 
+> > Given how long HW queues currently are, I wouldn't set the timeout to
+> > 100ms -- mac80211 has no expectation how long this will take, although
+> > 100ms seems pretty long I'm not sure it'll always be sufficient?
+> 
+> It is not that we wait for 100ms always, we return as soon as
+> possible if there are no pending frames in sw/hw queues. I never
+> hit this timeout though. In the worst case there can be 128 (4 aggr)
+> frames pending in sw queue and 2 in hw queue. If we assume each one of
+> these aggregates has 4ms duration, we at least need 24ms air time at
+> the lowest rate. If they are not part of AMPDU, it would take a
+> little bit more I think. So, probably we can give ~40ms timeout,
+> is that reasonable?. If i'm reading the code correctly, iwlwifi
+> seems to use 2000ms.
+
+Ok. I wasn't concerned about it being too high, I was thinking 100ms
+might not be enough, but since you say it will be I guess it's fine.
+
+johannes
+
