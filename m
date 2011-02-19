@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:36166 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362Ab1BOOs6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 09:48:58 -0500
-Received: by qyk12 with SMTP id 12so198300qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 06:48:57 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:24878 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755319Ab1BSBaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Feb 2011 20:30:03 -0500
+Date: Fri, 18 Feb 2011 17:30:01 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Naveen Singh <Naveen.Singh@Atheros.com>,
+	Jack Yang <Jack.Yang@Atheros.com>
+CC: Samuel Chang <Samuel.Chang@Atheros.com>,
+	Joe Perches <joe@perches.com>, Jerry Hu <Jerry.Hu@Atheros.com>,
+	Maggie Huang <Maggie.Huang@Atheros.com>,
+	Vipin Mehta <Vipin.Mehta@Atheros.com>,
+	<linux-kernel@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>, Greg KH <greg@kroah.com>,
+	<mcgrof@gmail.com>
+Subject: ath6kl - coordination of development
+Message-ID: <20110219013001.GM15610@tux>
 MIME-Version: 1.0
-In-Reply-To: <1297294234.12795.2.camel@dev.znau.edu.ua>
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-	<AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
-	<1297288286.9734.28.camel@maggie>
-	<AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
-	<1297294234.12795.2.camel@dev.znau.edu.ua>
-Date: Tue, 15 Feb 2011 15:48:57 +0100
-Message-ID: <AANLkTi=oXNRN0Vvkn8f8-cZaEDEYqg9jUuXqBUCGhWF8@mail.gmail.com>
-Subject: Re: SSB AI support code
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Uf, I'm back after weekend.
+A lot of work is going to go into ath6kl soon. To help avoid conflicts
+with it is of critical importance to coordinate and communicate.
 
-W dniu 10 lutego 2011 00:30 użytkownik George Kashperko
-<george@znau.edu.ua> napisał:
->> What are the other cores for? Why do we need driver for chipcommon,
->> mipscore? Are that cores internally accessed by 80211 core?
->
-> Prior to using any core, very same as b43 one, others (mipscore, usb,
-> b44, etc.) must be set up properly.
-> Therefore drivers exists. Chipcommon need setup as well - it handles
-> cpu/mem/bus/clocks, power control, built-in uarts and might be much
-> more. Its like "wrapper" core for indirect bus management.
-> And I dont know if 80211 is talking directly to any other core except
-> maybe chipcommon.
+The Linux kernel policy on staging drivers is that they will be removed
+from the Linux kernel if they do not get any cleanup attention. We are
+addressing that now but the cleanups will cause conflicts with any other
+wide spread change. Joe has some large amount of cleanup patches he has
+written with some scripts and will soon send them out. To help avoid
+conflicts the hope is we will limit the cleanups we do to a few set of
+patches at a time. All these changes will be as atomic and small as
+possible. Our goal is to eventually move ath6kl out to proper placement
+in the kernel, but this will take some time.
 
-Thanks for explanation, but what about cores like internal memory, or
-usb? What are they for?
+Note that if you are doing development on a side branch it is incorrect,
+you should post your patches targetted upstream *first*. To hack on ath6kl
+you will need to:
 
--- 
-Rafał
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
+git checkout -b ath6kl-dev origin/staging-next
+
+To track our TODO we will use the wiki:
+
+http://wireless.kernel.org/en/users/Drivers/ath6kl
+
+To coordinate development we will talk on IRC:
+
+Channel: #ath6kl
+Server: irc.freenode.net
+
+Anyone looking to coordinate development or get patches into ath6kl in
+any way shape or form is recommended to use IRC to coordinate with
+myself, Naveen and Joe. Vipin is off on vacation for a while now.
+
+Joe -- I know you have a large series pending, but perhaps we can
+coordinate to only send batches in 20 ? Or Greg do you have any preference?
+
+Naveen, please work with me on your patches. I'd like to see Joe's patches
+merged first. I take it Jack Yang's patches are identical to the ones you are
+going to work on?
+
+  Luis
