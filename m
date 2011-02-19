@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15353 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:37955 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756117Ab1BYNqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 08:46:11 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] mac80211: better fix for conn_mon_timer running after disassociate
-Date: Fri, 25 Feb 2011 14:46:02 +0100
-Message-Id: <1298641562-3805-1-git-send-email-sgruszka@redhat.com>
+	id S1752028Ab1BSJWZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Feb 2011 04:22:25 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:22:04 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <mcgrof@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
+Subject: [PATCH] compat: Define usleep_range(min, max) as msleep(max/1000) for <2.6.36
+Date: Sat, 19 Feb 2011 01:22:21 -0800
+Message-ID: <1298107341-9894-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is still possible to schedule conn_mon_timer after disassociate from
-ieee80211_sta_tx_notify() and ieee80211_offchannel_ps_disable().
+ops_flush() of ath9k uses usleep_range().
 
-Move disassociate check to ieee80211_sta_reset_conn_monitor() to cover
-all these cases, and add unlikely since in most the time we call
-ieee80211_sta_reset_conn_monitor() when associated.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- net/mac80211/mlme.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+ include/linux/compat-2.6.36.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index abb0116..cc984bd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -145,6 +145,9 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 74d2309..8d8b636 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -101,6 +101,7 @@ int no_printk(const char *s, ...) { return 0; }
+ #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
+ #endif
  
-+	if (unlikely(!sdata->u.mgd.associated))
-+		return;
-+
- 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
- 		return;
++#define usleep_range(_min, _max)	msleep((_max) / 1000)
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
  
-@@ -1083,12 +1086,6 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 	if (is_multicast_ether_addr(hdr->addr1))
- 		return;
- 
--	/*
--	 * In case we receive frames after disassociation.
--	 */
--	if (!sdata->u.mgd.associated)
--		return;
--
- 	ieee80211_sta_reset_conn_monitor(sdata);
- }
- 
+ #endif /* LINUX_26_36_COMPAT_H */
 -- 
-1.7.1
+1.7.0.4
 
