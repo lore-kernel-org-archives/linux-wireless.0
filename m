@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42986 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817Ab1BIKY4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47146 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752482Ab1BSJOz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 05:24:56 -0500
-Received: by wwa36 with SMTP id 36so6407wwa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 02:24:55 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: fix identification of beacon packets (debug)
-Date: Wed,  9 Feb 2011 12:25:14 +0200
-Message-Id: <1297247114-4563-1-git-send-email-eliad@wizery.com>
+	Sat, 19 Feb 2011 04:14:55 -0500
+Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110219061241.GA5881@vmraj-lnx.users.atheros.com>
+References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
+	 <1298027245.3772.3.camel@jlt3.sipsolutions.net>
+	 <20110219061241.GA5881@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Feb 2011 10:14:50 +0100
+Message-ID: <1298106890.3725.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-for debugging purposes, wl12xx determines whether a rx packet
-is a beacon packet.
+On Sat, 2011-02-19 at 11:42 +0530, Rajkumar Manoharan wrote:
 
-however, it checks only the frame_control subtype without checking
-the actual packet type, which leads to false identification in some
-cases.
+> > I know we currently don't allow powersave when there's more than one
+> > interface, but we still allow it while there are monitor interfaces and
+> > a monitor interface could be sending packets, which would violate the
+> > flush() contract with the driver -- the driver may expect not to get any
+> > packets during flush.
 
-use ieee80211_is_beacon instead.
+> AFIK we also are not stopping tx queue of monitor iface on offchannel.
+> Doing so could help flush().
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/rx.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Hrm, indeed. And we can't even stop the queues there. We can pause them
+for the flush though. In fact, why don't we just stop device queues for
+flush and bypass this problem. I also think we should flush the status
+tasklet when drv_flush() has returned so that all status processing is
+also flushed out before we return to regular processing.
 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 029597b..1e3616a 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -92,7 +92,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
- {
- 	struct wl1271_rx_descriptor *desc;
- 	struct sk_buff *skb;
--	u16 *fc;
-+	struct ieee80211_hdr *hdr;
- 	u8 *buf;
- 	u8 beacon = 0;
- 
-@@ -118,8 +118,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
- 	/* now we pull the descriptor out of the buffer */
- 	skb_pull(skb, sizeof(*desc));
- 
--	fc = (u16 *)skb->data;
--	if ((*fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	if (ieee80211_is_beacon(hdr->frame_control))
- 		beacon = 1;
- 
- 	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
--- 
-1.7.0.4
+> > I'm not sure. Maybe we should disable powersave when there are monitor
+> > interfaces after all, even though that would rob us of a way to debug
+> > things. Thoughts?
+
+> drivers like ath9k receives all frames from any bss on FIF_PROMISC_IN_BSS,
+> since there is no specific hw filter for that. So in that case it would be
+> better to disable power save.
+
+Well, I'm not convinced yet -- it will likely also complicate the code
+quite a bit when we want to implement NoA powersave etc. Of course we're
+trying to get rid of monitor interfaces there anyway, but still ...
+
+johannes
 
