@@ -1,137 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63030 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237Ab1BUQLH (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:20352 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754891Ab1BSB20 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 11:11:07 -0500
-MIME-Version: 1.0
-Date: Tue, 22 Feb 2011 00:11:06 +0800
-Message-ID: <AANLkTi=OSZhT0OGN_3Jzw=zh1U_QjhB+vR8SxidM5Zge@mail.gmail.com>
-Subject: [2.6.38-rc5, patch] fix cfg80211_wext_siwfreq lock ordering...
-From: Daniel J Blueman <daniel.blueman@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 18 Feb 2011 20:28:26 -0500
+Date: Fri, 18 Feb 2011 17:25:36 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	akpm <akpm@linux-foundation.org>
+Subject: [PATCH -next] wl12xx: fix sdio_test kconfig/build errors
+Message-Id: <20110218172536.970b5b39.randy.dunlap@oracle.com>
+In-Reply-To: <20110217162650.092e77c3.sfr@canb.auug.org.au>
+References: <20110217162650.092e77c3.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I previously managed to reproduce a hang while scanning wireless
-channels (reproducible with airodump-ng hopping channels); subsequent
-lockdep instrumentation revealed a lock ordering issue [1].
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Without knowing the design intent, it looks like the locks should be
-taken in reverse order; please comment.
+The wl12xx sdio_test code uses wl12xx_get_platform_data, which is
+only present when WL12*_SDIO is enabled, so make WL12XX_SDIO_TEST
+depend on WL12XX_SDIO so that the needed interface will be present.
 
-Signed-off-by: Daniel J Blueman <daniel.blueman@gmail.com>
+sdio_test.c:(.devinit.text+0x13178): undefined reference to `wl12xx_get_platform_data'
 
---- [1]
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: Roger Quadros <roger.quadros@nokia.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-=======================================================
-[ INFO: possible circular locking dependency detected ]
-2.6.38-rc5-341cd #4
--------------------------------------------------------
-airodump-ng/15445 is trying to acquire lock:
- (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffff816b1266>]
-cfg80211_wext_siwfreq+0xc6/0x100
-
-but task is already holding lock:
- (&wdev->mtx){+.+.+.}, at: [<ffffffff816b125c>] cfg80211_wext_siwfreq+0xbc/0x100
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #1 (&wdev->mtx){+.+.+.}:
-       [<ffffffff810a79d6>] lock_acquire+0xc6/0x280
-       [<ffffffff816d6bce>] mutex_lock_nested+0x6e/0x4b0
-       [<ffffffff81696080>] cfg80211_netdev_notifier_call+0x430/0x5f0
-       [<ffffffff8109351b>] notifier_call_chain+0x8b/0x100
-       [<ffffffff810935b1>] raw_notifier_call_chain+0x11/0x20
-       [<ffffffff81576d92>] call_netdevice_notifiers+0x32/0x60
-       [<ffffffff815771a4>] __dev_notify_flags+0x34/0x80
-       [<ffffffff81577230>] dev_change_flags+0x40/0x70
-       [<ffffffff8158587c>] do_setlink+0x1fc/0x8d0
-       [<ffffffff81586042>] rtnl_setlink+0xf2/0x140
-       [<ffffffff81586923>] rtnetlink_rcv_msg+0x163/0x270
-       [<ffffffff8159d741>] netlink_rcv_skb+0xa1/0xd0
-       [<ffffffff815867b0>] rtnetlink_rcv+0x20/0x30
-       [<ffffffff8159d39a>] netlink_unicast+0x2ba/0x300
-       [<ffffffff8159dd57>] netlink_sendmsg+0x267/0x3e0
-       [<ffffffff8155e364>] sock_sendmsg+0xe4/0x110
-       [<ffffffff8155f3a3>] sys_sendmsg+0x253/0x3b0
-       [<ffffffff81003192>] system_call_fastpath+0x16/0x1b
-
--> #0 (&rdev->devlist_mtx){+.+.+.}:
-       [<ffffffff810a7222>] __lock_acquire+0x1622/0x1d10
-       [<ffffffff810a79d6>] lock_acquire+0xc6/0x280
-       [<ffffffff816d6bce>] mutex_lock_nested+0x6e/0x4b0
-       [<ffffffff816b1266>] cfg80211_wext_siwfreq+0xc6/0x100
-       [<ffffffff816b2fad>] ioctl_standard_call+0x5d/0xd0
-       [<ffffffff816b3223>] T.808+0x163/0x170
-       [<ffffffff816b326a>] wext_handle_ioctl+0x3a/0x90
-       [<ffffffff815798d2>] dev_ioctl+0x6f2/0x830
-       [<ffffffff8155cf3d>] sock_ioctl+0xfd/0x290
-       [<ffffffff8117dffd>] do_vfs_ioctl+0x9d/0x590
-       [<ffffffff8117e53a>] sys_ioctl+0x4a/0x80
-       [<ffffffff81003192>] system_call_fastpath+0x16/0x1b
-
-other info that might help us debug this:
-
-2 locks held by airodump-ng/15445:
- #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff81586782>] rtnl_lock+0x12/0x20
- #1:  (&wdev->mtx){+.+.+.}, at: [<ffffffff816b125c>]
-cfg80211_wext_siwfreq+0xbc/0x100
-
-stack backtrace:
-Pid: 15445, comm: airodump-ng Not tainted 2.6.38-rc5-341cd #4
-Call Trace:
- [<ffffffff810a3f0a>] ? print_circular_bug+0xfa/0x100
- [<ffffffff810a7222>] ? __lock_acquire+0x1622/0x1d10
- [<ffffffff810a1f99>] ? trace_hardirqs_off_caller+0x29/0xc0
- [<ffffffff810a79d6>] ? lock_acquire+0xc6/0x280
- [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
- [<ffffffff810a31d7>] ? mark_held_locks+0x67/0x90
- [<ffffffff816d6bce>] ? mutex_lock_nested+0x6e/0x4b0
- [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
- [<ffffffff810a31d7>] ? mark_held_locks+0x67/0x90
- [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
- [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
- [<ffffffff816b2fad>] ? ioctl_standard_call+0x5d/0xd0
- [<ffffffff8157818b>] ? __dev_get_by_name+0x9b/0xc0
- [<ffffffff816b2f50>] ? ioctl_standard_call+0x0/0xd0
- [<ffffffff816b3223>] ? T.808+0x163/0x170
- [<ffffffff8112ddf2>] ? might_fault+0x72/0xd0
- [<ffffffff816b326a>] ? wext_handle_ioctl+0x3a/0x90
- [<ffffffff8112de3b>] ? might_fault+0xbb/0xd0
- [<ffffffff815798d2>] ? dev_ioctl+0x6f2/0x830
- [<ffffffff810a1bae>] ? put_lock_stats+0xe/0x40
- [<ffffffff810a1c8c>] ? lock_release_holdtime+0xac/0x150
- [<ffffffff8155cf3d>] ? sock_ioctl+0xfd/0x290
- [<ffffffff8117dffd>] ? do_vfs_ioctl+0x9d/0x590
- [<ffffffff8116c8ff>] ? fget_light+0x1df/0x3c0
- [<ffffffff8117e53a>] ? sys_ioctl+0x4a/0x80
- [<ffffffff81003192>] ? system_call_fastpath+0x16/0x1b
-
---- [2]
-
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 3e5dbd4..d112f03 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -802,11 +802,11 @@ int cfg80211_wext_siwfreq(struct net_device *dev,
- 			return freq;
- 		if (freq == 0)
- 			return -EINVAL;
--		wdev_lock(wdev);
- 		mutex_lock(&rdev->devlist_mtx);
-+		wdev_lock(wdev);
- 		err = cfg80211_set_freq(rdev, wdev, freq, NL80211_CHAN_NO_HT);
--		mutex_unlock(&rdev->devlist_mtx);
- 		wdev_unlock(wdev);
-+		mutex_unlock(&rdev->devlist_mtx);
- 		return err;
- 	default:
- 		return -EOPNOTSUPP;
--- 
-Daniel J Blueman
+--- linux-next-20110217.orig/drivers/net/wireless/wl12xx/Kconfig
++++ linux-next-20110217/drivers/net/wireless/wl12xx/Kconfig
+@@ -54,7 +54,7 @@ config WL12XX_SDIO
+ 
+ config WL12XX_SDIO_TEST
+ 	tristate "TI wl12xx SDIO testing support"
+-	depends on WL12XX && MMC
++	depends on WL12XX && MMC && WL12XX_SDIO
+ 	default n
+ 	---help---
+ 	  This module adds support for the SDIO bus testing with the
