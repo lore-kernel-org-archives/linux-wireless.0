@@ -1,36 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45169 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028Ab1BSJZW (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:44345 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754684Ab1BSW2y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 04:25:22 -0500
-Received: by fxm20 with SMTP id 20so4673736fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:25:21 -0800 (PST)
-Date: Sat, 19 Feb 2011 12:25:17 +0300
-From: Stanislav Fomichev <kernel@fomichev.me>
-To: Greg KH <greg@kroah.com>
-Cc: brudley@broadcom.com, gregkh@suse.de,
+	Sat, 19 Feb 2011 17:28:54 -0500
+Date: Sat, 19 Feb 2011 16:28:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: george0505@realtek.com, chaoming_li@realsil.com.cn,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcm80211: fix warnings in wl_check_firmwares
-Message-ID: <20110219092422.GA1828@sdf-MacBook>
-References: <20110212174700.GA2058@sdf-MacBook>
- <20110218205731.GD796@kroah.com>
+Subject: [PATCH V2 2/16] rtlwifi: Make changes in rtlwifi/rtl8192ce/def.h
+ to support rtl8192cu
+Message-ID: <4d604424.7jwosr+EnoW2lfwL%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110218205731.GD796@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sat, Feb 12, 2011 at 08:47:00PM +0300, Stanislav Fomichev wrote:
-> > Use %zu instead of %d for size_t
-> > 
-> > Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
-> > ---
-> >  drivers/staging/brcm80211/sys/wl_mac80211.c |    4 ++--
-> 
-> This doesn't apply to linux-next as this file isn't around anymore :(
-This is not relevant anymore as I see you included the other patch with
-the same title (which is based on the right tree).
+This change modifies rtlwifi/rtl8192ce/def.h to handle rtl8192cu. In
+addition, a couple of routines needed for both drivers are converted
+to be inline.
 
--- 
-	Stas
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+@@ -121,11 +121,37 @@
+ #define CHIP_92C			0x01
+ #define CHIP_88C			0x00
+ 
++/* Add vendor information into chip version definition.
++ * Add UMC B-Cut and RTL8723 chip info definition.
++ *
++ * BIT 7	Reserved
++ * BIT 6	UMC BCut
++ * BIT 5	Manufacturer(TSMC/UMC)
++ * BIT 4	TEST/NORMAL
++ * BIT 3	8723 Version
++ * BIT 2	8723?
++ * BIT 1	1T2R?
++ * BIT 0	88C/92C
++*/
++
+ enum version_8192c {
+ 	VERSION_A_CHIP_92C = 0x01,
+ 	VERSION_A_CHIP_88C = 0x00,
+ 	VERSION_B_CHIP_92C = 0x11,
+ 	VERSION_B_CHIP_88C = 0x10,
++	VERSION_TEST_CHIP_88C = 0x00,
++	VERSION_TEST_CHIP_92C = 0x01,
++	VERSION_NORMAL_TSMC_CHIP_88C = 0x10,
++	VERSION_NORMAL_TSMC_CHIP_92C = 0x11,
++	VERSION_NORMAL_TSMC_CHIP_92C_1T2R = 0x13,
++	VERSION_NORMAL_UMC_CHIP_88C_A_CUT = 0x30,
++	VERSION_NORMAL_UMC_CHIP_92C_A_CUT = 0x31,
++	VERSION_NORMAL_UMC_CHIP_92C_1T2R_A_CUT = 0x33,
++	VERSION_NORMA_UMC_CHIP_8723_1T1R_A_CUT = 0x34,
++	VERSION_NORMA_UMC_CHIP_8723_1T1R_B_CUT = 0x3c,
++	VERSION_NORMAL_UMC_CHIP_88C_B_CUT = 0x70,
++	VERSION_NORMAL_UMC_CHIP_92C_B_CUT = 0x71,
++	VERSION_NORMAL_UMC_CHIP_92C_1T2R_B_CUT = 0x73,
+ 	VERSION_UNKNOWN = 0x88,
+ };
+ 
+@@ -254,4 +280,122 @@ struct h2c_cmd_8192c {
+ 	u8 *p_cmdbuffer;
+ };
+ 
++static inline u8 _rtl92c_get_chnl_group(u8 chnl)
++{
++	u8 group = 0;
++
++	if (chnl < 3)
++		group = 0;
++	else if (chnl < 9)
++		group = 1;
++	else
++		group = 2;
++
++	return group;
++}
++
++/* NOTE: reference to rtl8192c_rates struct */
++static inline int _rtl92c_rate_mapping(struct ieee80211_hw *hw, bool isHT,
++				       u8 desc_rate, bool first_ampdu)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	int rate_idx = 0;
++
++	if (first_ampdu) {
++		if (false == isHT) {
++			switch (desc_rate) {
++			case DESC92C_RATE1M:
++				rate_idx = 0;
++				break;
++			case DESC92C_RATE2M:
++				rate_idx = 1;
++				break;
++			case DESC92C_RATE5_5M:
++				rate_idx = 2;
++				break;
++			case DESC92C_RATE11M:
++				rate_idx = 3;
++				break;
++			case DESC92C_RATE6M:
++				rate_idx = 4;
++				break;
++			case DESC92C_RATE9M:
++				rate_idx = 5;
++				break;
++			case DESC92C_RATE12M:
++				rate_idx = 6;
++				break;
++			case DESC92C_RATE18M:
++				rate_idx = 7;
++				break;
++			case DESC92C_RATE24M:
++				rate_idx = 8;
++				break;
++			case DESC92C_RATE36M:
++				rate_idx = 9;
++				break;
++			case DESC92C_RATE48M:
++				rate_idx = 10;
++				break;
++			case DESC92C_RATE54M:
++				rate_idx = 11;
++				break;
++			default:
++				RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
++					 ("Rate %d is not support, set to "
++					"1M rate.\n", desc_rate));
++				rate_idx = 0;
++				break;
++			}
++		} else {
++			rate_idx = 11;
++		}
++		return rate_idx;
++	}
++	switch (desc_rate) {
++	case DESC92C_RATE1M:
++		rate_idx = 0;
++		break;
++	case DESC92C_RATE2M:
++		rate_idx = 1;
++		break;
++	case DESC92C_RATE5_5M:
++		rate_idx = 2;
++		break;
++	case DESC92C_RATE11M:
++		rate_idx = 3;
++		break;
++	case DESC92C_RATE6M:
++		rate_idx = 4;
++		break;
++	case DESC92C_RATE9M:
++		rate_idx = 5;
++		break;
++	case DESC92C_RATE12M:
++		rate_idx = 6;
++		break;
++	case DESC92C_RATE18M:
++		rate_idx = 7;
++		break;
++	case DESC92C_RATE24M:
++		rate_idx = 8;
++		break;
++	case DESC92C_RATE36M:
++		rate_idx = 9;
++		break;
++	case DESC92C_RATE48M:
++		rate_idx = 10;
++		break;
++	case DESC92C_RATE54M:
++		rate_idx = 11;
++		break;
++	/* TODO: How to mapping MCS rate? */
++	/*  NOTE: referenc to __ieee80211_rx */
++	default:
++		rate_idx = 11;
++		break;
++	}
++	return rate_idx;
++}
++
+ #endif
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1335,19 +1335,6 @@ void rtl92ce_update_interrupt_mask(struc
+ 	rtl92ce_enable_interrupt(hw);
+ }
+ 
+-static u8 _rtl92c_get_chnl_group(u8 chnl)
+-{
+-	u8 group;
+-
+-	if (chnl < 3)
+-		group = 0;
+-	else if (chnl < 9)
+-		group = 1;
+-	else
+-		group = 2;
+-	return group;
+-}
+-
+ static void _rtl92ce_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
+ 						 bool autoload_fail,
+ 						 u8 *hwinfo)
