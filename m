@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1745 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753755Ab1BWK5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 05:57:41 -0500
-Date: Wed, 23 Feb 2011 11:57:21 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 1/4] iwlwifi: Limit number of firmware reload
-Message-ID: <20110223105720.GA11916@redhat.com>
-References: <1298317536-5071-1-git-send-email-wey-yi.w.guy@intel.com>
- <1298317536-5071-2-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45169 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab1BSJZW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Feb 2011 04:25:22 -0500
+Received: by fxm20 with SMTP id 20so4673736fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:25:21 -0800 (PST)
+Date: Sat, 19 Feb 2011 12:25:17 +0300
+From: Stanislav Fomichev <kernel@fomichev.me>
+To: Greg KH <greg@kroah.com>
+Cc: brudley@broadcom.com, gregkh@suse.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] brcm80211: fix warnings in wl_check_firmwares
+Message-ID: <20110219092422.GA1828@sdf-MacBook>
+References: <20110212174700.GA2058@sdf-MacBook>
+ <20110218205731.GD796@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1298317536-5071-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <20110218205731.GD796@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wey
+> On Sat, Feb 12, 2011 at 08:47:00PM +0300, Stanislav Fomichev wrote:
+> > Use %zu instead of %d for size_t
+> > 
+> > Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
+> > ---
+> >  drivers/staging/brcm80211/sys/wl_mac80211.c |    4 ++--
+> 
+> This doesn't apply to linux-next as this file isn't around anymore :(
+This is not relevant anymore as I see you included the other patch with
+the same title (which is based on the right tree).
 
-On Mon, Feb 21, 2011 at 11:45:33AM -0800, Wey-Yi Guy wrote:
-> If device has serious problem and cause firmware can not recover itself.
-> Keep reloading firmware will not help, it can only fill up the syslog and
-> lock up the system because busy reloading.
-Filling up logs could be simply avoided by limiting number of prints.
-
-> Introduce the limit reload counter, if the reload reach the maximum within
-> the pre-defined duration;stop the reload operation.
-We have already one mechanism for limit too frequent firmware reload,
-way not reuse it?
-
-> +	reload_msec = jiffies_to_msecs((long) reload_jiffies -
-> +				(long) priv->reload_jiffies);
-What for are these (long) casts?
-
-> +	/* firmware reload counter and timestamp */
-> +	unsigned long reload_jiffies;
-You do not initialize it, first reload_msec will have untrue value.
-
-Beside, all these reload firmware mechanism are just crappy workarounds
-for real firmware and/or driver bugs. Instead of creating such patches,
-Intel should fix real problems in firmware and driver in first place,
-such reloading will be not needed.
-
-Stanislaw
+-- 
+	Stas
