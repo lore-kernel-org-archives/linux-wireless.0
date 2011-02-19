@@ -1,80 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22391 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751787Ab1BDGa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 01:30:56 -0500
-Date: Fri, 4 Feb 2011 07:29:41 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	george0505 <george0505@realtek.com>,
-	"'Zhaoming_Li'" <chaoming_li@realsil.com.cn>
-Subject: Re: [RFC/RFT 1/8] rtlwifi: Prepare core for addition of USB driver
-Message-ID: <20110204062940.GA2222@redhat.com>
-References: <1296411100-5675-1-git-send-email-Larry.Finger@lwfinger.net>
- <1296411100-5675-2-git-send-email-Larry.Finger@lwfinger.net>
- <20110203102552.GB3516@redhat.com>
- <4D4B7D92.7000402@lwfinger.net>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:44813 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754556Ab1BSW3y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Feb 2011 17:29:54 -0500
+Date: Sat, 19 Feb 2011 16:29:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: george0505@realtek.com, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH V2 14/16] rtlwifi: Modify buiild system for rtl8192cu
+Message-ID: <4d604460.x0GwTyd3ViaXkuEd%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D4B7D92.7000402@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry
+Modify Kconfig and Makefile to build rtl8192cu.
 
-On Thu, Feb 03, 2011 at 10:16:18PM -0600, Larry Finger wrote:
-> >> +static int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
-> >> +					  u16 value, u16 index, void *pdata,
-> >> +					  u16 len, u8 requesttype)
-> >> +{
-> >> +	int rc;
-> >> +	unsigned int pipe;
-> >> +	u8 reqtype;
-> >> +	struct usb_ctrlrequest *dr;
-> >> +	struct urb *urb;
-> >> +	struct rtl819x_async_write_data {
-> >> +		u8 data[REALTEK_USB_VENQT_MAX_BUF_SIZE];
-> >> +		struct usb_ctrlrequest dr;
-> >> +	} *buf;
-> >> +
-> >> +	if (requesttype == VENDOR_READ) {
-> >> +		pipe = usb_rcvctrlpipe(udev, 0); /* read_in */
-> >> +		reqtype =  REALTEK_USB_VENQT_READ;
-> > This is not needed, or function should be named differently not _async_write.
-> 
-> This one I do not understand. The function does do an asynchronous write. Please
-> explain.
-If function do "write", then requesttype argument should be removed, and
-dr->bRequestType = REALTEK_USB_VENQT_WRITE should be hardcoded.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> >> +	wvalue = (u16)(addr&0x0000ffff);
-> >> +	_usbctrl_vendorreq_sync(udev, request, wvalue, index, data, len,
-> >> +				requesttype);
-> >> +	ret = (le32_to_cpu(*data) & (0xffffffff >> ((4 - len) * 8)));
-> > Ok, BYTEMASK can be used, but what mean this magic? 
-> 
-> As the output of this routine is always cast with (u8) when len is 1 and (u16)
-> when len is 2, I think the magic can just disappear and ret can simply be
-> 
-> 	ret = le32_to_cpu(*data);
-Good.
-
-> I will test and have contacted the original author. There is similar magic in
-> _usb_write_async() that can also disappear.
-> 
-> >> +
-> >> +	 /* IBSS */
-> >> +	 mac->beacon_interval = 100;
-> >> +
-> >> +	 /* AMPDU */
-> >> +	 mac->min_space_cfg = 0;
-> >> +	 mac->max_mss_density = 0;
-> > Spaces.
-> 
-> Please explain what you mean by "spaces".
-I guess I should wrote "indention". On that lines, there in one space
-after tab :-)
-
-Thanks for working on my remarks.
-Stanislaw
+Index: wireless-testing/drivers/net/wireless/rtlwifi/Kconfig
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/Kconfig
++++ wireless-testing/drivers/net/wireless/rtlwifi/Kconfig
+@@ -1,6 +1,6 @@
+ config RTL8192CE
+-	tristate "Realtek RTL8192CE/RTL8188SE Wireless Network Adapter"
+-	depends on MAC80211 && EXPERIMENTAL
++	tristate "Realtek RTL8192CE/RTL8188CE Wireless Network Adapter"
++	depends on MAC80211 && PCI && EXPERIMENTAL
+ 	select FW_LOADER
+ 	select RTLWIFI
+ 	---help---
+@@ -9,7 +9,18 @@ config RTL8192CE
+ 
+ 	If you choose to build it as a module, it will be called rtl8192ce
+ 
++config RTL8192CU
++	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
++	depends on MAC80211 && USB && EXPERIMENTAL
++	select FW_LOADER
++	select RTLWIFI
++	---help---
++	This is the driver for Realtek RTL8192CU/RTL8188CU 802.11n USB
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be called rtl8192cu
++
+ config RTLWIFI
+ 	tristate
+-	depends on RTL8192CE
++	depends on RTL8192CE || RTL8192CU
+ 	default m
+Index: wireless-testing/drivers/net/wireless/rtlwifi/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/Makefile
++++ wireless-testing/drivers/net/wireless/rtlwifi/Makefile
+@@ -12,3 +12,7 @@ rtlwifi-objs	:=		\
+ 		usb.o
+ 
+ obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
++obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
++
++ccflags-y += -D__CHECK_ENDIAN__
++
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/Makefile
+===================================================================
+--- /dev/null
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/Makefile
+@@ -0,0 +1,15 @@
++rtl8192cu-objs :=		\
++		dm.o		\
++		fw.o		\
++		hw.o		\
++		led.o		\
++		mac.o		\
++		phy.o		\
++		rf.o		\
++		sw.o		\
++		table.o		\
++		trx.o
++
++obj-$(CONFIG_RTL8192CU) += rtl8192cu.o
++
++ccflags-y += -D__CHECK_ENDIAN__
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/Makefile
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/Makefile
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/Makefile
+@@ -10,3 +10,5 @@ rtl8192ce-objs :=		\
+ 		trx.o
+ 
+ obj-$(CONFIG_RTL8192CE) += rtl8192ce.o
++
++ccflags-y += -D__CHECK_ENDIAN__
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+@@ -1077,6 +1077,7 @@
+ #define _RARF_RC8(x)				(((x) & 0x1F) << 24)
+ 
+ #define AC_PARAM_TXOP_LIMIT_OFFSET		16
++#define AC_PARAM_TXOP_OFFSET			16
+ #define AC_PARAM_ECW_MAX_OFFSET			12
+ #define AC_PARAM_ECW_MIN_OFFSET			8
+ #define AC_PARAM_AIFS_OFFSET			0
