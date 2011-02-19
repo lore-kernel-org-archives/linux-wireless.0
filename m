@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50517 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755661Ab1BWT16 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 14:27:58 -0500
-From: Bing Zhao <bzhao@marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:38508 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752534Ab1BSJvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Feb 2011 04:51:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:50:45 -0800
+Date: Sat, 19 Feb 2011 15:19:45 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Greg KH <greg@kroah.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Wed, 23 Feb 2011 11:26:47 -0800
-Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <477F20668A386D41ADCC57781B1F704307F50C4688@SC-VEXCH1.marvell.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
-	 <1291380780.3499.119.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F704307F50C44E4@SC-VEXCH1.marvell.com>
- <1298449433.3747.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1298449433.3747.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Implement op_flush()
+Message-ID: <20110219094943.GA16465@vasanth-laptop>
+References: <1298106822-9411-1-git-send-email-vasanth@atheros.com> <1298107440.3725.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1298107440.3725.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
-ZW50OiBXZWRuZXNkYXksIEZlYnJ1YXJ5IDIzLCAyMDExIDEyOjI0IEFNDQo+IFRvOiBCaW5nIFpo
-YW8NCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9obiBXLiBMaW52aWxs
-ZTsgRGFuIFdpbGxpYW1zOyBEYXZpZCBXb29kaG91c2U7IEFtaXRrdW1hciBLYXJ3YXI7DQo+IEtp
-cmFuIERpdmVrYXI7IEZyYW5rIEh1YW5nOyBHcmVnIEtIOyBEYXZpZCBTLiBNaWxsZXINCj4gU3Vi
-amVjdDogUkU6IFtQQVRDSCAwMC8zMV0gd2lyZWxlc3M6IE1hcnZlbGwgbXdpZmlleCBkcml2ZXIg
-Zm9yIFNEODc4Nw0KPiANCj4gT24gVHVlLCAyMDExLTAyLTIyIGF0IDE5OjM3IC0wODAwLCBCaW5n
-IFpoYW8gd3JvdGU6DQo+IA0KPiA+IElzIGl0IE9LIGlmIEkgY2hhbmdlIFBSSU5UTSAoZGVidWdn
-aW5nIHByaW50aykgdG8gc29tZXRoaW5nIGxpa2UgSVdMX0RFQlVHXz8NCj4gPg0KPiA+IDxkcml2
-ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kZWJ1Zy5oPg0KPiA+IC4uLi4uLg0KPiA+ICNk
-ZWZpbmUgSVdMX0RFQlVHX0lORk8ocCwgZiwgYS4uLikgICAgICBJV0xfREVCVUcocCwgSVdMX0RM
-X0lORk8sIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJV0xfREVCVUdfTUFDODAyMTEocCwgZiwgYS4u
-LikgIElXTF9ERUJVRyhwLCBJV0xfRExfTUFDODAyMTEsIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJ
-V0xfREVCVUdfTUFDRFVNUChwLCBmLCBhLi4uKSAgIElXTF9ERUJVRyhwLCBJV0xfRExfTUFDRFVN
-UCwgZiwgIyMgYSkNCj4gPiAjZGVmaW5lIElXTF9ERUJVR19URU1QKHAsIGYsIGEuLi4pICAgICAg
-SVdMX0RFQlVHKHAsIElXTF9ETF9URU1QLCBmLCAjIyBhKQ0KPiA+ICNkZWZpbmUgSVdMX0RFQlVH
-X1NDQU4ocCwgZiwgYS4uLikgICAgICBJV0xfREVCVUcocCwgSVdMX0RMX1NDQU4sIGYsICMjIGEp
-DQo+ID4gI2RlZmluZSBJV0xfREVCVUdfUlgocCwgZiwgYS4uLikgICAgICAgIElXTF9ERUJVRyhw
-LCBJV0xfRExfUlgsIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJV0xfREVCVUdfVFgocCwgZiwgYS4u
-LikgICAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfVFgsIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJ
-V0xfREVCVUdfSVNSKHAsIGYsIGEuLi4pICAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfSVNSLCBm
-LCAjIyBhKQ0KPiA+IC4uLi4uLg0KPiA+DQo+ID4gT3IsIHlvdSB3YW50IG1lIHRvIHJlbW92ZSBQ
-UklOVE0gc3R1ZmYgY29tcGxldGVseT8NCj4gDQo+IFllYWgsIEkga25vdyB0aGF0J3MgdGhlcmUg
-aW4gaXdsd2lmaSB0b28gLi4uIEkgZG9uJ3QgbGlrZSBpdCwgYnV0IEkNCj4gY291bGRuJ3QgeWV0
-IGdldCBpdCByZW1vdmVkIG9yIHJlcGxhY2VkIGJ5IG5ld2VyIGluZnJhc3RydWN0dXJlICh3aGlj
-aA0KPiBkaWRuJ3QgZXhpc3Qgd2hlbiB0aGlzIHdhcyB3cml0dGVuKS4gQ2FuIEkgY29udmluY2Ug
-eW91IHRvIGF0IGxlYXN0IGxvb2sNCj4gYXQgcHJfZGVidWcgYmFzZWQgdGhpbmdzPw0KDQpUaGFu
-a3MgZm9yIHlvdXIgc3VnZ2VzdGlvbi4NClllcywgSSB3aWxsIHVzZSBwcl9kZWJ1ZyBiYXNlZCBB
-UEkuDQoNCkJpbmcNCg0KPiANCj4gam9oYW5uZXMNCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVz
-cyIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5v
-cmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
-cmRvbW8taW5mby5odG1sDQo=
+On Sat, Feb 19, 2011 at 02:54:00PM +0530, Johannes Berg wrote:
+> On Sat, 2011-02-19 at 01:13 -0800, Vasanthakumar Thiagarajan wrote:
+> > When op_flush() is called with no drop (drop=false), the driver
+> > tries to tx as many frames as possible in about 100ms on every
+> > hw queue. During this time period frames from sw queue are also
+> > scheduled on to respective hw queue.
+> 
+> Given how long HW queues currently are, I wouldn't set the timeout to
+> 100ms -- mac80211 has no expectation how long this will take, although
+> 100ms seems pretty long I'm not sure it'll always be sufficient?
+
+It is not that we wait for 100ms always, we return as soon as
+possible if there are no pending frames in sw/hw queues. I never
+hit this timeout though. In the worst case there can be 128 (4 aggr)
+frames pending in sw queue and 2 in hw queue. If we assume each one of
+these aggregates has 4ms duration, we at least need 24ms air time at
+the lowest rate. If they are not part of AMPDU, it would take a
+little bit more I think. So, probably we can give ~40ms timeout,
+is that reasonable?. If i'm reading the code correctly, iwlwifi
+seems to use 2000ms.
+
+vasanth
