@@ -1,271 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:40150 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752197Ab1BIUAH (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:60805 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752425Ab1BTM6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 15:00:07 -0500
-Received: by qwa26 with SMTP id 26so443055qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Feb 2011 12:00:06 -0800 (PST)
+	Sun, 20 Feb 2011 07:58:12 -0500
+Received: by eye27 with SMTP id 27so2477416eye.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 04:58:02 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/8] rt2x00: Add antenna setting for RT3070/RT3090/RT3390 with RX antenna diversity support
+Date: Sun, 20 Feb 2011 13:54:52 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Date: Wed, 9 Feb 2011 21:00:04 +0100
-Message-ID: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
-Subject: Notes on ssb specs and implementation
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: b43-dev <b43-dev@lists.infradead.org>
-Content-Type: multipart/mixed; boundary=0016e6891d104ac305049bdee9e7
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201102201354.53379.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016e6891d104ac305049bdee9e7
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: RA-Jay Hung <Jay_Hung@ralinktech.com>
 
-Hi,
+For RT3070/RT3090/RT3390 with RX antenna diversity support, we must select
+default antenna using gpio control way even if we do not turn on
+antenna diversity feature.
 
-I've N-PHY card that doesn't report any scan results, so after
-checking N-PHY code (it looks fine so far) I decided to dig into ssb.
-Hopefully this will lead to some fixes and maybe working card.
+Seperate the meaning of TX/RX chain and antenna. Some chips use
+2x2 TX/RX chain but may have 3 RX antennas or 1x1 TX/RX chain
+but may have 2 RX antennas to do antenna diversity.
 
-I've dumped MMIO operations performed by wl and ssb/b43, compared
-them, documented with parts from specs and noted differences.
+Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    3 +
+ drivers/net/wireless/rt2x00/rt2800lib.c |   74 +++++++++++++++++++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 +
+ 3 files changed, 70 insertions(+), 9 deletions(-)
 
-As you should know, we have to enable wireless core twice: first time
-to get basic information about hardware, second to configure it in
-correct (like PHY specific) way.
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index ec8159c..ef8f605 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -270,6 +270,7 @@
+ 
+ /*
+  * GPIO_CTRL_CFG:
++ * GPIOD: GPIO direction, 0: Output, 1: Input
+  */
+ #define GPIO_CTRL_CFG			0x0228
+ #define GPIO_CTRL_CFG_BIT0		FIELD32(0x00000001)
+@@ -281,6 +282,7 @@
+ #define GPIO_CTRL_CFG_BIT6		FIELD32(0x00000040)
+ #define GPIO_CTRL_CFG_BIT7		FIELD32(0x00000080)
+ #define GPIO_CTRL_CFG_BIT8		FIELD32(0x00000100)
++#define GPIO_CTRL_CFG_GPIOD		FIELD32(0x00000800)
+ 
+ /*
+  * MCU_CMD_CFG
+@@ -2068,6 +2070,7 @@ struct mac_iveiv_entry {
+ #define MCU_LED_LED_POLARITY		0x54
+ #define MCU_RADAR			0x60
+ #define MCU_BOOT_SIGNAL			0x72
++#define MCU_ANT_SELECT			0X73
+ #define MCU_BBP_SIGNAL			0x80
+ #define MCU_POWER_SAVE			0x83
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c9bf074..7f44b97 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1368,10 +1368,32 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_config_erp);
+ 
++static void rt2800_set_ant_diversity(struct rt2x00_dev *rt2x00dev,
++				     enum antenna ant)
++{
++	u32 reg;
++	u8 eesk_pin = (ant == ANTENNA_A) ? 1 : 0;
++	u8 gpio_bit3 = (ant == ANTENNA_A) ? 0 : 1;
++
++	if (rt2x00_is_pci(rt2x00dev)) {
++		rt2800_register_read(rt2x00dev, E2PROM_CSR, &reg);
++		rt2x00_set_field32(&reg, E2PROM_CSR_DATA_CLOCK, eesk_pin);
++		rt2800_register_write(rt2x00dev, E2PROM_CSR, reg);
++	} else if (rt2x00_is_usb(rt2x00dev))
++		rt2800_mcu_request(rt2x00dev, MCU_ANT_SELECT, 0xff,
++				   eesk_pin, 0);
++
++	rt2800_register_read(rt2x00dev, GPIO_CTRL_CFG, &reg);
++	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_GPIOD, 0);
++	rt2x00_set_field32(&reg, GPIO_CTRL_CFG_BIT3, gpio_bit3);
++	rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
++}
++
+ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ {
+ 	u8 r1;
+ 	u8 r3;
++	u16 eeprom;
+ 
+ 	rt2800_bbp_read(rt2x00dev, 1, &r1);
+ 	rt2800_bbp_read(rt2x00dev, 3, &r3);
+@@ -1379,7 +1401,7 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ 	/*
+ 	 * Configure the TX antenna.
+ 	 */
+-	switch ((int)ant->tx) {
++	switch (ant->tx_chain_num) {
+ 	case 1:
+ 		rt2x00_set_field8(&r1, BBP1_TX_ANTENNA, 0);
+ 		break;
+@@ -1394,8 +1416,18 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ 	/*
+ 	 * Configure the RX antenna.
+ 	 */
+-	switch ((int)ant->rx) {
++	switch (ant->rx_chain_num) {
+ 	case 1:
++		if (rt2x00_rt(rt2x00dev, RT3070) ||
++		    rt2x00_rt(rt2x00dev, RT3090) ||
++		    rt2x00_rt(rt2x00dev, RT3390)) {
++			rt2x00_eeprom_read(rt2x00dev,
++					   EEPROM_NIC_CONF1, &eeprom);
++			if (rt2x00_get_field16(eeprom,
++						EEPROM_NIC_CONF1_ANT_DIVERSITY))
++				rt2800_set_ant_diversity(rt2x00dev,
++						rt2x00dev->default_ant.rx);
++		}
+ 		rt2x00_set_field8(&r3, BBP3_RX_ANTENNA, 0);
+ 		break;
+ 	case 2:
+@@ -1441,13 +1473,13 @@ static void rt2800_config_channel_rf2xxx(struct rt2x00_dev *rt2x00dev,
+ {
+ 	rt2x00_set_field32(&rf->rf4, RF4_FREQ_OFFSET, rt2x00dev->freq_offset);
+ 
+-	if (rt2x00dev->default_ant.tx == 1)
++	if (rt2x00dev->default_ant.tx_chain_num == 1)
+ 		rt2x00_set_field32(&rf->rf2, RF2_ANTENNA_TX1, 1);
+ 
+-	if (rt2x00dev->default_ant.rx == 1) {
++	if (rt2x00dev->default_ant.rx_chain_num == 1) {
+ 		rt2x00_set_field32(&rf->rf2, RF2_ANTENNA_RX1, 1);
+ 		rt2x00_set_field32(&rf->rf2, RF2_ANTENNA_RX2, 1);
+-	} else if (rt2x00dev->default_ant.rx == 2)
++	} else if (rt2x00dev->default_ant.rx_chain_num == 2)
+ 		rt2x00_set_field32(&rf->rf2, RF2_ANTENNA_RX2, 1);
+ 
+ 	if (rf->channel > 14) {
+@@ -1594,13 +1626,13 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	tx_pin = 0;
+ 
+ 	/* Turn on unused PA or LNA when not using 1T or 1R */
+-	if (rt2x00dev->default_ant.tx != 1) {
++	if (rt2x00dev->default_ant.tx_chain_num == 2) {
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN, 1);
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN, 1);
+ 	}
+ 
+ 	/* Turn on unused PA or LNA when not using 1T or 1R */
+-	if (rt2x00dev->default_ant.rx != 1) {
++	if (rt2x00dev->default_ant.rx_chain_num == 2) {
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_A1_EN, 1);
+ 		rt2x00_set_field32(&tx_pin, TX_PIN_CFG_LNA_PE_G1_EN, 1);
+ 	}
+@@ -3060,11 +3092,35 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Identify default antenna configuration.
+ 	 */
+-	rt2x00dev->default_ant.tx =
++	rt2x00dev->default_ant.tx_chain_num =
+ 	    rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH);
+-	rt2x00dev->default_ant.rx =
++	rt2x00dev->default_ant.rx_chain_num =
+ 	    rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH);
+ 
++	rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
++
++	if (rt2x00_rt(rt2x00dev, RT3070) ||
++	    rt2x00_rt(rt2x00dev, RT3090) ||
++	    rt2x00_rt(rt2x00dev, RT3390)) {
++		value = rt2x00_get_field16(eeprom,
++				EEPROM_NIC_CONF1_ANT_DIVERSITY);
++		switch (value) {
++		case 0:
++		case 1:
++		case 2:
++			rt2x00dev->default_ant.tx = ANTENNA_A;
++			rt2x00dev->default_ant.rx = ANTENNA_A;
++			break;
++		case 3:
++			rt2x00dev->default_ant.tx = ANTENNA_A;
++			rt2x00dev->default_ant.rx = ANTENNA_B;
++			break;
++		}
++	} else {
++		rt2x00dev->default_ant.tx = ANTENNA_A;
++		rt2x00dev->default_ant.rx = ANTENNA_A;
++	}
++
+ 	/*
+ 	 * Read frequency offset and RF programming sequence.
+ 	 */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 39bc2fa..fd28836 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -225,6 +225,8 @@ struct channel_info {
+ struct antenna_setup {
+ 	enum antenna rx;
+ 	enum antenna tx;
++	u8 rx_chain_num;
++	u8 tx_chain_num;
+ };
+ 
+ /*
+-- 
+1.7.2.3
 
-ssb_device_enable_1 is for first reset
-ssb_device_enable_2 is for second reset
-
-Notes from ssb_device_enable_1:
-1) There are few undocumented flushes performed by both drivers. Could
-be nice to document it in specs
-2) wl does not reset PHY (no B43_TMSLOW_PHYRESET and no taking it out
-of reset after enabling wireless core)
-3) After reset (last step in ssb_device_enable) wl doesn't leave core
-specific flags
-
-Notes from ssb_device_enable_2:
-1) ssb does not implement fast disable in case clocks are not enabled
-2) ssb uses different Reject bit than wl
-3) ssb doesn't check for "If the Core ID Low register has the
-"Initiator" bit set"
-4) wl checks for "Busy" bit in IM STATE, not TM as documented in specs
-5) when writing "Force Gated Clocks On", "Clock Enable", and "Reset"
-both drivers keep Reject set, however specs don't mention that
-6) wl checks "If the "Initiator" bit in TM State Low is set" using ff8
-register which is Core ID Low, not TMSLOW
-7) rest differences are duplicated from ssb_device_enable_1
-
-Larry: could you care for specs notes I collected?
-
-Michael: was there any reasons why we didn't implement some parts of
-core-disabling code?
-Michael: should we care about the way wl sets core specific flags? I
-didn't dig into that moment in MMIO dumps, but as ssb_device_enable
-implementation ignores flags at the end, it has to set flags somehow
-differently on it's own.
-
---=20
-Rafa=C5=82
-
---0016e6891d104ac305049bdee9e7
-Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_1.wl.txt"
-Content-Disposition: attachment; filename="ssb_device_enable_1.wl.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gjyn7ea40
-
-d2w6Cgo+Pj4gc3NiX2RldmljZV9lbmFibGUgc3RhcnQKPj4+IHNzYl9kZXZpY2VfZGlzYWJsZSBz
-dGFydAkJRGlzYWJsZSB0aGUgQ29yZSB0byBhY2NvdW50IGZvciBhIGNvcmUgaW4gYSByYW5kb20g
-c3RhdGUKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDAwMDAwMwkJSWYgdGhlIGNvcmUgaXMgYWxy
-ZWFkeSBpbiByZXNldCAodGhlICJSZXNldCIgYml0IGluIFRNIFN0YXRlIExvdyBpcyBzZXQpIGl0
-J3MgYWxyZWFkeSBkaXNhYmxlZCwgcmV0dXJuCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwMDAw
-MDMJCUlmIHRoZSBjb3JlIGlzIGFscmVhZHkgaW4gcmVzZXQgKHRoZSAiUmVzZXQiIGJpdCBpbiBU
-TSBTdGF0ZSBMb3cgaXMgc2V0KSBpdCdzIGFscmVhZHkgZGlzYWJsZWQsIHJldHVybgo+Pj4gc3Ni
-X2RldmljZV9kaXNhYmxlIGVuZAoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwNzAwMDEJKHNw
-ZWNpZmljPT1CNDNfVE1TTE9XX1BIWUNMS0VOKSBXcml0ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2Nr
-cyBPbiIsICJDbG9jayBFbmFibGUiLGFuZCAiUmVzZXQiIGJpdHMgYWxvbmcgd2l0aCBhbnkgZGV2
-aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3RlZCwgdG8gdGhlIFRNIFN0YXRlIExvdyByZWdpc3Rl
-ciAodW5zZXQgdGhlIHJlc3QpCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwNzAwMDEJCVBlcmZv
-cm0gYSBkdW1teSByZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNzYl9yZWFkMzIo
-MHhmOWMpIC0+IDB4MTAwYzAwMDAJCUlmIHRoZSBTIEVycm9yIGJpdCBpcyBzZXQgaW4gdGhlIFRN
-IFN0YXRlIEhpZ2ggcmVnaXN0ZXIKc3NiX3JlYWQzMigweGY5MCkgLT4gMHgwMDAwMDAyMAkJVW5z
-ZXQgdGhlICJJbiBCYW5kIEVycm9yIiBvciAiVGltZW91dCIgYml0cyBpZiB0aGUgSU0gU3RhdGUg
-cmVnaXN0ZXIgaGFzIHRoZW0gc2V0Cgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDA3MDAwMAko
-c3BlY2lmaWM9PUI0M19UTVNMT1dfUEhZQ0xLRU4pIFdyaXRlIHRoZSAiRm9yY2UgR2F0ZWQgQ2xv
-Y2tzIE9uIiwgIkNsb2NrIEVuYWJsZSIgYml0cywgYWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNp
-ZmljIGZsYWdzIHJlcXVlc3RlZCwgdG8gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlciAodW5zZXQg
-dGhlIHJlc3QpIApzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAwMDcwMDAwCQlQZXJmb3JtIGEgZHVt
-bXkgcmVhZCBvbiB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyCgpzc2Jfd3JpdGUzMigweGY5OCkg
-PC0gMHgwMDAxMDAwMAkoV2h5IG5vIEI0M19UTVNMT1dfUEhZQ0xLRU4/KSBXcml0ZSB0aGUgIkNs
-b2NrIEVuYWJsZSIgYml0IGFsb25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1
-ZXN0ZWQgdG8gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlciAodW5zZXQgdGhlIHJlc3QpCnNzYl9y
-ZWFkMzIoMHhmOTgpIC0+IDB4MDAwMTAwMDAJCVVuZG9jdW1lbnRlZCBmbHVzaAo+Pj4gc3NiX2Rl
-dmljZV9lbmFibGUgZW5kCg==
---0016e6891d104ac305049bdee9e7
-Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_1.b43.txt"
-Content-Disposition: attachment; filename="ssb_device_enable_1.b43.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gjyn7fh61
-
-YjQzL3NzYjoKCj4+PiBzc2JfZGV2aWNlX2VuYWJsZSBzdGFydAo+Pj4gc3NiX2RldmljZV9kaXNh
-YmxlIHN0YXJ0CQlEaXNhYmxlIHRoZSBDb3JlIHRvIGFjY291bnQgZm9yIGEgY29yZSBpbiBhIHJh
-bmRvbSBzdGF0ZQpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAwMDAwMDAxCQlJZiB0aGUgY29yZSBp
-cyBhbHJlYWR5IGluIHJlc2V0ICh0aGUgIlJlc2V0IiBiaXQgaW4gVE0gU3RhdGUgTG93IGlzIHNl
-dCkgaXQncyBhbHJlYWR5IGRpc2FibGVkLCByZXR1cm4KCj4+PiBzc2JfZGV2aWNlX2Rpc2FibGUg
-ZW5kCgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDBmMDAwMQkoc3BlY2lmaWM9PUI0M19UTVNM
-T1dfUEhZQ0xLRU4gfCBCNDNfVE1TTE9XX1BIWVJFU0VUKSBXcml0ZSB0aGUgIkZvcmNlIEdhdGVk
-IENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiLGFuZCAiUmVzZXQiIGJpdHMgYWxvbmcgd2l0aCBh
-bnkgZGV2aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3RlZCwgdG8gdGhlIFRNIFN0YXRlIExvdyBy
-ZWdpc3RlciAodW5zZXQgdGhlIHJlc3QpCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwZjAwMDEJ
-CVBlcmZvcm0gYSBkdW1teSByZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNzYl9y
-ZWFkMzIoMHhmOWMpIC0+IDB4MTAwODAwMDAJCUlmIHRoZSBTIEVycm9yIGJpdCBpcyBzZXQgaW4g
-dGhlIFRNIFN0YXRlIEhpZ2ggcmVnaXN0ZXIKc3NiX3JlYWQzMigweGY5MCkgLT4gMHgwMDAwMDAy
-MAkJVW5zZXQgdGhlICJJbiBCYW5kIEVycm9yIiBvciAiVGltZW91dCIgYml0cyBpZiB0aGUgSU0g
-U3RhdGUgcmVnaXN0ZXIgaGFzIHRoZW0gc2V0Cgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDBm
-MDAwMAkoc3BlY2lmaWM9PUI0M19UTVNMT1dfUEhZQ0xLRU4gfCBCNDNfVE1TTE9XX1BIWVJFU0VU
-KSBXcml0ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiIGJpdHMs
-IGFsb25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQsIHRvIHRoZSBU
-TSBTdGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KSAKc3NiX3JlYWQzMigweGY5OCkg
-LT4gMHgwMDBmMDAwMAkJUGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyBy
-ZWdpc3RlcgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwZDAwMDAJKHNwZWNpZmljPT1CNDNf
-VE1TTE9XX1BIWUNMS0VOIHwgQjQzX1RNU0xPV19QSFlSRVNFVCkgV3JpdGUgdGhlICJDbG9jayBF
-bmFibGUiIGJpdCBhbG9uZyB3aXRoIGFueSBkZXZpY2Ugc3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVk
-IHRvIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KQpzc2JfcmVhZDMy
-KDB4Zjk4KSAtPiAweDAwMGQwMDAwCQlVbmRvY3VtZW50ZWQgZmx1c2gKPj4+IHNzYl9kZXZpY2Vf
-ZW5hYmxlIGVuZAoKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDBkMDAwMAkJVW5zZXQgdGhlIFBI
-WSBSZXNldCBmbGFnIGFuZCBzZXQgdGhlIEZvcmNlIEdhdGVkIENsb2NrcyBmbGFnIGluIFRNIFN0
-YXRlIExvdyBGbGFncwpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDA3MDAwMAlVbnNldCB0aGUg
-UEhZIFJlc2V0IGZsYWcgYW5kIHNldCB0aGUgRm9yY2UgR2F0ZWQgQ2xvY2tzIGZsYWcgaW4gVE0g
-U3RhdGUgTG93IEZsYWdzCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwNzAwMDAJCVVuZG9jdW1l
-bnRlZCBmbHVzaAoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwNTAwMDAJVW5zZXQgdGhlIEZv
-cmNlIEdhdGVkIENsb2NrcyBmbGFnIGluIFRNIFN0YXRlIExvdyBGbGFncwpzc2JfcmVhZDMyKDB4
-Zjk4KSAtPiAweDAwMDUwMDAwCQlVbmRvY3VtZW50ZWQgZmx1c2gK
---0016e6891d104ac305049bdee9e7
-Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_2.wl.txt"
-Content-Disposition: attachment; filename="ssb_device_enable_2.wl.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gjyn7mzl2
-
-d2w6Cgo+Pj4gc3NiX2RldmljZV9lbmFibGUgc3RhcnQKPj4+IHNzYl9kZXZpY2VfZGlzYWJsZSBz
-dGFydAkJRGlzYWJsZSB0aGUgQ29yZSB0byBhY2NvdW50IGZvciBhIGNvcmUgaW4gYSByYW5kb20g
-c3RhdGUKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDAxMDAwMAkJSWYgdGhlIGNvcmUgaXMgYWxy
-ZWFkeSBpbiByZXNldCAodGhlICJSZXNldCIgYml0IGluIFRNIFN0YXRlIExvdyBpcyBzZXQpIGl0
-J3MgYWxyZWFkeSBkaXNhYmxlZCwgcmV0dXJuCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwMTAw
-MDAJCUlmIGNsb2NrcyBhcmUgbm90IHlldCBlbmFibGVkICh0aGUgIkNsb2NrIEVuYWJsZWQiIGJp
-dCBpbiBUTSBTdGF0ZSBMb3cKCgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwMTAwMDIJU2V0
-IHRoZSAiUmVqZWN0IiBiaXQgaW4gVE0gU3RhdGUgTG93LCB3aGljaCB3aWxsIGNhdXNlIHRoZSBj
-b3JlIHRvIHJlamVjdCBmdXJ0aGVyIGlucHV0CnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwMTAw
-MDIJCVBlcmZvcm0gYSBkdW1teSByZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNz
-Yl9yZWFkMzIoMHhmOWMpIC0+IDB4MTAwYzAwMDAJCVdhaXQgdW50aWwgdGhlICJCdXN5IiBiaXQg
-aW4gVE0gU3RhdGUgSGlnaCBpcyB1bnNldCAob3IgMTAwMDAwIHVTLCBjaGVja2luZyBldmVyeSAx
-MHVTZWMpCnNzYl9yZWFkMzIoMHhmOWMpIC0+IDB4MTAwYzAwMDAJCVdhaXQgdW50aWwgdGhlICJC
-dXN5IiBiaXQgaW4gVE0gU3RhdGUgSGlnaCBpcyB1bnNldCAob3IgMTAwMDAwIHVTLCBjaGVja2lu
-ZyBldmVyeSAxMHVTZWMpCgogcmVhZDMyIDB4YzAyMDBmZjggLT4gMHg0MTA0MjJjNQlJZiB0aGUg
-Q29yZSBJRCBMb3cgcmVnaXN0ZXIgaGFzIHRoZSAiSW5pdGlhdG9yIiBiaXQgc2V0CnNzYl9yZWFk
-MzIoMHhmOTApIC0+IDB4MDAwMDAwMjAJCVNldCB0aGUgIlJlamVjdCIgYml0IGluIHRoZSBJTSBT
-dGF0ZSByZWdpc3Rlcgpzc2Jfd3JpdGUzMigweGY5MCkgPC0gMHgwMjAwMDAyMAlTZXQgdGhlICJS
-ZWplY3QiIGJpdCBpbiB0aGUgSU0gU3RhdGUgcmVnaXN0ZXIKc3NiX3JlYWQzMigweGY5MCkgLT4g
-MHgwMjAwMDAyMAkJUGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIElNIFN0YXRlIHJlZ2lzdGVy
-CnNzYl9yZWFkMzIoMHhmOTApIC0+IDB4MDIwMDAwMjAJCShUTSAhPSBJTSkgV2FpdCB1bnRpbCB0
-aGUgIkJ1c3kiIGJpdCBpbiBUTSBTdGF0ZSBpcyB1bnNldCAob2YgMTAwMDAwIHVTLCBjaGVja2lu
-ZyBldmVyeSAxMHVTKQoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MDAwNzAwMDMJKFJlamVjdCBp
-cyB3cml0dGVuISkgKHNwZWNpZmljPT1CNDNfVE1TTE9XX1BIWUNMS0VOKSBXcml0ZSB0aGUgIkZv
-cmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiLCBhbmQgIlJlc2V0IiBiaXRzIGFs
-b25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQsIHRvIHRoZSBUTSBT
-dGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KQpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAw
-eDAwMDcwMDAzCQlQZXJmb3JtIGEgZHVtbXkgcmVhZCBvbiB0aGUgVE0gU3RhdGUgTG93IHJlZ2lz
-dGVyCgogcmVhZDMyIDB4YzAyMDBmZjggLT4gMHg0MTA0MjJjNQkoQ29yZSBJRCAhPSBUTVNMT1cp
-IElmIHRoZSAiSW5pdGlhdG9yIiBiaXQgaW4gVE0gU3RhdGUgTG93IGlzIHNldApzc2JfcmVhZDMy
-KDB4ZjkwKSAtPiAweDAyMDAwMDIwCQlDbGVhciB0aGUgIlJlamVjdCIgYml0IGluIHRoZSBJTSBT
-dGF0ZSByZWdpc3Rlcgpzc2Jfd3JpdGUzMigweGY5MCkgPC0gMHgwMDAwMDAyMAlDbGVhciB0aGUg
-IlJlamVjdCIgYml0IGluIHRoZSBJTSBTdGF0ZSByZWdpc3RlcgoKc3NiX3dyaXRlMzIoMHhmOTgp
-IDwtIDB4MDAwNDAwMDMJKHNwZWNpZmljPT1CNDNfVE1TTE9XX1BIWUNMS0VOKSBXcml0ZSB0aGUg
-IlJlc2V0IiBhbmQgIlJlamVjdCIgYml0cyBhbG9uZyB3aXRoIGFueSBkZXZpY2Ugc3BlY2lmaWMg
-ZmxhZ3MgcmVxdWVzdGVkIHRvIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCj4+PiBzc2JfZGV2
-aWNlX2Rpc2FibGUgZW5kCgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgwMDA3MDAwMQkoc3BlY2lm
-aWM9PUI0M19UTVNMT1dfUEhZQ0xLRU4pIFdyaXRlIHRoZSAiRm9yY2UgR2F0ZWQgQ2xvY2tzIE9u
-IiwgIkNsb2NrIEVuYWJsZSIsYW5kICJSZXNldCIgYml0cyBhbG9uZyB3aXRoIGFueSBkZXZpY2Ug
-c3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVkLCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyICh1
-bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgwMDA3MDAwMQkJUGVyZm9ybSBh
-IGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlcgoKc3NiX3JlYWQzMigweGY5
-YykgLT4gMHgxMDBjMDAwMAkJSWYgdGhlIFMgRXJyb3IgYml0IGlzIHNldCBpbiB0aGUgVE0gU3Rh
-dGUgSGlnaCByZWdpc3Rlcgpzc2JfcmVhZDMyKDB4ZjkwKSAtPiAweDAwMDAwMDIwCQlVbnNldCB0
-aGUgIkluIEJhbmQgRXJyb3IiIG9yICJUaW1lb3V0IiBiaXRzIGlmIHRoZSBJTSBTdGF0ZSByZWdp
-c3RlciBoYXMgdGhlbSBzZXQKCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDAwMDcwMDAwCShzcGVj
-aWZpYz09QjQzX1RNU0xPV19QSFlDTEtFTikgV3JpdGUgdGhlICJGb3JjZSBHYXRlZCBDbG9ja3Mg
-T24iLCAiQ2xvY2sgRW5hYmxlIiBiaXRzLCBhbG9uZyB3aXRoIGFueSBkZXZpY2Ugc3BlY2lmaWMg
-ZmxhZ3MgcmVxdWVzdGVkLCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyICh1bnNldCB0aGUg
-cmVzdCkgCnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MDAwNzAwMDAJCVBlcmZvcm0gYSBkdW1teSBy
-ZWFkIG9uIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIKCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAw
-eDAwMDEwMDAwCShXaHkgbm8gQjQzX1RNU0xPV19QSFlDTEtFTj8pIFdyaXRlIHRoZSAiQ2xvY2sg
-RW5hYmxlIiBiaXQgYWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3Rl
-ZCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyICh1bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQz
-MigweGY5OCkgLT4gMHgwMDAxMDAwMAkJVW5kb2N1bWVudGVkIGZsdXNoCj4+PiBzc2JfZGV2aWNl
-X2VuYWJsZSBlbmQK
---0016e6891d104ac305049bdee9e7
-Content-Type: text/plain; charset=US-ASCII; name="ssb_device_enable_2.b43.txt"
-Content-Disposition: attachment; filename="ssb_device_enable_2.b43.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gjyn7q663
-
-YjQzL3NzYjoKCj4+PiBzc2JfZGV2aWNlX2VuYWJsZSBzdGFydAo+Pj4gc3NiX2RldmljZV9kaXNh
-YmxlIHN0YXJ0CQlEaXNhYmxlIHRoZSBDb3JlIHRvIGFjY291bnQgZm9yIGEgY29yZSBpbiBhIHJh
-bmRvbSBzdGF0ZQpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAwMDUwMDAwCQlJZiB0aGUgY29yZSBp
-cyBhbHJlYWR5IGluIHJlc2V0ICh0aGUgIlJlc2V0IiBiaXQgaW4gVE0gU3RhdGUgTG93IGlzIHNl
-dCkgaXQncyBhbHJlYWR5IGRpc2FibGVkLCByZXR1cm4gCgkJCQkJSWYgY2xvY2tzIGFyZSBub3Qg
-eWV0IGVuYWJsZWQgKHRoZSAiQ2xvY2sgRW5hYmxlZCIgYml0IGluIFRNIFN0YXRlIExvdyAKCQkJ
-CQlXcml0ZSB0aGUgIlJlc2V0IiBhbmQgIlJlamVjdCIgYml0cyBhbG9uZyB3aXRoIGFueSBkZXZp
-Y2Ugc3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVkIHRvIHRoZSBUTSBTdGF0ZSBMb3csIHdhaXQgMXVT
-LCByZWdpc3RlciBhbmQgcmV0dXJuCgogcmVhZDMyIDB4YzAyMDBmZjggLT4gMHg0MTA0MjJjNQlz
-c2JfdG1zbG93X3JlamVjdF9iaXRtYXNrCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDAwMDEwMDA0
-CVNldCB0aGUgIlJlamVjdCIgYml0IGluIFRNIFN0YXRlIExvdywgd2hpY2ggd2lsbCBjYXVzZSB0
-aGUgY29yZSB0byByZWplY3QgZnVydGhlciBpbnB1dApzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDAw
-MDEwMDA0CQlQZXJmb3JtIGEgZHVtbXkgcmVhZCBvbiB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVy
-Cgpzc2JfcmVhZDMyKDB4ZjljKSAtPiAweDEwMDgwMDAwCQlXYWl0IHVudGlsIHRoZSAiQnVzeSIg
-Yml0IGluIFRNIFN0YXRlIEhpZ2ggaXMgdW5zZXQgKG9yIDEwMDAwMCB1UywgY2hlY2tpbmcgZXZl
-cnkgMTB1U2VjKQoKCj8JCQkJCUlmIHRoZSBDb3JlIElEIExvdyByZWdpc3RlciBoYXMgdGhlICJJ
-bml0aWF0b3IiIGJpdCBzZXQKCgoKCgpzc2Jfd3JpdGUzMigweGY5OCkgPC0gMHgyMDRmMDAwNQlX
-cml0ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiLCBhbmQgIlJl
-c2V0IiBiaXRzIGFsb25nIHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQs
-IHRvIHRoZSBUTSBTdGF0ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KQpzc2JfcmVhZDMy
-KDB4Zjk4KSAtPiAweDIwNGYwMDA1CQlQZXJmb3JtIGEgZHVtbXkgcmVhZCBvbiB0aGUgVE0gU3Rh
-dGUgTG93IHJlZ2lzdGVyCgo/CQkJCQlJZiB0aGUgIkluaXRpYXRvciIgYml0IGluIFRNIFN0YXRl
-IExvdyBpcyBzZXQgCj8JCQkJCUNsZWFyIHRoZSAiUmVqZWN0IiBiaXQgaW4gdGhlIElNIFN0YXRl
-IHJlZ2lzdGVyCgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0YzAwMDUJV3JpdGUgdGhlICJS
-ZXNldCIgYW5kICJSZWplY3QiIGJpdHMgYWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNpZmljIGZs
-YWdzIHJlcXVlc3RlZCB0byB0aGUgVE0gU3RhdGUgTG93IHJlZ2lzdGVyCnNzYl9yZWFkMzIoMHhm
-OTgpIC0+IDB4MjA0YzAwMDUJCVVuZG9jdW1lbnRlZCBmbHVzaAo+Pj4gc3NiX2RldmljZV9kaXNh
-YmxlIGVuZAoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0ZjAwMDEJKHNwZWNpZmljPT1CNDNf
-VE1TTE9XX1BIWUNMS0VOIHwgQjQzX1RNU0xPV19QSFlSRVNFVCB8IEI0M19UTVNMT1dfR01PREUg
-fCBCNDNfVE1TTE9XX1BIWV9CQU5EV0lEVEhfMjBNSFopIFdyaXRlIHRoZSAiRm9yY2UgR2F0ZWQg
-Q2xvY2tzIE9uIiwgIkNsb2NrIEVuYWJsZSIsYW5kICJSZXNldCIgYml0cyBhbG9uZyB3aXRoIGFu
-eSBkZXZpY2Ugc3BlY2lmaWMgZmxhZ3MgcmVxdWVzdGVkLCB0byB0aGUgVE0gU3RhdGUgTG93IHJl
-Z2lzdGVyICh1bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgyMDRmMDAwMQkJ
-UGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyByZWdpc3RlcgoKc3NiX3Jl
-YWQzMigweGY5YykgLT4gMHgxMDA4MDAwMAkJSWYgdGhlIFMgRXJyb3IgYml0IGlzIHNldCBpbiB0
-aGUgVE0gU3RhdGUgSGlnaCByZWdpc3Rlcgpzc2JfcmVhZDMyKDB4ZjkwKSAtPiAweDAwMDAwMDIw
-CQlVbnNldCB0aGUgIkluIEJhbmQgRXJyb3IiIG9yICJUaW1lb3V0IiBiaXRzIGlmIHRoZSBJTSBT
-dGF0ZSByZWdpc3RlciBoYXMgdGhlbSBzZXQKCnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDIwNGYw
-MDAwCShzcGVjaWZpYz09QjQzX1RNU0xPV19QSFlDTEtFTiB8IEI0M19UTVNMT1dfUEhZUkVTRVQg
-fCBCNDNfVE1TTE9XX0dNT0RFIHwgQjQzX1RNU0xPV19QSFlfQkFORFdJRFRIXzIwTUhaKSBXcml0
-ZSB0aGUgIkZvcmNlIEdhdGVkIENsb2NrcyBPbiIsICJDbG9jayBFbmFibGUiIGJpdHMsIGFsb25n
-IHdpdGggYW55IGRldmljZSBzcGVjaWZpYyBmbGFncyByZXF1ZXN0ZWQsIHRvIHRoZSBUTSBTdGF0
-ZSBMb3cgcmVnaXN0ZXIgKHVuc2V0IHRoZSByZXN0KSAKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgy
-MDRmMDAwMAkJUGVyZm9ybSBhIGR1bW15IHJlYWQgb24gdGhlIFRNIFN0YXRlIExvdyByZWdpc3Rl
-cgoKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0ZDAwMDAJKHNwZWNpZmljPT1CNDNfVE1TTE9X
-X1BIWUNMS0VOIHwgQjQzX1RNU0xPV19QSFlSRVNFVCB8IEI0M19UTVNMT1dfR01PREUgfCBCNDNf
-VE1TTE9XX1BIWV9CQU5EV0lEVEhfMjBNSFopIFdyaXRlIHRoZSAiQ2xvY2sgRW5hYmxlIiBiaXQg
-YWxvbmcgd2l0aCBhbnkgZGV2aWNlIHNwZWNpZmljIGZsYWdzIHJlcXVlc3RlZCB0byB0aGUgVE0g
-U3RhdGUgTG93IHJlZ2lzdGVyICh1bnNldCB0aGUgcmVzdCkKc3NiX3JlYWQzMigweGY5OCkgLT4g
-MHgyMDRkMDAwMAkJVW5kb2N1bWVudGVkIGZsdXNoCj4+PiBzc2JfZGV2aWNlX2VuYWJsZSBlbmQK
-CnNzYl9yZWFkMzIoMHhmOTgpIC0+IDB4MjA0ZDAwMDAJCVVuc2V0IHRoZSBQSFkgUmVzZXQgZmxh
-ZyBhbmQgc2V0IHRoZSBGb3JjZSBHYXRlZCBDbG9ja3MgZmxhZyBpbiBUTSBTdGF0ZSBMb3cgRmxh
-Z3MKc3NiX3dyaXRlMzIoMHhmOTgpIDwtIDB4MjA0NzAwMDAJVW5zZXQgdGhlIFBIWSBSZXNldCBm
-bGFnIGFuZCBzZXQgdGhlIEZvcmNlIEdhdGVkIENsb2NrcyBmbGFnIGluIFRNIFN0YXRlIExvdyBG
-bGFncwpzc2JfcmVhZDMyKDB4Zjk4KSAtPiAweDIwNDcwMDAwCQlVbmRvY3VtZW50ZWQgZmx1c2gK
-CnNzYl93cml0ZTMyKDB4Zjk4KSA8LSAweDIwNDUwMDAwCVVuc2V0IHRoZSBGb3JjZSBHYXRlZCBD
-bG9ja3MgZmxhZyBpbiBUTSBTdGF0ZSBMb3cgRmxhZ3MKc3NiX3JlYWQzMigweGY5OCkgLT4gMHgy
-MDQ1MDAwMAkJVW5kb2N1bWVudGVkIGZsdXNoCg==
---0016e6891d104ac305049bdee9e7--
