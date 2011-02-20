@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57256 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750790Ab1BDGYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 01:24:07 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 03 Feb 2011 22:23:47 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
-Date: Fri, 4 Feb 2011 11:53:59 +0530
-Message-ID: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:57153 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752365Ab1BTM6M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Feb 2011 07:58:12 -0500
+Received: by eye27 with SMTP id 27so2477439eye.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 04:58:07 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/8] Revert "rt2x00 : avoid timestamp for monitor injected frame."
+Date: Sun, 20 Feb 2011 13:56:07 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <201102201354.53379.IvDoorn@gmail.com> <201102201355.26260.IvDoorn@gmail.com> <201102201355.47592.IvDoorn@gmail.com>
+In-Reply-To: <201102201355.47592.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201102201356.08735.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In a highly noisy environment, a data frame which is queued before
-a nullfunc frame on a different hw queue may be sent over the air
-after the tx completion of nullfunc frame. This causes the station
-to enter power save and the AP to see the station as awake and
-continues to send the data traffic. Fix this by draining all tx
-queues before we send the null function frame with PM bit set.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+This reverts commit e81e0aef32bfa7f593b14479b9c7eaa7196798ac "rt2x00 : avoid
+timestamp for monitor injected frame." as it breaks proper timestamp insertion
+into probe responses injected by hostapd for example.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: Alban Browaeys <prahal@yahoo.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 68a1c76..0cb6017 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1710,7 +1710,6 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
- 			    bf->bf_buf_addr,
- 			    txq->axq_qnum);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index fa17c83..bf9bba3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -365,13 +365,10 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
  
--
- 	return bf;
- }
+ 	/*
+ 	 * Beacons and probe responses require the tsf timestamp
+-	 * to be inserted into the frame, except for a frame that has been injected
+-	 * through a monitor interface. This latter is needed for testing a
+-	 * monitor interface.
++	 * to be inserted into the frame.
+ 	 */
+-	if ((ieee80211_is_beacon(hdr->frame_control) ||
+-	    ieee80211_is_probe_resp(hdr->frame_control)) &&
+-	    (!(tx_info->flags & IEEE80211_TX_CTL_INJECTED)))
++	if (ieee80211_is_beacon(hdr->frame_control) ||
++	    ieee80211_is_probe_resp(hdr->frame_control))
+ 		__set_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags);
  
-@@ -1813,6 +1812,15 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	if (unlikely(!bf))
- 		return -ENOMEM;
- 
-+	if (ieee80211_is_nullfunc(hdr->frame_control) &&
-+	    ieee80211_has_pm(hdr->frame_control)) {
-+		/* Drain all the pending frames before we send a nullfunc frame
-+		 * to avoid any power save state mismatch between the station
-+		 * and the AP.
-+		 */
-+		ath_drain_all_txq(sc, false);
-+	}
-+
- 	q = skb_get_queue_mapping(skb);
- 	spin_lock_bh(&txq->axq_lock);
- 	if (txq == sc->tx.txq_map[q] &&
+ 	/*
 -- 
-1.6.3.3
+1.7.2.3
 
