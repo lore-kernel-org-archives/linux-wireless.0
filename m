@@ -1,46 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41403 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753612Ab1BQVzB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Feb 2011 16:55:01 -0500
-Received: by iyj8 with SMTP id 8so2839396iyj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Feb 2011 13:55:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1293745375-29775-1-git-send-email-david.ward@ll.mit.edu>
-References: <1293745375-29775-1-git-send-email-david.ward@ll.mit.edu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 17 Feb 2011 13:54:40 -0800
-Message-ID: <AANLkTi=aOdVVA8Q8ODMYm3j8-9CzmR56twT5zj2TRh2z@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: fix driver-select for iwl3945/iwlagn
-To: David Ward <david.ward@ll.mit.edu>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:30903 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751689Ab1BUTYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 14:24:16 -0500
+Subject: Re: [PATCH 0/4] update for 2.6.39
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Feb 2011 11:09:35 -0800
+Message-ID: <1298315375.5138.3.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBEZWMgMzAsIDIwMTAgYXQgMTo0MiBQTSwgRGF2aWQgV2FyZCA8ZGF2aWQud2FyZEBs
-bC5taXQuZWR1PiB3cm90ZToKPiBUaGUgaXdsMzk0NS9pd2xhZ24gZHJpdmVycyB3ZXJlIG5ldmVy
-IGJ1aWx0IHdoZW4gY2hvb3NpbmcgdGhlICJpbnRlbCIKPiBvciAiaXdsd2lmaSIgb3B0aW9ucyB3
-aXRoIHRoZSBkcml2ZXItc2VsZWN0IHNjcmlwdC4gKE5vdGUgdGhhdCB0aGlzCj4gY3VycmVudGx5
-IGFmZmVjdHMgYWxsIHN0YWJsZSByZWxlYXNlcyBvZiBjb21wYXQtd2lyZWxlc3MgYXMgd2VsbC4p
-Cj4KPiBTaWduZWQtb2ZmLWJ5OiBEYXZpZCBXYXJkIDxkYXZpZC53YXJkQGxsLm1pdC5lZHU+Cj4g
-LS0tCj4gwqBzY3JpcHRzL2RyaXZlci1zZWxlY3QgfCDCoCDCoDQgKystLQo+IMKgMSBmaWxlcyBj
-aGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEv
-c2NyaXB0cy9kcml2ZXItc2VsZWN0IGIvc2NyaXB0cy9kcml2ZXItc2VsZWN0Cj4gaW5kZXggMzk4
-OWI5Zi4uMGQ1YTM4YiAxMDA3NTUKPiAtLS0gYS9zY3JpcHRzL2RyaXZlci1zZWxlY3QKPiArKysg
-Yi9zY3JpcHRzL2RyaXZlci1zZWxlY3QKPiBAQCAtMzE4LDEzICszMTgsMTMgQEAgY2FzZSAkMSBp
-bgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZGlzYWJsZV92YXJfMDEKPiDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoDs7Cj4gwqAgwqAgwqAgwqBpbnRlbCkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IHNlbGVjdF9kcml2ZXJzIMKgIMKgIMKgIMKgIMKgQ09ORklHX0lXTFdJRkkgXAo+ICsgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgc2VsZWN0X2RyaXZlcnMgwqAgwqAgwqAgwqAgwqBDT05GSUdfQ09NUEFU
-X0lXTFdJRkkgXAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgQ09ORklHX0lQVwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZGlzYWJs
-ZV9zdGFnaW5nCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBkaXNhYmxlX3Zhcgo+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgOzsKPiDCoCDCoCDCoCDCoGl3bHdpZmkpCj4gLSDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCBzZWxlY3RfZHJpdmVyIMKgIMKgIMKgIMKgIMKgIENPTkZJR19JV0xXSUZJCj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCBzZWxlY3RfZHJpdmVyIMKgIMKgIMKgIMKgIMKgIENPTkZJR19D
-T01QQVRfSVdMV0lGSQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZGlzYWJsZV9zdGFnaW5nCj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBkaXNhYmxlX3Zhcl8wMQo+IMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgOzsKCkFwcGxpZWQsIHRoYW5rcyBhbmQgc29ycnkgZm9yIHRoZSBkZWxheSwgSSBqdXN0
-IHNhdyB0aGlzLgoKICBMdWlzCg==
+John,
+
+Please drop this series of patches, I will resubmit
+
+Thanks
+
+Wey
+
+On Mon, 2011-02-21 at 11:06 -0800, Guy, Wey-Yi W wrote:
+> We splite legacy(3945/4965) from iwlwifi into separated directory(iwlegacy)
+> We also fix few firmware related problems
+> 
+> Wey-Yi Guy (3):
+>   iwlwifi: Limit number of firmware reload
+>   iwlwifi: Loading correct uCode again when fail to load
+>   iwlwifi: enable 2-wire bt coex support for non-combo device
+> 
+> Meenakshi Venkataraman (1):
+>   iwlwifi: split the drivers for agn and legacy devices 3945/4965
+> 
+> these patches are also available from wireless-next-2.6 branch on
+>  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+> 
+>  drivers/net/wireless/Kconfig                    |    1 +
+>  drivers/net/wireless/Makefile                   |    3 +-
+>  drivers/net/wireless/iwlwifi/Kconfig            |  124 +-
+>  drivers/net/wireless/iwlwifi/Makefile           |   39 +-
+>  drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c |  522 ---
+>  drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h |   60 -
+>  drivers/net/wireless/iwlwifi/iwl-3945-fh.h      |  188 -
+>  drivers/net/wireless/iwlwifi/iwl-3945-hw.h      |  294 --
+>  drivers/net/wireless/iwlwifi/iwl-3945-led.c     |   64 -
+>  drivers/net/wireless/iwlwifi/iwl-3945-led.h     |   32 -
+>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c      |  995 ------
+>  drivers/net/wireless/iwlwifi/iwl-3945.c         | 2819 ---------------
+>  drivers/net/wireless/iwlwifi/iwl-3945.h         |  308 --
+>  drivers/net/wireless/iwlwifi/iwl-4965-hw.h      |  792 -----
+>  drivers/net/wireless/iwlwifi/iwl-4965.c         | 2666 --------------
+>  drivers/net/wireless/iwlwifi/iwl-agn.c          |   35 +-
+>  drivers/net/wireless/iwlwifi/iwl-core.c         |   76 +-
+>  drivers/net/wireless/iwlwifi/iwl-debugfs.c      |    2 -
+>  drivers/net/wireless/iwlwifi/iwl-dev.h          |   13 +-
+>  drivers/net/wireless/iwlwifi/iwl-eeprom.c       |    8 -
+>  drivers/net/wireless/iwlwifi/iwl-hcmd.c         |    5 -
+>  drivers/net/wireless/iwlwifi/iwl-led.c          |    2 -
+>  drivers/net/wireless/iwlwifi/iwl-legacy.c       |  657 ----
+>  drivers/net/wireless/iwlwifi/iwl-legacy.h       |   79 -
+>  drivers/net/wireless/iwlwifi/iwl-power.c        |    3 -
+>  drivers/net/wireless/iwlwifi/iwl-rx.c           |    6 -
+>  drivers/net/wireless/iwlwifi/iwl-scan.c         |   10 -
+>  drivers/net/wireless/iwlwifi/iwl-sta.c          |   11 -
+>  drivers/net/wireless/iwlwifi/iwl-tx.c           |    7 -
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c     | 4334 -----------------------
+>  30 files changed, 106 insertions(+), 14049 deletions(-)
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-fh.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-led.c
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-led.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945.c
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-4965.c
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-legacy.c
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-legacy.h
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl3945-base.c
+> 
+
+
