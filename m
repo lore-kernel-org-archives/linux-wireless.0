@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49264 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082Ab1BOAUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 19:20:11 -0500
-Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTingds9m3sj5bJoExiuoivbRSAtnF2A-4emjYMdJ@mail.gmail.com> (sfid-20110215_011145_942850_24C2EA9B)
-References: <1297725710.5683.17.camel@maggie>
-	 <AANLkTingds9m3sj5bJoExiuoivbRSAtnF2A-4emjYMdJ@mail.gmail.com>
-	 (sfid-20110215_011145_942850_24C2EA9B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 01:20:01 +0100
-Message-ID: <1297729201.5683.22.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:38227 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752947Ab1BUQnq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 11:43:46 -0500
+Received: by eyx24 with SMTP id 24so336547eyx.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 08:43:45 -0800 (PST)
+Message-ID: <4D62963D.9020806@lwfinger.net>
+Date: Mon, 21 Feb 2011 10:43:41 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Mathieu Malaterre <mathieu.malaterre@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Realtek RTL8192SE support ? (aka r8192se_pci)
+References: <AANLkTinoU0Dxy2iAHEsprTbakrbs8a8vPARFW0odz4g9@mail.gmail.com> <4D628D75.1070907@lwfinger.net> <AANLkTim-=h6N5a=4gaA+42xoWHk3PY1jM8FU9fkJ3CJp@mail.gmail.com>
+In-Reply-To: <AANLkTim-=h6N5a=4gaA+42xoWHk3PY1jM8FU9fkJ3CJp@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-15 at 01:03 +0100, Gábor Stefanik wrote: 
-> > -static int ssb_wait_bit(struct ssb_device *dev, u16 reg, u32 bitmask,
-> > -                       int timeout, int set)
-> > +static int ssb_wait_bits(struct ssb_device *dev, u16 reg, u32 bitmask,
-> > +                        int timeout, int set)
-> 
-> While you are at it, you may want to change this to "bool set".
+On 02/21/2011 10:12 AM, Mathieu Malaterre wrote:
+> On Mon, Feb 21, 2011 at 5:06 PM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>> On 02/21/2011 03:35 AM, Mathieu Malaterre wrote:
+>>>
+>>> Dear all,
+>>>
+>>>    As far as I know driver for rtl8192su will be added to kernel
+>>> 2.6.38. By any chance does anyone knows if rtl8192se will make it into
+>>> this release ?
+>>
+>> As part of our collaborative effort, Realtek has sent me a mac80211-based
+>> driver for the RTL8192SE. It will be submitted to the wireless mailing list
+>> for review once the driver for the RTL8192CU is accepted. The earliest this
+>> would happen is 2.6.39, but I think 2.6.40 is more realistic. I also have a
+>> driver for the RTL8192DE that will follow the RTL8192SE.
+>
+> Dear Larry,
+>
+>    Thank you very much for taking the time to answer my question.
+>    Would it be possible to be part of some kind of testing group for
+> this 'new' driver. I have been using r8192se_pci (*) for a couple of
+> days, but I have the feeling this driver keeps filling in my
+> computer's memory. I have to reboot to clean the memory (I have not
+> found any other way).
+>
+> Using linux 2.6.37 from debian unstable
 
-Please feel free to submit a separate patch on top of this.
+It will take me a few days, but I should be able to send you patches to 
+incorporate the rtl8192se driver.
 
--- 
-Greetings Michael.
-
+Larry
