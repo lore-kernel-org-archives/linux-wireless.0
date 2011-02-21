@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45050 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148Ab1BAOPN (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:50007 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751107Ab1BUUHY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 09:15:13 -0500
-Date: Tue, 1 Feb 2011 09:05:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Mohammed Shajakhan <Mohammed.Shajakhan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Fix memory leak due to failed PAPRD frames
-Message-ID: <20110201140538.GA2560@tuxdriver.com>
-References: <1296460529-13669-1-git-send-email-mshajakhan@atheros.com>
- <AANLkTimbtr8zKf6Nj0GmTccKU2u2ubTkL3a5BVSGfUK0@mail.gmail.com>
- <4D478F12.1070404@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D478F12.1070404@atheros.com>
+	Mon, 21 Feb 2011 15:07:24 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 447D554029D
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 15:10:25 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-21 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110221200721.C15EE43501@repository3.orbit-lab.org>
+Date: Mon, 21 Feb 2011 15:07:21 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 01, 2011 at 10:11:54AM +0530, Mohammed Shafi wrote:
-> On Tuesday 01 February 2011 12:13 AM, Luis R. Rodriguez wrote:
-> >On Sun, Jan 30, 2011 at 11:55 PM, Mohammed Shafi Shajakhan
-> ><mshajakhan@atheros.com>  wrote:
-> >>From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >>
-> >>free the skb's when the Tx of PAPRD frames fails and also add a debug
-> >>message indicating that.
-> >>
-> >>Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
-> >Is this a stable fix?
-> No Luis, this problem came from some recent changes in PAPRD before
-> that it was Ok.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + b6a583d...97d34f4 akpm-end   -> origin/akpm-end  (forced update)
+   ee715087..6f576d5 akpm-start -> origin/akpm-start
+   05136e6..07b259a  history    -> origin/history
+ + 0dbc173...af3a283 master     -> origin/master  (forced update)
+   ee715087..6f576d5 stable     -> origin/stable
+ * [new tag]         next-20110221 -> next-20110221
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-The patch applied to wireless-2.6 without changes, and the error
-handling for ath_tx_start matched existing usage.  So, I have it
-queued now in wireless-2.6 with an added "Cc: stable@kernel.org".
+compat-wireless code metrics
 
-Should I not?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+    789311 - Total upstream lines of code being pulled
