@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38333 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543Ab1BALXL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42973 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753472Ab1BUTAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 06:23:11 -0500
-Received: by wyb28 with SMTP id 28so6558772wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 03:23:10 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: pass up beacons from external BSS when operating as AP
-Date: Tue,  1 Feb 2011 13:23:05 +0200
-Message-Id: <1296559385-5357-1-git-send-email-arik@wizery.com>
+	Mon, 21 Feb 2011 14:00:36 -0500
+Date: Mon, 21 Feb 2011 13:47:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nathaniel Smith <njs@pobox.com>
+Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
+	johannes@sipsolutions.net, nbd@openwrt.org
+Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
+Message-ID: <20110221184716.GD9650@tuxdriver.com>
+References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
+ <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacons from external BSSes are required for updating overlapping BSS
-info (i.e. ERP protection). Pass them up unconditionally.
+On Fri, Feb 18, 2011 at 07:44:30PM -0800, Nathaniel Smith wrote:
+> On Fri, Feb 18, 2011 at 1:21 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > +       /* grab timestamp info for buffer control estimates */
+> > +       tserv = ktime_sub(ktime_get(), skb->tstamp);
+> [...]
+> > +               ewma_add(&sta->sdata->qdata[q].tserv_ns_avg,
+> > +                        ktime_to_ns(tserv));
+> 
+> I think you're still measuring how long it takes one packet to get
+> from the end of the queue to the beginning, rather than measuring how
+> long it takes each packet to go out?
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/rx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Yes, I am measuring how long the driver+device takes to release each
+skb back to me (using that as a proxy for how long it takes to get
+the fragment to the next hop).  Actually, FWIW I'm only measuring
+that time for those skb's that result in a tx status report.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index f36d70f..42dbb6f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2658,7 +2658,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 				return 0;
- 		} else if (!ieee80211_bssid_match(bssid,
- 					sdata->vif.addr)) {
--			if (!(status->rx_flags & IEEE80211_RX_IN_SCAN))
-+			if (!(status->rx_flags & IEEE80211_RX_IN_SCAN) &&
-+			    !ieee80211_is_beacon(hdr->frame_control))
- 				return 0;
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		}
+I tried to see how your measurement would be useful, but I just don't
+see how the number of frames ahead of me in the queue is relevant to
+the measured link latency?  I mean, I realize that having more packets
+ahead of me in the queue is likely to increase the latency for this
+frame, but I don't understand why I should use that information to
+discount the measured latency...?
+
+John
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
