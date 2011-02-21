@@ -1,119 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:55343 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752515Ab1BLAeX (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63030 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237Ab1BUQLH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 19:34:23 -0500
-Date: Sat, 12 Feb 2011 01:34:20 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, Sandesh Goel <sgoel@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH 2/2] mwl8k: Tell mac80211 we have rate adaptation in AP FW
-Message-ID: <20110212003420.GG1240@mail.wantstofly.org>
-References: <1297469031-21004-1-git-send-email-thomas@cozybit.com> <1297469031-21004-2-git-send-email-thomas@cozybit.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297469031-21004-2-git-send-email-thomas@cozybit.com>
+	Mon, 21 Feb 2011 11:11:07 -0500
+MIME-Version: 1.0
+Date: Tue, 22 Feb 2011 00:11:06 +0800
+Message-ID: <AANLkTi=OSZhT0OGN_3Jzw=zh1U_QjhB+vR8SxidM5Zge@mail.gmail.com>
+Subject: [2.6.38-rc5, patch] fix cfg80211_wext_siwfreq lock ordering...
+From: Daniel J Blueman <daniel.blueman@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ adding Nishant Sarmukadam and Sandesh Goel to CC ]
+I previously managed to reproduce a hang while scanning wireless
+channels (reproducible with airodump-ng hopping channels); subsequent
+lockdep instrumentation revealed a lock ordering issue [1].
 
+Without knowing the design intent, it looks like the locks should be
+taken in reverse order; please comment.
 
-On Fri, Feb 11, 2011 at 04:03:51PM -0800, Thomas Pedersen wrote:
+Signed-off-by: Daniel J Blueman <daniel.blueman@gmail.com>
 
-> From: Nishant Sarmukadam <nishants@marvell.com>
-> 
-> Minstrel rate control algorithm is enabled by default by mac80211.
-> This is not needed since the firmware does the rate control in our case.
-> 
-> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
-> ---
->  drivers/net/wireless/mwl8k.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> index f79da1b..840b9e4 100644
-> --- a/drivers/net/wireless/mwl8k.c
-> +++ b/drivers/net/wireless/mwl8k.c
-> @@ -4765,6 +4765,9 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
->  
->  	/* Set rssi values to dBm */
->  	hw->flags |= IEEE80211_HW_SIGNAL_DBM;
-> +	/* AP FW has rate control */
-> +	if (priv->ap_fw)
-> +		hw->flags |= IEEE80211_HW_HAS_RATE_CONTROL;
->  	hw->vif_data_size = sizeof(struct mwl8k_vif);
->  	hw->sta_data_size = sizeof(struct mwl8k_sta);
+--- [1]
 
-I got this same patch (almost exactly the same -- STA firmware actually
-also has rate control so the added AP check in this version of the patch
-is bogus) sent to me a number of times now, the last time from Pradeep
-Nemavat <pnemavat@marvell.com> in private email on Feb 26 2010.  This
-is what I wrote back to him at the time:
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.38-rc5-341cd #4
+-------------------------------------------------------
+airodump-ng/15445 is trying to acquire lock:
+ (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffff816b1266>]
+cfg80211_wext_siwfreq+0xc6/0x100
 
-| mac80211.h says:
-| 
-|  * @IEEE80211_HW_HAS_RATE_CONTROL:
-|  *      The hardware or firmware includes rate control, and cannot be
-|  *      controlled by the stack. As such, no rate control algorithm
-|  *      should be instantiated, and the TX rate reported to userspace
-|  *      will be taken from the TX status instead of the rate control
-|  *      algorithm.
-|  *      Note that this requires that the driver implement a number of
-|  *      callbacks so it has the correct information, it needs to have
-|  *      the @set_rts_threshold callback and must look at the BSS config
-|  *      @use_cts_prot for G/N protection, @use_short_slot for slot
-|  *      timing in 2.4 GHz and @use_short_preamble for preambles for
-|  *      CCK frames.
-| 
-| In particular, the "need to report TX rate used in the TX status"
-| requirement is something that we don't do, which is why I didn't merge
-| the IEEE80211_HW_HAS_RATE_CONTROL change upstream yet.  (I know that
-| it improves performance, but performance is secondary to correctness.)
-| 
-| One case where this is important is when you use tcpdump to look at
-| transmitted packets and at which rates they were transmitted for
-| debugging purposes -- tcpdump will report rates for each transmitted
-| packet just like for received packets, a la:
-| 
-|         [...]
-| 
-| In the situation before this patch, transmitted packets would be
-| reported at whatever rate minstrel chose for it (while the actual rate
-| on the air might be different), but after this patch, they will all
-| just be reported at 1 Mb/s, which is hardly better.
-| 
-| If there is no way to find out what rate the firmware decided to
-| transmit at, what we should perhaps do is prevent a transmit rate from
-| being sent to userspace at all.  I.e. in the packet that tcpdump sniffs
-| from the packet socket, there should just not be a "Rate" field in the
-| Radiotap (www.radiotap.org) header at all.  We might be able to do this
-| by choosing a special value in the TX status indicating that we don't
-| know the TX rate, and then having mac80211 not generate a Rate field
-| when it encounters an invalid value -- at least that would be better
-| than reporting TX rates we know to be wrong.
+but task is already holding lock:
+ (&wdev->mtx){+.+.+.}, at: [<ffffffff816b125c>] cfg80211_wext_siwfreq+0xbc/0x100
 
-The general strategy of the s/w team on this project at the time
-appeared to be to send me patches, to totally ignore the feedback I
-would then provide on those patches, and then to submit the exact
-same patches again two months later in the hope that I would at some
-point just get tired of NAKing them and they would get merged by way
-of reviewer exhaustion.
+which lock already depends on the new lock.
 
-E.g. it's probably the 3th or 4th time that I get sent this patch now,
-and while I freely admit that my reasoning above for not having merged
-this patch yet may be faulty, noone has bothered to try to convince me
-that it is, all I get is just the exact same patch resubmitted every
-N months without any indication that the previous feedback has even
-registered.
+the existing dependency chain (in reverse order) is:
 
-I have explained my objections against this patch in detail to Nishant
-in the past, and more than once.  Why has all that feedback just gone
-straight to /dev/null every single time?
+-> #1 (&wdev->mtx){+.+.+.}:
+       [<ffffffff810a79d6>] lock_acquire+0xc6/0x280
+       [<ffffffff816d6bce>] mutex_lock_nested+0x6e/0x4b0
+       [<ffffffff81696080>] cfg80211_netdev_notifier_call+0x430/0x5f0
+       [<ffffffff8109351b>] notifier_call_chain+0x8b/0x100
+       [<ffffffff810935b1>] raw_notifier_call_chain+0x11/0x20
+       [<ffffffff81576d92>] call_netdevice_notifiers+0x32/0x60
+       [<ffffffff815771a4>] __dev_notify_flags+0x34/0x80
+       [<ffffffff81577230>] dev_change_flags+0x40/0x70
+       [<ffffffff8158587c>] do_setlink+0x1fc/0x8d0
+       [<ffffffff81586042>] rtnl_setlink+0xf2/0x140
+       [<ffffffff81586923>] rtnetlink_rcv_msg+0x163/0x270
+       [<ffffffff8159d741>] netlink_rcv_skb+0xa1/0xd0
+       [<ffffffff815867b0>] rtnetlink_rcv+0x20/0x30
+       [<ffffffff8159d39a>] netlink_unicast+0x2ba/0x300
+       [<ffffffff8159dd57>] netlink_sendmsg+0x267/0x3e0
+       [<ffffffff8155e364>] sock_sendmsg+0xe4/0x110
+       [<ffffffff8155f3a3>] sys_sendmsg+0x253/0x3b0
+       [<ffffffff81003192>] system_call_fastpath+0x16/0x1b
 
+-> #0 (&rdev->devlist_mtx){+.+.+.}:
+       [<ffffffff810a7222>] __lock_acquire+0x1622/0x1d10
+       [<ffffffff810a79d6>] lock_acquire+0xc6/0x280
+       [<ffffffff816d6bce>] mutex_lock_nested+0x6e/0x4b0
+       [<ffffffff816b1266>] cfg80211_wext_siwfreq+0xc6/0x100
+       [<ffffffff816b2fad>] ioctl_standard_call+0x5d/0xd0
+       [<ffffffff816b3223>] T.808+0x163/0x170
+       [<ffffffff816b326a>] wext_handle_ioctl+0x3a/0x90
+       [<ffffffff815798d2>] dev_ioctl+0x6f2/0x830
+       [<ffffffff8155cf3d>] sock_ioctl+0xfd/0x290
+       [<ffffffff8117dffd>] do_vfs_ioctl+0x9d/0x590
+       [<ffffffff8117e53a>] sys_ioctl+0x4a/0x80
+       [<ffffffff81003192>] system_call_fastpath+0x16/0x1b
 
-thanks,
-Lennert
+other info that might help us debug this:
+
+2 locks held by airodump-ng/15445:
+ #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff81586782>] rtnl_lock+0x12/0x20
+ #1:  (&wdev->mtx){+.+.+.}, at: [<ffffffff816b125c>]
+cfg80211_wext_siwfreq+0xbc/0x100
+
+stack backtrace:
+Pid: 15445, comm: airodump-ng Not tainted 2.6.38-rc5-341cd #4
+Call Trace:
+ [<ffffffff810a3f0a>] ? print_circular_bug+0xfa/0x100
+ [<ffffffff810a7222>] ? __lock_acquire+0x1622/0x1d10
+ [<ffffffff810a1f99>] ? trace_hardirqs_off_caller+0x29/0xc0
+ [<ffffffff810a79d6>] ? lock_acquire+0xc6/0x280
+ [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
+ [<ffffffff810a31d7>] ? mark_held_locks+0x67/0x90
+ [<ffffffff816d6bce>] ? mutex_lock_nested+0x6e/0x4b0
+ [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
+ [<ffffffff810a31d7>] ? mark_held_locks+0x67/0x90
+ [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
+ [<ffffffff816b1266>] ? cfg80211_wext_siwfreq+0xc6/0x100
+ [<ffffffff816b2fad>] ? ioctl_standard_call+0x5d/0xd0
+ [<ffffffff8157818b>] ? __dev_get_by_name+0x9b/0xc0
+ [<ffffffff816b2f50>] ? ioctl_standard_call+0x0/0xd0
+ [<ffffffff816b3223>] ? T.808+0x163/0x170
+ [<ffffffff8112ddf2>] ? might_fault+0x72/0xd0
+ [<ffffffff816b326a>] ? wext_handle_ioctl+0x3a/0x90
+ [<ffffffff8112de3b>] ? might_fault+0xbb/0xd0
+ [<ffffffff815798d2>] ? dev_ioctl+0x6f2/0x830
+ [<ffffffff810a1bae>] ? put_lock_stats+0xe/0x40
+ [<ffffffff810a1c8c>] ? lock_release_holdtime+0xac/0x150
+ [<ffffffff8155cf3d>] ? sock_ioctl+0xfd/0x290
+ [<ffffffff8117dffd>] ? do_vfs_ioctl+0x9d/0x590
+ [<ffffffff8116c8ff>] ? fget_light+0x1df/0x3c0
+ [<ffffffff8117e53a>] ? sys_ioctl+0x4a/0x80
+ [<ffffffff81003192>] ? system_call_fastpath+0x16/0x1b
+
+--- [2]
+
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 3e5dbd4..d112f03 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -802,11 +802,11 @@ int cfg80211_wext_siwfreq(struct net_device *dev,
+ 			return freq;
+ 		if (freq == 0)
+ 			return -EINVAL;
+-		wdev_lock(wdev);
+ 		mutex_lock(&rdev->devlist_mtx);
++		wdev_lock(wdev);
+ 		err = cfg80211_set_freq(rdev, wdev, freq, NL80211_CHAN_NO_HT);
+-		mutex_unlock(&rdev->devlist_mtx);
+ 		wdev_unlock(wdev);
++		mutex_unlock(&rdev->devlist_mtx);
+ 		return err;
+ 	default:
+ 		return -EOPNOTSUPP;
+-- 
+Daniel J Blueman
