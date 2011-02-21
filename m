@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53137 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754790Ab1BMR5u (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45264 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab1BUVHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 12:57:50 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 9so4086972iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Feb 2011 09:57:50 -0800 (PST)
-From: "Nathaniel J. Smith" <njs@pobox.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, "Nathaniel J. Smith" <njs@pobox.com>
-Subject: [PATCH 5/5] iwlwifi: make current tx queue sizes visible in debugfs
-Date: Sun, 13 Feb 2011 09:56:43 -0800
-Message-Id: <1297619803-2832-7-git-send-email-njs@pobox.com>
-In-Reply-To: <1297619803-2832-1-git-send-email-njs@pobox.com>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
+	Mon, 21 Feb 2011 16:07:34 -0500
+Subject: Re: [ipw3945-devel] [PATCH wireless-2.6] iwlagn: Support new 5000
+ microcode.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
+	stable@kernel.org, linux-wireless@vger.kernel.org,
+	"Fry, Donald H" <donald.h.fry@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <AANLkTikFAzdV=A0uEo+5D4ixwgNz0XA3ogA00Wm=r-8t@mail.gmail.com>
+References: <1298318710-23775-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <AANLkTikFAzdV=A0uEo+5D4ixwgNz0XA3ogA00Wm=r-8t@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Feb 2011 22:07:25 +0100
+Message-ID: <1298322445.3836.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Nathaniel J. Smith <njs@pobox.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+On Mon, 2011-02-21 at 21:29 +0100, Gábor Stefanik wrote:
+> On Mon, Feb 21, 2011 at 9:05 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> > From: Fry, Donald H <donald.h.fry@intel.com>
+> >
+> > New iwlwifi-5000 microcode requires driver support for API version 5.
+> >
+> > Signed-off-by: Don Fry <donald.h.fry@intel.com>
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > CC: stable@kernel.org
+> > ---
+> > these patches are also available from wireless-2.6 branch on
+> >  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+> >
+> >  drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+> > index 79ab0a6..537fb8c 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+> > @@ -51,7 +51,7 @@
+> >  #include "iwl-agn-debugfs.h"
+> >
+> >  /* Highest firmware API version supported */
+> > -#define IWL5000_UCODE_API_MAX 2
+> > +#define IWL5000_UCODE_API_MAX 5
+> 
+> Where are versions 3 and 4?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index bc7a965..31c58fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -980,7 +980,7 @@ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
- 	int pos = 0;
- 	int cnt;
- 	int ret;
--	const size_t bufsz = sizeof(char) * 64 *
-+	const size_t bufsz = sizeof(char) * 128 *
- 				priv->cfg->base_params->num_of_queues;
- 
- 	if (!priv->txq) {
-@@ -995,9 +995,11 @@ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
- 		txq = &priv->txq[cnt];
- 		q = &txq->q;
- 		pos += scnprintf(buf + pos, bufsz - pos,
--				"hwq %.2d: read=%u write=%u stop=%d"
-+				"hwq %.2d: read=%u write=%u"
-+				" high_mark=%u stop=%d"
- 				" swq_id=%#.2x (ac %d/hwq %d)\n",
- 				cnt, q->read_ptr, q->write_ptr,
-+				atomic_read(&q->high_mark),
- 				!!test_bit(cnt, priv->queue_stopped),
- 				txq->swq_id, txq->swq_id & 3,
- 				(txq->swq_id >> 2) & 0x1f);
--- 
-1.7.1
+They don't (and won't) exist. We just went to version 5 wholesale to
+make it easier to distinguish between the new and old file format -- in
+the future new features etc. won't be announced by versions but by TLVs
+in the file format (see the code that loads the ucode file from disk)
+unless the firmware is completely incompatible.
+
+johannes
 
