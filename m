@@ -1,94 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42984 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755469Ab1B1QuT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51871 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226Ab1BUP2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 11:50:19 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 17so3916695fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:50:18 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/9] [mac80211] add method to access oper chan
-Date: Mon, 28 Feb 2011 17:46:22 +0100
-Cc: lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
-	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
-In-Reply-To: <201102281740.37036.bernhard.schmidt@saxnet.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201102281746.23102.bernhard.schmidt@saxnet.de>
+	Mon, 21 Feb 2011 10:28:08 -0500
+Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight
+ bufferbloat
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
+	"Nathaniel J. Smith" <njs@pobox.com>, nbd@openwrt.org
+In-Reply-To: <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
+References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
+	 <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Feb 2011 16:28:06 +0100
+Message-ID: <1298302086.3707.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm really not sure about this.. is there another/better way to
-access the current channel last set on a wiphy?
+On Fri, 2011-02-18 at 16:21 -0500, John W. Linville wrote:
+> This is an implementation of the eBDP algorithm as documented in
+> Section IV of "Buffer Sizing for 802.11 Based Networks" by Tianji Li,
+> et al.
+> 
+> 	http://www.hamilton.ie/tianji_li/buffersizing.pdf
+> 
+> This implementation timestamps an skb before handing it to the
+> hardware driver, then computes the service time when the frame is
+> freed by the driver.  An exponentially weighted moving average of per
+> fragment service times is used to restrict queueing delays in hopes
+> of achieving a target fragment transmission latency.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> v1 -> v2:
+> - execute algorithm separately for each WMM queue
+> - change ewma scaling parameters
+> - calculate max queue len only when new latency data is received
+> - stop queues when occupancy limit is reached rather than dropping
+> - use skb->destructor for tracking queue occupancy
+> 
+> Johannes' comment about tx status reporting being unreliable (and what
+> he was really saying) finally sunk-in.  So, this version uses
+> skb->destructor to track in-flight fragments.  That should handle
+> fragments that get silently dropped in the driver for whatever reason
+> without leaking queue capacity.  Correct me if I'm wrong!
 
-Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
----
- include/net/cfg80211.h |    2 ++
- net/mac80211/cfg.c     |    8 ++++++++
- net/wireless/chan.c    |    2 +-
- 3 files changed, 11 insertions(+), 1 deletions(-)
+Yeah, I had that idea as well. Could unify the existing skb_orphan()
+call though :-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 679a049..8300699 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1121,6 +1121,7 @@ struct cfg80211_pmksa {
-  *	doesn't verify much. Note, however, that the passed netdev may be
-  *	%NULL as well if the user requested changing the channel for the
-  *	device itself, or for a monitor interface.
-+ * @get_channel: Get current channel for a given wireless interface.
-  *
-  * @scan: Request to do a scan. If returning zero, the scan request is given
-  *	the driver, and will be valid until passed to cfg80211_scan_done().
-@@ -1276,6 +1277,7 @@ struct cfg80211_ops {
- 	int	(*set_channel)(struct wiphy *wiphy, struct net_device *dev,
- 			       struct ieee80211_channel *chan,
- 			       enum nl80211_channel_type channel_type);
-+	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
- 
- 	int	(*scan)(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_scan_request *request);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8b436c7..2a05b31 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1257,6 +1257,13 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static struct ieee80211_channel *ieee80211_get_oper_channel(struct wiphy *wiphy)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	return local->oper_channel;
-+}
-+
- #ifdef CONFIG_PM
- static int ieee80211_suspend(struct wiphy *wiphy)
- {
-@@ -2027,6 +2034,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.change_bss = ieee80211_change_bss,
- 	.set_txq_params = ieee80211_set_txq_params,
- 	.set_channel = ieee80211_set_channel,
-+	.get_channel = ieee80211_get_oper_channel,
- 	.suspend = ieee80211_suspend,
- 	.resume = ieee80211_resume,
- 	.scan = ieee80211_scan,
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 17cd0c0..4e63e67 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -93,7 +93,7 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 			return -ENETDOWN;
- 	}
- 
--	if (!rdev->ops->set_channel)
-+	if (!rdev->ops->set_channel || !rdev->ops->get_channel)
- 		return -EOPNOTSUPP;
- 
- 	chan = rdev_freq_to_chan(rdev, freq, channel_type);
--- 
-1.7.2.3
+However, Nathaniel is right -- if the skb is freed right away during
+tx() you kinda estimate its queue time to be virtually zero. That
+doesn't make a lot of sense and might in certain conditions exacerbate
+the problem, for example if the system is out of memory more packets
+might be allowed through than in normal operation etc.
+
+Also, for some USB drivers I believe SKB lifetime has no relation to
+queue size at all because the data is just shuffled into an URB. I'm not
+sure we can solve this generically. I'm not really sure how this works
+for USB drivers, I think they queue up frames with the HCI controller
+rather than directly with the device.
+
+Finally, this isn't taking into account any of the issues about
+aggregation and AP mode. Remember that both with multiple streams (on
+different ACs) and even more so going to different stations
+(AP/IBSS/mesh modes, and likely soon even in STA mode with (T)DLS, and
+let's not forget 11ac/ad) there may be vast differences in the time
+different frames spend on a queue which are not just due to bloated
+queues. I'm concerned about this since none of it has been taken into
+account in the paper you're basing this on, all evaluations seem to be
+pretty much based on a single traffic stream.
+
+Overall, I think there should be some more research first. This might
+help in some cases, but do we know it won't completely break throughput
+in other cases?
+
+johannes
+
