@@ -1,106 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22871 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28562 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754457Ab1BHPvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 10:51:51 -0500
-Subject: Re: [RFC/RFT] iwl3945: use software scanning by default
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1297172211-17448-1-git-send-email-sgruszka@redhat.com>
-References: <1297172211-17448-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Feb 2011 07:50:07 -0800
-Message-ID: <1297180207.20613.41.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1750936Ab1BUJvo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 04:51:44 -0500
+Date: Mon, 21 Feb 2011 10:50:39 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 13/14] rtlwifi: rtl8192cu: Add routine trx
+Message-ID: <20110221095037.GA4390@redhat.com>
+References: <4d5d90c9.sN3PKFogcRQR8mbQ%Larry.Finger@lwfinger.net>
+ <20110218112633.GA2270@redhat.com>
+ <4D5EA1D4.9080600@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D5EA1D4.9080600@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Fri, Feb 18, 2011 at 10:44:04AM -0600, Larry Finger wrote:
+> There are a lot of endian warnings besides the frame_header ones.
+> Fixing many of them will require rewriting those macros that you
+> mentioned in an earlier message. My efforts on those usually end up
+> breaking the drivers
+Hmm, but they do not break now ? 
 
-On Tue, 2011-02-08 at 05:36 -0800, Stanislaw Gruszka wrote:
-> Looking for some more testing and opinions.
-> 
-> Patch fixes:
-> https://bugzilla.redhat.com/show_bug.cgi?id=671366
-> and probably some other "very poor performance" bugs reported
-> elsewhere.
-> 
-> Sometimes after hardware scanning device is unable to receive frames
-> at higher rate, what cause that very slow speed is observed by the users.
-> 
-> To workaround problem we can use software scanning. Patch remove
-> "deprecated" warning and make sw scan be used by default on 3945.
-> 
-> On older kernels, in particular 2.6.35, software scanning does not
-> fix problem. On my setup, not affected by bug, I can see slow speed
-> with software scans on 2.6.35 as well. I'm not quite sure why. Anyway
-> on upstream patch works good for me and bug reporter.
-> 
-> ---
->  drivers/net/wireless/iwlwifi/iwl-core.h     |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   14 +++-----------
->  2 files changed, 5 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-> index 6e14a7b..9e7a6d1 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-> @@ -254,8 +254,8 @@ struct iwl_ops {
->  };
->  
->  struct iwl_mod_params {
-> -	int sw_crypto;		/* def: 0 = using hardware encryption */
-> -	int disable_hw_scan;	/* def: 0 = use h/w scan */
-> +	int sw_crypto;		/* def: HW dependent */
-> +	int disable_hw_scan;	/* def: HW dependent */
->  	int num_of_queues;	/* def: HW dependent */
->  	int disable_11n;	/* def: 0 = 11n capabilities enabled */
->  	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 10e8034..7d9e234 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -94,6 +94,7 @@ MODULE_LICENSE("GPL");
->  struct iwl_mod_params iwl3945_mod_params = {
->  	.sw_crypto = 1,
->  	.restart_fw = 1,
-> +	.disable_hw_scan = 1,
->  	/* the rest are 0 by default */
->  };
->  
-> @@ -3996,16 +3997,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
->  	priv->contexts[IWL_RXON_CTX_BSS].station_devtype = RXON_DEV_TYPE_ESS;
->  	priv->contexts[IWL_RXON_CTX_BSS].unused_devtype = RXON_DEV_TYPE_ESS;
->  
-> -	/*
-> -	 * Disabling hardware scan means that mac80211 will perform scans
-> -	 * "the hard way", rather than using device's scan.
-> -	 */
-> -	if (iwl3945_mod_params.disable_hw_scan) {
-> -		dev_printk(KERN_DEBUG, &(pdev->dev),
-> -			"sw scan support is deprecated\n");
-> +	if (iwl3945_mod_params.disable_hw_scan)
->  		iwl3945_hw_ops.hw_scan = NULL;
-> -	}
-> -
->  
->  	IWL_DEBUG_INFO(priv, "*** LOAD DRIVER ***\n");
->  	priv->cfg = cfg;
-> @@ -4326,8 +4319,7 @@ MODULE_PARM_DESC(debug, "debug output mask");
->  #endif
->  module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
->  		   int, S_IRUGO);
-> -MODULE_PARM_DESC(disable_hw_scan,
-> -		 "disable hardware scanning (default 0) (deprecated)");
-> +MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 1)");
->  module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, S_IRUGO);
->  MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
->  
+> and I had hoped to defer that effort, but it
+> seems that the time has come. While I'm doing that, will you look at
+> my first cut at fixing endian issues to make sure I'm doing it
+> correctly?
 
-don't have much experience with 3945, but not sure setting sw scan by
-default is the right choice?
+This patch as well your furtner one "[PATCH V2 15/16] rtlwifi:
+rtl8192ce: Fix endian warnings" looks fine, thanks.
 
-Wey
-
+Stanislaw
