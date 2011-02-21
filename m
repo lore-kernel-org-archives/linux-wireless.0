@@ -1,90 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37791 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753985Ab1BMLVS convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57469 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab1BUCTp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Feb 2011 06:21:18 -0500
+	Sun, 20 Feb 2011 21:19:45 -0500
+Received: by ywj3 with SMTP id 3so599530ywj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:19:45 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <AANLkTikk_1ywKCMkRgRR20h3ApEhc3kdErMDBx9c9T2f@mail.gmail.com>
-References: <NMZS1i37KEE.A.1eG.6_wVNB@chimera>
-	<AANLkTikk_1ywKCMkRgRR20h3ApEhc3kdErMDBx9c9T2f@mail.gmail.com>
-Date: Sun, 13 Feb 2011 12:21:17 +0100
-Message-ID: <AANLkTinQnH7YEeuHj3zAZo1RReXSxcQqUxTw1ocTp4R2@mail.gmail.com>
-Subject: Re: 2.6.38-rc4-git5: Reported regressions from 2.6.37
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Nicolas Stransky <Nico@stransky.cx>, sgh@sgh.dk,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19809.52147.200376.92948@gargle.gargle.HOWL>
+Date: Mon, 21 Feb 2011 07:49:31 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 14/23] ath9k_htc: Calculate and set the HW opmode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 13, 2011 at 12:07 PM, Sedat Dilek
-<sedat.dilek@googlemail.com> wrote:
-> On Sat, Feb 12, 2011 at 11:57 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> This message contains a list of some regressions from 2.6.37,
->> for which there are no fixes in the mainline known to the tracking team.
->> If any of them have been fixed already, please let us know.
->>
->> If you know of any other unresolved regressions from 2.6.37, please let us
->> know either and we'll add them to the list.  Also, please let us know
->> if any of the entries below are invalid.
->>
->> Each entry from the list will be sent additionally in an automatic reply
->> to this message with CCs to the people involved in reporting and handling
->> the issue.
->>
->>
->> Listed regressions statistics:
->>
->>  Date          Total  Pending  Unresolved
->>  ----------------------------------------
->>  2011-02-12       39       20          18
->>  2011-02-03       19       11           7
->>
->>
->> Unresolved regressions
->> ----------------------
->
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=27382
->> Subject         : ath5k phy0: gain calibration timeout
->> Submitter       : Nicolas Stransky <Nico@stransky.cx>
->> Date            : 2011-01-23 00:18 (21 days old)
->>
->
-> As I looked into the BR #27382...
-> The patch by Nick Kossifidis from comment #32 (see [1] and [2]) fixed
-> the problem for two affected users.
->
-> As I have an ath5k wifi device (but I am not affected) on one of my
-> machines, I could test also.
->
-> Hey, Nick :-)
-> You promised to send a fix to linux-wireless ML (hope, I didn't oversee it).
->
-> Raphael, might be good to wait for the promised patch?
->
-> - Sedat -
->
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=27382#c32
-> [2] http://www.kernel.org/pub/linux/kernel/people/mickflemm/fastchanfix.patch
->
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Oops, shame on me... Nick's patch was already sent to l-w ML.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   15 ++++++++++++++-
+ 1 files changed, 14 insertions(+), 1 deletions(-)
 
-See "[PATCH] ath5k: Fix fast channel switching" [1].
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 51a8c51..9733580 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -166,6 +166,18 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+ 	ath_hw_setbssidmask(common);
+ }
+ 
++static void ath9k_htc_set_opmode(struct ath9k_htc_priv *priv)
++{
++	if (priv->num_ibss_vif)
++		priv->ah->opmode = NL80211_IFTYPE_ADHOC;
++	else if (priv->num_ap_vif)
++		priv->ah->opmode = NL80211_IFTYPE_AP;
++	else
++		priv->ah->opmode = NL80211_IFTYPE_STATION;
++
++	ath9k_hw_setopmode(priv->ah);
++}
++
+ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ {
+ 	struct ath_hw *ah = priv->ah;
+@@ -1252,12 +1264,12 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 
+ 	ath9k_htc_set_bssid_mask(priv, vif);
+ 
+-	priv->ah->opmode = vif->type;
+ 	priv->vif_slot |= (1 << avp->index);
+ 	priv->nvifs++;
+ 	priv->vif = vif;
+ 
+ 	INC_VIF(priv, vif->type);
++	ath9k_htc_set_opmode(priv);
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
+@@ -1293,6 +1305,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+ 	priv->vif = NULL;
+ 
+ 	DEC_VIF(priv, vif->type);
++	ath9k_htc_set_opmode(priv);
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface at idx: %d\n", avp->index);
+ 
+-- 
+1.7.4.1
 
-Raphael, can you add the reference to the patch to the entry/list?
-Thanks.
-
-The patch is already in linux-next [2], but I am not sure if it is in
-Linus-tree, already.
-
-- Sedat -
-
-[1] https://patchwork.kernel.org/patch/530811/
-[2] http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commit;h=c210de8f88215db31cf3529c9763fc3124d6e09d
