@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:33319 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192Ab1BNXIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 18:08:41 -0500
-Subject: Re: Notes on ssb specs and implementation
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:15333 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752622Ab1BUUAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 15:00:14 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <AANLkTinnY2EzNBReVPqHYzi9xDvZNXFZqbUm66e9vTOM@mail.gmail.com> (sfid-20110215_000306_559821_FFFFFFFF9C6FCD67)
-References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
-	 <1297282621.9734.5.camel@maggie>
-	 <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com>
-	 <1297720877.5683.3.camel@maggie>
-	 <AANLkTi=ayavFKJw9s-n-AvMDrtMxXdDcjV+BnoxO-qkE@mail.gmail.com>
-	 <1297723925.5683.11.camel@maggie>
-	 <AANLkTinnY2EzNBReVPqHYzi9xDvZNXFZqbUm66e9vTOM@mail.gmail.com>
-	 (sfid-20110215_000306_559821_FFFFFFFF9C6FCD67)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Feb 2011 00:08:33 +0100
-Message-ID: <1297724913.5683.12.camel@maggie>
-Mime-Version: 1.0
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/4] iwlwifi: enable 2-wire bt coex support for non-combo device
+Date: Mon, 21 Feb 2011 11:45:35 -0800
+Message-Id: <1298317536-5071-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1298317536-5071-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1298317536-5071-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-15 at 00:02 +0100, Rafał Miłecki wrote: 
-> W dniu 14 lutego 2011 23:52 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> > On Mon, 2011-02-14 at 23:32 +0100, Rafał Miłecki wrote:
-> >> Sure. It's not for submission, so you have to expect magic values.
-> >
-> > That patch doesn't look too bad.
-> 
-> Should we commit such a patch? Even if we didn't notice it to improve anything?
+For non-combo devices, 2-wire BT coex is needed to make sure BT coex
+still function with external BT devices
 
-I think it should wait until you got the device working.
-But once it works, it should be committed.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c04d991..9965215 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2744,9 +2744,11 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 			priv->cfg->ops->hcmd->set_rxon_chain(priv, ctx);
+ 	}
+ 
+-	if (priv->cfg->bt_params &&
+-	    !priv->cfg->bt_params->advanced_bt_coexist) {
+-		/* Configure Bluetooth device coexistence support */
++	if (!priv->cfg->bt_params || (priv->cfg->bt_params &&
++	    !priv->cfg->bt_params->advanced_bt_coexist)) {
++		/*
++		 * default is 2-wire BT coexexistence support
++		 */
+ 		priv->cfg->ops->hcmd->send_bt_config(priv);
+ 	}
+ 
 -- 
-Greetings Michael.
+1.7.0.4
 
