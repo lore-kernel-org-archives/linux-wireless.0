@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35755 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754705Ab1BHRKg (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:64346 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568Ab1BUQJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 12:10:36 -0500
-Message-ID: <4D517908.6020003@candelatech.com>
-Date: Tue, 08 Feb 2011 09:10:32 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 21 Feb 2011 11:09:35 -0500
+Received: by wwa36 with SMTP id 36so6231652wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 08:09:34 -0800 (PST)
+Message-ID: <4D628E37.7040503@lwfinger.net>
+Date: Mon, 21 Feb 2011 10:09:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/7] mac80211:  Make STA disconnect messages warn instead
- of debug.
-References: <1297115078-27773-1-git-send-email-greearb@candelatech.com> <87y65q7hc3.fsf@purkki.adurom.net>
-In-Reply-To: <87y65q7hc3.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com> <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com> <4CBF640C.4080405@broadcom.com> <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com> <1287674517.2383.7.camel@dcbw.foobar.com> <AANLkTikLbtV5dLu+Gu=8ibi=ERPiOykN9qBL4rPKS36g@mail.gmail.com> <4D5EF0E9.4050908@lwfinger.net> <20110221095957.GA4568@redhat.com>
+In-Reply-To: <20110221095957.GA4568@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2011 06:04 AM, Kalle Valo wrote:
-> greearb@candelatech.com writes:
->
->> From: Ben Greear<greearb@candelatech.com>
+On 02/21/2011 03:59 AM, Stanislaw Gruszka wrote:
+> On Fri, Feb 18, 2011 at 04:21:29PM -0600, Larry Finger wrote:
+>> On 02/18/2011 03:24 PM, Rafał Miłecki wrote:
+>>> Few months later, is there any progress? Can we expect:
+>>>
+>>> 1) Easier licensing of currently provided firmware (see Fedore case)
+>>> 2) Firmware for LP-PHY devices
+>>> ?
 >>
->> This makes them more easily seen in /var/log/messages
->> and the console, for instance.
+>> I think we can forget this whole business. It seems that Broadcom is
+>> content with their business model, even though knowledgeable Linux
+>> users are avoiding their products like the plague.
 >
-> Messages like these are in the category "business as usual", which
-> happens frequently when the device is moved. IMHO they are not really
-> warnings. I'm worried that making the messages more visible might
-> scare the users too much.
+> Broadcom will not release old firmware with redistributable license,
+> because of legal concerns, which are ridiculous for everyone except
+> them.
+>
+> http://lists.fedoraproject.org/pipermail/devel/2010-September/142893.html
 
-To me it seems more useful than the network up/down messages that
-are already printed from the networking core.
+Did I tell you that I hate lawyers?
 
-That said, I don't feel strongly about this change, and it's certainly
-an easy patch for me to carry in my own tree.
-
-Thanks
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Larry
