@@ -1,99 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:34367 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419Ab1BUCTA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 21:19:00 -0500
-Received: by gxk8 with SMTP id 8so301676gxk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:18:59 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19809.52102.386489.422538@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 07:48:46 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 08/23] ath9k_htc: Set the BSSID mask for multiple interfaces
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36290 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751277Ab1BUWbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 17:31:47 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/7] compat-wireless: brcm80211 fix is in upstream now
+Date: Mon, 21 Feb 2011 23:31:21 +0100
+Message-Id: <1298327484-16938-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1298327484-16938-1-git-send-email-hauke@hauke-m.de>
+References: <1298327484-16938-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    5 +++
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   35 +++++++++++++++++++++++++
- 2 files changed, 40 insertions(+), 0 deletions(-)
+ patches/38-brcm80211-mac80211-backport.patch |   14 --------------
+ 1 files changed, 0 insertions(+), 14 deletions(-)
+ delete mode 100644 patches/38-brcm80211-mac80211-backport.patch
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index eecb42b..11d028f 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -210,6 +210,11 @@ struct ath9k_htc_vif {
- 	u8 index;
- };
- 
-+struct ath9k_vif_iter_data {
-+	const u8 *hw_macaddr;
-+	u8 mask[ETH_ALEN];
-+};
-+
- #define ATH9K_HTC_MAX_STA 8
- #define ATH9K_HTC_MAX_TID 8
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 5ef0769..9620f45 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -133,6 +133,39 @@ static void ath9k_htc_vif_reconfig(struct ath9k_htc_priv *priv)
- 	}
- }
- 
-+static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	struct ath9k_vif_iter_data *iter_data = data;
-+	int i;
-+
-+	for (i = 0; i < ETH_ALEN; i++)
-+		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
-+}
-+
-+static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_vif_iter_data iter_data;
-+
-+	/*
-+	 * Use the hardware MAC address as reference, the hardware uses it
-+	 * together with the BSSID mask when matching addresses.
-+	 */
-+	iter_data.hw_macaddr = common->macaddr;
-+	memset(&iter_data.mask, 0xff, ETH_ALEN);
-+
-+	if (vif)
-+		ath9k_htc_bssid_iter(&iter_data, vif->addr, vif);
-+
-+	/* Get list of all active MAC addresses */
-+	ieee80211_iterate_active_interfaces_atomic(priv->hw, ath9k_htc_bssid_iter,
-+						   &iter_data);
-+
-+	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
-+	ath_hw_setbssidmask(common);
-+}
-+
- void ath9k_htc_reset(struct ath9k_htc_priv *priv)
- {
- 	struct ath_hw *ah = priv->ah;
-@@ -1200,6 +1233,8 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
-+	ath9k_htc_set_bssid_mask(priv, vif);
-+
- 	priv->ah->opmode = vif->type;
- 	priv->vif_slot |= (1 << avp->index);
- 	priv->nvifs++;
+diff --git a/patches/38-brcm80211-mac80211-backport.patch b/patches/38-brcm80211-mac80211-backport.patch
+deleted file mode 100644
+index 329a119..0000000
+--- a/patches/38-brcm80211-mac80211-backport.patch
++++ /dev/null
+@@ -1,14 +0,0 @@
+-This patch is a temporary solution as long as staging uses an older 
+-version of mac80211.
+-
+---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+-@@ -2312,7 +2312,7 @@ static s32 wl_inform_single_bss(struct w
+- 	notif_bss_info->frame_len =
+- 	    offsetof(struct ieee80211_mgmt,
+- 		     u.beacon.variable) + wl_get_ielen(wl);
+--	freq = ieee80211_channel_to_frequency(notif_bss_info->channel);
+-+	freq = ieee80211_channel_to_frequency(notif_bss_info->channel, notif_bss_info->band);
+- 	channel = ieee80211_get_channel(wiphy, freq);
+- 
+- 	WL_DBG("SSID : \"%s\", rssi %d, channel %d, capability : 0x04%x, bssid %pM\n",
 -- 
-1.7.4.1
+1.7.1
 
