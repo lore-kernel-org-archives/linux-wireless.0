@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:15800 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138Ab1BSARa (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54238 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751245Ab1BUUwh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 19:17:30 -0500
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000022511.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 02:16:52 +0200
-Subject: Re: [RFC] AI support (13/14 ssb add AI support)
-From: George Kashperko <george@znau.edu.ua>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-In-Reply-To: <4D5F0990.2060004@lwfinger.net>
-References: <1297958316.5623.27.camel@dev.znau.edu.ua>
-	 (sfid-20110217_170718_357395_57E8418D)  <1297980093.13554.5.camel@maggie>
-	 <1297981882.23381.38.camel@dev.znau.edu.ua>
-	 (sfid-20110217_233956_707110_FFFFFFFFBE33FFA6)  <1298069145.23801.29.camel@maggie>
-	 <1298070443.25739.23.camel@dev.znau.edu.ua>
-	 (sfid-20110219_001605_010946_FFFFFFFFA70C4DCA) <1298071637.23801.40.camel@maggie>
-	 <4D5F04C0.4080707@lwfinger.net> <1298072855.25739.55.camel@dev.znau.edu.ua>
-	 <4D5F0990.2060004@lwfinger.net>
-Content-Type: text/plain
-Date: Sat, 19 Feb 2011 02:08:51 +0200
-Message-Id: <1298074131.25739.65.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Mon, 21 Feb 2011 15:52:37 -0500
+Received: by qwd7 with SMTP id 7so2343755qwd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 12:52:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1298318710-23775-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1298318710-23775-1-git-send-email-wey-yi.w.guy@intel.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 21 Feb 2011 21:29:30 +0100
+Message-ID: <AANLkTikFAzdV=A0uEo+5D4ixwgNz0XA3ogA00Wm=r-8t@mail.gmail.com>
+Subject: Re: [ipw3945-devel] [PATCH wireless-2.6] iwlagn: Support new 5000 microcode.
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, stable@kernel.org,
+	linux-wireless@vger.kernel.org,
+	"Fry, Donald H" <donald.h.fry@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Feb 21, 2011 at 9:05 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> From: Fry, Donald H <donald.h.fry@intel.com>
+>
+> New iwlwifi-5000 microcode requires driver support for API version 5.
+>
+> Signed-off-by: Don Fry <donald.h.fry@intel.com>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> CC: stable@kernel.org
+> ---
+> these patches are also available from wireless-2.6 branch on
+>  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+>
+>  drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+> index 79ab0a6..537fb8c 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+> @@ -51,7 +51,7 @@
+>  #include "iwl-agn-debugfs.h"
+>
+>  /* Highest firmware API version supported */
+> -#define IWL5000_UCODE_API_MAX 2
+> +#define IWL5000_UCODE_API_MAX 5
 
-> On 02/18/2011 05:47 PM, George Kashperko wrote:
-> > Hi,
-> >
-> >> I don't want to get involved in the debate over abstraction, but FWIW, the
-> >> patchset does work for PCI-based SSB devices.
-> >>
-> >> Larry
-> >>
-> > Could you please let me know if you tried last code I've posted, as my
-> > original RFC was indeed embeddables' targeted and won't work for
-> > SSB-over-PCI.
-> > Last code I've posted I've tested on SSB over PCIE host and it was
-> > pretty much working.
-> 
-> I tested the 14 patches you posted on 2/17/2011 that arrived about 10:20 UTC.
-> 
-> Larry
-> 
-Ohh, I skrewed again -.-
-Donno how but I decided It didn't work for you. I'm too much sleepy, but
-can't go sleep till coffee let me off. Sorry.
+Where are versions 3 and 4?
 
-Have nice day,
-George
+>  #define IWL5150_UCODE_API_MAX 2
+>
+>  /* Lowest firmware API version supported */
+> --
+> 1.7.0.4
+>
+>
+> ------------------------------------------------------------------------------
+> Free Software Download:
+> Index, Search & Analyze Logs and other IT data in Real-Time with Splunk
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>
 
 
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
