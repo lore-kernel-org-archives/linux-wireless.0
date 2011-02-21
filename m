@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56095 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754904Ab1BULhT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 06:37:19 -0500
-Received: by iyb26 with SMTP id 26so620061iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 03:37:18 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:18889 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750735Ab1BUFSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 00:18:40 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 21:18:19 -0800
+Date: Mon, 21 Feb 2011 10:47:15 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
+Subject: Re: [PATCH 16/23] ath9k_htc: Disable powersave if an AP interface
+	is present
+Message-ID: <20110221051715.GA17236@vasanth-laptop>
+References: <19809.52162.358774.683966@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19810.20072.555575.712274@gargle.gargle.HOWL>
-Date: Mon, 21 Feb 2011 17:07:12 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH] ath9k_hw: Fix power on reset
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <19809.52162.358774.683966@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Mon, Feb 21, 2011 at 07:49:46AM +0530, Sujith wrote:
+> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> 
+> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index f384b35..4779bb1 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -1393,7 +1393,8 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+>  
+>  	}
+>  
+> -	if (changed & IEEE80211_CONF_CHANGE_PS) {
+> +	if ((priv->ah->opmode != NL80211_IFTYPE_AP) &&
+> +	    (changed & IEEE80211_CONF_CHANGE_PS)) {
+>  		if (conf->flags & IEEE80211_CONF_PS) {
+>  			ath9k_htc_setpower(priv, ATH9K_PM_NETWORK_SLEEP);
+>  			priv->ps_enabled = true;
 
-Commit "ath9k_hw: add an extra delay when reseting AR_RTC_RESET"
-added an extra udelay to the reset routine. As the required
-delay is already present, remove this.
+Is it not that mac80211 already takes care of that?.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f9cf815..9a34381 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1100,7 +1100,6 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 		REG_WRITE(ah, AR_RC, AR_RC_AHB);
- 
- 	REG_WRITE(ah, AR_RTC_RESET, 0);
--	udelay(2);
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
- 
--- 
-1.7.4.1
-
+Vasanth
