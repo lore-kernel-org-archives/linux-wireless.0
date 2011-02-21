@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:36610 "EHLO mail.neratec.ch"
+Received: from mx1.redhat.com ([209.132.183.28]:2652 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751138Ab1BIPuy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 10:50:54 -0500
-Message-ID: <4D52B7DB.8000000@neratec.com>
-Date: Wed, 09 Feb 2011 16:50:51 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Chaoxing Lin <CLin@3eti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] DFS userspace handler
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com> <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752311Ab1BUIDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 03:03:32 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org, kernel@lists.fedoraproject.org
+Cc: Kyle McMartin <kmcmartin@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2.6.35] iwl3945: remove plcp check
+Date: Mon, 21 Feb 2011 09:03:36 +0100
+Message-Id: <1298275416-3871-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2011 04:35 PM, Chaoxing Lin wrote:
-> What about DFS in WDS / Mesh / IBSS mode if DFS is only implemented in hostapd?
-> 
-> Will an instance of hostapd be required for all these modes, too?
-> 
-> Thanks
-> 
-Yes, with this approach you will need to have some userspace component that
-evaluates the reported pulses and handles channels upon radar detection.
+commit c91d01556f52255a31575be0cb1981c92a2a5028 upstream.
 
-hostapd was taken as the first shot, but one might also think of a dedicated
-DFS deamon that takes this role. Actually that is our intended gain of this
-approach: having a defined interface for pulse events reporting and highest
-flexibility wrt detection and handling.
+Patch fixes:
+https://bugzilla.redhat.com/show_bug.cgi?id=654599
 
-Cheers
+Many users report very low speed problem on 3945 devices,
+this patch fixes problem, but only for some of them.
 
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Zefir Kurtisi
-> Sent: Wednesday, February 09, 2011 7:02 AM
-> To: linux-wireless@vger.kernel.org
-> Cc: Zefir Kurtisi
-> Subject: [RFC] DFS userspace handler
-> 
-> Hello DFS folks,
-> 
-> this is a patch series to prove the concept of DFS handling done in userspace.
-> 
-> It moves the radar pattern detector introduced in [1] and documented in [2] 
-> from mac80211 up to hostapd.
-> 
-> The basic concept is:
-> 1) pattern detection
->  * pulse events detected by HW are passed to hostapd
->  * hostapd performs per-wiphy DFS pattern matching
-> 2) channel handling: on radar detection hostapd
->  * updates channel state (NOL handling)
->  * switches to new operating channel with TX disabled (on all wiphys)
->  * after CAC period enables TX on that channel
-> 
-> The proposed patches provide part 1) of the concept. The nl80211 interface is
-> extended with functions to pass DFS pulse events to hostapd.
-> 
-> Testing as described in [2] results in identical output, indicating that both
-> approaches (mac80211 and hostapd based) are equivalent from functional point
-> of view.
-> 
-> The testing was done with
->  * OpenWRT r25417
->  * Atheros AR9280 Rev:2
->  * DFS radars generated with R&S vector signal generator
-> 
-> We at our company would prefer this approach over the mac80211 based one as
-> soon as we see that part 2) can be implemented as proposed. 
-> 
-> 
-> 
-> Cheers
-> Zefir
-> 
-> 
-> 
-> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/61868
-> [2] http://linuxwireless.org/en/developers/DFS/DetectorDesignNt
-> ---
+For unknown reason, sometimes after hw scanning, device is not able
+to receive frames at high rate. Since plcp health check may request
+hw scan to "reset radio", performance problem start to be observable
+after update kernel to .35, where plcp check was introduced.
+
+Bug reporter confirmed that removing plcp check fixed problem for him.
+
+Reported-and-tested-by: SilvioTO <silviotoya@yahoo.it>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 2a9480d..7b4fc94 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2837,7 +2837,6 @@ static struct iwl_lib_ops iwl3945_lib = {
+ 	.config_ap = iwl3945_config_ap,
+ 	.manage_ibss_station = iwl3945_manage_ibss_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
+-	.check_plcp_health = iwl3945_good_plcp_health,
+ 
+ 	.debugfs_ops = {
+ 		.rx_stats_read = iwl3945_ucode_rx_stats_read,
+-- 
+1.7.1
 
