@@ -1,68 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:50668 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267Ab1BDVNW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44227 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753889Ab1BUKg4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 16:13:22 -0500
-Cc: trivial@kernel.org, henryp@broadcom.com, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <95FFFE22-6CF5-4ECF-B2B4-D6835F0F100E@gmail.com>
-From: Justin Mattock <justinmattock@gmail.com>
-To: Greg KH <greg@kroah.com>
-In-Reply-To: <20110204210021.GA15713@kroah.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v936)
-Subject: Re: [PATCH 6/8]staging: brcm80211i: sbsdio.h: change a typo comamnd to command
-Date: Fri, 4 Feb 2011 13:13:17 -0800
-References: <1296623248-5399-1-git-send-email-justinmattock@gmail.com> <20110204205919.GA15658@kroah.com> <20110204210021.GA15713@kroah.com>
+	Mon, 21 Feb 2011 05:36:56 -0500
+Subject: Re: multiqueue behavior?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave =?ISO-8859-1?Q?T=E4ht?= <d@taht.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <87hbc06avr.fsf@cruithne.co.teklibre.org>
+References: <87hbc06avr.fsf@cruithne.co.teklibre.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Feb 2011 11:36:54 +0100
+Message-ID: <1298284614.3707.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2011-02-18 at 19:01 -0700, Dave Täht wrote:
+> I LOVED your diagram of how it is supposed to all work. What I don't
+> understand is how on earth stuff gets into the different queues in the
+> first place. From my talk with felix it seemed apparent that he didn't
+> know how that actually worked, and I for one, wouldn't mind figuring out
+> how/when those queues actually get used. 
+> 
+> It looked to me that the only way that they got into a different queue
+> was with some sort of skb marking.
 
-On Feb 4, 2011, at 1:00 PM, Greg KH wrote:
+Take a look at net/wireless/util.c cfg80211_classify8021d(). I've also
+expanded the description on the wiki page a bit.
 
-> On Fri, Feb 04, 2011 at 12:59:19PM -0800, Greg KH wrote:
->> On Tue, Feb 01, 2011 at 09:07:28PM -0800, Justin P. Mattock wrote:
->>> The below patch fixes a typo comamnd to command.
->>>
->>> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
->>>
->>> ---
->>> drivers/staging/brcm80211/include/sbsdio.h |    2 +-
->>> 1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/staging/brcm80211/include/sbsdio.h b/drivers/ 
->>> staging/brcm80211/include/sbsdio.h
->>> index 6afdbbe..c190acb 100644
->>> --- a/drivers/staging/brcm80211/include/sbsdio.h
->>> +++ b/drivers/staging/brcm80211/include/sbsdio.h
->>> @@ -144,7 +144,7 @@
->>> 						 */
->>>
->>> #define SBSDIO_BYTEMODE_DATALEN_MAX	64	/* sdio byte mode: maximum  
->>> length of one
->>> -						 * data comamnd
->>> +						 * data command
->>
->> This patch adds a trailing space, which is not allowed.
->>
->> Please fix this and resend.
->
-> Nevermind, I've edited this by hand and fixed it up.
->
-> Please be more careful in the future and ALWAYS run your patches  
-> through
-> scripts/checkpatch.pl to catch these types of things.
->
-> thanks,
->
-> greg k-h
+johannes
 
-
-yep I admit I had forgotten to use that script(was focusing on  
-maintainers)..
-I will remember that next time..
-
-Thanks..
-
-Justin P. Mattock
