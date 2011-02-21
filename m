@@ -1,95 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:56514 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab1B0WbB (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:47128 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463Ab1BUHVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 17:31:01 -0500
-Received: by wwe15 with SMTP id 15so2539007wwe.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:31:00 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 3/7] wl12xx: Change claiming of the SDIO bus
-Date: Mon, 28 Feb 2011 00:30:41 +0200
-Message-Id: <1298845845-12191-4-git-send-email-ido@wizery.com>
-In-Reply-To: <1298845845-12191-1-git-send-email-ido@wizery.com>
-References: <1298845845-12191-1-git-send-email-ido@wizery.com>
+	Mon, 21 Feb 2011 02:21:21 -0500
+Received: by wyb38 with SMTP id 38so806793wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 23:21:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1298106890.3725.7.camel@jlt3.sipsolutions.net>
+References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
+	<1298027245.3772.3.camel@jlt3.sipsolutions.net>
+	<20110219061241.GA5881@vmraj-lnx.users.atheros.com>
+	<1298106890.3725.7.camel@jlt3.sipsolutions.net>
+Date: Mon, 21 Feb 2011 12:51:19 +0530
+Message-ID: <AANLkTinP96mRkqCz-HgE3ePR-g2pFveR6HL2QoNw=E_r@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SDIO bus is claimed and released for each SDIO transaction. In
-addition to the few CPU cycles it takes to claim and release the bus, it
-may also cause undesired side effects such as the MMC host stopping its
-internal clocks.
+On Sat, Feb 19, 2011 at 2:44 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2011-02-19 at 11:42 +0530, Rajkumar Manoharan wrote:
+>
+>> > I know we currently don't allow powersave when there's more than one
+>> > interface, but we still allow it while there are monitor interfaces and
+>> > a monitor interface could be sending packets, which would violate the
+>> > flush() contract with the driver -- the driver may expect not to get any
+>> > packets during flush.
+>
+>> AFIK we also are not stopping tx queue of monitor iface on offchannel.
+>> Doing so could help flush().
+>
+> Hrm, indeed. And we can't even stop the queues there. We can pause them
+> for the flush though. In fact, why don't we just stop device queues for
+> flush and bypass this problem.
 
-Since only the wl12xx_sdio driver drives this SDIO card, it is safe to
-claim the SDIO host once (on power on), and release it only when turning
-the power off.
+If the device queues are stopped, we have to find some other fix for
+this power save issue since null func frame will be queued to pending
+frames as I mentioned earlier. Can we have this patch merged and fix
+the monitor vif issue for this case and the scanning case later? I
+have also sent a RFC patch earlier with stopping device queues and a
+new PS_PENDING flag for this
+(http://marc.info/?l=linux-wireless&m=129775059910372&w=3) That patch
+also addresses this race.
 
-This patch was inspired by Juuso Oikarinen's (juuso.oikarinen@nokia.com)
-patch "wl12xx: Change claiming of the (SDIO) bus".
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/sdio.c |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index d5e8748..b9c3747 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -106,8 +106,6 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
- 	int ret;
- 	struct sdio_func *func = wl_to_func(wl);
- 
--	sdio_claim_host(func);
--
- 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
- 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
- 		wl1271_debug(DEBUG_SDIO, "sdio read 52 addr 0x%x, byte 0x%02x",
-@@ -123,8 +121,6 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
- 	}
- 
--	sdio_release_host(func);
--
- 	if (ret)
- 		wl1271_error("sdio read failed (%d)", ret);
- }
-@@ -135,8 +131,6 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 	int ret;
- 	struct sdio_func *func = wl_to_func(wl);
- 
--	sdio_claim_host(func);
--
- 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
- 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
- 		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
-@@ -152,8 +146,6 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 			ret = sdio_memcpy_toio(func, addr, buf, len);
- 	}
- 
--	sdio_release_host(func);
--
- 	if (ret)
- 		wl1271_error("sdio write failed (%d)", ret);
- }
-@@ -170,7 +162,6 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
- 
- 	sdio_claim_host(func);
- 	sdio_enable_func(func);
--	sdio_release_host(func);
- 
- out:
- 	return ret;
-@@ -180,7 +171,6 @@ static int wl1271_sdio_power_off(struct wl1271 *wl)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
--	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
- 
--- 
-1.7.1
-
+Vivek.
