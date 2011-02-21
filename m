@@ -1,138 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60649 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956Ab1B0WbF (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:39473 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab1BUCUW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 17:31:05 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so3126865wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:31:05 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 6/7] wl12xx: Avoid redundant TX work
-Date: Mon, 28 Feb 2011 00:30:44 +0200
-Message-Id: <1298845845-12191-7-git-send-email-ido@wizery.com>
-In-Reply-To: <1298845845-12191-1-git-send-email-ido@wizery.com>
-References: <1298845845-12191-1-git-send-email-ido@wizery.com>
+	Sun, 20 Feb 2011 21:20:22 -0500
+Received: by mail-yi0-f46.google.com with SMTP id 18so2360641yib.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:20:22 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19809.52184.289748.148298@gargle.gargle.HOWL>
+Date: Mon, 21 Feb 2011 07:50:08 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 19/23] ath9k_htc: Handle BSSID/AID for multiple interfaces
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TX might be handled in the threaded IRQ handler, in which case, TX work
-might be scheduled just to discover it has nothing to do.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Save a few context switches by cancelling redundant TX work in case TX
-is about to be handled in the threaded IRQ handler. Also, avoid
-scheduling TX work from wl1271_op_tx if not needed.
+The AID and BSSID should be set in the HW only for the
+first station interface or adhoc interface. Also, cancel
+the ANI timer in stop() for multi-STA scenario. And finally
+configure the HW beacon timers only for the first station
+interface.
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |   33 ++++++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 2 files changed, 29 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   17 ++++++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   44 +++++++++++++++--------
+ 2 files changed, 44 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9ceba52..70995a1 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -641,6 +641,12 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 	u32 intr;
- 	struct wl1271 *wl = (struct wl1271 *)cookie;
- 	bool done = false;
-+	unsigned long flags;
-+
-+	/* TX might be handled here, avoid redundant work */
-+	set_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
-+
-+	cancel_work_sync(&wl->tx_work);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 007b99f..5238091 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -123,8 +123,9 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	/* TSF out of range threshold fixed at 1 second */
+ 	bs.bs_tsfoor_threshold = ATH9K_TSFOOR_THRESHOLD;
  
- 	mutex_lock(&wl->mutex);
- 
-@@ -685,13 +691,17 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 			wl1271_rx(wl, &wl->fw_status->common);
- 
- 			/* Check if any tx blocks were freed */
-+			spin_lock_irqsave(&wl->wl_lock, flags);
- 			if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
- 			    wl->tx_queue_count) {
-+				spin_unlock_irqrestore(&wl->wl_lock, flags);
- 				/*
- 				 * In order to avoid starvation of the TX path,
- 				 * call the work function directly.
- 				 */
- 				wl1271_tx_work_locked(wl);
-+			} else {
-+				spin_unlock_irqrestore(&wl->wl_lock, flags);
- 			}
- 
- 			/* check for tx results */
-@@ -721,6 +731,14 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 	wl1271_ps_elp_sleep(wl);
- 
- out:
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	/* In case TX was not handled here, queue TX work */
-+	clear_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
-+	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
-+	    wl->tx_queue_count)
-+		ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
- 	mutex_unlock(&wl->mutex);
- 
- 	return IRQ_HANDLED;
-@@ -1055,7 +1073,13 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	int q;
- 	u8 hlid = 0;
- 
-+	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
-+
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		hlid = wl1271_tx_get_hlid(skb);
-+
- 	spin_lock_irqsave(&wl->wl_lock, flags);
-+
- 	wl->tx_queue_count++;
- 
- 	/*
-@@ -1068,12 +1092,8 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+-	ath_dbg(common, ATH_DBG_BEACON, "tsf: %llu tsftu: %u\n", tsf, tsftu);
+-	ath_dbg(common, ATH_DBG_BEACON,
++	ath_dbg(common, ATH_DBG_CONFIG, "intval: %u tsf: %llu tsftu: %u\n",
++		intval, tsf, tsftu);
++	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"bmiss: %u sleep: %u cfp-period: %u maxdur: %u next: %u\n",
+ 		bs.bs_bmissthreshold, bs.bs_sleepduration,
+ 		bs.bs_cfpperiod, bs.bs_cfpmaxduration, bs.bs_cfpnext);
+@@ -341,6 +342,18 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 		return;
  	}
  
--	spin_unlock_irqrestore(&wl->wl_lock, flags);
--
- 	/* queue the packet */
--	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
--		hlid = wl1271_tx_get_hlid(skb);
- 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
- 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
- 	} else {
-@@ -1085,9 +1105,12 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
--	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags))
-+	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
-+	    !test_bit(WL1271_FLAG_TX_PENDING, &wl->flags))
- 		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
++	/*
++	 * The beacon paramters are configured only for the first
++	 * station interface.
++	 */
++	if ((priv->ah->opmode == NL80211_IFTYPE_STATION) &&
++	    (priv->num_sta_vif > 1) &&
++	    (vif->type == NL80211_IFTYPE_STATION)) {
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Beacon already configured for a station interface\n");
++		return;
++	}
 +
- 	return NETDEV_TX_OK;
- }
+ 	cur_conf->beacon_interval = bss_conf->beacon_int;
+ 	if (cur_conf->beacon_interval == 0)
+ 		cur_conf->beacon_interval = 100;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 949af24..6ec9cb6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1603,30 +1603,44 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	bool set_assoc;
  
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 45e6577..8fdea60 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -317,6 +317,7 @@ enum wl12xx_flags {
- 	WL1271_FLAG_JOINED,
- 	WL1271_FLAG_GPIO_POWER,
- 	WL1271_FLAG_TX_QUEUE_STOPPED,
-+	WL1271_FLAG_TX_PENDING,
- 	WL1271_FLAG_IN_ELP,
- 	WL1271_FLAG_PSM,
- 	WL1271_FLAG_PSM_REQUESTED,
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
+ 
++	/*
++	 * Set the HW AID/BSSID only for the first station interface
++	 * or in IBSS mode.
++	 */
++	set_assoc = !!((priv->ah->opmode == NL80211_IFTYPE_ADHOC) ||
++		       ((priv->ah->opmode == NL80211_IFTYPE_STATION) &&
++			(priv->num_sta_vif == 1)));
++
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+-		common->curaid = bss_conf->assoc ?
+-				 bss_conf->aid : 0;
+-		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
+-			bss_conf->assoc);
++		if (set_assoc) {
++			ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
++				bss_conf->assoc);
+ 
+-		if (bss_conf->assoc)
+-			ath9k_htc_start_ani(priv);
+-		else
+-			ath9k_htc_stop_ani(priv);
++			common->curaid = bss_conf->assoc ?
++				bss_conf->aid : 0;
++
++			if (bss_conf->assoc)
++				ath9k_htc_start_ani(priv);
++			else
++				ath9k_htc_stop_ani(priv);
++		}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
+-		/* Set BSSID */
+-		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+-		ath9k_hw_write_associd(ah);
++		if (set_assoc) {
++			memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
++			ath9k_hw_write_associd(ah);
+ 
+-		ath_dbg(common, ATH_DBG_CONFIG,
+-			"BSSID: %pM aid: 0x%x\n",
+-			common->curbssid, common->curaid);
++			ath_dbg(common, ATH_DBG_CONFIG,
++				"BSSID: %pM aid: 0x%x\n",
++				common->curbssid, common->curaid);
++		}
+ 	}
+ 
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon) {
 -- 
-1.7.1
+1.7.4.1
 
