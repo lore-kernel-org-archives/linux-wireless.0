@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5886 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64642 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754097Ab1BIRFr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 12:05:47 -0500
-Subject: Re: [PATCH 2/5] iwlwifi: cleanup {iwl,iwl3945}_good_plcp_health
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110209062412.GA2184@redhat.com>
-References: <1297153919-18766-1-git-send-email-sgruszka@redhat.com>
-	 <1297153919-18766-2-git-send-email-sgruszka@redhat.com>
-	 <1297178645.20613.28.camel@wwguy-ubuntu> <20110209062412.GA2184@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Feb 2011 09:03:56 -0800
-Message-ID: <1297271036.20613.62.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1753754Ab1BUKAy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 05:00:54 -0500
+Date: Mon, 21 Feb 2011 10:59:58 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+Message-ID: <20110221095957.GA4568@redhat.com>
+References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
+ <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
+ <4CBF640C.4080405@broadcom.com>
+ <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
+ <1287674517.2383.7.camel@dcbw.foobar.com>
+ <AANLkTikLbtV5dLu+Gu=8ibi=ERPiOykN9qBL4rPKS36g@mail.gmail.com>
+ <4D5EF0E9.4050908@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4D5EF0E9.4050908@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-08 at 22:24 -0800, Stanislaw Gruszka wrote:
-> Hi Wey
+On Fri, Feb 18, 2011 at 04:21:29PM -0600, Larry Finger wrote:
+> On 02/18/2011 03:24 PM, Rafał Miłecki wrote:
+> >Few months later, is there any progress? Can we expect:
+> >
+> >1) Easier licensing of currently provided firmware (see Fedore case)
+> >2) Firmware for LP-PHY devices
+> >?
 > 
-> On Tue, Feb 08, 2011 at 07:24:05AM -0800, wwguy wrote:
-> > On Tue, 2011-02-08 at 00:31 -0800, Stanislaw Gruszka wrote:
-> > > Make plcp health code human readable.
-> > > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > > ---
-> > >  drivers/net/wireless/iwlwifi/iwl-3945.c     |   83 +++++++-----------
-> > >  drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |  122 +++++++++++----------------
-> > >  drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
-> > >  3 files changed, 80 insertions(+), 126 deletions(-)
-> > > 
-> > 
-> > Thanks for the clean up, now is much easier to read.
-> > 
-> > Now we are very close to release the split driver, here you change both
-> > agn and 3945, not sure what is the easier approach will be? push the
-> > patch now, or wait for the driver split finish, then push the patch
-> > after that.
-> 
-> I will repost my patches on top of your changes,
-> hope they'll go to 2.6.39 ?
-> 
-yes, we are targeting 2.6.39, but if there is any delay, I will let you
-know. Don't want to hold off your patch if we delay.
+> I think we can forget this whole business. It seems that Broadcom is
+> content with their business model, even though knowledgeable Linux
+> users are avoiding their products like the plague.
 
-We should know by the end of this week
+Broadcom will not release old firmware with redistributable license,
+because of legal concerns, which are ridiculous for everyone except
+them.
 
-Wey
+http://lists.fedoraproject.org/pipermail/devel/2010-September/142893.html 
 
+That sucks.
 
