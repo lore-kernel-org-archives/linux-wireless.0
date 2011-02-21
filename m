@@ -1,154 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38194 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755268Ab1BBXC0 convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:55997 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab1BUCSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 18:02:26 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.38-rc3-git1: Reported regressions from 2.6.37
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+	Sun, 20 Feb 2011 21:18:53 -0500
+Received: by mail-yx0-f174.google.com with SMTP id 7so122851yxs.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:18:53 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <QUnbpYCwS-F.A.vaC.VHeSNB@chimera>
-Date: Thu,  3 Feb 2011 00:02:08 +0100 (CET)
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19809.52095.42734.41131@gargle.gargle.HOWL>
+Date: Mon, 21 Feb 2011 07:48:39 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 07/23] ath9k_htc: Remove OP_ASSOCIATED variable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.37,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-If you know of any other unresolved regressions from 2.6.37, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+mac80211 stores the association state in ieee80211_bss_conf.
+Use this and remove the local state, which is incorrect anyway
+since it is stored globally and not on a per-VIF basis.
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
+Restarting ANI and reconfiguration of HW beacon timers when a
+scan run ends requires more work. This is handled by iterating
+over the active interfaces.
 
+Finally, remove the useless check for associated status in RX
+processing.
 
-Listed regressions statistics:
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            |   14 +++---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   19 ++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   56 ++++++++++++++---------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   26 +++++------
+ 4 files changed, 74 insertions(+), 41 deletions(-)
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-02-03       19       11           7
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28102
-Subject		: New display errors in 2.6.38-rc2-00175-g6fb1b30
-Submitter	: Nico Schottelius <nico-kernel-20110117@schottelius.org>
-Date		: 2011-01-28 20:29 (6 days old)
-Message-ID	: <20110128202905.GB3395@schottelius.org>
-References	: http://marc.info/?l=linux-kernel&m=129624657425949&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28052
-Subject		: [BUG] 2.6.38-rc2: Circular Locking Dependency
-Submitter	: Knut Petersen <Knut_Petersen@t-online.de>
-Date		: 2011-01-24 9:25 (10 days old)
-Message-ID	: <4D3D45A3.7040809@t-online.de>
-References	: http://marc.info/?l=linux-kernel&m=129586118515443&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27812
-Subject		: 2.6.38-rc2: acpi backlight control missing
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2011-01-22 10:49 (12 days old)
-First-Bad-Commit: http://git.kernel.org/linus/677bd810eedce61edf15452491781ff046b92edc
-Message-ID	: <1295693349.2120.3.camel@localhost.localdomain>
-References	: http://marc.info/?l=linux-kernel&m=129569353414755&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27652
-Subject		: 38-rc1: umount+rmmod cause ext4 error.
-Submitter	: Tao Ma <tm@tao.ma>
-Date		: 2011-01-19 6:53 (15 days old)
-Message-ID	: <4D368A70.5030103@tao.ma>
-References	: http://marc.info/?l=linux-ext4&m=129542001031750&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27382
-Subject		: ath5k phy0: gain calibration timeout
-Submitter	: Nicolas Stransky <Nico@stransky.cx>
-Date		: 2011-01-23 00:18 (11 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27282
-Subject		: Regression: 2.6.38 vs. Powertop 2
-Submitter	: Dennis Jansen <dennis.jansen@web.de>
-Date		: 2011-01-21 14:34 (13 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27022
-Subject		: [REPORT] BUG: spinlock recursion on CPU#0, init/1
-Submitter	: Santosh Shilimkar <santosh.shilimkar@ti.com>
-Date		: 2011-01-10 15:33 (24 days old)
-Message-ID	: <a7a9bdaa5936630925fb7ffd1a1795b1@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=129467294808655&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=28012
-Subject		: [drm:i915_driver_load] *ERROR* failed to init modeset, EINVAL
-Submitter	: Ferenc Wágner <wferi@niif.hu>
-Date		: 2011-02-01 15:18 (2 days old)
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=45892
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27862
-Subject		: Cannot launch X.org server on Core I5 with 2.6.38-rc2-git7
-Submitter	: Darisuz Luksza <dariusz.luksza@gmail.com>
-Date		: 2011-01-30 12:13 (4 days old)
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-Patch		: https://bugs.freedesktop.org/attachment.cgi?id=42634
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27702
-Subject		: regression 2.6.37 -> 2.6.38-rc1: after suspend backlight cannot be adjusted
-Submitter	: Norbert Preining <preining@logic.at>
-Date		: 2011-01-21 1:55 (13 days old)
-Message-ID	: <20110121015529.GD9796@gamma.logic.tuwien.ac.at>
-References	: http://marc.info/?l=linux-kernel&m=129557717826819&w=2
-Handled-By	: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
-Patch		: https://patchwork.kernel.org/patch/499221/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=27472
-Subject		: 5bd5a45 breaks resume from suspend on Thinkpad X201
-Submitter	: Björn Schließmann <chronoss@gmx.de>
-Date		: 2011-01-23 23:24 (11 days old)
-Handled-By	: CASTET Matthieu <castet.matthieu@free.fr>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=45192
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.37,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=27352
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 4e19e14..eecb42b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -335,11 +335,10 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
+ #define OP_SCANNING		   BIT(1)
+ #define OP_LED_ASSOCIATED	   BIT(2)
+ #define OP_LED_ON		   BIT(3)
+-#define OP_ASSOCIATED		   BIT(4)
+-#define OP_ENABLE_BEACON	   BIT(5)
+-#define OP_LED_DEINIT		   BIT(6)
+-#define OP_BT_PRIORITY_DETECTED    BIT(7)
+-#define OP_BT_SCAN                 BIT(8)
++#define OP_ENABLE_BEACON	   BIT(4)
++#define OP_LED_DEINIT		   BIT(5)
++#define OP_BT_PRIORITY_DETECTED    BIT(6)
++#define OP_BT_SCAN                 BIT(7)
+ 
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+@@ -370,6 +369,8 @@ struct ath9k_htc_priv {
+ 	u16 nstations;
+ 	u16 seq_no;
+ 	u32 bmiss_cnt;
++	bool rearm_ani;
++	bool reconfig_beacon;
+ 
+ 	struct ath9k_hw_cal_data caldata;
+ 
+@@ -429,6 +430,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
++void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv);
+ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending);
+ 
+ void ath9k_htc_rxep(void *priv, struct sk_buff *skb,
+@@ -441,7 +443,7 @@ void ath9k_htc_beaconep(void *drv_priv, struct sk_buff *skb,
+ int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv);
+ void ath9k_htc_station_work(struct work_struct *work);
+ void ath9k_htc_aggr_work(struct work_struct *work);
+-void ath9k_ani_work(struct work_struct *work);;
++void ath9k_ani_work(struct work_struct *work);
+ void ath_start_ani(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 87cc65a..133f628 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -283,3 +283,22 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 		return;
+ 	}
+ }
++
++void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++
++	switch (priv->ah->opmode) {
++	case NL80211_IFTYPE_STATION:
++		ath9k_htc_beacon_config_sta(priv, cur_conf);
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
++		break;
++	default:
++		ath_dbg(common, ATH_DBG_CONFIG,
++			"Unsupported beaconing mode\n");
++		return;
++	}
++}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index dbde491..5ef0769 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -105,6 +105,34 @@ void ath9k_ps_work(struct work_struct *work)
+ 	ath9k_htc_setpower(priv, ATH9K_PM_NETWORK_SLEEP);
+ }
+ 
++static void ath9k_htc_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct ath9k_htc_priv *priv = data;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++
++	if (bss_conf->assoc) {
++		priv->rearm_ani = true;
++		priv->reconfig_beacon = true;
++	}
++}
++
++static void ath9k_htc_vif_reconfig(struct ath9k_htc_priv *priv)
++{
++	priv->rearm_ani = false;
++	priv->reconfig_beacon = false;
++
++	ieee80211_iterate_active_interfaces_atomic(priv->hw,
++						   ath9k_htc_vif_iter, priv);
++	if (priv->rearm_ani)
++		ath_start_ani(priv);
++
++	if (priv->reconfig_beacon) {
++		ath9k_htc_ps_wakeup(priv);
++		ath9k_htc_beacon_reconfig(priv);
++		ath9k_htc_ps_restore(priv);
++	}
++}
++
+ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ {
+ 	struct ath_hw *ah = priv->ah;
+@@ -119,9 +147,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 	mutex_lock(&priv->mutex);
+ 	ath9k_htc_ps_wakeup(priv);
+ 
+-	if (priv->op_flags & OP_ASSOCIATED)
+-		cancel_delayed_work_sync(&priv->ath9k_ani_work);
+-
++	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	ieee80211_stop_queues(priv->hw);
+ 	htc_stop(priv->htc);
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+@@ -148,12 +174,7 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 
+ 	WMI_CMD(WMI_ENABLE_INTR_CMDID);
+ 	htc_start(priv->htc);
+-
+-	if (priv->op_flags & OP_ASSOCIATED) {
+-		ath9k_htc_beacon_config(priv, priv->vif);
+-		ath_start_ani(priv);
+-	}
+-
++	ath9k_htc_vif_reconfig(priv);
+ 	ieee80211_wake_queues(priv->hw);
+ 
+ 	ath9k_htc_ps_restore(priv);
+@@ -1491,13 +1512,10 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath_dbg(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
+ 			bss_conf->assoc);
+ 
+-		if (bss_conf->assoc) {
+-			priv->op_flags |= OP_ASSOCIATED;
++		if (bss_conf->assoc)
+ 			ath_start_ani(priv);
+-		} else {
+-			priv->op_flags &= ~OP_ASSOCIATED;
++		else
+ 			cancel_delayed_work_sync(&priv->ath9k_ani_work);
+-		}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
+@@ -1622,8 +1640,7 @@ static void ath9k_htc_sw_scan_start(struct ieee80211_hw *hw)
+ 	priv->op_flags |= OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	cancel_work_sync(&priv->ps_work);
+-	if (priv->op_flags & OP_ASSOCIATED)
+-		cancel_delayed_work_sync(&priv->ath9k_ani_work);
++	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -1632,14 +1649,11 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	struct ath9k_htc_priv *priv = hw->priv;
+ 
+ 	mutex_lock(&priv->mutex);
+-	ath9k_htc_ps_wakeup(priv);
+ 	spin_lock_bh(&priv->beacon_lock);
+ 	priv->op_flags &= ~OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+-	if (priv->op_flags & OP_ASSOCIATED) {
+-		ath9k_htc_beacon_config(priv, priv->vif);
+-		ath_start_ani(priv);
+-	}
++	ath9k_htc_ps_wakeup(priv);
++	ath9k_htc_vif_reconfig(priv);
+ 	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 884deeb..6ddcf93 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -591,24 +591,22 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	ath9k_process_rate(hw, rx_status, rxbuf->rxstatus.rs_rate,
+ 			   rxbuf->rxstatus.rs_flags);
+ 
+-	if (priv->op_flags & OP_ASSOCIATED) {
+-		if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
+-		    !rxbuf->rxstatus.rs_moreaggr)
+-			ATH_RSSI_LPF(priv->rx.last_rssi,
+-				     rxbuf->rxstatus.rs_rssi);
++	if (rxbuf->rxstatus.rs_rssi != ATH9K_RSSI_BAD &&
++	    !rxbuf->rxstatus.rs_moreaggr)
++		ATH_RSSI_LPF(priv->rx.last_rssi,
++			     rxbuf->rxstatus.rs_rssi);
+ 
+-		last_rssi = priv->rx.last_rssi;
++	last_rssi = priv->rx.last_rssi;
+ 
+-		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-			rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
+-							     ATH_RSSI_EP_MULTIPLIER);
++	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
++		rxbuf->rxstatus.rs_rssi = ATH_EP_RND(last_rssi,
++						     ATH_RSSI_EP_MULTIPLIER);
+ 
+-		if (rxbuf->rxstatus.rs_rssi < 0)
+-			rxbuf->rxstatus.rs_rssi = 0;
++	if (rxbuf->rxstatus.rs_rssi < 0)
++		rxbuf->rxstatus.rs_rssi = 0;
+ 
+-		if (ieee80211_is_beacon(fc))
+-			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
+-	}
++	if (ieee80211_is_beacon(fc))
++		priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
+ 
+ 	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+-- 
+1.7.4.1
 
