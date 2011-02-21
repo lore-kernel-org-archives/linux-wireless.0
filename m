@@ -1,65 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46378 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753543Ab1BWPdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 10:33:44 -0500
-Subject: Re: [PATCH 1/4] iwlwifi: Limit number of firmware reload
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20110223105720.GA11916@redhat.com>
-References: <1298317536-5071-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1298317536-5071-2-git-send-email-wey-yi.w.guy@intel.com>
-	 <20110223105720.GA11916@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Feb 2011 07:18:57 -0800
-Message-ID: <1298474337.5138.33.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:55725 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab1BUCT3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Feb 2011 21:19:29 -0500
+Received: by mail-gy0-f174.google.com with SMTP id 11so65408gyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:19:29 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19809.52131.619464.414079@gargle.gargle.HOWL>
+Date: Mon, 21 Feb 2011 07:49:15 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 12/23] ath9k_htc: Maintain individual counters for interfaces
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-On Wed, 2011-02-23 at 02:57 -0800, Stanislaw Gruszka wrote:
-> Hi Wey
-> 
-> On Mon, Feb 21, 2011 at 11:45:33AM -0800, Wey-Yi Guy wrote:
-> > If device has serious problem and cause firmware can not recover itself.
-> > Keep reloading firmware will not help, it can only fill up the syslog and
-> > lock up the system because busy reloading.
-> Filling up logs could be simply avoided by limiting number of prints.
-> 
-> > Introduce the limit reload counter, if the reload reach the maximum within
-> > the pre-defined duration;stop the reload operation.
-> We have already one mechanism for limit too frequent firmware reload,
-> way not reuse it?
-> 
-> > +	reload_msec = jiffies_to_msecs((long) reload_jiffies -
-> > +				(long) priv->reload_jiffies);
-> What for are these (long) casts?
-> 
-> > +	/* firmware reload counter and timestamp */
-> > +	unsigned long reload_jiffies;
-> You do not initialize it, first reload_msec will have untrue value.
-> 
-I am assuming it will initialized to zero at load time, but you are
-right, I still should initialize it, I will submit separated patch to
-initialize it.
+This is required for allowing only one IBSS interface to be
+configured.
 
-> Beside, all these reload firmware mechanism are just crappy workarounds
-> for real firmware and/or driver bugs. Instead of creating such patches,
-> Intel should fix real problems in firmware and driver in first place,
-> such reloading will be not needed.
-> 
-I am also wish we can root cause the firmware problem and fix, but it
-take time and if we logging continuous crash and it will fill the log
-very fast, the side issue also cause system become un-usable because the
-continuous reload. 
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |   28 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   14 ++++++++++-
+ 2 files changed, 40 insertions(+), 2 deletions(-)
 
-
-Wey 
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 97f7ae0..0088c6e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -206,6 +206,32 @@ struct ath9k_htc_target_stats {
+ 
+ #define ATH9K_HTC_MAX_VIF 2
+ 
++#define INC_VIF(_priv, _type) do {		\
++		switch (_type) {		\
++		case NL80211_IFTYPE_STATION:	\
++			_priv->num_sta_vif++;	\
++			break;			\
++		case NL80211_IFTYPE_ADHOC:	\
++			_priv->num_ibss_vif++;	\
++			break;			\
++		default:			\
++			break;			\
++		}				\
++	} while (0)
++
++#define DEC_VIF(_priv, _type) do {		\
++		switch (_type) {		\
++		case NL80211_IFTYPE_STATION:	\
++			_priv->num_sta_vif--;	\
++			break;			\
++		case NL80211_IFTYPE_ADHOC:	\
++			_priv->num_ibss_vif--;	\
++			break;			\
++		default:			\
++			break;			\
++		}				\
++	} while (0)
++
+ struct ath9k_htc_vif {
+ 	u8 index;
+ 	u16 seq_no;
+@@ -367,6 +393,8 @@ struct ath9k_htc_priv {
+ 	u8 mon_vif_idx;
+ 	u8 sta_slot;
+ 	u8 vif_sta_pos[ATH9K_HTC_MAX_VIF];
++	u8 num_ibss_vif;
++	u8 num_sta_vif;
+ 
+ 	u16 op_flags;
+ 	u16 curtxpow;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 04cb243..39074fc 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1193,9 +1193,15 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&priv->mutex);
+ 
+ 	if (priv->nvifs >= ATH9K_HTC_MAX_VIF) {
+-		ret = -ENOBUFS;
+ 		mutex_unlock(&priv->mutex);
+-		return ret;
++		return -ENOBUFS;
++	}
++
++	if (priv->num_ibss_vif ||
++	    (priv->nvifs && vif->type == NL80211_IFTYPE_ADHOC)) {
++		ath_err(common, "IBSS coexistence with other modes is not allowed\n");
++		mutex_unlock(&priv->mutex);
++		return -ENOBUFS;
+ 	}
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+@@ -1240,6 +1246,8 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	priv->nvifs++;
+ 	priv->vif = vif;
+ 
++	INC_VIF(priv, vif->type);
++
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
+ 
+@@ -1273,6 +1281,8 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+ 	ath9k_htc_remove_station(priv, vif, NULL);
+ 	priv->vif = NULL;
+ 
++	DEC_VIF(priv, vif->type);
++
+ 	ath_dbg(common, ATH_DBG_CONFIG, "Detach Interface at idx: %d\n", avp->index);
+ 
+ 	ath9k_htc_ps_restore(priv);
+-- 
+1.7.4.1
 
