@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38262 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753775Ab1BFUME (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 15:12:04 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 1/5] mac80211:  Make STA disconnect messages warn instead of debug.
-Date: Sun,  6 Feb 2011 12:11:54 -0800
-Message-Id: <1297023118-24363-1-git-send-email-greearb@candelatech.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55240 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751131Ab1BUWcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 17:32:32 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat: backport usb_pipe_endpoint()
+Date: Mon, 21 Feb 2011 23:32:22 +0100
+Message-Id: <1298327544-18943-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-This makes them more easily seen in /var/log/messages
-and the console, for instance.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-:100644 100644 f77adf1... 340bef6... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
+ include/linux/compat-2.6.35.h |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f77adf1..340bef6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2019,10 +2019,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 				ieee80211_mgd_probe_ap_send(sdata);
- 			} else {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--				wiphy_debug(local->hw.wiphy,
--					    "%s: No ack for nullfunc frame to"
--					    " AP %pM, disconnecting.\n",
--					    sdata->name, bssid);
-+				wiphy_warn(local->hw.wiphy,
-+					   "%s: No ack for nullfunc frame to"
-+					   " AP %pM, disconnecting.\n",
-+					   sdata->name, bssid);
- #endif
- 				ieee80211_sta_connection_lost(sdata, bssid);
- 			}
-@@ -2030,11 +2030,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			run_again(ifmgd, ifmgd->probe_timeout);
- 		else if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--			wiphy_debug(local->hw.wiphy,
--				    "%s: Failed to send nullfunc to AP %pM"
--				    " after %dms, disconnecting.\n",
--				    sdata->name,
--				    bssid, probe_wait_ms);
-+			wiphy_warn(local->hw.wiphy,
-+				   "%s: Failed to send nullfunc to AP %pM"
-+				   " after %dms, disconnecting.\n",
-+				   sdata->name,
-+				   bssid, probe_wait_ms);
- #endif
- 			ieee80211_sta_connection_lost(sdata, bssid);
- 		} else if (ifmgd->probe_send_count < max_tries) {
-@@ -2052,11 +2052,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
--			wiphy_debug(local->hw.wiphy,
--				    "%s: No probe response from AP %pM"
--				    " after %dms, disconnecting.\n",
--				    sdata->name,
--				    bssid, probe_wait_ms);
-+			wiphy_warn(local->hw.wiphy,
-+				   "%s: No probe response from AP %pM"
-+				   " after %dms, disconnecting.\n",
-+				   sdata->name,
-+				   bssid, probe_wait_ms);
+diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+index c4de169..857a521 100644
+--- a/include/linux/compat-2.6.35.h
++++ b/include/linux/compat-2.6.35.h
+@@ -7,6 +7,7 @@
+ #include <linux/etherdevice.h>
+ #include <net/sock.h>
+ #include <linux/types.h>
++#include <linux/usb.h>
  
- 			ieee80211_sta_connection_lost(sdata, bssid);
- 		}
+ /* added on linux/kernel.h */
+ #define USHRT_MAX      ((u16)(~0U))
+@@ -31,6 +32,14 @@ extern loff_t noop_llseek(struct file *file, loff_t offset, int origin);
+ 
+ #define pm_qos_request(_qos) pm_qos_requirement(_qos)
+ 
++static inline struct usb_host_endpoint *
++usb_pipe_endpoint(struct usb_device *dev, unsigned int pipe)
++{
++	struct usb_host_endpoint **eps;
++	eps = usb_pipein(pipe) ? dev->ep_in : dev->ep_out;
++	return eps[usb_pipeendpoint(pipe)];
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
+ 
+ #endif /* LINUX_26_35_COMPAT_H */
 -- 
-1.7.2.3
+1.7.1
 
