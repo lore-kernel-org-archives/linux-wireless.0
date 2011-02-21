@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:37955 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752028Ab1BSJWZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 04:22:25 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:22:04 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <mcgrof@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Subject: [PATCH] compat: Define usleep_range(min, max) as msleep(max/1000) for <2.6.36
-Date: Sat, 19 Feb 2011 01:22:21 -0800
-Message-ID: <1298107341-9894-1-git-send-email-vasanth@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45383 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242Ab1BUUak (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 15:30:40 -0500
+Date: Mon, 21 Feb 2011 15:25:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	akpm <akpm@linux-foundation.org>
+Subject: Re: [PATCH -next] wl12xx: fix sdio_test kconfig/build errors
+Message-ID: <20110221202538.GK9650@tuxdriver.com>
+References: <20110217162650.092e77c3.sfr@canb.auug.org.au>
+ <20110218172536.970b5b39.randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110218172536.970b5b39.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ops_flush() of ath9k uses usleep_range().
+Luca, I'm merging this one...
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- include/linux/compat-2.6.36.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Fri, Feb 18, 2011 at 05:25:36PM -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> The wl12xx sdio_test code uses wl12xx_get_platform_data, which is
+> only present when WL12*_SDIO is enabled, so make WL12XX_SDIO_TEST
+> depend on WL12XX_SDIO so that the needed interface will be present.
+> 
+> sdio_test.c:(.devinit.text+0x13178): undefined reference to `wl12xx_get_platform_data'
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: Luciano Coelho <luciano.coelho@nokia.com>
+> Cc: Roger Quadros <roger.quadros@nokia.com>
+> ---
+>  drivers/net/wireless/wl12xx/Kconfig |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- linux-next-20110217.orig/drivers/net/wireless/wl12xx/Kconfig
+> +++ linux-next-20110217/drivers/net/wireless/wl12xx/Kconfig
+> @@ -54,7 +54,7 @@ config WL12XX_SDIO
+>  
+>  config WL12XX_SDIO_TEST
+>  	tristate "TI wl12xx SDIO testing support"
+> -	depends on WL12XX && MMC
+> +	depends on WL12XX && MMC && WL12XX_SDIO
+>  	default n
+>  	---help---
+>  	  This module adds support for the SDIO bus testing with the
+> 
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 74d2309..8d8b636 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -101,6 +101,7 @@ int no_printk(const char *s, ...) { return 0; }
- #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active, 0)
- #endif
- 
-+#define usleep_range(_min, _max)	msleep((_max) / 1000)
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
- 
- #endif /* LINUX_26_36_COMPAT_H */
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
