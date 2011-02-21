@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42973 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472Ab1BUTAg (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:55725 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab1BUCTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 14:00:36 -0500
-Date: Mon, 21 Feb 2011 13:47:17 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nathaniel Smith <njs@pobox.com>
-Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
-	johannes@sipsolutions.net, nbd@openwrt.org
-Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
-Message-ID: <20110221184716.GD9650@tuxdriver.com>
-References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
- <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
- <AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
+	Sun, 20 Feb 2011 21:19:15 -0500
+Received: by gyb11 with SMTP id 11so65408gyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 18:19:14 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19809.52116.847107.354456@gargle.gargle.HOWL>
+Date: Mon, 21 Feb 2011 07:49:00 +0530
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
+Subject: [PATCH 10/23] ath9k_htc: Use VIF from the packet's control data
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 18, 2011 at 07:44:30PM -0800, Nathaniel Smith wrote:
-> On Fri, Feb 18, 2011 at 1:21 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > +       /* grab timestamp info for buffer control estimates */
-> > +       tserv = ktime_sub(ktime_get(), skb->tstamp);
-> [...]
-> > +               ewma_add(&sta->sdata->qdata[q].tserv_ns_avg,
-> > +                        ktime_to_ns(tserv));
-> 
-> I think you're still measuring how long it takes one packet to get
-> from the end of the queue to the beginning, rather than measuring how
-> long it takes each packet to go out?
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Yes, I am measuring how long the driver+device takes to release each
-skb back to me (using that as a proxy for how long it takes to get
-the fragment to the next hop).  Actually, FWIW I'm only measuring
-that time for those skb's that result in a tx status report.
+There is no need to use a locally stored reference.
 
-I tried to see how your measurement would be useful, but I just don't
-see how the number of frames ahead of me in the queue is relevant to
-the measured link latency?  I mean, I realize that having more packets
-ahead of me in the queue is likely to increase the latency for this
-frame, but I don't understand why I should use that information to
-discount the measured latency...?
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 6ddcf93..04d8248 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -232,6 +232,7 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
+ void ath9k_tx_tasklet(unsigned long data)
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
++	struct ieee80211_vif *vif;
+ 	struct ieee80211_sta *sta;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *tx_info;
+@@ -243,12 +244,16 @@ void ath9k_tx_tasklet(unsigned long data)
+ 		hdr = (struct ieee80211_hdr *) skb->data;
+ 		fc = hdr->frame_control;
+ 		tx_info = IEEE80211_SKB_CB(skb);
++		vif = tx_info->control.vif;
+ 
+ 		memset(&tx_info->status, 0, sizeof(tx_info->status));
+ 
++		if (!vif)
++			goto send_mac80211;
++
+ 		rcu_read_lock();
+ 
+-		sta = ieee80211_find_sta(priv->vif, hdr->addr1);
++		sta = ieee80211_find_sta(vif, hdr->addr1);
+ 		if (!sta) {
+ 			rcu_read_unlock();
+ 			ieee80211_tx_status(priv->hw, skb);
+@@ -278,6 +283,7 @@ void ath9k_tx_tasklet(unsigned long data)
+ 
+ 		rcu_read_unlock();
+ 
++	send_mac80211:
+ 		/* Send status to mac80211 */
+ 		ieee80211_tx_status(priv->hw, skb);
+ 	}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
