@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48051 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467Ab1BNV6I (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:62872 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676Ab1BUSjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 16:58:08 -0500
-Received: by bwz15 with SMTP id 15so5956280bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 13:58:06 -0800 (PST)
+	Mon, 21 Feb 2011 13:39:21 -0500
+Received: by wwa36 with SMTP id 36so6398108wwa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 10:39:20 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: fix 0x2055 radio workaround condition
+Date: Mon, 21 Feb 2011 19:38:58 +0100
+Message-Id: <1298313538-3904-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1297685871.3785.39.camel@jlt3.sipsolutions.net>
-References: <1297619803-2832-1-git-send-email-njs@pobox.com>
-	<1297619803-2832-5-git-send-email-njs@pobox.com>
-	<1297685871.3785.39.camel@jlt3.sipsolutions.net>
-Date: Mon, 14 Feb 2011 13:58:05 -0800
-Message-ID: <AANLkTinuvxEuuz3-xWkhQ1fA8s7QumJHJQKpd1C48CV1@mail.gmail.com>
-Subject: Re: [PATCH 4/5] iwlwifi: auto-tune tx queue size to minimize latency
-From: Nathaniel Smith <njs@pobox.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 4:17 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2011-02-13 at 09:56 -0800, Nathaniel J. Smith wrote:
->> This patch estimates how long it takes the hardware to transmit one
->> packet (by comparing each packet's queue residency time to the number
->> of packets it had to wait behind), and then further smooths these
->> estimates with an EWMA. Then, it uses the estimated packet
->> transmission time to choose the maximum queue size that will still
->> produce reasonably bounded queue residency times, given current
->> conditions.
->
-> This sounds nice -- but couldn't it just as well be implemented in
-> mac80211, at least for most devices (that have accurate TX status
-> reporting)?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I don't know. I take it you're imagining a scheme where mac80211 keeps
-a hash table or similar of all packets that have been queued to the
-device, and does its own tx rate estimation and calls start/stop_queue
-as needed? If that works, then it would be lovely. (Heck, it should
-probably go in the generic net layer eventually; ethernet cards have
-the same problem.) But there are enough complications around
-multiqueue devices, packet aggregation strategies, interrupt
-mitigation, etc., that I don't think I sit down and write this fully
-general solution myself, at least not without a lot more experience
-with the needs of different devices. So this patch is intended as a
-start.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 2186afc..9f5a3c9 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -430,9 +430,9 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+ 	bool workaround = false;
+ 
+ 	if (sprom->revision < 4)
+-		workaround = (binfo->vendor != PCI_VENDOR_ID_BROADCOM ||
+-				binfo->type != 0x46D ||
+-				binfo->rev < 0x41);
++		workaround = (binfo->vendor != PCI_VENDOR_ID_BROADCOM &&
++				binfo->type == 0x46D &&
++				binfo->rev >= 0x41);
+ 	else
+ 		workaround =
+ 			!(sprom->boardflags2_lo & B43_BFL2_RXBB_INT_REG_DIS);
+-- 
+1.7.1
 
-On Mon, Feb 14, 2011 at 7:46 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
-> Hi Nathaniel,
-[...]
-> should the high_mark get reset when interface up or queue reset.
-
-Hi Wey,
-
-I thought about that, but I can't see what difference it would make.
-If we have no information about connection quality, then any high_mark
-is as good as any other (and if anything, the previous connection's
-quality is probably as good an estimate as we have, since people often
-reconnect to the same network repeatedly after suspend, etc.). And in
-any case, once connected, we should adapt quite quickly (esp. when
-using the uplink heavily, which is the only time when the queue size
-has an effect), so our starting value should hardly matter. But I have
-no objection to resetting it if that seems cleaner somehow.
-
--- Nathaniel
