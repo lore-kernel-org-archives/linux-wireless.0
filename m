@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57506 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752510Ab1BDUAf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 15:00:35 -0500
-Message-ID: <4D4C5AE1.7090803@openwrt.org>
-Date: Fri, 04 Feb 2011 21:00:33 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:38364 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369Ab1BUUQK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 15:16:10 -0500
+Date: Mon, 21 Feb 2011 17:16:45 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: pull request: bluetooth-next-2.6 2011-02-17
+Message-ID: <20110221201645.GC2965@joana>
+References: <20110218135956.GA2256@joana>
 MIME-Version: 1.0
-To: Mark Mentovai <mark@moxienet.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: fix maximum tx power handling
-References: <AANLkTi=4z31H+v2=Dve2FY3aw0iEBm5UQPz55Qx9UkwR@mail.gmail.com>	<AANLkTikNUv2VuL8ftQAF_x4R-ccB0Y_aPFFdF52UBnBt@mail.gmail.com> <AANLkTikxhPHQ_50cKoJn920n9A0hVssoZZfJRCsw=CH+@mail.gmail.com>
-In-Reply-To: <AANLkTikxhPHQ_50cKoJn920n9A0hVssoZZfJRCsw=CH+@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110218135956.GA2256@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-02-04 8:42 PM, Mark Mentovai wrote:
-> Luis R. Rodriguez wrote:
->> On Sun, Jan 30, 2011 at 9:01 AM, Mark Mentovai <mark@moxienet.com> wrote:
->>> Your patch also doesn’t work properly for me using the ath9k driver.
->>> With your patch, I wind up with an artificial power limit of 20dBm
->>> across the board, although the hardware limit is actually 25dBm on the
->>> AR9223 I’m testing with. This stems from the fact that ath9k doesn’t
->>> know how to properly compute the hardware limit.
->>> ath9k_init_txpower_limits is implemented on top of
->>> ath9k_hw_set_txpowerlimit, which uses a channel’s current max_power
->>> value as a basis for its computation. This means that it will either
->>> use the hard-coded initial value of 20dBm from CHAN2G and CHAN5G in
->>> drivers/net/wireless/ath/ath9k/init.c, or it will use world regulatory
->>> domain values (also 20dBm) set by ath_regd_init_wiphy calling
->>> wiphy_apply_custom_regulatory.
->>
->> The real limit on ath9k comes from analyzing the CTLs from the EEPROM,
->> and using that as a max when a CTL is present. The value from cfg80211
->> is simply a local regulatory one, the CTLs take this one step further
->> and are calibration specific to help optimize performance on every
->> frequency range.
+Hi John,
+
+* Gustavo F. Padovan <padovan@profusion.mobi> [2011-02-18 10:59:56 -0300]:
+
+> Hi John,
 > 
-> Of course. My point was merely that the CTL-based calculations that
-> ath9k does in ath9k_init_txpower_limits when it tries to set a better
-> .max_power don’t even come out correctly, because they’re based on the
-> initial values or on regdomain values. They’re not actually the
-> hardware’s limits. I’m not even positive that there’s a single right
-> “hardware transmit power limit per channel” value, unless you were to
-> examine all of the possible rates and perhaps antenna configurations
-> and other parameters. ath9k_init_txpower_limits doesn’t do this.
-> That’s why I saw the patch restricting transmit power to be 20dBm even
-> though the CTL data would allow higher power.
+> Busy times at the Bluetooth subsystem. Here is another big set of patches
+> intended to 2.6.39. ;)
 > 
-> In other words, I think babcbc295fee766ca710235e431686fef744d9a6 was wrong.
-Right, for testing the tx power, we need to override the
-twiceMaxRegulatoryPower parameter that we pass to the set_txpower op.
+> One of the changes is the end of the L2CAP and SCO kernel modules. We just
+> merged them into the main bluetooth.ko module. It really never made sense to
+> have them separated. 
+> 
+> Then we have firmware support to a new Atheros device by Bala Shanmugam.
+> The First set of patches for Bluetooth Low Energy(LE) support, by Ville Tervo.
+> Low Energy is a new Bluetooth radio that will bring many new use cases to the
+> Bluetooth technology. Finally, LE connection update command support by Claudio
+> Takahasi. The rest is just bugs fixes and cleanups. 
+> 
+> Please pull, or let me know any doubts you have. Thanks.
 
-Additionally, we could examine more rates, but I haven't seen any card
-where higher rates have a higher tx power setting that lower rates. I
-think Atheros internally also uses the tx power setting for the lowest rate.
+I saw you had a merge conflict between bluetooth-2.6 and bluetooth-next-2.6
+and I want to apologize for the extra work I caused to you. It was all my
+fault by not testing the merge of the my own trees. It won't happen again. ;)
 
-Other than the different rates, I don't think you need to examine more
-configurations. The power increase by using multiple chains is already
-added to the max tx power value.
+Regards,
 
-- Felix
+-- 
+Gustavo F. Padovan
+http://profusion.mobi
