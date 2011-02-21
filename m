@@ -1,75 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55238 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752319Ab1BWLrI (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43842 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532Ab1BUKyy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 06:47:08 -0500
-Subject: Re: IBSS merge
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Alina Friedrichsen <x-alina@gmx.net>,
-	Bruno Randolf <br1@einfach.org>
-In-Reply-To: <1298460913.4122.2.camel@jlt3.sipsolutions.net>
-References: <1298460913.4122.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Feb 2011 12:47:05 +0100
-Message-ID: <1298461625.4122.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 21 Feb 2011 05:54:54 -0500
+Received: by eyx24 with SMTP id 24so181344eyx.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 02:54:53 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] wl12xx: use standard ALIGN() macro
+Date: Mon, 21 Feb 2011 12:54:49 +0200
+Message-Id: <1298285690-11596-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-02-23 at 12:35 +0100, Johannes Berg wrote:
-> Hi,
-> 
-> I'm confused about our IBSS merge code.
-> 
-> ieee80211_rx_bss_info:
-> 
-> ...
->         /* same BSSID */
->         if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0)
->                 goto put_bss;
-> ...
->         /* give slow hardware some time to do the TSF sync */
->         if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
->                 goto put_bss;
-> ...
-> 
-> 
-> Both of this was added by Alina, but why did the patch adding the first
-> part not remove the second part again? If we suddenly need to adopt a
-> new BSSID due to higher TSF why wait for the HW to sync first?
-> 
-> It seems the latter was a workaround for syncing over and over again
-> when the HW hadn't caught up yet, but that doesn't seem worthwhile any
-> more since we no longer re-sync with the same BSSID?
 
-So why not do
-
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/ibss.c |    5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/wl12xx/rx.h |    4 ----
+ drivers/net/wireless/wl12xx/tx.c |    4 ++--
+ drivers/net/wireless/wl12xx/tx.h |    2 --
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
---- wireless-testing.orig/net/mac80211/ibss.c	2011-02-23 12:30:32.000000000 +0100
-+++ wireless-testing/net/mac80211/ibss.c	2011-02-23 12:46:22.000000000 +0100
-@@ -31,7 +31,6 @@
- #define IEEE80211_IBSS_JOIN_TIMEOUT (7 * HZ)
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index 4cef8fa..75fabf8 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -30,10 +30,6 @@
+ #define WL1271_RX_MAX_RSSI -30
+ #define WL1271_RX_MIN_RSSI -95
  
- #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
--#define IEEE80211_IBSS_MERGE_DELAY 0x400000
- #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
- 
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
-@@ -397,10 +396,6 @@ static void ieee80211_rx_bss_info(struct
- 	       jiffies);
- #endif
- 
--	/* give slow hardware some time to do the TSF sync */
--	if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
--		goto put_bss;
+-#define WL1271_RX_ALIGN_TO 4
+-#define WL1271_RX_ALIGN(len) (((len) + WL1271_RX_ALIGN_TO - 1) & \
+-			     ~(WL1271_RX_ALIGN_TO - 1))
 -
- 	if (beacon_timestamp > rx_timestamp) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 		printk(KERN_DEBUG "%s: beacon TSF higher than "
-
+ #define SHORT_PREAMBLE_BIT   BIT(0)
+ #define OFDM_RATE_BIT        BIT(6)
+ #define PBCC_RATE_BIT        BIT(7)
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 67a0094..94ff3fa 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -185,7 +185,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	desc->reserved = 0;
+ 
+ 	/* align the length (and store in terms of words) */
+-	pad = WL1271_TX_ALIGN(skb->len);
++	pad = ALIGN(skb->len, WL1271_TX_ALIGN_TO);
+ 	desc->length = cpu_to_le16(pad >> 2);
+ 
+ 	/* calculate number of padding bytes */
+@@ -245,7 +245,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 	 * pad the skb data to make sure its length is aligned.
+ 	 * The number of padding bytes is computed and set in wl1271_tx_fill_hdr
+ 	 */
+-	total_len = WL1271_TX_ALIGN(skb->len);
++	total_len = ALIGN(skb->len, WL1271_TX_ALIGN_TO);
+ 	memcpy(wl->aggr_buf + buf_offset, skb->data, skb->len);
+ 	memset(wl->aggr_buf + buf_offset + skb->len, 0, total_len - skb->len);
+ 
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 05722a5..db88f58 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -53,8 +53,6 @@
+ #define TX_HW_RESULT_QUEUE_LEN_MASK      0xf
+ 
+ #define WL1271_TX_ALIGN_TO 4
+-#define WL1271_TX_ALIGN(len) (((len) + WL1271_TX_ALIGN_TO - 1) & \
+-			     ~(WL1271_TX_ALIGN_TO - 1))
+ #define WL1271_TKIP_IV_SPACE 4
+ 
+ struct wl1271_tx_hw_descr {
+-- 
+1.7.0.4
 
