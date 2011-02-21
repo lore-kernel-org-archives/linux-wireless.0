@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:34437 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750917Ab1BJUkO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 15:40:14 -0500
-Date: Thu, 10 Feb 2011 22:40:10 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Chaoxing Lin <CLin@3eti.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: FW: hostapd problem on reconfig (SIGHUP)
-Message-ID: <20110210204010.GA7571@jm.kir.nu>
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
+Received: from mx1.redhat.com ([209.132.183.28]:15429 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751618Ab1BUOCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 09:02:42 -0500
+Date: Mon, 21 Feb 2011 15:02:41 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@venema.h4ckr.net
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] ath9k: correct ath9k_hw_set_interrupts
+Message-ID: <20110221140210.GA5996@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DFA0@RockMX01.rock.corp>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 10, 2011 at 02:55:14PM +0000, Chaoxing Lin wrote:
-> I see a problem while testing the latest hostapd/kernel/wpa_supplicant. I believe the problem in on hostapd side.
+Commit 4df3071ebd92ef7115b409da64d0eb405d24a631 "ath9k_hw: optimize
+interrupt mask changes", changed ath9k_hw_set_interrupts function to
+enable interrupts regardless of function argument, what could possibly
+be wrong. Correct that behaviour and check "ints" arguments before
+enabling interrupts, also disable interrupts if ints do not have
+ATH9K_INT_GLOBAL flag set.
 
-Could you please re-test with the current hostap.git snapshot?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-> 1. If there's a client associated, a SIGHUP signal to hostapd can cause problem that no clients can associate (almost 100% reproducible)
-
-I would assume the clients could still re-associate if you were to
-manually request them to do so. They may not do this automatically until
-the STA entry in hostapd times out (though, with the change I just added
-to hostap.git, this happens immediately in case of SIGHUP).
-
-> 2. "segmentation fault" happens a few times(not all the time)  to hostapd by repeating SIGHUP and SIGUSR1 to hostapd.
-
-Fixed.
-
-> 3. Another minor thing. Actually a suggestion, hostapd does not need to re-config if configuration file is not changed. This is preferred because when hostapd controls multiple radios (e.g hostapd radio1.conf radio2.conf), it’s desirable that service on other radio is not disrupted when one of the conf is changed. 
-
-How frequently are you changing the configuration? Is this really a big
-enough issue to justify extra complexity in figuring out whether the
-configuration has changed? Anyway, an easier approach would be to add a
-new control interface command RECONFIGURE (which is already available in
-wpa_supplicant) which would allow the reconfiguration to be done
-separately for a single radio.
-
->     a. The already associated client still thinks itself associated. This is verified by "iw wlan0 link" on client side. 
-> 　　It timed out later on and can no longer associate.
-
-The client was probably in sleep state when the AP sent out the
-broadcast Deauthentication frames or for some other reason missed it at
-the time. It should be able to reassociate after the timeout, though.. I
-did not see issues with this in my tests.
-
->     b. driver (ath9k in kernel 2.6.38-rc4, operate over ar9380) says it has already deauthenticated the clients per 
->            hostapd flush instruction. This is verified by "iw wlan0 station dump" on ap side.
->         I sniffed the air. Deauthentication packets (as broadcast) were sent out by driver. The associated client does not 
-> 　　deauthenticate and re-associate (bug in wpa_supplicant?).
-
-Please let me know if you can still reproduce this after having updated
-hostapd to the current hostap.git snapshot.
-
->     c. hostapd still thinks the associated client is associated, which is wrong. This is verified by "killall -SIGUSR1 hostapd"
->        followed by "cat /tmp/hostapd.dump"
-
-Fixed.
-
->     d. Tried to use new client to associate. No success.
->        Both old and clients stuck 
-
-Strange.. I have been unable to reproduce this. What kind of hostapd
-configuration are you using?
-
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index c75d40f..5efc869 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -891,7 +891,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	if (!(ints & ATH9K_INT_GLOBAL))
+-		ath9k_hw_enable_interrupts(ah);
++		ath9k_hw_disable_interrupts(ah);
+ 
+ 	ath_dbg(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
+ 
+@@ -969,7 +969,8 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ 			REG_CLR_BIT(ah, AR_IMR_S5, AR_IMR_S5_TIM_TIMER);
+ 	}
+ 
+-	ath9k_hw_enable_interrupts(ah);
++	if (ints & ATH9K_INT_GLOBAL)
++		ath9k_hw_enable_interrupts(ah);
+ 
+ 	return;
+ }
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.1
+
