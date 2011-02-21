@@ -1,48 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60416 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753507Ab1BNMkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 07:40:40 -0500
-Date: Mon, 14 Feb 2011 13:40:23 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] iwl3945: use software scanning by default
-Message-ID: <20110214124022.GA14827@redhat.com>
-References: <1297172211-17448-1-git-send-email-sgruszka@redhat.com>
- <1297685299.3785.32.camel@jlt3.sipsolutions.net>
+Received: from mail-bw0-f51.google.com ([209.85.214.51]:52217 "EHLO
+	mail-bw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006Ab1BUXcM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Feb 2011 18:32:12 -0500
+Received: by bwz10 with SMTP id 10so2645194bwz.10
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 15:32:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1297685299.3785.32.camel@jlt3.sipsolutions.net>
+In-Reply-To: <20110221184716.GD9650@tuxdriver.com>
+References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
+	<1298064074-8108-1-git-send-email-linville@tuxdriver.com>
+	<AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
+	<20110221184716.GD9650@tuxdriver.com>
+Date: Mon, 21 Feb 2011 15:26:32 -0800
+Message-ID: <AANLkTi=LnpFLzKbtaPxSjg9TRU_pY2oRi6tsFg5GkaGK@mail.gmail.com>
+Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
+From: Nathaniel Smith <njs@pobox.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
+	johannes@sipsolutions.net, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 01:08:19PM +0100, Johannes Berg wrote:
-> On Tue, 2011-02-08 at 14:36 +0100, Stanislaw Gruszka wrote:
-> > Looking for some more testing and opinions.
-> > 
-> > Patch fixes:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=671366
-> > and probably some other "very poor performance" bugs reported
-> > elsewhere.
-> > 
-> > Sometimes after hardware scanning device is unable to receive frames
-> > at higher rate, what cause that very slow speed is observed by the users.
-> 
-> Is there any more information about this problem?
+On Mon, Feb 21, 2011 at 10:47 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Feb 18, 2011 at 07:44:30PM -0800, Nathaniel Smith wrote:
+>> On Fri, Feb 18, 2011 at 1:21 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > +       /* grab timestamp info for buffer control estimates */
+>> > +       tserv = ktime_sub(ktime_get(), skb->tstamp);
+>> [...]
+>> > +               ewma_add(&sta->sdata->qdata[q].tserv_ns_avg,
+>> > +                        ktime_to_ns(tserv));
+>>
+>> I think you're still measuring how long it takes one packet to get
+>> from the end of the queue to the beginning, rather than measuring how
+>> long it takes each packet to go out?
+>
+> Yes, I am measuring how long the driver+device takes to release each
+> skb back to me (using that as a proxy for how long it takes to get
+> the fragment to the next hop).  Actually, FWIW I'm only measuring
+> that time for those skb's that result in a tx status report.
+>
+> I tried to see how your measurement would be useful, but I just don't
+> see how the number of frames ahead of me in the queue is relevant to
+> the measured link latency?  I mean, I realize that having more packets
+> ahead of me in the queue is likely to increase the latency for this
+> frame, but I don't understand why I should use that information to
+> discount the measured latency...?
 
-Only valuable data we have is on above bugzilla report:
-- messages with IWL_DEBUG_SCAN and some other flags:
-  https://bugzilla.redhat.com/attachment.cgi?id=476229
-- wireshark capture:
-  https://bugzilla.redhat.com/attachment.cgi?id=476614
+It depends on which latency you want to measure. The way that I
+reasoned was, suppose that at some given time, the card is able to
+transmit 1 fragment every T nanoseconds. Then it can transmit n
+fragments in n*T nanoseconds, so if we want the queue depth to be 2
+ms, then we have
+  n * T = 2 * NSEC_PER_MSEC
+  n = 2 * NSEC_PER_MSEC / T
 
-There is lots of ubuntu users discussion here:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/621265?comments=all 
-Most important information there is that removing plcp check
-and/or not using NetworkManager helps (both triggers scans).
+Which is the calculation that you're doing:
 
-Stanislaw
++                       sta->sdata->qdata[q].max_enqueued =
++                               max_t(int, 2, 2 * NSEC_PER_MSEC / tserv_ns_avg);
 
+But for this calculation to make sense, we need T to be the time it
+takes the card to transmit 1 fragment. In your patch, you're not
+measuring that. You're measuring the total time between when a packet
+is enqueued and when it is transmitted; if there were K packets in the
+queue ahead of it, then this is the time to send *all* of them --
+you're measuring (K+1)*T. That's why in my patch, I recorded the
+current size of the queue when each packet is enqueued, so I could
+compute T = total_time / (K+1).
+
+Under saturation conditions, K+1 will always equal max_enqueued, so I
+guess in your algorithm, at the steady state we have
+
+  max_enqueued = K+1 = 2 * NSEC_PER_MSEC / ((K+1) * T)
+  (K+1)^2 = 2 * NSEC_PER_MSEC / T
+  K+1 = sqrt(2 * NSEC_PER_MSEC / T)
+
+So I think under saturation, you converge to setting the queue to the
+square root of the appropriate size?
+
+-- Nathaniel
