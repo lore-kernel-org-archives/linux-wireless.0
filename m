@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49619 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50804 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab1BNKMj (ORCPT
+	with ESMTP id S1751015Ab1BVNBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 05:12:39 -0500
-Subject: Re: [RFC] mac80211: reply to directed probes in IBSS
+	Tue, 22 Feb 2011 08:01:03 -0500
+Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimEDvmp2RbLXdOf8vRrjzBKd+rLwqoreX+x3EdB@mail.gmail.com>
-References: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
-	 <AANLkTimEDvmp2RbLXdOf8vRrjzBKd+rLwqoreX+x3EdB@mail.gmail.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTinP96mRkqCz-HgE3ePR-g2pFveR6HL2QoNw=E_r@mail.gmail.com>
+References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
+	 <1298027245.3772.3.camel@jlt3.sipsolutions.net>
+	 <20110219061241.GA5881@vmraj-lnx.users.atheros.com>
+	 <1298106890.3725.7.camel@jlt3.sipsolutions.net>
+	 <AANLkTinP96mRkqCz-HgE3ePR-g2pFveR6HL2QoNw=E_r@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 11:12:37 +0100
-Message-ID: <1297678357.3785.14.camel@jlt3.sipsolutions.net>
+Date: Tue, 22 Feb 2011 14:02:25 +0100
+Message-ID: <1298379745.3773.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-08 at 16:41 +0530, Mohammed Shafi wrote:
-> On Tue, Feb 1, 2011 at 6:19 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2011-02-21 at 12:51 +0530, Vivek Natarajan wrote:
+> On Sat, Feb 19, 2011 at 2:44 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sat, 2011-02-19 at 11:42 +0530, Rajkumar Manoharan wrote:
 > >
-> > At least the WMM spec says we should reply to
-> > unicast probe request frames that go to us.
+> >> > I know we currently don't allow powersave when there's more than one
+> >> > interface, but we still allow it while there are monitor interfaces and
+> >> > a monitor interface could be sending packets, which would violate the
+> >> > flush() contract with the driver -- the driver may expect not to get any
+> >> > packets during flush.
 > >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> >  net/mac80211/ibss.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >> AFIK we also are not stopping tx queue of monitor iface on offchannel.
+> >> Doing so could help flush().
 > >
-> > --- wireless-testing.orig/net/mac80211/ibss.c   2011-02-01 12:58:16.000000000 +0100
-> > +++ wireless-testing/net/mac80211/ibss.c        2011-02-01 13:47:44.000000000 +0100
-> > @@ -689,7 +689,7 @@ static void ieee80211_rx_mgmt_probe_req(
-> >               mgmt->bssid, tx_last_beacon);
-> >  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
-> >
-> > -       if (!tx_last_beacon)
-> > +       if (!tx_last_beacon && !(status->rx_flags & IEEE80211_RX_RA_MATCH))
-> >                return;
-> >
-> >        if (memcmp(mgmt->bssid, ifibss->bssid, ETH_ALEN) != 0 &&
+> > Hrm, indeed. And we can't even stop the queues there. We can pause them
+> > for the flush though. In fact, why don't we just stop device queues for
+> > flush and bypass this problem.
 > 
-> Hi Johannes,
->              tested with the same thing (in addition of passing the
-> rx_status structure) and it is working fine.
+> If the device queues are stopped, we have to find some other fix for
+> this power save issue since null func frame will be queued to pending
+> frames as I mentioned earlier. Can we have this patch merged and fix
+> the monitor vif issue for this case and the scanning case later? I
+> have also sent a RFC patch earlier with stopping device queues and a
+> new PS_PENDING flag for this
+> (http://marc.info/?l=linux-wireless&m=129775059910372&w=3) That patch
+> also addresses this race.
 
-Yeah, I clearly missed that, guess I wasn't paying attention.
-
-The real question though is -- do we want/need this? I can only find
-reference to this behaviour in the WMM spec.
+I think for a first solution we can probably get away not worrying about
+monitor injection frames, since typically they'd be used by P2P things
+that disable powersave anyway. Right? And we already have the monitor
+vs. flush problem anyway.
 
 johannes
 
