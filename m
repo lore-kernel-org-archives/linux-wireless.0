@@ -1,590 +1,499 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56491 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58113 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932878Ab1BYWAh (ORCPT
+	with ESMTP id S1750990Ab1BVWAf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 17:00:37 -0500
+	Tue, 22 Feb 2011 17:00:35 -0500
+Date: Tue, 22 Feb 2011 16:52:30 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlegacy: change some symbols duplicated from iwlwifi directory
-Date: Fri, 25 Feb 2011 16:50:06 -0500
-Message-Id: <1298670606-1250-1-git-send-email-linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2011-02-22
+Message-ID: <20110222215229.GJ12153@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/iwlegacy/built-in.o:(.rodata+0x29f0): multiple definition of `iwl_rates'
-drivers/net/wireless/iwlwifi/built-in.o:(.rodata+0xa68): first defined here
-powerpc64-linux-ld: Warning: size of symbol `iwl_rates' changed from 143 in drivers/net/wireless/iwlwifi/built-in.o to 130 in drivers/net/wireless/iwlegacy/built-in.o
-drivers/net/wireless/iwlegacy/built-in.o:(.data+0x0): multiple definition of `bt_coex_active'
-drivers/net/wireless/iwlwifi/built-in.o:(.data+0x668): first defined here
-drivers/net/wireless/iwlegacy/built-in.o:(.rodata+0x750): multiple definition of `iwl_eeprom_band_1'
-drivers/net/wireless/iwlwifi/built-in.o:(.rodata+0x27d0): first defined here
-drivers/net/wireless/iwlegacy/built-in.o:(.rodata+0x3f0): multiple definition of `iwl_bcast_addr'
-drivers/net/wireless/iwlwifi/built-in.o:(.rodata+0x24f8): first defined here
-drivers/net/wireless/iwlegacy/built-in.o:(.bss+0x3d48): multiple definition of `iwl_debug_level'
-drivers/net/wireless/iwlwifi/built-in.o:(.bss+0x21950): first defined here
+Dave,
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Here is the latest batch of wireless bits intended for 2.6.39.  It seems
+I neglected to send a pull request last week, so this one is a bit big
+-- I apologize!
+
+This includes a rather large batch of bluetooth bits by way of Gustavo.
+It looks like a variety of bits, including some code refactoring, some
+protocol support enhancements, some bugfixes, etc. -- nothing too
+unusual.
+
+Other items of interest include a new driver from Realtek, some ssb
+support enhancements, and the usual sort of updates for mac80211 and a
+variety of drivers.  Also included is a wireless-2.6 pull to resolve
+some build breakage.
+
+Please let me know if there are problems!
+
+John
+
 ---
- drivers/net/wireless/iwlegacy/iwl-4965-lib.c  |    4 +-
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c   |   20 +++++-----
- drivers/net/wireless/iwlegacy/iwl-4965-sta.c  |    5 +-
- drivers/net/wireless/iwlegacy/iwl-4965-tx.c   |    2 +-
- drivers/net/wireless/iwlegacy/iwl-core.c      |   21 +++++-----
- drivers/net/wireless/iwlegacy/iwl-core.h      |    2 -
- drivers/net/wireless/iwlegacy/iwl-debug.h     |    2 +-
- drivers/net/wireless/iwlegacy/iwl-debugfs.c   |    4 +-
- drivers/net/wireless/iwlegacy/iwl-dev.h       |    8 ++--
- drivers/net/wireless/iwlegacy/iwl-eeprom.c    |   54 ++++++++++++------------
- drivers/net/wireless/iwlegacy/iwl-eeprom.h    |    2 +-
- drivers/net/wireless/iwlegacy/iwl-legacy-rs.h |    4 +-
- drivers/net/wireless/iwlegacy/iwl-scan.c      |    4 +-
- drivers/net/wireless/iwlegacy/iwl3945-base.c  |    6 +-
- drivers/net/wireless/iwlegacy/iwl4965-base.c  |    6 +-
- 15 files changed, 71 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-index bd9618a..5a8a3cc 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-lib.c
-@@ -424,7 +424,7 @@ int iwl4965_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band)
- 		if (band == IEEE80211_BAND_5GHZ)
- 			band_offset = IWL_FIRST_OFDM_RATE;
- 		for (idx = band_offset; idx < IWL_RATE_COUNT_LEGACY; idx++)
--			if (iwl_rates[idx].plcp == (rate_n_flags & 0xFF))
-+			if (iwlegacy_rates[idx].plcp == (rate_n_flags & 0xFF))
- 				return idx - band_offset;
- 	}
- 
-@@ -995,7 +995,7 @@ int iwl4965_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		/* use bcast addr, will not be transmitted but must be valid */
- 		cmd_len = iwl_legacy_fill_probe_req(priv,
- 					(struct ieee80211_mgmt *)scan->data,
--					iwl_bcast_addr, NULL, 0,
-+					iwlegacy_bcast_addr, NULL, 0,
- 					IWL_MAX_SCAN_SIZE - sizeof(*scan));
- 
- 	}
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 69abd28..31ac672 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -97,7 +97,7 @@ static const u8 ant_toggle_lookup[] = {
-  * maps to IWL_RATE_INVALID
-  *
-  */
--const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
-+const struct iwl_rate_info iwlegacy_rates[IWL_RATE_COUNT] = {
- 	IWL_DECLARE_RATE_INFO(1, INV, INV, 2, INV, 2, INV, 2),    /*  1mbps */
- 	IWL_DECLARE_RATE_INFO(2, INV, 1, 5, 1, 5, 1, 5),          /*  2mbps */
- 	IWL_DECLARE_RATE_INFO(5, INV, 2, 6, 2, 11, 2, 11),        /*5.5mbps */
-@@ -133,8 +133,8 @@ static int iwl4965_hwrate_to_plcp_idx(u32 rate_n_flags)
- 
- 	/* legacy rate format, search for match in table */
- 	} else {
--		for (idx = 0; idx < ARRAY_SIZE(iwl_rates); idx++)
--			if (iwl_rates[idx].plcp == (rate_n_flags & 0xFF))
-+		for (idx = 0; idx < ARRAY_SIZE(iwlegacy_rates); idx++)
-+			if (iwlegacy_rates[idx].plcp == (rate_n_flags & 0xFF))
- 				return idx;
- 	}
- 
-@@ -500,7 +500,7 @@ static u32 iwl4965_rate_n_flags_from_tbl(struct iwl_priv *priv,
- 	u32 rate_n_flags = 0;
- 
- 	if (is_legacy(tbl->lq_type)) {
--		rate_n_flags = iwl_rates[index].plcp;
-+		rate_n_flags = iwlegacy_rates[index].plcp;
- 		if (index >= IWL_FIRST_CCK_RATE && index <= IWL_LAST_CCK_RATE)
- 			rate_n_flags |= RATE_MCS_CCK_MSK;
- 
-@@ -512,9 +512,9 @@ static u32 iwl4965_rate_n_flags_from_tbl(struct iwl_priv *priv,
- 		rate_n_flags = RATE_MCS_HT_MSK;
- 
- 		if (is_siso(tbl->lq_type))
--			rate_n_flags |=	iwl_rates[index].plcp_siso;
-+			rate_n_flags |=	iwlegacy_rates[index].plcp_siso;
- 		else
--			rate_n_flags |=	iwl_rates[index].plcp_mimo2;
-+			rate_n_flags |=	iwlegacy_rates[index].plcp_mimo2;
- 	} else {
- 		IWL_ERR(priv, "Invalid tbl->lq_type %d\n", tbl->lq_type);
- 	}
-@@ -703,7 +703,7 @@ iwl4965_rs_get_adjacent_rate(struct iwl_priv *priv, u8 index, u16 rate_mask,
- 
- 	low = index;
- 	while (low != IWL_RATE_INVALID) {
--		low = iwl_rates[low].prev_rs;
-+		low = iwlegacy_rates[low].prev_rs;
- 		if (low == IWL_RATE_INVALID)
- 			break;
- 		if (rate_mask & (1 << low))
-@@ -713,7 +713,7 @@ iwl4965_rs_get_adjacent_rate(struct iwl_priv *priv, u8 index, u16 rate_mask,
- 
- 	high = index;
- 	while (high != IWL_RATE_INVALID) {
--		high = iwl_rates[high].next_rs;
-+		high = iwlegacy_rates[high].next_rs;
- 		if (high == IWL_RATE_INVALID)
- 			break;
- 		if (rate_mask & (1 << high))
-@@ -2221,7 +2221,7 @@ static void iwl4965_rs_initialize_lq(struct iwl_priv *priv,
- 	if ((i < 0) || (i >= IWL_RATE_COUNT))
- 		i = 0;
- 
--	rate = iwl_rates[i].plcp;
-+	rate = iwlegacy_rates[i].plcp;
- 	tbl->ant_type = iwl4965_first_antenna(valid_tx_ant);
- 	rate |= tbl->ant_type << RATE_MCS_ANT_POS;
- 
-@@ -2791,7 +2791,7 @@ static ssize_t iwl4965_rs_sta_dbgfs_rate_scale_data_read(struct file *file,
- 	else
- 		desc += sprintf(buff+desc,
- 				"Bit Rate= %d Mb/s\n",
--				iwl_rates[lq_sta->last_txrate_idx].ieee >> 1);
-+				iwlegacy_rates[lq_sta->last_txrate_idx].ieee >> 1);
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
- 	return ret;
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-sta.c b/drivers/net/wireless/iwlegacy/iwl-4965-sta.c
-index 057da2c..a262c23 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-sta.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-sta.c
-@@ -59,7 +59,8 @@ iwl4965_sta_alloc_lq(struct iwl_priv *priv, u8 sta_id)
- 
- 	rate_flags |= iwl4965_first_antenna(priv->hw_params.valid_tx_ant) <<
- 				RATE_MCS_ANT_POS;
--	rate_n_flags = iwl4965_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
-+	rate_n_flags = iwl4965_hw_set_rate_n_flags(iwlegacy_rates[r].plcp,
-+						   rate_flags);
- 	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
- 		link_cmd->rs_table[i].rate_n_flags = rate_n_flags;
- 
-@@ -553,7 +554,7 @@ int iwl4965_alloc_bcast_station(struct iwl_priv *priv,
- 	u8 sta_id;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
--	sta_id = iwl_legacy_prep_station(priv, ctx, iwl_bcast_addr,
-+	sta_id = iwl_legacy_prep_station(priv, ctx, iwlegacy_bcast_addr,
- 								false, NULL);
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_ERR(priv, "Unable to prepare broadcast station\n");
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-index 2e0f0db..829db91 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
-@@ -203,7 +203,7 @@ static void iwl4965_tx_cmd_build_rate(struct iwl_priv *priv,
- 	if (info->band == IEEE80211_BAND_5GHZ)
- 		rate_idx += IWL_FIRST_OFDM_RATE;
- 	/* Get PLCP rate for tx_cmd->rate_n_flags */
--	rate_plcp = iwl_rates[rate_idx].plcp;
-+	rate_plcp = iwlegacy_rates[rate_idx].plcp;
- 	/* Zero out flags for this packet */
- 	rate_flags = 0;
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 7cc560b..d418b64 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -64,16 +64,15 @@ MODULE_LICENSE("GPL");
-  *
-  * default: bt_coex_active = true (BT_COEX_ENABLE)
-  */
--bool bt_coex_active = true;
--EXPORT_SYMBOL_GPL(bt_coex_active);
-+static bool bt_coex_active = true;
- module_param(bt_coex_active, bool, S_IRUGO);
- MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
- 
--u32 iwl_debug_level;
--EXPORT_SYMBOL(iwl_debug_level);
-+u32 iwlegacy_debug_level;
-+EXPORT_SYMBOL(iwlegacy_debug_level);
- 
--const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
--EXPORT_SYMBOL(iwl_bcast_addr);
-+const u8 iwlegacy_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-+EXPORT_SYMBOL(iwlegacy_bcast_addr);
- 
- 
- /* This function both allocates and initializes hw and priv. */
-@@ -183,7 +182,7 @@ int iwl_legacy_init_geos(struct iwl_priv *priv)
- 
- 	/* 5.2GHz channels start after the 2.4GHz channels */
- 	sband = &priv->bands[IEEE80211_BAND_5GHZ];
--	sband->channels = &channels[ARRAY_SIZE(iwl_eeprom_band_1)];
-+	sband->channels = &channels[ARRAY_SIZE(iwlegacy_eeprom_band_1)];
- 	/* just OFDM */
- 	sband->bitrates = &rates[IWL_FIRST_OFDM_RATE];
- 	sband->n_bitrates = IWL_RATE_COUNT_LEGACY - IWL_FIRST_OFDM_RATE;
-@@ -1489,7 +1488,7 @@ int iwl_legacy_alloc_traffic_mem(struct iwl_priv *priv)
- {
- 	u32 traffic_size = IWL_TRAFFIC_DUMP_SIZE;
- 
--	if (iwl_debug_level & IWL_DL_TX) {
-+	if (iwlegacy_debug_level & IWL_DL_TX) {
- 		if (!priv->tx_traffic) {
- 			priv->tx_traffic =
- 				kzalloc(traffic_size, GFP_KERNEL);
-@@ -1497,7 +1496,7 @@ int iwl_legacy_alloc_traffic_mem(struct iwl_priv *priv)
- 				return -ENOMEM;
- 		}
- 	}
--	if (iwl_debug_level & IWL_DL_RX) {
-+	if (iwlegacy_debug_level & IWL_DL_RX) {
- 		if (!priv->rx_traffic) {
- 			priv->rx_traffic =
- 				kzalloc(traffic_size, GFP_KERNEL);
-@@ -1526,7 +1525,7 @@ void iwl_legacy_dbg_log_tx_data_frame(struct iwl_priv *priv,
- 	__le16 fc;
- 	u16 len;
- 
--	if (likely(!(iwl_debug_level & IWL_DL_TX)))
-+	if (likely(!(iwlegacy_debug_level & IWL_DL_TX)))
- 		return;
- 
- 	if (!priv->tx_traffic)
-@@ -1551,7 +1550,7 @@ void iwl_legacy_dbg_log_rx_data_frame(struct iwl_priv *priv,
- 	__le16 fc;
- 	u16 len;
- 
--	if (likely(!(iwl_debug_level & IWL_DL_RX)))
-+	if (likely(!(iwlegacy_debug_level & IWL_DL_RX)))
- 		return;
- 
- 	if (!priv->rx_traffic)
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.h b/drivers/net/wireless/iwlegacy/iwl-core.h
-index 1159b0d..c6d12d7 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.h
-@@ -628,8 +628,6 @@ static inline const struct ieee80211_supported_band *iwl_get_hw_mode(
- 	return priv->hw->wiphy->bands[band];
- }
- 
--extern bool bt_coex_active;
--
- /* mac80211 handlers */
- int iwl_legacy_mac_config(struct ieee80211_hw *hw, u32 changed);
- void iwl_legacy_mac_reset_tsf(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-debug.h b/drivers/net/wireless/iwlegacy/iwl-debug.h
-index 665789f..ae13112 100644
---- a/drivers/net/wireless/iwlegacy/iwl-debug.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-debug.h
-@@ -30,7 +30,7 @@
- #define __iwl_legacy_debug_h__
- 
- struct iwl_priv;
--extern u32 iwl_debug_level;
-+extern u32 iwlegacy_debug_level;
- 
- #define IWL_ERR(p, f, a...) dev_err(&((p)->pci_dev->dev), f, ## a)
- #define IWL_WARN(p, f, a...) dev_warn(&((p)->pci_dev->dev), f, ## a)
-diff --git a/drivers/net/wireless/iwlegacy/iwl-debugfs.c b/drivers/net/wireless/iwlegacy/iwl-debugfs.c
-index 6ea9c4f..2d32438 100644
---- a/drivers/net/wireless/iwlegacy/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-debugfs.c
-@@ -748,7 +748,7 @@ static ssize_t iwl_legacy_dbgfs_traffic_log_read(struct file *file,
- 				"q[%d]: read_ptr: %u, write_ptr: %u\n",
- 				cnt, q->read_ptr, q->write_ptr);
- 	}
--	if (priv->tx_traffic && (iwl_debug_level & IWL_DL_TX)) {
-+	if (priv->tx_traffic && (iwlegacy_debug_level & IWL_DL_TX)) {
- 		ptr = priv->tx_traffic;
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 				"Tx Traffic idx: %u\n",	priv->tx_traffic_idx);
-@@ -771,7 +771,7 @@ static ssize_t iwl_legacy_dbgfs_traffic_log_read(struct file *file,
- 			"read: %u, write: %u\n",
- 			 rxq->read, rxq->write);
- 
--	if (priv->rx_traffic && (iwl_debug_level & IWL_DL_RX)) {
-+	if (priv->rx_traffic && (iwlegacy_debug_level & IWL_DL_RX)) {
- 		ptr = priv->rx_traffic;
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 				"Rx Traffic idx: %u\n",	priv->rx_traffic_idx);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-dev.h b/drivers/net/wireless/iwlegacy/iwl-dev.h
-index 25718cf..9ee849d 100644
---- a/drivers/net/wireless/iwlegacy/iwl-dev.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-dev.h
-@@ -624,7 +624,7 @@ struct iwl_hw_params {
-  *
-  ****************************************************************************/
- extern void iwl4965_update_chain_flags(struct iwl_priv *priv);
--extern const u8 iwl_bcast_addr[ETH_ALEN];
-+extern const u8 iwlegacy_bcast_addr[ETH_ALEN];
- extern int iwl_legacy_queue_space(const struct iwl_queue *q);
- static inline int iwl_legacy_queue_used(const struct iwl_queue *q, int i)
- {
-@@ -1285,7 +1285,7 @@ struct iwl_priv {
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
- 	/* debugging info */
- 	u32 debug_level; /* per device debugging will override global
--			    iwl_debug_level if set */
-+			    iwlegacy_debug_level if set */
- #endif /* CONFIG_IWLWIFI_LEGACY_DEBUG */
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUGFS
- 	/* debugfs */
-@@ -1338,12 +1338,12 @@ static inline u32 iwl_legacy_get_debug_level(struct iwl_priv *priv)
- 	if (priv->debug_level)
- 		return priv->debug_level;
- 	else
--		return iwl_debug_level;
-+		return iwlegacy_debug_level;
- }
- #else
- static inline u32 iwl_legacy_get_debug_level(struct iwl_priv *priv)
- {
--	return iwl_debug_level;
-+	return iwlegacy_debug_level;
- }
- #endif
- 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.c b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-index 39e5773..04c5648 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-@@ -77,7 +77,7 @@
- 
- /************************** EEPROM BANDS ****************************
-  *
-- * The iwl_eeprom_band definitions below provide the mapping from the
-+ * The iwlegacy_eeprom_band definitions below provide the mapping from the
-  * EEPROM contents to the specific channel number supported for each
-  * band.
-  *
-@@ -107,32 +107,32 @@
-  *********************************************************************/
- 
- /* 2.4 GHz */
--const u8 iwl_eeprom_band_1[14] = {
-+const u8 iwlegacy_eeprom_band_1[14] = {
- 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
- };
- 
- /* 5.2 GHz bands */
--static const u8 iwl_eeprom_band_2[] = {	/* 4915-5080MHz */
-+static const u8 iwlegacy_eeprom_band_2[] = {	/* 4915-5080MHz */
- 	183, 184, 185, 187, 188, 189, 192, 196, 7, 8, 11, 12, 16
- };
- 
--static const u8 iwl_eeprom_band_3[] = {	/* 5170-5320MHz */
-+static const u8 iwlegacy_eeprom_band_3[] = {	/* 5170-5320MHz */
- 	34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 60, 64
- };
- 
--static const u8 iwl_eeprom_band_4[] = {	/* 5500-5700MHz */
-+static const u8 iwlegacy_eeprom_band_4[] = {	/* 5500-5700MHz */
- 	100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140
- };
- 
--static const u8 iwl_eeprom_band_5[] = {	/* 5725-5825MHz */
-+static const u8 iwlegacy_eeprom_band_5[] = {	/* 5725-5825MHz */
- 	145, 149, 153, 157, 161, 165
- };
- 
--static const u8 iwl_eeprom_band_6[] = {       /* 2.4 ht40 channel */
-+static const u8 iwlegacy_eeprom_band_6[] = {       /* 2.4 ht40 channel */
- 	1, 2, 3, 4, 5, 6, 7
- };
- 
--static const u8 iwl_eeprom_band_7[] = {       /* 5.2 ht40 channel */
-+static const u8 iwlegacy_eeprom_band_7[] = {       /* 5.2 ht40 channel */
- 	36, 44, 52, 60, 100, 108, 116, 124, 132, 149, 157
- };
- 
-@@ -273,46 +273,46 @@ static void iwl_legacy_init_band_reference(const struct iwl_priv *priv,
- 			eeprom_ops.regulatory_bands[eep_band - 1];
- 	switch (eep_band) {
- 	case 1:		/* 2.4GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_1);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_1);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_1;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_1;
- 		break;
- 	case 2:		/* 4.9GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_2);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_2);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_2;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_2;
- 		break;
- 	case 3:		/* 5.2GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_3);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_3);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_3;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_3;
- 		break;
- 	case 4:		/* 5.5GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_4);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_4);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_4;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_4;
- 		break;
- 	case 5:		/* 5.7GHz band */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_5);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_5);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_5;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_5;
- 		break;
- 	case 6:		/* 2.4GHz ht40 channels */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_6);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_6);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_6;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_6;
- 		break;
- 	case 7:		/* 5 GHz ht40 channels */
--		*eeprom_ch_count = ARRAY_SIZE(iwl_eeprom_band_7);
-+		*eeprom_ch_count = ARRAY_SIZE(iwlegacy_eeprom_band_7);
- 		*eeprom_ch_info = (struct iwl_eeprom_channel *)
- 				iwl_legacy_eeprom_query_addr(priv, offset);
--		*eeprom_ch_index = iwl_eeprom_band_7;
-+		*eeprom_ch_index = iwlegacy_eeprom_band_7;
- 		break;
- 	default:
- 		BUG();
-@@ -388,11 +388,11 @@ int iwl_legacy_init_channel_map(struct iwl_priv *priv)
- 	IWL_DEBUG_EEPROM(priv, "Initializing regulatory info from EEPROM\n");
- 
- 	priv->channel_count =
--	    ARRAY_SIZE(iwl_eeprom_band_1) +
--	    ARRAY_SIZE(iwl_eeprom_band_2) +
--	    ARRAY_SIZE(iwl_eeprom_band_3) +
--	    ARRAY_SIZE(iwl_eeprom_band_4) +
--	    ARRAY_SIZE(iwl_eeprom_band_5);
-+	    ARRAY_SIZE(iwlegacy_eeprom_band_1) +
-+	    ARRAY_SIZE(iwlegacy_eeprom_band_2) +
-+	    ARRAY_SIZE(iwlegacy_eeprom_band_3) +
-+	    ARRAY_SIZE(iwlegacy_eeprom_band_4) +
-+	    ARRAY_SIZE(iwlegacy_eeprom_band_5);
- 
- 	IWL_DEBUG_EEPROM(priv, "Parsing data for %d channels.\n",
- 			priv->channel_count);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.h b/drivers/net/wireless/iwlegacy/iwl-eeprom.h
-index 0744f8d..c59c810 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.h
-@@ -144,7 +144,7 @@ struct iwl_eeprom_channel {
- #define EEPROM_4965_BOARD_PBA                  (2*0x56+1) /* 9 bytes */
- 
- /* 2.4 GHz */
--extern const u8 iwl_eeprom_band_1[14];
-+extern const u8 iwlegacy_eeprom_band_1[14];
- 
- /*
-  * factory calibration data for one txpower level, on one channel,
-diff --git a/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h b/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-index f66a1b2..38647e4 100644
---- a/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-+++ b/drivers/net/wireless/iwlegacy/iwl-legacy-rs.h
-@@ -56,7 +56,7 @@ struct iwl3945_rate_info {
- 
- /*
-  * These serve as indexes into
-- * struct iwl_rate_info iwl_rates[IWL_RATE_COUNT];
-+ * struct iwl_rate_info iwlegacy_rates[IWL_RATE_COUNT];
-  */
- enum {
- 	IWL_RATE_1M_INDEX = 0,
-@@ -268,7 +268,7 @@ enum {
- #define TID_MAX_TIME_DIFF ((TID_QUEUE_MAX_SIZE - 1) * TID_QUEUE_CELL_SPACING)
- #define TIME_WRAP_AROUND(x, y) (((y) > (x)) ? (y) - (x) : (0-(x)) + (y))
- 
--extern const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT];
-+extern const struct iwl_rate_info iwlegacy_rates[IWL_RATE_COUNT];
- 
- enum iwl_table_type {
- 	LQ_NONE,
-diff --git a/drivers/net/wireless/iwlegacy/iwl-scan.c b/drivers/net/wireless/iwlegacy/iwl-scan.c
-index 842f0b4..60f597f 100644
---- a/drivers/net/wireless/iwlegacy/iwl-scan.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-scan.c
-@@ -492,9 +492,9 @@ iwl_legacy_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
- 		return 0;
- 
- 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
--	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
-+	memcpy(frame->da, iwlegacy_bcast_addr, ETH_ALEN);
- 	memcpy(frame->sa, ta, ETH_ALEN);
--	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
-+	memcpy(frame->bssid, iwlegacy_bcast_addr, ETH_ALEN);
- 	frame->seq_ctrl = 0;
- 
- 	len += 24;
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index a6af981..ab87e1b 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -2630,7 +2630,7 @@ static int iwl3945_alloc_bcast_station(struct iwl_priv *priv)
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	sta_id = iwl_legacy_prep_station(priv, ctx,
--					iwl_bcast_addr, false, NULL);
-+					iwlegacy_bcast_addr, false, NULL);
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_ERR(priv, "Unable to prepare broadcast station\n");
- 		spin_unlock_irqrestore(&priv->sta_lock, flags);
-@@ -2929,7 +2929,7 @@ int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		scan->tx_cmd.len = cpu_to_le16(
- 			iwl_legacy_fill_probe_req(priv,
- 				(struct ieee80211_mgmt *)scan->data,
--				iwl_bcast_addr, NULL, 0,
-+				iwlegacy_bcast_addr, NULL, 0,
- 				IWL_MAX_SCAN_SIZE - sizeof(*scan)));
- 	}
- 	/* select Rx antennas */
-@@ -4283,7 +4283,7 @@ module_param_named(disable_hw_scan, iwl3945_mod_params.disable_hw_scan,
- MODULE_PARM_DESC(disable_hw_scan,
- 		"disable hardware scanning (default 0) (deprecated)");
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
--module_param_named(debug, iwl_debug_level, uint, S_IRUGO | S_IWUSR);
-+module_param_named(debug, iwlegacy_debug_level, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- module_param_named(fw_restart, iwl3945_mod_params.restart_fw, int, S_IRUGO);
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 4d53d0f..91b3d8b 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -3057,7 +3057,7 @@ static void iwl4965_init_hw_rates(struct iwl_priv *priv,
- 	int i;
- 
- 	for (i = 0; i < IWL_RATE_COUNT_LEGACY; i++) {
--		rates[i].bitrate = iwl_rates[i].ieee * 5;
-+		rates[i].bitrate = iwlegacy_rates[i].ieee * 5;
- 		rates[i].hw_value = i; /* Rate scaling will work on indexes */
- 		rates[i].hw_value_short = i;
- 		rates[i].flags = 0;
-@@ -3066,7 +3066,7 @@ static void iwl4965_init_hw_rates(struct iwl_priv *priv,
- 			 * If CCK != 1M then set short preamble rate flag.
- 			 */
- 			rates[i].flags |=
--				(iwl_rates[i].plcp == IWL_RATE_1M_PLCP) ?
-+				(iwlegacy_rates[i].plcp == IWL_RATE_1M_PLCP) ?
- 					0 : IEEE80211_RATE_SHORT_PREAMBLE;
- 		}
- 	}
-@@ -3615,7 +3615,7 @@ module_exit(iwl4965_exit);
- module_init(iwl4965_init);
- 
- #ifdef CONFIG_IWLWIFI_LEGACY_DEBUG
--module_param_named(debug, iwl_debug_level, uint, S_IRUGO | S_IWUSR);
-+module_param_named(debug, iwlegacy_debug_level, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- 
+The following changes since commit db62983a1e4b2af9e79c97af768f0c8b80bd93f0:
+
+  Merge branch 'net/ax88796' of git://git.pengutronix.de/git/mkl/linux-2.6 (2011-02-22 11:15:29 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Andrei Emeltchenko (3):
+      Bluetooth: Use non-flushable by default L2CAP data packets
+      Bluetooth: Do not use assignments in IF conditions
+      Bluetooth: fix crash by disabling tasklet in sock accept
+
+Andrei Warkentin (1):
+      Bluetooth: Make hci a child of the corresponding tty device.
+
+Bala Shanmugam (1):
+      Bluetooth: Add firmware support for Atheros 3012
+
+Ben Greear (7):
+      ath9k: Print channel-type in chan-change dbg message.
+      mac80211: Properly set work-item channel-type.
+      mac80211: Allow scanning on existing channel-type.
+      mac80211: Allow work items to use existing channel type.
+      ath9k: Add debug info for configuring power level.
+      mac80211: Ensure power-level set properly for scanning.
+      mac80211: Add power to debugfs.
+
+Bob Copeland (1):
+      ath5k: move external function definitions to a header file
+
+Cho, Yu-Chen (1):
+      Bluetooth: Add Atheros BT AR5BBU12 fw supported
+
+Christian Lamparter (6):
+      p54: sort channel list by frequency instead of channel index
+      p54: p54_generate_band cleanup
+      p54: enhance rssi->dBm database import
+      p54spi: update sample eeprom
+      p54: implement flush callback
+      ar9170usb: mark the old driver as obsolete
+
+Claudio Takahasi (3):
+      Bluetooth: Add LE signaling commands handling
+      Bluetooth: Add connection parameter update response
+      Bluetooth: Send LE Connection Update Command
+
+Eliad Peller (4):
+      wl12xx: mcp2.5 - add config_ps acx
+      wl12xx: move to new firmware (6.1.3.50.49)
+      wl12xx: use the conf struct instead of macros for memory configuration
+      wl12xx: set supported_rates after association
+
+George (9):
+      rtlwifi: Add usb driver
+      rtlwifi: Add headers for rtl8187cu
+      rtlwifi: rtl8192cu: Add routines dm, fw, led and sw
+      rtlwifi: rtl8192cu: Add routine hw
+      rtlwifi: rtl8192cu: Add routine mac
+      rtlwifi: rtl8192cu: Add routine phy
+      rtlwifi: rtl8192cu: Add routine rf
+      rtlwifi: rtl8192cu: Add routine table
+      rtlwifi: rtl8192cu: Add routine trx
+
+Gustavo F. Padovan (27):
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-2.6 into wireless
+      Bluetooth: Fix setting of MTU for ERTM and Streaming Mode
+      Bluetooth: Rename l2cap.c to l2cap_core.c
+      Bluetooth: Initial work for L2CAP split.
+      Bluetooth: move l2cap_sock_ops to l2cap_sock.c
+      Bluetooth: move l2cap_sock_release() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_bind()/listen() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_accept() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_getname() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_setsockopt() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_getsockopt() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_connect() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_recvmsg() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_shutdown() to l2cap_sock.c
+      Bluetooth: move l2cap_sock_sendmsg() to l2cap_sock.c
+      Bluetooth: move L2CAP sock timers function to l2cap_sock.c
+      Bluetooth: move l2cap_sock_kill() to l2cap_sock.c
+      Bluetooth: move __l2cap_sock_close() to l2cap_sock.c
+      Bluetooth: update Bluetooth daemon name in Kconfig help
+      Bluetooth: Merge L2CAP and SCO modules into bluetooth.ko
+      Bluetooth: remove l2cap_load() hack
+      Bluetooth: Add L2CAP mode to debugfs output
+      Bluetooth: Use usb_fill_int_urb()
+      Bluetooth: Fix crash when ioctl(HCIUARTSETPROTO) fails
+      Bluetooth: fix errors reported by checkpatch.pl
+      Bluetooth: Fix errors reported by checkpatch.pl
+      Bluetooth: fix checkpatch errors in af_bluetooth.c
+
+Helmut Schaa (4):
+      mac80211: Remove superfluous if clause
+      rt2x00: Minor optimization for devices with RTS/CTS offload
+      Revert "rt2x00 : avoid timestamp for monitor injected frame."
+      rt2x00: Remove superfluos empty line
+
+Henry Ptasinski (1):
+      wireless-next-2.6: brcm80211: fix compile issue
+
+Jan Beulich (1):
+      small adjustment to net/mac80211/Kconfig
+
+Jesper Juhl (1):
+      Bluetooth: Fix failure to release lock in read_index_list()
+
+Johan Hedberg (25):
+      Bluetooth: Implement automatic setup procedure for local adapters
+      Bluetooth: Add support for management powered event
+      Bluetooth: Add support for set_powered management command
+      Bluetooth: Add support for set_discoverable management command
+      Bluetooth: Add set_connectable management command
+      Bluetooth: Unify mode related management messages to a single struct
+      Bluetooth: Add flag to track managment controlled adapters
+      Bluetooth: Add send_mode_rsp convenience function for mgmt.c
+      Bluetooth: Implement set_pairable managment command
+      Bluetooth: Implement UUID handling through the management interface
+      Bluetooth: Implement debugfs support for listing UUIDs
+      Bluetooth: Reject pairing requests when in non-pairable mode
+      Bluetooth: Add special handling with __hci_request and HCI_INIT
+      Bluetooth: Add controller side link key clearing to hci_init_req
+      Bluetooth: Remove page timeout setting from HCI init sequence
+      Bluetooth: Implement a more complete adapter initialization sequence
+      Bluetooth: Add class of device control to the management interface
+      Bluetooth: Implement link key handling for the management interface
+      Bluetooth: Add connected/disconnected management events
+      Bluetooth: Add disconnect managment command
+      Bluetooth: Add support for connect failed management event
+      Bluetooth: Add get_connections managment interface command
+      Bluetooth: Create common cmd_complete function for mgmt.c
+      Bluetooth: Add support for PIN code handling in the management interface
+      Bluetooth: Add set_io_capability management command
+
+Johannes Berg (2):
+      mac80211: reply to directed probes in IBSS
+      mac80211: fix 2.4 GHz 40 MHz disabling
+
+John W. Linville (5):
+      Merge branch 'for-linville' of git://git.kernel.org/.../luca/wl12xx
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-2.6
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-next-2.6
+      Merge ssh://master.kernel.org/.../linville/wireless-2.6
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Jussi Kivilinna (4):
+      zd1211rw: correct use of usb_bulk_msg on interrupt endpoints
+      zd1211rw: use async urb for write command
+      zd1211rw: move async iowrite16v up to callers
+      zd1211rw: add unlikely to ZD_ASSERT
+
+Larry Finger (13):
+      rtlwifi: Modify core routines
+      rtlwifi: rtl8192ce: Refactor rtl8192ce/dm
+      rtlwifi: rtl8192ce: Refactor rtl8192ce/fw
+      rtlwifi: rtl8192ce: Rework rtl8192ce/phy.c
+      p54: Fix compile warning
+      rtlwifi: Make changes in rtlwifi/rtl8192ce/reg.h to support rtl8192cu
+      rtlwifi: Make changes in rtlwifi/rtl8192ce/def.h to support rtl8192cu
+      rtlwifi: Modify some rtl8192ce routines for merging rtl8192cu
+      rtlwifi: Modify wifi.h for rtl8192cu
+      rtlwifi: Move common parts of rtl8192ce/phy.c
+      rtlwifi: Modify build system for rtl8192cu
+      rtlwifi: rtl8192ce: Fix endian warnings
+      rtlwifi: Remove obsolete/unused macros
+
+Michael Buesch (1):
+      ssb: Make ssb_wait_bit multi-bit safe
+
+Mohammed Shafi Shajakhan (1):
+      ath9k: Fix ath9k prevents CPU to enter C3 states
+
+Nikolay Ledovskikh (1):
+      ath5k: Correct channel setting for AR2317 chip
+
+Oliver Neukum (1):
+      Bluetooth: fix crash with quirky dongles doing sound
+
+RA-Jay Hung (2):
+      rt2x00: Add antenna setting for RT3070/RT3090/RT3390 with RX antenna diversity support
+      rt2x00: Fix rt2800 txpower setting to correct value
+
+RA-Shiang Tu (1):
+      rt2x00: Add support for RT5390 chip
+
+Rafał Miłecki (5):
+      ssb: extract boardflags2 for SPROMs rev 4 and 5
+      ssb: trivial: fix SPROM extract warning formatting
+      ssb: remove invalid define SSB_TMSLOW_PHYCLK
+      ssb: when needed, reject IM input while disabling device
+      ssb: reset device only if it was enabled
+
+Rajkumar Manoharan (1):
+      ath9k: disable beaconing before stopping beacon queue
+
+Randy Dunlap (1):
+      wl12xx: fix sdio_test kconfig/build errors
+
+Rogério Brito (1):
+      Bluetooth: ath3k: Avoid duplication of code
+
+Seth Forshee (1):
+      rt2x00: Check for errors from skb_pad() calls
+
+Shiang Tu (2):
+      rt2x00: Add/Modify protection related register definitions
+      rt2x00: Add/Modify the GPIO register definition
+
+Stanislaw Gruszka (4):
+      iwlwifi: cleanup iwl_recover_from_statistics
+      iwlwifi: cleanup iwl_good_ack_health
+      iwlwifi: fix ack health for WiFi/BT combo devices
+      mac80211: fix conn_mon_timer running after disassociate
+
+Steve Brown (1):
+      ath9k: Remove redundant beacon_interval
+
+Sujith Manoharan (1):
+      ath9k_hw: Fix power on reset
+
+Szymon Janc (5):
+      Bluetooth: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
+      Bluetooth: Clean up hci_sniff_subrate_evt function
+      Bluetooth: Fix some code style issues in hci_core.h
+      Bluetooth: Fix some code style issues in hci_core.c
+      Bluetooth: Fix some code style issues in hci_event.c
+
+Vasanthakumar Thiagarajan (1):
+      ath9k: Implement op_flush()
+
+Vasiliy Kulikov (3):
+      Bluetooth: l2cap: fix 1 byte infoleak to userspace
+      Bluetooth: bnep: fix buffer overflow
+      Bluetooth: sco: fix information leak to userspace
+
+Ville Tervo (9):
+      Bluetooth: Add low energy commands and events
+      Bluetooth: Add LE connect support
+      Bluetooth: Use LE buffers for LE traffic
+      Bluetooth: Add LE connection support to L2CAP
+      Bluetooth: Add server socket support for LE connection
+      Bluetooth: Do not send disconn comand over LE links
+      Bluetooth: Treat LE and ACL links separately on timeout
+      Bluetooth: Add SMP command structures
+      Bluetooth: Use proper timer for hci command timout
+
+Vinicius Costa Gomes (1):
+      Bluetooth: Fix initiated LE connections
+
+Vivek Natarajan (3):
+      ath9k_htc: Fix a compilation warning.
+      ath9k_hw: Updates for AR9485 1.1 chipsets.
+      mac80211: Clear PS related flag on disabling power save.
+
+Vladislav P (1):
+      Bluetooth: Release BTM while sleeping to avoid deadlock
+
+Wey-Yi Guy (2):
+      iwlagn: donot process bt update when bt coex disable
+      iwlagn: handle bt defer work in 2000 series
+
+Wojciech Dubowik (1):
+      ath5k: Enable AR2315 chipset recognition
+
+Xose Vazquez Perez (1):
+      wireless: rt2x00: rt2800pci.c: add two ids
+
+ Documentation/feature-removal-schedule.txt         |   11 +
+ MAINTAINERS                                        |    2 +-
+ drivers/bluetooth/ath3k.c                          |  290 +++-
+ drivers/bluetooth/btusb.c                          |   20 +-
+ drivers/bluetooth/hci_ldisc.c                      |    1 +
+ drivers/net/wireless/ath/ar9170/Kconfig            |    4 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h             |   20 +
+ drivers/net/wireless/ath/ath5k/attach.c            |    3 +-
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c      |   17 -
+ drivers/net/wireless/ath/ath5k/phy.c               |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  112 +-
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h   | 1141 +++++++++
+ drivers/net/wireless/ath/ath9k/ath9k.h             |   13 +-
+ drivers/net/wireless/ath/ath9k/beacon.c            |   43 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |    1 -
+ drivers/net/wireless/ath/ath9k/init.c              |    8 -
+ drivers/net/wireless/ath/ath9k/main.c              |  124 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |    4 +
+ drivers/net/wireless/ath/ath9k/xmit.c              |   30 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c            |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c         |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |   74 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c              |   37 +-
+ drivers/net/wireless/p54/eeprom.c                  |  208 ++-
+ drivers/net/wireless/p54/eeprom.h                  |    7 +
+ drivers/net/wireless/p54/fwio.c                    |   12 +-
+ drivers/net/wireless/p54/lmac.h                    |    1 +
+ drivers/net/wireless/p54/main.c                    |   47 +-
+ drivers/net/wireless/p54/p54.h                     |    6 +-
+ drivers/net/wireless/p54/p54spi_eeprom.h           |    9 +-
+ drivers/net/wireless/p54/txrx.c                    |    6 +-
+ drivers/net/wireless/rt2x00/Kconfig                |   12 +
+ drivers/net/wireless/rt2x00/rt2800.h               |  129 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |  747 +++++--
+ drivers/net/wireless/rt2x00/rt2800pci.c            |   12 +
+ drivers/net/wireless/rt2x00/rt2x00.h               |    4 +
+ drivers/net/wireless/rt2x00/rt2x00ht.c             |    1 -
+ drivers/net/wireless/rt2x00/rt2x00mac.c            |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c          |    9 +-
+ drivers/net/wireless/rt2x00/rt61pci.c              |   12 +-
+ drivers/net/wireless/rt2x00/rt73usb.c              |   12 +-
+ drivers/net/wireless/rtlwifi/Kconfig               |   17 +-
+ drivers/net/wireless/rtlwifi/Makefile              |    6 +-
+ drivers/net/wireless/rtlwifi/base.c                |   76 +-
+ drivers/net/wireless/rtlwifi/base.h                |   39 +-
+ drivers/net/wireless/rtlwifi/core.c                |   14 +-
+ drivers/net/wireless/rtlwifi/debug.h               |    1 +
+ drivers/net/wireless/rtlwifi/pci.c                 |  148 +-
+ drivers/net/wireless/rtlwifi/pci.h                 |   12 +-
+ drivers/net/wireless/rtlwifi/ps.c                  |   58 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  | 1388 +++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c | 2049 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/Makefile    |    2 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |  144 ++
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        | 1361 +-----------
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h        |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/fw.c        |   59 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  153 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/led.c       |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       | 2072 +----------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.h       |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/reg.h       |   73 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.h        |    2 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |  170 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.h       |  464 ++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/Makefile    |   15 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/def.h       |   62 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |  116 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.h        |   32 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/fw.c        |   30 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/fw.h        |   30 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        | 2505 ++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.h        |  107 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/led.c       |  142 ++
+ drivers/net/wireless/rtlwifi/rtl8192cu/led.h       |   37 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       | 1144 +++++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.h       |  180 ++
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |  611 +++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.h       |   34 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/reg.h       |   30 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |  493 ++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.h        |   30 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |  327 +++
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.h        |   35 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/table.c     | 1888 +++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/table.h     |   71 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |  684 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.h       |  430 ++++
+ drivers/net/wireless/rtlwifi/usb.c                 | 1035 ++++++++
+ drivers/net/wireless/rtlwifi/usb.h                 |  164 ++
+ drivers/net/wireless/rtlwifi/wifi.h                |  667 ++++--
+ drivers/net/wireless/wl12xx/Kconfig                |    2 +-
+ drivers/net/wireless/wl12xx/acx.c                  |   86 +-
+ drivers/net/wireless/wl12xx/acx.h                  |   41 +-
+ drivers/net/wireless/wl12xx/cmd.c                  |   10 +-
+ drivers/net/wireless/wl12xx/cmd.h                  |   14 +-
+ drivers/net/wireless/wl12xx/conf.h                 |   49 +
+ drivers/net/wireless/wl12xx/event.c                |   14 -
+ drivers/net/wireless/wl12xx/event.h                |    2 -
+ drivers/net/wireless/wl12xx/init.c                 |   13 +
+ drivers/net/wireless/wl12xx/main.c                 |  143 +-
+ drivers/net/wireless/wl12xx/ps.c                   |    6 +-
+ drivers/net/wireless/wl12xx/rx.c                   |    6 +-
+ drivers/net/wireless/wl12xx/rx.h                   |    2 +-
+ drivers/net/wireless/wl12xx/tx.c                   |   22 -
+ drivers/net/wireless/wl12xx/wl12xx.h               |   66 +-
+ drivers/net/wireless/zd1211rw/zd_chip.c            |   35 +-
+ drivers/net/wireless/zd1211rw/zd_def.h             |    2 +-
+ drivers/net/wireless/zd1211rw/zd_usb.c             |  177 ++-
+ drivers/net/wireless/zd1211rw/zd_usb.h             |    9 +-
+ drivers/ssb/main.c                                 |   44 +-
+ drivers/ssb/pci.c                                  |    6 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |    4 +-
+ include/linux/ssb/ssb_regs.h                       |    7 +-
+ include/net/bluetooth/bluetooth.h                  |   33 +
+ include/net/bluetooth/hci.h                        |  122 +
+ include/net/bluetooth/hci_core.h                   |  152 +-
+ include/net/bluetooth/l2cap.h                      |   53 +-
+ include/net/bluetooth/mgmt.h                       |  142 ++
+ include/net/bluetooth/smp.h                        |   76 +
+ net/bluetooth/Kconfig                              |   16 +-
+ net/bluetooth/Makefile                             |    4 +-
+ net/bluetooth/af_bluetooth.c                       |   53 +-
+ net/bluetooth/bnep/core.c                          |    2 -
+ net/bluetooth/bnep/sock.c                          |    1 +
+ net/bluetooth/cmtp/capi.c                          |    3 +-
+ net/bluetooth/cmtp/core.c                          |   11 +-
+ net/bluetooth/hci_conn.c                           |   78 +-
+ net/bluetooth/hci_core.c                           |  345 +++-
+ net/bluetooth/hci_event.c                          |  622 +++++-
+ net/bluetooth/hci_sock.c                           |    6 +-
+ net/bluetooth/hci_sysfs.c                          |   58 +-
+ net/bluetooth/hidp/core.c                          |   11 +-
+ net/bluetooth/{l2cap.c => l2cap_core.c}            | 1722 ++++----------
+ net/bluetooth/l2cap_sock.c                         | 1156 +++++++++
+ net/bluetooth/mgmt.c                               | 1312 ++++++++++-
+ net/bluetooth/rfcomm/core.c                        |    2 -
+ net/bluetooth/rfcomm/tty.c                         |    2 +
+ net/bluetooth/sco.c                                |   17 +-
+ net/mac80211/Kconfig                               |    2 +-
+ net/mac80211/cfg.c                                 |    1 +
+ net/mac80211/debugfs.c                             |    6 +
+ net/mac80211/ibss.c                                |   11 +-
+ net/mac80211/ieee80211_i.h                         |    2 -
+ net/mac80211/main.c                                |   33 +-
+ net/mac80211/mlme.c                                |    8 +
+ net/mac80211/rx.c                                  |   12 +-
+ net/mac80211/scan.c                                |   15 +-
+ net/mac80211/tx.c                                  |    1 +
+ net/mac80211/util.c                                |    6 -
+ net/mac80211/work.c                                |   59 +-
+ 153 files changed, 22844 insertions(+), 6512 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/mac.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
+ create mode 100644 drivers/net/wireless/rtlwifi/usb.c
+ create mode 100644 drivers/net/wireless/rtlwifi/usb.h
+ create mode 100644 include/net/bluetooth/smp.h
+ rename net/bluetooth/{l2cap.c => l2cap_core.c} (76%)
+ create mode 100644 net/bluetooth/l2cap_sock.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2011-02-22.patch.bz2
+
 -- 
-1.7.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
