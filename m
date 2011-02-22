@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:64847 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643Ab1B0VQk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 16:16:40 -0500
-From: Alessio Igor Bogani <abogani@kernel.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Bird <tim.bird@am.sony.com>,
-	Alessio Igor Bogani <abogani@kernel.org>
-Subject: [PATCH] rtlwifi: make gcc happy
-Date: Sun, 27 Feb 2011 22:16:30 +0100
-Message-Id: <1298841390-1194-1-git-send-email-abogani@kernel.org>
+Received: from kroah.org ([198.145.64.141]:47887 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750885Ab1BVUOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Feb 2011 15:14:14 -0500
+Date: Tue, 22 Feb 2011 12:07:24 -0800
+From: Greg KH <greg@kroah.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: [stable] 2.6.38-rc5-git6: Reported regressions 2.6.36 -> 2.6.37
+Message-ID: <20110222200724.GB11679@kroah.com>
+References: <JwKd6rET8XO.A._ZC.gbuYNB@chimera>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <JwKd6rET8XO.A._ZC.gbuYNB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘rtl92ce_rx_query_desc’:
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:255:5: warning: ‘rf_rx_num’ may be used uninitialized in this function
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:257:12: warning: ‘total_rssi’ may be used uninitialized in this function
-drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:466:6: warning: ‘weighting’ may be used uninitialized in this function
+On Mon, Feb 21, 2011 at 11:29:26PM +0100, Rafael J. Wysocki wrote:
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24582
+> Subject		: Kernel Oops at tty_buffer_request_room when using pppd program (2.6.37-rc4)
+> Submitter	: baoyb <baoyb@avit.org.cn>
+> Date		: 2010-12-08 13:55 (76 days old)
+> Message-ID	: <EF6DDE218DB34702B1FA84D6CD7EA771@baoyb>
+> References	: http://marc.info/?l=linux-kernel&m=129181763525738&w=2
+> Handled-By	: Jiri Slaby <jslaby@suse.cz>
+> Patch		: https://bugzilla.kernel.org/attachment.cgi?id=47872
 
-Signed-off-by: Alessio Igor Bogani <abogani@kernel.org>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+This is queued up already for sending to Linus soon.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index bf5852f..593eb8e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -252,9 +252,9 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct phy_sts_cck_8192s_t *cck_buf;
- 	s8 rx_pwr_all, rx_pwr[4];
--	u8 rf_rx_num, evm, pwdb_all;
-+	u8 evm, pwdb_all, rf_rx_num = 0;
- 	u8 i, max_spatial_stream;
--	u32 rssi, total_rssi;
-+	u32 rssi, total_rssi = 0;
- 	bool is_cck_rate;
- 
- 	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
-@@ -463,7 +463,7 @@ static void _rtl92ce_update_rxsignalstatistics(struct ieee80211_hw *hw,
- 					       struct rtl_stats *pstats)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	int weighting;
-+	int weighting = 0;
- 
- 	if (rtlpriv->stats.recv_signal_power == 0)
- 		rtlpriv->stats.recv_signal_power = pstats->recvsignalpower;
--- 
-1.7.4.1
+thanks,
 
+greg k-h
