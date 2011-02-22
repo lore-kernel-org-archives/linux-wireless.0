@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37868 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792Ab1BOOun convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 09:50:43 -0500
-Received: by qwa26 with SMTP id 26so183175qwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 06:50:43 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:32396 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752543Ab1BVRkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Feb 2011 12:40:07 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 09:39:46 -0800
+Date: Tue, 22 Feb 2011 23:09:43 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 19/23] ath9k_htc: Handle BSSID/AID for multiple interfaces
+Message-ID: <20110222173936.GB3779@vmraj-lnx.users.atheros.com>
+References: <19809.52184.289748.148298@gargle.gargle.HOWL>
+ <20110222053749.GB11916@vmraj-lnx.users.atheros.com>
+ <19811.46805.564817.918214@gargle.gargle.HOWL>
 MIME-Version: 1.0
-In-Reply-To: <1297361481.30218.31.camel@maggie>
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-	<AANLkTi=v9PM8pQ8qF1XpuMSYAy4=MAO2W8TQU+a3AGQn@mail.gmail.com>
-	<1297288286.9734.28.camel@maggie>
-	<AANLkTimS7Q5Du5_r3dZbF1gfpDofjL3Vm-AdEZP=zDQd@mail.gmail.com>
-	<4D5320AA.5020405@lwfinger.net>
-	<1297315457.12795.40.camel@dev.znau.edu.ua>
-	<1297333256.30218.10.camel@maggie>
-	<1297359641.15805.38.camel@dev.znau.edu.ua>
-	<1297361481.30218.31.camel@maggie>
-Date: Tue, 15 Feb 2011 15:50:42 +0100
-Message-ID: <AANLkTi=vp2cCsSJNv1+G2kWxTOL4Y7Tq8TVAMN_cAGQ6@mail.gmail.com>
-Subject: Re: SSB AI support code ([RFC] v2)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: George Kashperko <george@znau.edu.ua>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <19811.46805.564817.918214@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/2/10 Michael Büsch <mb@bu3sch.de>:
-> You're actually abusing the ops structure. The ops structure is meant
-> to abstract the SSB backplane from its host bus. It is _not_ meant
-> to abstract the SSB backplane itself. Your patches mix that up. It's
-> an abstraction layer violation, which my proposal avoids completely.
+On Tue, Feb 22, 2011 at 06:45:01PM +0530, Sujith wrote:
+> Rajkumar Manoharan wrote:
+> > > +	/*
+> > > +	 * The beacon paramters are configured only for the first
+> > > +	 * station interface.
+> > > +	 */
+> > > +	if ((priv->ah->opmode == NL80211_IFTYPE_STATION) &&
+> > > +	    (priv->num_sta_vif > 1) &&
+> > > +	    (vif->type == NL80211_IFTYPE_STATION)) {
+> > > +		ath_dbg(common, ATH_DBG_CONFIG,
+> > > +			"Beacon already configured for a station interface\n");
+> > > +		return;
+> > > +	}
+> > > +
+> > This will not allow beacon config if your first station vif was not yet
+> > associated.
+> 
+> Good catch.
+> 
+> > > +	/*
+> > > +	 * Set the HW AID/BSSID only for the first station interface
+> > > +	 * or in IBSS mode.
+> > > +	 */
+> > > +	set_assoc = !!((priv->ah->opmode == NL80211_IFTYPE_ADHOC) ||
+> > > +		       ((priv->ah->opmode == NL80211_IFTYPE_STATION) &&
+> > > +			(priv->num_sta_vif == 1)));
+> > > +
+> > > +
+> > Assume there are two station vifs where one is associated and another is not.
+> > In such case aid and ani is not configured.
+> 
+> That's the intention...
+>
+I dont understand why not to start ani on multi-vifs.
 
-After some reading, learning, I think I generally agree with Michael.
-
-George: I like you consider separated bus driver now. Please let us
-know when you design something!
-
--- 
-Rafał
+--
+Rajkumar
