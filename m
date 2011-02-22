@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:46609 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754516Ab1BVPxS (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:37337 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751833Ab1BVMcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 10:53:18 -0500
-Received: by mail-vw0-f47.google.com with SMTP id 4so1368369vws.6
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 07:53:17 -0800 (PST)
-Message-ID: <4D63DBE7.7020004@ti.com>
-Date: Tue, 22 Feb 2011 17:53:11 +0200
-From: Luciano Coelho <coelho@ti.com>
+	Tue, 22 Feb 2011 07:32:45 -0500
 MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wl12xx: use standard ALIGN() macro
-References: <1298285690-11596-1-git-send-email-eliad@wizery.com>
-In-Reply-To: <1298285690-11596-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110221202538.GK9650@tuxdriver.com>
+References: <20110217162650.092e77c3.sfr@canb.auug.org.au>
+	<20110218172536.970b5b39.randy.dunlap@oracle.com>
+	<20110221202538.GK9650@tuxdriver.com>
+Date: Tue, 22 Feb 2011 14:32:40 +0200
+Message-ID: <AANLkTi=M77+wuEa1Dc-+vA_-caY9p1Ft_5s4aQ7CDSjQ@mail.gmail.com>
+Subject: Re: [PATCH -next] wl12xx: fix sdio_test kconfig/build errors
+From: "Coelho, Luciano" <coelho@ti.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	akpm <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2011 12:54 PM, Eliad Peller wrote:
-> Signed-off-by: Eliad Peller<eliad@wizery.com>
-> ---
+On Mon, Feb 21, 2011 at 10:25 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> Luca, I'm merging this one...
 
-The patch looks good, but please add a commit message.  There can be no 
-commit without a commit message (even if it is extremely trivial).
+Thanks, John!
 
-Thanks!
-
---
+-- 
 Cheers,
 Luca.
