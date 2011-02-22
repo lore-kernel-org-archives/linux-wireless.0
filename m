@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:53969 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751378Ab1BRVN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 16:13:56 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 13:13:35 -0800
-From: Vipin Mehta <vmehta@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	<devel@driverdev.osuosl.org>
-Subject: [PATCH 01/15] staging: ath6kl: Fixing a NULL pointer exception
-Date: Fri, 18 Feb 2011 13:13:02 -0800
-Message-ID: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:58580 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750736Ab1BVM1T convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Feb 2011 07:27:19 -0500
+Received: by mail-vx0-f170.google.com with SMTP id 39so1760257vxb.29
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 04:27:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
+References: <1297778837.8664.0.camel@jlt3.sipsolutions.net>
+Date: Tue, 22 Feb 2011 14:27:18 +0200
+Message-ID: <AANLkTi=upFyQWB6oJ1mtAuaWGCtaK3FzJNP7YBTP8fPF@mail.gmail.com>
+Subject: Re: [RFC/RFT] mac80211: make tx() operation return void
+From: "Coelho, Luciano" <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver was dereferencing a NULL pointer because of the device instance
-being registered via the set_wiphy_dev() function. The function
-ar6000_avail_ev() was passing the argument as NULL instead of using the one
-returned by the MMC stack through the probe callback.
+On Tue, Feb 15, 2011 at 4:07 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> --- wireless-testing.orig/drivers/net/wireless/wl12xx/main.c    2011-02-15 13:53:38.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/wl12xx/main.c 2011-02-15 13:55:02.000000000 +0100
+> @@ -975,7 +975,7 @@ int wl1271_plt_stop(struct wl1271 *wl)
+>        return ret;
+>  }
+>
+> -static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+> +static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  {
+>        struct wl1271 *wl = hw->priv;
+>        unsigned long flags;
+> @@ -1009,8 +1009,6 @@ static int wl1271_op_tx(struct ieee80211
+>                set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+>                spin_unlock_irqrestore(&wl->wl_lock, flags);
+>        }
+> -
+> -       return NETDEV_TX_OK;
+>  }
 
-Signed-off-by: Vipin Mehta <vmehta@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |   17 ++++++++++-------
- 1 files changed, 10 insertions(+), 7 deletions(-)
+For the wl12xx part:
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 26dafc9..4f6ddf7 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -1604,6 +1604,14 @@ ar6000_avail_ev(void *context, void *hif_handle)
-     struct wireless_dev *wdev;
- #endif /* ATH6K_CONFIG_CFG80211 */
-     int init_status = 0;
-+    HIF_DEVICE_OS_DEVICE_INFO osDevInfo;
-+
-+    memset(&osDevInfo, 0, sizeof(osDevInfo));
-+    if (HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_OS_DEVICE,
-+        &osDevInfo, sizeof(osDevInfo))) {
-+        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("%s: Failed to get OS device instance\n", __func__));
-+        return A_ERROR;
-+    }
- 
-     AR_DEBUG_PRINTF(ATH_DEBUG_INFO,("ar6000_available\n"));
- 
-@@ -1623,7 +1631,7 @@ ar6000_avail_ev(void *context, void *hif_handle)
-     device_index = i;
- 
- #ifdef ATH6K_CONFIG_CFG80211
--    wdev = ar6k_cfg80211_init(NULL);
-+    wdev = ar6k_cfg80211_init(osDevInfo.pOSDevice);
-     if (IS_ERR(wdev)) {
-         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: ar6k_cfg80211_init failed\n", __func__));
-         return A_ERROR;
-@@ -1668,12 +1676,7 @@ ar6000_avail_ev(void *context, void *hif_handle)
- 
- #ifdef SET_NETDEV_DEV
-     if (ar_netif) { 
--        HIF_DEVICE_OS_DEVICE_INFO osDevInfo;
--        A_MEMZERO(&osDevInfo, sizeof(osDevInfo));
--        if (!HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_OS_DEVICE,
--				&osDevInfo, sizeof(osDevInfo))) {
--            SET_NETDEV_DEV(dev, osDevInfo.pOSDevice);
--        }
-+        SET_NETDEV_DEV(dev, osDevInfo.pOSDevice);
-     }
- #endif 
- 
+Acked-by: Luciano Coelho <coelho@ti.com>
+
 -- 
-1.6.3.3
-
+Cheers,
+Luca.
