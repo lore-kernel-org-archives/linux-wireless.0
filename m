@@ -1,120 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35068 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755108Ab1BBW0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 17:26:48 -0500
-Date: Wed, 2 Feb 2011 14:26:45 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "Zhao, Shanyu" <shanyu.zhao@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Lance Zimmerman <lance.zimmerman@atheros.com>,
-	Prem Kumar <Prem.Kumar@atheros.com>
-Subject: Re: Backporting other subsystems on Linux
-Message-ID: <20110202222645.GE3035@tux>
-References: <380B2771CDD78E46856E6B788D9F1997D2468080@orsmsx503.amr.corp.intel.com>
- <BD672EAEE3AD2C47A7120B0973C3FB3A50F0AC156A@SC1EXMB-MBCL.global.atheros.com>
- <380B2771CDD78E46856E6B788D9F1997D27D86D2@orsmsx503.amr.corp.intel.com>
- <20110202220926.GB3035@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110202220926.GB3035@tux>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55510 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550Ab1BVWXB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Feb 2011 17:23:01 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so264297wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:23:00 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 7/8] wl12xx: AP-mode - count free FW TX blocks per link
+Date: Wed, 23 Feb 2011 00:22:30 +0200
+Message-Id: <1298413351-15462-8-git-send-email-arik@wizery.com>
+In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
+References: <1298413351-15462-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 02, 2011 at 02:09:26PM -0800, Luis Rodriguez wrote:
-> Increasing audience.
-> 
-> On Wed, Feb 02, 2011 at 01:27:10PM -0800, Zhao, Shanyu wrote:
-> > Hi Luis,
-> > 
-> > Thank you for the quick response. When I say USB, I didn't mean USB network
-> > drivers, I'm talking about USB host/device controller drivers or gadget
-> > drivers. For example, we can backport USB3 support to, say, 2.6.28.
-> > 
-> > From what I understand, I can add any driver to your compat-wireless tree and
-> > build it the same way as other wireless drivers. Am I right?
-> 
-> That's right.
-> 
-> > Then your tree should really be called compat-drivers. :) I'm not sure if
-> > you're welcoming non-network related drivers.
-> 
-> I see the value in providing backport support for not just 802.11 but
-> other drivers as well. Today compat-wireless backports: 802.11, Bluetooth,
-> Ethernet, and because some of these drivers require larger components like
-> the Sonic Silicon Backplane (ssb) for b44 an b43, it means it also backports
-> a bit more.
-> 
-> I would be hesitant to allow for more drivers to go into compat-wireless if
-> it was not for the fact that I am actually getting a good slew of contributions
-> from other members and this helps me maintain this thing. So -- if are willing
-> to upkeep backport support for other non 802.11/Bluetooth/Ethernet drivers
-> in compat-wireless, I gladly welcome the changes.
-> 
-> > What's the routine of maintaining a driver in compat-xxx?
-> 
-> I use linux-next.git to suck out drivers and we apply backport stuff to them
-> during a kernel development cycle. Generic kernel backport crap goes into the
-> compat.git tree: new request_firmware API got added recently, so we have a
-> compat_firmware_class, and respective udev changes. Things that are specific to
-> the stuff you are backport get stuffed into the compat-wireless.git tree.
-> Typically this involves patches which apply onto the linux-next.git code we
-> suck out which we cannot backport through compat.git. Preference is to always
-> push for compat.git changes over some nasty patch with ifdefs, and only leave
-> as a last resort uses patches on compat-wireless. The patches in
-> compat-wireless patches/ directory are sorted by the API change that requires
-> patching the kernel. This helps add support for new drivers that we want to add
-> to compat-wireless. The offsets for patches are adjusted regularly through some
-> Quilt magic that Hauke Mehrtens implemented (./scripts/admin-update refresh).
-> When crap fails to compile we either remove the driver or fix it. PCMCIA for
-> example was deemed as pointless to backport on our last Linux wireless summit
-> so there is some desire to remove all that crap but so far no one has so we go
-> on with it.
-> 
-> > Do you periodically
-> > run compat-xxx along with compat and latest kernel (mainstream) and fix any
-> > patch that no longer applies cleanly? How about stable kernel like 2.6.35.3?
-> > How do you align compat, compat-wireless and mainstream kernel?
-> 
-> Apart from bleeding edge code from linux-next.git, I also make branches for
-> both compat-wireless.git and compat.git for each stable kernel release. This
-> follows the model H. Peter Anvin has implemented in the maintenance of the
-> linux-2.6-allstable.git tree. When a branch there say on linux-2.6.36.y gets a new
-> extraversion and I know it has some juicy stuff I update my linux-2.6.36.y trees
-> as well and make a release through the stable compat-wireless page:
-> 
-> http://wireless.kernel.org/en/users/Download/stable/
-> 
-> It used to be that we only made bleeding edge releases based on linux-next.git but
-> that proved too unstable for some users.
-> 
-> Check out the ChangeLog for the latest stable compat-wireless, I have automated
-> the ChangeLog release to include the git shortlog of all components involved
-> between each stable kernel release.
-> 
-> The next question you have which you have not asked me yet is how do you address
-> cherry picks or patches not upstream. For that I have added three directories,
-> they are self described by their names with a URL to their respective README:
-> 
->   * linux-next-cherry-picks/ http://bit.ly/h76wrL 
->   * linux-next-pending/      http://bit.ly/eY4aCY 
->   * pending-stable/          http://bit.ly/dOsi7J 
-> 
-> What I really need to get to at some point is to use implement a
-> menuconfig thingy, we already drag the Kconfigs in but use config.mk for
-> makefile/dependency mapping. Patches welcomed.
+Count the number of FW TX blocks allocated per link. We add blocks to a
+link counter when allocated for a TX descriptor. We remove blocks
+according to counters in fw_status indicating the number of freed blocks
+in FW. These counters are polled after each IRQ.
 
-BTW one idea I have as of recent is to consider using Hudson for automatic
-build testing for compat-wireless but haven't yet mucked with it. Eventually
-this will be more and more important as time goes by and we support older
-kernels. The goal is to at the *very least* always support down to the last
-stable 2.6 kernel listed on kernel.org, today that is 2.6.27 and I think its
-a safe promise to commit to backporting *at least* to that kernel. We go
-beyond 2.6.27 though today.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   11 +++++++
+ drivers/net/wireless/wl12xx/ps.c     |    2 -
+ drivers/net/wireless/wl12xx/tx.c     |   53 ++++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 ++
+ 4 files changed, 44 insertions(+), 26 deletions(-)
 
-[1] http://en.wikipedia.org/wiki/Hudson_(software)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index cb9baa0..6cb114f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -570,6 +570,17 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 	if (total)
+ 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
+ 
++	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		for (i = 0; i < AP_MAX_LINKS; i++) {
++			u8 cnt = status->tx_lnk_free_blks[i] -
++				wl->links[i].prev_freed_blks;
++
++			wl->links[i].prev_freed_blks =
++				status->tx_lnk_free_blks[i];
++			wl->links[i].allocated_blks -= cnt;
++		}
++	}
++
+ 	/* update the host-chipset time offset */
+ 	getnstimeofday(&ts);
+ 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 2d3086a..b7b3139 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -172,5 +172,3 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 
+ 	return ret;
+ }
+-
+-
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index e67b68b..3eb6533 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -108,7 +108,7 @@ u8 wl1271_tx_get_hlid(struct sk_buff *skb)
+ }
+ 
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+-				u32 buf_offset)
++				u32 buf_offset, u8 hlid)
+ {
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+@@ -137,6 +137,9 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 
+ 		wl->tx_blocks_available -= total_blocks;
+ 
++		if (wl->bss_type == BSS_TYPE_AP_BSS)
++			wl->links[hlid].allocated_blks += total_blocks;
++
+ 		ret = 0;
+ 
+ 		wl1271_debug(DEBUG_TX,
+@@ -150,7 +153,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ }
+ 
+ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+-			      u32 extra, struct ieee80211_tx_info *control)
++			      u32 extra, struct ieee80211_tx_info *control,
++			      u8 hlid)
+ {
+ 	struct timespec ts;
+ 	struct wl1271_tx_hw_descr *desc;
+@@ -186,7 +190,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	desc->tid = ac;
+ 
+ 	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+-		desc->aid = TX_HW_DEFAULT_AID;
++		desc->aid = hlid;
+ 
+ 		/* if the packets are destined for AP (have a STA entry)
+ 		   send them with AP rate policies, otherwise use default
+@@ -196,25 +200,17 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 		else
+ 			rate_idx = ACX_TX_BASIC_RATE;
+ 	} else {
+-		if (control->control.sta) {
+-			struct wl1271_station *wl_sta;
+-
+-			wl_sta = (struct wl1271_station *)
+-					control->control.sta->drv_priv;
+-			desc->hlid = wl_sta->hlid;
++		desc->hlid = hlid;
++		switch (hlid) {
++		case WL1271_AP_GLOBAL_HLID:
++			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
++			break;
++		case WL1271_AP_BROADCAST_HLID:
++			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
++			break;
++		default:
+ 			rate_idx = ac;
+-		} else {
+-			struct ieee80211_hdr *hdr;
+-
+-			hdr = (struct ieee80211_hdr *)
+-						(skb->data + sizeof(*desc));
+-			if (ieee80211_is_mgmt(hdr->frame_control)) {
+-				desc->hlid = WL1271_AP_GLOBAL_HLID;
+-				rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
+-			} else {
+-				desc->hlid = WL1271_AP_BROADCAST_HLID;
+-				rate_idx = ACX_TX_AP_MODE_BCST_RATE;
+-			}
++			break;
+ 		}
+ 	}
+ 
+@@ -245,6 +241,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 	u32 extra = 0;
+ 	int ret = 0;
+ 	u32 total_len;
++	u8 hlid;
+ 
+ 	if (!skb)
+ 		return -EINVAL;
+@@ -271,14 +268,19 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		}
+ 	}
+ 
+-	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset);
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		hlid = wl1271_tx_get_hlid(skb);
++	else
++		hlid = TX_HW_DEFAULT_AID;
++
++	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
+ 
+-	wl1271_tx_fill_hdr(wl, skb, extra, info);
++	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+ 
+ 	/*
+ 	 * The length of each packet is stored in terms of words. Thus, we must
+@@ -635,8 +637,11 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 
+ 	/* TX failure */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+-		for (i = 0; i < AP_MAX_LINKS; i++)
++		for (i = 0; i < AP_MAX_LINKS; i++) {
+ 			wl1271_tx_reset_link_queues(wl, i);
++			wl->links[i].allocated_blks = 0;
++			wl->links[i].prev_freed_blks = 0;
++		}
+ 
+ 		wl->last_tx_hlid = 0;
+ 	} else {
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 9ffac80..0e00c5b 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -322,6 +322,10 @@ enum wl12xx_flags {
+ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
++
++	/* accounting for allocated / available TX blocks in FW */
++	u8 allocated_blks;
++	u8 prev_freed_blks;
+ };
+ 
+ struct wl1271 {
+-- 
+1.7.1
 
-  Luis
