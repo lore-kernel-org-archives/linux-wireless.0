@@ -1,68 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44803 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734Ab1B1RVV (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51429 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755259Ab1BVWWq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 12:21:21 -0500
-Received: by iwn34 with SMTP id 34so3275404iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 09:21:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikTNavD44e_bMO7Q8C5X73qwVHdjnVCiOUO1xCr@mail.gmail.com>
-References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
- <20110228142243.GB25724@kroah.com> <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
- <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com> <AANLkTikTNavD44e_bMO7Q8C5X73qwVHdjnVCiOUO1xCr@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 28 Feb 2011 09:21:01 -0800
-Message-ID: <AANLkTikxfjcStGND0SAqgCA+sZBEa0Xo_mf-ZGpsQrks@mail.gmail.com>
-Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU to
- enter C3 state.
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Greg KH <greg@kroah.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Feb 2011 17:22:46 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so264086wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:45 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 2/8] wl12xx: AP-mode - fix race condition on sta connection
+Date: Wed, 23 Feb 2011 00:22:25 +0200
+Message-Id: <1298413351-15462-3-git-send-email-arik@wizery.com>
+In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
+References: <1298413351-15462-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 9:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Feb 28, 2011 at 8:52 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
->> On Mon, Feb 28, 2011 at 8:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
->>>> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
->>>>> The default qos value of 55 causes higher power consumption
->>>>> and the battery drains out quickly. So, remove the pm_qos request
->>>>> in the driver and the throughout issue in the Intel Pinetrail
->>>>> platforms in which the DMA latency is seen can be fixed with
->>>>> the following script:
->>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
->>>>> http://johannes.sipsolutions.net/files/netlatency.c.txt
->>>>>
->>>>> More details can be found in the following bugzilla link:
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
->>>>>
->>>>> Cc: stable@kernel.org
->>>>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
->>>>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->>>>
->>>> Why did you send me 3 copies of this patch, when I don't need any copies
->>>> of it?
->>>>
->>>> Totally confused,
->>>
->>> Vivek, please only ask John to send this to David as stable so it can
->>> get into 2.6.38-rc, then once there you can refer the sha1sum from
->>> Linus' tree and justify propagating into the stable series.
->>>
->> I had sent separate patches for v2.6.37 and for v2.6.38 since the
->> patch could not be applied directly to previous versions. So, should I
->> send this rebased patch for v2.6.37 only after it makes it into
->> v2.6.38?
->
-> Affirmative. You cannot propagate stable patches unless they are
-> already in Linus' tree.
+If a sta starts transmitting immediately after authentication, sometimes
+the FW deauthenticates it. Fix this by marking the sta "in-connection"
+in FW before sending the autentication response.
 
-See:
+The "in-connection" entry is automatically removed when connection
+succeeds or after a timeout.
 
-http://wireless.kernel.org/en/users/Documentation/Fix_Propagation
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.c |   25 +++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h |    9 +++++++++
+ drivers/net/wireless/wl12xx/tx.c  |   19 +++++++++++++++++++
+ 3 files changed, 53 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 33840d9..841b82d 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1542,3 +1542,28 @@ out:
+ 	kfree(config_ps);
+ 	return ret;
+ }
++
++int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr)
++{
++	struct wl1271_acx_inconnection_sta *acx = NULL;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx set inconnaction sta %pM", addr);
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx)
++		return -ENOMEM;
++
++	memcpy(acx->addr, addr, ETH_ALEN);
++
++	ret = wl1271_cmd_configure(wl, ACX_UPDATE_INCONNECTION_STA_LIST,
++				   acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx set inconnaction sta failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 4e301de..dd19b01 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1155,6 +1155,13 @@ struct wl1271_acx_config_ps {
+ 	__le32 null_data_rate;
+ } __packed;
+ 
++struct wl1271_acx_inconnection_sta {
++	struct acx_header header;
++
++	u8 addr[ETH_ALEN];
++	u8 padding1[2];
++} __packed;
++
+ enum {
+ 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
+ 	ACX_MEM_CFG                 = 0x0003,
+@@ -1215,6 +1222,7 @@ enum {
+ 	ACX_GEN_FW_CMD              = 0x0070,
+ 	ACX_HOST_IF_CFG_BITMAP      = 0x0071,
+ 	ACX_MAX_TX_FAILURE          = 0x0072,
++	ACX_UPDATE_INCONNECTION_STA_LIST = 0x0073,
+ 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
+ 	DOT11_CUR_TX_PWR            = 0x100D,
+ 	DOT11_RX_DOT11_MODE         = 0x1012,
+@@ -1290,5 +1298,6 @@ int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
+ int wl1271_acx_max_tx_retry(struct wl1271 *wl);
+ int wl1271_acx_config_ps(struct wl1271 *wl);
++int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
+ 
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 67a0094..a724da4 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -70,6 +70,22 @@ static void wl1271_free_tx_id(struct wl1271 *wl, int id)
+ 	}
+ }
+ 
++static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
++						 struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++
++	/*
++	 * add the station to the known list before transmitting the
++	 * authentication response. this way it won't get de-authed by FW
++	 * when transmitting too soon.
++	 */
++	hdr = (struct ieee80211_hdr *)(skb->data +
++				       sizeof(struct wl1271_tx_hw_descr));
++	if (ieee80211_is_auth(hdr->frame_control))
++		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
++}
++
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 				u32 buf_offset)
+ {
+@@ -238,6 +254,9 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 	if (ret < 0)
+ 		return ret;
+ 
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		wl1271_tx_ap_update_inconnection_sta(wl, skb);
++
+ 	wl1271_tx_fill_hdr(wl, skb, extra, info);
+ 
+ 	/*
+-- 
+1.7.1
+
