@@ -1,336 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51424 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751396Ab1B0V0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 16:26:45 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33694 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497Ab1BVNuq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Feb 2011 08:50:46 -0500
+Received: by fxm17 with SMTP id 17so2765026fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 05:50:45 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k: use generic mac80211 LED blinking code
-Date: Sun, 27 Feb 2011 22:26:40 +0100
-Message-Id: <1298842000-62632-1-git-send-email-nbd@openwrt.org>
+Subject: [PATCH] carl9170: add Airlive X.USB a/b/g/n USBID
+Date: Tue, 22 Feb 2011 14:49:43 +0100
+Cc: linville@tuxdriver.com, Jan Puk <janpuk@volny.cz>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201102221449.43419.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+From: Jan Puk <janpuk@volny.cz>
+
+"AirLive X.USB now works perfectly under a Linux
+environment!"
+
+Cc: <stable@kernel.org>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |   42 +++-----
- drivers/net/wireless/ath/ath9k/gpio.c  |  164 +++++---------------------------
- drivers/net/wireless/ath/ath9k/init.c  |   22 ++++
- drivers/net/wireless/ath/ath9k/main.c  |    3 -
- 4 files changed, 61 insertions(+), 170 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f9f0389..367b514 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -449,26 +449,20 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 537732e..f82c400 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -118,6 +118,8 @@ static struct usb_device_id carl9170_usb_ids[] = {
+ 	{ USB_DEVICE(0x057c, 0x8402) },
+ 	/* Qwest/Actiontec 802AIN Wireless N USB Network Adapter */
+ 	{ USB_DEVICE(0x1668, 0x1200) },
++	/* Airlive X.USB a/b/g/n */
++	{ USB_DEVICE(0x1b75, 0x9170) },
  
- #define ATH_LED_PIN_DEF 		1
- #define ATH_LED_PIN_9287		8
--#define ATH_LED_ON_DURATION_IDLE	350	/* in msecs */
--#define ATH_LED_OFF_DURATION_IDLE	250	/* in msecs */
--
--enum ath_led_type {
--	ATH_LED_RADIO,
--	ATH_LED_ASSOC,
--	ATH_LED_TX,
--	ATH_LED_RX
--};
--
--struct ath_led {
--	struct ath_softc *sc;
--	struct led_classdev led_cdev;
--	enum ath_led_type led_type;
--	char name[32];
--	bool registered;
--};
- 
-+#ifdef CONFIG_MAC80211_LEDS
- void ath_init_leds(struct ath_softc *sc);
- void ath_deinit_leds(struct ath_softc *sc);
-+#else
-+static inline void ath_init_leds(struct ath_softc *sc)
-+{
-+}
-+
-+static inline void ath_deinit_leds(struct ath_softc *sc)
-+{
-+}
-+#endif
-+
- 
- /* Antenna diversity/combining */
- #define ATH_ANT_RX_CURRENT_SHIFT 4
-@@ -620,15 +614,11 @@ struct ath_softc {
- 	struct ath_beacon beacon;
- 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
- 
--	struct ath_led radio_led;
--	struct ath_led assoc_led;
--	struct ath_led tx_led;
--	struct ath_led rx_led;
--	struct delayed_work ath_led_blink_work;
--	int led_on_duration;
--	int led_off_duration;
--	int led_on_cnt;
--	int led_off_cnt;
-+#ifdef CONFIG_MAC80211_LEDS
-+	bool led_registered;
-+	char led_name[32];
-+	struct led_classdev led_cdev;
-+#endif
- 
- 	struct ath9k_hw_cal_data caldata;
- 	int last_rssi;
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index fb4f17a..e369bf7 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -20,117 +20,25 @@
- /*	 LED functions		*/
- /********************************/
- 
--static void ath_led_blink_work(struct work_struct *work)
--{
--	struct ath_softc *sc = container_of(work, struct ath_softc,
--					    ath_led_blink_work.work);
--
--	if (!(sc->sc_flags & SC_OP_LED_ASSOCIATED))
--		return;
--
--	if ((sc->led_on_duration == ATH_LED_ON_DURATION_IDLE) ||
--	    (sc->led_off_duration == ATH_LED_OFF_DURATION_IDLE))
--		ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 0);
--	else
--		ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin,
--				  (sc->sc_flags & SC_OP_LED_ON) ? 1 : 0);
--
--	ieee80211_queue_delayed_work(sc->hw,
--				     &sc->ath_led_blink_work,
--				     (sc->sc_flags & SC_OP_LED_ON) ?
--					msecs_to_jiffies(sc->led_off_duration) :
--					msecs_to_jiffies(sc->led_on_duration));
--
--	sc->led_on_duration = sc->led_on_cnt ?
--			max((ATH_LED_ON_DURATION_IDLE - sc->led_on_cnt), 25) :
--			ATH_LED_ON_DURATION_IDLE;
--	sc->led_off_duration = sc->led_off_cnt ?
--			max((ATH_LED_OFF_DURATION_IDLE - sc->led_off_cnt), 10) :
--			ATH_LED_OFF_DURATION_IDLE;
--	sc->led_on_cnt = sc->led_off_cnt = 0;
--	if (sc->sc_flags & SC_OP_LED_ON)
--		sc->sc_flags &= ~SC_OP_LED_ON;
--	else
--		sc->sc_flags |= SC_OP_LED_ON;
--}
--
-+#ifdef CONFIG_MAC80211_LEDS
- static void ath_led_brightness(struct led_classdev *led_cdev,
- 			       enum led_brightness brightness)
- {
--	struct ath_led *led = container_of(led_cdev, struct ath_led, led_cdev);
--	struct ath_softc *sc = led->sc;
--
--	switch (brightness) {
--	case LED_OFF:
--		if (led->led_type == ATH_LED_ASSOC ||
--		    led->led_type == ATH_LED_RADIO) {
--			ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin,
--				(led->led_type == ATH_LED_RADIO));
--			sc->sc_flags &= ~SC_OP_LED_ASSOCIATED;
--			if (led->led_type == ATH_LED_RADIO)
--				sc->sc_flags &= ~SC_OP_LED_ON;
--		} else {
--			sc->led_off_cnt++;
--		}
--		break;
--	case LED_FULL:
--		if (led->led_type == ATH_LED_ASSOC) {
--			sc->sc_flags |= SC_OP_LED_ASSOCIATED;
--			if (led_blink)
--				ieee80211_queue_delayed_work(sc->hw,
--						     &sc->ath_led_blink_work, 0);
--		} else if (led->led_type == ATH_LED_RADIO) {
--			ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 0);
--			sc->sc_flags |= SC_OP_LED_ON;
--		} else {
--			sc->led_on_cnt++;
--		}
--		break;
--	default:
--		break;
--	}
--}
--
--static int ath_register_led(struct ath_softc *sc, struct ath_led *led,
--			    char *trigger)
--{
--	int ret;
--
--	led->sc = sc;
--	led->led_cdev.name = led->name;
--	led->led_cdev.default_trigger = trigger;
--	led->led_cdev.brightness_set = ath_led_brightness;
--
--	ret = led_classdev_register(wiphy_dev(sc->hw->wiphy), &led->led_cdev);
--	if (ret)
--		ath_err(ath9k_hw_common(sc->sc_ah),
--			"Failed to register led:%s", led->name);
--	else
--		led->registered = 1;
--	return ret;
--}
--
--static void ath_unregister_led(struct ath_led *led)
--{
--	if (led->registered) {
--		led_classdev_unregister(&led->led_cdev);
--		led->registered = 0;
--	}
-+	struct ath_softc *sc = container_of(led_cdev, struct ath_softc, led_cdev);
-+	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, (brightness == LED_OFF));
- }
- 
- void ath_deinit_leds(struct ath_softc *sc)
- {
--	ath_unregister_led(&sc->assoc_led);
--	sc->sc_flags &= ~SC_OP_LED_ASSOCIATED;
--	ath_unregister_led(&sc->tx_led);
--	ath_unregister_led(&sc->rx_led);
--	ath_unregister_led(&sc->radio_led);
--	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
-+	if (!sc->led_registered)
-+		return;
-+
-+	ath_led_brightness(&sc->led_cdev, LED_OFF);
-+	led_classdev_unregister(&sc->led_cdev);
- }
- 
- void ath_init_leds(struct ath_softc *sc)
- {
--	char *trigger;
- 	int ret;
- 
- 	if (AR_SREV_9287(sc->sc_ah))
-@@ -144,48 +52,22 @@ void ath_init_leds(struct ath_softc *sc)
- 	/* LED off, active low */
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
--	if (led_blink)
--		INIT_DELAYED_WORK(&sc->ath_led_blink_work, ath_led_blink_work);
--
--	trigger = ieee80211_get_radio_led_name(sc->hw);
--	snprintf(sc->radio_led.name, sizeof(sc->radio_led.name),
--		"ath9k-%s::radio", wiphy_name(sc->hw->wiphy));
--	ret = ath_register_led(sc, &sc->radio_led, trigger);
--	sc->radio_led.led_type = ATH_LED_RADIO;
--	if (ret)
--		goto fail;
--
--	trigger = ieee80211_get_assoc_led_name(sc->hw);
--	snprintf(sc->assoc_led.name, sizeof(sc->assoc_led.name),
--		"ath9k-%s::assoc", wiphy_name(sc->hw->wiphy));
--	ret = ath_register_led(sc, &sc->assoc_led, trigger);
--	sc->assoc_led.led_type = ATH_LED_ASSOC;
--	if (ret)
--		goto fail;
--
--	trigger = ieee80211_get_tx_led_name(sc->hw);
--	snprintf(sc->tx_led.name, sizeof(sc->tx_led.name),
--		"ath9k-%s::tx", wiphy_name(sc->hw->wiphy));
--	ret = ath_register_led(sc, &sc->tx_led, trigger);
--	sc->tx_led.led_type = ATH_LED_TX;
--	if (ret)
--		goto fail;
--
--	trigger = ieee80211_get_rx_led_name(sc->hw);
--	snprintf(sc->rx_led.name, sizeof(sc->rx_led.name),
--		"ath9k-%s::rx", wiphy_name(sc->hw->wiphy));
--	ret = ath_register_led(sc, &sc->rx_led, trigger);
--	sc->rx_led.led_type = ATH_LED_RX;
--	if (ret)
--		goto fail;
--
--	return;
--
--fail:
--	if (led_blink)
--		cancel_delayed_work_sync(&sc->ath_led_blink_work);
--	ath_deinit_leds(sc);
-+	if (!led_blink)
-+		sc->led_cdev.default_trigger =
-+			ieee80211_get_radio_led_name(sc->hw);
-+
-+	snprintf(sc->led_name, sizeof(sc->led_name),
-+		"ath9k-%s", wiphy_name(sc->hw->wiphy));
-+	sc->led_cdev.name = sc->led_name;
-+	sc->led_cdev.brightness_set = ath_led_brightness;
-+
-+	ret = led_classdev_register(wiphy_dev(sc->hw->wiphy), &sc->led_cdev);
-+	if (ret < 0)
-+		return;
-+
-+	sc->led_registered = true;
- }
-+#endif
- 
- /*******************/
- /*	Rfkill	   */
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index f66c882..79aec98 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -140,6 +140,21 @@ static struct ieee80211_rate ath9k_legacy_rates[] = {
- 	RATE(540, 0x0c, 0),
- };
- 
-+#ifdef CONFIG_MAC80211_LEDS
-+static const struct ieee80211_tpt_blink ath9k_tpt_blink[] = {
-+	{ .throughput = 0 * 1024, .blink_time = 334 },
-+	{ .throughput = 1 * 1024, .blink_time = 260 },
-+	{ .throughput = 5 * 1024, .blink_time = 220 },
-+	{ .throughput = 10 * 1024, .blink_time = 190 },
-+	{ .throughput = 20 * 1024, .blink_time = 170 },
-+	{ .throughput = 50 * 1024, .blink_time = 150 },
-+	{ .throughput = 70 * 1024, .blink_time = 130 },
-+	{ .throughput = 100 * 1024, .blink_time = 110 },
-+	{ .throughput = 200 * 1024, .blink_time = 80 },
-+	{ .throughput = 300 * 1024, .blink_time = 50 },
-+};
-+#endif
-+
- static void ath9k_deinit_softc(struct ath_softc *sc);
- 
- /*
-@@ -731,6 +746,13 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 
- 	ath9k_init_txpower_limits(sc);
- 
-+#ifdef CONFIG_MAC80211_LEDS
-+	/* must be initialized before ieee80211_register_hw */
-+	sc->led_cdev.default_trigger = ieee80211_create_tpt_led_trigger(sc->hw,
-+		IEEE80211_TPT_LEDTRIG_FL_RADIO, ath9k_tpt_blink,
-+		ARRAY_SIZE(ath9k_tpt_blink));
-+#endif
-+
- 	/* Register with mac80211 */
- 	error = ieee80211_register_hw(hw);
- 	if (error)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 97830c7..2e228aa 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1216,9 +1216,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 
--	if (led_blink)
--		cancel_delayed_work_sync(&sc->ath_led_blink_work);
--
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
- 	cancel_work_sync(&sc->paprd_work);
--- 
-1.7.3.2
-
+ 	/* terminate */
+ 	{}
