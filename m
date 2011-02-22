@@ -1,65 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64637 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756206Ab1BOWS4 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51429 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550Ab1BVWW6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 17:18:56 -0500
-Received: by bwz15 with SMTP id 15so40723bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 14:18:54 -0800 (PST)
-Message-ID: <4D5AFBCB.1090907@gmail.com>
-Date: Tue, 15 Feb 2011 23:18:51 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Nikolay Ledovskikh <nledovskikh@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com, me@bobcopeland.com,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
-Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
- seqfault on AHB chips
-References: <20110215220929.1cc6e9d4.nledovskikh@gmail.com>	<4D5AD6A6.8090505@gmail.com>	<AANLkTiks9rG2CzM2LabNerK3zgJ+R+weytQgvXxDbNe7@mail.gmail.com>	<4D5AE52B.80002@gmail.com> <AANLkTinnCOEXF835yhNeJDfBdKjx_dss6TFeUmjL-Yk2@mail.gmail.com> <4D5AFB3B.6080407@gmail.com>
-In-Reply-To: <4D5AFB3B.6080407@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Feb 2011 17:22:58 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so264086wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:57 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 6/8] wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
+Date: Wed, 23 Feb 2011 00:22:29 +0200
+Message-Id: <1298413351-15462-7-git-send-email-arik@wizery.com>
+In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
+References: <1298413351-15462-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2011 11:16 PM, Jiri Slaby wrote:
-> On 02/15/2011 10:39 PM, Nikolay Ledovskikh wrote:
->>> Maybe the address you got from the platform side was already ored by
->>> KSEG1...
->>
->> I took a look at openwrt atheros platform code and suppose you are right.
->> So what we should do for now? Add pointer cast (void __iomem *)?
->> Because ioremap_nocache doesn't work as expected. I think it's better
->> to rewrote the openwrt
->> code, but not now.
-> 
-> So I've found:
-> http://www.google.com/codesearch/p?hl=en#sayuPQDVf4c/trunk/openwrt/target/linux/atheros/patches-2.6.32/100-board.patch&q=ar231x-wmac&sa=N&cd=4&ct=rc
-> 
-> There, the res->start may be either of the following:
-> AR531X_WLAN0 .. 0x18000000
-> AR531X_WLAN1 .. 0x18500000
+Remove an active hlid when chip wakeup fails. In addition rename the
+involved functions.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-> AR2315_WLAN0 .. 0xB0000000
-
-Or maybe this should be 0x10000000 in openwrt in the first place? Then
-ioremap should do the right thing, right?
-
-> I suppose you have the 3rd otherwise it should die without ORing KSEG1?
-> 
-> Or maybe MIPS guys will correct me? (The problem is that ioremap of one
-> of the addresses above kills the box. If Nikolaj removes the ioremap and
-> uses the address directly, it works for him. I'm saying it will die for
-> the first 2 addresses if we remove ioremap completely -- from what I
-> found in MIPS specs.)
-> 
-> I _think_ there should be (instead of ioremap):
-> sc->iobase = (void __iomem *)KSEG1ADDR(res->start);
-> 
-> Then we do readl(sc->iobase) et al. in ath5k.
-> 
-> thanks,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 9c44150..cb9baa0 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2617,7 +2617,7 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
+ 	return 0;
+ }
+ 
+-static int wl1271_allocate_hlid(struct wl1271 *wl,
++static int wl1271_allocate_sta(struct wl1271 *wl,
+ 			     struct ieee80211_sta *sta,
+ 			     u8 *hlid)
+ {
+@@ -2638,10 +2638,13 @@ static int wl1271_allocate_hlid(struct wl1271 *wl,
+ 	return 0;
+ }
+ 
+-static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
++static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
+ {
+ 	int id = hlid - WL1271_AP_STA_HLID_START;
+ 
++	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
++		return;
++
+ 	__clear_bit(id, wl->ap_hlid_map);
+ 	wl1271_tx_reset_link_queues(wl, hlid);
+ }
+@@ -2664,13 +2667,13 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
+ 
+-	ret = wl1271_allocate_hlid(wl, sta, &hlid);
++	ret = wl1271_allocate_sta(wl, sta, &hlid);
+ 	if (ret < 0)
+ 		goto out;
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+-		goto out;
++		goto out_free_sta;
+ 
+ 	ret = wl1271_cmd_add_sta(wl, sta, hlid);
+ 	if (ret < 0)
+@@ -2679,6 +2682,10 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
+ 
++out_free_sta:
++	if (ret < 0)
++		wl1271_free_sta(wl, hlid);
++
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 	return ret;
+@@ -2715,7 +2722,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out_sleep;
+ 
+-	wl1271_free_hlid(wl, wl_sta->hlid);
++	wl1271_free_sta(wl, wl_sta->hlid);
+ 
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
 -- 
-js
+1.7.1
+
