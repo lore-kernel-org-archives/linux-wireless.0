@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61398 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab1BKLGi (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:42986 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752247Ab1BVGwW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 06:06:38 -0500
-Received: by wyb28 with SMTP id 28so2345974wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Feb 2011 03:06:37 -0800 (PST)
+	Tue, 22 Feb 2011 01:52:22 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 22:52:00 -0800
+Date: Tue, 22 Feb 2011 12:21:58 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: =?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] ath9k: configure opmode sepecific beacon timers
+ dynamically
+Message-ID: <20110222065157.GA14252@vmraj-lnx.users.atheros.com>
+References: <1297877604-8084-1-git-send-email-rmanoharan@atheros.com>
+ <AANLkTi=Kpib=BbwmTpOREinsN7mOjKEVs_Z5Fueftsm8@mail.gmail.com>
 MIME-Version: 1.0
-Date: Fri, 11 Feb 2011 14:06:37 +0300
-Message-ID: <AANLkTinOMu1yr+XYqhRiaBfHut4jUL-ZXbP9-PFyamKG@mail.gmail.com>
-Subject: 802.11s power save improvement
-From: Ivan Bezyazychnyy <ivan.bezyazychnyy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <AANLkTi=Kpib=BbwmTpOREinsN7mOjKEVs_Z5Fueftsm8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
+On Mon, Feb 21, 2011 at 11:15:36PM +0530, Björn Smedman wrote:
+> On Wed, Feb 16, 2011 at 6:33 PM, Rajkumar Manoharan
+> <rmanoharan@atheros.com> wrote:
+> > Current ath9k code does not handle beacon timers on opmode
+> > specific. One such example is that a STA beacon config overwrites
+> > already configured AP vif's beacon timers during scan.
+> >
+> > So select a vif as primary based on opmode and configure that
+> > vif's bss and beacon config in hw and update the primary vif
+> > on opmode change, interface up/down and bss info change.
+> >
+> > And also while moving back to single STA vif from multi STA vifs,
+> > power save is enabled and hw has to be reconfigured with proper
+> > beacon and bssid. Otherwise connection poll will be triggered
+> > so frequently due to beacon loss.
+> 
+> It's really nice to see multi-vif beacons get some attention, thanks. :)
 
-We have noticed that Linux kernel does not implement power save in a mesh
-networking (802.11s). We have compared Linux kernel sources and IEEE 802.11s
-standard and discovered next issues in power save mesh implementation:
+Thanks.
+> Just one thought: Is the "opmode" concept really necessary? It's been
+> discussed previously and I think the conclusion is often that it would
+> be better to iterate all the current vifs and do something logical
+> based on that instead of setting an "opmode".
+>
+Yes. currently opmode is set based on vif iteration and the changes were
+merged under "ath9k: Fix up hardware mode and beacons with multiple vifs".
+And beacon config is filled by doing vif iteration againgt matching opmode.
 
-1. Add peer-plink power mode (See 11C.13.2).
-Add nl80211 interface and cfg80211 parameter, accessible via iw:
-   * iw dev <devname> station set <MAC address> plink_power <active|light|deep>
-   * iw dev <devname> station get <MAC address> plink_power
-
-2. Indicate non-peer power mode in relevant frames (11C.13.3):
-   * beacon
-   * probe response
-   * QoS control field in group addressed mesh data
-
-3. Indicate link-specific power mode in relevant frames (11C.13.4.1):
-   * individually addressed mesh data
-   * QoS Null
-
-4. Track mesh peer power mode in sta_info.
-Use indication in acknowledged unicast mesh data/QoS Null frames to record
-current peer power mode.
-
-5. Buffer mesh data frames for sleeping peers.
-Make indication for unicast frames in TIM bitmap.
-Deliver group addressed frames after DTIM.
-
-6. Indicate mesh awake window in beacon/probe response frames (11C.13.7).
-
-7. Implement peer service periods (11C.13.10)
-
-We are going to fix this problems.
-Has someone looked into the issue before, what was the major problem that
-is preventing this from being fixed?
-May be someone is already working in this area?
-Also all commentaries, advices and tips are appreciated.
-
-Thank you.
-
-Ivan Bezyazychnyy,
-Open Source & Linux Lab
+--
+Rajkumar
+> Do you think it would be possible to remove the "opmode" construct
+> from your patch? Do you think it would be an improvement?
+>
+> Björn Smedman
