@@ -1,69 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51648 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932648Ab1BYUAm (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55510 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754550Ab1BVWWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 15:00:42 -0500
-Date: Fri, 25 Feb 2011 14:48:13 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	netdev@vger.kernel.org, padovan@profusion.mobi
-Subject: Re: pull request: wireless-next-2.6 2011-02-22
-Message-ID: <20110225194812.GG15897@tuxdriver.com>
-References: <20110222215229.GJ12153@tuxdriver.com>
- <20110224.224344.104068328.davem@davemloft.net>
- <20110225.111500.59674472.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110225.111500.59674472.davem@davemloft.net>
+	Tue, 22 Feb 2011 17:22:52 -0500
+Received: by wyg36 with SMTP id 36so264297wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:51 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 4/8] wl12xx: report invalid TX rate when returning non-TX-ed skbs
+Date: Wed, 23 Feb 2011 00:22:27 +0200
+Message-Id: <1298413351-15462-5-git-send-email-arik@wizery.com>
+In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
+References: <1298413351-15462-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 25, 2011 at 11:15:00AM -0800, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Thu, 24 Feb 2011 22:43:44 -0800 (PST)
+Report a TX rate idx of -1 and count 0 when returning untransmitted
+skbs to mac80211 using ieee80211_tx_status(). Otherwise mac80211
+tries to use the returned (essentially garbage) status.
 
-> > Pulled, thanks a lot John.
-> 
-> John a few things:
-> 
-> 1) I had to add some vmalloc.h includes to fix the build on sparc64,
->    see commit b08cd667c4b6641c4d16a3f87f4550f81a6d69ac in net-next-2.6
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/tx.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-I have a patch in my tree for that -- seems they hit it on ARM as well.
-
-> 2) Something is screwey with the bluetooth config options now.
-> 
->    I have an allmodconfig tree, and when I run "make oldconfig" after
->    this pull, BT_L2CAP and BT_SCO both prompt me, claiming that they
->    can only be built statically.
-> 
->    I give it 'y' just to make it happen, for both, and afterways no
->    matter how many times I rerun "make oldconfig" I keep seeing things
->    like this in my build:
-> 
-> scripts/kconfig/conf --silentoldconfig Kconfig
-> include/config/auto.conf:986:warning: symbol value 'm' invalid for BT_SCO
-> include/config/auto.conf:3156:warning: symbol value 'm' invalid for BT_L2CAP
-> 
->    First, what the heck is going on here?  Second, why the heck can't these
->    non-trivial pieces of code be built modular any more?
-> 
->    You can't make something "bool", have it depend on something that
->    might be modular, and then build it into what could in fact be a
->    module.  That's exactly what the bluetooth stuff seems to be doing
->    now.
-> 
->    I suspect commit 642745184f82688eb3ef0cdfaa4ba632055be9af
-> 
-> Thanks.
-
-Sorry, I overlooked that.  Hopefully Gustavo will figure it out quickly.
-
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 0c96255..e67b68b 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -606,10 +606,14 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
+ 	struct sk_buff *skb;
+ 	int i, total = 0;
+ 	unsigned long flags;
++	struct ieee80211_tx_info *info;
+ 
+ 	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
+ 			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
++			info = IEEE80211_SKB_CB(skb);
++			info->status.rates[0].idx = -1;
++			info->status.rates[0].count = 0;
+ 			ieee80211_tx_status(wl->hw, skb);
+ 			total++;
+ 		}
+@@ -627,6 +631,7 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ {
+ 	int i;
+ 	struct sk_buff *skb;
++	struct ieee80211_tx_info *info;
+ 
+ 	/* TX failure */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+@@ -639,6 +644,9 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
+ 				wl1271_debug(DEBUG_TX, "freeing skb 0x%p",
+ 					     skb);
++				info = IEEE80211_SKB_CB(skb);
++				info->status.rates[0].idx = -1;
++				info->status.rates[0].count = 0;
+ 				ieee80211_tx_status(wl->hw, skb);
+ 			}
+ 		}
+@@ -657,6 +665,9 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 			skb = wl->tx_frames[i];
+ 			wl1271_free_tx_id(wl, i);
+ 			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
++			info = IEEE80211_SKB_CB(skb);
++			info->status.rates[0].idx = -1;
++			info->status.rates[0].count = 0;
+ 			ieee80211_tx_status(wl->hw, skb);
+ 		}
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1
+
