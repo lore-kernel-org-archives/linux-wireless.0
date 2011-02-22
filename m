@@ -1,139 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51429 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab1BVWWq (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42814 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836Ab1BVE6a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:22:46 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so264086wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:45 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 2/8] wl12xx: AP-mode - fix race condition on sta connection
-Date: Wed, 23 Feb 2011 00:22:25 +0200
-Message-Id: <1298413351-15462-3-git-send-email-arik@wizery.com>
-In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
-References: <1298413351-15462-1-git-send-email-arik@wizery.com>
+	Mon, 21 Feb 2011 23:58:30 -0500
+Received: by fxm17 with SMTP id 17so2350421fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 20:58:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <op.vqfj0pud3ri7v4@arend-laptop>
+References: <AANLkTinq6_GVzD3hF4krxdBTn2gwgiu_8EuaOFCuEaq4@mail.gmail.com> <op.vqfj0pud3ri7v4@arend-laptop>
+From: Alim Akhtar <alim.akhtar@gmail.com>
+Date: Tue, 22 Feb 2011 13:57:57 +0900
+Message-ID: <AANLkTikW7kDBE_yczthCKiUSafvp8jBWFUn5OpLneQuU@mail.gmail.com>
+Subject: Re: Suspend/Resume Doesnot work with brcmfmac driver
+To: Arend van Spriel <arend@broadcom.com>, henryp@broadcom.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a sta starts transmitting immediately after authentication, sometimes
-the FW deauthenticates it. Fix this by marking the sta "in-connection"
-in FW before sending the autentication response.
+Hi Arend Van Spriel/Henry
 
-The "in-connection" entry is automatically removed when connection
-succeeds or after a timeout.
+I am facing a problem with the wifi connectivity using BRCM4329 chipset.
+The problem is, while browsing some time i lost the connect with the
+AP, dmesg shows the below msges:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c |   25 +++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/acx.h |    9 +++++++++
- drivers/net/wireless/wl12xx/tx.c  |   19 +++++++++++++++++++
- 3 files changed, 53 insertions(+), 0 deletions(-)
+ERROR @wl_cfg80211_config_default_key : error (-22)
+cfg80211: Calling CRDA to update world regulatory domain
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 33840d9..841b82d 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1542,3 +1542,28 @@ out:
- 	kfree(config_ps);
- 	return ret;
- }
-+
-+int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr)
-+{
-+	struct wl1271_acx_inconnection_sta *acx = NULL;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx set inconnaction sta %pM", addr);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx)
-+		return -ENOMEM;
-+
-+	memcpy(acx->addr, addr, ETH_ALEN);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_UPDATE_INCONNECTION_STA_LIST,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx set inconnaction sta failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index 4e301de..dd19b01 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1155,6 +1155,13 @@ struct wl1271_acx_config_ps {
- 	__le32 null_data_rate;
- } __packed;
- 
-+struct wl1271_acx_inconnection_sta {
-+	struct acx_header header;
-+
-+	u8 addr[ETH_ALEN];
-+	u8 padding1[2];
-+} __packed;
-+
- enum {
- 	ACX_WAKE_UP_CONDITIONS      = 0x0002,
- 	ACX_MEM_CFG                 = 0x0003,
-@@ -1215,6 +1222,7 @@ enum {
- 	ACX_GEN_FW_CMD              = 0x0070,
- 	ACX_HOST_IF_CFG_BITMAP      = 0x0071,
- 	ACX_MAX_TX_FAILURE          = 0x0072,
-+	ACX_UPDATE_INCONNECTION_STA_LIST = 0x0073,
- 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
- 	DOT11_CUR_TX_PWR            = 0x100D,
- 	DOT11_RX_DOT11_MODE         = 0x1012,
-@@ -1290,5 +1298,6 @@ int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
- int wl1271_acx_max_tx_retry(struct wl1271 *wl);
- int wl1271_acx_config_ps(struct wl1271 *wl);
-+int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
- 
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 67a0094..a724da4 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -70,6 +70,22 @@ static void wl1271_free_tx_id(struct wl1271 *wl, int id)
- 	}
- }
- 
-+static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
-+						 struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr;
-+
-+	/*
-+	 * add the station to the known list before transmitting the
-+	 * authentication response. this way it won't get de-authed by FW
-+	 * when transmitting too soon.
-+	 */
-+	hdr = (struct ieee80211_hdr *)(skb->data +
-+				       sizeof(struct wl1271_tx_hw_descr));
-+	if (ieee80211_is_auth(hdr->frame_control))
-+		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
-+}
-+
- static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 				u32 buf_offset)
- {
-@@ -238,6 +254,9 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 	if (ret < 0)
- 		return ret;
- 
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		wl1271_tx_ap_update_inconnection_sta(wl, skb);
-+
- 	wl1271_tx_fill_hdr(wl, skb, extra, info);
- 
- 	/*
--- 
-1.7.1
+I traced the code and find that this is happening when i hit the condition
 
+if (wsec & WEP_ENABLED) {
+
+and basically ioctl WLC_SET_KEY_PRIMARY is failed.
+
+can you please give your though why this is happening(connection lost to AP)?
+Is there is some problem with my AP setting?
+Is there is any problem with the RF setting (basically nvram parameters)?
+Any help will be appreciated.
+
+Regards,
+Alim
+
+
+On Sat, Feb 5, 2011 at 9:44 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>
+> Hi Alim,
+>
+> On Sat, 05 Feb 2011 10:21:41 +0100, Alim Akhtar <alim.akhtar@gmail.com> wrote:
+>
+>> Dear Arend Van Spriel
+>>
+>> I am using BCM4329 chip and downloaded the driver for google chromium git repo (2.6.36 kernel version).
+>> I am facing a problem, suspend/resume does not works with this driver.
+>> I have seem your commit in the staging tree on 22th Jan "staging: brcm80211: fix suspend/resume in brcmsmac" but i cannt find the fix for brcmfmac. Can you please till suspend/resume for brcmfmac driver is already fixed or it is work in progress? Also if fixed, please till me patch location or send me the patch it self.
+>
+> The suspend/resume changes for brcmfmac is work in progress at the moment as I was told by colleagues working on that driver. I assume the patch will be included in the chromium repo and also in the staging repo (git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git - staging-next branch).
+>
+> For the staging repo you can keep an eye on the mailing list: http://driverdev.linuxdriverproject.org/pipermail/devel/
+>
+>> Any help will be appreciated.
+>>
+>> Regards,
+>> Alim
+>>
+>>
+>> --
+>>
+>
+> Gr. AvS
+> --
+> "The most merciful thing in the world, I think, is the inability of the human
+> mind to correlate all its contents." - "The Call of Cthulhu"
+>
+
+
+
+--
+aLim akHtaR
+mAin hUn nA :-)
