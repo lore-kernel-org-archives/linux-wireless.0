@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14324 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755093Ab1BNOCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 09:02:35 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 06:02:14 -0800
-Message-ID: <4D5935EF.1060302@atheros.com>
-Date: Mon, 14 Feb 2011 19:32:23 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: make use of slot time macros
-References: <1297407704-4029-1-git-send-email-mshajakhan@atheros.com> <4D553107.3020402@openwrt.org> <20110211161551.GA2224@tuxdriver.com> <4D5561F2.3050404@openwrt.org> <20110211162944.GD2224@tuxdriver.com> <4D58B25D.4040507@atheros.com> <4D58B39B.9040207@atheros.com> <4D593295.6060800@openwrt.org>
-In-Reply-To: <4D593295.6060800@openwrt.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51429 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754984Ab1BVWWk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Feb 2011 17:22:40 -0500
+Received: by wyg36 with SMTP id 36so264086wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:39 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 0/8] wl12xx: AP-mode per link PSM
+Date: Wed, 23 Feb 2011 00:22:23 +0200
+Message-Id: <1298413351-15462-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 February 2011 07:18 PM, Felix Fietkau wrote:
-> On 2011-02-14 5:46 AM, Mohammed Shafi wrote:
->    
->> On Monday 14 February 2011 10:11 AM, Mohammed Shafi wrote:
->>      
->>> On Friday 11 February 2011 09:59 PM, John W. Linville wrote:
->>>        
->>>> On Fri, Feb 11, 2011 at 05:21:06PM +0100, Felix Fietkau wrote:
->>>>          
->>>>> On 2011-02-11 5:15 PM, John W. Linville wrote:
->>>>>            
->>>>>> On Fri, Feb 11, 2011 at 01:52:23PM +0100, Felix Fietkau wrote:
->>>>>>              
->>>>>>> On 2011-02-11 8:01 AM, Mohammed Shafi Shajakhan wrote:
->>>>>>>                
->>>>>>>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>>>>>>
->>>>>>>> Instead of using raw numbers to assign slot time it would be
->>>>>>>> better to
->>>>>>>> make use of predefined slot time macros
->>>>>>>>                  
->>>>>>> How does this make it better?
->>>>>>>                
->>>>>> Maybe if it was ATH9K_SHORT_SLOT_TIME it would make more sense?
->>>>>>              
->>>>> Well, neither the unit of this variable, nor the values that can be
->>>>> used
->>>>> are ath9k specific.
->>>>>            
->> Felix  then I don't know why these macros are used here and I followed
->> the same thing:
->>
->> htc_drv_beacon.c 242 if (ah->slottime == ATH9K_SLOT_TIME_20)
->> init.c           517 sc->beacon.slottime = ATH9K_SLOT_TIME_9;
->>      
-> Just because the macros are there doesn't mean that it was a good idea
-> to use them. As far as I know, these were simply inherited from the
-> Atheros codebase that ath9k was based on.
-> I actually consider the code more readable without the redundant
-> "ATH9K_SLOT_TIME_" part.
->    
-Felix I agree the first part, but I could still see no harm in using 
-these macros.
-Initially we  using these values 6,9,20(no other values) for the slot 
-time and there are macros defined for them. If we are using some other 
-values I would agree that its wrong.
-Why not make use of it ?
-IMHO if we use these macros it will at least people who are reading the 
-code there are three standard values 6,9 and 20
-I am sure it would help us to debug issues easily(just like Fair beacon 
-distribution thing).
+This patchset introduces per-link PSM for AP-mode. The PS status of each
+link is updated from FW.
+The wl12xx concept of PSM is different from the mac80211 one - some data
+must remain in FW for a link in PSM since the TIM is updated automatically
+by FW. This functionality depends on the following mac80211 patch:
+"mac80211: add HW flag for disabling auto link-PS in AP mode"
 
-> - Felix
-> .
->
->    
+We set up a skb-queue per link which allows for a cleaner link
+disconnection and prepares the code for regulating each link separately.
+
+A few other AP-mode related small bug fixes and enchancements are included.
+
+v1->2:
+- In first patch, use atomic operations when changing the flags
+  variable. It is not always changed within a spinlock/mutex.
+- Rebase on latest master of maintainer's git
+
+Arik Nemtsov (8):
+  wl12xx: fix potential race condition with TX queue watermark
+  wl12xx: AP-mode - fix race condition on sta connection
+  wl12xx: AP-mode - TX queue per link in AC
+  wl12xx: report invalid TX rate when returning non-TX-ed skbs
+  wl12xx: AP-mode - support HW based link PS monitoring
+  wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
+  wl12xx: AP-mode - count free FW TX blocks per link
+  wl12xx: AP-mode - management of links in PS-mode
+
+ drivers/net/wireless/wl12xx/acx.c    |   25 ++++
+ drivers/net/wireless/wl12xx/acx.h    |    9 ++
+ drivers/net/wireless/wl12xx/main.c   |  125 +++++++++++++++---
+ drivers/net/wireless/wl12xx/ps.c     |   78 +++++++++++
+ drivers/net/wireless/wl12xx/ps.h     |    2 +
+ drivers/net/wireless/wl12xx/tx.c     |  233 +++++++++++++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/tx.h     |    3 +
+ drivers/net/wireless/wl12xx/wl12xx.h |   37 ++++++
+ 8 files changed, 456 insertions(+), 56 deletions(-)
+
