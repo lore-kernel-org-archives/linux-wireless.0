@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:64340 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab1BAJ00 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50125 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755163Ab1BVW1P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 04:26:26 -0500
-Received: by qwa26 with SMTP id 26so6466390qwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Feb 2011 01:26:26 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 1 Feb 2011 09:26:25 +0000
-Message-ID: <AANLkTik=oRjh9UHAsOOTpuOJR7OBw2HCsXd8vhHN_YJY@mail.gmail.com>
-Subject: Ralink RT2501/RT2573 USB Wireless Adapter crashes kernel 2.6.37
-From: Eric Fernandez <zeb@zebulon.org.uk>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 22 Feb 2011 17:27:15 -0500
+Received: by wyg36 with SMTP id 36so269256wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:27:14 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/2] wl12xx: always set mac_address when configuring ht caps
+Date: Wed, 23 Feb 2011 00:27:07 +0200
+Message-Id: <1298413627-19819-2-git-send-email-eliad@wizery.com>
+In-Reply-To: <1298413627-19819-1-git-send-email-eliad@wizery.com>
+References: <1298413627-19819-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The mac_address should be set also when ht caps are disabled.
 
-I reported this issue for two Linux distribution (Arch and Mandriva)
-after upgrading to kernel 2.6.37 and is rather critical for users of
-RT2573 Ralink USB Wireless adapters. This leads to complete system
-crash, which is solved either by using a wired ethernet connection, or
-by downgrading the kernel to 2.6.36 version. This happens in
-particular when watching a streaming video (e.g. Youtube). I do not
-see any entry in the log files. The sound goes to a loop, system is
-completely blocked and only a hard reset will allow rebooting.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-I feel this issue has been reported for other distributions too:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/673682
-and this may be related:
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/002935.html
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 33840d9..6d53129 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1328,10 +1328,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+ 		/* get data from A-MPDU parameters field */
+ 		acx->ampdu_max_length = ht_cap->ampdu_factor;
+ 		acx->ampdu_min_spacing = ht_cap->ampdu_density;
+-
+-		memcpy(acx->mac_address, mac_address, ETH_ALEN);
+ 	}
+ 
++	memcpy(acx->mac_address, mac_address, ETH_ALEN);
+ 	acx->ht_capabilites = cpu_to_le32(ht_capabilites);
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
+-- 
+1.7.0.4
 
-I tried to use the compat-wireless drivers (2011-01-30), which were
-compiled correctly, but rt2x00 module loading segfaults when inserting
-the USB adapter.
-
-What can I do to help squashing this issue?
-
-Many thanks in advance.
-Eric
