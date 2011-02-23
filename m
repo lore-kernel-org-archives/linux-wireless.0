@@ -1,98 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp105.rog.mail.re2.yahoo.com ([206.190.36.83]:22922 "HELO
-	smtp105.rog.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751018Ab1BKDWN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55238 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319Ab1BWLrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 22:22:13 -0500
-Message-ID: <599344.62309.qm@smtp105.rog.mail.re2.yahoo.com>
-From: Shawn Starr <shawn.starr@rogers.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [regression][2.6.38-rcX][net][iwlagn] WiFi signal after period of time tanks causing contant drops
-Date: Thu, 10 Feb 2011 22:15:29 -0500
-References: <613373.34172.qm@smtp106.rog.mail.re2.yahoo.com> <1297350984.20613.68.camel@wwguy-ubuntu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 23 Feb 2011 06:47:08 -0500
+Subject: Re: IBSS merge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	Bruno Randolf <br1@einfach.org>
+In-Reply-To: <1298460913.4122.2.camel@jlt3.sipsolutions.net>
+References: <1298460913.4122.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Feb 2011 12:47:05 +0100
+Message-ID: <1298461625.4122.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 10, 2011 10:07:48 PM Shawn Starr wrote:
-> On Thursday, February 10, 2011 07:16:24 AM wwguy wrote:
-> > On Wed, 2011-02-09 at 23:15 -0800, Andrew Morton wrote:
-> > > (cc linux-wireless)
-> > > 
-> > > On Sun, 06 Feb 2011 22:54 -0500 Shawn Starr <shawn.starr@rogers.com>
+On Wed, 2011-02-23 at 12:35 +0100, Johannes Berg wrote:
+> Hi,
 > 
-> wrote:
-> > > > Using a Intel Corporation PRO/Wireless 5100 AGN [Shiloh] card
-> > > > after
-> > > > rebooting and a period of of seveal hours signal begins to drop
-> > > > to
-> > > > low levels:
-> > > > 
-> > > > 
-> > > > wlan0     IEEE 802.11abgn  ESSID:"XXXXXXXX"
-> > > > 
-> > > >           Mode:Managed  Frequency:2.462 GHz  Access
-> > > >           Point:
-> > > >           AA:BB:CC:DD:EE:FF Bit Rate=11 Mb/s
-> > > >           Tx-Power=15 dBm
-> > > >           Retry  long limit:7   RTS thr:off   Fragment
-> > > >           thr:off
-> > > >           Power Management:off
-> > > >           Link Quality=12/70  Signal level=-98 dBm
-> > > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx
-> > > >           invalid frag:0
-> > > >           Tx excessive retries:0  Invalid misc:35  
-> > > >           Missed
-> > > >           beacon:0
-> > > > 
-> > > > ...
-> > > > 
-> > > >           Link Quality=12/70  Signal level=-98 dBm
-> > > >           Rx invalid nwid:0  Rx invalid crypt:0  Rx
-> > > >           invalid frag:0
-> > > >           Tx excessive retries:0  Invalid misc:40  
-> > > >           Missed
-> > > >           beacon:0
-> > > > 
-> > > > I start seeing lots of Invalid misc errors and connection drops.
-> > > > If
-> > > > I reboot, then signal will be back to normal for a period of
-> > > > time
-> > > > again.
-> > > > 
-> > > > My official kernel is from Fedora rawhide
-> > > > (2.6.38-0.rc3.git4.1.fc15.x86_64)
-> > > > 
-> > > > Anyone else notice poor link/signal levels?
-> > > > 
-> > > > .37 showed no such issues.
-> > 
-> > did not see anything special from the log, is any environment or
-> > condition changed? what AP you are using?
-> > 
-> > Thanks
-> > Wey
+> I'm confused about our IBSS merge code.
 > 
-> I'm using an Linksys WRT54G with tomato firmware for a number of years. The
-> AP is in my house and very close. I will keep an eye on this. This all
-> seemed to have started after we had a power outage. The AP is fine however
-> and I haven't noticed this drop a 2 after.
+> ieee80211_rx_bss_info:
 > 
-> If there was any environment changes they appear to have 'settled' down.
+> ...
+>         /* same BSSID */
+>         if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0)
+>                 goto put_bss;
+> ...
+>         /* give slow hardware some time to do the TSF sync */
+>         if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
+>                 goto put_bss;
+> ...
 > 
-> I will be going to 2.6.38-0.rc4.git0.1.fc15 right now and will do another
-> long hour test by keeping the laptop on for a number of hours on the
-> weekend.
+> 
+> Both of this was added by Alina, but why did the patch adding the first
+> part not remove the second part again? If we suddenly need to adopt a
+> new BSSID due to higher TSF why wait for the HW to sync first?
+> 
+> It seems the latter was a workaround for syncing over and over again
+> when the HW hadn't caught up yet, but that doesn't seem worthwhile any
+> more since we no longer re-sync with the same BSSID?
 
-To answer myself, https://bugzilla.kernel.org/show_bug.cgi?id=28832
+So why not do
 
-Looks like this is behavour observed in -rc3 the same period I did the 
-upgrade. I can discount the power outage :)
+---
+ net/mac80211/ibss.c |    5 -----
+ 1 file changed, 5 deletions(-)
 
-> 
-> Thanks,
-> Shawn.
+--- wireless-testing.orig/net/mac80211/ibss.c	2011-02-23 12:30:32.000000000 +0100
++++ wireless-testing/net/mac80211/ibss.c	2011-02-23 12:46:22.000000000 +0100
+@@ -31,7 +31,6 @@
+ #define IEEE80211_IBSS_JOIN_TIMEOUT (7 * HZ)
+ 
+ #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
+-#define IEEE80211_IBSS_MERGE_DELAY 0x400000
+ #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
+ 
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+@@ -397,10 +396,6 @@ static void ieee80211_rx_bss_info(struct
+ 	       jiffies);
+ #endif
+ 
+-	/* give slow hardware some time to do the TSF sync */
+-	if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
+-		goto put_bss;
+-
+ 	if (beacon_timestamp > rx_timestamp) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 		printk(KERN_DEBUG "%s: beacon TSF higher than "
+
+
