@@ -1,131 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37977 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755125Ab1BHAKo (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:50593 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751007Ab1BWPYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 19:10:44 -0500
-Received: by ywo7 with SMTP id 7so1713433ywo.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Feb 2011 16:10:44 -0800 (PST)
-Subject: [PATCH] ath9k: Remove redundant beacon_interval
-From: Steve Brown <sbrown@cortland.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Mohammed Shafi <shafi.ath9k@gmail.com>
+	Wed, 23 Feb 2011 10:24:16 -0500
+Received: by wyf19 with SMTP id 19so5117240wyf.15
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 07:24:00 -0800 (PST)
+Subject: pull request: wl12xx 2011-02-23
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Feb 2011 17:10:39 -0700
-Message-ID: <1297123839.16189.36.camel@nm.ewol.com>
+Date: Wed, 23 Feb 2011 17:23:57 +0200
+Message-ID: <1298474637.2104.71.camel@pimenta>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable appears in both ath_softc and ath_beacon_config.
-The struct ath_beacon_config is embedded in ath_softc. The redundant
-variable was added by commit id 57c4d7b4c4986037be51476b8e3025d5ba18d8b8.
+Hi John,
 
-Signed-off-by: Steve Brown <sbrown@cortland.com>
-Reviewed-by: Mohammed Shafi <shafi.ath9k@gmail.com>
+Yet another pull request for 2.6.39.  The most important change is PS
+support in AP-mode, by Arik.  The other patches are mainly bugfixes and
+small cleanups.
 
----
+Please pull or let me know if there's any problem.  This tree is based
+on wireless-next/master.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9272278..dbf0aa5 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -371,7 +371,7 @@ struct ath_vif {
- #define IEEE80211_MS_TO_TU(x)           (((x) * 1000) / 1024)
- 
- struct ath_beacon_config {
--	u16 beacon_interval;
-+	int beacon_interval;
- 	u16 listen_interval;
- 	u16 dtim_period;
- 	u16 bmiss_timeout;
-@@ -633,8 +633,6 @@ struct ath_softc {
- 	struct ath9k_hw_cal_data caldata;
- 	int last_rssi;
- 
--	int beacon_interval;
--
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	struct ath9k_debug debug;
- 	spinlock_t nodes_lock;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 87ba44c..1f6f899 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -226,6 +226,7 @@ int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	struct ath_vif *avp;
- 	struct ath_buf *bf;
- 	struct sk_buff *skb;
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
- 	__le64 tstamp;
- 
- 	avp = (void *)vif->drv_priv;
-@@ -282,7 +283,7 @@ int ath_beacon_alloc(struct ath_softc *sc, struct ieee80211_vif *vif)
- 		u64 tsfadjust;
- 		int intval;
- 
--		intval = sc->beacon_interval ? : ATH_DEFAULT_BINTVAL;
-+		intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
- 
- 		/*
- 		 * Calculate the TSF offset for this beacon slot, i.e., the
-@@ -346,6 +347,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
- void ath_beacon_tasklet(unsigned long data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)data;
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_buf *bf = NULL;
-@@ -393,7 +395,7 @@ void ath_beacon_tasklet(unsigned long data)
- 	 * on the tsf to safeguard against missing an swba.
- 	 */
- 
--	intval = sc->beacon_interval ? : ATH_DEFAULT_BINTVAL;
-+	intval = cur_conf->beacon_interval ? : ATH_DEFAULT_BINTVAL;
- 
- 	tsf = ath9k_hw_gettsf64(ah);
- 	tsftu = TSF_TO_TU(tsf>>32, tsf);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4ed43b2..ded225d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1886,6 +1886,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 				   u32 changed)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-@@ -1944,7 +1945,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 
- 	if (changed & BSS_CHANGED_BEACON_INT) {
--		sc->beacon_interval = bss_conf->beacon_int;
-+		cur_conf->beacon_interval = bss_conf->beacon_int;
- 		/*
- 		 * In case of AP mode, the HW TSF has to be reset
- 		 * when the beacon interval changes.
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9f4e755..bc614ac 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1055,6 +1055,7 @@ int ath_txq_update(struct ath_softc *sc, int qnum,
- int ath_cabq_update(struct ath_softc *sc)
- {
- 	struct ath9k_tx_queue_info qi;
-+	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
- 	int qnum = sc->beacon.cabq->axq_qnum;
- 
- 	ath9k_hw_get_txq_props(sc->sc_ah, qnum, &qi);
-@@ -1066,7 +1067,7 @@ int ath_cabq_update(struct ath_softc *sc)
- 	else if (sc->config.cabqReadytime > ATH9K_READY_TIME_HI_BOUND)
- 		sc->config.cabqReadytime = ATH9K_READY_TIME_HI_BOUND;
- 
--	qi.tqi_readyTime = (sc->beacon_interval *
-+	qi.tqi_readyTime = (cur_conf->beacon_interval *
- 			    sc->config.cabqReadytime) / 100;
- 	ath_txq_update(sc, qnum, &qi);
- 
+Thanks!
+
+The following changes since commit 320d6c1b56de5f461c6062625b9664095f90ee95:
+
+  ath9k_hw: Fix power on reset (2011-02-21 15:40:00 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+
+Arik Nemtsov (9):
+      wl12xx: avoid blocking while holding rcu lock on bss info change
+      wl12xx: fix potential race condition with TX queue watermark
+      wl12xx: AP-mode - fix race condition on sta connection
+      wl12xx: AP-mode - TX queue per link in AC
+      wl12xx: report invalid TX rate when returning non-TX-ed skbs
+      wl12xx: AP-mode - support HW based link PS monitoring
+      wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
+      wl12xx: AP-mode - count free FW TX blocks per link
+      wl12xx: AP-mode - management of links in PS-mode
+
+Dan Carpenter (1):
+      wl12xx: change type from u8 to int
+
+Eliad Peller (4):
+      wl12xx: fix identification of beacon packets (debug)
+      wl12xx: declare support for IEEE80211_HW_REPORTS_TX_ACK_STATUS
+      wl12xx: use standard ALIGN() macro
+      wl12xx: always set mac_address when configuring ht caps
+
+Gery Kahn (1):
+      wl12xx: update PLT initialization for new firmware
+
+Luciano Coelho (1):
+      wl12xx: fix MODULE_AUTHOR email address
+
+ drivers/net/wireless/wl12xx/acx.c    |   28 ++++-
+ drivers/net/wireless/wl12xx/acx.h    |    9 ++
+ drivers/net/wireless/wl12xx/init.c   |    2 +-
+ drivers/net/wireless/wl12xx/main.c   |  147 +++++++++++++++++----
+ drivers/net/wireless/wl12xx/ps.c     |   78 +++++++++++
+ drivers/net/wireless/wl12xx/ps.h     |    2 +
+ drivers/net/wireless/wl12xx/rx.c     |    6 +-
+ drivers/net/wireless/wl12xx/rx.h     |    4 -
+ drivers/net/wireless/wl12xx/tx.c     |  237 ++++++++++++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/tx.h     |    5 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |   37 ++++++
+ 11 files changed, 478 insertions(+), 77 deletions(-)
+
+
+--
+Cheers,
+Luca.
+
 
