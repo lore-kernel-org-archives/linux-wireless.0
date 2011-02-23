@@ -1,98 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:55350 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932153Ab1BWJdY convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:51487 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755019Ab1BWUHY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 04:33:24 -0500
-Received: by wwi17 with SMTP id 17so5124828wwi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 01:33:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1298450837.3747.10.camel@jlt3.sipsolutions.net>
-References: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
-	<1298450837.3747.10.camel@jlt3.sipsolutions.net>
-Date: Wed, 23 Feb 2011 15:03:23 +0530
-Message-ID: <AANLkTi==e0fMRJQPC-++Vgx9H2iO5ruVzMDoVNhbppOz@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Fix a race on enabling power save.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 23 Feb 2011 15:07:24 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 742355401D1
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 15:10:30 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-23 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110223200722.DC07F45938@repository3.orbit-lab.org>
+Date: Wed, 23 Feb 2011 15:07:22 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 23, 2011 at 2:17 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-02-23 at 13:04 +0530, Vivek Natarajan wrote:
->> There is a race on sending a data frame before the tx completion
->> of nullfunc frame for enabling power save. As the data quickly
->> follows the nullfunc frame, the AP thinks that the station is out
->> of power save and continues to send the frames. Whereas in the
->> station, the nullfunc ack will be processed after the tx completion
->> of data frame and mac80211 goes to powersave. Thus the power
->> save state mismatch between the station and the AP causes some
->> data loss and some applications fail because of that. This patch
->> fixes this issue.
->>
->> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->> ---
->>  net/mac80211/mlme.c   |   14 +++++++++++++-
->>  net/mac80211/status.c |    2 --
->>  2 files changed, 13 insertions(+), 3 deletions(-)
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 7b3f9df..abb0116 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
->>               return;
->>
->>       if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
->> -         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
->> +         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
->> +             netif_tx_stop_all_queues(sdata->dev);
->> +             /*
->> +              * Flush all the frames queued in the driver before
->> +              * going to power save
->> +              */
->> +             drv_flush(local, false);
->>               ieee80211_send_nullfunc(local, sdata, 1);
->>
->> +             /* Flush once again to get the tx status of nullfunc frame */
->> +             drv_flush(local, false);
->> +     }
->> +
->>       if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
->>             (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
->>           (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
->> @@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
->>               local->hw.conf.flags |= IEEE80211_CONF_PS;
->>               ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
->>       }
->> +
->> +     netif_tx_start_all_queues(sdata->dev);
->>  }
->>
->>  void ieee80211_dynamic_ps_timer(unsigned long data)
->> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
->> index 010a559..8651851 100644
->> --- a/net/mac80211/status.c
->> +++ b/net/mac80211/status.c
->> @@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
->>               if (info->flags & IEEE80211_TX_STAT_ACK) {
->>                       local->ps_sdata->u.mgd.flags |=
->>                                       IEEE80211_STA_NULLFUNC_ACKED;
->> -                     ieee80211_queue_work(&local->hw,
->> -                                     &local->dynamic_ps_enable_work);
->
-> Is the patch still correct if you don't remove this? I realise it won't
-> usually be necessary, but I think we don't flush the TX status tasklet
-> on flush right now so in theory there could be a race there that this
-> code would clean up after, right?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   9827e52..44b4c85  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   2369930..ec19f7f  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 5884a13...bc8d831 akpm-end   -> origin/akpm-end  (forced update)
+   6f576d5..d8204a3  akpm-start -> origin/akpm-start
+   42db7b4..8e00ca7  history    -> origin/history
+ + 182fa86...2c80a1c master     -> origin/master  (forced update)
+   6f576d5..d8204a3  stable     -> origin/stable
+ * [new tag]         next-20110223 -> next-20110223
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.38-rc6 -> v2.6.38-rc6
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-If this is not removed, dynamic_ps_enable work would be queued once
-again. And if a new frame is transmitted before this work is executed,
-mac80211 tries to go to PS immediately in this work instead of
-actually waiting for the dynamic_ps_timeout.
+compat-wireless code metrics
 
-Vivek.
+    791100 - Total upstream lines of code being pulled
+      2135 - backport code changes
+      1863 - backport code additions
+       272 - backport code deletions
+      7437 - backport from compat module
+      9572 - total backport code
+    1.2100 - % of code consists of backport work
