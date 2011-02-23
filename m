@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36906 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754662Ab1B1UJA (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50517 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755661Ab1BWT16 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 15:09:00 -0500
-Subject: Re: [PATCH] rtlwifi: usb parts should depend on CONFIG_USB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	George <george0505@realtek.com>, linux-next@vger.kernel.org
-In-Reply-To: <1298922500-21632-1-git-send-email-linville@tuxdriver.com>
-References: <alpine.DEB.2.00.1102171354200.16788@ayla.of.borg>
-	 <1298922500-21632-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Feb 2011 21:08:51 +0100
-Message-ID: <1298923731.10109.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 23 Feb 2011 14:27:58 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Greg KH <greg@kroah.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Wed, 23 Feb 2011 11:26:47 -0800
+Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
+Message-ID: <477F20668A386D41ADCC57781B1F704307F50C4688@SC-VEXCH1.marvell.com>
+References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+	 <1291380780.3499.119.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307F50C44E4@SC-VEXCH1.marvell.com>
+ <1298449433.3747.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1298449433.3747.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-28 at 14:48 -0500, John W. Linville wrote:
->  
-> +ifeq ($(CONFIG_USB),y)
-> +rtlwifi-objs	+= usb.o
-> +endif
-
-That reads weird, shouldn't
-
-rtlwifi-$(CONFIG_USB) += usb.o
-
-do? Or more likely actually use CONFIG_RTL8192CU?
-
-johannes
-
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
+ZW50OiBXZWRuZXNkYXksIEZlYnJ1YXJ5IDIzLCAyMDExIDEyOjI0IEFNDQo+IFRvOiBCaW5nIFpo
+YW8NCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9obiBXLiBMaW52aWxs
+ZTsgRGFuIFdpbGxpYW1zOyBEYXZpZCBXb29kaG91c2U7IEFtaXRrdW1hciBLYXJ3YXI7DQo+IEtp
+cmFuIERpdmVrYXI7IEZyYW5rIEh1YW5nOyBHcmVnIEtIOyBEYXZpZCBTLiBNaWxsZXINCj4gU3Vi
+amVjdDogUkU6IFtQQVRDSCAwMC8zMV0gd2lyZWxlc3M6IE1hcnZlbGwgbXdpZmlleCBkcml2ZXIg
+Zm9yIFNEODc4Nw0KPiANCj4gT24gVHVlLCAyMDExLTAyLTIyIGF0IDE5OjM3IC0wODAwLCBCaW5n
+IFpoYW8gd3JvdGU6DQo+IA0KPiA+IElzIGl0IE9LIGlmIEkgY2hhbmdlIFBSSU5UTSAoZGVidWdn
+aW5nIHByaW50aykgdG8gc29tZXRoaW5nIGxpa2UgSVdMX0RFQlVHXz8NCj4gPg0KPiA+IDxkcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kZWJ1Zy5oPg0KPiA+IC4uLi4uLg0KPiA+ICNk
+ZWZpbmUgSVdMX0RFQlVHX0lORk8ocCwgZiwgYS4uLikgICAgICBJV0xfREVCVUcocCwgSVdMX0RM
+X0lORk8sIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJV0xfREVCVUdfTUFDODAyMTEocCwgZiwgYS4u
+LikgIElXTF9ERUJVRyhwLCBJV0xfRExfTUFDODAyMTEsIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJ
+V0xfREVCVUdfTUFDRFVNUChwLCBmLCBhLi4uKSAgIElXTF9ERUJVRyhwLCBJV0xfRExfTUFDRFVN
+UCwgZiwgIyMgYSkNCj4gPiAjZGVmaW5lIElXTF9ERUJVR19URU1QKHAsIGYsIGEuLi4pICAgICAg
+SVdMX0RFQlVHKHAsIElXTF9ETF9URU1QLCBmLCAjIyBhKQ0KPiA+ICNkZWZpbmUgSVdMX0RFQlVH
+X1NDQU4ocCwgZiwgYS4uLikgICAgICBJV0xfREVCVUcocCwgSVdMX0RMX1NDQU4sIGYsICMjIGEp
+DQo+ID4gI2RlZmluZSBJV0xfREVCVUdfUlgocCwgZiwgYS4uLikgICAgICAgIElXTF9ERUJVRyhw
+LCBJV0xfRExfUlgsIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJV0xfREVCVUdfVFgocCwgZiwgYS4u
+LikgICAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfVFgsIGYsICMjIGEpDQo+ID4gI2RlZmluZSBJ
+V0xfREVCVUdfSVNSKHAsIGYsIGEuLi4pICAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfSVNSLCBm
+LCAjIyBhKQ0KPiA+IC4uLi4uLg0KPiA+DQo+ID4gT3IsIHlvdSB3YW50IG1lIHRvIHJlbW92ZSBQ
+UklOVE0gc3R1ZmYgY29tcGxldGVseT8NCj4gDQo+IFllYWgsIEkga25vdyB0aGF0J3MgdGhlcmUg
+aW4gaXdsd2lmaSB0b28gLi4uIEkgZG9uJ3QgbGlrZSBpdCwgYnV0IEkNCj4gY291bGRuJ3QgeWV0
+IGdldCBpdCByZW1vdmVkIG9yIHJlcGxhY2VkIGJ5IG5ld2VyIGluZnJhc3RydWN0dXJlICh3aGlj
+aA0KPiBkaWRuJ3QgZXhpc3Qgd2hlbiB0aGlzIHdhcyB3cml0dGVuKS4gQ2FuIEkgY29udmluY2Ug
+eW91IHRvIGF0IGxlYXN0IGxvb2sNCj4gYXQgcHJfZGVidWcgYmFzZWQgdGhpbmdzPw0KDQpUaGFu
+a3MgZm9yIHlvdXIgc3VnZ2VzdGlvbi4NClllcywgSSB3aWxsIHVzZSBwcl9kZWJ1ZyBiYXNlZCBB
+UEkuDQoNCkJpbmcNCg0KPiANCj4gam9oYW5uZXMNCj4gDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
+IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVz
+cyIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5v
+cmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
+cmRvbW8taW5mby5odG1sDQo=
