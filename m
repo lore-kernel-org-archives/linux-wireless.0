@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39693 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751831Ab1BHVgl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 16:36:41 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: build zd1211rw only for kernel >= 2.6.29
-Date: Tue,  8 Feb 2011 22:36:21 +0100
-Message-Id: <1297200981-22971-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1297200981-22971-1-git-send-email-hauke@hauke-m.de>
-References: <1297200981-22971-1-git-send-email-hauke@hauke-m.de>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:50754 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754655Ab1BWNwW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 08:52:22 -0500
+Received: by mail-wy0-f180.google.com with SMTP id 23so1283535wyf.39
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 05:52:21 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: declare support for
+ IEEE80211_HW_REPORTS_TX_ACK_STATUS
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1296638405-28704-1-git-send-email-eliad@wizery.com>
+References: <1296638405-28704-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Feb 2011 15:52:17 +0200
+Message-ID: <1298469137.2104.20.camel@pimenta>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-zd1211rw uses usb_queue_reset_device() which is not backported now.
+On Wed, 2011-02-02 at 11:20 +0200, Eliad Peller wrote:
+> The wl12xx fw supports ack status reporting for tx frames, so
+> add the IEEE80211_HW_REPORTS_TX_ACK_STATUS flag to our supported
+> features.
+> 
+> Since we do the rate control in the fw, we'll probably want
+> to adjust the STA_LOST_PKT_THRESHOLD heuristics in the future, to
+> account for retransmissions as well.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> --- 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Applied, thank you!
 
-diff --git a/config.mk b/config.mk
-index 7c337bb..ad05a3d 100644
---- a/config.mk
-+++ b/config.mk
-@@ -387,8 +387,10 @@ CONFIG_EEPROM_93CX6=m
- 
- # USB Drivers
- ifdef CONFIG_USB
-+ifndef CONFIG_COMPAT_KERNEL_29
- CONFIG_ZD1211RW=m
- # CONFIG_ZD1211RW_DEBUG=y
-+endif #CONFIG_COMPAT_KERNEL_29
- 
- # Sorry, rndis_wlan uses cancel_work_sync which is new and can't be done in compat...
- 
 -- 
-1.7.1
+Cheers,
+Luca.
 
