@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:35012 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830Ab1BROfC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 09:35:02 -0500
-Received: by wyb28 with SMTP id 28so3724623wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Feb 2011 06:35:00 -0800 (PST)
-Message-ID: <4D5E838F.1020707@lwfinger.net>
-Date: Fri, 18 Feb 2011 08:34:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 13/14] rtlwifi: rtl8192cu: Add routine trx
-References: <4d5d90c9.sN3PKFogcRQR8mbQ%Larry.Finger@lwfinger.net> <20110218112633.GA2270@redhat.com>
-In-Reply-To: <20110218112633.GA2270@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:6649 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753411Ab1BWPVL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 10:21:11 -0500
+Subject: Re: Help about Intel Centrino Advanced-N 6205 wifi card
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "jgq516@gmail.com" <jgq516@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1298444805-27178-1-git-send-email-jgq516@gmail.com>
+References: <1298444805-27178-1-git-send-email-jgq516@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Feb 2011 07:06:25 -0800
+Message-ID: <1298473585.5138.28.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/18/2011 05:26 AM, Stanislaw Gruszka wrote:
-> On Thu, Feb 17, 2011 at 03:19:05PM -0600, Larry Finger wrote:
->> +static enum rtl_desc_qsel _rtl8192cu_mq_to_descq(struct ieee80211_hw *hw,
->> +					 u16 fc, u16 mac80211_queue_index)
->> +{
->> +	enum rtl_desc_qsel qsel;
->> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
->> +
->> +	if (unlikely(ieee80211_is_beacon(fc))) {
->> +		qsel = QSLT_BEACON;
->> +		goto out;
->> +	}
->> +	if (ieee80211_is_mgmt(fc)) {
-> [snip]
->> +	u16 fc = le16_to_cpu(hdr->frame_control);
->> +	enum rtl_desc_qsel fw_qsel = _rtl8192cu_mq_to_descq(hw, fc,
->
-> We have that bug on all over the code, ieee80211_is_* expect le16 value
-> whereas we pass cpu endian value. Driver is completely broken on that
-> respect, it will not work on big endian machines.
->
-> What should be done is use "sparse" (i.e. make C=1) and fix all
-> endian bugs. That will not assure driver will work on BE machines,
-> but at least we will fix obvious bugs.
+Hi Xiao,
 
-Thanks for the comment. Unfortunately, sparse (C=2) does not find this error. 
-That test had been done and was clean. After reading your comment, I went back 
-to Documentation/sparse.txt and found the magic CF="-D__CHECK_ENDIAN__" 
-argument. This argument results in multiple warnings that will be fixed for V2.
+On Tue, 2011-02-22 at 23:06 -0800, jgq516@gmail.com wrote:
+> Hello all,
+> 
+> I have one Intel Centrino Advanced-N 6205 wifi card which need firmware iwlwifi-6000g2a-4.ucode to support it, but in intel website http://intellinuxwireless.org/?n=Downloads, only iwlwifi-6000g2a-5.ucode firmware exists, where can I download the official version
+> 4 firmware? Thanks in advance!
+> 
+> I also got iwlwifi-6000g2a-4.ucode from one website but maybe it has some problems, this firmware works well with kernel 2.6.37-rc1,
+> but it seems can't compatible with 2.6.36, there are some "Microcode SW error detected" when enable the card, pls see the following
+> logs, why this error exist with 2.6.36 kernel but disappeared in 2.6.37-rc1 kernel? and unfortunately, I want to work with 2.6.36 kernel:(.
+> 
+If you need to stay with 2.6.36 kernel, please use compat-wireless which
+contain all the necessary support for 6205 device, 
+http://wireless.kernel.org/en/users/Download
 
-Do you have any suggestions regarding an inexpensive BE platform that I might 
-acquire for testing? Ideally, this box would have the capability to support PCIe 
-mini cards as well as USB.
+The latest and offical supported firmware is iwlwifi-6000g2a-17.168.5.2
 
-Larry
+Thanks
+Wey
+
+
