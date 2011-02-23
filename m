@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38201 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377Ab1BWOpd (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47468 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752323Ab1BWHaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 09:45:33 -0500
-Date: Wed, 23 Feb 2011 09:41:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Sebastien Jan <s-jan@ti.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] WLAN: fix the path to the wl12xx firmwares
-Message-ID: <20110223144134.GA2729@tuxdriver.com>
-References: <1298467516-9092-1-git-send-email-s-jan@ti.com>
- <1298471599.2104.44.camel@pimenta>
+	Wed, 23 Feb 2011 02:30:18 -0500
+Received: by wwb39 with SMTP id 39so1207069wwb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 23:30:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1298471599.2104.44.camel@pimenta>
+In-Reply-To: <1298379745.3773.1.camel@jlt3.sipsolutions.net>
+References: <1298018776-6936-1-git-send-email-vnatarajan@atheros.com>
+	<1298027245.3772.3.camel@jlt3.sipsolutions.net>
+	<20110219061241.GA5881@vmraj-lnx.users.atheros.com>
+	<1298106890.3725.7.camel@jlt3.sipsolutions.net>
+	<AANLkTinP96mRkqCz-HgE3ePR-g2pFveR6HL2QoNw=E_r@mail.gmail.com>
+	<1298379745.3773.1.camel@jlt3.sipsolutions.net>
+Date: Wed, 23 Feb 2011 13:00:15 +0530
+Message-ID: <AANLkTi=0hUr8xKfwmkkp84DHvs1Sr1gWk1oVkLCZB+pZ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mac80211: Fix a race on enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 23, 2011 at 04:33:19PM +0200, Luciano Coelho wrote:
-> Hi Sebastien,
-> 
-> On Wed, 2011-02-23 at 14:25 +0100, Sebastien Jan wrote:
-> > Validated FW loading on a Ubuntu Natty alpha image, on a pandaboard
-> > (embedding a WL1271).
-> > 
-> > Signed-off-by: Sebastien Jan <s-jan@ti.com>
-> > ---
-> 
-> Thanks for working on getting the wl12xx driver to work on the
-> pandaboard!
-> 
-> > diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-> > index 9050dd9..8ceb6a0 100644
-> > --- a/drivers/net/wireless/wl12xx/wl12xx.h
-> > +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-> > @@ -112,8 +112,8 @@ extern u32 wl12xx_debug_level;
-> >  				  CFG_RX_CTL_EN | CFG_RX_BCN_EN |     \
-> >  				  CFG_RX_AUTH_EN | CFG_RX_ASSOC_EN)
-> >  
-> > -#define WL1271_FW_NAME "wl1271-fw.bin"
-> > -#define WL1271_NVS_NAME "wl1271-nvs.bin"
-> > +#define WL1271_FW_NAME "ti-connectivity/wl1271-fw.bin"
-> > +#define WL1271_NVS_NAME "ti-connectivity/wl1271-nvs.bin"
-> 
-> You're right.  Our firmware is (unfortunately) inside the
-> ti-connectivity in linux-firmware.git.  So it would make sense to
-> include the ti-connectivity/ directory when requesting for the firmware,
-> but it's just damn ugly. :( The driver should not care at all where the
-> firmware is to be fetched from, that should be up to the userspace.
-> 
-> Dunno what is the best thing to do about this.  Add the directory to the
-> driver? Move the wl1271*.bin files to the root of linux-firmware? Does
-> anybody have opinions about it?
+On Tue, Feb 22, 2011 at 6:32 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> If the device queues are stopped, we have to find some other fix for
+>> this power save issue since null func frame will be queued to pending
+>> frames as I mentioned earlier. Can we have this patch merged and fix
+>> the monitor vif issue for this case and the scanning case later? I
+>> have also sent a RFC patch earlier with stopping device queues and a
+>> new PS_PENDING flag for this
+>> (http://marc.info/?l=linux-wireless&m=129775059910372&w=3) That patch
+>> also addresses this race.
+>
+> I think for a first solution we can probably get away not worrying about
+> monitor injection frames, since typically they'd be used by P2P things
+> that disable powersave anyway. Right? And we already have the monitor
+> vs. flush problem anyway.
 
-I think there are a number of other drivers with embedded pathnames.
+Thanks. I will resend the patch rebased to current wireless-testing.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Vivek.
