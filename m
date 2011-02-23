@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39164 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751845Ab1B0Nty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 08:49:54 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: add tty_set_termios only for kernel >= 2.6.27
-Date: Sun, 27 Feb 2011 14:49:44 +0100
-Message-Id: <1298814584-11779-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:39627 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751717Ab1BWJlg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 04:41:36 -0500
+Subject: Re: [PATCH] mac80211: Fix a race on enabling power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: Vivek Natarajan <vnatarajan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTi==e0fMRJQPC-++Vgx9H2iO5ruVzMDoVNhbppOz@mail.gmail.com>
+References: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
+	 <1298450837.3747.10.camel@jlt3.sipsolutions.net>
+	 <AANLkTi==e0fMRJQPC-++Vgx9H2iO5ruVzMDoVNhbppOz@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Feb 2011 10:41:31 +0100
+Message-ID: <1298454091.3697.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tty_set_termios does not build with older kernel versions and is only
-needed by bluetooth which works only for kernel >= 2.6.27.
+On Wed, 2011-02-23 at 15:03 +0530, Vivek Natarajan wrote:
+> On Wed, Feb 23, 2011 at 2:17 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2011-02-23 at 13:04 +0530, Vivek Natarajan wrote:
+> >> There is a race on sending a data frame before the tx completion
+> >> of nullfunc frame for enabling power save. As the data quickly
+> >> follows the nullfunc frame, the AP thinks that the station is out
+> >> of power save and continues to send the frames. Whereas in the
+> >> station, the nullfunc ack will be processed after the tx completion
+> >> of data frame and mac80211 goes to powersave. Thus the power
+> >> save state mismatch between the station and the AP causes some
+> >> data loss and some applications fail because of that. This patch
+> >> fixes this issue.
+> >>
+> >> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> >> ---
+> >>  net/mac80211/mlme.c   |   14 +++++++++++++-
+> >>  net/mac80211/status.c |    2 --
+> >>  2 files changed, 13 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> >> index 7b3f9df..abb0116 100644
+> >> --- a/net/mac80211/mlme.c
+> >> +++ b/net/mac80211/mlme.c
+> >> @@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+> >>               return;
+> >>
+> >>       if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+> >> -         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
+> >> +         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
+> >> +             netif_tx_stop_all_queues(sdata->dev);
+> >> +             /*
+> >> +              * Flush all the frames queued in the driver before
+> >> +              * going to power save
+> >> +              */
+> >> +             drv_flush(local, false);
+> >>               ieee80211_send_nullfunc(local, sdata, 1);
+> >>
+> >> +             /* Flush once again to get the tx status of nullfunc frame */
+> >> +             drv_flush(local, false);
+> >> +     }
+> >> +
+> >>       if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+> >>             (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
+> >>           (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
+> >> @@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+> >>               local->hw.conf.flags |= IEEE80211_CONF_PS;
+> >>               ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+> >>       }
+> >> +
+> >> +     netif_tx_start_all_queues(sdata->dev);
+> >>  }
+> >>
+> >>  void ieee80211_dynamic_ps_timer(unsigned long data)
+> >> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> >> index 010a559..8651851 100644
+> >> --- a/net/mac80211/status.c
+> >> +++ b/net/mac80211/status.c
+> >> @@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+> >>               if (info->flags & IEEE80211_TX_STAT_ACK) {
+> >>                       local->ps_sdata->u.mgd.flags |=
+> >>                                       IEEE80211_STA_NULLFUNC_ACKED;
+> >> -                     ieee80211_queue_work(&local->hw,
+> >> -                                     &local->dynamic_ps_enable_work);
+> >
+> > Is the patch still correct if you don't remove this? I realise it won't
+> > usually be necessary, but I think we don't flush the TX status tasklet
+> > on flush right now so in theory there could be a race there that this
+> > code would clean up after, right?
+> 
+> If this is not removed, dynamic_ps_enable work would be queued once
+> again. And if a new frame is transmitted before this work is executed,
+> mac80211 tries to go to PS immediately in this work instead of
+> actually waiting for the dynamic_ps_timeout.
 
-Reported-by: Juan Carlos Garza <juancarlosgarza@gmail.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.39.c        |    2 ++
- include/linux/compat-2.6.39.h |    2 ++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+Ok, thanks for the clarification.
 
-diff --git a/compat/compat-2.6.39.c b/compat/compat-2.6.39.c
-index c2966f7..8d85877 100644
---- a/compat/compat-2.6.39.c
-+++ b/compat/compat-2.6.39.c
-@@ -11,6 +11,7 @@
- #include <linux/compat.h>
- #include <linux/tty.h>
- 
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
- /*
-  *		Termios Helper Methods
-  */
-@@ -108,4 +109,5 @@ int tty_set_termios(struct tty_struct *tty, struct ktermios *new_termios)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(tty_set_termios);
-+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)) */
- 
-diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
-index 1c7b322..0c4f030 100644
---- a/include/linux/compat-2.6.39.h
-+++ b/include/linux/compat-2.6.39.h
-@@ -27,7 +27,9 @@
- #define tiocmget(tty) tiocmget(tty, NULL)
- #define tiocmset(tty, set, clear) tiocmset(tty, NULL, set, clear)
- 
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
- extern int tty_set_termios(struct tty_struct *tty, struct ktermios *kt);
-+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)) */
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
- 
--- 
-1.7.1
+johannes
 
