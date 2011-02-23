@@ -1,85 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:21496 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009Ab1BNRGb convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59467 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433Ab1BWFet convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 12:06:31 -0500
-Received: from hpaq14.eem.corp.google.com (hpaq14.eem.corp.google.com [172.25.149.14])
-	by smtp-out.google.com with ESMTP id p1EH6S4p027457
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 09:06:28 -0800
-Received: from wyb42 (wyb42.prod.google.com [10.241.225.106])
-	by hpaq14.eem.corp.google.com with ESMTP id p1EH61Kj028109
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 09:06:27 -0800
-Received: by wyb42 with SMTP id 42so4903981wyb.9
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 09:06:27 -0800 (PST)
+	Wed, 23 Feb 2011 00:34:49 -0500
+Received: by wwb39 with SMTP id 39so1127573wwb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 21:34:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4D594BA2.5080905@candelatech.com>
-References: <1296862224-19489-1-git-send-email-greearb@candelatech.com>
-	<1297685561.3785.36.camel@jlt3.sipsolutions.net>
-	<4D594BA2.5080905@candelatech.com>
-Date: Mon, 14 Feb 2011 09:06:26 -0800
-Message-ID: <AANLkTimnDRORFvJiOZNJA-BbhfU0AP1RXFPV31wJyU6Q@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Make some mlme timers module paramaters.
-From: Sam Leffler <sleffler@google.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1298390485.2575.6.camel@gnutoo-laptop>
+References: <1298390485.2575.6.camel@gnutoo-laptop>
+Date: Wed, 23 Feb 2011 11:04:47 +0530
+Message-ID: <AANLkTin0ixVQJA6B6Et1AUqdkhu1b+hv6Gxu_SQWEMzD@mail.gmail.com>
+Subject: Re: ath9k stopped queue bug
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 7:34 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 02/14/2011 04:12 AM, Johannes Berg wrote:
->>
->> On Fri, 2011-02-04 at 15:30 -0800, greearb@candelatech.com wrote:
->>>
->>> From: Ben Greear<greearb@candelatech.com>
->>>
->>> This allows users to tune the connection-loss algorithms
->>> to be more or less lenient.  In particular, larger
->>> null-func retries helps when using lots of virtual
->>> stations on a loaded network.
->>
->> I see this has been merged, but I really think it should be reverted. It
->> doesn't really fix anything, and it makes the behaviour less
->> predictable. Also, even on a loaded network the nullfunc frames should
->> be transmitted quickly as they go out on VO. I'm thinking the fact that
->> it doesn't will also affect other things -- like the bufferbloat
->> discussion -- and fixing the problem would be a much better idea.
+On Tue, Feb 22, 2011 at 9:31 PM, Denis 'GNUtoo' Carikli
+<GNUtoo@no-log.org> wrote:
+> Hi,
 >
-> The defaults stay the same, and allowing the values to be set a bit larger
-> lets 128 stations associate, where without this, they constantly fail the
-> null-func retries counter.
+> When I transfer large files at high speed(rsync to my x86 router,
+> locally, not trough the Internet) I get:
+> ping: sendmsg: No buffer space available
 >
-> Imagine 128 stations all trying to associate and auth WPA at the
-> same time, and start DHCP and some IPv6 auto-negotiation
-> as soon as they are up...  That is quite a lot of packets
-> for a bunch of timing-sensitive operations.
+> And I can't send anymore data.
 >
-> I know my particular use is pretty strange, but surely I'm not
-> the only one that would like a good way to stress-test APs.
+> /sys/kernel/debug/ieee80211/phy*/queues is
+> 00: 0x00000000/0
+> 01: 0x00000000/0
+> 02: 0x00000000/0
+> 03: 0x00000000/0
+> In normal conditions.
 >
-> I can also imagine that other users might like their system even more
-> trigger happy..perhaps that would speed up roaming in some cases.
-> Or users on very poor/congested networks, flakey APs, etc.
+> But when I can't send anymore data I've that:
+> 00: 0x00000000/0
+> 01: 0x00000000/0
+> 02: 0x00000001/0
+> 03: 0x00000000/0
+> or that:
+> 00: 0x00000000/0
+> 01: 0x00000000/0
+> 02: 0x00000001/333
+> 03: 0x00000000/0
 >
-> The default values seem to be chosen arbitrarily to work for most
-> users most of the time.  I think it adds way more benefit to allow
-> these easily changed than any harm that comes from giving users
-> the option.
+>
+> Here's my irc conversation in #linux-wireless on Freeenode about that
+> issue:
+>
+> Feb 22 16:28:38 <GNUtoo|laptop> hi,
+> Feb 22 16:29:23 <GNUtoo|laptop> when I rsync to my router at high speed
+> over wifi, huge amount of data, I've that:
+> Feb 22 16:29:24 <GNUtoo|laptop> ping: sendmsg: No buffer space available
+> Feb 22 16:29:27 <GNUtoo|laptop> and wifi breaks
+> Feb 22 16:29:30 <GNUtoo|laptop> I've to reconnect
+> Feb 22 16:29:40 <GNUtoo|laptop> should I try setting a lower MTU?
+> Feb 22 16:29:43 <GNUtoo|laptop> what should I try?
+> Feb 22 16:29:53 <GNUtoo|laptop> and why isn't there any more buffer
+> space?
+> Feb 22 16:31:57 <johill>        sounds like a queue management bug
+> Feb 22 16:32:06 <johill>        with packets stuck somewhere
+> Feb 22 16:32:09 <johill>        what driver?
+> Feb 22 16:34:04 *       an-t (~ant@srv1.gnpx.net) has joined #linux-wireless
+> Feb 22 16:34:42 <GNUtoo|laptop> ath9k
+> Feb 22 16:34:51 <GNUtoo|laptop> on 2.6.37-020637-generic
+> Feb 22 16:34:57 <GNUtoo|laptop> I think that's mainline
+> Feb 22 16:35:01 <GNUtoo|laptop> let me check
+> Feb 22 16:35:02 <johill>        hm, dunno
+> Feb 22 16:35:09 <johill>        there were some queue mgmt things there
+> Feb 22 16:35:12 <johill>        don't really konw
+> Feb 22 16:35:49 <Chainsaw>      GNUtoo|laptop: Probably useful to share your
+> driver DDoS on linux-wireless; some idea of how many files & what size.
+> Feb 22 16:36:10 <GNUtoo|laptop> basically what I do is that:
+> Feb 22 16:36:20 <GNUtoo|laptop> I use openembedded to cross-compile
+> files
+> Feb 22 16:36:25 <GNUtoo|laptop> and sync the result with my router
+> Feb 22 16:36:26 *       Blues-Man
+> (~bluesman@host137-190-dynamic.43-79-r.retail.telecomitalia.it) has
+> joined #linux-wireless
+> Feb 22 16:36:35 <GNUtoo|laptop> that is an x86 computer with ath9k and
+> hostapd
+> Feb 22 16:36:52 <GNUtoo|laptop>
+> cd /home/gnutoo/embedded/oe/oetmps/eee701/deploy/glibc
+> Feb 22 16:36:56 <GNUtoo|laptop> rsync -av -e "ssh -l gnutoo -p 222" *
+> router:/var/www/gnutoo.homelinux.org/openembedded/eee701
+> Feb 22 16:37:05 <GNUtoo|laptop> is the script I use to sync it
+> Feb 22 16:37:37 <johill>        I bet when this happens you never get a ping
+> pcket through
+> Feb 22 16:38:10 <johill>        and /sys/kernel/debug/ieee80211/phy*/queues is
+> non-zero
+> Feb 22 16:38:18 <johill>        the info from that file would be useful
+> Feb 22 16:38:37 <GNUtoo|laptop> ok I was pastebining the file sizes
+> Feb 22 16:38:41 <GNUtoo|laptop> as there are a lot of files....
+> Feb 22 16:39:06 <GNUtoo|laptop> ok I'll try to reproduce
+> Feb 22 16:39:13 <GNUtoo|laptop> tough that will disconnect me from irc
+> Feb 22 16:40:54 <johill>        I bet it'll be 0x0001/n
+> Feb 22 16:40:56 <johill>        n > 0
+> Feb 22 16:42:16 <GNUtoo|laptop> ping also increase during the huge
+> transfer
+> Feb 22 16:42:30 <johill>        that's "bufferbloat" but expected now
+> Feb 22 16:42:35 <GNUtoo|laptop> ok
+> Feb 22 16:42:49 <GNUtoo|laptop> I learned what bufferbloat was not so
+> long ago
+> Feb 22 16:44:27 *       Topic for #linux-wireless is: User-level discussions
+> about wireless LANs on Linux | compat-wireless-2.6 only available for
+> kernels >= 2.6.27, work is underway to enable older kernels now that we
+> don't use multiqueue on mac80211
+> Feb 22 16:44:27 *       Topic for #linux-wireless set by linville at Wed Jul
+> 8 21:06:20 2009
+> Feb 22 16:44:30 <GNUtoo|laptop> it starts with
+> Feb 22 16:44:32 <GNUtoo|laptop> 02: 0x00000001/0
+> Feb 22 16:44:41 <GNUtoo|laptop> and then increase to
+> Feb 22 16:44:47 <GNUtoo|laptop> 02: 0x00000001/333
+> Feb 22 16:44:50 <GNUtoo|laptop> the reset is 0
+> Feb 22 16:45:02 <johill>        yeah
+> Feb 22 16:45:06 <johill>        as expected
+> Feb 22 16:45:08 <GNUtoo|laptop> ok
+> Feb 22 16:45:12 <GNUtoo|laptop> what's that exactly?
+> Feb 22 16:45:19 <johill>        the reason why the queue is stopped
+> Feb 22 16:45:23 <johill>        and the number of packets in the queue
+> Feb 22 16:45:24 <GNUtoo|laptop> oh nice
+> Feb 22 16:45:32 <johill>        0x000 == not stopped
+> Feb 22 16:45:35 <GNUtoo|laptop> ok
+> Feb 22 16:45:39 <GNUtoo|laptop> and what's the reason?
+> Feb 22 16:45:41 <johill>         /0 = no packets
+> Feb 22 16:45:54 <johill>        BIT(0) == driver asked for queue to be stopped
+> Feb 22 16:46:03 <johill>        (IEEE80211_QUEUE_STOP_REASON_DRIVER)
+> Feb 22 16:46:08 <GNUtoo|laptop> ok
+> Feb 22 16:46:11 <johill>        (net/mac80211/ieee80211_i.h)
+> Feb 22 16:46:15 <johill>        so driver's fault
+> Feb 22 16:46:28 <GNUtoo|laptop> dmesg shows nothing tough
+> Feb 22 16:46:37 <GNUtoo|laptop> only normal stuff
+> Feb 22 16:46:38 <johill>        yeah not surprising either
+> Feb 22 16:46:45 <GNUtoo|laptop> ah debugfs?
+> Feb 22 16:46:47 <johill>        queue start/stop happens often enough, no
+> logging for it
+> Feb 22 16:46:50 <GNUtoo|laptop> or something like that should be used
+> Feb 22 16:46:50 <GNUtoo|laptop> ok
+> Feb 22 16:49:45 <GNUtoo|laptop> what should I do now?
+> Feb 22 16:50:10 <johill>        report a bug on ath9k
+>
+please try with debug messages enabled sudo modprobe ath9k debug=0x2
+(or)
+sudo modprobe debug=0x82 (this produces lots of log)
 
-We default MAX_NULLFUNC_TRIES to 1.  By the time you disconnect you've
-missed at least 7 consecutive beacon frames (nominally 700 TU) and the
-1 NullData frame (nominal 7 tx attempts).  I have _rarely_ seen trying
-multiple times succeed.  Increasing tries requires spacing them out
-which significantly increases roaming time which is user visible.
-Also in most cases the event generated may cause wpa_supplicant to
-re-join the same AP after a scan (depends on whether your supplicant
-code blacklist's the ap and/or you have other options).
-
-Thus having the module parameter means I can set my desired parameters
-w/o having local mods.
-
--Sam
+> Denis.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
