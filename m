@@ -1,94 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51429 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754550Ab1BVWW6 (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:42670 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755683Ab1BWDkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:22:58 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so264086wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:57 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 6/8] wl12xx: AP mode - fix bug in cleanup of wl1271_op_sta_add()
-Date: Wed, 23 Feb 2011 00:22:29 +0200
-Message-Id: <1298413351-15462-7-git-send-email-arik@wizery.com>
-In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
-References: <1298413351-15462-1-git-send-email-arik@wizery.com>
+	Tue, 22 Feb 2011 22:40:06 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Greg KH <greg@kroah.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Tue, 22 Feb 2011 19:37:07 -0800
+Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
+Message-ID: <477F20668A386D41ADCC57781B1F704307F50C44E4@SC-VEXCH1.marvell.com>
+References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+ <1291380780.3499.119.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291380780.3499.119.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove an active hlid when chip wakeup fails. In addition rename the
-involved functions.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9c44150..cb9baa0 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2617,7 +2617,7 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
- 
--static int wl1271_allocate_hlid(struct wl1271 *wl,
-+static int wl1271_allocate_sta(struct wl1271 *wl,
- 			     struct ieee80211_sta *sta,
- 			     u8 *hlid)
- {
-@@ -2638,10 +2638,13 @@ static int wl1271_allocate_hlid(struct wl1271 *wl,
- 	return 0;
- }
- 
--static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
-+static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
- {
- 	int id = hlid - WL1271_AP_STA_HLID_START;
- 
-+	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
-+		return;
-+
- 	__clear_bit(id, wl->ap_hlid_map);
- 	wl1271_tx_reset_link_queues(wl, hlid);
- }
-@@ -2664,13 +2667,13 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
- 
--	ret = wl1271_allocate_hlid(wl, sta, &hlid);
-+	ret = wl1271_allocate_sta(wl, sta, &hlid);
- 	if (ret < 0)
- 		goto out;
- 
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
--		goto out;
-+		goto out_free_sta;
- 
- 	ret = wl1271_cmd_add_sta(wl, sta, hlid);
- 	if (ret < 0)
-@@ -2679,6 +2682,10 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
-+out_free_sta:
-+	if (ret < 0)
-+		wl1271_free_sta(wl, hlid);
-+
- out:
- 	mutex_unlock(&wl->mutex);
- 	return ret;
-@@ -2715,7 +2722,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_sleep;
- 
--	wl1271_free_hlid(wl, wl_sta->hlid);
-+	wl1271_free_sta(wl, wl_sta->hlid);
- 
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
--- 
-1.7.1
-
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
+ZW50OiBGcmlkYXksIERlY2VtYmVyIDAzLCAyMDEwIDQ6NTMgQU0NCj4gVG86IEJpbmcgWmhhbw0K
+PiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZpbGxlOyBE
+YW4gV2lsbGlhbXM7IERhdmlkIFdvb2Rob3VzZTsgQW1pdGt1bWFyIEthcndhcjsNCj4gS2lyYW4g
+RGl2ZWthcjsgR3JlZyBLSDsgRGF2aWQgUy4gTWlsbGVyDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
+MDAvMzFdIHdpcmVsZXNzOiBNYXJ2ZWxsIG13aWZpZXggZHJpdmVyIGZvciBTRDg3ODcNCj4gDQo+
+IE9uIFdlZCwgMjAxMC0xMi0wMSBhdCAxNzozMSAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+
+IFRoZSBtd2lmaWV4IGRyaXZlciBmb3IgTWFydmVsbCA4MDIuMTFuIGNoaXBzZXQgU0Q4Nzg3IGlz
+IGF2YWlsYWJsZSBhdA0KPiA+IGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9td2lmaWV4LmdpdC4gQm90
+aCBTVEEgbW9kZSBhbmQgTW9iaWxlIGhvdHNwb3QNCj4gPiBtb2RlIGFyZSBzdXBwb3J0ZWQuDQo+
+ID4NCj4gPiBnaXQgcHVsbCBnaXQ6Ly9naXQubWFydmVsbC5jb20vbXdpZmlleC5naXQgbWFzdGVy
+DQo+IA0KPiBQbGVhc2UgcG9zdCBwYXRjaGVzLCBub3QgZ2l0IHRyZWVzLg0KPiANCj4gQnV0IHNp
+bmNlIEpvaG4gaXMgaG9sZGluZyB1cyBzb21ld2hhdCBob3N0YWdlIGJ5IHNheWluZyBoZSdsbCBj
+b25zaWRlcg0KPiBtZXJnaW5nIHRoaXMsIGFuZCBhcHBhcmVudGx5IHlvdSBkb24ndCBoYXZlIHRo
+ZSB0YXN0ZSB0byBldmVuIGNvbnNpZGVyDQo+IHRoZSByZXZpZXcgY29tbWVudHMgeW91IGhhdmUg
+Z290dGVuIGJlZm9yZSwgSSB0b29rIGEgYnJpZWYgbG9vayB0bw0KPiAqcHJvdmUqIHRoYXQgdGhp
+cyBkcml2ZXIgY2Fubm90IGJlIG1lcmdlZCBhcyBpcy4NCj4gDQo+IA0KPiBIZXJlJ3MgYSBzaG9y
+dCBsaXN0IG9mIHRoaW5ncyB0byBmaXg6DQo+ICAqIF9fcGFja2VkDQo+ICAqIEVOVEVSL0xFQVZF
+IG11c3QgZ28NCj4gICogZW51bSBtd2lmaWV4X3N0YXR1cyBtdXN0IGdvIC0tIHVzZSBlcnJubw0K
+PiAgKiBwcml2YXRlIGlvY3RscyB3ZXJlIGdyYW5kZmF0aGVyZWQgaW4sDQo+ICAgIGJ1dCBhcmVu
+J3QgYWxsb3dlZCBpbiBuZXcgZHJpdmVycw0KPiAgKiBkbyB5b3UgcmVhbGx5IG5lZWQgeW91ciBv
+d24gY3J5cHRvIG1vZGUgZGVmaW5pdGlvbnM/DQo+ICAqIHlvdXIgcHNldWRvLWtlcm5lbGRvYyBj
+b21tZW50cyAiLyoqIiBkb24ndCBjb25mb3JtDQo+ICAgIHRvIHRoZSByaWdodCBmb3JtYXQNCj4g
+ICogcHJpdmF0ZSBsb2NraW5nIHdyYXBwZXJzIGFyZSBub3QgYWxsb3dlZCAobXdpZmlleF9zcGlu
+X2xvY2sgZXRjKQ0KPiAgKiBwcml2YXRlIGRlYnVnZ2luZyBsaWtlIFBSSU5UTSBpcyBub3QgYWxs
+b3dlZA0KDQpJcyBpdCBPSyBpZiBJIGNoYW5nZSBQUklOVE0gKGRlYnVnZ2luZyBwcmludGspIHRv
+IHNvbWV0aGluZyBsaWtlIElXTF9ERUJVR18/DQoNCjxkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
+aWZpL2l3bC1kZWJ1Zy5oPg0KLi4uLi4uDQojZGVmaW5lIElXTF9ERUJVR19JTkZPKHAsIGYsIGEu
+Li4pICAgICAgSVdMX0RFQlVHKHAsIElXTF9ETF9JTkZPLCBmLCAjIyBhKQ0KI2RlZmluZSBJV0xf
+REVCVUdfTUFDODAyMTEocCwgZiwgYS4uLikgIElXTF9ERUJVRyhwLCBJV0xfRExfTUFDODAyMTEs
+IGYsICMjIGEpDQojZGVmaW5lIElXTF9ERUJVR19NQUNEVU1QKHAsIGYsIGEuLi4pICAgSVdMX0RF
+QlVHKHAsIElXTF9ETF9NQUNEVU1QLCBmLCAjIyBhKQ0KI2RlZmluZSBJV0xfREVCVUdfVEVNUChw
+LCBmLCBhLi4uKSAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfVEVNUCwgZiwgIyMgYSkNCiNkZWZp
+bmUgSVdMX0RFQlVHX1NDQU4ocCwgZiwgYS4uLikgICAgICBJV0xfREVCVUcocCwgSVdMX0RMX1ND
+QU4sIGYsICMjIGEpDQojZGVmaW5lIElXTF9ERUJVR19SWChwLCBmLCBhLi4uKSAgICAgICAgSVdM
+X0RFQlVHKHAsIElXTF9ETF9SWCwgZiwgIyMgYSkNCiNkZWZpbmUgSVdMX0RFQlVHX1RYKHAsIGYs
+IGEuLi4pICAgICAgICBJV0xfREVCVUcocCwgSVdMX0RMX1RYLCBmLCAjIyBhKQ0KI2RlZmluZSBJ
+V0xfREVCVUdfSVNSKHAsIGYsIGEuLi4pICAgICAgIElXTF9ERUJVRyhwLCBJV0xfRExfSVNSLCBm
+LCAjIyBhKQ0KLi4uLi4uDQoNCk9yLCB5b3Ugd2FudCBtZSB0byByZW1vdmUgUFJJTlRNIHN0dWZm
+IGNvbXBsZXRlbHk/DQoNClRoYW5rcywNCg0KQmluZw0KDQo+ICAqIHRoZXJlJ3MgZXhhY3RseSBv
+bmUgc3BhY2UgYWZ0ZXIgIiNpbmNsdWRlIg0KPiAgKiBzdHJ1Y3QgZXRoXzgwM19oZHI/IGFyZSB5
+b3Ugc2VyaW91cz8gYW5kIHlvdSBldmVuIGhhdmUNCj4gICAgaXQgdHdpY2U6IHN0cnVjdCBldGhf
+SUlfaGRyDQo+ICAqIGVudW0gaWVlZV90eXBlc19lbGVtZW50aWRfZSBtdXN0IGdvDQo+ICAqIHNp
+bWlsYXJseSwgYWxtb3N0IGFsbCBvZiBpZWVlLmgNCj4gICogbm8gYml0ZmllbGRzIGFuZCBCSUdf
+RU5ESUFOX0JJVEZJRUxEIGFsbG93ZWQNCj4gICogbm90IGFsbCBhbGxvY2F0aW9ucyBhcmUgR0ZQ
+X0FUT01JQywgdXNlIHdpc2VseSBhbmQNCj4gICAgR0ZQX0tFUk5FTCBpbiBtb3N0IHBsYWNlcw0K
+PiAgKiBhIHdpZmkgZHJpdmVyIHRoYXQncyBkb2luZyBzdHVmZiB3aXRoIHNvY2tldHMgKG5sX3Nr
+LCBza19zb2NrZXQpPw0KPiAgICBleHBsYWluLCBpbiBNVUNIIGRldGFpbCAob3IgcHJlZmVyYWJs
+eSBqdXN0IGdldCByaWQgb2YgaXQpDQo+ICAqIHRoZXJlJ3MgZGVidWdmc19yZW1vdmVfcmVjdXJz
+aXZlDQo+ICAqIHNvbWUgZnVuY3Rpb25zIGxpa2UgbXdpZmlleF9pc19uZXR3b3JrX2NvbXBhdGli
+bGUgbmVlZCB0byBiZSBicm9rZW4NCj4gICAgaW50byBzbWFsbGVyIG9uZXMgdG8gYXZvaWQgdGhl
+IGNyYXAgaW5kZW50YXRpb24gdGhleSBoYXZlDQo+ICAqIG13aWZpZXhfdWFwX2FwX2NmZ19wYXJz
+ZV9kYXRhLiBNdXN0IEkgc2F5IG1vcmU/DQo+ICAqIHN0cnVjdCBtd2lmaWV4X2J1ZmZlciAqbWJ1
+Zj8gSXMgdGhpcyBhIEJTRCBkcml2ZXI/IFdlIGhhdmUgU0tCcywgZ2V0DQo+ICAgIHJpZCBvZiB0
+aGlzLiAoT2ggYW5kIHNrYnMgaGF2ZSBhIENCKQ0KPiAgKiBtd2lmaWV4X2luaXRfbG9jay9td2lm
+aWV4X2ZyZWVfbG9jayAtLSBJJ2QgbGF1Z2ggaW4geW91ciBnZW5lcmFsDQo+ICAgIGRpcmVjdGlv
+biBpZiBpdCB3YXNuJ3Qgc28gc2FkDQo+ICAqIG13aWZpZXhfdXRpbF9wZWVrX2xpc3QgZXRjLjog
+bGVhcm4gYWJvdXQgbGlzdC5oDQo+ICAqIG13aWZpZXhfaW5pdF90aW1lciAtLSBzdGlsbCBzYWQs
+IGR5bmFtaWNhbGx5IGFsbG9jYXRpbmcgdGltZXJzPyBqdXN0DQo+ICAgIGxpa2Ugc3BpbmxvY2tz
+LCB0aGV5IGNhbiBiZSBlbWJlZGRlZCBhbmQgbWFrZSB5b3VyIGNvZGUgc2ltcGxlcg0KPiANCj4g
+T2sgZ29vZCBlbm91Z2gsIHRoYXQgc2hvdWxkIGtlZXAgeW91IGJ1c3kgZm9yIGEgd2hpbGUuLi4N
+Cj4gDQo+IFRoZSBhYm92ZSBpcyBtaWdodCBiZSBhIGdvb2QgYmFzaXMgZm9yIGEgVE9ETyBmaWxl
+IGZvciBzdGFnaW5nLi4uDQo+IA0KPiBqb2hhbm5lcw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3Jp
+YmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVs
+ZXNzIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
+Lm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
+am9yZG9tby1pbmZvLmh0bWwNCg==
