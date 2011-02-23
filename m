@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:37814 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695Ab1B1Sb5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 13:31:57 -0500
-Message-ID: <4D6BEA16.2060604@lwfinger.net>
-Date: Mon, 28 Feb 2011 12:31:50 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.neratec.ch ([80.75.119.105]:37252 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751131Ab1BWKS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 05:18:57 -0500
+Date: Wed, 23 Feb 2011 11:18:53 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: Nikolay Ledovskikh <nledovskikh@gmail.com>
+Cc: linux-wireless@vger.kernel.org, nbd <nbd@openwrt.org>
+Message-ID: <13107431.38.1298456333929.JavaMail.wlan@500181>
+In-Reply-To: <AANLkTimP1r1A6nzcfh7kP=Hmcq9Cgha5Du28hE3zOs0x@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: Use mips generic dma-mapping functions to avoid
+ seqfault on AHB chips
 MIME-Version: 1.0
-To: Alessio Igor Bogani <abogani@kernel.org>,
-	John Linville <linville@tuxdriver.com>
-CC: Dan Carpenter <error27@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Bird <tim.bird@am.sony.com>
-Subject: Re: [PATCH] rtlwifi: fix places where uninitialized data is used
-References: <20110228003734.GA9075@bicker> <1298880715-4286-1-git-send-email-abogani@kernel.org>
-In-Reply-To: <1298880715-4286-1-git-send-email-abogani@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/2011 02:11 AM, Alessio Igor Bogani wrote:
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘rtl92ce_rx_query_desc’:
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:255:5: warning: ‘rf_rx_num’ may be used uninitialized in this function
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:257:12: warning: ‘total_rssi’ may be used uninitialized in this function
-> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:466:6: warning: ‘weighting’ may be used uninitialized in this function
->
-> This work was supported by a hardware donation from the CE Linux Forum.
->
-> Signed-off-by: Alessio Igor Bogani<abogani@kernel.org>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    6 +++---
->   1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-> index bf5852f..593eb8e 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-> @@ -252,9 +252,9 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	struct phy_sts_cck_8192s_t *cck_buf;
->   	s8 rx_pwr_all, rx_pwr[4];
-> -	u8 rf_rx_num, evm, pwdb_all;
-> +	u8 evm, pwdb_all, rf_rx_num = 0;
->   	u8 i, max_spatial_stream;
-> -	u32 rssi, total_rssi;
-> +	u32 rssi, total_rssi = 0;
->   	bool is_cck_rate;
->
->   	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
-> @@ -463,7 +463,7 @@ static void _rtl92ce_update_rxsignalstatistics(struct ieee80211_hw *hw,
->   					       struct rtl_stats *pstats)
->   {
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> -	int weighting;
-> +	int weighting = 0;
->
->   	if (rtlpriv->stats.recv_signal_power == 0)
->   		rtlpriv->stats.recv_signal_power = pstats->recvsignalpower;
+> So, the problems are in openwrt platform patches that should be
+> rewriten:
+> 1. Changes needed to avoid using code like "mem=res->start" without
+> ioremap.
+> 2. Changes needed to avoid using NULL in first argument of
+> dma_alloc_coherent and others.
+> 
+> Without these changes ahb patch won't get into the kernel and we'll be
+> lack of wisoc devices support?
+> Is there any chance for the patch to get into the kernel and what
+> should be done for it?
+I can confirm that the problem is not in the driver but in openwrt
+code. Dma mapping is assuming it has to shift address to pci bar
+no matter whether PCI is enabled or not.
+It seems to work on devices which don't have AHB arbitration
+and PCI core. Somehow dma doesn't mind that destination address
+with extra 0x2 at the beginning. Or at least it doesn't crash.
 
-ACK. Obviously gcc 4.5.1 has a bug and misses these, whereas 4.5.2 finds them.
+Also physical addresses need to be consistent in platform code which
+is not the case at the moment. I am working now on the patch to fix it 
+in openwrt.
 
-Larry
+To get ar231x platform into the kernel is another story but if it
+was done for ar71xx it just matter of some effort. Actually is 
+anyone working on it? It would allow to use platform code in the
+wireless driver without extensive patching.
+
+Cheers,
+Wojtek
+
+> 
+> (PS: Sorry for my english.)
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
