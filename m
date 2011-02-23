@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:45828 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932138Ab1BWNxu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60864 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753022Ab1BWLfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Feb 2011 08:53:50 -0500
-Received: by mail-wy0-f169.google.com with SMTP id 11so3158976wyi.28
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 05:53:49 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: avoid blocking while holding rcu lock on bss
- info change
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1297545860-26313-1-git-send-email-arik@wizery.com>
-References: <1297545860-26313-1-git-send-email-arik@wizery.com>
+	Wed, 23 Feb 2011 06:35:15 -0500
+Subject: IBSS merge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	Bruno Randolf <br1@einfach.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Feb 2011 15:53:45 +0200
-Message-ID: <1298469225.2104.23.camel@pimenta>
+Date: Wed, 23 Feb 2011 12:35:13 +0100
+Message-ID: <1298460913.4122.2.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-02-12 at 23:24 +0200, Arik Nemtsov wrote:
-> Some blocking functions were called while holding the rcu lock for
-> accessing STA information. This can lead to a deadlock.
-> 
-> Save the required info beforehand and release the rcu without
-> blocking.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> --- 
+Hi,
 
-Applied, thank you!
+I'm confused about our IBSS merge code.
 
--- 
-Cheers,
-Luca.
+ieee80211_rx_bss_info:
+
+...
+        /* same BSSID */
+        if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0)
+                goto put_bss;
+...
+        /* give slow hardware some time to do the TSF sync */
+        if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
+                goto put_bss;
+...
+
+
+Both of this was added by Alina, but why did the patch adding the first
+part not remove the second part again? If we suddenly need to adopt a
+new BSSID due to higher TSF why wait for the HW to sync first?
+
+It seems the latter was a workaround for syncing over and over again
+when the HW hadn't caught up yet, but that doesn't seem worthwhile any
+more since we no longer re-sync with the same BSSID?
+
+johannes
 
