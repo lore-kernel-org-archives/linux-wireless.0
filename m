@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33146 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948Ab1BLRrI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48681 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753305Ab1BWVaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Feb 2011 12:47:08 -0500
-Received: by bwz15 with SMTP id 15so4228362bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Feb 2011 09:47:07 -0800 (PST)
-Date: Sat, 12 Feb 2011 20:47:00 +0300
-From: Stanislav Fomichev <kernel@fomichev.me>
-To: brudley@broadcom.com, gregkh@suse.de
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] brcm80211: fix warnings in wl_check_firmwares
-Message-ID: <20110212174700.GA2058@sdf-MacBook>
+	Wed, 23 Feb 2011 16:30:39 -0500
+Date: Wed, 23 Feb 2011 16:21:32 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH] ath9k: correct ath9k_hw_set_interrupts
+Message-ID: <20110223212132.GC2729@tuxdriver.com>
+References: <20110221140210.GA5996@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110221140210.GA5996@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use %zu instead of %d for size_t
+On Mon, Feb 21, 2011 at 03:02:41PM +0100, Stanislaw Gruszka wrote:
+> Commit 4df3071ebd92ef7115b409da64d0eb405d24a631 "ath9k_hw: optimize
+> interrupt mask changes", changed ath9k_hw_set_interrupts function to
+> enable interrupts regardless of function argument, what could possibly
+> be wrong. Correct that behaviour and check "ints" arguments before
+> enabling interrupts, also disable interrupts if ints do not have
+> ATH9K_INT_GLOBAL flag set.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Stanislav Fomichev <kernel@fomichev.me>
----
- drivers/staging/brcm80211/sys/wl_mac80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Should this be Cc: stable@kernel.org?
 
-diff --git a/drivers/staging/brcm80211/sys/wl_mac80211.c b/drivers/staging/brcm80211/sys/wl_mac80211.c
-index 5faa521..0c87baa 100644
---- a/drivers/staging/brcm80211/sys/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wl_mac80211.c
-@@ -1822,12 +1822,12 @@ int wl_check_firmwares(struct wl_info *wl)
- 			WL_ERROR("%s: invalid bin/hdr fw\n", __func__);
- 			rc = -EBADF;
- 		} else if (fw_hdr->size % sizeof(struct wl_fw_hdr)) {
--			WL_ERROR("%s: non integral fw hdr file size %d/%zu\n",
-+			WL_ERROR("%s: non integral fw hdr file size %zu/%zu\n",
- 				 __func__, fw_hdr->size,
- 				 sizeof(struct wl_fw_hdr));
- 			rc = -EBADF;
- 		} else if (fw->size < MIN_FW_SIZE || fw->size > MAX_FW_SIZE) {
--			WL_ERROR("%s: out of bounds fw file size %d\n",
-+			WL_ERROR("%s: out of bounds fw file size %zu\n",
- 				 __func__, fw->size);
- 			rc = -EBADF;
- 		} else {
 -- 
-1.7.1
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
