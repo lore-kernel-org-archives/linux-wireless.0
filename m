@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3771 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751583Ab1BRV4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Feb 2011 16:56:42 -0500
-Subject: Re: [PATCH 01/15] staging: ath6kl: Fixing a NULL pointer exception
-From: Joe Perches <joe@perches.com>
-To: Greg KH <greg@kroah.com>
-Cc: Vipin Mehta <vmehta@atheros.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-In-Reply-To: <20110218212938.GA21986@kroah.com>
-References: <1298063596-2096-1-git-send-email-vmehta@atheros.com>
-	 <20110218212938.GA21986@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Feb 2011 13:56:40 -0800
-Message-ID: <1298066200.7179.12.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43506 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754519Ab1BWQOh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 11:14:37 -0500
+Date: Wed, 23 Feb 2011 10:14:39 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: sfr@canb.auug.org.au, otavio@ossystems.com.br, w@1wt.eu,
+	george0505@realtek.com, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH V2 4/5] rtlwifi: rtl8192cu: Fix for udelay too large
+Message-ID: <4d65326f.0vNgH3uNBGHYMogT%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-02-18 at 13:29 -0800, Greg KH wrote:
-> On Fri, Feb 18, 2011 at 01:13:02PM -0800, Vipin Mehta wrote:
-> > The driver was dereferencing a NULL pointer because of the device instance
-> > being registered via the set_wiphy_dev() function. The function
-> > ar6000_avail_ev() was passing the argument as NULL instead of using the one
-> > returned by the MMC stack through the probe callback.
-> I've applied all of these, but note that some of them add whitespace
-> warnings.  In the future, I'll reject those that do this, please always
-> run your patches through scripts/checkpatch.pl to not have this happen.
+From: Willy Tarreau <w@1wt.eu>
+Date: Sun, 20 Feb 2011 11:43:36 +0100
+Subject: rtlwifi: Eliminate udelay calls with too large values
 
-Vipin,
+On ARM, compilation of rtlwifi/efuse.c fails with the message:
+ERROR: "__bad_udelay" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+On inspection, the faulty calls are in routine efuse_reset_loader(), a
+routine that is never used, and the faulty routine is deleted.
 
-A good test is to generate the patches using git format-patch
-then apply them to a new, separate branch using git am.
-Whitespace problems will cause rejects.
+Signed-off-by: Willy Tarreau <w@1wt.eu>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-You can use git am --whitespace=fix on each patch if necessary,
-then regenerate the git format-patch set from that new branch.
+ drivers/net/wireless/rtlwifi/efuse.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-cheers, Joe
-
+Index: wireless-testing/drivers/net/wireless/rtlwifi/efuse.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/efuse.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/efuse.c
+@@ -1169,21 +1169,3 @@ static u8 efuse_calculate_word_cnts(u8 w
+ 	return word_cnts;
+ }
+ 
+-void efuse_reset_loader(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u16 tmp_u2b;
+-
+-	tmp_u2b = rtl_read_word(rtlpriv, rtlpriv->cfg->maps[SYS_FUNC_EN]);
+-	rtl_write_word(rtlpriv, rtlpriv->cfg->maps[SYS_FUNC_EN],
+-		       (tmp_u2b & ~(BIT(12))));
+-	udelay(10000);
+-	rtl_write_word(rtlpriv, rtlpriv->cfg->maps[SYS_FUNC_EN],
+-		       (tmp_u2b | BIT(12)));
+-	udelay(10000);
+-}
+-
+-bool efuse_program_map(struct ieee80211_hw *hw, char *p_filename, u8 tabletype)
+-{
+-	return true;
+-}
+Index: wireless-testing/drivers/net/wireless/rtlwifi/efuse.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/efuse.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/efuse.h
+@@ -117,8 +117,5 @@ extern bool efuse_shadow_update_chk(stru
+ extern void rtl_efuse_shadow_map_update(struct ieee80211_hw *hw);
+ extern void efuse_force_write_vendor_Id(struct ieee80211_hw *hw);
+ extern void efuse_re_pg_section(struct ieee80211_hw *hw, u8 section_idx);
+-extern bool efuse_program_map(struct ieee80211_hw *hw,
+-			      char *p_filename, u8 tabletype);
+-extern void efuse_reset_loader(struct ieee80211_hw *hw);
+ 
+ #endif
