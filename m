@@ -1,84 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64021 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754853Ab1BDAGW convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932112Ab1BWIpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 19:06:22 -0500
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
-	<AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
-	<s5haaid3xos.wl%tiwai@suse.de>
-	<201102032009.17100.rjw@sisk.pl>
-	<AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
-	<AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
-Date: Fri, 4 Feb 2011 10:06:19 +1000
-Message-ID: <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-From: Dave Airlie <airlied@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Carlos Mafra <crmafra2@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 23 Feb 2011 03:45:50 -0500
+Subject: Re: Help about Intel Centrino Advanced-N 6205 wifi card
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jgq516@gmail.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1298444805-27178-1-git-send-email-jgq516@gmail.com>
+References: <1298444805-27178-1-git-send-email-jgq516@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Feb 2011 09:45:48 +0100
+Message-ID: <1298450748.3747.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 4, 2011 at 8:10 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Feb 3, 2011 at 1:56 PM, Carlos Mafra <crmafra2@gmail.com> wrote:
->>>
->>> I added https://bugzilla.kernel.org/show_bug.cgi?id=24982 to the list of
->>> post-2.6.36 regressions for further tracking.
->>
->> I also tested on 2.6.38-rc3+ now and the issue is not solved,
->> just like Takashi expected.
->
-> Hmm. That commit (bf9dc102e284) still reverts cleanly.
->
-> Keith, Dave, should we just revert it? It's definitely a regression,
-> and we do _not_ allow "fixes" to one thing that just causes a
-> regression to another.
->
-> Quite frankly, I think it's totally wrong to just blindly set DPMS
-> status to ON like that. It's as wrong as it was to leave it off, and
-> the regressions reported are basically mirror images of the exact same
-> bug that that commit tried to fix.
->
-> IOW, the commit message says:
->
->    When setting a new crtc configuration, force the DPMS state of all
->    connectors to ON. Otherwise, they'll be left at OFF and a future mode set
->    that disables the specified connector will not turn the connector off.
->
-> but setting it to ON doesn't actually _fix_ anything, because you just
-> get the exact same issue in reverse, ie you just get
->
->   .. and a future mode set  that ENables the specified connector will
->    not turn the connector ON.
+On Wed, 2011-02-23 at 15:06 +0800, jgq516@gmail.com wrote:
+> Hello all,
+> 
+> I have one Intel Centrino Advanced-N 6205 wifi card which need
+> firmware iwlwifi-6000g2a-4.ucode to support it, but in intel website
+> http://intellinuxwireless.org/?n=Downloads, only
+> iwlwifi-6000g2a-5.ucode firmware exists, where can I download the
+> official version 4 firmware? Thanks in advance!
 
-If we are setting a mode on a connector it automatically will end up
-in a DPMS on state,
-so this seemed correct from what I can see.
+There's no such thing.
 
-A future mode set shouldn't ever not turn the connector on, since
-modesetting is an implicit
-DPMS,
+> I also got iwlwifi-6000g2a-4.ucode from one website
 
-It sounds like something more subtle than that, though I'm happy to
-revert this for now, and let Keith
-think about it a bit more.
+I'm not aware of any such released version, so this must be a test build
+or similar.
 
-Dave.
+>  but maybe it has some problems, this firmware works well with kernel
+> 2.6.37-rc1,
+> but it seems can't compatible with 2.6.36, there are some "Microcode
+> SW error detected" when enable the card, pls see the following
+> logs, why this error exist with 2.6.36 kernel but disappeared in
+> 2.6.37-rc1 kernel? and unfortunately, I want to work with 2.6.36
+> kernel:(.
+
+Since this is a new device, support in 2.6.36 will likely not be
+possible. You might be able to modify iwl-6000.c to load a v5 firmware
+(set IWL6000G2_UCODE_API_MAX to 5) but we cannot support that and I
+don't know that the firmware API didn't change and you'll run into
+crashes again.
+
+I believe that the only supported way to get your device working is to
+start with 2.6.37 and the latest official -5 firmware image from the
+Intel download page.
+
+If you're really stuck on 2.6.36 for some reason, you can use
+compat-wireless to backport the driver.
+
+johannes
+
