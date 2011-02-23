@@ -1,201 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:37442 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411Ab1BLSns (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139Ab1BWIrV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Feb 2011 13:43:48 -0500
-Subject: [PATCH 3/4] zd1211rw: move async iowrite16v up to callers
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Sat, 12 Feb 2011 20:43:42 +0200
-Message-ID: <20110212184342.2062.34436.stgit@fate.lan>
-In-Reply-To: <20110212184254.2062.33710.stgit@fate.lan>
-References: <20110212184254.2062.33710.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 23 Feb 2011 03:47:21 -0500
+Subject: Re: [PATCH] mac80211: Fix a race on enabling power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
+References: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Feb 2011 09:47:17 +0100
+Message-ID: <1298450837.3747.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Writing beacon to device happen through multiple write command calls.
-zd_usb_iowrite16v uses synchronous urb call and with multiple write
-commands in row causes high CPU usage.
+On Wed, 2011-02-23 at 13:04 +0530, Vivek Natarajan wrote:
+> There is a race on sending a data frame before the tx completion
+> of nullfunc frame for enabling power save. As the data quickly
+> follows the nullfunc frame, the AP thinks that the station is out
+> of power save and continues to send the frames. Whereas in the
+> station, the nullfunc ack will be processed after the tx completion
+> of data frame and mac80211 goes to powersave. Thus the power
+> save state mismatch between the station and the AP causes some
+> data loss and some applications fail because of that. This patch
+> fixes this issue.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  net/mac80211/mlme.c   |   14 +++++++++++++-
+>  net/mac80211/status.c |    2 --
+>  2 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 7b3f9df..abb0116 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+>  		return;
+>  
+>  	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+> -	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
+> +	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
+> +		netif_tx_stop_all_queues(sdata->dev);
+> +		/*
+> +		 * Flush all the frames queued in the driver before
+> +		 * going to power save
+> +		 */
+> +		drv_flush(local, false);
+>  		ieee80211_send_nullfunc(local, sdata, 1);
+>  
+> +		/* Flush once again to get the tx status of nullfunc frame */
+> +		drv_flush(local, false);
+> +	}
+> +
+>  	if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+>  	      (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
+>  	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
+> @@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+>  		local->hw.conf.flags |= IEEE80211_CONF_PS;
+>  		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+>  	}
+> +
+> +	netif_tx_start_all_queues(sdata->dev);
+>  }
+>  
+>  void ieee80211_dynamic_ps_timer(unsigned long data)
+> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> index 010a559..8651851 100644
+> --- a/net/mac80211/status.c
+> +++ b/net/mac80211/status.c
+> @@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  		if (info->flags & IEEE80211_TX_STAT_ACK) {
+>  			local->ps_sdata->u.mgd.flags |=
+>  					IEEE80211_STA_NULLFUNC_ACKED;
+> -			ieee80211_queue_work(&local->hw,
+> -					&local->dynamic_ps_enable_work);
 
-Make asynchronous zd_usb_iowrite16v_async available outside zd_usb.c
-and use where possible.
+Is the patch still correct if you don't remove this? I realise it won't
+usually be necessary, but I think we don't flush the TX status tasklet
+on flush right now so in theory there could be a race there that this
+code would clean up after, right?
 
-This lower CPU usage from ~10% to ~2% on Intel Atom when running
-AP-mode with 100 TU beacon interval.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
- drivers/net/wireless/zd1211rw/zd_chip.c |   35 +++++++++++++++++++++++++------
- drivers/net/wireless/zd1211rw/zd_usb.c  |   11 ++++------
- drivers/net/wireless/zd1211rw/zd_usb.h  |    4 ++++
- 3 files changed, 37 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 54f68f1..a73a305 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -142,8 +142,9 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
- 	return 0;
- }
- 
--int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
--	           unsigned int count)
-+static int _zd_iowrite32v_async_locked(struct zd_chip *chip,
-+				       const struct zd_ioreq32 *ioreqs,
-+				       unsigned int count)
- {
- 	int i, j, r;
- 	struct zd_ioreq16 ioreqs16[USB_MAX_IOWRITE32_COUNT * 2];
-@@ -170,7 +171,7 @@ int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
- 		ioreqs16[j+1].addr  = ioreqs[i].addr;
- 	}
- 
--	r = zd_usb_iowrite16v(&chip->usb, ioreqs16, count16);
-+	r = zd_usb_iowrite16v_async(&chip->usb, ioreqs16, count16);
- #ifdef DEBUG
- 	if (r) {
- 		dev_dbg_f(zd_chip_dev(chip),
-@@ -180,6 +181,20 @@ int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
- 	return r;
- }
- 
-+int _zd_iowrite32v_locked(struct zd_chip *chip, const struct zd_ioreq32 *ioreqs,
-+			  unsigned int count)
-+{
-+	int r;
-+
-+	zd_usb_iowrite16v_async_start(&chip->usb);
-+	r = _zd_iowrite32v_async_locked(chip, ioreqs, count);
-+	if (r) {
-+		zd_usb_iowrite16v_async_end(&chip->usb, 0);
-+		return r;
-+	}
-+	return zd_usb_iowrite16v_async_end(&chip->usb, 50 /* ms */);
-+}
-+
- int zd_iowrite16a_locked(struct zd_chip *chip,
-                   const struct zd_ioreq16 *ioreqs, unsigned int count)
- {
-@@ -187,6 +202,8 @@ int zd_iowrite16a_locked(struct zd_chip *chip,
- 	unsigned int i, j, t, max;
- 
- 	ZD_ASSERT(mutex_is_locked(&chip->mutex));
-+	zd_usb_iowrite16v_async_start(&chip->usb);
-+
- 	for (i = 0; i < count; i += j + t) {
- 		t = 0;
- 		max = count-i;
-@@ -199,8 +216,9 @@ int zd_iowrite16a_locked(struct zd_chip *chip,
- 			}
- 		}
- 
--		r = zd_usb_iowrite16v(&chip->usb, &ioreqs[i], j);
-+		r = zd_usb_iowrite16v_async(&chip->usb, &ioreqs[i], j);
- 		if (r) {
-+			zd_usb_iowrite16v_async_end(&chip->usb, 0);
- 			dev_dbg_f(zd_chip_dev(chip),
- 				  "error zd_usb_iowrite16v. Error number %d\n",
- 				  r);
-@@ -208,7 +226,7 @@ int zd_iowrite16a_locked(struct zd_chip *chip,
- 		}
- 	}
- 
--	return 0;
-+	return zd_usb_iowrite16v_async_end(&chip->usb, 50 /* ms */);
- }
- 
- /* Writes a variable number of 32 bit registers. The functions will split
-@@ -221,6 +239,8 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
- 	int r;
- 	unsigned int i, j, t, max;
- 
-+	zd_usb_iowrite16v_async_start(&chip->usb);
-+
- 	for (i = 0; i < count; i += j + t) {
- 		t = 0;
- 		max = count-i;
-@@ -233,8 +253,9 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
- 			}
- 		}
- 
--		r = _zd_iowrite32v_locked(chip, &ioreqs[i], j);
-+		r = _zd_iowrite32v_async_locked(chip, &ioreqs[i], j);
- 		if (r) {
-+			zd_usb_iowrite16v_async_end(&chip->usb, 0);
- 			dev_dbg_f(zd_chip_dev(chip),
- 				"error _zd_iowrite32v_locked."
- 				" Error number %d\n", r);
-@@ -242,7 +263,7 @@ int zd_iowrite32a_locked(struct zd_chip *chip,
- 		}
- 	}
- 
--	return 0;
-+	return zd_usb_iowrite16v_async_end(&chip->usb, 50 /* ms */);
- }
- 
- int zd_ioread16(struct zd_chip *chip, zd_addr_t addr, u16 *value)
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index c98f6e7..81e8048 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -1674,7 +1674,7 @@ static void iowrite16v_urb_complete(struct urb *urb)
- 
- static int zd_submit_waiting_urb(struct zd_usb *usb, bool last)
- {
--	int r;
-+	int r = 0;
- 	struct urb *urb = usb->urb_async_waiting;
- 
- 	if (!urb)
-@@ -1700,7 +1700,7 @@ error:
- 	return r;
- }
- 
--static void zd_usb_iowrite16v_async_start(struct zd_usb *usb)
-+void zd_usb_iowrite16v_async_start(struct zd_usb *usb)
- {
- 	ZD_ASSERT(usb_anchor_empty(&usb->submitted_cmds));
- 	ZD_ASSERT(usb->urb_async_waiting == NULL);
-@@ -1713,7 +1713,7 @@ static void zd_usb_iowrite16v_async_start(struct zd_usb *usb)
- 	usb->urb_async_waiting = NULL;
- }
- 
--static int zd_usb_iowrite16v_async_end(struct zd_usb *usb, unsigned int timeout)
-+int zd_usb_iowrite16v_async_end(struct zd_usb *usb, unsigned int timeout)
- {
- 	int r;
- 
-@@ -1749,9 +1749,8 @@ error:
- 	return r;
- }
- 
--static int zd_usb_iowrite16v_async(struct zd_usb *usb,
--				   const struct zd_ioreq16 *ioreqs,
--				   unsigned int count)
-+int zd_usb_iowrite16v_async(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
-+			    unsigned int count)
- {
- 	int r;
- 	struct usb_device *udev;
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
-index 9291426..b3df2c8 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.h
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.h
-@@ -273,6 +273,10 @@ static inline int zd_usb_ioread16(struct zd_usb *usb, u16 *value,
- 	return zd_usb_ioread16v(usb, value, (const zd_addr_t *)&addr, 1);
- }
- 
-+void zd_usb_iowrite16v_async_start(struct zd_usb *usb);
-+int zd_usb_iowrite16v_async_end(struct zd_usb *usb, unsigned int timeout);
-+int zd_usb_iowrite16v_async(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
-+			    unsigned int count);
- int zd_usb_iowrite16v(struct zd_usb *usb, const struct zd_ioreq16 *ioreqs,
- 	              unsigned int count);
- 
+johannes
 
