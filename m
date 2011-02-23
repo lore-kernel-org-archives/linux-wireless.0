@@ -1,76 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:42496 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932430Ab1BCTJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 14:09:30 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Takashi Iwai <tiwai@suse.de>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-Date: Thu, 3 Feb 2011 20:09:16 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	"Carlos R. Mafra" <crmafra2@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com> <s5haaid3xos.wl%tiwai@suse.de>
-In-Reply-To: <s5haaid3xos.wl%tiwai@suse.de>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:55350 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932153Ab1BWJdY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 04:33:24 -0500
+Received: by wwi17 with SMTP id 17so5124828wwi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 01:33:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201102032009.17100.rjw@sisk.pl>
+In-Reply-To: <1298450837.3747.10.camel@jlt3.sipsolutions.net>
+References: <1298446472-19475-1-git-send-email-vnatarajan@atheros.com>
+	<1298450837.3747.10.camel@jlt3.sipsolutions.net>
+Date: Wed, 23 Feb 2011 15:03:23 +0530
+Message-ID: <AANLkTi==e0fMRJQPC-++Vgx9H2iO5ruVzMDoVNhbppOz@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Fix a race on enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vivek Natarajan <vnatarajan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 03, 2011, Takashi Iwai wrote:
-> At Thu, 3 Feb 2011 07:42:05 -0800,
-> Linus Torvalds wrote:
-> > 
-> > On Thu, Feb 3, 2011 at 3:23 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
-> > > On Thu  3.Feb'11 at  1:03:41 +0100, Rafael J. Wysocki wrote:
-> > >>
-> > >> If you know of any other unresolved post-2.6.36 regressions, please let us know
-> > >> either and we'll add them to the list.  Also, please let us know if any
-> > >> of the entries below are invalid.
-> > >
-> > > I'm sorry if I'm overlooking something, but as far as I can see the regression
-> > > reported here:
-> > >
-> > > https://lkml.org/lkml/2011/1/24/457
-> > >
-> > > is not in the list (update on that report: reverting that commit on top of
-> > > 2.6.37 fixes the issue).
-> > 
-> > Ok, added Keith and Dave to the cc, since they are the signers of that commit.
-> > 
-> > > After some time, I also ended up finding an earlier report in the kernel bugzilla
-> > > which I think is the same regression (it was bisected to the same commit):
-> > >
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=24982
-> > >
-> > > but I do not see it in the list either, even though it's marked as a
-> > > regression in the bugzilla.
-> > >
-> > > The issue was also present in 2.6.38-rc2 last time I tested.
-> > 
-> > Just to confirm, can you also check -rc3? I'm pretty sure nothing has
-> > changed, but there were a few drm patches after -rc2, so it's alsways
-> > good to double-check.
-> 
-> The problem I reported in the bugzilla above is still present in
-> 2.6.38-rc3.  I'm pretty sure that's the same issue as Carlos' case.
+On Wed, Feb 23, 2011 at 2:17 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-02-23 at 13:04 +0530, Vivek Natarajan wrote:
+>> There is a race on sending a data frame before the tx completion
+>> of nullfunc frame for enabling power save. As the data quickly
+>> follows the nullfunc frame, the AP thinks that the station is out
+>> of power save and continues to send the frames. Whereas in the
+>> station, the nullfunc ack will be processed after the tx completion
+>> of data frame and mac80211 goes to powersave. Thus the power
+>> save state mismatch between the station and the AP causes some
+>> data loss and some applications fail because of that. This patch
+>> fixes this issue.
+>>
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>> ---
+>>  net/mac80211/mlme.c   |   14 +++++++++++++-
+>>  net/mac80211/status.c |    2 --
+>>  2 files changed, 13 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 7b3f9df..abb0116 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -738,9 +738,19 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+>>               return;
+>>
+>>       if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+>> -         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
+>> +         (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
+>> +             netif_tx_stop_all_queues(sdata->dev);
+>> +             /*
+>> +              * Flush all the frames queued in the driver before
+>> +              * going to power save
+>> +              */
+>> +             drv_flush(local, false);
+>>               ieee80211_send_nullfunc(local, sdata, 1);
+>>
+>> +             /* Flush once again to get the tx status of nullfunc frame */
+>> +             drv_flush(local, false);
+>> +     }
+>> +
+>>       if (!((local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
+>>             (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)) ||
+>>           (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
+>> @@ -748,6 +758,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+>>               local->hw.conf.flags |= IEEE80211_CONF_PS;
+>>               ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+>>       }
+>> +
+>> +     netif_tx_start_all_queues(sdata->dev);
+>>  }
+>>
+>>  void ieee80211_dynamic_ps_timer(unsigned long data)
+>> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+>> index 010a559..8651851 100644
+>> --- a/net/mac80211/status.c
+>> +++ b/net/mac80211/status.c
+>> @@ -318,8 +318,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+>>               if (info->flags & IEEE80211_TX_STAT_ACK) {
+>>                       local->ps_sdata->u.mgd.flags |=
+>>                                       IEEE80211_STA_NULLFUNC_ACKED;
+>> -                     ieee80211_queue_work(&local->hw,
+>> -                                     &local->dynamic_ps_enable_work);
+>
+> Is the patch still correct if you don't remove this? I realise it won't
+> usually be necessary, but I think we don't flush the TX status tasklet
+> on flush right now so in theory there could be a race there that this
+> code would clean up after, right?
 
-I added https://bugzilla.kernel.org/show_bug.cgi?id=24982 to the list of
-post-2.6.36 regressions for further tracking.
+If this is not removed, dynamic_ps_enable work would be queued once
+again. And if a new frame is transmitted before this work is executed,
+mac80211 tries to go to PS immediately in this work instead of
+actually waiting for the dynamic_ps_timeout.
 
-Thanks,
-Rafael
+Vivek.
