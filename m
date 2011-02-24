@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:41635 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739Ab1BBFGi (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:35005 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755588Ab1BXQBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 00:06:38 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 3/8]drivers:net:ipw2100.c change a typo comamnd to command
-Date: Tue,  1 Feb 2011 21:06:21 -0800
-Message-Id: <1296623181-5243-1-git-send-email-justinmattock@gmail.com>
+	Thu, 24 Feb 2011 11:01:39 -0500
+Received: by qwd7 with SMTP id 7so531606qwd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 08:01:39 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1298563114.4251.3.camel@jlt3.sipsolutions.net>
+References: <1298554926.4775.4.camel@jlt3.sipsolutions.net>
+	<AANLkTi=sRXPy8tmc4QYDQZfC-CqhGZpKpNeOR6b+OhhQ@mail.gmail.com>
+	<1298563114.4251.3.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Feb 2011 17:01:38 +0100
+Message-ID: <AANLkTimaFrGObYC2x-XRo4waQKocLjZ34QYWDzLknAi7@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: make tx() operation return void
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo comamnd to command.
+On Thu, Feb 24, 2011 at 4:58 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-02-24 at 16:56 +0100, Sedat Dilek wrote:
+>> On Thu, Feb 24, 2011 at 2:42 PM, Johannes Berg
+>
+>> Will this patch go into 2.6.39?
+>> I have modified it as a v2 to fit latest linux-next ("apply-tested").
+>
+> Presumably. I'd based it on wireless-testing, but why did you use
+> linux-next rather than wireless-next? What's the difference anyway?
+>
+> johannes
+>
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+IIRC current linux-next and wireless-next don't differ, so it doesn't
+matter :-).
+I have removed only the drivers/staging/brcm80211/sys/wl_mac80211.c
+part as it does not exist in -next.
 
----
- drivers/net/wireless/ipw2x00/ipw2100.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 61915f3..da60fae 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1397,7 +1397,7 @@ static int ipw2100_power_cycle_adapter(struct ipw2100_priv *priv)
- }
- 
- /*
-- * Send the CARD_DISABLE_PHY_OFF comamnd to the card to disable it
-+ * Send the CARD_DISABLE_PHY_OFF command to the card to disable it
-  *
-  * After disabling, if the card was associated, a STATUS_ASSN_LOST will be sent.
-  *
--- 
-1.6.5.GIT
-
+- Sedat -
