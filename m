@@ -1,132 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36771 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893Ab1BJP0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Feb 2011 10:26:52 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] compat-wireless: make patches apply again
-Date: Thu, 10 Feb 2011 16:26:27 +0100
-Message-Id: <1297351590-24019-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
-References: <1297351590-24019-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:39749 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834Ab1BXAwP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Feb 2011 19:52:15 -0500
+Received: by yxs7 with SMTP id 7so21611yxs.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Feb 2011 16:52:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikq2XA9c9FUQJ3cv7xjL69J=tHxLdwj8fiNnmhN@mail.gmail.com>
+References: <4D5DA039.9010907@gmail.com>
+	<AANLkTikq2XA9c9FUQJ3cv7xjL69J=tHxLdwj8fiNnmhN@mail.gmail.com>
+Date: Thu, 24 Feb 2011 00:52:14 +0000
+Message-ID: <AANLkTikkv0QbzoHv_Z8cdDp7g67oG57tN7QaZv8NH4Na@mail.gmail.com>
+Subject: Re: Google Summer of Code 2011 - Project ideas page for the Linux
+ Foundation online
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Till Kamppeter <till.kamppeter@gmail.com>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	Lars Uebernickel <larsuebernickel@gmx.de>,
+	peter sikking <peter@mmiworks.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 18, 2011 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Feb 17, 2011 at 2:24 PM, Till Kamppeter
+> <till.kamppeter@gmail.com> wrote:
+>> Hi,
+>>
+>> I have set up a page for project ideas for the Linux Foundation's
+>> participation in the Google Summer of Code 2011:
+>>
+>> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2011
+>>
+>> Please add your ideas to the sub-page of your work group. If you have
+>> problems mail me with your project idea.
+>
+> For 802.11 you can dump your ideas here:
+>
+> http://wireless.kernel.org/en/developers/GSoC/2011/
+>
+>  Luis
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/16-bluetooth.patch               |   32 +++++++++++++++---------------
- patches/31-backport-sk_add_backlog.patch |    6 ++--
- patches/35-fix-makefile-includes.patch   |   14 ++++++------
- 3 files changed, 26 insertions(+), 26 deletions(-)
+Seeing as a few of the mac80211-based wireless drivers (for some of
+the more dumb/basic/cheap devices) has gained access-point(AP)-mode
+support code in the kernel recently in the last few months, it would
+probably be appropriate to add (if it isn't already there) or enhance
+access-point-mode support in some of the user-land tools like
+NetworkManager, nm-applet, or wireless assistant? I think hostapd
+doesn't care what type of drivers they are, except they need to claim
+to support AP mode, so I think hostapd is okay... but of course there
+are always the odd user-friendliness in various places that can do
+with a bit of more work about "setting up a network service", e.g.
+say, make it easier and more user-friendly to setting a bridge between
+wireless client and wired connectivity. This involves configuring
+hostapd, iptables for ip masquerading/network address translation, and
+possibly a few other things.
 
-diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
-index c94528a..d54e517 100644
---- a/patches/16-bluetooth.patch
-+++ b/patches/16-bluetooth.patch
-@@ -547,9 +547,21 @@ here still, but for now we keep this here.
-  {
-  	struct sock *sk;
-  
----- a/net/bluetooth/l2cap.c
--+++ b/net/bluetooth/l2cap.c
--@@ -982,8 +982,12 @@ static struct sock *l2cap_sock_alloc(str
-+--- a/net/bluetooth/l2cap_sock.c
-++++ b/net/bluetooth/l2cap_sock.c
-+@@ -520,7 +520,11 @@ static int l2cap_sock_getsockopt(struct
-+ 	return err;
-+ }
-+ 
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
-+ static int l2cap_sock_setsockopt_old(struct socket *sock, int optname, char __user *optval, unsigned int optlen)
-++#else
-++static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, char __user *optval, int optlen)
-++#endif
-+ {
-+ 	struct sock *sk = sock->sk;
-+ 	struct l2cap_options opts;
-+@@ -1067,8 +1071,12 @@ struct sock *l2cap_sock_alloc(struct net
-  	return sk;
-  }
-  
-@@ -562,7 +574,7 @@ here still, but for now we keep this here.
-  {
-  	struct sock *sk;
-  
--@@ -995,7 +999,11 @@ static int l2cap_sock_create(struct net
-+@@ -1080,7 +1088,11 @@ static int l2cap_sock_create(struct net
-  			sock->type != SOCK_DGRAM && sock->type != SOCK_RAW)
-  		return -ESOCKTNOSUPPORT;
-  
-@@ -574,15 +586,3 @@ here still, but for now we keep this here.
-  		return -EPERM;
-  
-  	sock->ops = &l2cap_sock_ops;
--@@ -2043,7 +2051,11 @@ static int l2cap_sock_setsockopt_old(str
-- 	return err;
-- }
-- 
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
-- static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, char __user *optval, unsigned int optlen)
--+#else
--+static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, char __user *optval, int optlen)
--+#endif
-- {
-- 	struct sock *sk = sock->sk;
-- 	struct bt_security sec;
-diff --git a/patches/31-backport-sk_add_backlog.patch b/patches/31-backport-sk_add_backlog.patch
-index 704c7c6..916d31f 100644
---- a/patches/31-backport-sk_add_backlog.patch
-+++ b/patches/31-backport-sk_add_backlog.patch
-@@ -7,9 +7,9 @@ limitted caller via a3a858ff. The older kernels don't have a
- size and as such always are successfull when adding to the
- backlog.
- 
----- a/net/bluetooth/l2cap.c
--+++ b/net/bluetooth/l2cap.c
--@@ -4449,8 +4449,12 @@ static inline int l2cap_data_channel(str
-+--- a/net/bluetooth/l2cap_core.c
-++++ b/net/bluetooth/l2cap_core.c
-+@@ -3368,8 +3368,12 @@ static inline int l2cap_data_channel(str
-  		if (!sock_owned_by_user(sk)) {
-  			l2cap_ertm_data_rcv(sk, skb);
-  		} else {
-diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
-index 2142da2..ea5b41d 100644
---- a/patches/35-fix-makefile-includes.patch
-+++ b/patches/35-fix-makefile-includes.patch
-@@ -20,11 +20,11 @@ path the make process will search in the kernel tree for the headers.
- +ccflags-y += -I$(obj)/..
- --- a/drivers/staging/brcm80211/brcmfmac/Makefile
- +++ b/drivers/staging/brcm80211/brcmfmac/Makefile
--@@ -32,9 +32,9 @@ ccflags-y :=			\
-- 	-DPKT_FILTER_SUPPORT	\
-- 	-DSHOW_EVENTS		\
-- 	-DTOE			\
---	-Idrivers/staging/brcm80211/brcmfmac		\
-+@@ -35,9 +35,9 @@ ccflags-y :=			\
-+ ccflags-$(CONFIG_BRCMDBG)	+= -DDHD_DEBUG
-+ 
-+ ccflags-y += \
-+-	-Idrivers/staging/brcm80211/brcmfmac	\
- -	-Idrivers/staging/brcm80211/include		\
- -	-Idrivers/staging/brcm80211/util
- +	-I$(obj)		\
-@@ -35,9 +35,9 @@ path the make process will search in the kernel tree for the headers.
-  	wl_cfg80211.o \
- --- a/drivers/staging/brcm80211/brcmsmac/Makefile
- +++ b/drivers/staging/brcm80211/brcmsmac/Makefile
--@@ -24,10 +24,10 @@ ccflags-y :=					\
-+@@ -23,10 +23,10 @@ ccflags-y :=				\
-+ 	-DWL11N					\
-  	-DDBAND					\
-- 	-DBCMDMA32				\
-  	-DBCMNVRAMR				\
- -	-Idrivers/staging/brcm80211/brcmsmac \
- -	-Idrivers/staging/brcm80211/brcmsmac/phy \
--- 
-1.7.1
+Hin-Tak
 
+P.S. Till: please feel free to recycle past unfinished ideas and sign
+me up as possible mentors of relevant printer-stuff projects
