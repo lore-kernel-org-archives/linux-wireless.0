@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2472 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755249Ab1BOWhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 17:37:52 -0500
-Message-ID: <4D5B0034.3090303@broadcom.com>
-Date: Tue, 15 Feb 2011 14:37:40 -0800
-From: "Henry Ptasinski" <henryp@broadcom.com>
+Received: from web161201.mail.bf1.yahoo.com ([98.139.210.128]:33091 "HELO
+	web161201.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756215Ab1BXOuO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 09:50:14 -0500
+Message-ID: <853861.85701.qm@web161201.mail.bf1.yahoo.com>
+References: <loom.20110224T145652-996@post.gmane.org> <1298557108.4775.12.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Feb 2011 06:43:33 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: AW: IBSS and 802.11i (RSN) with mac80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1298557108.4775.12.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: kernel@fomichev.me, "John W. Linville" <linville@tuxdriver.com>,
-	"Greg Korah-Hartman" <gregkh@suse.de>
-cc: devel@linuxdriverproject.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>
-Subject: Re: [PATCH v2 1/4] brcm80211: fix compile issue
-References: <1297721111-20606-1-git-send-email-kernel@fomichev.me>
- <7A94256FD72B884D9E7C55586C3CBCEE13CDA25D88@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110215221200.GA2087@sdf-MacBook>
-In-Reply-To: <20110215221200.GA2087@sdf-MacBook>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2011 02:12 PM, Stanislav Fomichev wrote:
-> Commit 59eb21a65047 "cfg80211: Extend channel to frequency mapping for 802.11j"
-> changed the definition of the ieee80211_channel_to_frequency; so fix its
-> usage in brcmfmac.
->
+Johannes,
+thanks for the almost instant reply. I'll give this a try!
 
-Commit 59eb21a65047 went into wireless-next a few weeks ago, but hasn't 
-made it over to staging-next yet.  Should John pick up this patch for 
-wireless-next now, and it'll eventually migrate over to staging-next?
+ -- 
+Regards 
+Joerg 
 
-- Henry
+
+
+
+----- Johannes Berg wrote ----
+> 
+> 1) Check that iw reports that you can do it (I just now  committed code
+>    to iw to report it since you asked, so use git  version, which will
+>    become 0.9.23 at some point in the  future)
+> 
+> 2) get git version of wpa_supplicant, compile with  CONFIG_IBSS_RSN and
+>    use a config file like  this:
+> 
+> ap_scan=2
+> network={
+>     ssid="your  SSID"
+>     mode=1
+>      frequency=2412
+>     proto=RSN
+>      key_mgmt=WPA-PSK
+>     psk="your secret key!!  :-)"
+> }
+> 
+> 
+> If you find a good place, maybe you can add it to the  wiki?
+> 
+> Note that wpa_supplicant currently doesn't reject the config if  the
+> driver doesn't support it, but it won't work.
+> 
+> If you want to make  your driver support it, the easiest way is to
+> implement something like I did  for iwlwifi:
+> 
+> commit 274102a8a2a4a0b67c401b75a96694db76cfc701
+> Author:  Johannes Berg <johannes.berg@intel.com>
+> Date:    Tue Jan 18 04:44:03 2011 -0800
+> 
+>     iwlwifi: support RSN  IBSS
+> 
+> 
+> johannes
+
 
 
