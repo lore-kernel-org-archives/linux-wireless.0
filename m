@@ -1,349 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51429 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755291Ab1BVWWt (ORCPT
+Received: from mail81.extendcp.co.uk ([79.170.40.81]:56700 "EHLO
+	mail81.extendcp.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852Ab1BXSIL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Feb 2011 17:22:49 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so264086wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Feb 2011 14:22:49 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 3/8] wl12xx: AP-mode - TX queue per link in AC
-Date: Wed, 23 Feb 2011 00:22:26 +0200
-Message-Id: <1298413351-15462-4-git-send-email-arik@wizery.com>
-In-Reply-To: <1298413351-15462-1-git-send-email-arik@wizery.com>
-References: <1298413351-15462-1-git-send-email-arik@wizery.com>
+	Thu, 24 Feb 2011 13:08:11 -0500
+Date: Thu, 24 Feb 2011 17:44:32 +0000
+From: Tony Houghton <h@realh.co.uk>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: 619946@bugs.debian.org
+Subject: ath9k causes lockups since kernel 2.6.33
+Message-ID: <20110224174432.7ad545b4@toddler>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating in AP-mode we require a per link tx-queue.
-This allows us to implement HW assisted PS mode for links,
-as well as regulate per-link FW TX blocks consumption.
-Split each link into ACs to support future QoS for AP-mode.
+[Posted to linux-wireless and 619946@bugs.debian.org]
 
-AC queues are emptied in priority and per-link queues are
-scheduled in a simple round-robin fashion.
+After upgrading my netbook's kernel from 2.6.32 in Debian squeeze I
+found it could not reliably shut down the wireless connection eg when
+suspending. It would almost always completely lock up. Ubuntu's 2.6.35
+kernel is also affected, and so are certain versions pulled from git,
+compiled with a config based on the Debian default.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |   17 ++++-
- drivers/net/wireless/wl12xx/tx.c     |  130 +++++++++++++++++++++++++++++++---
- drivers/net/wireless/wl12xx/tx.h     |    3 +
- drivers/net/wireless/wl12xx/wl12xx.h |   14 ++++
- 4 files changed, 151 insertions(+), 13 deletions(-)
+While testing different kernels I found it would crash at different
+times, usually before the screen turned off for suspending, but
+sometimes it would crash on resuming and occasionally it locked up while
+booting, but it's always a complete lock-up ie the keyboard is
+completely responsive, including caps lock, the mouse won't move if the
+display is still on, and the only way out is to hold down the power
+button.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 4d64cef..610e76b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -980,6 +980,7 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct wl1271 *wl = hw->priv;
- 	unsigned long flags;
- 	int q;
-+	u8 hlid = 0;
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	wl->tx_queue_count++;
-@@ -998,7 +999,13 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	/* queue the packet */
- 	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
--	skb_queue_tail(&wl->tx_queue[q], skb);
-+	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-+		hlid = wl1271_tx_get_hlid(skb);
-+		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
-+		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
-+	} else {
-+		skb_queue_tail(&wl->tx_queue[q], skb);
-+	}
- 
- 	/*
- 	 * The chip specific setup must run before the first TX packet -
-@@ -2636,6 +2643,7 @@ static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
- 	int id = hlid - WL1271_AP_STA_HLID_START;
- 
- 	__clear_bit(id, wl->ap_hlid_map);
-+	wl1271_tx_reset_link_queues(wl, hlid);
- }
- 
- static int wl1271_op_sta_add(struct ieee80211_hw *hw,
-@@ -3262,7 +3270,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	struct ieee80211_hw *hw;
- 	struct platform_device *plat_dev = NULL;
- 	struct wl1271 *wl;
--	int i, ret;
-+	int i, j, ret;
- 	unsigned int order;
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1271_ops);
-@@ -3290,6 +3298,10 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
- 		skb_queue_head_init(&wl->tx_queue[i]);
- 
-+	for (i = 0; i < NUM_TX_QUEUES; i++)
-+		for (j = 0; j < AP_MAX_LINKS; j++)
-+			skb_queue_head_init(&wl->links[j].tx_queue[i]);
-+
- 	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
- 	INIT_DELAYED_WORK(&wl->pspoll_work, wl1271_pspoll_work);
- 	INIT_WORK(&wl->irq_work, wl1271_irq_work);
-@@ -3315,6 +3327,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->bss_type = MAX_BSS_TYPE;
- 	wl->set_bss_type = MAX_BSS_TYPE;
- 	wl->fw_bss_type = MAX_BSS_TYPE;
-+	wl->last_tx_hlid = 0;
- 
- 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index a724da4..0c96255 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -86,6 +86,27 @@ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
- 		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
- }
- 
-+u8 wl1271_tx_get_hlid(struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
-+
-+	if (control->control.sta) {
-+		struct wl1271_station *wl_sta;
-+
-+		wl_sta = (struct wl1271_station *)
-+				control->control.sta->drv_priv;
-+		return wl_sta->hlid;
-+	} else {
-+		struct ieee80211_hdr *hdr;
-+
-+		hdr = (struct ieee80211_hdr *)skb->data;
-+		if (ieee80211_is_mgmt(hdr->frame_control))
-+			return WL1271_AP_GLOBAL_HLID;
-+		else
-+			return WL1271_AP_BROADCAST_HLID;
-+	}
-+}
-+
- static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 				u32 buf_offset)
- {
-@@ -298,7 +319,7 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
- 	return enabled_rates;
- }
- 
--static void handle_tx_low_watermark(struct wl1271 *wl)
-+void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
- {
- 	unsigned long flags;
- 
-@@ -312,7 +333,7 @@ static void handle_tx_low_watermark(struct wl1271 *wl)
- 	}
- }
- 
--static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
-+static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
- {
- 	struct sk_buff *skb = NULL;
- 	unsigned long flags;
-@@ -338,12 +359,69 @@ out:
- 	return skb;
- }
- 
-+static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
-+{
-+	struct sk_buff *skb = NULL;
-+	unsigned long flags;
-+	int i, h, start_hlid;
-+
-+	/* start from the link after the last one */
-+	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
-+
-+	/* dequeue according to AC, round robin on each link */
-+	for (i = 0; i < AP_MAX_LINKS; i++) {
-+		h = (start_hlid + i) % AP_MAX_LINKS;
-+
-+		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
-+		if (skb)
-+			goto out;
-+		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
-+		if (skb)
-+			goto out;
-+		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
-+		if (skb)
-+			goto out;
-+		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
-+		if (skb)
-+			goto out;
-+	}
-+
-+out:
-+	if (skb) {
-+		wl->last_tx_hlid = h;
-+		spin_lock_irqsave(&wl->wl_lock, flags);
-+		wl->tx_queue_count--;
-+		spin_unlock_irqrestore(&wl->wl_lock, flags);
-+	} else {
-+		wl->last_tx_hlid = 0;
-+	}
-+
-+	return skb;
-+}
-+
-+static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
-+{
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		return wl1271_ap_skb_dequeue(wl);
-+
-+	return wl1271_sta_skb_dequeue(wl);
-+}
-+
- static void wl1271_skb_queue_head(struct wl1271 *wl, struct sk_buff *skb)
- {
- 	unsigned long flags;
- 	int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 
--	skb_queue_head(&wl->tx_queue[q], skb);
-+	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-+		u8 hlid = wl1271_tx_get_hlid(skb);
-+		skb_queue_head(&wl->links[hlid].tx_queue[q], skb);
-+
-+		/* make sure we dequeue the same packet next time */
-+		wl->last_tx_hlid = (hlid + AP_MAX_LINKS - 1) % AP_MAX_LINKS;
-+	} else {
-+		skb_queue_head(&wl->tx_queue[q], skb);
-+	}
-+
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	wl->tx_queue_count++;
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
-@@ -406,7 +484,7 @@ out_ack:
- 	if (sent_packets) {
- 		/* interrupt the firmware with the new packets */
- 		wl1271_write32(wl, WL1271_HOST_WR_ACCESS, wl->tx_packets_count);
--		handle_tx_low_watermark(wl);
-+		wl1271_handle_tx_low_watermark(wl);
- 	}
- 
- out:
-@@ -523,6 +601,27 @@ void wl1271_tx_complete(struct wl1271 *wl)
- 	}
- }
- 
-+void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
-+{
-+	struct sk_buff *skb;
-+	int i, total = 0;
-+	unsigned long flags;
-+
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
-+			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
-+			ieee80211_tx_status(wl->hw, skb);
-+			total++;
-+		}
-+	}
-+
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	wl->tx_queue_count -= total;
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
-+	wl1271_handle_tx_low_watermark(wl);
-+}
-+
- /* caller must hold wl->mutex */
- void wl1271_tx_reset(struct wl1271 *wl)
- {
-@@ -530,19 +629,28 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 	struct sk_buff *skb;
- 
- 	/* TX failure */
--	for (i = 0; i < NUM_TX_QUEUES; i++) {
--		while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
--			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
--			ieee80211_tx_status(wl->hw, skb);
-+	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-+		for (i = 0; i < AP_MAX_LINKS; i++)
-+			wl1271_tx_reset_link_queues(wl, i);
-+
-+		wl->last_tx_hlid = 0;
-+	} else {
-+		for (i = 0; i < NUM_TX_QUEUES; i++) {
-+			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
-+				wl1271_debug(DEBUG_TX, "freeing skb 0x%p",
-+					     skb);
-+				ieee80211_tx_status(wl->hw, skb);
-+			}
- 		}
- 	}
-+
- 	wl->tx_queue_count = 0;
- 
- 	/*
- 	 * Make sure the driver is at a consistent state, in case this
- 	 * function is called from a context other than interface removal.
- 	 */
--	handle_tx_low_watermark(wl);
-+	wl1271_handle_tx_low_watermark(wl);
- 
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		if (wl->tx_frames[i] != NULL) {
-@@ -563,8 +671,8 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 
- 	while (!time_after(jiffies, timeout)) {
- 		mutex_lock(&wl->mutex);
--		wl1271_debug(DEBUG_TX, "flushing tx buffer: %d",
--			     wl->tx_frames_cnt);
-+		wl1271_debug(DEBUG_TX, "flushing tx buffer: %d %d",
-+			     wl->tx_frames_cnt, wl->tx_queue_count);
- 		if ((wl->tx_frames_cnt == 0) && (wl->tx_queue_count == 0)) {
- 			mutex_unlock(&wl->mutex);
- 			return;
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index 05722a5..76df5d5 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -152,5 +152,8 @@ void wl1271_tx_flush(struct wl1271 *wl);
- u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
- u32 wl1271_tx_min_rate_get(struct wl1271 *wl);
-+u8 wl1271_tx_get_hlid(struct sk_buff *skb);
-+void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
-+void wl1271_handle_tx_low_watermark(struct wl1271 *wl);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 1d6c943..9ffac80 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -319,6 +319,11 @@ enum wl12xx_flags {
- 	WL1271_FLAG_AP_STARTED
- };
- 
-+struct wl1271_link {
-+	/* AP-mode - TX queue per AC in link */
-+	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
-+};
-+
- struct wl1271 {
- 	struct platform_device *plat_dev;
- 	struct ieee80211_hw *hw;
-@@ -498,6 +503,15 @@ struct wl1271 {
- 	/* RX BA constraint value */
- 	bool ba_support;
- 	u8 ba_rx_bitmap;
-+
-+	/*
-+	 * AP-mode - links indexed by HLID. The global and broadcast links
-+	 * are always active.
-+	 */
-+	struct wl1271_link links[AP_MAX_LINKS];
-+
-+	/* the hlid of the link where the last transmitted skb came from */
-+	int last_tx_hlid;
- };
- 
- struct wl1271_station {
--- 
-1.7.1
+The adaptor is an AR9285:
 
+84: udi = '/org/freedesktop/Hal/devices/pci_168c_2b'
+  pci.device_protocol = 0  (0x0)  (int)
+  pci.vendor = 'Atheros Communications Inc.'  (string)
+  info.vendor = 'Atheros Communications Inc.'  (string)
+  pci.product = 'AR9285 Wireless Network Adapter (PCI-Express)'  (string)
+  linux.sysfs_path = '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (strin
+g)
+  info.parent = '/org/freedesktop/Hal/devices/pci_10de_ac6'  (string)
+  info.linux.driver = 'ath9k'  (string)
+  pci.subsys_vendor = 'Hewlett-Packard Company'  (string)
+  linux.hotplug_type = 2  (0x2)  (int)
+  linux.subsystem = 'pci'  (string)
+  info.subsystem = 'pci'  (string)
+  info.product = 'AR9285 Wireless Network Adapter (PCI-Express)'  (string)
+  info.udi = '/org/freedesktop/Hal/devices/pci_168c_2b'  (string)
+  pci.linux.sysfs_path = '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (string)
+  pci.product_id = 43  (0x2b)  (int)
+  pci.vendor_id = 5772  (0x168c)  (int)
+  pci.subsys_product_id = 12352  (0x3040)  (int)
+  pci.subsys_vendor_id = 4156  (0x103c)  (int)
+  pci.device_class = 2  (0x2)  (int)
+  pci.device_subclass = 128  (0x80)  (int)
+
+I haven't tried looking in logs because the crashes are so severe I
+don't think they'd be able to record anything useful. But using git
+bisect I think I have tracked down the change that started causing this
+problem:
+
+53bc7aa08b48e5cd745f986731cc7dc24eef2a9f is the first bad commit
+commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+Author: Vivek Natarajan <vnatarajan@atheros.com>
+Date:   Mon Apr 5 14:48:04 2010 +0530
+
+    ath9k: Add support for newer AR9285 chipsets.
+    
+    This patch adds support for a modified newer version of AR9285
+    chipsets.
+    
+    Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+:040000 040000 2ceb3a80ec957f3304308169c4ab9e5356622a95 14b6922350867c88d7ba6823408a9ce9aa15ddf5 M	drivers
+
+git bisect start
+# good: [66f41d4c5c8a5deed66fdcc84509376c9a0bf9d8] Linux 2.6.34-rc6
+git bisect good 66f41d4c5c8a5deed66fdcc84509376c9a0bf9d8
+# bad: [9fe6206f400646a2322096b56c59891d530e8d51] Linux 2.6.35
+git bisect bad 9fe6206f400646a2322096b56c59891d530e8d51
+# bad: [c316ba3b518bc35ce5aef5421135220389f4eb98] Merge branch 'linux-next' of git://git.infradead.org/ubi-2.6
+git bisect bad c316ba3b518bc35ce5aef5421135220389f4eb98
+# good: [fb091be08d1acf184e8801dfdcace6e0cb19b1fe] Merge branch 'v4l_for_2.6.35' of git://git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-2.6
+git bisect good fb091be08d1acf184e8801dfdcace6e0cb19b1fe
+# bad: [b56f2d55c6c22b0c5774b3b22e336fb6cc5f4094] netfilter: use rcu_dereference_protected()
+git bisect bad b56f2d55c6c22b0c5774b3b22e336fb6cc5f4094
+# bad: [adfba3c7c026a6a5560d2a43fefc9b198cb74462] mac80211: use fixed channel in ibss join when appropriate
+git bisect bad adfba3c7c026a6a5560d2a43fefc9b198cb74462
+# bad: [1968cc78d91c79857089713bf3f3cceb5e9c63ae] ath5k: correct channel setting for 2.5 mhz spacing
+git bisect bad 1968cc78d91c79857089713bf3f3cceb5e9c63ae
+# good: [56b632e8cc7a13cece861d890deb2843116f9372] drivers/net: Remove local #define IW_IOCTL, use IW_HANDLER
+git bisect good 56b632e8cc7a13cece861d890deb2843116f9372
+# good: [ecdf94b81237d272b1514b76f27a5d22782bcaa6] iwlwifi: remove skb_linearize for rx frames
+git bisect good ecdf94b81237d272b1514b76f27a5d22782bcaa6
+# skip: [c81494d548d0735f13c04dd2c336cde470d1a5ae] ath9k: rename symbols in enum ath9k_internal_frame_type to avoid confusion
+git bisect skip c81494d548d0735f13c04dd2c336cde470d1a5ae
+# skip: [f9ea3eb44218b0e12a190f222400f8d56136915f] include/net/iw_handler.h: Use SIOCIWFIRST not SIOCSIWCOMMIT in comment
+git bisect skip f9ea3eb44218b0e12a190f222400f8d56136915f
+# skip: [152d530d9edbb08424dc1b6561252597a7932c49] ath9k: remove ah->mask_reg, it's never used properly
+git bisect skip 152d530d9edbb08424dc1b6561252597a7932c49
+# skip: [879999cec9489f8942ebce3ec1b5f23ef948dda7] ar9170usb: fix panic triggered by undersized rxstream buffer
+git bisect skip 879999cec9489f8942ebce3ec1b5f23ef948dda7
+# skip: [b409894f9d6961bd5feffb86ba1d8dbbebfb5b72] ath: fix coding style/readability in ath/ar9170
+git bisect skip b409894f9d6961bd5feffb86ba1d8dbbebfb5b72
+# skip: [9fd1ea428590cf6e35e5a7df32ff6bccfd371db2] wireless/ipw2x00: remove trailing space in messages
+git bisect skip 9fd1ea428590cf6e35e5a7df32ff6bccfd371db2
+# skip: [3069168c82d65f88e4ac76eda09baff02adfd743] ath9k: move imask from sc to ah
+git bisect skip 3069168c82d65f88e4ac76eda09baff02adfd743
+# good: [7590a550b88b8c3cb025f0a8ed58e279ad62e4c1] wl1251: use DRIVER_NAME macro in wl1251_spi_driver
+git bisect good 7590a550b88b8c3cb025f0a8ed58e279ad62e4c1
+# bad: [0f2df9eac70423838a1f8d410fd3899ddd88317b] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6 into merge
+git bisect bad 0f2df9eac70423838a1f8d410fd3899ddd88317b
+# bad: [2b43ae6daf26f29cec49fa3a3f18025355495500] mac80211: remove irq disabling for sta lock
+git bisect bad 2b43ae6daf26f29cec49fa3a3f18025355495500
+# bad: [bde748a40d4d5a9915def6772e208848c105e616] ath9k_htc: Add support for power save.
+git bisect bad bde748a40d4d5a9915def6772e208848c105e616
+# bad: [53bc7aa08b48e5cd745f986731cc7dc24eef2a9f] ath9k: Add support for newer AR9285 chipsets.
+git bisect bad 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+# good: [d5cdfacb35ed886271d1ccfffbded98d3447da17] cfg80211: Add local-state-change-only auth/deauth/disassoc
+git bisect good d5cdfacb35ed886271d1ccfffbded98d3447da17
