@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36135 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469Ab1BLNDe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Feb 2011 08:03:34 -0500
-Message-ID: <4D56851D.7000509@hauke-m.de>
-Date: Sat, 12 Feb 2011 14:03:25 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: George Kashperko <george@znau.edu.ua>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: SSB AI support code
-References: <1297258590.17400.37.camel@dev.znau.edu.ua>
-In-Reply-To: <1297258590.17400.37.camel@dev.znau.edu.ua>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:45120 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754365Ab1BXPfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 10:35:13 -0500
+Subject: Re: [PATCH] iwlegacy: do not set tx power when channel is changing
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1298553835-5821-1-git-send-email-sgruszka@redhat.com>
+References: <1298553835-5821-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Feb 2011 07:20:20 -0800
+Message-ID: <1298560820.5138.37.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2011-02-24 at 05:23 -0800, Stanislaw Gruszka wrote:
+> Same fix as f844a709a7d8f8be61a571afc31dfaca9e779621
+> "iwlwifi: do not set tx power when channel is changing".
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-After rethinking this I came to the same result as Michael that it would
-bet better to have a extra module for the AI bus separated from the ssb.
-I grepped for ssb_ in the b43 driver code and it should be doable to
-change the api of ssb so that adding an other bus can be done without
-any changes to ssb. After the SSB API was changed once.
+> ---
+>  drivers/net/wireless/iwlegacy/iwl-4965.c |    2 +-
+>  drivers/net/wireless/iwlegacy/iwl-core.c |   13 ++++++++++---
+>  2 files changed, 11 insertions(+), 4 deletions(-)
+> 
+good catch :-), thanks
+Wey
 
-Most of the ssb_* methods calls in the b43 driver are getting an
-ssb_device struct so just a common struct for ssb and the ai bus is
-needed and it must contain some function pointers to the needed functions.
-
-Then the drivers integrated in the drivers/ssb must be extracted and
-unbundled from the ssb code. One common header file with some common
-structs for ssb and AI is needed and the rest can be separated.
-
-If you need help with something, I would like to help you with these
-things. I just ordered an Netgear WNR3500L. ;-)
-
-Hauke
