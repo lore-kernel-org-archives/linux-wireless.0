@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42978 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755313Ab1BOTQE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46547 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755886Ab1BXOV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 14:16:04 -0500
-Received: by bwz15 with SMTP id 15so775392bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 11:16:02 -0800 (PST)
-Date: Tue, 15 Feb 2011 22:13:13 +0300
-From: Nikolay Ledovskikh <nledovskikh@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com, me@bobcopeland.com, jirislaby@gmail.com
-Subject: [PATCH] ath5k: Right channel setting for ar2317 chip
-Message-Id: <20110215221313.498d21ed.nledovskikh@gmail.com>
+	Thu, 24 Feb 2011 09:21:29 -0500
+Subject: Re: IBSS and 802.11i (RSN) with mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jpo234 <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1298557108.4775.12.camel@jlt3.sipsolutions.net>
+References: <loom.20110224T145652-996@post.gmane.org>
+	 <1298557108.4775.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Feb 2011 15:21:27 +0100
+Message-ID: <1298557287.4775.13.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch that fixes right channel setting when running ar2317 based boards.
+On Thu, 2011-02-24 at 15:18 +0100, Johannes Berg wrote:
+> On Thu, 2011-02-24 at 14:01 +0000, jpo234 wrote:
+> 
+> > Can somebody please either point me to some existing documentation on the topic 
+> > or write a small HOWTO?
+> 
+> 1) Check that iw reports that you can do it (I just now committed code
+>    to iw to report it since you asked, so use git version, which will
+>    become 0.9.23 at some point in the future)
 
-Signed-off-by: Nikolay Ledovskikh <nledovskikh@gmail.com>
----
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 78c26fd..c44111f 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1253,6 +1253,7 @@ static int ath5k_hw_channel(struct ath5k_hw *ah,
- 	case AR5K_RF5111:
- 		ret = ath5k_hw_rf5111_channel(ah, channel);
- 		break;
-+	case AR5K_RF2317:
- 	case AR5K_RF2425:
- 		ret = ath5k_hw_rf2425_channel(ah, channel);
- 		break;
+FWIW, I think iwlwifi is still the only driver that has hw crypto and
+supports it right now.
 
--- 
-Best regards, Nikolay Ledovskikh.
+johannes
+
