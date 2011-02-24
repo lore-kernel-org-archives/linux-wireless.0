@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:50245 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000Ab1BNWwO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 17:52:14 -0500
-Subject: Re: Notes on ssb specs and implementation
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <AANLkTi=ayavFKJw9s-n-AvMDrtMxXdDcjV+BnoxO-qkE@mail.gmail.com> (sfid-20110214_233217_829894_FFFFFFFFD1071FC3)
-References: <AANLkTimfTt7kiwtSiPfE0kYRXwgHXJPAv19xuiv-M=NG@mail.gmail.com>
-	 <1297282621.9734.5.camel@maggie>
-	 <AANLkTinjDMSCqxWbAfjZO_JkfBZeRoAZOG5Pxvf1v8Xr@mail.gmail.com>
-	 <1297720877.5683.3.camel@maggie>
-	 <AANLkTi=ayavFKJw9s-n-AvMDrtMxXdDcjV+BnoxO-qkE@mail.gmail.com>
-	 (sfid-20110214_233217_829894_FFFFFFFFD1071FC3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 23:52:05 +0100
-Message-ID: <1297723925.5683.11.camel@maggie>
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.187]:51147 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293Ab1BXVJr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 16:09:47 -0500
+Message-ID: <4D66C912.8090205@mail.berlios.de>
+Date: Thu, 24 Feb 2011 22:09:38 +0100
+From: Stefan Weil <weil@mail.berlios.de>
+MIME-Version: 1.0
+To: Greg KH <greg@kroah.com>
+CC: Greg Kroah-Hartman <gregkh@suse.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: brcm80211: Fix memory leak after kmalloc failure
+References: <1298158151-22903-1-git-send-email-weil@mail.berlios.de> <20110223220533.GA23425@kroah.com>
+In-Reply-To: <20110223220533.GA23425@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-14 at 23:32 +0100, Rafał Miłecki wrote: 
-> Sure. It's not for submission, so you have to expect magic values.
+Am 23.02.2011 23:05, schrieb Greg KH:
+> On Sun, Feb 20, 2011 at 12:29:11AM +0100, Stefan Weil wrote:
+>> This error was spotted by cppcheck:
+>>
+>> drivers/staging/brcm80211/phy/wlc_phy_lcn.c:4053: error: Memory leak: ptr
+>>
+>> Cc: Brett Rudley <brudley@broadcom.com>
+>> Cc: Henry Ptasinski <henryp@broadcom.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: devel@driverdev.osuosl.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Stefan Weil <weil@mail.berlios.de>
+>> ---
+>> drivers/staging/brcm80211/phy/wlc_phy_lcn.c | 1 +
+>
+> What tree did you make this against? This file isn't in the linux-next
+> tree anymore.
+>
+> thanks,
+>
+> greg k-h
 
-That patch doesn't look too bad.
+The patch was based on 
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git.
 
-> Personally I don't like for example description at
-> http://bcm-v4.sipsolutions.net/802.11/PHY . It's really messed in "Put
-> PHY Into Reset".
-> Section "Put PHY Into Reset" is really "How to reset PHY" and it
-> duplicates code of takine PHY out of reset.
+In linux-next, the file was moved to a different directory:
 
-Yeah, well. Maybe I repeat myself for the hundredth time:
-Do not duplicate the specifications exactly. Apply common sense before
-implementing the code.
-If we can do better on certain things, do it.
+from drivers/staging/brcm80211/phy/wlc_phy_lcn.c
+to   drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
 
-> We also have a lot of magic in ssb_device_enable. We reset SB and PHY
-> at the same time. I guess it introduces some optimization but makes it
-> harder to understand, especially if you try to understand implemented
-> code and look as specs at the same time.
+It still needs the same fix. I'll send a new patch based on latest 
+linux-next.
 
-Well, it's core specific flags. I don't see anything
-wrong here. I think the PHY reset might even require an actual core
-reset to work correctly. So you could never untie both.
-But that's exactly those magic things we're never going to find out
-unless we have hardware documentation.
-
--- 
-Greetings Michael.
+Regards
+Stefan W.
 
