@@ -1,30 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37958 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754871Ab1B1Pct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 10:32:49 -0500
-Subject: Re: [PATCH v3 2/5] iwlegacy: fix dma mappings and skbs leak
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1298899997-2372-2-git-send-email-sgruszka@redhat.com>
-References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
-	 <1298899997-2372-2-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Feb 2011 07:16:10 -0800
-Message-ID: <1298906170.5082.75.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.17.9]:61833 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293Ab1BXVMC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 16:12:02 -0500
+From: Stefan Weil <weil@mail.berlios.de>
+To: greg@kroah.com
+Cc: Stefan Weil <weil@mail.berlios.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] staging: brcm80211: Fix memory leak after kmalloc failure
+Date: Thu, 24 Feb 2011 22:11:48 +0100
+Message-Id: <1298581908-16274-1-git-send-email-weil@mail.berlios.de>
+In-Reply-To: <4D66C912.8090205@mail.berlios.de>
+References: <4D66C912.8090205@mail.berlios.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-28 at 05:33 -0800, Stanislaw Gruszka wrote:
-> Fix possible dma mappings and skbs introduced by commit
-> 470058e0ad82fcfaaffd57307d8bf8c094e8e9d7 "iwlwifi: avoid Tx queue
-> memory allocation in interface down".
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+This error was spotted by cppcheck:
 
+drivers/staging/brcm80211/phy/wlc_phy_lcn.c:4053: error: Memory leak: ptr
+
+v2:
+Rebased patch on linux-next (file was moved to a new directory).
+
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Stefan Weil <weil@mail.berlios.de>
+---
+ .../staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c   |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+index 3fbbbb4..f027d50 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/wlc_phy_lcn.c
+@@ -4051,6 +4051,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
+ 
+ 	phy_c32 = kmalloc(sizeof(u16) * 20, GFP_ATOMIC);
+ 	if (NULL == phy_c32) {
++		kfree(ptr);
+ 		return;
+ 	}
+ 	phy_c26 = read_phy_reg(pi, 0x6da);
+-- 
+1.7.2.3
 
