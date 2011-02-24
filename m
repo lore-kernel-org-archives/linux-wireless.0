@@ -1,79 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61868 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751850Ab1BHHfv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 02:35:51 -0500
-Date: Tue, 8 Feb 2011 08:35:41 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: Re: [RFC] iwl3945: remove check_plcp_health
-Message-ID: <20110208073540.GB2298@redhat.com>
-References: <20110125093507.GA6429@redhat.com>
- <20110125151445.GA2927@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110125151445.GA2927@tuxdriver.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:44674 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756417Ab1BXUH0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 15:07:26 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4148254017C
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 15:10:34 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-24 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110224200724.9EE0346520@repository3.orbit-lab.org>
+Date: Thu, 24 Feb 2011 15:07:24 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 25, 2011 at 10:14:46AM -0500, John W. Linville wrote:
-> On Tue, Jan 25, 2011 at 10:35:28AM +0100, Stanislaw Gruszka wrote:
-> > This patch helps some users currently complaining about iwl3945
-> > performance.
-> > 
-> > https://bugzilla.redhat.com/show_bug.cgi?id=654599
-> > https://bugs.launchpad.net/ubuntu/maverick/+source/linux/+bug/621265/+index?comments=all
-> > 
-> > Patch does not helps all users, but they seems to be affected
-> > by different bug or bugs.
-> > 
-> > Patch effectively reverts commit a29576a7844326c5223f4d4adbfd3f4d64173d4c
-> > "iwl3945: add plcp error checking". It is minimal fix intended to
-> > -stable posting. I will post cleaning up patch, if fix will be accepted.
-> > 
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > index 8cacb4e..eb916d7 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > @@ -2832,7 +2832,6 @@ static struct iwl_lib_ops iwl3945_lib = {
-> >  	.config_ap = iwl3945_config_ap,
-> >  	.manage_ibss_station = iwl3945_manage_ibss_station,
-> >  	.recover_from_tx_stall = iwl_bg_monitor_recover,
-> > -	.check_plcp_health = iwl3945_good_plcp_health,
-> >  
-> >  	.debugfs_ops = {
-> >  		.rx_stats_read = iwl3945_ucode_rx_stats_read,
-> 
-> Did you experiment with different values for
-> IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF for iwl3945?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   44b4c85..74d6d79  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + bc8d831...4b91e9f akpm-end   -> origin/akpm-end  (forced update)
+   d8204a3..4a508dd  akpm-start -> origin/akpm-start
+   8e00ca7..99c2c59  history    -> origin/history
+ + 2c80a1c...d0ae5e3 master     -> origin/master  (forced update)
+   d8204a3..4a508dd  stable     -> origin/stable
+ * [new tag]         next-20110224 -> next-20110224
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-For fedora user increasing threshold help as well. Ubuntu
-crowd gave some confusing testing results.
+compat-wireless code metrics
 
-Anyway, after further investigation done in 
-https://bugzilla.redhat.com/show_bug.cgi?id=671366
-we discovered that hw scanning during association
-sometimes put hardware in state when it is not able
-to receive frames at higher rates.
-
-Hw scan can be requested by plcp check or by NM, both
-cases may cause troubles.
-
-Also tx rates can be low, using common rate scaling code
-helps.
-
-My plan to fix performance problems on 3945:
-- send patch to stable for increase plcp threshold on 3945
-- make sw scan default on upstream
-- add module option to disable plcp_check at all 
-- remove custom rate scaling algorithm
-
-Stanislaw
+    831210 - Total upstream lines of code being pulled
+      2163 - backport code changes
+      1881 - backport code additions
+       282 - backport code deletions
+      7437 - backport from compat module
+      9600 - total backport code
+    1.1549 - % of code consists of backport work
