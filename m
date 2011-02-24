@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24527 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754020Ab1BUTV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 14:21:27 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/4] iwlwifi: enable 2-wire bt coex support for non-combo device
-Date: Mon, 21 Feb 2011 11:06:48 -0800
-Message-Id: <1298315209-17986-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:52275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753038Ab1BXNqP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 08:46:15 -0500
+Subject: [PATCH] mac80211: remove IBSS merge delay
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Feb 2011 14:46:13 +0100
+Message-ID: <1298555173.4775.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For non-combo devices, 2-wire BT coex is needed to make sure BT coex
-still function with external BT devices
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This reverts 4a332a38
+("mac80211: Give it some time to do the TSF sync").
+
+There's no point in waiting with a new IBSS merge
+just because the hardware hasn't merged up with
+the old IBSS yet, and since 34e8f082 we no longer
+attempt to merge with the IBSS we're already in.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+ net/mac80211/ibss.c |    5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c04d991..9965215 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2744,9 +2744,11 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv, ctx);
- 	}
+--- wireless-testing.orig/net/mac80211/ibss.c	2011-02-24 12:49:33.000000000 +0100
++++ wireless-testing/net/mac80211/ibss.c	2011-02-24 12:49:46.000000000 +0100
+@@ -31,7 +31,6 @@
+ #define IEEE80211_IBSS_JOIN_TIMEOUT (7 * HZ)
  
--	if (priv->cfg->bt_params &&
--	    !priv->cfg->bt_params->advanced_bt_coexist) {
--		/* Configure Bluetooth device coexistence support */
-+	if (!priv->cfg->bt_params || (priv->cfg->bt_params &&
-+	    !priv->cfg->bt_params->advanced_bt_coexist)) {
-+		/*
-+		 * default is 2-wire BT coexexistence support
-+		 */
- 		priv->cfg->ops->hcmd->send_bt_config(priv);
- 	}
+ #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
+-#define IEEE80211_IBSS_MERGE_DELAY 0x400000
+ #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
  
--- 
-1.7.0.4
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+@@ -397,10 +396,6 @@ static void ieee80211_rx_bss_info(struct
+ 	       jiffies);
+ #endif
+ 
+-	/* give slow hardware some time to do the TSF sync */
+-	if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
+-		goto put_bss;
+-
+ 	if (beacon_timestamp > rx_timestamp) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 		printk(KERN_DEBUG "%s: beacon TSF higher than "
+
 
