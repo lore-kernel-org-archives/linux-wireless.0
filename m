@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40844 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850Ab1B0Eei (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41107 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125Ab1BXThP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Feb 2011 23:34:38 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 05/17]drivers:staging:brcm80211:include:bcmsdh_sdmmc.h Remove one to many n's in a word.
-Date: Sat, 26 Feb 2011 20:33:58 -0800
-Message-Id: <1298781250-2718-6-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1298781250-2718-1-git-send-email-justinmattock@gmail.com>
-References: <1298781250-2718-1-git-send-email-justinmattock@gmail.com>
+	Thu, 24 Feb 2011 14:37:15 -0500
+Subject: [PATCH] rtl8192c: fix compilation errors
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Feb 2011 20:37:10 +0100
+Message-ID: <1298576230.4251.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note: not sure if I sent this out or not.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The Patch below removes one to many "n's" in a word..
+On my G5 this fails to compile with
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-CC: Brett Rudley <brudley@broadcom.com>
-CC: Henry Ptasinski <henryp@broadcom.com>
-CC: linux-wireless@vger.kernel.org 
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:701: error: __ksymtab__rtl92c_phy_txpwr_idx_to_dbm causes a section type conflict
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:701: error: __ksymtab__rtl92c_phy_txpwr_idx_to_dbm causes a section type conflict
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:677: error: __ksymtab__rtl92c_phy_dbm_to_txpwr_Idx causes a section type conflict
+drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c:677: error: __ksymtab__rtl92c_phy_dbm_to_txpwr_Idx causes a section type conflict
+
+since you can't export static functions.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/brcm80211/include/bcmsdh_sdmmc.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h b/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h
-index 4d671dd..c9602c6 100644
---- a/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h
-+++ b/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h
-@@ -52,7 +52,7 @@ extern void sdioh_sdmmc_osfree(sdioh_info_t *sd);
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c	2011-02-24 20:35:47.398280074 +0100
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c	2011-02-24 20:35:58.536168754 +0100
+@@ -644,9 +644,9 @@ void rtl92c_phy_set_beacon_hw_reg(struct
+ }
+ EXPORT_SYMBOL(rtl92c_phy_set_beacon_hw_reg);
  
- struct sdioh_info {
- 	struct osl_info *osh;		/* osh handler */
--	bool client_intr_enabled;	/* interrupt connnected flag */
-+	bool client_intr_enabled;	/* interrupt connected flag */
- 	bool intr_handler_valid;	/* client driver interrupt handler valid */
- 	sdioh_cb_fn_t intr_handler;	/* registered interrupt handler */
- 	void *intr_handler_arg;	/* argument to call interrupt handler */
--- 
-1.7.4.1
+-static u8 _rtl92c_phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
+-				       enum wireless_mode wirelessmode,
+-				       long power_indbm)
++u8 _rtl92c_phy_dbm_to_txpwr_Idx(struct ieee80211_hw *hw,
++				enum wireless_mode wirelessmode,
++				long power_indbm)
+ {
+ 	u8 txpwridx;
+ 	long offset;
+@@ -676,9 +676,9 @@ static u8 _rtl92c_phy_dbm_to_txpwr_Idx(s
+ }
+ EXPORT_SYMBOL(_rtl92c_phy_dbm_to_txpwr_Idx);
+ 
+-static long _rtl92c_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
+-					 enum wireless_mode wirelessmode,
+-					 u8 txpwridx)
++long _rtl92c_phy_txpwr_idx_to_dbm(struct ieee80211_hw *hw,
++				  enum wireless_mode wirelessmode,
++				  u8 txpwridx)
+ {
+ 	long offset;
+ 	long pwrout_dbm;
+
 
