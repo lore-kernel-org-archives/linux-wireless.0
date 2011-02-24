@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36290 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751277Ab1BUWbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 17:31:47 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/7] compat-wireless: brcm80211 fix is in upstream now
-Date: Mon, 21 Feb 2011 23:31:21 +0100
-Message-Id: <1298327484-16938-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1298327484-16938-1-git-send-email-hauke@hauke-m.de>
-References: <1298327484-16938-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:48064 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019Ab1BXOSa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 09:18:30 -0500
+Subject: Re: IBSS and 802.11i (RSN) with mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jpo234 <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20110224T145652-996@post.gmane.org>
+References: <loom.20110224T145652-996@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Feb 2011 15:18:28 +0100
+Message-ID: <1298557108.4775.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2011-02-24 at 14:01 +0000, jpo234 wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/38-brcm80211-mac80211-backport.patch |   14 --------------
- 1 files changed, 0 insertions(+), 14 deletions(-)
- delete mode 100644 patches/38-brcm80211-mac80211-backport.patch
+> Can somebody please either point me to some existing documentation on the topic 
+> or write a small HOWTO?
 
-diff --git a/patches/38-brcm80211-mac80211-backport.patch b/patches/38-brcm80211-mac80211-backport.patch
-deleted file mode 100644
-index 329a119..0000000
---- a/patches/38-brcm80211-mac80211-backport.patch
-+++ /dev/null
-@@ -1,14 +0,0 @@
--This patch is a temporary solution as long as staging uses an older 
--version of mac80211.
--
----- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
--+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
--@@ -2312,7 +2312,7 @@ static s32 wl_inform_single_bss(struct w
-- 	notif_bss_info->frame_len =
-- 	    offsetof(struct ieee80211_mgmt,
-- 		     u.beacon.variable) + wl_get_ielen(wl);
---	freq = ieee80211_channel_to_frequency(notif_bss_info->channel);
--+	freq = ieee80211_channel_to_frequency(notif_bss_info->channel, notif_bss_info->band);
-- 	channel = ieee80211_get_channel(wiphy, freq);
-- 
-- 	WL_DBG("SSID : \"%s\", rssi %d, channel %d, capability : 0x04%x, bssid %pM\n",
--- 
-1.7.1
+1) Check that iw reports that you can do it (I just now committed code
+   to iw to report it since you asked, so use git version, which will
+   become 0.9.23 at some point in the future)
+
+2) get git version of wpa_supplicant, compile with CONFIG_IBSS_RSN and
+   use a config file like this:
+
+ap_scan=2
+network={
+	ssid="your SSID"
+	mode=1
+	frequency=2412
+	proto=RSN
+	key_mgmt=WPA-PSK
+	psk="your secret key!! :-)"
+}
+
+
+If you find a good place, maybe you can add it to the wiki?
+
+Note that wpa_supplicant currently doesn't reject the config if the
+driver doesn't support it, but it won't work.
+
+If you want to make your driver support it, the easiest way is to
+implement something like I did for iwlwifi:
+
+commit 274102a8a2a4a0b67c401b75a96694db76cfc701
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Tue Jan 18 04:44:03 2011 -0800
+
+    iwlwifi: support RSN IBSS
+
+
+johannes
 
