@@ -1,101 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58331 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753793Ab1B1Ndq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 08:33:46 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 3/5] iwlwifi: add {ack,plpc}_check module parameters
-Date: Mon, 28 Feb 2011 14:33:15 +0100
-Message-Id: <1298899997-2372-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
-References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:37399 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756498Ab1BXUCL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 15:02:11 -0500
+Received: by vxi39 with SMTP id 39so771542vxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 12:02:10 -0800 (PST)
+Date: Thu, 24 Feb 2011 14:02:03 -0600
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: Tony Houghton <h@realh.co.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <vnatarajan@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: Re: ath9k causes lockups since kernel 2.6.35
+Message-ID: <20110224200203.GB17412@elie>
+References: <20110224182022.57e32862@toddler>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110224182022.57e32862@toddler>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add module ack_check, and plcp_check parameters. Ack_check is disabled
-by default since is proved that check ack health can cause troubles.
-Plcp_check is enabled by default.
+(just cc-ing some people listed in MAINTAINERS)
+Hi,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-core.h    |    2 ++
- drivers/net/wireless/iwlwifi/iwl-rx.c      |    8 ++++++--
- 4 files changed, 15 insertions(+), 2 deletions(-)
+Tony Houghton wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 0d0572c..693a1fa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -609,6 +609,7 @@ const u8 *iwlagn_eeprom_query_addr(const struct iwl_priv *priv,
- struct iwl_mod_params iwlagn_mod_params = {
- 	.amsdu_size_8K = 1,
- 	.restart_fw = 1,
-+	.plcp_check = true,
- 	/* the rest are 0 by default */
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8cdbd8c..4792418 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4785,3 +4785,9 @@ MODULE_PARM_DESC(antenna_coupling,
- module_param_named(bt_ch_inhibition, iwlagn_bt_ch_announce, bool, S_IRUGO);
- MODULE_PARM_DESC(bt_ch_inhibition,
- 		 "Disable BT channel inhibition (default: enable)");
-+
-+module_param_named(plcp_check, iwlagn_mod_params.plcp_check, bool, S_IRUGO);
-+MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
-+
-+module_param_named(ack_check, iwlagn_mod_params.ack_check, bool, S_IRUGO);
-+MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index ed701f9..fac3a6c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -261,6 +261,8 @@ struct iwl_mod_params {
- 	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
- 	int antenna;  		/* def: 0 = both antennas (use diversity) */
- 	int restart_fw;		/* def: 1 = restart firmware */
-+	bool plcp_check;	/* def: true = enable plcp health check */
-+	bool ack_check;		/* def: false = disable ack health check */
- };
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index a21f6fe..fd84d53 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -230,18 +230,22 @@ void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
- void iwl_recover_from_statistics(struct iwl_priv *priv,
- 				struct iwl_rx_packet *pkt)
- {
-+	const struct iwl_mod_params *mod_params = priv->cfg->mod_params;
-+
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
- 	    !iwl_is_any_associated(priv))
- 		return;
- 
--	if (priv->cfg->ops->lib->check_ack_health &&
-+	if (mod_params->ack_check &&
-+	    priv->cfg->ops->lib->check_ack_health &&
- 	    !priv->cfg->ops->lib->check_ack_health(priv, pkt)) {
- 		IWL_ERR(priv, "low ack count detected, restart firmware\n");
- 		if (!iwl_force_reset(priv, IWL_FW_RESET, false))
- 			return;
- 	}
- 
--	if (priv->cfg->ops->lib->check_plcp_health &&
-+	if (mod_params->plcp_check &&
-+	    priv->cfg->ops->lib->check_plcp_health &&
- 	    !priv->cfg->ops->lib->check_plcp_health(priv, pkt))
- 		iwl_force_reset(priv, IWL_RF_RESET, false);
- }
--- 
-1.7.1
+> With 2.6.37 I can not use suspend on my Compaq/HP 311c (Intel Atom
+> N270/NVidia Ion LE). Originally the machine just kept locking up without
+> even blanking the display when I tried to suspend (using the GNOME menu
+> or by shutting the lid). I upgraded upower and gnome-power-manager etc
+> to experimental and after that the machine suspended OK but could not
+> resume. The backlight came on but the screen stayed blank and I could
+> not get to a console or anything with Alt+Fn.
+[...]
+> I tried replacing network-manager with wicd but that crashed the system
+> when it connected instead of when disconnected.
+[...]
+> While testing different kernels I found it would crash at different
+> times, usually before the screen turned off for suspending, but
+> sometimes it would crash on resuming and occasionally it locked up while
+> booting, but it's always a complete lock-up ie the keyboard is
+> completely responsive, including caps lock, the mouse won't move if the
+> display is still on, and the only way out is to hold down the power
+> button.
+[...]
+> I haven't tried looking in logs because the crashes are so severe I
+> don't think they'd be able to record anything useful. But using git
+> bisect I think I have tracked down the change that started causing this
+> problem:
+>
+> 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f is the first bad commit
+> commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+> Author: Vivek Natarajan <vnatarajan@atheros.com>
+> Date:   Mon Apr 5 14:48:04 2010 +0530
+> 
+>     ath9k: Add support for newer AR9285 chipsets.
+>     
+>     This patch adds support for a modified newer version of AR9285
+>     chipsets.
+>     
+>     Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
+The adaptor is an AR9285[1].
+
+That commit is based against v2.6.33 and was merged in v2.6.35-rc1
+
+$ git describe 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+v2.6.33-3523-g53bc7aa
+$ git name-rev --tags 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+53bc7aa08b48e5cd745f986731cc7dc24eef2a9f tags/v2.6.35-rc1~473^2~167^2~346
+
+Any ideas for tracking this down?
+
+Thanks,
+Jonathan
+
+[1]
+> 84: udi = '/org/freedesktop/Hal/devices/pci_168c_2b'
+>   pci.device_protocol = 0  (0x0)  (int)
+>   pci.vendor = 'Atheros Communications Inc.'  (string)
+>   info.vendor = 'Atheros Communications Inc.'  (string)
+>   pci.product = 'AR9285 Wireless Network Adapter
+> (PCI-Express)'  (string) linux.sysfs_path =
+> '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (strin g)
+>   info.parent = '/org/freedesktop/Hal/devices/pci_10de_ac6'  (string)
+>   info.linux.driver = 'ath9k'  (string)
+>   pci.subsys_vendor = 'Hewlett-Packard Company'  (string)
+>   linux.hotplug_type = 2  (0x2)  (int)
+>   linux.subsystem = 'pci'  (string)
+>   info.subsystem = 'pci'  (string)
+>   info.product = 'AR9285 Wireless Network Adapter
+> (PCI-Express)'  (string) info.udi =
+> '/org/freedesktop/Hal/devices/pci_168c_2b'  (string)
+> pci.linux.sysfs_path =
+> '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (string)
+> pci.product_id = 43  (0x2b)  (int) pci.vendor_id = 5772  (0x168c)
+> (int) pci.subsys_product_id = 12352  (0x3040)  (int)
+> pci.subsys_vendor_id = 4156  (0x103c)  (int) pci.device_class = 2
+> (0x2)  (int) pci.device_subclass = 128  (0x80)  (int)
