@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57312 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47827 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016Ab1BITOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 14:14:53 -0500
-Message-ID: <4D52E7A7.6060402@hauke-m.de>
-Date: Wed, 09 Feb 2011 20:14:47 +0100
+	id S1754525Ab1BXSx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Feb 2011 13:53:29 -0500
 From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] compat-wireless: fix some problems with brcm80211
-References: <1297200981-22971-1-git-send-email-hauke@hauke-m.de> <AANLkTinM-uZ_R8nJhzUosmneX6KhjmUk+Cc0XQ+W3k2_@mail.gmail.com>
-In-Reply-To: <AANLkTinM-uZ_R8nJhzUosmneX6KhjmUk+Cc0XQ+W3k2_@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: some minor updates for config.mk
+Date: Thu, 24 Feb 2011 19:53:08 +0100
+Message-Id: <1298573588-2943-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1298573588-2943-1-git-send-email-hauke@hauke-m.de>
+References: <1298573588-2943-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2011 11:34 PM, Rafał Miłecki wrote:
-> 2011/2/8 Hauke Mehrtens <hauke@hauke-m.de>:
->> We have to activate debug, without we get compile errors
-> 
-> And spam users with all messages? What about fixing errors?
-> 
-Hi,
 
-I already send a patch to the brcm80211 guys [1]. so we hopefully do not
-need debugging for a long time. In the normal kernel build this
-debugging was activated by default till some days ago, so for the users
-nothing changes. ;-)
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Hauke
+diff --git a/config.mk b/config.mk
+index 8007708..dd6aa60 100644
+--- a/config.mk
++++ b/config.mk
+@@ -330,6 +330,7 @@ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800PCI=m
+ # CONFIG_RT2800PCI_RT33XX=y
+ # CONFIG_RT2800PCI_RT35XX=y
++# CONFIG_RT2800PCI_RT53XX=y
+ endif #CONFIG_CRC_CCITT
+ NEED_RT2X00=y
+ 
+@@ -547,10 +548,10 @@ ifneq ($(CONFIG_COMPAT_STAGING),)
+ 
+ CONFIG_BRCM80211=m
+ CONFIG_BRCMSMAC=y
++# CONFIG_BRCMDBG=y
+ 
+ ifdef CONFIG_WIRELESS_EXT
+ CONFIG_ATH6KL_CFG80211=y
+-CONFIG_ATH6KL_DEBUG=y
+ # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
+ # CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set
+ # CONFIG_ATH6KL_ENABLE_HOST_DEBUG is not set
+-- 
+1.7.1
 
- [1]
-http://driverdev.linuxdriverproject.org/pipermail/devel/2011-February/011879.html
