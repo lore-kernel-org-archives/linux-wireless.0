@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:35252 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755476Ab1BIBli (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43482
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932222Ab1BYTOX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 20:41:38 -0500
-Received: by mail-qy0-f179.google.com with SMTP id 19so4778506qyj.17
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 17:41:36 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 8 Feb 2011 23:41:36 -0200
-Message-ID: <AANLkTins2XMBb0NuEdJVaBX=Pz6=pVpbfiXNqAF409Fs@mail.gmail.com>
-Subject: pull request: wl12xx 2011-02-08
-From: "Coelho, Luciano" <coelho@ti.com>
+	Fri, 25 Feb 2011 14:14:23 -0500
+Date: Fri, 25 Feb 2011 11:15:00 -0800 (PST)
+Message-Id: <20110225.111500.59674472.davem@davemloft.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org, padovan@profusion.mobi
+Subject: Re: pull request: wireless-next-2.6 2011-02-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110224.224344.104068328.davem@davemloft.net>
+References: <20110222215229.GJ12153@tuxdriver.com>
+	<20110224.224344.104068328.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: David Miller <davem@davemloft.net>
+Date: Thu, 24 Feb 2011 22:43:44 -0800 (PST)
 
-This is one more pull request for 2.6.39.  It contains initial changes
-that add support to our new firmware.  There are some other patches
-pending, but I'm currently on vacation, so I didn't have much time to
-look into them carefully, so let's hold them till I'm back.  I had
-already reviewed carefully the changes for the new firmware, so they
-can be included already now.
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 22 Feb 2011 16:52:30 -0500
+> 
+>> Here is the latest batch of wireless bits intended for 2.6.39.  It seems
+>> I neglected to send a pull request last week, so this one is a bit big
+>> -- I apologize!
+>> 
+>> This includes a rather large batch of bluetooth bits by way of Gustavo.
+>> It looks like a variety of bits, including some code refactoring, some
+>> protocol support enhancements, some bugfixes, etc. -- nothing too
+>> unusual.
+>> 
+>> Other items of interest include a new driver from Realtek, some ssb
+>> support enhancements, and the usual sort of updates for mac80211 and a
+>> variety of drivers.  Also included is a wireless-2.6 pull to resolve
+>> some build breakage.
+>> 
+>> Please let me know if there are problems!
+> 
+> Pulled, thanks a lot John.
 
-Please pull or let me know if there's any problem.  This tree is based
-on wireless-next/master.
+John a few things:
 
-Thanks!
+1) I had to add some vmalloc.h includes to fix the build on sparc64,
+   see commit b08cd667c4b6641c4d16a3f87f4550f81a6d69ac in net-next-2.6
 
+2) Something is screwey with the bluetooth config options now.
 
-The following changes since commit 3ad97fbcc233a295f2ccc2c6bdeb32323e360a5e:
+   I have an allmodconfig tree, and when I run "make oldconfig" after
+   this pull, BT_L2CAP and BT_SCO both prompt me, claiming that they
+   can only be built statically.
 
- mac80211: remove unneeded check (2011-02-07 16:18:28 -0500)
+   I give it 'y' just to make it happen, for both, and afterways no
+   matter how many times I rerun "make oldconfig" I keep seeing things
+   like this in my build:
 
-are available in the git repository at:
- git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+scripts/kconfig/conf --silentoldconfig Kconfig
+include/config/auto.conf:986:warning: symbol value 'm' invalid for BT_SCO
+include/config/auto.conf:3156:warning: symbol value 'm' invalid for BT_L2CAP
 
-Eliad Peller (4):
-     wl12xx: mcp2.5 - add config_ps acx
-     wl12xx: move to new firmware (6.1.3.50.49)
-     wl12xx: use the conf struct instead of macros for memory configuration
-     wl12xx: set supported_rates after association
+   First, what the heck is going on here?  Second, why the heck can't these
+   non-trivial pieces of code be built modular any more?
 
- drivers/net/wireless/wl12xx/acx.c    |   86 ++++++++++++++++++---
- drivers/net/wireless/wl12xx/acx.h    |   41 +++++++---
- drivers/net/wireless/wl12xx/cmd.c    |   10 +-
- drivers/net/wireless/wl12xx/cmd.h    |   14 +---
- drivers/net/wireless/wl12xx/conf.h   |   49 ++++++++++++
- drivers/net/wireless/wl12xx/event.c  |   14 ----
- drivers/net/wireless/wl12xx/event.h  |    2 -
- drivers/net/wireless/wl12xx/init.c   |   13 +++
- drivers/net/wireless/wl12xx/main.c   |  143 ++++++++++++++++-----------------
- drivers/net/wireless/wl12xx/ps.c     |    6 +-
- drivers/net/wireless/wl12xx/rx.c     |    6 +-
- drivers/net/wireless/wl12xx/rx.h     |    2 +-
- drivers/net/wireless/wl12xx/tx.c     |   22 -----
- drivers/net/wireless/wl12xx/wl12xx.h |   66 +++++++++++-----
- 14 files changed, 298 insertions(+), 176 deletions(-)
+   You can't make something "bool", have it depend on something that
+   might be modular, and then build it into what could in fact be a
+   module.  That's exactly what the bluetooth stuff seems to be doing
+   now.
 
---
-Cheers,
-Luca.
+   I suspect commit 642745184f82688eb3ef0cdfaa4ba632055be9af
+
+Thanks.
