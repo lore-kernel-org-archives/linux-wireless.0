@@ -1,101 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.3eti.com ([65.220.88.141]:51914 "EHLO webmail.3eti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751455Ab1BIQJK convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55781 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932122Ab1BYOg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 11:09:10 -0500
-From: Chaoxing Lin <CLin@3eti.com>
-To: 'Zefir Kurtisi' <zefir.kurtisi@neratec.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] DFS userspace handler
-Date: Wed, 9 Feb 2011 16:09:08 +0000
-Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC34@RockMX01.rock.corp>
-References: <1297252905-29739-1-git-send-email-zefir.kurtisi@neratec.com>
- <BD54DDEB2546894FAB0731EA7B0EDF8D0571DC0A@RockMX01.rock.corp>
- <4D52B7DB.8000000@neratec.com>
-In-Reply-To: <4D52B7DB.8000000@neratec.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 25 Feb 2011 09:36:59 -0500
+Subject: [PATCH] mac80211: support direct offchannel TX offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 25 Feb 2011 15:36:57 +0100
+Message-ID: <1298644617.4329.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I would vote for a dedidate DFS daemon.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Straightforward name is better. 
-Beginners would be hard to understand why WDS/Mesh/IBSS mode requires a hostapd daemon which intuitively means for AP mode..
+For devices supported by iwlwifi sometimes
+off-channel transmissions need to be handled
+by the device completely. To support this
+mac80211 needs to pass the frame directly
+to the driver and not through the TX path
+as the driver needs the frame and channel
+information at the same time.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h      |   10 ++++++++++
+ net/mac80211/cfg.c          |   39 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h   |   31 +++++++++++++++++++++++++++++++
+ net/mac80211/driver-trace.h |   33 +++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h  |    1 +
+ net/mac80211/status.c       |    4 ++++
+ 6 files changed, 118 insertions(+)
 
+--- wireless-testing.orig/include/net/mac80211.h	2011-02-24 12:49:42.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2011-02-24 12:49:44.000000000 +0100
+@@ -1799,6 +1799,11 @@ enum ieee80211_ampdu_mlme_action {
+  *	ieee80211_remain_on_channel_expired(). This callback may sleep.
+  * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
+  *	aborted before it expires. This callback may sleep.
++ * @offchannel_tx: Transmit frame on another channel, wait for a response
++ *	and return. Reliable TX status must be reported for the frame. If the
++ *	return value is 1, then the @remain_on_channel will be used with a
++ *	regular transmission (if supported.)
++ * @offchannel_tx_cancel_wait: cancel wait associated with offchannel TX
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1878,6 +1883,11 @@ struct ieee80211_ops {
+ 				 enum nl80211_channel_type channel_type,
+ 				 int duration);
+ 	int (*cancel_remain_on_channel)(struct ieee80211_hw *hw);
++	int (*offchannel_tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
++			     struct ieee80211_channel *chan,
++			     enum nl80211_channel_type channel_type,
++			     unsigned int wait);
++	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/cfg.c	2011-02-24 12:49:34.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2011-02-24 12:49:44.000000000 +0100
+@@ -1800,6 +1800,33 @@ static int ieee80211_mgmt_tx(struct wiph
+ 
+ 	*cookie = (unsigned long) skb;
+ 
++	if (is_offchan && local->ops->offchannel_tx) {
++		int ret;
++
++		IEEE80211_SKB_CB(skb)->band = chan->band;
++
++		mutex_lock(&local->mtx);
++
++		if (local->hw_offchan_tx_cookie) {
++			mutex_unlock(&local->mtx);
++			return -EBUSY;
++		}
++
++		/* TODO: bitrate control, TX processing? */
++		ret = drv_offchannel_tx(local, skb, chan, channel_type, wait);
++
++		if (ret == 0)
++			local->hw_offchan_tx_cookie = *cookie;
++		mutex_unlock(&local->mtx);
++
++		/*
++		 * Allow driver to return 1 to indicate it wants to have the
++		 * frame transmitted with a remain_on_channel + regular TX.
++		 */
++		if (ret != 1)
++			return ret;
++	}
++
+ 	if (is_offchan && local->ops->remain_on_channel) {
+ 		unsigned int duration;
+ 		int ret;
+@@ -1886,6 +1913,18 @@ static int ieee80211_mgmt_tx_cancel_wait
+ 
+ 	mutex_lock(&local->mtx);
+ 
++	if (local->ops->offchannel_tx_cancel_wait &&
++	    local->hw_offchan_tx_cookie == cookie) {
++		ret = drv_offchannel_tx_cancel_wait(local);
++
++		if (!ret)
++			local->hw_offchan_tx_cookie = 0;
++
++		mutex_unlock(&local->mtx);
++
++		return ret;
++	}
++
+ 	if (local->ops->cancel_remain_on_channel) {
+ 		cookie ^= 2;
+ 		ret = ieee80211_cancel_remain_on_channel_hw(local, cookie);
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2011-02-24 12:49:34.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2011-02-24 12:49:44.000000000 +0100
+@@ -957,6 +957,7 @@ struct ieee80211_local {
+ 	unsigned int hw_roc_duration;
+ 	u32 hw_roc_cookie;
+ 	bool hw_roc_for_tx;
++	unsigned long hw_offchan_tx_cookie;
+ 
+ 	/* dummy netdev for use w/ NAPI */
+ 	struct net_device napi_dev;
+--- wireless-testing.orig/net/mac80211/driver-ops.h	2011-02-24 12:49:42.000000000 +0100
++++ wireless-testing/net/mac80211/driver-ops.h	2011-02-24 12:49:44.000000000 +0100
+@@ -495,4 +495,35 @@ static inline int drv_cancel_remain_on_c
+ 	return ret;
+ }
+ 
++static inline int drv_offchannel_tx(struct ieee80211_local *local,
++				    struct sk_buff *skb,
++				    struct ieee80211_channel *chan,
++				    enum nl80211_channel_type channel_type,
++				    unsigned int wait)
++{
++	int ret;
++
++	might_sleep();
++
++	trace_drv_offchannel_tx(local, skb, chan, channel_type, wait);
++	ret = local->ops->offchannel_tx(&local->hw, skb, chan,
++					channel_type, wait);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
++static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
++{
++	int ret;
++
++	might_sleep();
++
++	trace_drv_offchannel_tx_cancel_wait(local);
++	ret = local->ops->offchannel_tx_cancel_wait(&local->hw);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+--- wireless-testing.orig/net/mac80211/driver-trace.h	2011-02-24 12:49:34.000000000 +0100
++++ wireless-testing/net/mac80211/driver-trace.h	2011-02-24 12:49:44.000000000 +0100
+@@ -884,6 +884,39 @@ DEFINE_EVENT(local_only_evt, drv_cancel_
+ 	TP_ARGS(local)
+ );
+ 
++TRACE_EVENT(drv_offchannel_tx,
++	TP_PROTO(struct ieee80211_local *local, struct sk_buff *skb,
++		 struct ieee80211_channel *chan,
++		 enum nl80211_channel_type channel_type,
++		 unsigned int wait),
++
++	TP_ARGS(local, skb, chan, channel_type, wait),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(int, center_freq)
++		__field(int, channel_type)
++		__field(unsigned int, wait)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->center_freq = chan->center_freq;
++		__entry->channel_type = channel_type;
++		__entry->wait = wait;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " freq:%dMHz, wait:%dms",
++		LOCAL_PR_ARG, __entry->center_freq, __entry->wait
++	)
++);
++
++DEFINE_EVENT(local_only_evt, drv_offchannel_tx_cancel_wait,
++	TP_PROTO(struct ieee80211_local *local),
++	TP_ARGS(local)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+--- wireless-testing.orig/net/mac80211/status.c	2011-02-24 12:49:34.000000000 +0100
++++ wireless-testing/net/mac80211/status.c	2011-02-24 12:49:44.000000000 +0100
+@@ -341,6 +341,10 @@ void ieee80211_tx_status(struct ieee8021
+ 			cookie = local->hw_roc_cookie ^ 2;
+ 			local->hw_roc_skb_for_status = NULL;
+ 		}
++
++		if (cookie == local->hw_offchan_tx_cookie)
++			local->hw_offchan_tx_cookie = 0;
++
+ 		cfg80211_mgmt_tx_status(
+ 			skb->dev, cookie, skb->data, skb->len,
+ 			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
 
------Original Message-----
-From: Zefir Kurtisi [mailto:zefir.kurtisi@neratec.com] 
-Sent: Wednesday, February 09, 2011 10:51 AM
-To: Chaoxing Lin
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] DFS userspace handler
-
-On 02/09/2011 04:35 PM, Chaoxing Lin wrote:
-> What about DFS in WDS / Mesh / IBSS mode if DFS is only implemented in hostapd?
-> 
-> Will an instance of hostapd be required for all these modes, too?
-> 
-> Thanks
-> 
-Yes, with this approach you will need to have some userspace component that
-evaluates the reported pulses and handles channels upon radar detection.
-
-hostapd was taken as the first shot, but one might also think of a dedicated
-DFS deamon that takes this role. Actually that is our intended gain of this
-approach: having a defined interface for pulse events reporting and highest
-flexibility wrt detection and handling.
-
-Cheers
-
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Zefir Kurtisi
-> Sent: Wednesday, February 09, 2011 7:02 AM
-> To: linux-wireless@vger.kernel.org
-> Cc: Zefir Kurtisi
-> Subject: [RFC] DFS userspace handler
-> 
-> Hello DFS folks,
-> 
-> this is a patch series to prove the concept of DFS handling done in userspace.
-> 
-> It moves the radar pattern detector introduced in [1] and documented in [2] 
-> from mac80211 up to hostapd.
-> 
-> The basic concept is:
-> 1) pattern detection
->  * pulse events detected by HW are passed to hostapd
->  * hostapd performs per-wiphy DFS pattern matching
-> 2) channel handling: on radar detection hostapd
->  * updates channel state (NOL handling)
->  * switches to new operating channel with TX disabled (on all wiphys)
->  * after CAC period enables TX on that channel
-> 
-> The proposed patches provide part 1) of the concept. The nl80211 interface is
-> extended with functions to pass DFS pulse events to hostapd.
-> 
-> Testing as described in [2] results in identical output, indicating that both
-> approaches (mac80211 and hostapd based) are equivalent from functional point
-> of view.
-> 
-> The testing was done with
->  * OpenWRT r25417
->  * Atheros AR9280 Rev:2
->  * DFS radars generated with R&S vector signal generator
-> 
-> We at our company would prefer this approach over the mac80211 based one as
-> soon as we see that part 2) can be implemented as proposed. 
-> 
-> 
-> 
-> Cheers
-> Zefir
-> 
-> 
-> 
-> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/61868
-> [2] http://linuxwireless.org/en/developers/DFS/DetectorDesignNt
-> ---
 
