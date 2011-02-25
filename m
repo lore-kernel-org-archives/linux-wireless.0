@@ -1,68 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web161201.mail.bf1.yahoo.com ([98.139.210.128]:33091 "HELO
-	web161201.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756215Ab1BXOuO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 09:50:14 -0500
-Message-ID: <853861.85701.qm@web161201.mail.bf1.yahoo.com>
-References: <loom.20110224T145652-996@post.gmane.org> <1298557108.4775.12.camel@jlt3.sipsolutions.net>
-Date: Thu, 24 Feb 2011 06:43:33 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: IBSS and 802.11i (RSN) with mac80211
+Received: from mx1.redhat.com ([209.132.183.28]:15353 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756117Ab1BYNqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 08:46:11 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1298557108.4775.12.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] mac80211: better fix for conn_mon_timer running after disassociate
+Date: Fri, 25 Feb 2011 14:46:02 +0100
+Message-Id: <1298641562-3805-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
-thanks for the almost instant reply. I'll give this a try!
+Is still possible to schedule conn_mon_timer after disassociate from
+ieee80211_sta_tx_notify() and ieee80211_offchannel_ps_disable().
 
- -- 
-Regards 
-Joerg 
+Move disassociate check to ieee80211_sta_reset_conn_monitor() to cover
+all these cases, and add unlikely since in most the time we call
+ieee80211_sta_reset_conn_monitor() when associated.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/mlme.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-
-
------ Johannes Berg wrote ----
-> 
-> 1) Check that iw reports that you can do it (I just now  committed code
->    to iw to report it since you asked, so use git  version, which will
->    become 0.9.23 at some point in the  future)
-> 
-> 2) get git version of wpa_supplicant, compile with  CONFIG_IBSS_RSN and
->    use a config file like  this:
-> 
-> ap_scan=2
-> network={
->     ssid="your  SSID"
->     mode=1
->      frequency=2412
->     proto=RSN
->      key_mgmt=WPA-PSK
->     psk="your secret key!!  :-)"
-> }
-> 
-> 
-> If you find a good place, maybe you can add it to the  wiki?
-> 
-> Note that wpa_supplicant currently doesn't reject the config if  the
-> driver doesn't support it, but it won't work.
-> 
-> If you want to make  your driver support it, the easiest way is to
-> implement something like I did  for iwlwifi:
-> 
-> commit 274102a8a2a4a0b67c401b75a96694db76cfc701
-> Author:  Johannes Berg <johannes.berg@intel.com>
-> Date:    Tue Jan 18 04:44:03 2011 -0800
-> 
->     iwlwifi: support RSN  IBSS
-> 
-> 
-> johannes
-
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index abb0116..cc984bd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -145,6 +145,9 @@ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
++	if (unlikely(!sdata->u.mgd.associated))
++		return;
++
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+ 		return;
+ 
+@@ -1083,12 +1086,6 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 	if (is_multicast_ether_addr(hdr->addr1))
+ 		return;
+ 
+-	/*
+-	 * In case we receive frames after disassociation.
+-	 */
+-	if (!sdata->u.mgd.associated)
+-		return;
+-
+ 	ieee80211_sta_reset_conn_monitor(sdata);
+ }
+ 
+-- 
+1.7.1
 
