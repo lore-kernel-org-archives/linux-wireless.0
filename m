@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:63215 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752614Ab1BZTBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Feb 2011 14:01:16 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/5] iwlagn: split BT page and inquiry UART msg
-Date: Sat, 26 Feb 2011 10:46:05 -0800
-Message-Id: <1298745966-25130-5-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:49278 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938Ab1BYHKT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 02:10:19 -0500
+Cc: trivial@kernel.org, johannes@sipsolutions.net, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <C0CEB11E-CD60-4A10-BFC8-7CB555D1413C@gmail.com>
+From: Justin Mattock <justinmattock@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+In-Reply-To: <AANLkTi=FuD0FCTv6f0sPKkg14O9R_giKi9uvA0Xsgy1q@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v936)
+Subject: Re: [PATCH 18/21]include:net:mac80211.h remove one to many l's in the word.
+Date: Thu, 24 Feb 2011 23:10:15 -0800
+References: <1298614522-4153-1-git-send-email-justinmattock@gmail.com> <AANLkTi=FuD0FCTv6f0sPKkg14O9R_giKi9uvA0Xsgy1q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both inquiry and page was combine in frame7 of UART message, separate it
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   10 ++++++----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    9 ++++++---
- 2 files changed, 12 insertions(+), 7 deletions(-)
+On Feb 24, 2011, at 10:20 PM, Julian Calaby wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 8c70f0b..dc7055e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1984,12 +1984,14 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
- 		(BT_UART_MSG_FRAME6DISCOVERABLE_MSK & uart_msg->frame6) >>
- 			BT_UART_MSG_FRAME6DISCOVERABLE_POS);
- 
--	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Inquiry/Page SR Mode = "
--			"0x%X, Connectable = 0x%X",
-+	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Page = "
-+			"0x%X, Inquiry = 0x%X, Connectable = 0x%X",
- 		(BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK & uart_msg->frame7) >>
- 			BT_UART_MSG_FRAME7SNIFFACTIVITY_POS,
--		(BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_MSK & uart_msg->frame7) >>
--			BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS,
-+		(BT_UART_MSG_FRAME7PAGE_MSK & uart_msg->frame7) >>
-+			BT_UART_MSG_FRAME7PAGE_POS,
-+		(BT_UART_MSG_FRAME7INQUIRY_MSK & uart_msg->frame7) >>
-+			BT_UART_MSG_FRAME7INQUIRY_POS,
- 		(BT_UART_MSG_FRAME7CONNECTABLE_MSK & uart_msg->frame7) >>
- 			BT_UART_MSG_FRAME7CONNECTABLE_POS);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index df6abbf..3629ee3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -4258,9 +4258,12 @@ enum iwl_bt_coex_profile_traffic_load {
- #define BT_UART_MSG_FRAME7SNIFFACTIVITY_POS	(0)
- #define BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK	\
- 		(0x7 << BT_UART_MSG_FRAME7SNIFFACTIVITY_POS)
--#define BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS	(3)
--#define BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_MSK	\
--		(0x3 << BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS)
-+#define BT_UART_MSG_FRAME7PAGE_POS		(3)
-+#define BT_UART_MSG_FRAME7PAGE_MSK		\
-+		(0x1 << BT_UART_MSG_FRAME7PAGE_POS)
-+#define BT_UART_MSG_FRAME7INQUIRY_POS		(4)
-+#define BT_UART_MSG_FRAME7INQUIRY_MSK		\
-+		(0x1 << BT_UART_MSG_FRAME7INQUIRY_POS)
- #define BT_UART_MSG_FRAME7CONNECTABLE_POS	(5)
- #define BT_UART_MSG_FRAME7CONNECTABLE_MSK	\
- 		(0x1 << BT_UART_MSG_FRAME7CONNECTABLE_POS)
--- 
-1.7.0.4
+> On Fri, Feb 25, 2011 at 17:15, Justin P. Mattock
+> <justinmattock@gmail.com> wrote:
+>> The patch below removes an extra "l" in the word.
+>
+> Random thought:
+>
+> Not that I'm complaining about your work here, and not that commits
+> are a finite resource, but would it be possible for you to collect
+> your spelling changes into slightly bigger commits before sending them
+> off?
+>
+> E.g. instead of sending off 21 patches to remove 21 erroneous l's, why
+> not do a full spelling check on these 21 files, then send off 21
+> patches to fix *all* the spelling mistakes in each file? You could
+> even group them up by directory if you liked.
+>
+> Thanks,
+>
+> --  
+>
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
 
+
+yeah.. I agree, its just people have said that I should individually
+send each patch to each maintainer subsystem etc...
+(rather would just send one with everything on it, but then might make  
+things more confusing)
+
+Justin P. Mattock
