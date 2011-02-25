@@ -1,40 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54204 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753425Ab1BGUGr (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:51124 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302Ab1BYIoX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 15:06:47 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id CBB3754009C
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Feb 2011 15:09:19 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-07 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110207200645.CB44240F97@repository3.orbit-lab.org>
-Date: Mon,  7 Feb 2011 15:06:45 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 25 Feb 2011 03:44:23 -0500
+Received: by pvg12 with SMTP id 12so218245pvg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 00:44:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+Date: Fri, 25 Feb 2011 14:14:21 +0530
+Message-ID: <AANLkTim8GSfuN5+zMyLWczy2YdSwxXsegtjLnGYVQsAG@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
+From: Mohammed Shafi <shafi.ath9k@gmail.com>
+To: Jonathan Nieder <jrnieder@gmail.com>, Tony Houghton <h@realh.co.uk>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Vivek Natarajan <vnatarajan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + da7658b...c8750c0 akpm-end   -> origin/akpm-end  (forced update)
-   831d52b..8dbdea8  akpm-start -> origin/akpm-start
-   d564fa0..960b1eb  history    -> origin/history
- + a2a5d7a...5424f20 master     -> origin/master  (forced update)
-   831d52b..8dbdea8  stable     -> origin/stable
- * [new tag]         next-20110207 -> next-20110207
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Fri, Feb 25, 2011 at 1:21 PM, Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+> On Fri, Feb 25, 2011 at 1:32 AM, Jonathan Nieder <jrnieder@gmail.com> wrote:
+>> (just cc-ing some people listed in MAINTAINERS)
+>> Hi,
+>>
+>> Tony Houghton wrote:
+>>
+>>> With 2.6.37 I can not use suspend on my Compaq/HP 311c (Intel Atom
+>>> N270/NVidia Ion LE). Originally the machine just kept locking up without
+>>> even blanking the display when I tried to suspend (using the GNOME menu
+>>> or by shutting the lid). I upgraded upower and gnome-power-manager etc
+>>> to experimental and after that the machine suspended OK but could not
+>>> resume. The backlight came on but the screen stayed blank and I could
+>>> not get to a console or anything with Alt+Fn.
+>> [...]
+>>> I tried replacing network-manager with wicd but that crashed the system
+>>> when it connected instead of when disconnected.
+>> [...]
+>>> While testing different kernels I found it would crash at different
+>>> times, usually before the screen turned off for suspending, but
+>>> sometimes it would crash on resuming and occasionally it locked up while
+>>> booting, but it's always a complete lock-up ie the keyboard is
+>>> completely responsive, including caps lock, the mouse won't move if the
+>>> display is still on, and the only way out is to hold down the power
+>>> button.
+>> [...]
+>>> I haven't tried looking in logs because the crashes are so severe I
+>>> don't think they'd be able to record anything useful. But using git
+>>> bisect I think I have tracked down the change that started causing this
+>>> problem:
+>>>
+>>> 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f is the first bad commit
+>>> commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+>>> Author: Vivek Natarajan <vnatarajan@atheros.com>
+>>> Date:   Mon Apr 5 14:48:04 2010 +0530
+>>>
+>>>     ath9k: Add support for newer AR9285 chipsets.
+>>>
+>>>     This patch adds support for a modified newer version of AR9285
+>>>     chipsets.
+>>>
+>>>     Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>>>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>
+>> The adaptor is an AR9285[1].
+>>
+>> That commit is based against v2.6.33 and was merged in v2.6.35-rc1
+>>
+>> $ git describe 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+>> v2.6.33-3523-g53bc7aa
+>> $ git name-rev --tags 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+>> 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f tags/v2.6.35-rc1~473^2~167^2~346
+>>
+>> Any ideas for tracking this down?
+>
+> is this issue still reproducible ?
+> Apart from this reporting I have not seen any other  issues for AR9285.
 
-compat-wireless code metrics
-
-    786482 - Total upstream lines of code being pulled
+sorry just now saw's Tonys message in linux wireless mailing list
+>
+>>
+>> Thanks,
+>> Jonathan
+>>
+>> [1]
+>>> 84: udi = '/org/freedesktop/Hal/devices/pci_168c_2b'
+>>>   pci.device_protocol = 0  (0x0)  (int)
+>>>   pci.vendor = 'Atheros Communications Inc.'  (string)
+>>>   info.vendor = 'Atheros Communications Inc.'  (string)
+>>>   pci.product = 'AR9285 Wireless Network Adapter
+>>> (PCI-Express)'  (string) linux.sysfs_path =
+>>> '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (strin g)
+>>>   info.parent = '/org/freedesktop/Hal/devices/pci_10de_ac6'  (string)
+>>>   info.linux.driver = 'ath9k'  (string)
+>>>   pci.subsys_vendor = 'Hewlett-Packard Company'  (string)
+>>>   linux.hotplug_type = 2  (0x2)  (int)
+>>>   linux.subsystem = 'pci'  (string)
+>>>   info.subsystem = 'pci'  (string)
+>>>   info.product = 'AR9285 Wireless Network Adapter
+>>> (PCI-Express)'  (string) info.udi =
+>>> '/org/freedesktop/Hal/devices/pci_168c_2b'  (string)
+>>> pci.linux.sysfs_path =
+>>> '/sys/devices/pci0000:00/0000:00:15.0/0000:03:00.0'  (string)
+>>> pci.product_id = 43  (0x2b)  (int) pci.vendor_id = 5772  (0x168c)
+>>> (int) pci.subsys_product_id = 12352  (0x3040)  (int)
+>>> pci.subsys_vendor_id = 4156  (0x103c)  (int) pci.device_class = 2
+>>> (0x2)  (int) pci.device_subclass = 128  (0x80)  (int)
+>> _______________________________________________
+>> ath9k-devel mailing list
+>> ath9k-devel@lists.ath9k.org
+>> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>>
+>
