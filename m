@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jabba.london.02.net ([82.132.130.169]:47831 "EHLO mail.o2.co.uk"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932141Ab1BYOl0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 09:41:26 -0500
-Date: Fri, 25 Feb 2011 14:35:39 +0000
-From: Tony Houghton <h@realh.co.uk>
-To: sedat.dilek@gmail.com
-Cc: sedat.dilek@googlemail.com, Jonathan Nieder <jrnieder@gmail.com>,
-	ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <vnatarajan@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re: ath9k causes lockups since kernel 2.6.35
-Message-ID: <20110225143539.6e9cb46c@realh.co.uk>
-In-Reply-To: <AANLkTinv-iP2ugHy2n23jwi2uuyJCoSXtekTj9QYvbXJ@mail.gmail.com>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<AANLkTinv-iP2ugHy2n23jwi2uuyJCoSXtekTj9QYvbXJ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from web57406.mail.re1.yahoo.com ([66.196.100.57]:34063 "HELO
+	web57406.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932510Ab1BYKPb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 05:15:31 -0500
+Message-ID: <557082.85443.qm@web57406.mail.re1.yahoo.com>
+Date: Fri, 25 Feb 2011 02:08:49 -0800 (PST)
+From: Joe Gunn <armadefuego@yahoo.com>
+Subject: [PATCH 2.6.38-rc6-wl 1/1] orinoco: Drop scan results with unknown channels
+To: orinoco-devel@lists.sourceforge.net
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 25 Feb 2011 08:57:11 +0100
-Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+If the frequency can not be mapped to a channel structure log it and drop it.
+---
+The driver was getting an error return from the frequency map. The invalid freq
+uency was not in the frequency table, so the channel structure returned null. T
+his test fro that case and does not allow the packet to continue up the stack.
+---
+diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco
+/scan.c
+index 86cb54c..e99ca1c 100644
+--- a/drivers/net/wireless/orinoco/scan.c
++++ b/drivers/net/wireless/orinoco/scan.c
+@@ -111,6 +111,11 @@ static void orinoco_add_hostscan_result(struct orinoco_pri
+vate *priv,
+ 
+ 	freq = ieee80211_dsss_chan_to_freq(le16_to_cpu(bss->a.channel));
+ 	channel = ieee80211_get_channel(wiphy, freq);
++	if (!channel) {
++		printk(KERN_DEBUG "Invalid channel designation %04X(%04X)",
++			bss->a.channel, freq);
++		return;	/* Then ignore it for now */
++	}
+ 	timestamp = 0;
+ 	capability = le16_to_cpu(bss->a.capabilities);
+ 	beacon_interval = le16_to_cpu(bss->a.beacon_interv);
 
-> Debian/experimental provides now 2.6.38-rc6 kernel packages, might be
-> worth a test?
+Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
 
-I just tried that and at first it looked as if it might be working,
-because it successfully disabled and reenabled wireless (via
-network-manager). But when I tried suspend it crashed on resuming. IIRC
-I also tried the newest tagged version from git and that was a fail too.
 
-FWIW this last crash was on battery power, but most of the time I've
-been plugged in to the mains. I saw some commit messages about
-power-saving mode but it didn't occur to me that battery/mains might
-make a difference and it looks like it doesn't.
+
+      
