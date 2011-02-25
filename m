@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52568 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751023Ab1BAVEV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 16:04:21 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: backport alloc_ordered_workqueue
-Date: Tue,  1 Feb 2011 22:04:12 +0100
-Message-Id: <1296594253-21273-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.19.149.2]:58237 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754452Ab1BYMBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 07:01:10 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 04:00:49 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] ath9k_hw: Fix pcie_serdes setting for AR9485 1.1 version.
+Date: Fri, 25 Feb 2011 17:31:01 +0530
+Message-ID: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was moved from a patch in compat-wireless to this place.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- include/linux/compat-2.6.37.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index 502d2b1..e993f75 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -106,6 +106,8 @@ extern void compat_led_classdev_unregister(struct led_classdev *led_cdev);
- extern void compat_led_brightness_set(struct led_classdev *led_cdev,
- 				      enum led_brightness brightness);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 6fa3c24..7f5de6e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -78,15 +78,15 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 		/* Awake Setting */
  
-+#define alloc_ordered_workqueue(name, flags) create_singlethread_workqueue(name)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-				ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1,
+-				ARRAY_SIZE(ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1),
++				ar9485_1_1_pcie_phy_clkreq_disable_L1,
++				ARRAY_SIZE(ar9485_1_1_pcie_phy_clkreq_disable_L1),
+ 				2);
  
- #endif /* LINUX_26_37_COMPAT_H */
+ 		/* Sleep Setting */
+ 
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-				ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1,
+-				ARRAY_SIZE(ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1),
++				ar9485_1_1_pcie_phy_clkreq_disable_L1,
++				ARRAY_SIZE(ar9485_1_1_pcie_phy_clkreq_disable_L1),
+ 				2);
+ 	} else if (AR_SREV_9485(ah)) {
+ 		/* mac */
 -- 
-1.7.1
+1.6.3.3
 
