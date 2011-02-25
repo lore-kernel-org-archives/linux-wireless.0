@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:42750 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754096Ab1BYDVq (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:42455 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932644Ab1BYUGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 22:21:46 -0500
-Received: by pwi15 with SMTP id 15so293478pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 19:21:46 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19815.8349.58361.632340@gargle.gargle.HOWL>
-Date: Fri, 25 Feb 2011 08:53:09 +0530
-To: Jay Davidson <jdiq123@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: [ath9k-devel] [Help Appreciated] Minstrel/Ath9k Rate control mechanism and Video delivery recognition
-In-Reply-To: <AANLkTiktAwpCE_2LhveOn2LvkiEi7uG4SN8xZ1x1Nm5D@mail.gmail.com>
-References: <AANLkTiktAwpCE_2LhveOn2LvkiEi7uG4SN8xZ1x1Nm5D@mail.gmail.com>
+	Fri, 25 Feb 2011 15:06:32 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id EF88754017F
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 15:09:42 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-25 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110225200631.55A7C46520@repository3.orbit-lab.org>
+Date: Fri, 25 Feb 2011 15:06:31 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jay Davidson wrote:
-> Dear all,
-> 
-> I have a few questions regarding Minstrel HT/Ath9k Rate control mechanism, and regarding video delivery recognition.
-> 
-> 1) Does minstrel or ATH9k RA change anything other than the MCS, e.g. frame aggregation size, retry limit, contention window, channel bandwidth etc. For example if I
-> initiate my AP with a 40 Mhz channel bandwidth, does it ever switch between 20 Mhz channel if its better or does it remain at 40 Mhz until its manually changed?. Any
-> documentation available for the RC/RA is appreciated.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   ec19f7f..6dae501  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 4b91e9f...fa8596d akpm-end   -> origin/akpm-end  (forced update)
+   4a508dd..86e2fe9  akpm-start -> origin/akpm-start
+   99c2c59..b13c9c0  history    -> origin/history
+ + d0ae5e3...b655770 master     -> origin/master  (forced update)
+   4a508dd..86e2fe9  stable     -> origin/stable
+ * [new tag]         next-20110225 -> next-20110225
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-* Channel Width Management is not supported by ath9k or mac80211, for that matter,
-  so dynamic switching between 20/40 Mhz will not happen.
-* Frame aggregation size will automatically change based on the rate.
-* Retry limits are fixed.
+compat-wireless code metrics
 
-> 2) what parameter do I need to change to modify the contention window (can use debugfs if hard coded).
-
-For AP mode, the CWMIN/CWMAX values are configurable in hostapd.
-
-> 3) How to set the rate at runtime(modify the MCS) aka. is it possible via iwconfig or iw. If not what parameters to change in order to port it via DebugFs.
-
-Fixed rate setting for MCS rates is currently not supported.
-hostapd has some knobs for limiting the rateset in 11g mode, IIRC.
-
-> 4) what parameter do I need to change to modify the number of subframes in an aggregate, from what I know Atheros' defualt is set to 32 and max is 64 subframes.
-
-You have to hack the driver, check
-max_tx_aggregation_subframes/max_rx_aggregation_subframes in mac80211.h
-
-> and finally:
-> 5) When I stream Video using VLC via RTP(UDP) protocol, the debug counters(access category) show it as Best effort and NOT "VI" which is what it should be. Any advice
-> suggestions reasoning, and/or a fix for this would be great.
-
-If it is so, it is a bug.
-
-Sujith
+    831210 - Total upstream lines of code being pulled
+      2163 - backport code changes
+      1881 - backport code additions
+       282 - backport code deletions
+      7438 - backport from compat module
+      9601 - total backport code
+    1.1551 - % of code consists of backport work
