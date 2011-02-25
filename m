@@ -1,81 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51871 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226Ab1BUP2I (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:62786 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753066Ab1BYQH0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 10:28:08 -0500
-Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight
- bufferbloat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
-	"Nathaniel J. Smith" <njs@pobox.com>, nbd@openwrt.org
-In-Reply-To: <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
-References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
-	 <1298064074-8108-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Feb 2011 16:28:06 +0100
-Message-ID: <1298302086.3707.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 25 Feb 2011 11:07:26 -0500
+Received: by pxi15 with SMTP id 15so275050pxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 08:07:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20110225144718.63550601@realh.co.uk>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+	<20110225144718.63550601@realh.co.uk>
+Date: Fri, 25 Feb 2011 21:37:25 +0530
+Message-ID: <AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
+From: Mohammed Shafi <shafi.ath9k@gmail.com>
+To: Tony Houghton <h@realh.co.uk>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Vivek Natarajan <vnatarajan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-02-18 at 16:21 -0500, John W. Linville wrote:
-> This is an implementation of the eBDP algorithm as documented in
-> Section IV of "Buffer Sizing for 802.11 Based Networks" by Tianji Li,
-> et al.
-> 
-> 	http://www.hamilton.ie/tianji_li/buffersizing.pdf
-> 
-> This implementation timestamps an skb before handing it to the
-> hardware driver, then computes the service time when the frame is
-> freed by the driver.  An exponentially weighted moving average of per
-> fragment service times is used to restrict queueing delays in hopes
-> of achieving a target fragment transmission latency.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> v1 -> v2:
-> - execute algorithm separately for each WMM queue
-> - change ewma scaling parameters
-> - calculate max queue len only when new latency data is received
-> - stop queues when occupancy limit is reached rather than dropping
-> - use skb->destructor for tracking queue occupancy
-> 
-> Johannes' comment about tx status reporting being unreliable (and what
-> he was really saying) finally sunk-in.  So, this version uses
-> skb->destructor to track in-flight fragments.  That should handle
-> fragments that get silently dropped in the driver for whatever reason
-> without leaking queue capacity.  Correct me if I'm wrong!
+On Fri, Feb 25, 2011 at 8:17 PM, Tony Houghton <h@realh.co.uk> wrote:
+> On Fri, 25 Feb 2011 13:21:32 +0530
+> Mohammed Shafi <shafi.ath9k@gmail.com> wrote:
+>
+>> > Tony Houghton wrote:
+>> >
+>> >> With 2.6.37 I can not use suspend on my Compaq/HP 311c (Intel Atom
+>> >> N270/NVidia Ion LE). Originally the machine just kept locking up without
+>> >> even blanking the display when I tried to suspend (using the GNOME menu
+>> >> or by shutting the lid).
+>
+> [Snip]
+>
+> The above was from my original message before I worked out that the
+> problem was in the wireless because disabling and reneabling wireless,
+> killing the ath9k module etc, would often produce similar crashes, but
+> suspend seems to do it more consistently.
 
-Yeah, I had that idea as well. Could unify the existing skb_orphan()
-call though :-)
+Ok.
 
-However, Nathaniel is right -- if the skb is freed right away during
-tx() you kinda estimate its queue time to be virtually zero. That
-doesn't make a lot of sense and might in certain conditions exacerbate
-the problem, for example if the system is out of memory more packets
-might be allowed through than in normal operation etc.
+>
+>> >> booting, but it's always a complete lock-up ie the keyboard is
+>> >> completely responsive, including caps lock, the mouse won't move if the
+>
+> I meant *un*responsive of course!
+>
+>> >> I haven't tried looking in logs because the crashes are so severe I
+>> >> don't think they'd be able to record anything useful.
 
-Also, for some USB drivers I believe SKB lifetime has no relation to
-queue size at all because the data is just shuffled into an URB. I'm not
-sure we can solve this generically. I'm not really sure how this works
-for USB drivers, I think they queue up frames with the HCI controller
-rather than directly with the device.
+Can you please get those messages with net console ?
 
-Finally, this isn't taking into account any of the issues about
-aggregation and AP mode. Remember that both with multiple streams (on
-different ACs) and even more so going to different stations
-(AP/IBSS/mesh modes, and likely soon even in STA mode with (T)DLS, and
-let's not forget 11ac/ad) there may be vast differences in the time
-different frames spend on a queue which are not just due to bloated
-queues. I'm concerned about this since none of it has been taken into
-account in the paper you're basing this on, all evaluations seem to be
-pretty much based on a single traffic stream.
+>
+> If I enable debugging is there a way to get it to sync to disc after
+> every message? I think the developers are going to need at least that
+> information to be able to track this down.
 
-Overall, I think there should be some more research first. This might
-help in some cases, but do we know it won't completely break throughput
-in other cases?
+Yes sure, that could narrow down the issue.
 
-johannes
+>
+>> is this issue still reproducible ?
+>
+> Yes :-(.
 
+It would be highly helpful if this issue is reproducible in the latest
+wireless testing or compat wireless. It will help us to fix it cleanly
+
+>
+>> Apart from this reporting I have not seen any other  issues for AR9285.
+>
+> Strange, isn't it. I can't be the only person trying to use a recent
+> version of Linux on one of these netbooks, but I couldn't find any
+> similar complaints on Google. Maybe mine has an obscure fault which is
+> only triggered by a feature supported in the newer kernels.
+>
+
+also need to rule out its a platform independent issue.
