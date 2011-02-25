@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 75-145-127-229-Colorado.hfc.comcastbusiness.net ([75.145.127.229]:51263
-	"EHLO gw.co.teklibre.org" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752383Ab1B0P4u convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 10:56:50 -0500
-From: d@taht.net (Dave =?utf-8?Q?T=C3=A4ht?=)
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	bloat-devel@lists.bufferbloat.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ANNOUNCE: debloat-testing kernel git tree
-References: <20110225222210.GA3618@tuxdriver.com>
-	<AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
-	<87fwr9jxya.fsf@cruithne.co.teklibre.org>
-	<AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
-Date: Sun, 27 Feb 2011 08:56:48 -0700
-In-Reply-To: <AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
-	(Sedat Dilek's message of "Sun, 27 Feb 2011 16:38:17 +0100")
-Message-ID: <8739n9ii7z.fsf@cruithne.co.teklibre.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from he.sipsolutions.net ([78.46.109.217]:56114 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932196Ab1BYPt0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 10:49:26 -0500
+Subject: Re: [PATCH 2/2] iwlagn: fix iwlagn_check_needed_chains
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Swati Rallapalli <swati@cs.utexas.edu>
+In-Reply-To: <1298647873.28351.10.camel@wwguy-huron>
+References: <20110225112409.977212647@sipsolutions.net>
+	 <20110225112620.515442527@sipsolutions.net>
+	 <1298648166.2603.11.camel@wwguy-ubuntu>
+	 <1298648386.4329.18.camel@jlt3.sipsolutions.net>
+	 <1298647873.28351.10.camel@wwguy-huron>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 25 Feb 2011 16:49:21 +0100
+Message-ID: <1298648961.4329.19.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sedat Dilek <sedat.dilek@googlemail.com> writes:
+On Fri, 2011-02-25 at 07:31 -0800, Guy, Wey-Yi wrote:
+> On Fri, 2011-02-25 at 07:39 -0800, Johannes Berg wrote:
+> > On Fri, 2011-02-25 at 07:36 -0800, wwguy wrote:
+> > 
+> > > > @@ -503,7 +488,46 @@ static void iwlagn_check_needed_chains(s
+> > > >  			 * will soon tell us about that.
+> > > >  			 */
+> > > >  			need_multiple = false;
+> > > > +			rcu_read_unlock();
+> > > > +			break;
+> > > 
+> > > why unlock and break here instead stay do it later like before?
+> > 
+> > Only because the indentation there was getting so deep it was annoying
+> > to fit into 80 cols :-)
+> 
+> how you want to submit this patch? through iwlagn, or yo uwill send it
+> along with mac80211 to John?
 
-> On Sun, Feb 27, 2011 at 4:31 PM, Dave Täht <d@taht.net> wrote:
->>
->> Sedat Dilek <sedat.dilek@googlemail.com> writes:
->>
->>> On Fri, Feb 25, 2011 at 11:22 PM, John W. Linville
->>> <linville@tuxdriver.com> wrote:
->>>> Announcement
->>>>
->>>> The bufferbloat project [1] is pleased to announce the availability
->>>> of the debloat-testing Linux kernel git tree:
->>>>
->>>>   git://git.infradead.org/debloat-testing.git
->>
->> ----snip----
+Don't really care. I just sent them both here to keep them together and
+for Daniel and Swati ... First though, I'd like them to test it maybe.
 
->> Excellent. At moment I would recommend building "low latency preempt
->> desktop" kernels with a high HZ value (400 or 1000), enabling highres
->> timers, and compiling in SFB as a module. (I'd like the default for SFB
->> to be "m" rather than "n", too)
->>
+johannes
 
-> These "debloat guys" are fast :-).  I was just preparing my
-> build-system (which I normally use to debianize linux-next kernels).
-> Any other recommendation for kernel-config options?  For example:
-> linux-next has already CONFIG_NET_SCH_CHOKE (but I have unset it).
-
-Enable CHOKe.
-
-The HZ value change is due to my worry that we've smashed latency so
-much in the driver/mac layer that it's interacting with the higher
-layers somewhat badly... So we need to add more hooks to the servo loops
-involved in order to have a normal HZ. 
-
-> Which commits are in debloat-testing GIT but not in linux-next tree?
-
-The current list was in the release announcement. More on the way
-(mostly embedded drivers at this point) git pull early and often!
-
-> Are you planning debloat feature for 2.6.39?
-
-Depends on how many testers we get and what the results are. 
-
-I feel the eBDP stuff will not be ready during this release cycle. SFB
-and CHOKe are in net-next, so, probably. Various driver patches -
-particularly those that increase the available dynamic range via
-ethtool, (e.g lowering the bottommost TX queue limit to, like, 4,
-especially for home gateways) may make it out if people look harder into
-the issue.
-
->
-> - Sedat -
-
--- 
-Dave Taht
-http://nex-6.taht.net
