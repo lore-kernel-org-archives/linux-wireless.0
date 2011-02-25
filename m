@@ -1,180 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55256 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751288Ab1BUWcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 17:32:36 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat: backport tty_set_termios
-Date: Mon, 21 Feb 2011 23:32:24 +0100
-Message-Id: <1298327544-18943-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1298327544-18943-1-git-send-email-hauke@hauke-m.de>
-References: <1298327544-18943-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:49206 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753269Ab1BYL0x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 06:26:53 -0500
+Message-Id: <20110225112620.515442527@sipsolutions.net>
+Date: Fri, 25 Feb 2011 12:24:11 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Swati Rallapalli <swati@cs.utexas.edu>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/2] iwlagn: fix iwlagn_check_needed_chains
+References: <20110225112409.977212647@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code is copied from the kernel sources.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+This function was intended to calculate the
+number of RX chains needed, but could only
+work where the AP's streams were asymmetric,
+i.e. 2 TX and 3 RX or similar. In the case
+where IEEE80211_HT_MCS_TX_RX_DIFF was not
+set, this function would calculate the wrong
+information.
+
+Additionally, mac80211 didn't pass through
+the required values at all, so it couldn't
+work anyway.
+
+Rewrite the logic in this function and add
+appropriate comments to make it readable.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- compat/Makefile               |    1 +
- compat/compat-2.6.39.c        |  111 +++++++++++++++++++++++++++++++++++++++++
- include/linux/compat-2.6.39.h |    7 +++
- 3 files changed, 119 insertions(+), 0 deletions(-)
- create mode 100644 compat/compat-2.6.39.c
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   58 +++++++++++++++++++---------
+ 1 file changed, 41 insertions(+), 17 deletions(-)
 
-diff --git a/compat/Makefile b/compat/Makefile
-index 9c042ca..f87b024 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -29,3 +29,4 @@ compat-$(CONFIG_COMPAT_KERNEL_35) += compat-2.6.35.o
- compat-$(CONFIG_COMPAT_KERNEL_36) += compat-2.6.36.o
- compat-$(CONFIG_COMPAT_KERNEL_37) += compat-2.6.37.o
- compat-$(CONFIG_COMPAT_KERNEL_38) += compat-2.6.38.o
-+compat-$(CONFIG_COMPAT_KERNEL_39) += compat-2.6.39.o
-diff --git a/compat/compat-2.6.39.c b/compat/compat-2.6.39.c
-new file mode 100644
-index 0000000..c2966f7
---- /dev/null
-+++ b/compat/compat-2.6.39.c
-@@ -0,0 +1,111 @@
-+/*
-+ * Copyright 2011    Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Compatibility file for Linux wireless for kernels 2.6.39.
-+ */
-+
-+#include <linux/compat.h>
-+#include <linux/tty.h>
-+
-+/*
-+ *		Termios Helper Methods
-+ */
-+static void unset_locked_termios(struct ktermios *termios,
-+				 struct ktermios *old,
-+				 struct ktermios *locked)
-+{
-+	int	i;
-+
-+#define NOSET_MASK(x, y, z) (x = ((x) & ~(z)) | ((y) & (z)))
-+
-+	if (!locked) {
-+		printk(KERN_WARNING "Warning?!? termios_locked is NULL.\n");
-+		return;
-+	}
-+
-+	NOSET_MASK(termios->c_iflag, old->c_iflag, locked->c_iflag);
-+	NOSET_MASK(termios->c_oflag, old->c_oflag, locked->c_oflag);
-+	NOSET_MASK(termios->c_cflag, old->c_cflag, locked->c_cflag);
-+	NOSET_MASK(termios->c_lflag, old->c_lflag, locked->c_lflag);
-+	termios->c_line = locked->c_line ? old->c_line : termios->c_line;
-+	for (i = 0; i < NCCS; i++)
-+		termios->c_cc[i] = locked->c_cc[i] ?
-+			old->c_cc[i] : termios->c_cc[i];
-+	/* FIXME: What should we do for i/ospeed */
-+}
-+
-+/**
-+ *	tty_set_termios		-	update termios values
-+ *	@tty: tty to update
-+ *	@new_termios: desired new value
-+ *
-+ *	Perform updates to the termios values set on this terminal. There
-+ *	is a bit of layering violation here with n_tty in terms of the
-+ *	internal knowledge of this function.
-+ *
-+ *	Locking: termios_mutex
-+ */
-+int tty_set_termios(struct tty_struct *tty, struct ktermios *new_termios)
-+{
-+	struct ktermios old_termios;
-+	struct tty_ldisc *ld;
-+	unsigned long flags;
-+
-+	/*
-+	 *	Perform the actual termios internal changes under lock.
-+	 */
-+
-+
-+	/* FIXME: we need to decide on some locking/ordering semantics
-+	   for the set_termios notification eventually */
-+	mutex_lock(&tty->termios_mutex);
-+	old_termios = *tty->termios;
-+	*tty->termios = *new_termios;
-+	unset_locked_termios(tty->termios, &old_termios, tty->termios_locked);
-+
-+	/* See if packet mode change of state. */
-+	if (tty->link && tty->link->packet) {
-+		int extproc = (old_termios.c_lflag & EXTPROC) |
-+				(tty->termios->c_lflag & EXTPROC);
-+		int old_flow = ((old_termios.c_iflag & IXON) &&
-+				(old_termios.c_cc[VSTOP] == '\023') &&
-+				(old_termios.c_cc[VSTART] == '\021'));
-+		int new_flow = (I_IXON(tty) &&
-+				STOP_CHAR(tty) == '\023' &&
-+				START_CHAR(tty) == '\021');
-+		if ((old_flow != new_flow) || extproc) {
-+			spin_lock_irqsave(&tty->ctrl_lock, flags);
-+			if (old_flow != new_flow) {
-+				tty->ctrl_status &= ~(TIOCPKT_DOSTOP | TIOCPKT_NOSTOP);
-+				if (new_flow)
-+					tty->ctrl_status |= TIOCPKT_DOSTOP;
-+				else
-+					tty->ctrl_status |= TIOCPKT_NOSTOP;
-+			}
-+			if (extproc)
-+				tty->ctrl_status |= TIOCPKT_IOCTL;
-+			spin_unlock_irqrestore(&tty->ctrl_lock, flags);
-+			wake_up_interruptible(&tty->link->read_wait);
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c	2011-02-25 11:03:37.000000000 +0100
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c	2011-02-25 12:21:18.000000000 +0100
+@@ -471,6 +471,7 @@ static void iwlagn_check_needed_chains(s
+ 	struct iwl_rxon_context *tmp;
+ 	struct ieee80211_sta *sta;
+ 	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
++	struct ieee80211_sta_ht_cap *ht_cap;
+ 	bool need_multiple;
+ 
+ 	lockdep_assert_held(&priv->mutex);
+@@ -479,23 +480,7 @@ static void iwlagn_check_needed_chains(s
+ 	case NL80211_IFTYPE_STATION:
+ 		rcu_read_lock();
+ 		sta = ieee80211_find_sta(vif, bss_conf->bssid);
+-		if (sta) {
+-			struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+-			int maxstreams;
+-
+-			maxstreams = (ht_cap->mcs.tx_params &
+-				      IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK)
+-					>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
+-			maxstreams += 1;
+-
+-			need_multiple = true;
+-
+-			if ((ht_cap->mcs.rx_mask[1] == 0) &&
+-			    (ht_cap->mcs.rx_mask[2] == 0))
+-				need_multiple = false;
+-			if (maxstreams <= 1)
+-				need_multiple = false;
+-		} else {
++		if (!sta) {
+ 			/*
+ 			 * If at all, this can only happen through a race
+ 			 * when the AP disconnects us while we're still
+@@ -503,7 +488,46 @@ static void iwlagn_check_needed_chains(s
+ 			 * will soon tell us about that.
+ 			 */
+ 			need_multiple = false;
++			rcu_read_unlock();
++			break;
 +		}
-+	}
 +
-+	if (tty->ops->set_termios)
-+		(*tty->ops->set_termios)(tty, &old_termios);
-+	else
-+		tty_termios_copy_hw(tty->termios, &old_termios);
++		ht_cap = &sta->ht_cap;
 +
-+	ld = tty_ldisc_ref(tty);
-+	if (ld != NULL) {
-+		if (ld->ops->set_termios)
-+			(ld->ops->set_termios)(tty, &old_termios);
-+		tty_ldisc_deref(ld);
-+	}
-+	mutex_unlock(&tty->termios_mutex);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(tty_set_termios);
++		need_multiple = true;
 +
-diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
-index c0c98fd..1c7b322 100644
---- a/include/linux/compat-2.6.39.h
-+++ b/include/linux/compat-2.6.39.h
-@@ -5,6 +5,8 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))
- 
-+#include <linux/tty.h>
++		/*
++		 * If the peer advertises no support for receiving 2 and 3
++		 * stream MCS rates, it can't be transmitting them either.
++		 */
++		if (ht_cap->mcs.rx_mask[1] == 0 &&
++		    ht_cap->mcs.rx_mask[2] == 0) {
++			need_multiple = false;
++		} else if (!(ht_cap->mcs.tx_params &
++						IEEE80211_HT_MCS_TX_DEFINED)) {
++			/* If it can't TX MCS at all ... */
++			need_multiple = false;
++		} else if (ht_cap->mcs.tx_params &
++						IEEE80211_HT_MCS_TX_RX_DIFF) {
++			int maxstreams;
 +
- /*
-  * This is not part of The 2.6.37 kernel yet but we
-  * we use it to optimize the backport code we
-@@ -22,6 +24,11 @@
- #define br_port_exists(dev)	(dev->br_port)
- #endif
- 
-+#define tiocmget(tty) tiocmget(tty, NULL)
-+#define tiocmset(tty, set, clear) tiocmset(tty, NULL, set, clear)
++			/*
++			 * But if it can receive them, it might still not
++			 * be able to transmit them, which is what we need
++			 * to check here -- so check the number of streams
++			 * it advertises for TX (if different from RX).
++			 */
 +
-+extern int tty_set_termios(struct tty_struct *tty, struct ktermios *kt);
++			maxstreams = (ht_cap->mcs.tx_params &
++				 IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK);
++			maxstreams >>=
++				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
++			maxstreams += 1;
 +
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)) */
- 
- #endif /* LINUX_26_39_COMPAT_H */
--- 
-1.7.1
++			if (maxstreams <= 1)
++				need_multiple = false;
+ 		}
++
+ 		rcu_read_unlock();
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+
 
