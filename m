@@ -1,66 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:40247 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011Ab1BHBLL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 20:11:11 -0500
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 7 Feb 2011 17:10:49 -0800
-Message-ID: <AANLkTineqSLDLg84Ah7Djd1R=K-xTfQDUd==K+eaJFES@mail.gmail.com>
-Subject: compat-wireless for 2.6.38-rc3 - third release
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:56646 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932122Ab1BYQIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 11:08:09 -0500
+Subject: new iwlwifi 5000 uCode available
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 25 Feb 2011 07:53:05 -0800
+Message-ID: <1298649186.28351.16.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I updated compat-wireless for 2.6.38-rc3, this is the third update, it
-should now include the proper compat.git branch and also adds some new
-patches from Hauke to minimize deltas and fix compilation. While at it
-I took the time to suck in new pending-stable patches for an "-s"
-release, I haven't cherry picked any patches yet as I cannot think of
-anything immediately important, if you do send me a patch.
+Hi,
 
-Code metrics for the vanilla release:
+Version 8.83.5.1 of maintenance release uCode for Intel® 5000AGN Series
+Wi-Fi Adapters is now available for download from
+http://intellinuxwireless.org/?n=Downloads
 
-    782535 - Total upstream lines of code being pulled
-      2108 - backport code changes
-      1847 - backport code additions
-       261 - backport code deletions
-      7292 - backport from compat module
-      9400 - total backport code
-    1.2012 - % of code consists of backport work
+This maintenance release should replace the current 5000 experimental
+release uCode
 
-Base tree: linux-2.6-allstable.git
-Base tree version: v2.6.38-rc3
-compat-wireless release: compat-wireless-v2.6.38-rc3-3
+Changes:
 
-Code metrics for the "-s" release:
+- Fix "tid mismatch" issue
 
-    782535 - Total upstream lines of code being pulled
-      2108 - backport code changes
-      1847 - backport code additions
-       261 - backport code deletions
-      7292 - backport from compat module
-      9400 - total backport code
-    1.2012 - % of code consists of backport work
-       115 - Code changes brought in from pending-stable
-        57 - Code additions brought in from pending-stable
-        58 - Code deletions brought in from pending-stable
-    0.0147 - % of code being cherry picked from pending-stable
+Wey-Yi
 
-Base tree: linux-2.6-allstable.git
-Base tree version: v2.6.38-rc3
-compat-wireless release: compat-wireless-v2.6.38-rc3-3-s
-
-Relevant URLs:
-
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38-rc3-3.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38-rc3-3-s.tar.bz2
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/ChangeLog-2.6.38-wireless
-http://wireless.kernel.org/en/users/Download/stable
-
-  Luis
