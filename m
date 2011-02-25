@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48289 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075Ab1B1Ftv (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54044
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751645Ab1BYGnJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 00:49:51 -0500
-Received: by iyb26 with SMTP id 26so2599374iyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 21:49:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1298814584-11779-1-git-send-email-hauke@hauke-m.de>
-References: <1298814584-11779-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 27 Feb 2011 21:49:31 -0800
-Message-ID: <AANLkTikvLy06Dt=9AVn+6ycqPAg48QNn9mW5LEkucRkJ@mail.gmail.com>
-Subject: Re: [PATCH] compat: add tty_set_termios only for kernel >= 2.6.27
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 25 Feb 2011 01:43:09 -0500
+Date: Thu, 24 Feb 2011 22:43:44 -0800 (PST)
+Message-Id: <20110224.224344.104068328.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-02-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110222215229.GJ12153@tuxdriver.com>
+References: <20110222215229.GJ12153@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 27, 2011 at 5:49 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> tty_set_termios does not build with older kernel versions and is only
-> needed by bluetooth which works only for kernel >= 2.6.27.
->
-> Reported-by: Juan Carlos Garza <juancarlosgarza@gmail.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 22 Feb 2011 16:52:30 -0500
 
-Applied, thanks!
+> Here is the latest batch of wireless bits intended for 2.6.39.  It seems
+> I neglected to send a pull request last week, so this one is a bit big
+> -- I apologize!
+> 
+> This includes a rather large batch of bluetooth bits by way of Gustavo.
+> It looks like a variety of bits, including some code refactoring, some
+> protocol support enhancements, some bugfixes, etc. -- nothing too
+> unusual.
+> 
+> Other items of interest include a new driver from Realtek, some ssb
+> support enhancements, and the usual sort of updates for mac80211 and a
+> variety of drivers.  Also included is a wireless-2.6 pull to resolve
+> some build breakage.
+> 
+> Please let me know if there are problems!
 
-  Luis
+Pulled, thanks a lot John.
