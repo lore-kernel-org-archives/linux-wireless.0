@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58708 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751806Ab1BAWrP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 17:47:15 -0500
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 17/18] wl1251: enable tx path in monitor mode if necessary for packet injection
-References: <4D45A79A.1030102@davizone.at> <4D45B7DC.3060303@davizone.at>
-	<8762t5dptt.fsf@purkki.adurom.net> <4D473F16.4010102@davizone.at>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 02 Feb 2011 00:47:13 +0200
-In-Reply-To: <4D473F16.4010102@davizone.at> (David Gnedt's message of "Tue\, 01 Feb 2011 00\:00\:38 +0100")
-Message-ID: <87bp2vbcem.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:51833 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751700Ab1BZJVW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Feb 2011 04:21:22 -0500
+Subject: Re: [PATCH v2] at76c50x-usb: fix warning caused by
+ at76_mac80211_tx now returning void
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, kalle.valo@iki.fi, kvalo@adurom.com
+In-Reply-To: <1298671436-2052-1-git-send-email-linville@tuxdriver.com>
+References: <1298666834.4329.20.camel@jlt3.sipsolutions.net>
+	 <1298671436-2052-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 26 Feb 2011 10:21:18 +0100
+Message-ID: <1298712078.3922.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Gnedt <david.gnedt@davizone.at> writes:
+On Fri, 2011-02-25 at 17:03 -0500, John W. Linville wrote:
+> CC [M]  drivers/net/wireless/at76c50x-usb.o
+> drivers/net/wireless/at76c50x-usb.c: In function ‘at76_mac80211_tx’:
+> drivers/net/wireless/at76c50x-usb.c:1759:4: warning: ‘return’ with a value, in function returning void
+> 
+> This is fallout from commit 7bb4568372856688bc070917265bce0b88bb7d4d
+> ("mac80211: make tx() operation return void").
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> v2 drop the frame and return...duh!
+> 
+> Will this hack still work if we drop the frame?  Did it ever work?
 
-> Am 2011-01-31 17:02, schrieb Kalle Valo:
->
->> I would like to step back and first look at the problem you are trying
->> to solve and maybe there's a way we can fix the join command. Was it
->> something to do with firmware sending extra frames? Unfortunately TI
->> firmwares are notorious for that.
->
-> Yeah, you are right, but I don't think the JOIN command can be
-> fixed. Even if we use it with a zero BSSID and zero SSID, it sends
-> some frames.
+I'm not sure it ever worked, Kalle did mention that this driver never
+really worked well.
 
-What frames are we talking about exactly? (I can't test this right now.)
+johannes
 
-> All in all I think the JOIN command was only meant to be used when you really
-> want to associate.
-
-Yes, that has been my impression as well. But I really don't know if
-we have any better options. Adding the hack you did to tx path is
-really awkward as well.
-
-> It would be really unpleasant if the firmware keeps sending frames
-> while channel hopping (through user-space software) in monitor mode.
-
-I don't see it as that bad really, but of course it depends what
-frames are sent.
-
--- 
-Kalle Valo
