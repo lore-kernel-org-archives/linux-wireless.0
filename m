@@ -1,31 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58563 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020Ab1BAW12 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 17:27:28 -0500
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Subject: Re: [PATCH 09/18] wl1251: enable adhoc mode
-References: <4D45A5CF.6050603@davizone.at>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 02 Feb 2011 00:27:26 +0200
-In-Reply-To: <4D45A5CF.6050603@davizone.at> (David Gnedt's message of "Sun\, 30 Jan 2011 18\:54\:23 +0100")
-Message-ID: <87vd13bdbl.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:44949 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab1BZBdS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Feb 2011 20:33:18 -0500
+Received: by ywj3 with SMTP id 3so667885ywj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 17:33:17 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] [mac|nl]80211: SAE mesh and userspace authentication
+Date: Fri, 25 Feb 2011 17:32:35 -0800
+Message-Id: <1298683960-20835-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Gnedt <david.gnedt@davizone.at> writes:
+Hello,
 
-> Enable adhoc support in wl1251 driver.
->
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+This patch series introduces support for userspace SAE (Simultaneous
+Authentication of Equals) daemons through nl80211 and mac80211. This
+authentication scheme is documented in IEEE 802.11s section 8.2a.1. 
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
+Regards,
+Thomas Pedersen
+cozybit, inc.
 
--- 
-Kalle Valo
