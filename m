@@ -1,40 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45776 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209Ab1BOQoP (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:47583 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741Ab1BZBgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 11:44:15 -0500
-Received: by fxm20 with SMTP id 20so375377fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 08:44:14 -0800 (PST)
-Message-ID: <4D5AAC7C.6060509@lwfinger.net>
-Date: Tue, 15 Feb 2011 10:40:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 25 Feb 2011 20:36:11 -0500
+Date: Fri, 25 Feb 2011 22:36:39 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-02-22
+Message-ID: <20110226013639.GA2166@joana>
+References: <20110222215229.GJ12153@tuxdriver.com>
+ <20110224.224344.104068328.davem@davemloft.net>
+ <20110225.111500.59674472.davem@davemloft.net>
+ <20110225193618.GB2107@joana>
 MIME-Version: 1.0
-To: Ben Ruijl <benruyl@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8712u: packet loss
-References: <AANLkTi=-KJ+OSvDGuxYvDYQZ2ZdS8G8obbvodOXd9zQD@mail.gmail.com> <AANLkTimTecR-W7iGzRWB_DxNVJoovK5SCuWfCmt8SUJo@mail.gmail.com> <AANLkTimx7=kYdWfe8FKL6oMyErE=3=GpXa-YrxkVVBG3@mail.gmail.com>
-In-Reply-To: <AANLkTimx7=kYdWfe8FKL6oMyErE=3=GpXa-YrxkVVBG3@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110225193618.GB2107@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2011 06:58 AM, Ben Ruijl wrote:
-> I am experiencing packet loss of about 12 percent with the r8712u
-> staging driver with my WL-352v2 device. I'm not the only one with this
-> problem (https://bbs.archlinux.org/viewtopic.php?id=112120). I haven't
-> done a git bisect yet, but I know the problem is in both the 2.6.37
-> version and the latest version.
+* Gustavo F. Padovan <padovan@profusion.mobi> [2011-02-25 16:36:18 -0300]:
 
-Normally, you should not expect to get much help in this mailing list with a 
-driver from staging. I assume that you have seen the warning that is placed in 
-the dmesg output when you load a staging driver. You are fortunate in this case 
-as I was the one that pushed this driver into staging.
+> Hi David,
+> 
+> * David Miller <davem@davemloft.net> [2011-02-25 11:15:00 -0800]:
+> 
+> > From: David Miller <davem@davemloft.net>
+> > Date: Thu, 24 Feb 2011 22:43:44 -0800 (PST)
+> > 
+> > > From: "John W. Linville" <linville@tuxdriver.com>
+> > > Date: Tue, 22 Feb 2011 16:52:30 -0500
+> > > 
+> > >> Here is the latest batch of wireless bits intended for 2.6.39.  It seems
+> > >> I neglected to send a pull request last week, so this one is a bit big
+> > >> -- I apologize!
+> > >> 
+> > >> This includes a rather large batch of bluetooth bits by way of Gustavo.
+> > >> It looks like a variety of bits, including some code refactoring, some
+> > >> protocol support enhancements, some bugfixes, etc. -- nothing too
+> > >> unusual.
+> > >> 
+> > >> Other items of interest include a new driver from Realtek, some ssb
+> > >> support enhancements, and the usual sort of updates for mac80211 and a
+> > >> variety of drivers.  Also included is a wireless-2.6 pull to resolve
+> > >> some build breakage.
+> > >> 
+> > >> Please let me know if there are problems!
+> > > 
+> > > Pulled, thanks a lot John.
+> > 
+> > John a few things:
+> > 
+> > 1) I had to add some vmalloc.h includes to fix the build on sparc64,
+> >    see commit b08cd667c4b6641c4d16a3f87f4550f81a6d69ac in net-next-2.6
+> > 
+> > 2) Something is screwey with the bluetooth config options now.
+> > 
+> >    I have an allmodconfig tree, and when I run "make oldconfig" after
+> >    this pull, BT_L2CAP and BT_SCO both prompt me, claiming that they
+> >    can only be built statically.
+> > 
+> >    I give it 'y' just to make it happen, for both, and afterways no
+> >    matter how many times I rerun "make oldconfig" I keep seeing things
+> >    like this in my build:
+> > 
+> > scripts/kconfig/conf --silentoldconfig Kconfig
+> > include/config/auto.conf:986:warning: symbol value 'm' invalid for BT_SCO
+> > include/config/auto.conf:3156:warning: symbol value 'm' invalid for BT_L2CAP
+> > 
+> >    First, what the heck is going on here?  Second, why the heck can't these
+> >    non-trivial pieces of code be built modular any more?
+> 
+> We now have L2CAP and SCO built-in in the main bluetooth.ko module.
+> 
+> > 
+> >    You can't make something "bool", have it depend on something that
+> >    might be modular, and then build it into what could in fact be a
+> >    module.  That's exactly what the bluetooth stuff seems to be doing
+> >    now.
+> 
+> Seems I did the Kconfig change wrong, I'll fix it ASAP and send it to you
+> guys.
 
-A bisection would not do much good as there have been few changes to the driver 
-since it was included.
+I Figured the problem. When I first wrote this I based the work in other
+Kconfig in net/ (as it was my very first time doing such kind of changes in a
+Kconfig). For example, net/decnet/ and net/ax25/ do exactly the same as the
+Bluetooth Kconfig. "bool" depending on "tristate" and build both together.
 
-Please describe your case more completely. List the output of iwconfig. I need 
-this info as my device gets a ping packet loss of about 1%.
+But doing another look after your report there is some places where this is
+done a bit different, net/ipv6 and net/mac80211 are examples. Then I changed
+to this new approach to remove the direct dependency from BT_L2CAP and BT_SCO.
+Patch follows this e-mail.
 
-Larry
+That point me out that we may have other subsystems doing it wrong and we have
+to fix this.
+
+-- 
+Gustavo F. Padovan
+http://profusion.mobi
