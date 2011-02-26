@@ -1,40 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:52287 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009Ab1BDLHZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 06:07:25 -0500
-Received: by pxi15 with SMTP id 15so384870pxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Feb 2011 03:07:24 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19787.56808.340852.289586@gargle.gargle.HOWL>
-Date: Fri, 4 Feb 2011 16:37:20 +0530
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k: Drain txq before sending a nullfunc frame.
-In-Reply-To: <AANLkTimfONC20SyM=OA9Fykkt91ZsU19XEBiC7uDnVY8@mail.gmail.com>
-References: <1296800640-6381-1-git-send-email-vnatarajan@atheros.com>
-	<19787.47298.50879.401166@gargle.gargle.HOWL>
-	<AANLkTim_7Xup048eGxz2HWj0AqRS_+jvC1LqgCdU9ZOh@mail.gmail.com>
-	<19787.54182.293274.705139@gargle.gargle.HOWL>
-	<AANLkTimfONC20SyM=OA9Fykkt91ZsU19XEBiC7uDnVY8@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:49426 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752612Ab1BZTBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Feb 2011 14:01:15 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/5] iwlagn: add BT Session Activity 2 UART message (BT -> WiFi)
+Date: Sat, 26 Feb 2011 10:46:04 -0800
+Message-Id: <1298745966-25130-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan wrote:
-> This is true for retry_tx set as false(for ath_draintxq) but if the
-> retry is set, I suppose the frame will be in the hw queue till all the
-> hw retries(20) and sw retries(10) (200 retries in total)are over. This
-> will take a lot of time for completion if the channel is busy.
+additional UART message defines
 
-Time for completion ? We are _draining_ the pending frames, they are never
-sent out ...
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   78 +++++++++++++++++++++++++++
+ 1 files changed, 78 insertions(+), 0 deletions(-)
 
-> I am thinking of calling ath_drain_all_txq() in flush() and the only
-> query is should the retry_tx be set.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index b32b143..df6abbf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -4173,6 +4173,7 @@ enum iwl_bt_coex_profile_traffic_load {
+  */
+ };
+ 
++/* BT UART message - Share Part (BT -> WiFi) */
+ #define BT_UART_MSG_FRAME1MSGTYPE_POS		(0)
+ #define BT_UART_MSG_FRAME1MSGTYPE_MSK		\
+ 		(0x7 << BT_UART_MSG_FRAME1MSGTYPE_POS)
+@@ -4267,6 +4268,83 @@ enum iwl_bt_coex_profile_traffic_load {
+ #define BT_UART_MSG_FRAME7RESERVED_MSK		\
+ 		(0x3 << BT_UART_MSG_FRAME7RESERVED_POS)
+ 
++/* BT Session Activity 2 UART message (BT -> WiFi) */
++#define BT_UART_MSG_2_FRAME1RESERVED1_POS	(5)
++#define BT_UART_MSG_2_FRAME1RESERVED1_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME1RESERVED1_POS)
++#define BT_UART_MSG_2_FRAME1RESERVED2_POS	(6)
++#define BT_UART_MSG_2_FRAME1RESERVED2_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME1RESERVED2_POS)
++
++#define BT_UART_MSG_2_FRAME2AGGTRAFFICLOAD_POS	(0)
++#define BT_UART_MSG_2_FRAME2AGGTRAFFICLOAD_MSK	\
++		(0x3F<<BT_UART_MSG_2_FRAME2AGGTRAFFICLOAD_POS)
++#define BT_UART_MSG_2_FRAME2RESERVED_POS	(6)
++#define BT_UART_MSG_2_FRAME2RESERVED_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME2RESERVED_POS)
++
++#define BT_UART_MSG_2_FRAME3BRLASTTXPOWER_POS	(0)
++#define BT_UART_MSG_2_FRAME3BRLASTTXPOWER_MSK	\
++		(0xF<<BT_UART_MSG_2_FRAME3BRLASTTXPOWER_POS)
++#define BT_UART_MSG_2_FRAME3INQPAGESRMODE_POS	(4)
++#define BT_UART_MSG_2_FRAME3INQPAGESRMODE_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME3INQPAGESRMODE_POS)
++#define BT_UART_MSG_2_FRAME3LEMASTER_POS	(5)
++#define BT_UART_MSG_2_FRAME3LEMASTER_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME3LEMASTER_POS)
++#define BT_UART_MSG_2_FRAME3RESERVED_POS	(6)
++#define BT_UART_MSG_2_FRAME3RESERVED_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME3RESERVED_POS)
++
++#define BT_UART_MSG_2_FRAME4LELASTTXPOWER_POS	(0)
++#define BT_UART_MSG_2_FRAME4LELASTTXPOWER_MSK	\
++		(0xF<<BT_UART_MSG_2_FRAME4LELASTTXPOWER_POS)
++#define BT_UART_MSG_2_FRAME4NUMLECONN_POS	(4)
++#define BT_UART_MSG_2_FRAME4NUMLECONN_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME4NUMLECONN_POS)
++#define BT_UART_MSG_2_FRAME4RESERVED_POS	(6)
++#define BT_UART_MSG_2_FRAME4RESERVED_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME4RESERVED_POS)
++
++#define BT_UART_MSG_2_FRAME5BTMINRSSI_POS	(0)
++#define BT_UART_MSG_2_FRAME5BTMINRSSI_MSK	\
++		(0xF<<BT_UART_MSG_2_FRAME5BTMINRSSI_POS)
++#define BT_UART_MSG_2_FRAME5LESCANINITMODE_POS	(4)
++#define BT_UART_MSG_2_FRAME5LESCANINITMODE_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME5LESCANINITMODE_POS)
++#define BT_UART_MSG_2_FRAME5LEADVERMODE_POS	(5)
++#define BT_UART_MSG_2_FRAME5LEADVERMODE_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME5LEADVERMODE_POS)
++#define BT_UART_MSG_2_FRAME5RESERVED_POS	(6)
++#define BT_UART_MSG_2_FRAME5RESERVED_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME5RESERVED_POS)
++
++#define BT_UART_MSG_2_FRAME6LECONNINTERVAL_POS	(0)
++#define BT_UART_MSG_2_FRAME6LECONNINTERVAL_MSK	\
++		(0x1F<<BT_UART_MSG_2_FRAME6LECONNINTERVAL_POS)
++#define BT_UART_MSG_2_FRAME6RFU_POS		(5)
++#define BT_UART_MSG_2_FRAME6RFU_MSK		\
++		(0x1<<BT_UART_MSG_2_FRAME6RFU_POS)
++#define BT_UART_MSG_2_FRAME6RESERVED_POS	(6)
++#define BT_UART_MSG_2_FRAME6RESERVED_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME6RESERVED_POS)
++
++#define BT_UART_MSG_2_FRAME7LECONNSLAVELAT_POS	(0)
++#define BT_UART_MSG_2_FRAME7LECONNSLAVELAT_MSK	\
++		(0x7<<BT_UART_MSG_2_FRAME7LECONNSLAVELAT_POS)
++#define BT_UART_MSG_2_FRAME7LEPROFILE1_POS	(3)
++#define BT_UART_MSG_2_FRAME7LEPROFILE1_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME7LEPROFILE1_POS)
++#define BT_UART_MSG_2_FRAME7LEPROFILE2_POS	(4)
++#define BT_UART_MSG_2_FRAME7LEPROFILE2_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME7LEPROFILE2_POS)
++#define BT_UART_MSG_2_FRAME7LEPROFILEOTHER_POS	(5)
++#define BT_UART_MSG_2_FRAME7LEPROFILEOTHER_MSK	\
++		(0x1<<BT_UART_MSG_2_FRAME7LEPROFILEOTHER_POS)
++#define BT_UART_MSG_2_FRAME7RESERVED_POS	(6)
++#define BT_UART_MSG_2_FRAME7RESERVED_MSK	\
++		(0x3<<BT_UART_MSG_2_FRAME7RESERVED_POS)
++
+ 
+ struct iwl_bt_uart_msg {
+ 	u8 header;
+-- 
+1.7.0.4
 
-Not sure.
-
-Sujith
