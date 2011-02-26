@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39757 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187Ab1BAOw4 (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:35941 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914Ab1BZCBr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Feb 2011 09:52:56 -0500
-Subject: Re: [PATCH] mac80211: pass up beacons from external BSS when
- operating as AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20110201145100.GA21686@jm.kir.nu>
-References: <1296559385-5357-1-git-send-email-arik@wizery.com>
-	 <1296568614.3989.6.camel@jlt3.sipsolutions.net>
-	 <20110201145100.GA21686@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Feb 2011 15:52:53 +0100
-Message-ID: <1296571973.3989.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 25 Feb 2011 21:01:47 -0500
+Received: by vxi39 with SMTP id 39so1916009vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 18:01:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1298683960-20835-1-git-send-email-thomas@cozybit.com>
+References: <1298683960-20835-1-git-send-email-thomas@cozybit.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 25 Feb 2011 18:01:26 -0800
+Message-ID: <AANLkTik7hem0+TWpyR_BARDCHfgz3yAn41hmfdB+RAQ8@mail.gmail.com>
+Subject: Re: [PATCH 0/5] [mac|nl]80211: SAE mesh and userspace authentication
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-02-01 at 16:51 +0200, Jouni Malinen wrote:
-> On Tue, Feb 01, 2011 at 02:56:54PM +0100, Johannes Berg wrote:
-> > On Tue, 2011-02-01 at 13:23 +0200, Arik Nemtsov wrote:
-> > > Beacons from external BSSes are required for updating overlapping BSS
-> > > info (i.e. ERP protection). Pass them up unconditionally.
-> > 
-> > Where will they be processed though?
-> 
-> In src/ap/ap_list.c (hostap.git) ;-)
-> 
-> This code has been there for a long time, but the functionality was
-> broken at some point (maybe already during d80211 -> mac80211 process)
-> due to the beacons not getting delivered there anymore.
+Hey Thomas,
 
-Oh, I guess then they are delivered via the monitor interface?
+I had asked you to review my patches, not submit them :)
 
-johannes
+John,
 
+Please disregard this series.  We'll resubmit shortly.
+
+Thanks,
+
+Javier
+
+On Fri, Feb 25, 2011 at 5:32 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> Hello,
+>
+> This patch series introduces support for userspace SAE (Simultaneous
+> Authentication of Equals) daemons through nl80211 and mac80211. This
+> authentication scheme is documented in IEEE 802.11s section 8.2a.1.
+>
+> Regards,
+> Thomas Pedersen
+> cozybit, inc.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
