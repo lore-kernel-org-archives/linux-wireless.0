@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:37642 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554Ab1BTM6N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 07:58:13 -0500
-Received: by eye27 with SMTP id 27so2477444eye.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 04:58:09 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/8] rt2x00: Remove superfluos empty line
-Date: Sun, 20 Feb 2011 13:56:26 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <201102201354.53379.IvDoorn@gmail.com> <201102201355.47592.IvDoorn@gmail.com> <201102201356.08735.IvDoorn@gmail.com>
-In-Reply-To: <201102201356.08735.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201102201356.27555.IvDoorn@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:63215 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752477Ab1BZTBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Feb 2011 14:01:14 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/5]  update for 2.6.39
+Date: Sat, 26 Feb 2011 10:46:01 -0800
+Message-Id: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+We modify the BT config command to support enhanced bt coex for 2000 devices
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00ht.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Wey-Yi Guy (5):
+  iwlagn: name change for BT config command
+  iwlagn: add bt config structure support for 2000 series
+  iwlagn: add BT Session Activity 2 UART message (BT -> WiFi)
+  iwlagn: split BT page and inquiry UART msg
+  iwlagn: enable BT session 2 type UART for 2000 series
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-index b7ad46e..03d9579 100644
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-@@ -69,7 +69,6 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 			txdesc->mcs |= 0x08;
- 	}
- 
--
- 	/*
- 	 * This frame is eligible for an AMPDU, however, don't aggregate
- 	 * frames that are intended to probe a specific tx rate.
--- 
-1.7.2.3
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-2000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   78 +++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-commands.h |  108 ++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ 4 files changed, 158 insertions(+), 30 deletions(-)
 
