@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:60444 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786Ab1BOE2F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 23:28:05 -0500
-Date: Mon, 14 Feb 2011 22:28:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: Fix compile warning
-Message-ID: <4d5a00d2./P3aAY/moiXTWkG7%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mga03.intel.com ([143.182.124.21]:63215 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752614Ab1BZTBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Feb 2011 14:01:16 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/5] iwlagn: split BT page and inquiry UART msg
+Date: Sat, 26 Feb 2011 10:46:05 -0800
+Message-Id: <1298745966-25130-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1298745966-25130-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If any of the p54-based drivers are built with CONFIG_P54_LEDS not
-defined, the following warning is generated:
+Both inquiry and page was combine in frame7 of UART message, separate it
 
-  CC [M]  drivers/net/wireless/p54/main.o
-drivers/net/wireless/p54/main.c: In function ‘p54_register_common’:
-drivers/net/wireless/p54/main.c:614:21: warning: unused variable ‘priv’
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   10 ++++++----
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    9 ++++++---
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 8c70f0b..dc7055e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1984,12 +1984,14 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME6DISCOVERABLE_MSK & uart_msg->frame6) >>
+ 			BT_UART_MSG_FRAME6DISCOVERABLE_POS);
+ 
+-	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Inquiry/Page SR Mode = "
+-			"0x%X, Connectable = 0x%X",
++	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Page = "
++			"0x%X, Inquiry = 0x%X, Connectable = 0x%X",
+ 		(BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK & uart_msg->frame7) >>
+ 			BT_UART_MSG_FRAME7SNIFFACTIVITY_POS,
+-		(BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_MSK & uart_msg->frame7) >>
+-			BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS,
++		(BT_UART_MSG_FRAME7PAGE_MSK & uart_msg->frame7) >>
++			BT_UART_MSG_FRAME7PAGE_POS,
++		(BT_UART_MSG_FRAME7INQUIRY_MSK & uart_msg->frame7) >>
++			BT_UART_MSG_FRAME7INQUIRY_POS,
+ 		(BT_UART_MSG_FRAME7CONNECTABLE_MSK & uart_msg->frame7) >>
+ 			BT_UART_MSG_FRAME7CONNECTABLE_POS);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index df6abbf..3629ee3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -4258,9 +4258,12 @@ enum iwl_bt_coex_profile_traffic_load {
+ #define BT_UART_MSG_FRAME7SNIFFACTIVITY_POS	(0)
+ #define BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK	\
+ 		(0x7 << BT_UART_MSG_FRAME7SNIFFACTIVITY_POS)
+-#define BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS	(3)
+-#define BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_MSK	\
+-		(0x3 << BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS)
++#define BT_UART_MSG_FRAME7PAGE_POS		(3)
++#define BT_UART_MSG_FRAME7PAGE_MSK		\
++		(0x1 << BT_UART_MSG_FRAME7PAGE_POS)
++#define BT_UART_MSG_FRAME7INQUIRY_POS		(4)
++#define BT_UART_MSG_FRAME7INQUIRY_MSK		\
++		(0x1 << BT_UART_MSG_FRAME7INQUIRY_POS)
+ #define BT_UART_MSG_FRAME7CONNECTABLE_POS	(5)
+ #define BT_UART_MSG_FRAME7CONNECTABLE_MSK	\
+ 		(0x1 << BT_UART_MSG_FRAME7CONNECTABLE_POS)
+-- 
+1.7.0.4
 
-Index: wireless-testing/drivers/net/wireless/p54/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/main.c
-+++ wireless-testing/drivers/net/wireless/p54/main.c
-@@ -611,7 +611,9 @@ EXPORT_SYMBOL_GPL(p54_init_common);
- 
- int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
- {
-+#ifdef CONFIG_P54_LEDS
- 	struct p54_common *priv = dev->priv;
-+#endif /* CONFIG_P54_LEDS */
- 	int err;
- 
- 	err = ieee80211_register_hw(dev);
