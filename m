@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:33269 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753591Ab1BBV3U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 16:29:20 -0500
-Date: Wed, 2 Feb 2011 22:29:12 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while
- in powersave mode
-Message-ID: <20110202212912.GA28687@sig21.net>
-References: <201101311600.39486.IvDoorn@gmail.com>
- <874o8mbaec.fsf@purkki.adurom.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38109 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308Ab1BZSAL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Feb 2011 13:00:11 -0500
+Received: by iwn34 with SMTP id 34so1964756iwn.19
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Feb 2011 10:00:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874o8mbaec.fsf@purkki.adurom.net>
+In-Reply-To: <1298648961.4329.19.camel@jlt3.sipsolutions.net>
+References: <20110225112409.977212647@sipsolutions.net> <20110225112620.515442527@sipsolutions.net>
+ <1298648166.2603.11.camel@wwguy-ubuntu> <1298648386.4329.18.camel@jlt3.sipsolutions.net>
+ <1298647873.28351.10.camel@wwguy-huron> <1298648961.4329.19.camel@jlt3.sipsolutions.net>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Sat, 26 Feb 2011 09:59:51 -0800
+Message-ID: <AANLkTimrXV=b6aC1L65iOP1Mi8y1FDhzmdLoe4=KOxSC@mail.gmail.com>
+Subject: Re: [PATCH 2/2] iwlagn: fix iwlagn_check_needed_chains
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Swati Rallapalli <swati@cs.utexas.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 02, 2011 at 07:42:51PM +0200, Kalle Valo wrote:
-> So the firmware/hardware doesn't have support for tracking and waking
-> up for beacons? I didn't even know that such hardware exists :) Waking
-> up for beacons from host sounds very inefficient and unrealiable. All
-> the devices I have seen either do this in firmware or hardware due to
-> time constraints. Even at76c50x-usb, which is ancient, does all this
-> in firmware.
+Acked-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Tested-by: Daniel Halperin <dhalperi@cs.washington.edu>
 
-IMHO this is a bit exaggerated.  Given that the beacon interval
-is typically ~100 msecs, and typical worst cast irq latencies
-on Linux 2.6 are a few 100 usecs, we can sleep e.g. 90msecs
-and wake up in time to catch the beacon with high probability, thus
-saving 90% on PHY power.  Not perfect, but good enough, isn't it?
+(I suppose those are redundant?)
 
+Dan
 
-Johannes
+On Fri, Feb 25, 2011 at 7:49 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Fri, 2011-02-25 at 07:31 -0800, Guy, Wey-Yi wrote:
+> > On Fri, 2011-02-25 at 07:39 -0800, Johannes Berg wrote:
+> > > On Fri, 2011-02-25 at 07:36 -0800, wwguy wrote:
+> > >
+> > > > > @@ -503,7 +488,46 @@ static void iwlagn_check_needed_chains(s
+> > > > >                          * will soon tell us about that.
+> > > > >                          */
+> > > > >                         need_multiple = false;
+> > > > > +                       rcu_read_unlock();
+> > > > > +                       break;
+> > > >
+> > > > why unlock and break here instead stay do it later like before?
+> > >
+> > > Only because the indentation there was getting so deep it was annoying
+> > > to fit into 80 cols :-)
+> >
+> > how you want to submit this patch? through iwlagn, or yo uwill send it
+> > along with mac80211 to John?
+>
+> Don't really care. I just sent them both here to keep them together and
+> for Daniel and Swati ... First though, I'd like them to test it maybe.
+>
+> johannes
+>
