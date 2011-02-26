@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:36547 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754771Ab1BINWe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Feb 2011 08:22:34 -0500
-Date: Wed, 9 Feb 2011 15:22:18 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Scanning and channel types.
-Message-ID: <20110209132218.GA6183@jm.kir.nu>
-References: <4D4F0D83.4040401@candelatech.com>
- <4D4F0DFF.9010703@openwrt.org>
- <AANLkTin=zENpxMQYe65Vxs7oSVqe37Lt3mgiPp=L-jzA@mail.gmail.com>
- <4D5033DE.4070701@candelatech.com>
- <AANLkTimzp3nL=vbxnhH2ZYZtGNFqMsKKqTw1+pfjkUMu@mail.gmail.com>
- <4D50503E.4090007@candelatech.com>
- <AANLkTim_rcWdzPhraUaTvC_C3-Tm5_w5xH6xHOK=mviE@mail.gmail.com>
- <4D505DDD.8050805@candelatech.com>
- <AANLkTimybx2pQGsy908ZOKCUndQX55vOQy1aToingWSY@mail.gmail.com>
- <4D50909B.1020005@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D50909B.1020005@candelatech.com>
+Received: from smtp207.alice.it ([82.57.200.103]:43656 "EHLO smtp207.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752445Ab1BZSuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Feb 2011 13:50:16 -0500
+Subject: Re: ath9k stopped queue bug
+From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <AANLkTin0ixVQJA6B6Et1AUqdkhu1b+hv6Gxu_SQWEMzD@mail.gmail.com>
+References: <1298390485.2575.6.camel@gnutoo-laptop>
+	 <AANLkTin0ixVQJA6B6Et1AUqdkhu1b+hv6Gxu_SQWEMzD@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 26 Feb 2011 19:44:23 +0100
+Message-ID: <1298745863.29858.3.camel@gnutoo-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 07, 2011 at 04:38:51PM -0800, Ben Greear wrote:
-> On 02/07/2011 03:53 PM, Daniel Halperin wrote:
-> >Just as there are G-only APs that don't advertise 1-11 Mbps in their
-> >beacons, there are HT-only APs that don't advertise support for 1-11
-> >or 6-54 Mbps in their beacons and *only* support MCS rates.
+On Wed, 2011-02-23 at 11:04 +0530, Mohammed Shafi wrote:
+> please try with debug messages enabled sudo modprobe ath9k debug=0x2
+> (or)
+> sudo modprobe debug=0x82 (this produces lots of log) 
+I unloaded, reloaded with debug= the ath9k module, then I connected to
+the AP and I didn't see any supplementary message:
 
-> If anyone knows how to configure such a beast, I'll run some
-> tests.  Or, if someone else has an AP like this, please let
-> me know if you see any problems with these patches.
+root@gnutoo-laptop:~# modinfo ath9k
+filename:       /lib/modules/2.6.37-020637-generic/kernel/drivers/net/wireless/ath/ath9k/ath9k.ko
+license:        Dual BSD/GPL
+description:    Support for Atheros 802.11n wireless LAN cards.
+author:         Atheros Communications
+srcversion:     9F79F17BF7FC245D5B37879
+alias:          pci:v0000168Cd00000030sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Esv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Dsv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Csv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Bsv*sd*bc*sc*i*
+alias:          pci:v0000168Cd0000002Asv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000029sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000027sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000024sv*sd*bc*sc*i*
+alias:          pci:v0000168Cd00000023sv*sd*bc*sc*i*
+depends:        ath9k_hw,mac80211,cfg80211,ath9k_common,ath
+vermagic:       2.6.37-020637-generic SMP mod_unload modversions 
+parm:           debug:Debugging mask (uint)
+parm:           nohwcrypt:Disable hardware encryption (int)
+parm:           blink:Enable LED blink on activity (int)
+root@gnutoo-laptop:~# lsmod | grep ath9k
+ath9k_common            3151  0 
+ath9k_hw              288200  1 ath9k_common
+ath                    17109  1 ath9k_hw
+root@gnutoo-laptop:~# modprobe ath9k debug=0x82
+[...] #connect to the open AP with network manager
+root@gnutoo-laptop:~# dmesg | tail -n 1
+[22036.864772] wlan0: no IPv6 routers present
 
-As of today, the hostap.git snapshot of hostapd allows you to configure
-the AP to require HT PHY support from every station trying to associate
-with it. This can be configured with require_ht=1. This by itself does
-not change the advertised rate sets, but when set, this allows following
-configuration to remove all non-MCS rates to be disabled:
+Denis.
 
-ieee80211n=1
-require_ht=1
-supported_rates=
-basic_rates=
 
-I'm not sure whether we currently handle such configuration correctly
-everywhere, but at least this will remove the non-MCS rates from
-Beacon/Probe Response frames from the AP. It does not prevent the AP
-from actually receiving frames at non-MCS rates, so it may still reply
-to Probe Request frames even if they are sent without using MCS rates. I
-think I can make hostapd not reply to those frames if they do not
-contain HT Capabilities IE, but still, you would likely see a response
-to a Probe Request with that IE included even if it is sent at 1 Mbps.
-Whether the response goes out using MCS in such a case is unknown to me
-at this point, though.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
+
