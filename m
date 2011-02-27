@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38508 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752534Ab1BSJvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Feb 2011 04:51:06 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Feb 2011 01:50:45 -0800
-Date: Sat, 19 Feb 2011 15:19:45 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Implement op_flush()
-Message-ID: <20110219094943.GA16465@vasanth-laptop>
-References: <1298106822-9411-1-git-send-email-vasanth@atheros.com> <1298107440.3725.8.camel@jlt3.sipsolutions.net>
+Received: from w1.fi ([128.177.27.249]:54367 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751925Ab1B0Kr3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Feb 2011 05:47:29 -0500
+Date: Sun, 27 Feb 2011 12:47:23 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Subject: Re: [PATCH 2/5] mac80211: Let user space receive and send mesh
+ auth/deauth frames
+Message-ID: <20110227104723.GA8482@jm.kir.nu>
+References: <1298683960-20835-1-git-send-email-thomas@cozybit.com>
+ <1298683960-20835-3-git-send-email-thomas@cozybit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1298107440.3725.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1298683960-20835-3-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 19, 2011 at 02:54:00PM +0530, Johannes Berg wrote:
-> On Sat, 2011-02-19 at 01:13 -0800, Vasanthakumar Thiagarajan wrote:
-> > When op_flush() is called with no drop (drop=false), the driver
-> > tries to tx as many frames as possible in about 100ms on every
-> > hw queue. During this time period frames from sw queue are also
-> > scheduled on to respective hw queue.
-> 
-> Given how long HW queues currently are, I wouldn't set the timeout to
-> 100ms -- mac80211 has no expectation how long this will take, although
-> 100ms seems pretty long I'm not sure it'll always be sufficient?
+On Fri, Feb 25, 2011 at 05:32:37PM -0800, Thomas Pedersen wrote:
+> From: Javier Cardona <javier@cozybit.com>
+> @@ -529,7 +529,9 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+>  	[NL80211_IFTYPE_MESH_POINT] = {
+> +		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+> +			BIT(IEEE80211_STYPE_AUTH >> 4) |
+> +			BIT(IEEE80211_STYPE_DEAUTH >> 4),
 
-It is not that we wait for 100ms always, we return as soon as
-possible if there are no pending frames in sw/hw queues. I never
-hit this timeout though. In the worst case there can be 128 (4 aggr)
-frames pending in sw queue and 2 in hw queue. If we assume each one of
-these aggregates has 4ms duration, we at least need 24ms air time at
-the lowest rate. If they are not part of AMPDU, it would take a
-little bit more I think. So, probably we can give ~40ms timeout,
-is that reasonable?. If i'm reading the code correctly, iwlwifi
-seems to use 2000ms.
+This seems to be pointing towards processing the full Authentication
+frame in user space. However, some other patches in this series seemed
+to be extending the NL80211_CMD_AUTHENTICATE mechanism to allow SAE to
+be implemented on top of it. Which direction is being taken here? Or are
+both mechanisms going to be used depending on iftype?
 
-vasanth
+For non-mesh cases, I would probably prefer NL80211_CMD_AUTHENTICATE
+extension for the station vif to continue with the style we started for
+FT. The AP vif is already handling the full Authentication frame in user
+space, so that is fine to for SAE, too.
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
