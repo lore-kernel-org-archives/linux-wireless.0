@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43242 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755207Ab1BNOIT (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40844 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850Ab1B0Eei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 09:08:19 -0500
-Subject: Re: [RFC v2 1/2] mac80211: add a function for setting the TIM bit
- for a specific station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, lrodriguez@atheros.com,
-	m.sujith@gmail.com
-In-Reply-To: <4D5936D8.3030906@openwrt.org>
-References: <1297207937-88528-1-git-send-email-nbd@openwrt.org>
-	 <1297685367.3785.33.camel@jlt3.sipsolutions.net>
-	 <4D5936D8.3030906@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 15:08:14 +0100
-Message-ID: <1297692494.3953.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 26 Feb 2011 23:34:38 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 05/17]drivers:staging:brcm80211:include:bcmsdh_sdmmc.h Remove one to many n's in a word.
+Date: Sat, 26 Feb 2011 20:33:58 -0800
+Message-Id: <1298781250-2718-6-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1298781250-2718-1-git-send-email-justinmattock@gmail.com>
+References: <1298781250-2718-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-14 at 15:06 +0100, Felix Fietkau wrote:
-> On 2011-02-14 1:09 PM, Johannes Berg wrote:
-> > On Wed, 2011-02-09 at 00:32 +0100, Felix Fietkau wrote:
-> >> When a driver wants to buffer some frames internally without feeding them
-> >> back to mac80211, this allows it to still wake up the station
-> > 
-> > Why would the driver want to do this though?
-> If a station enters powersave and the AP still has buffered frames for
-> aggregation, those frames need to stay in the queue, since the driver
-> controls the block ack window and keeps some state per frame (e.g.
-> number of software retransmissions).
-> If ath9k would send those frames back to mac80211, and mac80211 would
-> drop some of them, then the client's reorder window would get messed up
-> when the client comes back. This would also make managing frame sequence
-> numbers more complicated, since the driver would have to skip assigning
-> sequence numbers for frames where tx_info->flags has the
-> IEEE80211_TX_INTFL_RETRANSMISSION bit set, but then also look for gaps
-> caused by expired frames.
+Note: not sure if I sent this out or not.
 
-Ok, that makes sense. In fact, I think iwlwifi will have the same issue
-since it buffers in hw queues... will have to check that.
+The Patch below removes one to many "n's" in a word..
 
-johannes
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+CC: Brett Rudley <brudley@broadcom.com>
+CC: Henry Ptasinski <henryp@broadcom.com>
+CC: linux-wireless@vger.kernel.org 
+---
+ drivers/staging/brcm80211/include/bcmsdh_sdmmc.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h b/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h
+index 4d671dd..c9602c6 100644
+--- a/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h
++++ b/drivers/staging/brcm80211/include/bcmsdh_sdmmc.h
+@@ -52,7 +52,7 @@ extern void sdioh_sdmmc_osfree(sdioh_info_t *sd);
+ 
+ struct sdioh_info {
+ 	struct osl_info *osh;		/* osh handler */
+-	bool client_intr_enabled;	/* interrupt connnected flag */
++	bool client_intr_enabled;	/* interrupt connected flag */
+ 	bool intr_handler_valid;	/* client driver interrupt handler valid */
+ 	sdioh_cb_fn_t intr_handler;	/* registered interrupt handler */
+ 	void *intr_handler_arg;	/* argument to call interrupt handler */
+-- 
+1.7.4.1
 
