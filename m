@@ -1,43 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:24081 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757191Ab1BKPYi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Feb 2011 10:24:38 -0500
-Subject: Re: [PATCH 1/1] iwl3945: iwl3945_good_plcp_health might not used
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20110211144951.GA2278@redhat.com>
-References: <1297354593-22897-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20110211144951.GA2278@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Feb 2011 07:22:49 -0800
-Message-ID: <1297437769.20613.1300.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from 75-145-127-229-Colorado.hfc.comcastbusiness.net ([75.145.127.229]:55464
+	"EHLO gw.co.teklibre.org" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752076Ab1B0QZ7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Feb 2011 11:25:59 -0500
+From: d@taht.net (Dave =?utf-8?Q?T=C3=A4ht?=)
+To: sedat.dilek@gmail.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	bloat-devel@lists.bufferbloat.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: ANNOUNCE: debloat-testing kernel git tree
+References: <20110225222210.GA3618@tuxdriver.com>
+	<AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
+	<87fwr9jxya.fsf@cruithne.co.teklibre.org>
+	<AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
+	<8739n9ii7z.fsf@cruithne.co.teklibre.org>
+	<AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
+Date: Sun, 27 Feb 2011 09:25:56 -0700
+In-Reply-To: <AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
+	(Sedat Dilek's message of "Sun, 27 Feb 2011 17:01:27 +0100")
+Message-ID: <87tyfph2az.fsf@cruithne.co.teklibre.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Sedat Dilek <sedat.dilek@googlemail.com> writes:
 
-On Fri, 2011-02-11 at 06:49 -0800, Stanislaw Gruszka wrote:
-> On Thu, Feb 10, 2011 at 08:16:33AM -0800, Wey-Yi Guy wrote:
-> > remove plcp check for 3945, mark the function __maybe_unused
-> > 
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > Cc: <stable@kernel.org> # .35+: c91d015: iwl3945: remove plcp check
-> > Cc: stable@kernel.org  # 2.6.35+
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-3945.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-I see your point, but I also think it des not mean other driver doing
-bad, so we can do it too. do you agree? I like to see the iwlwifi driver
-as clean as possible (do our best :-))
+> On Sun, Feb 27, 2011 at 4:56 PM, Dave Täht <d@taht.net> wrote:
+>> Sedat Dilek <sedat.dilek@googlemail.com> writes:
+>>
+>>> On Sun, Feb 27, 2011 at 4:31 PM, Dave Täht <d@taht.net> wrote:
+>>>>
+>>>> Sedat Dilek <sedat.dilek@googlemail.com> writes:
+>>
+>>> Are you planning debloat feature for 2.6.39?
+>>
+>> Depends on how many testers we get and what the results are.
+>>
+>> I feel the eBDP stuff will not be ready during this release cycle. SFB
+>> and CHOKe are in net-next, so, probably. Various driver patches -
+>> particularly those that increase the available dynamic range via
+>> ethtool, (e.g lowering the bottommost TX queue limit to, like, 4,
+>> especially for home gateways) may make it out if people look harder into
+>> the issue.
+>
+> OK, thanks for the explanations.
+>
+> Concerning "more drivers":
+> What would I have to do to modify ath5k?
+> I looked into the ath9k patch in debloat-testing GIT and it was to mod
+> some (TX/BUF) values only.
 
-hope it is ok for you.
+Yes, reducing your TX buffer size greatly is the first, best, and
+easiest patch.
 
-Wey
+For wireless routers and cable home gateways especially, this research
+shows that the total un-managed buffers in your system should be less
+than 32.
 
+http://www.cs.clemson.edu/~jmarty/papers/PID1154937.pdf
+
+I found their data convincing, and there are dozens of other papers that
+we are sorting out on the bufferbloat.net web site.
+
+(PLEASE Note the key word there is un-managed)
+
+0 would be the best value. :/
+
+In the case of wireless, you also have retries to take into account.
+I'd argue in those cases, that what I say above is that the number
+should be FAR less than 32.
+
+Now, whether there is a good compromise between throughput and latency
+in that range in a DMA TX queue + TXQUEUE, remains to be seen. 
+
+> Not sure if ath9k is/was "well" prepared or only a good choice by the
+> testers/committers as they own such a device.
+
+My test network is mostly ath9k - the nanostation M5s and the WNDR5700
+router described here:
+
+http://www.bufferbloat.net/projects/bloat/wiki/Experiment_-_Bloated_LAGN_vs_debloated_WNDR5700
+
+There are people looking into the ath6kl, but you're the first to step
+up with the ath5k. :) Maybe the folk over at #ath6kl on irc can help.
+
+The ath9k patch improves latency under load enormously - I can run voip
+over it AND do big transfers and stream audio via samba... Which I
+couldn't before - and DNS, ND, NTP, babel, etc behave much better, but
+the currently hard coded nature of the TX queue limit does put an upper
+limit on packet aggregation that the eBDP folk are trying to resolve
+more generically.
+
+In practice, at "normal" 180Mbit rates, with the new queue depth of 3, I
+get most of the benefits of packet aggregation without the lag.
+
+I do see higher packet loss than I would like, at present.
+
+>
+> - Sedat -
+
+-- 
+Dave Taht
+http://nex-6.taht.net
