@@ -1,55 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:39546 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755557Ab1BHUHD (ORCPT
+Received: from mirapoint7.brutele.be ([212.68.199.151]:14945 "EHLO
+	mirapoint7.brutele.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896Ab1B0VhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 15:07:03 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 36AF65406F7
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Feb 2011 15:09:37 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-08 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110208200701.166F840F97@repository3.orbit-lab.org>
-Date: Tue,  8 Feb 2011 15:07:01 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 27 Feb 2011 16:37:19 -0500
+Message-ID: <4D6AC2A5.5070408@tvcablenet.be>
+Date: Sun, 27 Feb 2011 22:31:17 +0100
+From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Mathieu Malaterre <mathieu.malaterre@gmail.com>,
+	Larry.Finger@lwfinger.net
+Subject: Re: Realtek RTL8192SE support ? (aka r8192se_pci)
+References: <AANLkTinoU0Dxy2iAHEsprTbakrbs8a8vPARFW0odz4g9@mail.gmail.com> <4D628D75.1070907@lwfinger.net> <AANLkTim-=h6N5a=4gaA+42xoWHk3PY1jM8FU9fkJ3CJp@mail.gmail.com> <4D62963D.9020806@lwfinger.net>
+In-Reply-To: <4D62963D.9020806@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   b90fa62..9f255e1  linux-2.6.36.y -> origin/linux-2.6.36.y
-   6b436a1..41dd358  linux-2.6.37.y -> origin/linux-2.6.37.y
-   90ac356..b8988ca  linux-2.6.38.y -> origin/linux-2.6.38.y
-   100cb85..86702b3  master     -> origin/master
- * [new tag]         compat-wireless-v2.6.38-rc3-1 -> compat-wireless-v2.6.38-rc3-1
- * [new tag]         compat-wireless-v2.6.38-rc4-1 -> compat-wireless-v2.6.38-rc4-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-v2.6.38-rc3-2 -> compat-wireless-v2.6.38-rc3-2
- * [new tag]         compat-wireless-v2.6.38-rc3-3 -> compat-wireless-v2.6.38-rc3-3
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
- * [new branch]      linux-2.6.38.y -> origin/linux-2.6.38.y
-   4bf0115..2369930  master     -> origin/master
- * [new tag]         v2.6.38-rc1-1 -> v2.6.38-rc1-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + c8750c0...5ca9d46 akpm-end   -> origin/akpm-end  (forced update)
-   8dbdea8..100b33c  akpm-start -> origin/akpm-start
-   960b1eb..6cdc64a  history    -> origin/history
- + 5424f20...b36eb3f master     -> origin/master  (forced update)
-   8dbdea8..100b33c  stable     -> origin/stable
- * [new tag]         next-20110208 -> next-20110208
- * [new tag]         v2.6.38-rc4 -> v2.6.38-rc4
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+Le 21/02/11 17:43, Larry Finger a écrit :
+> On 02/21/2011 10:12 AM, Mathieu Malaterre wrote:
+>> On Mon, Feb 21, 2011 at 5:06 PM, Larry
+>> Finger<Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>  wrote:
+>>> On 02/21/2011 03:35 AM, Mathieu Malaterre wrote:
+>>>>
+>>>> Dear all,
+>>>>
+>>>>    As far as I know driver for rtl8192su will be added to kernel
+>>>> 2.6.38. By any chance does anyone knows if rtl8192se will make it into
+>>>> this release ?
+>>>
+>>> As part of our collaborative effort, Realtek has sent me a
+>>> mac80211-based
+>>> driver for the RTL8192SE. It will be submitted to the wireless
+>>> mailing list
+>>> for review once the driver for the RTL8192CU is accepted. The
+>>> earliest this
+>>> would happen is 2.6.39, but I think 2.6.40 is more realistic. I also
+>>> have a
+>>> driver for the RTL8192DE that will follow the RTL8192SE.
+>>
+>> Dear Larry,
+>>
+>>    Thank you very much for taking the time to answer my question.
+>>    Would it be possible to be part of some kind of testing group for
+>> this 'new' driver. I have been using r8192se_pci (*) for a couple of
+>> days, but I have the feeling this driver keeps filling in my
+>> computer's memory. I have to reboot to clean the memory (I have not
+>> found any other way).
+>>
+>> Using linux 2.6.37 from debian unstable
+> 
+> It will take me a few days, but I should be able to send you patches to
+> incorporate the rtl8192se driver.
+> 
+> Larry
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+I also volunteer to test this new driver. I often have problems with the
+current driver provided by Realtek. It seems the connexion is quite
+unstable and I often get kernel panic like this one:
 
-compat-wireless code metrics
+rtl8192se_rx_normal+0x143/0x400
+scheduler-tick+0xe1/0x2f0
+tasklet-action+0xa8/0x60
+_do_softirq+0xa5/0x130
+ack_apic_level+0x6d/0x210
+call_softirq+0x1c/0x30
+do_softirq+0x4d/0x80
+irq_exit+0x8d/0x90
+do_irq+0x6b/0x0
+ret_from_intr+0x0/0x	
+[<EOI>]
 
-    786527 - Total upstream lines of code being pulled
+acpi_idle_enter_c1+0xad/0xc7 [processor]
+ack-idle-enter-c1+0x8d/0xc7 [processor]
+cpuidle-idle-call+0x8c/0xf0
+cpu-idle+0x58/0xb
+skb-put+0x88/0x90
+
+kernel panic not syncing fatal exception in interrupt PID: 0, comm:
+kworker/0;1 Tainted G D 2.6.36
+
+call trace:
+panic+0xa1/0x1a3
+oops_end+0xaf/0xe0
+do_invalid_op+0x84/0xa0
+skb_put+0x88/0x90
+invalid_op+0x15/0x20
+skb_put+0x88/0x90
+
+I already asked realtek support about this but I didn't get a lot of
+help from them. So, I would be interested to see if the new driver you
+talked about perfoms better.
+
+Thanks in advance,
+
+François Valenduc
