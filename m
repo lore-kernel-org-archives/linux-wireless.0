@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58615 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752388Ab1BBKdy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Feb 2011 05:33:54 -0500
-Date: Wed, 2 Feb 2011 11:33:51 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: tony.luck@intel.com, fenghua.yu@intel.com,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
-	megaraidlinux@lsi.com, James.Bottomley@suse.de,
-	linux-scsi@vger.kernel.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, chas@cmf.nrl.navy.mil,
-	linux-atm-general@lists.sourceforge.net
-Subject: Re: [PATCH 1/8]arch:ia64:perfmon.h change a typo comamnd to
- command
-In-Reply-To: <1296623130-5130-1-git-send-email-justinmattock@gmail.com>
-Message-ID: <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
-References: <1296623130-5130-1-git-send-email-justinmattock@gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41801 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396Ab1B0UyQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Feb 2011 15:54:16 -0500
+Received: by bwz15 with SMTP id 15so3223988bwz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 12:54:15 -0800 (PST)
+From: Javier Martinez Canillas <martinez.javier@gmail.com>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Javier Martinez Canillas <martinez.javier@gmail.com>
+Subject: [PATCH 1/2] staging: brcm80211: Add buf_size parameter to ampdu_action handler function
+Date: Sun, 27 Feb 2011 21:54:14 +0100
+Message-Id: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 1 Feb 2011, Justin P. Mattock wrote:
+struct ieee80211_ops.ampdu_action function pointer definition now includes a
+u8 buf_size parameter.
 
-> The below patch fixes a typo comamnd to command.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> 
-> ---
->  arch/ia64/include/asm/perfmon.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/ia64/include/asm/perfmon.h b/arch/ia64/include/asm/perfmon.h
-> index 7f3333d..d551183 100644
-> --- a/arch/ia64/include/asm/perfmon.h
-> +++ b/arch/ia64/include/asm/perfmon.h
-> @@ -7,7 +7,7 @@
->  #define _ASM_IA64_PERFMON_H
->  
->  /*
-> - * perfmon comamnds supported on all CPU models
-> + * perfmon commands supported on all CPU models
+Update wl_ops_ampdu_action handler function according to this new signature.
 
-I have consended all the patches in this thread (modulo the staging ones) 
-into one and applied.
+Signed-off-by: Javier Martinez Canillas <martinez.javier@gmail.com>
+---
+ drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+index 7645c6c..345243b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
++++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
+@@ -142,7 +142,8 @@ static int wl_ops_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ static int wl_ops_ampdu_action(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+ 			       enum ieee80211_ampdu_mlme_action action,
+-			       struct ieee80211_sta *sta, u16 tid, u16 *ssn);
++			       struct ieee80211_sta *sta, u16 tid, u16 *ssn,
++			       u8 buf_size);
+ static void wl_ops_rfkill_poll(struct ieee80211_hw *hw);
+ 
+ static int wl_ops_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+@@ -609,7 +610,8 @@ static int
+ wl_ops_ampdu_action(struct ieee80211_hw *hw,
+ 		    struct ieee80211_vif *vif,
+ 		    enum ieee80211_ampdu_mlme_action action,
+-		    struct ieee80211_sta *sta, u16 tid, u16 *ssn)
++		    struct ieee80211_sta *sta, u16 tid, u16 *ssn,
++		    u8 buf_size)
+ {
+ #if defined(BCMDBG)
+ 	struct scb *scb = (struct scb *)sta->drv_priv;
 -- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+1.7.2.3
+
