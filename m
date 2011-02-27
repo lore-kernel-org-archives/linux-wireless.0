@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:65457 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204Ab1BFSnU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Feb 2011 13:43:20 -0500
-Date: Sun, 06 Feb 2011 12:44:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: sgruszka@redhat.com, george0505@realtek.com,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/6] rtlwifi: rtl8192ce: Patches to prepare for addition
- of rtl8192cu
-Message-ID: <4d4eebfa.pwLpJWz5U4PCRqNL%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from lo.gmane.org ([80.91.229.12]:48538 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750822Ab1B0SaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Feb 2011 13:30:11 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PtlNi-0003OL-5O
+	for linux-wireless@vger.kernel.org; Sun, 27 Feb 2011 19:30:10 +0100
+Received: from 91-65-104-167-dynip.superkabel.de ([91.65.104.167])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 19:30:10 +0100
+Received: from feldmann_markus by 91-65-104-167-dynip.superkabel.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 19:30:10 +0100
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: searching for wireless card
+Date: Sun, 27 Feb 2011 19:30:19 +0100
+Message-ID: <ike577$1cv$1@dough.gmane.org>
+References: <ikc2an$1un$1@dough.gmane.org> <1298819570.2933.2.camel@gnutoo-laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1298819570.2933.2.camel@gnutoo-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches will prepare the rtlwifi core to receive the driver
-for the RTL8192CU (USB) device, and to make some changes to the RTL8192CE
-(PCI) code to facilitate the new driver.
+Am 27.02.2011 16:12, schrieb Denis 'GNUtoo' Carikli:
+> On Sun, 2011-02-27 at 00:28 +0100, Markus Feldmann wrote:
+>> Hi All,
+>>
+>> i am searching for a wireless card with the following attributes:
+>> +linux compatible
+>> +b/g/n or a/b/g/n network compatible
+>> +opensource driver
+>> +productive and stable to use under Linux
+>> +not to old chip
+>> +atheros chip preferred
+>> +PCI
+>> +usable in Master Mode(Access Point)
+> I'm using an ath9k in AP mode, and it seem to work well for me.
+> My card is a PCI one.
+> altough no a
+> only b/g/n:
+> wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.442 GHz  Tx-Power=20
+> dBm
+> And I use only g, I'm not sure if n works yet.
+Hi,
 
-1/6: Changes to rtlwifi core
-2/6: Add usb driver to rtlwifi
-3/6: Refactor rtl8192ce/dm.c to be able to use common code
-4/6: Refactor rtl8192ce/fw.c to be able to use common code
-5/6: Small changes to rtl8192ce/phy.c
-6/6: Add some needed definitions to rtl8192ce/reg.h
+i want the n modus and the ath9k driver is needed to get the AP Modus to 
+work as i read.
 
-All of these changes are for 2.6.39.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+regards Markus
 
