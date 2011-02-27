@@ -1,84 +1,626 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:60716 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754662Ab1BHQnF (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33169 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab1B0WbD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 11:43:05 -0500
-Received: by eye27 with SMTP id 27so3074199eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 08:43:04 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] mac80211: add missing locking in ieee80211_reconfig
-Date: Tue,  8 Feb 2011 18:43:19 +0200
-Message-Id: <1297183399-2296-1-git-send-email-eliad@wizery.com>
+	Sun, 27 Feb 2011 17:31:03 -0500
+Received: by mail-ww0-f44.google.com with SMTP id 22so2383975wwb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:31:02 -0800 (PST)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH 4/7] wl12xx: Switch to a threaded interrupt handler
+Date: Mon, 28 Feb 2011 00:30:42 +0200
+Message-Id: <1298845845-12191-5-git-send-email-ido@wizery.com>
+In-Reply-To: <1298845845-12191-1-git-send-email-ido@wizery.com>
+References: <1298845845-12191-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When suspending an associated system, and then resuming,
-the station vif is being reconfigured without taking the
-sdata->u.mgd.mtx lock, which results in the following warning:
+To achieve maximal throughput, it is very important to react to
+interrupts as soon as possible. Currently the interrupt handler wakes up
+a worker for handling interrupts in process context. A cleaner and more
+efficient design would be to request a threaded interrupt handler.  This
+handler's priority is very high, and can do blocking operations such as
+SDIO/SPI transactions.
 
-WARNING: at net/mac80211/mlme.c:101 ieee80211_ap_probereq_get+0x58/0xb8 [mac80211]()
-Modules linked in: wl12xx_sdio wl12xx firmware_class crc7 mac80211 cfg80211 [last unloaded: crc7]
-Backtrace:
-[<c005432c>] (dump_backtrace+0x0/0x118) from [<c0376e28>] (dump_stack+0x20/0x24)
- r7:00000000 r6:bf12d6ec r5:bf154aac r4:00000065
-[<c0376e08>] (dump_stack+0x0/0x24) from [<c0079104>] (warn_slowpath_common+0x5c/0x74)
-[<c00790a8>] (warn_slowpath_common+0x0/0x74) from [<c0079148>] (warn_slowpath_null+0x2c/0x34)
- r9:000024ff r8:cd006460 r7:00000001 r6:00000000 r5:00000000
-r4:cf1394a0
-[<c007911c>] (warn_slowpath_null+0x0/0x34) from [<bf12d6ec>] (ieee80211_ap_probereq_get+0x58/0xb8 [mac80211])
-[<bf12d694>] (ieee80211_ap_probereq_get+0x0/0xb8 [mac80211]) from [<bf19cd04>] (wl1271_cmd_build_ap_probe_req+0x30/0xf8 [wl12xx])
- r4:cd007440
-[<bf19ccd4>] (wl1271_cmd_build_ap_probe_req+0x0/0xf8 [wl12xx]) from [<bf1995f4>] (wl1271_op_bss_info_changed+0x4c4/0x808 [wl12xx])
- r5:cd007440 r4:000003b4
-[<bf199130>] (wl1271_op_bss_info_changed+0x0/0x808 [wl12xx]) from [<bf122168>] (ieee80211_bss_info_change_notify+0x1a4/0x1f8 [mac80211])
-[<bf121fc4>] (ieee80211_bss_info_change_notify+0x0/0x1f8 [mac80211]) from [<bf141e80>] (ieee80211_reconfig+0x4d0/0x668 [mac80211])
- r8:cf0eeea4 r7:cd00671c r6:00000000 r5:cd006460 r4:cf1394a0
-[<bf1419b0>] (ieee80211_reconfig+0x0/0x668 [mac80211]) from [<bf137dd4>] (ieee80211_resume+0x60/0x70 [mac80211])
-[<bf137d74>] (ieee80211_resume+0x0/0x70 [mac80211]) from [<bf0eb930>] (wiphy_resume+0x6c/0x7c [cfg80211])
- r5:cd006248 r4:cd006110
-[<bf0eb8c4>] (wiphy_resume+0x0/0x7c [cfg80211]) from [<c0241024>] (legacy_resume+0x38/0x70)
- r7:00000000 r6:00000000 r5:cd006248 r4:cd0062fc
-[<c0240fec>] (legacy_resume+0x0/0x70) from [<c0241478>] (device_resume+0x168/0x1a0)
- r8:c04ca8d8 r7:cd00627c r6:00000010 r5:cd006248 r4:cd0062fc
-[<c0241310>] (device_resume+0x0/0x1a0) from [<c0241600>] (dpm_resume_end+0xf8/0x3bc)
- r7:00000000 r6:00000005 r5:cd006248 r4:cd0062fc
-[<c0241508>] (dpm_resume_end+0x0/0x3bc) from [<c00b2a24>] (suspend_devices_and_enter+0x1b0/0x204)
-[<c00b2874>] (suspend_devices_and_enter+0x0/0x204) from [<c00b2b68>] (enter_state+0xf0/0x148)
- r7:c037e978 r6:00000003 r5:c043d807 r4:00000000
-[<c00b2a78>] (enter_state+0x0/0x148) from [<c00b20a4>] (state_store+0xa4/0xcc)
- r7:c037e978 r6:00000003 r5:00000003 r4:c043d807
-[<c00b2000>] (state_store+0x0/0xcc) from [<c01fc90c>] (kobj_attr_store+0x20/0x24)
-[<c01fc8ec>] (kobj_attr_store+0x0/0x24) from [<c0157120>] (sysfs_write_file+0x11c/0x150)
-[<c0157004>] (sysfs_write_file+0x0/0x150) from [<c0100f84>] (vfs_write+0xc0/0x14c)
-[<c0100ec4>] (vfs_write+0x0/0x14c) from [<c01010e4>] (sys_write+0x4c/0x78)
- r8:40126000 r7:00000004 r6:cf1a7c80 r5:00000000 r4:00000000
-[<c0101098>] (sys_write+0x0/0x78) from [<c00500c0>] (ret_fast_syscall+0x0/0x30)
- r8:c00502c8 r7:00000004 r6:403525e8 r5:40126000 r4:00000004
+Some work can be deferred, mostly calls to mac80211 APIs
+(ieee80211_rx_ni and ieee80211_tx_status). By deferring such work to a
+different worker, we can keep the irq handler thread more I/O
+responsive. In addition, on multi-core systems the two threads can be
+scheduled on different cores, which will improve overall performance.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+The use of WL1271_FLAG_IRQ_PENDING & WL1271_FLAG_IRQ_RUNNING was
+changed. For simplicity, always query the FW for more pending
+interrupts. Since there are relatively long bursts of interrupts, the
+extra FW status read overhead is negligible. In addition, this enables
+registering the IRQ handler with the ONESHOT option.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
 ---
-v1 -> v2: don't truncate warning lines
+ drivers/net/wireless/wl12xx/debugfs.c |    2 +-
+ drivers/net/wireless/wl12xx/io.h      |    1 +
+ drivers/net/wireless/wl12xx/main.c    |  114 +++++++++++++++++++--------------
+ drivers/net/wireless/wl12xx/ps.c      |    6 +-
+ drivers/net/wireless/wl12xx/ps.h      |    2 +-
+ drivers/net/wireless/wl12xx/rx.c      |    3 +-
+ drivers/net/wireless/wl12xx/sdio.c    |   16 ++---
+ drivers/net/wireless/wl12xx/spi.c     |   19 ++----
+ drivers/net/wireless/wl12xx/tx.c      |    5 +-
+ drivers/net/wireless/wl12xx/wl12xx.h  |   11 ++-
+ 10 files changed, 97 insertions(+), 82 deletions(-)
 
- net/mac80211/util.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index cf68700..d036597 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1210,7 +1210,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			changed |= BSS_CHANGED_ASSOC;
-+			mutex_lock(&sdata->u.mgd.mtx);
- 			ieee80211_bss_info_change_notify(sdata, changed);
-+			mutex_unlock(&sdata->u.mgd.mtx);
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
- 			changed |= BSS_CHANGED_IBSS;
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index bebfa28..8e75b09 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -99,7 +99,7 @@ static void wl1271_debugfs_update_stats(struct wl1271 *wl)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
+index 844b32b..c1aac82 100644
+--- a/drivers/net/wireless/wl12xx/io.h
++++ b/drivers/net/wireless/wl12xx/io.h
+@@ -168,5 +168,6 @@ void wl1271_unregister_hw(struct wl1271 *wl);
+ int wl1271_init_ieee80211(struct wl1271 *wl);
+ struct ieee80211_hw *wl1271_alloc_hw(void);
+ int wl1271_free_hw(struct wl1271 *wl);
++irqreturn_t wl1271_irq(int irq, void *data);
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 443f829..9ceba52 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -374,7 +374,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 	if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -635,16 +635,12 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 		(s64)le32_to_cpu(status->fw_localtime);
+ }
+ 
+-#define WL1271_IRQ_MAX_LOOPS 10
+-
+-static void wl1271_irq_work(struct work_struct *work)
++irqreturn_t wl1271_irq(int irq, void *cookie)
+ {
+ 	int ret;
+ 	u32 intr;
+-	int loopcount = WL1271_IRQ_MAX_LOOPS;
+-	unsigned long flags;
+-	struct wl1271 *wl =
+-		container_of(work, struct wl1271, irq_work);
++	struct wl1271 *wl = (struct wl1271 *)cookie;
++	bool done = false;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -653,26 +649,27 @@ static void wl1271_irq_work(struct work_struct *work)
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, true);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	spin_lock_irqsave(&wl->wl_lock, flags);
+-	while (test_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags) && loopcount) {
+-		clear_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+-		spin_unlock_irqrestore(&wl->wl_lock, flags);
+-		loopcount--;
++	while (!done) {
++		/*
++		 * In order to avoid a race with the hardirq, clear the flag
++		 * before acknowledging the chip. Since the mutex is held,
++		 * wl1271_ps_elp_wakeup cannot be called concurrently.
++		 */
++		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
++		smp_mb__after_clear_bit();
+ 
+ 		wl1271_fw_status(wl, wl->fw_status);
+ 		intr = le32_to_cpu(wl->fw_status->common.intr);
++		intr &= WL1271_INTR_MASK;
+ 		if (!intr) {
+-			wl1271_debug(DEBUG_IRQ, "Zero interrupt received.");
+-			spin_lock_irqsave(&wl->wl_lock, flags);
++			done = true;
+ 			continue;
+ 		}
+ 
+-		intr &= WL1271_INTR_MASK;
+-
+ 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
+ 			wl1271_error("watchdog interrupt received! "
+ 				     "starting recovery.");
+@@ -719,20 +716,37 @@ static void wl1271_irq_work(struct work_struct *work)
+ 
+ 		if (intr & WL1271_ACX_INTR_HW_AVAILABLE)
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_HW_AVAILABLE");
+-
+-		spin_lock_irqsave(&wl->wl_lock, flags);
+ 	}
+ 
+-	if (test_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	else
+-		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+-	spin_unlock_irqrestore(&wl->wl_lock, flags);
+-
+ 	wl1271_ps_elp_sleep(wl);
+ 
+ out:
+ 	mutex_unlock(&wl->mutex);
++
++	return IRQ_HANDLED;
++}
++EXPORT_SYMBOL_GPL(wl1271_irq);
++
++static void wl1271_netstack_work(struct work_struct *work)
++{
++	struct wl1271 *wl =
++		container_of(work, struct wl1271, netstack_work);
++	struct sk_buff *skb;
++	bool done = false;
++
++	while (!done) {
++		done = true;
++		/* Pass all received frames to the network stack */
++		while ((skb = skb_dequeue(&wl->deferred_rx_queue)))
++			ieee80211_rx_ni(wl->hw, skb);
++
++		/* Return sent skbs to the network stack */
++		while ((skb = skb_dequeue(&wl->deferred_tx_queue))) {
++			ieee80211_tx_status(wl->hw, skb);
++			/* We did some work, so check the rx queue again */
++			done = false;
++		}
++	}
+ }
+ 
+ static int wl1271_fetch_firmware(struct wl1271 *wl)
+@@ -974,7 +988,6 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 		goto out;
+ 
+ irq_disable:
+-		wl1271_disable_interrupts(wl);
+ 		mutex_unlock(&wl->mutex);
+ 		/* Unlocking the mutex in the middle of handling is
+ 		   inherently unsafe. In this case we deem it safe to do,
+@@ -983,7 +996,8 @@ irq_disable:
+ 		   work function will not do anything.) Also, any other
+ 		   possible concurrent operations will fail due to the
+ 		   current state, hence the wl1271 struct should be safe. */
+-		cancel_work_sync(&wl->irq_work);
++		wl1271_disable_interrupts(wl);
++		cancel_work_sync(&wl->netstack_work);
+ 		mutex_lock(&wl->mutex);
+ power_off:
+ 		wl1271_power_off(wl);
+@@ -1010,14 +1024,14 @@ int __wl1271_plt_stop(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
+-	wl1271_disable_interrupts(wl);
+ 	wl1271_power_off(wl);
+ 
+ 	wl->state = WL1271_STATE_OFF;
+ 	wl->rx_counter = 0;
+ 
+ 	mutex_unlock(&wl->mutex);
+-	cancel_work_sync(&wl->irq_work);
++	wl1271_disable_interrupts(wl);
++	cancel_work_sync(&wl->netstack_work);
+ 	cancel_work_sync(&wl->recovery_work);
+ 	mutex_lock(&wl->mutex);
+ out:
+@@ -1171,7 +1185,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		break;
+ 
+ irq_disable:
+-		wl1271_disable_interrupts(wl);
+ 		mutex_unlock(&wl->mutex);
+ 		/* Unlocking the mutex in the middle of handling is
+ 		   inherently unsafe. In this case we deem it safe to do,
+@@ -1180,7 +1193,8 @@ irq_disable:
+ 		   work function will not do anything.) Also, any other
+ 		   possible concurrent operations will fail due to the
+ 		   current state, hence the wl1271 struct should be safe. */
+-		cancel_work_sync(&wl->irq_work);
++		wl1271_disable_interrupts(wl);
++		cancel_work_sync(&wl->netstack_work);
+ 		mutex_lock(&wl->mutex);
+ power_off:
+ 		wl1271_power_off(wl);
+@@ -1246,12 +1260,11 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
+ 
+ 	wl->state = WL1271_STATE_OFF;
+ 
+-	wl1271_disable_interrupts(wl);
+-
+ 	mutex_unlock(&wl->mutex);
+ 
++	wl1271_disable_interrupts(wl);
+ 	cancel_delayed_work_sync(&wl->scan_complete_work);
+-	cancel_work_sync(&wl->irq_work);
++	cancel_work_sync(&wl->netstack_work);
+ 	cancel_work_sync(&wl->tx_work);
+ 	cancel_delayed_work_sync(&wl->pspoll_work);
+ 	cancel_delayed_work_sync(&wl->elp_work);
+@@ -1527,7 +1540,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -1683,7 +1696,7 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -1912,7 +1925,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		goto out_unlock;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out_unlock;
+ 
+@@ -2015,7 +2028,7 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2041,7 +2054,7 @@ static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2069,7 +2082,7 @@ static int wl1271_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2548,7 +2561,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2603,7 +2616,7 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		conf_tid->apsd_conf[0] = 0;
+ 		conf_tid->apsd_conf[1] = 0;
+ 	} else {
+-		ret = wl1271_ps_elp_wakeup(wl, false);
++		ret = wl1271_ps_elp_wakeup(wl);
+ 		if (ret < 0)
+ 			goto out;
+ 
+@@ -2649,7 +2662,7 @@ static u64 wl1271_op_get_tsf(struct ieee80211_hw *hw)
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2738,7 +2751,7 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out_free_sta;
+ 
+@@ -2781,7 +2794,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
+ 	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2814,7 +2827,7 @@ int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -3178,7 +3191,7 @@ static ssize_t wl1271_sysfs_store_bt_coex_state(struct device *dev,
+ 	if (wl->state == WL1271_STATE_OFF)
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -3378,9 +3391,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 		for (j = 0; j < AP_MAX_LINKS; j++)
+ 			skb_queue_head_init(&wl->links[j].tx_queue[i]);
+ 
++	skb_queue_head_init(&wl->deferred_rx_queue);
++	skb_queue_head_init(&wl->deferred_tx_queue);
++
+ 	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
+ 	INIT_DELAYED_WORK(&wl->pspoll_work, wl1271_pspoll_work);
+-	INIT_WORK(&wl->irq_work, wl1271_irq_work);
++	INIT_WORK(&wl->netstack_work, wl1271_netstack_work);
+ 	INIT_WORK(&wl->tx_work, wl1271_tx_work);
+ 	INIT_WORK(&wl->recovery_work, wl1271_recovery_work);
+ 	INIT_DELAYED_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 5c347b1..971f13e 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -69,7 +69,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 	}
+ }
+ 
+-int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake)
++int wl1271_ps_elp_wakeup(struct wl1271 *wl)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(compl);
+ 	unsigned long flags;
+@@ -87,7 +87,7 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake)
+ 	 * the completion variable in one entity.
+ 	 */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+-	if (work_pending(&wl->irq_work) || chip_awake)
++	if (test_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+ 		pending = true;
+ 	else
+ 		wl->elp_compl = &compl;
+@@ -149,7 +149,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 	case STATION_ACTIVE_MODE:
+ 	default:
+ 		wl1271_debug(DEBUG_PSM, "leaving psm");
+-		ret = wl1271_ps_elp_wakeup(wl, false);
++		ret = wl1271_ps_elp_wakeup(wl);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/net/wireless/wl12xx/ps.h b/drivers/net/wireless/wl12xx/ps.h
+index fc1f4c1..c41bd0a 100644
+--- a/drivers/net/wireless/wl12xx/ps.h
++++ b/drivers/net/wireless/wl12xx/ps.h
+@@ -30,7 +30,7 @@
+ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 		       u32 rates, bool send);
+ void wl1271_ps_elp_sleep(struct wl1271 *wl);
+-int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake);
++int wl1271_ps_elp_wakeup(struct wl1271 *wl);
+ void wl1271_elp_work(struct work_struct *work);
+ void wl1271_ps_link_start(struct wl1271 *wl, u8 hlid, bool clean_queues);
+ void wl1271_ps_link_end(struct wl1271 *wl, u8 hlid);
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index a07e3f9..e490979 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -129,7 +129,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
+ 
+ 	skb_trim(skb, skb->len - desc->pad_len);
+ 
+-	ieee80211_rx_ni(wl->hw, skb);
++	skb_queue_tail(&wl->deferred_rx_queue, skb);
++	ieee80211_queue_work(wl->hw, &wl->netstack_work);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index b9c3747..7ee9d29 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -60,7 +60,7 @@ static struct device *wl1271_sdio_wl_to_dev(struct wl1271 *wl)
+ 	return &(wl_to_func(wl)->dev);
+ }
+ 
+-static irqreturn_t wl1271_irq(int irq, void *cookie)
++static irqreturn_t wl1271_hardirq(int irq, void *cookie)
+ {
+ 	struct wl1271 *wl = cookie;
+ 	unsigned long flags;
+@@ -69,17 +69,14 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 
+ 	/* complete the ELP completion */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
++	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 	if (wl->elp_compl) {
+ 		complete(wl->elp_compl);
+ 		wl->elp_compl = NULL;
+ 	}
+-
+-	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+-	return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static void wl1271_sdio_disable_interrupts(struct wl1271 *wl)
+@@ -231,14 +228,14 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	wl->irq = wlan_data->irq;
+ 	wl->ref_clock = wlan_data->board_ref_clock;
+ 
+-	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
++	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
++				   IRQF_TRIGGER_RISING,
++				   DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
+ 		goto out_free;
+ 	}
+ 
+-	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+-
+ 	disable_irq(wl->irq);
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+@@ -261,7 +258,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+  out_irq:
+ 	free_irq(wl->irq, wl);
+ 
+-
+  out_free:
+ 	wl1271_free_hw(wl);
+ 
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 0132dad..df5a00f 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -320,28 +320,23 @@ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 	spi_sync(wl_to_spi(wl), &m);
+ }
+ 
+-static irqreturn_t wl1271_irq(int irq, void *cookie)
++static irqreturn_t wl1271_hardirq(int irq, void *cookie)
+ {
+-	struct wl1271 *wl;
++	struct wl1271 *wl = cookie;
+ 	unsigned long flags;
+ 
+ 	wl1271_debug(DEBUG_IRQ, "IRQ");
+ 
+-	wl = cookie;
+-
+ 	/* complete the ELP completion */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
++	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 	if (wl->elp_compl) {
+ 		complete(wl->elp_compl);
+ 		wl->elp_compl = NULL;
+ 	}
+-
+-	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+-	return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
+@@ -413,14 +408,14 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
++	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
++				   IRQF_TRIGGER_RISING,
++				   DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
+ 		goto out_free;
+ 	}
+ 
+-	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+-
+ 	disable_irq(wl->irq);
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 57bd3bd..af1bfef 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -464,7 +464,7 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
+ 
+ 	while ((skb = wl1271_skb_dequeue(wl))) {
+ 		if (!woken_up) {
+-			ret = wl1271_ps_elp_wakeup(wl, false);
++			ret = wl1271_ps_elp_wakeup(wl);
+ 			if (ret < 0)
+ 				goto out_ack;
+ 			woken_up = true;
+@@ -589,7 +589,8 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 		     result->rate_class_index, result->status);
+ 
+ 	/* return the packet to the stack */
+-	ieee80211_tx_status(wl->hw, skb);
++	skb_queue_tail(&wl->deferred_tx_queue, skb);
++	ieee80211_queue_work(wl->hw, &wl->netstack_work);
+ 	wl1271_free_tx_id(wl, result->id);
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 338acc9..45e6577 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -320,7 +320,6 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_IN_ELP,
+ 	WL1271_FLAG_PSM,
+ 	WL1271_FLAG_PSM_REQUESTED,
+-	WL1271_FLAG_IRQ_PENDING,
+ 	WL1271_FLAG_IRQ_RUNNING,
+ 	WL1271_FLAG_IDLE,
+ 	WL1271_FLAG_IDLE_REQUESTED,
+@@ -404,6 +403,12 @@ struct wl1271 {
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+ 	int tx_queue_count;
+ 
++	/* Frames received, not handled yet by mac80211 */
++	struct sk_buff_head deferred_rx_queue;
++
++	/* Frames sent, not returned yet to mac80211 */
++	struct sk_buff_head deferred_tx_queue;
++
+ 	struct work_struct tx_work;
+ 
+ 	/* Pending TX frames */
+@@ -424,8 +429,8 @@ struct wl1271 {
+ 	/* Intermediate buffer, used for packet aggregation */
+ 	u8 *aggr_buf;
+ 
+-	/* The target interrupt mask */
+-	struct work_struct irq_work;
++	/* Network stack work  */
++	struct work_struct netstack_work;
+ 
+ 	/* Hardware recovery work */
+ 	struct work_struct recovery_work;
 -- 
-1.7.0.4
+1.7.1
 
