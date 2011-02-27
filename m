@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51835 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:64084 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752708Ab1BHWGL convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751635Ab1B0V6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 17:06:11 -0500
-Received: by iwn9 with SMTP id 9so6215749iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Feb 2011 14:06:11 -0800 (PST)
+	Sun, 27 Feb 2011 16:58:10 -0500
+Message-ID: <4D6AC8EC.1040104@lwfinger.net>
+Date: Sun, 27 Feb 2011 15:58:04 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1297200372-79404-2-git-send-email-nbd@openwrt.org>
-References: <1297200372-79404-1-git-send-email-nbd@openwrt.org>
-	<1297200372-79404-2-git-send-email-nbd@openwrt.org>
-Date: Tue, 8 Feb 2011 23:06:10 +0100
-Message-ID: <AANLkTinhX9R9XY2_BoJXkRxNMZ3F_Adzwcq5XVQyEX0t@mail.gmail.com>
-Subject: Re: [RFC 2/2] ath9k: fix powersave frame filtering/buffering in AP mode
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, lrodriguez@atheros.com,
-	m.sujith@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alessio Igor Bogani <abogani@kernel.org>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tim Bird <tim.bird@am.sony.com>
+Subject: Re: [PATCH] rtlwifi: make gcc happy
+References: <1298841390-1194-1-git-send-email-abogani@kernel.org>
+In-Reply-To: <1298841390-1194-1-git-send-email-abogani@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 8, 2011 at 10:26 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> This patch fixes a long standing issue of pending packets in the queue being
-> sent (and retransmitted many times) to sleeping stations.
-> This was made worse by aggregation through driver-internal retransmitting
-> of A-MDPU subframes.
+On 02/27/2011 03:16 PM, Alessio Igor Bogani wrote:
+> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘rtl92ce_rx_query_desc’:
+> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:255:5: warning: ‘rf_rx_num’ may be used uninitialized in this function
+> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:257:12: warning: ‘total_rssi’ may be used uninitialized in this function
+> drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:466:6: warning: ‘weighting’ may be used uninitialized in this function
+>
+> Signed-off-by: Alessio Igor Bogani<abogani@kernel.org>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    6 +++---
+>   1 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+> index bf5852f..593eb8e 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+> @@ -252,9 +252,9 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct phy_sts_cck_8192s_t *cck_buf;
+>   	s8 rx_pwr_all, rx_pwr[4];
+> -	u8 rf_rx_num, evm, pwdb_all;
+> +	u8 evm, pwdb_all, rf_rx_num = 0;
+>   	u8 i, max_spatial_stream;
+> -	u32 rssi, total_rssi;
+> +	u32 rssi, total_rssi = 0;
+>   	bool is_cck_rate;
+>
+>   	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
+> @@ -463,7 +463,7 @@ static void _rtl92ce_update_rxsignalstatistics(struct ieee80211_hw *hw,
+>   					       struct rtl_stats *pstats)
+>   {
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> -	int weighting;
+> +	int weighting = 0;
+>
+>   	if (rtlpriv->stats.recv_signal_power == 0)
+>   		rtlpriv->stats.recv_signal_power = pstats->recvsignalpower;
 
-Nice. :) Just one thought, shouldn't there be one more call to
-ieee80211_sta_set_tim() somewhere? I'm thinking there might be a race
-condition otherwise where the tid queues are empty on sta_notify but
-then later some failed/filtered A-MPDU subframes get queued...
 
-Also, just curious so feel free to answer or not, but how does the
-hardware handle the ps filter thing? Does it have a ps bit for every
-dst address? How many different dsts can it keep track of?
+ACK. What architecture and compiler version are you using? On x86_64, gcc 4.5.1 
+does not show these warnings.
 
-/Bj�rn
+Larry
+
