@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64371 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932620Ab1BYS10 convert rfc822-to-8bit (ORCPT
+Received: from w1.fi ([128.177.27.249]:56732 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751518Ab1B0Jnu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Feb 2011 13:27:26 -0500
-Received: by bwz15 with SMTP id 15so2189507bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Feb 2011 10:27:25 -0800 (PST)
+	Sun, 27 Feb 2011 04:43:50 -0500
+Date: Sun, 27 Feb 2011 11:43:44 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/5] [mac|nl]80211: SAE mesh and userspace
+ authentication
+Message-ID: <20110227094344.GA7835@jm.kir.nu>
+References: <1298683960-20835-1-git-send-email-thomas@cozybit.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimahYNo0ZHr9PU217CWJQP6ssuhaxguYVz7dX_-@mail.gmail.com>
-References: <1297907356-3214-1-git-send-email-linville@tuxdriver.com>
-	<1298064074-8108-1-git-send-email-linville@tuxdriver.com>
-	<AANLkTikJeN=CG20PAj-n1ZoaiJLbsiG=jfZnbu4Or3KS@mail.gmail.com>
-	<20110221184716.GD9650@tuxdriver.com>
-	<AANLkTi=LnpFLzKbtaPxSjg9TRU_pY2oRi6tsFg5GkaGK@mail.gmail.com>
-	<20110223222842.GA20039@tuxdriver.com>
-	<AANLkTimahYNo0ZHr9PU217CWJQP6ssuhaxguYVz7dX_-@mail.gmail.com>
-Date: Fri, 25 Feb 2011 10:27:24 -0800
-Message-ID: <AANLkTinOPNNi8e3NHpFw0ABtF5GBU_NfuMmOxnKKdo1f@mail.gmail.com>
-Subject: Re: [RFC v2] mac80211: implement eBDP algorithm to fight bufferbloat
-From: Nathaniel Smith <njs@pobox.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net,
-	johannes@sipsolutions.net, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1298683960-20835-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 25, 2011 at 10:21 AM, Nathaniel Smith <njs@pobox.com> wrote:
-> static u64 _ktime_diff_to_now_and_unstash(ktime_t then, int * enqueued) {
->
->        timespec ts_then = ktime_to_timespec(then);
->        timespec ts_now = ktime_to_timespec(ktime_get());
->        *enqueued = ts_then.tv_sec >> LATENCY_BITS;
->        ts_then.tv_sec &= (1 << LATENCY_BITS) - 1;
->        ts_now.tv_sec &= (1 << LATENCY_BITS) - 1;
->        if (ts_now.tv_sec < ts_then.tv_sec)
->                ts_now.tv_sec += (1 << LATENCY_BITS);
->         timespec_sub(ts_now, ts_then);
-> }
+On Fri, Feb 25, 2011 at 05:32:35PM -0800, Thomas Pedersen wrote:
+> This patch series introduces support for userspace SAE (Simultaneous
+> Authentication of Equals) daemons through nl80211 and mac80211. This
+> authentication scheme is documented in IEEE 802.11s section 8.2a.1. 
 
-Err, plus the 'return timespec_to_ns(...)' on the last line, that I
-was trying to add when my computer suddenly decided I wanted to send
-the message. How embarrassing.
-
-Anyway, not sure this is a *good* idea, but it should work. Hopefully
-we don't actually need to measure latencies > 256 seconds in this
-context...
-
--- Nathaniel
+While the SAE mechanism is specified in IEEE 802.11s, it is not in any
+way specific to mesh. Some of these patches looked generic, but at least
+the one touching ieee80211_default_mgmt_stypes addressed only the mesh
+point iftype. Do you have plans on making this more generic to allow SAE
+to be used in station mode interface with WPA2-Personal? I would assume
+that AP side can already be handled in hostapd without kernel changes,
+but it would be useful to allow wpa_supplicant to implement SAE for the
+station interface even if there is no use of mesh in the network.
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
