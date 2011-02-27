@@ -1,70 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37989 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab1BNKOk (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:64847 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643Ab1B0VQk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 05:14:40 -0500
-Received: by qwa26 with SMTP id 26so2972376qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 02:14:39 -0800 (PST)
+	Sun, 27 Feb 2011 16:16:40 -0500
+From: Alessio Igor Bogani <abogani@kernel.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tim Bird <tim.bird@am.sony.com>,
+	Alessio Igor Bogani <abogani@kernel.org>
+Subject: [PATCH] rtlwifi: make gcc happy
+Date: Sun, 27 Feb 2011 22:16:30 +0100
+Message-Id: <1298841390-1194-1-git-send-email-abogani@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <B7288B2B5878D747BA031EF4B170D7F6092D2727@TWHCMBS01.tw.ralinktech.ad>
-References: <201101311600.39486.IvDoorn@gmail.com>
-	<874o8mbaec.fsf@purkki.adurom.net>
-	<AANLkTikKevPWkWMu=HLPHt-jACLZLQzqN6thr-2LNk59@mail.gmail.com>
-	<B7288B2B5878D747BA031EF4B170D7F6092D2727@TWHCMBS01.tw.ralinktech.ad>
-Date: Mon, 14 Feb 2011 11:14:39 +0100
-Message-ID: <AANLkTimRT-2B4G1jC4D+BZURmd_FRGSkLT5MKsEvcS3r@mail.gmail.com>
-Subject: Re: [RFC] rt2x00: Add autowakeup timer for receiving beacons while in
- powersave mode
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: RA-Jay Hung <Jay_Hung@ralinktech.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	RA-Dennis Lee <Dennis_Lee@ralinktech.com>,
-	RA-Eddy Tsai <Eddy_Tsai@ralinktech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+drivers/net/wireless/rtlwifi/rtl8192ce/trx.c: In function ‘rtl92ce_rx_query_desc’:
+drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:255:5: warning: ‘rf_rx_num’ may be used uninitialized in this function
+drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:257:12: warning: ‘total_rssi’ may be used uninitialized in this function
+drivers/net/wireless/rtlwifi/rtl8192ce/trx.c:466:6: warning: ‘weighting’ may be used uninitialized in this function
 
->> Well the official Ralink driver also uses a timer to wakeup the hardware,
->> there are however registers which suggest support for autowake functionality.
->
->> Jay, Dennis, Eddy, can you explain a but how the autowake functionality is
->> implemented in the rt2800usb firmware?
->
-> Current power saving and wake up procedure as below.
->
-> PCI:
-> 1. Driver sends power-save command to firmware to turn off RF/BBP and configure
-> mac register (AUTO_WAKEUP_CFG) to set a hardware timer counter.
-> 2. When hardware timer timeout, issue an interrupt and notify the driver.
-> 3. Driver send wake up command to firmware to turn on RF/BBP and ready to process
-> packets
->
-> USB:
-> 1. Driver sends power-save command to firmware to turn off RF/BBP and set
-> a software timer to emulate the purpose of hardware timer.
-> 2. When software timer timeout, driver sends wake up command to firmware to
-> turn on RF/BBP and ready to process packets.
+Signed-off-by: Alessio Igor Bogani <abogani@kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks. So I'll add this routine to the rt2800usb driver then. :)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index bf5852f..593eb8e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -252,9 +252,9 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct phy_sts_cck_8192s_t *cck_buf;
+ 	s8 rx_pwr_all, rx_pwr[4];
+-	u8 rf_rx_num, evm, pwdb_all;
++	u8 evm, pwdb_all, rf_rx_num = 0;
+ 	u8 i, max_spatial_stream;
+-	u32 rssi, total_rssi;
++	u32 rssi, total_rssi = 0;
+ 	bool is_cck_rate;
+ 
+ 	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
+@@ -463,7 +463,7 @@ static void _rtl92ce_update_rxsignalstatistics(struct ieee80211_hw *hw,
+ 					       struct rtl_stats *pstats)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	int weighting;
++	int weighting = 0;
+ 
+ 	if (rtlpriv->stats.recv_signal_power == 0)
+ 		rtlpriv->stats.recv_signal_power = pstats->recvsignalpower;
+-- 
+1.7.4.1
 
-Johannes, if you don't want to add the complexity for checking the
-"pending MC/BC frames" in
-a received frame. Would you mind if I add some utility functions to
-mac80211 then? That way the
-logic is still shared for the drivers that need it, but it doesn't
-impact the code paths in mac80211 itself...
-
-> Note: for future projects, hw or firmware will take more psm mechanism to reduce
-> some latency between firmware and host to save more power.
-
-Cool :)
-
-Thanks for the info.
-
-Ivo
