@@ -1,41 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57973 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753306Ab1BGPKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Feb 2011 10:10:04 -0500
-Date: Mon, 7 Feb 2011 16:08:58 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, george0505@realtek.com,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/6] rtlwifi: rtl8192ce: Refactor rtl8192ce/fw
-Message-ID: <20110207150857.GE2319@redhat.com>
-References: <4d4eec0f.et2vL5g5GiBl8wXm%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4d4eec0f.et2vL5g5GiBl8wXm%Larry.Finger@lwfinger.net>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50372 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab1B0WQY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Feb 2011 17:16:24 -0500
+Received: by wyg36 with SMTP id 36so3120195wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:16:22 -0800 (PST)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] wl12xx: Remove private headers in wl1271_tx_reset
+Date: Mon, 28 Feb 2011 00:16:13 +0200
+Message-Id: <1298844973-11949-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 06, 2011 at 12:44:31PM -0600, Larry Finger wrote:
-> +bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
-> +			     struct sk_buff *skb)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
-> +	struct rtl8192_tx_ring *ring;
-> +	struct rtl_tx_desc *pdesc;
-> +	u8 own;
-> +	unsigned long flags;
-> +	struct sk_buff *pskb = NULL;
-> +
-> +	ring = &rtlpci->tx_ring[BEACON_QUEUE];
-> +
-> +	pskb = __skb_dequeue(&ring->queue);
-> +	if (pskb)
-> +		kfree_skb(pskb);
-> +
-> +	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+Frames in the tx_frames array include extra private headers, which must
+be removed before passing the skbs to ieee80211_tx_status.
 
-I think __skb_dequeue(&ring->queue) should be also protected
-by lock.
+Fix this by removing any private headers in wl1271_tx_reset, similar to
+how this is done in wl1271_tx_complete_packet.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/tx.c |   32 +++++++++++++++++++++++---------
+ 1 files changed, 23 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index ac60d57..37d354d 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -687,16 +687,30 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 	 */
+ 	wl1271_handle_tx_low_watermark(wl);
+ 
+-	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+-		if (wl->tx_frames[i] != NULL) {
+-			skb = wl->tx_frames[i];
+-			wl1271_free_tx_id(wl, i);
+-			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
+-			info = IEEE80211_SKB_CB(skb);
+-			info->status.rates[0].idx = -1;
+-			info->status.rates[0].count = 0;
+-			ieee80211_tx_status(wl->hw, skb);
++	for (i = 0; i < ACX_TX_DESCRIPTORS; i++) {
++		if (wl->tx_frames[i] == NULL)
++			continue;
++
++		skb = wl->tx_frames[i];
++		wl1271_free_tx_id(wl, i);
++		wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
++
++		/* Remove private headers before passing the skb to mac80211 */
++		info = IEEE80211_SKB_CB(skb);
++		skb_pull(skb, sizeof(struct wl1271_tx_hw_descr));
++		if (info->control.hw_key &&
++		    info->control.hw_key->cipher == WLAN_CIPHER_SUITE_TKIP) {
++			int hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++			memmove(skb->data + WL1271_TKIP_IV_SPACE, skb->data,
++				hdrlen);
++			skb_pull(skb, WL1271_TKIP_IV_SPACE);
+ 		}
++
++		info->status.rates[0].idx = -1;
++		info->status.rates[0].count = 0;
++
++		ieee80211_tx_status(wl->hw, skb);
++	}
+ }
+ 
+ #define WL1271_TX_FLUSH_TIMEOUT 500000
+-- 
+1.7.1
+
