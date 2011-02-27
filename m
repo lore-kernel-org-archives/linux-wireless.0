@@ -1,39 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:50007 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751107Ab1BUUHY (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:54596 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674Ab1B0UoP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 15:07:24 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 447D554029D
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Feb 2011 15:10:25 -0500 (EST)
-Subject: Compat-wireless release for 2011-02-21 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110221200721.C15EE43501@repository3.orbit-lab.org>
-Date: Mon, 21 Feb 2011 15:07:21 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 27 Feb 2011 15:44:15 -0500
+Date: Sun, 27 Feb 2011 14:44:08 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: Change rate-control feedback
+Message-ID: <4d6ab798.QpgTB5Dvvt1eieGL%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + b6a583d...97d34f4 akpm-end   -> origin/akpm-end  (forced update)
-   ee715087..6f576d5 akpm-start -> origin/akpm-start
-   05136e6..07b259a  history    -> origin/history
- + 0dbc173...af3a283 master     -> origin/master  (forced update)
-   ee715087..6f576d5 stable     -> origin/stable
- * [new tag]         next-20110221 -> next-20110221
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+The driver for the RTL8187L chips returns IEEE80211_TX_STAT_ACK for all
+packets, even if the maximum number of retries was exhausted. In addition
+it fails to setup max_rates in the ieee80211_hw struct, This behavior
+may be responsible for the problems noted in Bug 14168. As the bug is very
+old, testers have not been found, and I do not have the case where the
+indicated signal is less than -70 dBm.
 
-compat-wireless code metrics
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@kernel.org>
+---
 
-    789311 - Total upstream lines of code being pulled
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -869,23 +869,29 @@ static void rtl8187_work(struct work_str
+ 	/* The RTL8187 returns the retry count through register 0xFFFA. In
+ 	 * addition, it appears to be a cumulative retry count, not the
+ 	 * value for the current TX packet. When multiple TX entries are
+-	 * queued, the retry count will be valid for the last one in the queue.
+-	 * The "error" should not matter for purposes of rate setting. */
++	 * waiting in the queue, the retry count will be the total for all.
++	 * The "error" may matter for purposes of rate setting, but there is
++	 * no other choice with this hardware.
++	 */
+ 	struct rtl8187_priv *priv = container_of(work, struct rtl8187_priv,
+ 				    work.work);
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_hw *dev = priv->dev;
+ 	static u16 retry;
+ 	u16 tmp;
++	u16 avg_retry;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+ 	tmp = rtl818x_ioread16(priv, (__le16 *)0xFFFA);
++	avg_retry = (tmp - retry) / skb_queue_len(&priv->b_tx_status.queue);
+ 	while (skb_queue_len(&priv->b_tx_status.queue) > 0) {
+ 		struct sk_buff *old_skb;
+ 
+ 		old_skb = skb_dequeue(&priv->b_tx_status.queue);
+ 		info = IEEE80211_SKB_CB(old_skb);
+-		info->status.rates[0].count = tmp - retry + 1;
++		info->status.rates[0].count = avg_retry + 1;
++		if (info->status.rates[0].count > RETRY_COUNT)
++			info->flags &= ~IEEE80211_TX_STAT_ACK;
+ 		ieee80211_tx_status_irqsafe(dev, old_skb);
+ 	}
+ 	retry = tmp;
+@@ -931,8 +937,8 @@ static int rtl8187_start(struct ieee8021
+ 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
+ 				  RTL818X_TX_CONF_HW_SEQNUM |
+ 				  RTL818X_TX_CONF_DISREQQSIZE |
+-				  (7 << 8  /* short retry limit */) |
+-				  (7 << 0  /* long retry limit */) |
++				  (RETRY_COUNT << 8  /* short retry limit */) |
++				  (RETRY_COUNT << 0  /* long retry limit */) |
+ 				  (7 << 21 /* MAX TX DMA */));
+ 		rtl8187_init_urbs(dev);
+ 		rtl8187b_init_status_urb(dev);
+@@ -1376,6 +1382,9 @@ static int __devinit rtl8187_probe(struc
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		     IEEE80211_HW_SIGNAL_DBM |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS;
++	/* Initialize rate-control variables */
++	dev->max_rates = 1;
++	dev->max_rate_tries = RETRY_COUNT;
+ 
+ 	eeprom.data = dev;
+ 	eeprom.register_read = rtl8187_eeprom_register_read;
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+@@ -35,6 +35,8 @@
+ #define RFKILL_MASK_8187_89_97	0x2
+ #define RFKILL_MASK_8198	0x4
+ 
++#define RETRY_COUNT		7
++
+ struct rtl8187_rx_info {
+ 	struct urb *urb;
+ 	struct ieee80211_hw *dev;
