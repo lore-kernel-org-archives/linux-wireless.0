@@ -1,65 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pbsg500.nifty.com ([202.248.238.70]:54888 "EHLO
-	pbsg500.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab1BOFm5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 00:42:57 -0500
-Received: from [127.0.0.1] (himob3-p146.iem.hi-ho.ne.jp [203.180.26.146]) (authenticated)
-	by pbsg500.nifty.com with ESMTP id p1F5giLN032628
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Feb 2011 14:42:46 +0900
-Date: Tue, 15 Feb 2011 14:42:14 +0900
-From: Masahiro Inoue <miyabi.-.inoue@nifty.com>
-To: linux-wireless@vger.kernel.org
-Subject: Build Error Report(atlx)
-Message-Id: <20110215144213.9ED6.2E210E2F@nifty.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36630 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751876Ab1B0Nyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Feb 2011 08:54:54 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: change number of patch:
+Date: Sun, 27 Feb 2011 14:54:44 +0100
+Message-Id: <1298814885-11894-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+37-vsnprintk.patch also uses the number 37, so one of them has to be renamed.
 
-The build error occurs by compat-wireless-2011-02-14.
-My kernel is 2.6.27. 
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/37-led-max-brightness.patch |   24 ------------------------
+ patches/38-led-max-brightness.patch |   24 ++++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 24 deletions(-)
+ delete mode 100644 patches/37-led-max-brightness.patch
+ create mode 100644 patches/38-led-max-brightness.patch
 
-  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net/atlx/atl1.o
-/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net/atlx/atl1.c:2842: warning: useless storage class specifier in empty declaration
-/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net/atlx/atl1.c:2842: warning: empty declaration
-/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net/atlx/atl1.c:3104: error: 'atl1_pm_ops' undeclared here (not in a function)
-make[4]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net/atlx/atl1.o] Error 1
-make[3]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net/atlx] Error 2
-make[2]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14/drivers/net] Error 2
-make[1]: *** [_module_/home/miyabi/test/compat-wireless/compat-wireless-2011-02-14] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.27-67vl5-x86_64'
-make: *** [modules] Error 2
-
-
-The patch was made.
-
---- atl1.c.orig 2011-02-15 14:31:11.000000000 +0900
-+++ atl1.c      2011-02-15 14:28:45.000000000 +0900
-@@ -2839,6 +2839,9 @@
-        return 0;
- }
-
-+compat_pci_suspend(atl1_suspend)
-+compat_pci_resume(atl1_resume)
-+
- static SIMPLE_DEV_PM_OPS(atl1_pm_ops, atl1_suspend, atl1_resume);
- #define ATL1_PM_OPS    (&atl1_pm_ops)
-
-@@ -3101,7 +3104,12 @@
-        .probe = atl1_probe,
-        .remove = __devexit_p(atl1_remove),
-        .shutdown = atl1_shutdown,
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-        .driver.pm = ATL1_PM_OPS,
-+#elif defined(CONFIG_PM_SLEEP)
-+       .suspend        = atl1_suspend_compat,
-+       .resume         = atl1_resume_compat,
-+#endif
- };
-
- /*
-
+diff --git a/patches/37-led-max-brightness.patch b/patches/37-led-max-brightness.patch
+deleted file mode 100644
+index ca62ca9..0000000
+--- a/patches/37-led-max-brightness.patch
++++ /dev/null
+@@ -1,24 +0,0 @@
+---- a/drivers/net/wireless/iwlegacy/iwl-led.c
+-+++ b/drivers/net/wireless/iwlegacy/iwl-led.c
+-@@ -149,7 +149,9 @@ void iwl_legacy_leds_init(struct iwl_pri
+- 				   wiphy_name(priv->hw->wiphy));
+- 	priv->led.brightness_set = iwl_legacy_led_brightness_set;
+- 	priv->led.blink_set = iwl_legacy_led_blink_set;
+-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+- 	priv->led.max_brightness = 1;
+-+#endif
+- 
+- 	switch (mode) {
+- 	case IWL_LED_DEFAULT:
+---- a/drivers/net/wireless/iwlwifi/iwl-led.c
+-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+-@@ -149,7 +149,9 @@ void iwl_leds_init(struct iwl_priv *priv
+- 				   wiphy_name(priv->hw->wiphy));
+- 	priv->led.brightness_set = iwl_led_brightness_set;
+- 	priv->led.blink_set = iwl_led_blink_set;
+-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
+- 	priv->led.max_brightness = 1;
+-+#endif
+- 
+- 	switch (mode) {
+- 	case IWL_LED_DEFAULT:
+diff --git a/patches/38-led-max-brightness.patch b/patches/38-led-max-brightness.patch
+new file mode 100644
+index 0000000..ca62ca9
+--- /dev/null
++++ b/patches/38-led-max-brightness.patch
+@@ -0,0 +1,24 @@
++--- a/drivers/net/wireless/iwlegacy/iwl-led.c
+++++ b/drivers/net/wireless/iwlegacy/iwl-led.c
++@@ -149,7 +149,9 @@ void iwl_legacy_leds_init(struct iwl_pri
++ 				   wiphy_name(priv->hw->wiphy));
++ 	priv->led.brightness_set = iwl_legacy_led_brightness_set;
++ 	priv->led.blink_set = iwl_legacy_led_blink_set;
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
++ 	priv->led.max_brightness = 1;
+++#endif
++ 
++ 	switch (mode) {
++ 	case IWL_LED_DEFAULT:
++--- a/drivers/net/wireless/iwlwifi/iwl-led.c
+++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
++@@ -149,7 +149,9 @@ void iwl_leds_init(struct iwl_priv *priv
++ 				   wiphy_name(priv->hw->wiphy));
++ 	priv->led.brightness_set = iwl_led_brightness_set;
++ 	priv->led.blink_set = iwl_led_blink_set;
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
++ 	priv->led.max_brightness = 1;
+++#endif
++ 
++ 	switch (mode) {
++ 	case IWL_LED_DEFAULT:
+-- 
+1.7.1
 
