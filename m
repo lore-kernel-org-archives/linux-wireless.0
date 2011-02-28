@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52046 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758508Ab1BPBvY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Feb 2011 20:51:24 -0500
-Date: Tue, 15 Feb 2011 20:50:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: kernel@fomichev.me, Greg Korah-Hartman <gregkh@suse.de>,
-	devel@linuxdriverproject.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>
-Subject: Re: [PATCH v2 1/4] brcm80211: fix compile issue
-Message-ID: <20110216015040.GA2349@tuxdriver.com>
-References: <1297721111-20606-1-git-send-email-kernel@fomichev.me>
- <7A94256FD72B884D9E7C55586C3CBCEE13CDA25D88@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110215221200.GA2087@sdf-MacBook>
- <4D5B0034.3090303@broadcom.com>
+Received: from kroah.org ([198.145.64.141]:33750 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751690Ab1B1RfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 12:35:05 -0500
+Date: Mon, 28 Feb 2011 09:36:04 -0800
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Vivek Natarajan <vivek.natraj@gmail.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU
+ to enter C3 state.
+Message-ID: <20110228173604.GA4375@kroah.com>
+References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
+ <20110228142243.GB25724@kroah.com>
+ <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
+ <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com>
+ <AANLkTikTNavD44e_bMO7Q8C5X73qwVHdjnVCiOUO1xCr@mail.gmail.com>
+ <AANLkTikxfjcStGND0SAqgCA+sZBEa0Xo_mf-ZGpsQrks@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4D5B0034.3090303@broadcom.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikxfjcStGND0SAqgCA+sZBEa0Xo_mf-ZGpsQrks@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 02:37:40PM -0800, Henry Ptasinski wrote:
-> On 02/15/2011 02:12 PM, Stanislav Fomichev wrote:
-> >Commit 59eb21a65047 "cfg80211: Extend channel to frequency mapping for 802.11j"
-> >changed the definition of the ieee80211_channel_to_frequency; so fix its
-> >usage in brcmfmac.
+On Mon, Feb 28, 2011 at 09:21:01AM -0800, Luis R. Rodriguez wrote:
+> On Mon, Feb 28, 2011 at 9:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Mon, Feb 28, 2011 at 8:52 AM, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
+> >> On Mon, Feb 28, 2011 at 8:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> >>> On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
+> >>>> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
+> >>>>> The default qos value of 55 causes higher power consumption
+> >>>>> and the battery drains out quickly. So, remove the pm_qos request
+> >>>>> in the driver and the throughout issue in the Intel Pinetrail
+> >>>>> platforms in which the DMA latency is seen can be fixed with
+> >>>>> the following script:
+> >>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
+> >>>>> http://johannes.sipsolutions.net/files/netlatency.c.txt
+> >>>>>
+> >>>>> More details can be found in the following bugzilla link:
+> >>>>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+> >>>>>
+> >>>>> Cc: stable@kernel.org
+> >>>>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> >>>>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> >>>>
+> >>>> Why did you send me 3 copies of this patch, when I don't need any copies
+> >>>> of it?
+> >>>>
+> >>>> Totally confused,
+> >>>
+> >>> Vivek, please only ask John to send this to David as stable so it can
+> >>> get into 2.6.38-rc, then once there you can refer the sha1sum from
+> >>> Linus' tree and justify propagating into the stable series.
+> >>>
+> >> I had sent separate patches for v2.6.37 and for v2.6.38 since the
+> >> patch could not be applied directly to previous versions. So, should I
+> >> send this rebased patch for v2.6.37 only after it makes it into
+> >> v2.6.38?
 > >
+> > Affirmative. You cannot propagate stable patches unless they are
+> > already in Linus' tree.
 > 
-> Commit 59eb21a65047 went into wireless-next a few weeks ago, but
-> hasn't made it over to staging-next yet.  Should John pick up this
-> patch for wireless-next now, and it'll eventually migrate over to
-> staging-next?
+> See:
+> 
+> http://wireless.kernel.org/en/users/Documentation/Fix_Propagation
 
-If so, not only let me know but also resend a copy to me -- I haven't
-been tracking these...
+And of course, the file, Documentation/stable_kernel_rules.txt
 
-John
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+thanks,
+
+greg k-h
