@@ -1,79 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:48986 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab1BXSwa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Feb 2011 13:52:30 -0500
-Received: by yxs7 with SMTP id 7so405062yxs.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Feb 2011 10:52:29 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:60798 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752431Ab1B1GVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 01:21:05 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 22:20:44 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [stable 2.6.38][PATCH] ath9k: Fix ath9k to allow CPU to enter C3 state.
+Date: Mon, 28 Feb 2011 11:50:54 +0530
+Message-ID: <1298874054-3803-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
+References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikPGHKMi_VVU23_2js96E7n=PVHjBzBujE1v3HX@mail.gmail.com>
-References: <4D5DA039.9010907@gmail.com>
-	<AANLkTikq2XA9c9FUQJ3cv7xjL69J=tHxLdwj8fiNnmhN@mail.gmail.com>
-	<AANLkTikkv0QbzoHv_Z8cdDp7g67oG57tN7QaZv8NH4Na@mail.gmail.com>
-	<AANLkTikPGHKMi_VVU23_2js96E7n=PVHjBzBujE1v3HX@mail.gmail.com>
-Date: Thu, 24 Feb 2011 18:52:17 +0000
-Message-ID: <AANLkTikJhhKQhmJv-8ac+htsESc_8GRLO4k_ZFRCK2GS@mail.gmail.com>
-Subject: Re: Google Summer of Code 2011 - Project ideas page for the Linux
- Foundation online
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Till Kamppeter <till.kamppeter@gmail.com>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	Lars Uebernickel <larsuebernickel@gmx.de>,
-	peter sikking <peter@mmiworks.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 24, 2011 at 8:11 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Feb 23, 2011 at 4:52 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
->> On Fri, Feb 18, 2011 at 2:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Thu, Feb 17, 2011 at 2:24 PM, Till Kamppeter
->>> <till.kamppeter@gmail.com> wrote:
->>>> Hi,
->>>>
->>>> I have set up a page for project ideas for the Linux Foundation's
->>>> participation in the Google Summer of Code 2011:
->>>>
->>>> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2011
->>>>
->>>> Please add your ideas to the sub-page of your work group. If you have
->>>> problems mail me with your project idea.
->>>
->>> For 802.11 you can dump your ideas here:
->>>
->>> http://wireless.kernel.org/en/developers/GSoC/2011/
->>>
->>>  Luis
->>
->> Seeing as a few of the mac80211-based wireless drivers (for some of
->> the more dumb/basic/cheap devices) has gained access-point(AP)-mode
->> support code in the kernel recently in the last few months, it would
->> probably be appropriate to add (if it isn't already there) or enhance
->> access-point-mode support in some of the user-land tools like
->> NetworkManager, nm-applet, or wireless assistant?
->
-> The dbus / supplicant stuff was done in GSoC 2009, see:
->
-> http://wireless.kernel.org/en/developers/GSoC/2009/Add_AP_Support_to_Network_Manager
->
-> Patches were sent to Jouni and IIRC the dbus stuff was the last stuff
-> being figured out. So IIRC this was just a matter of userspace
-> catchup. If we need that then sure, Dan?
->
->  Luis
->
+The default qos value of 55 causes higher power consumption
+and the battery drains out quickly. So, remove the pm_qos request
+in the driver and the throughout issue in the Intel Pinetrail
+platforms in which the DMA latency is seen can be fixed with
+the following script:
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
+http://johannes.sipsolutions.net/files/netlatency.c.txt
 
-Oh, so long ago :-). (GSoC 2009 would be  over a little over a year
-ago). Somebody can write a user-friendly GUI wizard to do a
-wireless-wired bridge i.e. plus netfilter nat/masquerading config?
-Does hostapd has a dbus interface i.e. can it be invoked by the
-console owner on-the-fly? It does not seem to - would that be
-useful/do-able as a student project?
+More details can be found in the following bugzilla link:
+https://bugzilla.kernel.org/show_bug.cgi?id=27532
+
+Cc: stable@kernel.org
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    5 -----
+ drivers/net/wireless/ath/ath9k/init.c  |    7 -------
+ drivers/net/wireless/ath/ath9k/main.c  |    8 --------
+ 3 files changed, 0 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 23838e3..a993d8a 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -21,7 +21,6 @@
+ #include <linux/device.h>
+ #include <linux/leds.h>
+ #include <linux/completion.h>
+-#include <linux/pm_qos_params.h>
+ 
+ #include "debug.h"
+ #include "common.h"
+@@ -57,8 +56,6 @@ struct ath_node;
+ 
+ #define A_MAX(a, b) ((a) > (b) ? (a) : (b))
+ 
+-#define ATH9K_PM_QOS_DEFAULT_VALUE	55
+-
+ #define TSF_TO_TU(_h,_l) \
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+ 
+@@ -634,7 +631,6 @@ struct ath_softc {
+ 
+ 	struct ath_ant_comb ant_comb;
+ 
+-	struct pm_qos_request_list pm_qos_req;
+ };
+ 
+ struct ath_wiphy {
+@@ -666,7 +662,6 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+ extern struct ieee80211_ops ath9k_ops;
+ extern int ath9k_modparam_nohwcrypt;
+ extern int led_blink;
+-extern int ath9k_pm_qos_value;
+ extern bool is_ath9k_unloaded;
+ 
+ irqreturn_t ath_isr(int irq, void *dev);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 087a6a9..82cac80 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -41,9 +41,6 @@ static int ath9k_btcoex_enable;
+ module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+ 
+-int ath9k_pm_qos_value = ATH9K_PM_QOS_DEFAULT_VALUE;
+-module_param_named(pmqos, ath9k_pm_qos_value, int, S_IRUSR | S_IRGRP | S_IROTH);
+-MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
+ 
+ bool is_ath9k_unloaded;
+ /* We use the hw_value as an index into our private channel structure */
+@@ -762,9 +759,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
+-	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+-			   PM_QOS_DEFAULT_VALUE);
+-
+ 	return 0;
+ 
+ error_world:
+@@ -831,7 +825,6 @@ void ath9k_deinit_device(struct ath_softc *sc)
+ 	}
+ 
+ 	ieee80211_unregister_hw(hw);
+-	pm_qos_remove_request(&sc->pm_qos_req);
+ 	ath_rx_cleanup(sc);
+ 	ath_tx_cleanup(sc);
+ 	ath9k_deinit_softc(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index da5c645..a09d15f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1173,12 +1173,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 			ath9k_btcoex_timer_resume(sc);
+ 	}
+ 
+-	/* User has the option to provide pm-qos value as a module
+-	 * parameter rather than using the default value of
+-	 * 'ATH9K_PM_QOS_DEFAULT_VALUE'.
+-	 */
+-	pm_qos_update_request(&sc->pm_qos_req, ath9k_pm_qos_value);
+-
+ 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
+ 		common->bus_ops->extn_synch_en(common);
+ 
+@@ -1345,8 +1339,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
+ 
+-	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+-
+ 	mutex_unlock(&sc->mutex);
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG, "Driver halt\n");
+-- 
+1.7.3.4
+
