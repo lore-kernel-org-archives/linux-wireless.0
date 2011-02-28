@@ -1,44 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34395 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855Ab1BNMbi (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41917 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754124Ab1B1VBX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 07:31:38 -0500
-Subject: Re: [RFC] mac80211: reply to directed probes in IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110214122818.GA6712@jm.kir.nu>
-References: <1296564563.3989.0.camel@jlt3.sipsolutions.net>
-	 <AANLkTimEDvmp2RbLXdOf8vRrjzBKd+rLwqoreX+x3EdB@mail.gmail.com>
-	 <1297678357.3785.14.camel@jlt3.sipsolutions.net>
-	 <20110214122818.GA6712@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Feb 2011 13:31:34 +0100
-Message-ID: <1297686694.3785.40.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 28 Feb 2011 16:01:23 -0500
+Message-ID: <4D6C0D1D.9010209@lwfinger.net>
+Date: Mon, 28 Feb 2011 15:01:17 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	George <george0505@realtek.com>, linux-next@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: usb parts should depend on CONFIG_USB
+References: <alpine.DEB.2.00.1102171354200.16788@ayla.of.borg> <1298922500-21632-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1298922500-21632-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-14 at 14:28 +0200, Jouni Malinen wrote:
-> On Mon, Feb 14, 2011 at 11:12:37AM +0100, Johannes Berg wrote:
-> > The real question though is -- do we want/need this? I can only find
-> > reference to this behaviour in the WMM spec.
-> 
-> Yes, we do want and need it. Peer capability discovery in RSN IBSS
-> depends on this (or a potentially long wait on receiving Beacon frame
-> from the specific STA). IEEE 802.11REVmb clarifies the rules for IBSS in
-> 10.4.4.3.2 which has the following statement on this: "A STA in an IBSS
-> shall respond to Probe Request frames sent to the individual address of
-> the STA." after the sentence that limits responding to just the STA
-> that transmitted the last Beacon frame.
+On 02/28/2011 01:48 PM, John W. Linville wrote:
+> ERROR: "usb_unanchor_urb" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_control_msg" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_submit_urb" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_get_dev" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_kill_anchored_urbs" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_put_dev" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_free_urb" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_anchor_urb" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> ERROR: "usb_alloc_urb" [drivers/net/wireless/rtlwifi/rtlwifi.ko] undefined!
+> make[2]: *** [__modpost] Error 1
+> make[1]: *** [modules] Error 2
+> make: *** [sub-make] Error 2
+>
+> The USB-part of rtlwifi should depend on CONFIG_USB.
+>
+> Reported-by: Geert Uytterhoeven<geert@linux-m68k.org>
+> Signed-off-by: John W. Linville<linville@tuxdriver.com>
+> ---
+>   drivers/net/wireless/rtlwifi/Makefile |    7 +++++--
+>   1 files changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+> index 9192fd5..27355be 100644
+> --- a/drivers/net/wireless/rtlwifi/Makefile
+> +++ b/drivers/net/wireless/rtlwifi/Makefile
+> @@ -7,8 +7,7 @@ rtlwifi-objs	:=		\
+>   		efuse.o		\
+>   		ps.o		\
+>   		rc.o		\
+> -		regd.o		\
+> -		usb.o
+> +		regd.o
+>
+>   rtl8192c_common-objs +=		\
+>
+> @@ -16,6 +15,10 @@ ifeq ($(CONFIG_PCI),y)
+>   rtlwifi-objs	+= pci.o
+>   endif
+>
+> +ifeq ($(CONFIG_USB),y)
+> +rtlwifi-objs	+= usb.o
+> +endif
+> +
+>   obj-$(CONFIG_RTL8192C_COMMON)	+= rtl8192c/
+>   obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
+>   obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
 
-Ok, good. I submitted the patch, maybe I should resubmit with this
-information, but I guess it doesn't matter much.
+This fails on my system as CONFIG_USB=m, not y.
 
-The next question ends up being under which circumstances we should
-_send_ a unicast probe request. Currently, I don't think we ever do.
-
-johannes
+Larry
 
