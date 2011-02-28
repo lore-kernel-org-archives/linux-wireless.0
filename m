@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60649 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897Ab1B0WbE (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44202 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756093Ab1B1QwE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 17:31:04 -0500
-Received: by wyg36 with SMTP id 36so3126865wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 14:31:03 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 5/7] wl12xx: Switch to level trigger interrupts
-Date: Mon, 28 Feb 2011 00:30:43 +0200
-Message-Id: <1298845845-12191-6-git-send-email-ido@wizery.com>
-In-Reply-To: <1298845845-12191-1-git-send-email-ido@wizery.com>
-References: <1298845845-12191-1-git-send-email-ido@wizery.com>
+	Mon, 28 Feb 2011 11:52:04 -0500
+Received: by wwb22 with SMTP id 22so3289449wwb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:52:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
+References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com>
+	<20110228142243.GB25724@kroah.com>
+	<AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
+Date: Mon, 28 Feb 2011 22:22:02 +0530
+Message-ID: <AANLkTinF6rnvB15AiLnQyHV8O4hZuEsU9C2C-hpbTGNR@mail.gmail.com>
+Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU to
+ enter C3 state.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Greg KH <greg@kroah.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interrupt of the wl12xx is a level interrupt in nature, since the
-interrupt line is not auto-reset. However, since resetting the interrupt
-requires bus transactions, this cannot be done from an interrupt
-context. Thus, requesting a level interrupt would require to disable the
-irq and re-enable it after the HW is acknowledged. Since we now request
-a threaded irq, this can also be done by specifying the IRQF_ONESHOT
-flag.
+On Mon, Feb 28, 2011 at 8:18 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
+>> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
+>>> The default qos value of 55 causes higher power consumption
+>>> and the battery drains out quickly. So, remove the pm_qos request
+>>> in the driver and the throughout issue in the Intel Pinetrail
+>>> platforms in which the DMA latency is seen can be fixed with
+>>> the following script:
+>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
+>>> http://johannes.sipsolutions.net/files/netlatency.c.txt
+>>>
+>>> More details can be found in the following bugzilla link:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+>>>
+>>> Cc: stable@kernel.org
+>>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>>
+>> Why did you send me 3 copies of this patch, when I don't need any copies
+>> of it?
+>>
+>> Totally confused,
+>
+> Vivek, please only ask John to send this to David as stable so it can
+> get into 2.6.38-rc, then once there you can refer the sha1sum from
+> Linus' tree and justify propagating into the stable series.
+>
+I had sent separate patches for v2.6.37 and for v2.6.38 since the
+patch could not be applied directly to previous versions. So, should I
+send this rebased patch for v2.6.37 only after it makes it into
+v2.6.38?
 
-Triggering on an edge can be problematic in some platforms, if the
-sampling frequency is not sufficient for detecting very frequent
-interrupts. In case an interrupt is missed, the driver will hang as the
-interrupt line will stay high until it is acknowledged by the driver,
-which will never happen.
-
-Fix this by requesting a level triggered interrupt, with the
-IRQF_ONESHOT flag.
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/sdio.c |    2 +-
- drivers/net/wireless/wl12xx/spi.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 7ee9d29..a4f6417 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -229,7 +229,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	wl->ref_clock = wlan_data->board_ref_clock;
- 
- 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
--				   IRQF_TRIGGER_RISING,
-+				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
- 				   DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index df5a00f..18cf017 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -409,7 +409,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	}
- 
- 	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
--				   IRQF_TRIGGER_RISING,
-+				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
- 				   DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
--- 
-1.7.1
-
+Vivek.
