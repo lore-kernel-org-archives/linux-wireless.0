@@ -1,136 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:39886 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752122Ab1B0PYD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Feb 2011 10:24:03 -0500
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20110225222210.GA3618@tuxdriver.com>
-References: <20110225222210.GA3618@tuxdriver.com>
-Date: Sun, 27 Feb 2011 16:23:59 +0100
-Message-ID: <AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
-Subject: Re: ANNOUNCE: debloat-testing kernel git tree
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, bloat-devel@lists.bufferbloat.net
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:18372 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753793Ab1B1Ndo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 08:33:44 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v3 2/5] iwlegacy: fix dma mappings and skbs leak
+Date: Mon, 28 Feb 2011 14:33:14 +0100
+Message-Id: <1298899997-2372-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
+References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 25, 2011 at 11:22 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Announcement
->
-> The bufferbloat project [1] is pleased to announce the availability
-> of the debloat-testing Linux kernel git tree:
->
->        git://git.infradead.org/debloat-testing.git
->
-> The purpose of this tree is to provide a reasonably stable base for
-> the development and testing of new algorithms, miscellaneous fixes,
-> and maybe a few hacks intended to advance the cause of eliminating
-> or at least mitigating bufferbloat in the Linux world.
->
-> Introduction
->
-> Bufferbloat is a term coined by Jim Gettys to describe the increasing
-> prevalence of large and (particularly) unmanaged network buffers along
-> the network links that comprise the Internet [2].  If you are not aware
-> of the problems with network latency under load that the Internet is
-> already encountering, we encourage you to visit Jim Gettys' blog [3].
-> There Jim has begun to fit together enough puzzle pieces to at least
-> frame the issue.
->
-> Jim has also made available slides and an audio recording (edited
-> for time) from a presentation on this topic:
->
->        http://mirrors.bufferbloat.net/Talks/BellLabs01192011/
->
-> Kernel Bits
->
-> The debloat-testing tree is intended to track full and -rc releases
-> from linux-2.6, with interesting patches cherry-picked from net-next
-> and various experimental bits added on top.  The current stable of
-> such patches includes the following:
->
-> Eric Dumazet (based on original work by Juliusz Chroboczek):
->      net_sched: SFB flow scheduler
->
-> stephen hemminger:
->      sched: CHOKe flow scheduler
->
-> John Fastabend:
->      net: implement mechanism for HW based QOS
->      net_sched: implement a root container qdisc sch_mqprio
->
-> John W. Linville:
->      mac80211: implement eBDP algorithm to fight bufferbloat
->
-> Nathaniel J. Smith:
->      iwlwifi: Simplify tx queue management
->      iwlwifi: Convert the tx queue high_mark to an atomic_t
->      iwlwifi: Invert the sense of the queue high_mark
->      iwlwifi: auto-tune tx queue size to minimize latency
->      iwlwifi: make current tx queue sizes visible in debugfs
->
-> Dave Taht:
->      Bufferbloat reduction for the e1000 driver that started it all
->      Reduce bufferbloated default for e1000e, increase dynamic range
->      Smash bufferbloat in the ath9k driver
->
-> Userland Bits
->
-> Patches for the userspace tc utility incorporating support for both the
-> CHOKe AQM and the Stochastic Fair Blue scheduler (SFB) are available:
->
->        https://github.com/dtaht/iproute2bufferbloat
->
-> Contributions
->
-> Please send any experimental or research-oriented patches related to
-> bufferbloat to the bloat-devel@lists.bufferbloat.net list.  Reminders
-> of more mainstream patches that may be relevant and/or interesting
-> for cherry-picking into debloat-testing are welcome there as well.
->
-> Obviously, patches that are ready for normal merge consideration
-> should continue to be sent to netdev, linux-wireless, linux-kernel,
-> or whatever other existing list is appropriate for them.
->
-> Thanks
->
-> Finally, we want to offer a huge thanks to the 130+ new members of
-> the bloat mailing list [4] for leaping into the fray, and to David
-> Woodhouse for hosting the debloat-testing tree at infradead.
->
-> Please help us beat the bloat.  Good luck, and happy debloating!
->
-> Notes
->
-> [1] http://bufferbloat.net
-> [2] http://gettys.wordpress.com/what-is-bufferbloat-anyway/
-> [3] http://en.wordpress.com/tag/bufferbloat/
-> [4] https://lists.bufferbloat.net
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
+Fix possible dma mappings and skbs introduced by commit
+470058e0ad82fcfaaffd57307d8bf8c094e8e9d7 "iwlwifi: avoid Tx queue
+memory allocation in interface down".
 
-Hi,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c |   12 ++++-
+ drivers/net/wireless/iwlegacy/iwl-core.h    |    2 +
+ drivers/net/wireless/iwlegacy/iwl-tx.c      |   75 +++++++++++++++++---------
+ 3 files changed, 62 insertions(+), 27 deletions(-)
 
-it should be "localversion-debloat" in the commit-subject in [1] (not
-"localversion-wireless") :-).
-"-db" as suffix is IMHO not very meaningful... Why not add simply a
-suffix called "-debloat"?
-(Anyway, I will revert this patch because I don't want to have any
-suffix added automatically.)
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+index 829db91..5c40502 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c
+@@ -698,7 +698,7 @@ void iwl4965_txq_ctx_reset(struct iwl_priv *priv)
+  */
+ void iwl4965_txq_ctx_stop(struct iwl_priv *priv)
+ {
+-	int ch;
++	int ch, txq_id;
+ 	unsigned long flags;
+ 
+ 	/* Turn off all Tx DMA fifos */
+@@ -719,6 +719,16 @@ void iwl4965_txq_ctx_stop(struct iwl_priv *priv)
+ 					FH_TSSR_TX_STATUS_REG));
+ 	}
+ 	spin_unlock_irqrestore(&priv->lock, flags);
++
++	if (!priv->txq)
++		return;
++
++	/* Unmap DMA from host system and free skb's */
++	for (txq_id = 0; txq_id < priv->hw_params.max_txq_num; txq_id++)
++		if (txq_id == priv->cmd_queue)
++			iwl_legacy_cmd_queue_unmap(priv);
++		else
++			iwl_legacy_tx_queue_unmap(priv, txq_id);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlegacy/iwl-core.h b/drivers/net/wireless/iwlegacy/iwl-core.h
+index c6d12d7..f03b463 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-core.h
++++ b/drivers/net/wireless/iwlegacy/iwl-core.h
+@@ -388,6 +388,7 @@ void iwl_legacy_rx_reply_error(struct iwl_priv *priv,
+ /*****************************************************
+ * RX
+ ******************************************************/
++void iwl_legacy_cmd_queue_unmap(struct iwl_priv *priv);
+ void iwl_legacy_cmd_queue_free(struct iwl_priv *priv);
+ int iwl_legacy_rx_queue_alloc(struct iwl_priv *priv);
+ void iwl_legacy_rx_queue_update_write_ptr(struct iwl_priv *priv,
+@@ -415,6 +416,7 @@ int iwl_legacy_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ void iwl_legacy_tx_queue_reset(struct iwl_priv *priv,
+ 			struct iwl_tx_queue *txq,
+ 			int slots_num, u32 txq_id);
++void iwl_legacy_tx_queue_unmap(struct iwl_priv *priv, int txq_id);
+ void iwl_legacy_tx_queue_free(struct iwl_priv *priv, int txq_id);
+ void iwl_legacy_setup_watchdog(struct iwl_priv *priv);
+ /*****************************************************
+diff --git a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
+index 7db8340..a227773 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-tx.c
++++ b/drivers/net/wireless/iwlegacy/iwl-tx.c
+@@ -82,6 +82,24 @@ iwl_legacy_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ EXPORT_SYMBOL(iwl_legacy_txq_update_write_ptr);
+ 
+ /**
++ * iwl_legacy_tx_queue_unmap -  Unmap any remaining DMA mappings and free skb's
++ */
++void iwl_legacy_tx_queue_unmap(struct iwl_priv *priv, int txq_id)
++{
++	struct iwl_tx_queue *txq = &priv->txq[txq_id];
++	struct iwl_queue *q = &txq->q;
++
++	if (q->n_bd == 0)
++		return;
++
++	while (q->write_ptr != q->read_ptr) {
++		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
++		q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd);
++	}
++}
++EXPORT_SYMBOL(iwl_legacy_tx_queue_unmap);
++
++/**
+  * iwl_legacy_tx_queue_free - Deallocate DMA queue.
+  * @txq: Transmit queue to deallocate.
+  *
+@@ -92,17 +110,10 @@ EXPORT_SYMBOL(iwl_legacy_txq_update_write_ptr);
+ void iwl_legacy_tx_queue_free(struct iwl_priv *priv, int txq_id)
+ {
+ 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
+-	struct iwl_queue *q = &txq->q;
+ 	struct device *dev = &priv->pci_dev->dev;
+ 	int i;
+ 
+-	if (q->n_bd == 0)
+-		return;
+-
+-	/* first, empty all BD's */
+-	for (; q->write_ptr != q->read_ptr;
+-	     q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd))
+-		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
++	iwl_legacy_tx_queue_unmap(priv, txq_id);
+ 
+ 	/* De-alloc array of command/tx buffers */
+ 	for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
+@@ -129,39 +140,33 @@ void iwl_legacy_tx_queue_free(struct iwl_priv *priv, int txq_id)
+ EXPORT_SYMBOL(iwl_legacy_tx_queue_free);
+ 
+ /**
+- * iwl_legacy_cmd_queue_free - Deallocate DMA queue.
+- * @txq: Transmit queue to deallocate.
+- *
+- * Empty queue by removing and destroying all BD's.
+- * Free all buffers.
+- * 0-fill, but do not free "txq" descriptor structure.
++ * iwl_cmd_queue_unmap - Unmap any remaining DMA mappings from command queue
+  */
+-void iwl_legacy_cmd_queue_free(struct iwl_priv *priv)
++void iwl_legacy_cmd_queue_unmap(struct iwl_priv *priv)
+ {
+ 	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
+ 	struct iwl_queue *q = &txq->q;
+-	struct device *dev = &priv->pci_dev->dev;
+-	int i;
+ 	bool huge = false;
++	int i;
+ 
+ 	if (q->n_bd == 0)
+ 		return;
+ 
+-	for (; q->read_ptr != q->write_ptr;
+-	     q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd)) {
++	while (q->read_ptr != q->write_ptr) {
+ 		/* we have no way to tell if it is a huge cmd ATM */
+ 		i = iwl_legacy_get_cmd_index(q, q->read_ptr, 0);
+ 
+-		if (txq->meta[i].flags & CMD_SIZE_HUGE) {
++		if (txq->meta[i].flags & CMD_SIZE_HUGE)
+ 			huge = true;
+-			continue;
+-		}
++		else
++			pci_unmap_single(priv->pci_dev,
++					 dma_unmap_addr(&txq->meta[i], mapping),
++					 dma_unmap_len(&txq->meta[i], len),
++					 PCI_DMA_BIDIRECTIONAL);
+ 
+-		pci_unmap_single(priv->pci_dev,
+-				 dma_unmap_addr(&txq->meta[i], mapping),
+-				 dma_unmap_len(&txq->meta[i], len),
+-				 PCI_DMA_BIDIRECTIONAL);
++		q->read_ptr = iwl_legacy_queue_inc_wrap(q->read_ptr, q->n_bd);
+ 	}
++
+ 	if (huge) {
+ 		i = q->n_window;
+ 		pci_unmap_single(priv->pci_dev,
+@@ -169,6 +174,24 @@ void iwl_legacy_cmd_queue_free(struct iwl_priv *priv)
+ 				 dma_unmap_len(&txq->meta[i], len),
+ 				 PCI_DMA_BIDIRECTIONAL);
+ 	}
++}
++EXPORT_SYMBOL(iwl_legacy_cmd_queue_unmap);
++
++/**
++ * iwl_legacy_cmd_queue_free - Deallocate DMA queue.
++ * @txq: Transmit queue to deallocate.
++ *
++ * Empty queue by removing and destroying all BD's.
++ * Free all buffers.
++ * 0-fill, but do not free "txq" descriptor structure.
++ */
++void iwl_legacy_cmd_queue_free(struct iwl_priv *priv)
++{
++	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
++	struct device *dev = &priv->pci_dev->dev;
++	int i;
++
++	iwl_legacy_cmd_queue_unmap(priv);
+ 
+ 	/* De-alloc array of command/tx buffers */
+ 	for (i = 0; i <= TFD_CMD_SLOTS; i++)
+-- 
+1.7.1
 
-I have several other questions, but I start compiling first and test
-this debloat kernel.
-
-Regards,
-- Sedat -
-
-[1] "Add localversion-wireless to identify builds from this tree."
-http://git.infradead.org/debloat-testing.git/commit/3f9bdb4f44b076feda72d353d8ad717831416f36
