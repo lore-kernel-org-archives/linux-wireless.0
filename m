@@ -1,40 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43898 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754729Ab1BHO7S (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51045 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179Ab1B1Fve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Feb 2011 09:59:18 -0500
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Message-Id: <4E2FEB1E-9584-446C-94D9-1884E4414ABC@gmail.com>
-From: Justin Mattock <justinmattock@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20110208140355.GA2448@tuxdriver.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v936)
-Subject: Re: WARNING: at kernel/lockdep.c:3151 check_flags+0x63/0x179()
-Date: Tue, 8 Feb 2011 06:59:15 -0800
-References: <4D50BF6D.5050408@gmail.com> <20110208140355.GA2448@tuxdriver.com>
+	Mon, 28 Feb 2011 00:51:34 -0500
+Received: by iyb26 with SMTP id 26so2600189iyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Feb 2011 21:51:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1298814885-11894-2-git-send-email-hauke@hauke-m.de>
+References: <1298814885-11894-1-git-send-email-hauke@hauke-m.de> <1298814885-11894-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 27 Feb 2011 21:51:14 -0800
+Message-ID: <AANLkTineuBqUF4_=fTVBLw+Ni3-jAuMCyJ7WsGhyxJTV@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: do not set blink_set for kernel <= 2.6.24
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Feb 8, 2011, at 6:03 AM, John W. Linville wrote:
-
-> On Mon, Feb 07, 2011 at 07:58:37PM -0800, Justin P. Mattock wrote:
->> not sure if this is o.k. or not due to the message giving me a few
->> messages(full dmesg below)
+On Sun, Feb 27, 2011 at 5:54 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> blink_set is not available on struct led_classdev in kernel <= 2.6.24.
 >
-> No idea, but it probably isn't good...the better question is what
-> made you send this to linux-wireless?  Nothing in the stacktraces
-> seems to point at wireless stuff...
->
-> John
-> --  
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-shoot.. apologize for that, typed the wrong address for this. I'll  
-resend the original to lkml
+Applied, and pushed both, thanks!!
 
-Justin P. Mattock
+  Luis
