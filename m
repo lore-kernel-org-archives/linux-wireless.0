@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24527 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753991Ab1BUTV1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Feb 2011 14:21:27 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/4] iwlwifi: Loading correct uCode again when fail to load
-Date: Mon, 21 Feb 2011 11:06:47 -0800
-Message-Id: <1298315209-17986-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1298315209-17986-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61317 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154Ab1B1V2W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 16:28:22 -0500
+Message-ID: <4D6C1350.6050903@lwfinger.net>
+Date: Mon, 28 Feb 2011 15:27:44 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	George <george0505@realtek.com>, linux-next@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: usb parts should depend on CONFIG_USB
+References: <alpine.DEB.2.00.1102171354200.16788@ayla.of.borg>	 <1298922500-21632-1-git-send-email-linville@tuxdriver.com>	 <1298923731.10109.0.camel@jlt3.sipsolutions.net>	 <20110228201357.GF2515@tuxdriver.com>  <4D6C10B0.2090402@lwfinger.net> <1298928111.12230.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1298928111.12230.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During uCode loading, if the reply_alive come back with "failure",
-try to load the same uCode again.
+On 02/28/2011 03:21 PM, Johannes Berg wrote:
+> On Mon, 2011-02-28 at 15:16 -0600, Larry Finger wrote:
+>> On 02/28/2011 02:13 PM, John W. Linville wrote:
+>>> On Mon, Feb 28, 2011 at 09:08:51PM +0100, Johannes Berg wrote:
+>>>> On Mon, 2011-02-28 at 14:48 -0500, John W. Linville wrote:
+>>>>>
+>>>>> +ifeq ($(CONFIG_USB),y)
+>>>>> +rtlwifi-objs	+= usb.o
+>>>>> +endif
+>>>>
+>>>> That reads weird, shouldn't
+>>>>
+>>>> rtlwifi-$(CONFIG_USB) += usb.o
+>>>>
+>>>> do? Or more likely actually use CONFIG_RTL8192CU?
+>>>
+>>> Maybe...really just following what Larry already had there for pci...?
+>>
+>> Yes, and that was wrong too.
+>>
+>> It could be either as Johannes wrote it, or
+>
+> No, what I said won't work for m either, since you'd get
+>
+> rtlwifi-m += usb.o
+>
+> Though you can make that work by adding $(rtlwifi-m) manually to the
+> list of objects later.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+I just tested it. As you say, your solution only works for y, not m.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index abd0461..c04d991 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -466,6 +466,15 @@ static void iwl_rx_reply_alive(struct iwl_priv *priv,
- 		IWL_WARN(priv, "%s uCode did not respond OK.\n",
- 			(palive->ver_subtype == INITIALIZE_SUBTYPE) ?
- 			"init" : "runtime");
-+		/*
-+		 * If fail to load init uCode,
-+		 * let's try to load the init uCode again.
-+		 * We should not get into this situation, but if it
-+		 * does happen, we should not move on and loading "runtime"
-+		 * without proper calibrate the device.
-+		 */
-+		if (palive->ver_subtype == INITIALIZE_SUBTYPE)
-+			priv->ucode_type = UCODE_NONE;
- 		queue_work(priv->workqueue, &priv->restart);
- 	}
- }
--- 
-1.7.0.4
+I think this is what is needed:
 
+-ifeq ($(CONFIG_PCI),y)
++ifneq ($(CONFIG_PCI),)
+  rtlwifi-objs   += pci.o
+  endif
+
++ifneq ($(CONFIG_USB),)
++rtlwifi-objs   += usb.o
++endif
++
+
+At least it works wit PCI=y and USB=m.
+
+Larry
