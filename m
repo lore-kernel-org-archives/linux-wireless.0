@@ -1,84 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52859 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751045Ab1BDLlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Feb 2011 06:41:15 -0500
-Message-ID: <4D4BE5D7.8090202@openwrt.org>
-Date: Fri, 04 Feb 2011 12:41:11 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-CC: Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Wireless regression (was 2.6.38-rc3: FUSE (sshfs) hangs under
- load)
-References: <20110201175452.GB518@core.coreip.homeip.net> <E1PkbGG-0005Rf-QL@pomaz-ex.szeredi.hu> <20110202165236.GA3178@core.coreip.homeip.net> <20110203065541.GB5592@core.coreip.homeip.net> <E1Pkx7s-00073l-5B@pomaz-ex.szeredi.hu> <20110203194115.GA14159@core.coreip.homeip.net> <20110204064952.GA12914@core.coreip.homeip.net>
-In-Reply-To: <20110204064952.GA12914@core.coreip.homeip.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:36906 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662Ab1B1UJA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 15:09:00 -0500
+Subject: Re: [PATCH] rtlwifi: usb parts should depend on CONFIG_USB
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	George <george0505@realtek.com>, linux-next@vger.kernel.org
+In-Reply-To: <1298922500-21632-1-git-send-email-linville@tuxdriver.com>
+References: <alpine.DEB.2.00.1102171354200.16788@ayla.of.borg>
+	 <1298922500-21632-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Feb 2011 21:08:51 +0100
+Message-ID: <1298923731.10109.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-02-04 7:49 AM, Dmitry Torokhov wrote:
-> On Thu, Feb 03, 2011 at 11:41:15AM -0800, Dmitry Torokhov wrote:
->> On Thu, Feb 03, 2011 at 12:13:24PM +0100, Miklos Szeredi wrote:
->> > On Wed, 2 Feb 2011, Dmitry Torokhov wrote:
->> > > On Wed, Feb 02, 2011 at 08:52:36AM -0800, Dmitry Torokhov wrote:
->> > > > On Wed, Feb 02, 2011 at 12:52:36PM +0100, Miklos Szeredi wrote:
->> > > > > On Tue, 1 Feb 2011, Dmitry Torokhov wrote:
->> > > > > > Hi,
->> > > > > > 
->> > > > > > After installing 2.6.38-rc3 (plus a few input patches) sshfs started to
->> > > > > > misbehave on me under load. It starts off fine but when I try to compile
->> > > > > > a few modules against kernel sources residing on the other box the
->> > > > > > processes go into 'D' state and just sit there doing nothing.
->> > > > > 
->> > > > > Can you please post a stack trace from SysRq-T?
->> > > > > 
->> > > > 
-> ...
->> > > 
->> > > OK, so here are the stack traces you requested. First one is snapshot of
->> > > when compile got stuck, the 2nd one is when I interrupted make which
->> > > caused gcc to go to 'D' state.
->> > 
->> > There doesn't appear anything abnormal there.
->> > 
->> > It's going into D state after it has received an interrupt and sent it
->> > along to the userspace filesystem.  Then it will go into
->> > uninterruptible sleep until the answer is received.
->> > 
->> > So the hang is because the answer to an open request is not being
->> > received.  I can't tell where it got stuck, apparently not anywhere on
->> > the local machine.
->> > 
->> > Can you please get a log from sshfs with "-odebug,sshfs_debug" and
->> > redirect stderr to a file?  That might tell a bit more about the
->> > situation.  Or it might not...
->> 
->> Hmm, it might be just the network itself, last night mutt in ssh session
->> froze on me as well. I guess I'll just have to finish my bisect
->> exercise.
->> 
-> 
-> I finished bisecting and it turned out that the problematic commit
-> happened to be in wireless (I have iwl3945):
-> 
-> commit 4cd06a344db752f513437138953af191cbe9a691
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Sat Dec 18 19:30:49 2010 +0100
-> 
->     mac80211: skip unnecessary pskb_expand_head calls
-> 
->     If the skb is not cloned and we don't need any extra headroom, there
->     is no point in reallocating the skb head.
-> 
->     Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> With this commit reverted from 2.6.38-rc3 I can not reproduce sshfs
-> getting stuck here.
-I really don't see how this commit could be causing these issues, and
-I'm not aware of any similar issues affecting other drivers.
+On Mon, 2011-02-28 at 14:48 -0500, John W. Linville wrote:
+>  
+> +ifeq ($(CONFIG_USB),y)
+> +rtlwifi-objs	+= usb.o
+> +endif
 
-- Felix
+That reads weird, shouldn't
+
+rtlwifi-$(CONFIG_USB) += usb.o
+
+do? Or more likely actually use CONFIG_RTL8192CU?
+
+johannes
+
