@@ -1,46 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:60370 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36862 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000Ab1BTPAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Feb 2011 10:00:45 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Feb 2011 07:00:24 -0800
-From: Vipin Mehta <vmehta@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	<devel@driverdev.osuosl.org>
-Subject: [PATCH] staging: ath6kl: Eliminate cfg80211 warnings
-Date: Sun, 20 Feb 2011 07:00:38 -0800
-Message-ID: <1298214038-5303-1-git-send-email-vmehta@atheros.com>
+	id S1752849Ab1B1JYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 04:24:44 -0500
+Date: Mon, 28 Feb 2011 10:24:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] iwlwifi: fix dma mappings and skbs leak
+Message-ID: <20110228092438.GB2230@redhat.com>
+References: <1298649432-4416-1-git-send-email-sgruszka@redhat.com>
+ <1298652464.28351.22.camel@wwguy-huron>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1298652464.28351.22.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cancel the pending scan operation once the interface is going down to 
-avoid warnings from the cfg80211 module. Once the interface is down, 
-cfg80211 checks for any pending scan requests and dumps a warning if it 
-finds one. It expects the driver to abort any ongoing scan operation 
-once the driver detects that the interface is going down.
+Hi
 
-Signed-off-by: Vipin Mehta <vmehta@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On Fri, Feb 25, 2011 at 08:47:44AM -0800, Guy, Wey-Yi wrote:
+> I don't think we need EXPORT_SYMBOL anymore after driver split
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index a659f70..4d76489 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -2338,6 +2338,7 @@ ar6000_close(struct net_device *dev)
-         }
-         ar->arWlanState = WLAN_DISABLED;
-     }
-+	ar6k_cfg80211_scanComplete_event(ar, A_ECANCELED);
- #endif /* ATH6K_CONFIG_CFG80211 */
- 
-     return 0;
--- 
-1.6.3.3
+I will repost series addressing that and also comment from patch 3. 
 
+Thanks
+Stanislaw
