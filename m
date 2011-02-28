@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14039 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753647Ab1BNNqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 08:46:17 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 05:45:56 -0800
-Date: Mon, 14 Feb 2011 19:15:53 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: add monitor interface into PS disable list
-Message-ID: <20110214134553.GA31074@vmraj-lnx.users.atheros.com>
-References: <1297253799-9688-1-git-send-email-rmanoharan@atheros.com>
- <1297685187.3785.30.camel@jlt3.sipsolutions.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38614 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020Ab1B1OtQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 09:49:16 -0500
+Received: by iwn34 with SMTP id 34so3142851iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 06:49:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1297685187.3785.30.camel@jlt3.sipsolutions.net>
+In-Reply-To: <20110228142243.GB25724@kroah.com>
+References: <1298874054-3803-1-git-send-email-vnatarajan@atheros.com> <20110228142243.GB25724@kroah.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 28 Feb 2011 06:48:56 -0800
+Message-ID: <AANLkTi=upDdu1_QH7rvhc6QS0+hDSGtXf2AQ920C1u1U@mail.gmail.com>
+Subject: Re: [stable] [stable 2.6.37][PATCH] ath9k: Fix ath9k to allow CPU to
+ enter C3 state.
+To: Greg KH <greg@kroah.com>
+Cc: Vivek Natarajan <vnatarajan@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 14, 2011 at 05:36:27PM +0530, Johannes Berg wrote:
-> On Wed, 2011-02-09 at 17:46 +0530, Rajkumar Manoharan wrote:
-> > PS should be disabled in the presence of monitor interface.
-> 
-> I'm not really sure -- should it? You can have monitors with no flags to
-> do see what you're receiving locally, so I prefer the current behaviour.
-I just confued with multi-vif behaviour where we are disabling PS.
-> If you really want to monitor everything you pretty much need to
-> disconnect anyway, I think?
-Fine.
+On Mon, Feb 28, 2011 at 6:22 AM, Greg KH <greg@kroah.com> wrote:
+> On Mon, Feb 28, 2011 at 11:50:53AM +0530, Vivek Natarajan wrote:
+>> The default qos value of 55 causes higher power consumption
+>> and the battery drains out quickly. So, remove the pm_qos request
+>> in the driver and the throughout issue in the Intel Pinetrail
+>> platforms in which the DMA latency is seen can be fixed with
+>> the following script:
+>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
+>> http://johannes.sipsolutions.net/files/netlatency.c.txt
+>>
+>> More details can be found in the following bugzilla link:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=27532
+>>
+>> Cc: stable@kernel.org
+>> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>
+> Why did you send me 3 copies of this patch, when I don't need any copies
+> of it?
+>
+> Totally confused,
 
---
-Rajkumar
+Vivek, please only ask John to send this to David as stable so it can
+get into 2.6.38-rc, then once there you can refer the sha1sum from
+Linus' tree and justify propagating into the stable series.
+
+  Luis
