@@ -1,61 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1069 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751642Ab1BEMoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Feb 2011 07:44:46 -0500
-To: "Alim Akhtar" <alim.akhtar@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Suspend/Resume Doesnot work with brcmfmac driver
-References: <AANLkTinq6_GVzD3hF4krxdBTn2gwgiu_8EuaOFCuEaq4@mail.gmail.com>
-Date: Sat, 5 Feb 2011 13:44:25 +0100
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48485 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755480Ab1B1Qss (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 11:48:48 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 17so3915244fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 08:48:47 -0800 (PST)
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/9] [mac80211] enable radar detection
+Date: Mon, 28 Feb 2011 17:47:44 +0100
+Cc: lrodriguez@atheros.com, nbd@openwrt.org, dubowoj@neratec.com,
+	zefir.kurtisi@neratec.com, simon.wunderlich@saxnet.de
+References: <201102281740.37036.bernhard.schmidt@saxnet.de>
+In-Reply-To: <201102281740.37036.bernhard.schmidt@saxnet.de>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vqfj0pud3ri7v4@arend-laptop>
-In-Reply-To: <AANLkTinq6_GVzD3hF4krxdBTn2gwgiu_8EuaOFCuEaq4@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201102281747.44842.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alim,
+When switching to channels requiring radar detection, enable it
+if the current mode is one which requires beaconing. In all other
+cases the radar detection is disabled.
 
-On Sat, 05 Feb 2011 10:21:41 +0100, Alim Akhtar <alim.akhtar@gmail.com>  
-wrote:
+Note, drivers which do not support radar detection are not allowed
+to switch to those channels.
 
-> Dear Arend Van Spriel
->
-> I am using BCM4329 chip and downloaded the driver for google chromium  
-> git repo (2.6.36 kernel version).
-> I am facing a problem, suspend/resume does not works with this driver.
-> I have seem your commit in the staging tree on 22th Jan "staging:  
-> brcm80211: fix suspend/resume in brcmsmac" but i cannt find the fix for  
-> brcmfmac. Can you please till suspend/resume for brcmfmac driver is  
-> already fixed or it is work in progress? Also if fixed, please till me  
-> patch location or send me the patch it self.
+Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+---
+ include/net/mac80211.h      |    4 ++++
+ net/mac80211/cfg.c          |   15 +++++++++++++++
+ net/mac80211/driver-ops.h   |   14 ++++++++++++++
+ net/mac80211/driver-trace.h |   21 +++++++++++++++++++++
+ 4 files changed, 54 insertions(+), 0 deletions(-)
 
-The suspend/resume changes for brcmfmac is work in progress at the moment  
-as I was told by colleagues working on that driver. I assume the patch  
-will be included in the chromium repo and also in the staging repo  
-(git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git -  
-staging-next branch).
-
-For the staging repo you can keep an eye on the mailing list:  
-http://driverdev.linuxdriverproject.org/pipermail/devel/
-
-> Any help will be appreciated.
->
-> Regards,
-> Alim
->
->
-> --
->
-
-Gr. AvS
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2b072fa..495b0c5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1804,6 +1804,8 @@ enum ieee80211_ampdu_mlme_action {
+  *	return value is 1, then the @remain_on_channel will be used with a
+  *	regular transmission (if supported.)
+  * @offchannel_tx_cancel_wait: cancel wait associated with offchannel TX
++ *
++ * @radar_detection: Enable or disable radar detection on current channel.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1888,6 +1890,8 @@ struct ieee80211_ops {
+ 			     enum nl80211_channel_type channel_type,
+ 			     unsigned int wait);
+ 	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
++
++	int (*radar_detection)(struct ieee80211_hw *hw, int enable);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 4a07e67..e50ecaa 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1245,6 +1245,21 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
+ 		old_vif_oper_type = sdata->vif.bss_conf.channel_type;
+ 	old_oper_type = local->_oper_channel_type;
+ 
++	if (sdata && (sdata->vif.type == NL80211_IFTYPE_ADHOC ||
++		      sdata->vif.type == NL80211_IFTYPE_AP ||
++		      sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++		      sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
++		      sdata->vif.type == NL80211_IFTYPE_P2P_GO) &&
++	    (chan->flags & IEEE80211_CHAN_RADAR)) {
++		/*
++		 * Do not allow switching to channels requiring radar
++		 * detection if hardware doesn't support detection.
++		 */
++		if (drv_radar_detection(local, true))
++			return -EINVAL;
++	} else
++		drv_radar_detection(local, false);
++
+ 	if (!ieee80211_set_channel_type(local, sdata, channel_type))
+ 		return -EBUSY;
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 3729296..a2bef0c 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -526,4 +526,18 @@ static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
+ 	return ret;
+ }
+ 
++static inline int drv_radar_detection(struct ieee80211_local *local, int enable)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++
++	trace_drv_radar_detection(local, enable);
++	if (local->ops->radar_detection)
++		ret = local->ops->radar_detection(&local->hw, enable);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 520fe24..aa2c833 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -1150,6 +1150,27 @@ DEFINE_EVENT(local_only_evt, api_remain_on_channel_expired,
+ 	TP_ARGS(local)
+ );
+ 
++TRACE_EVENT(drv_radar_detection,
++	TP_PROTO(struct ieee80211_local *local, int enable),
++
++	TP_ARGS(local, enable),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(int, enable)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->enable = enable;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " enable:%d",
++		LOCAL_PR_ARG, __entry->enable
++	)
++);
++
+ /*
+  * Tracing for internal functions
+  * (which may also be called in response to driver calls)
 -- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
-
+1.7.2.3
