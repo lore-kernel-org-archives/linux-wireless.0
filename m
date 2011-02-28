@@ -1,83 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:45055 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752568Ab1BCVPl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Feb 2011 16:15:41 -0500
-Message-ID: <4D4B1AF4.2050000@hauke-m.de>
-Date: Thu, 03 Feb 2011 22:15:32 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:54137 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848Ab1B1Wka (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 17:40:30 -0500
+Date: Mon, 28 Feb 2011 16:40:28 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix error registering rate-control
+Message-ID: <4d6c245c.QdaRNI2fJAp8tw9+%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"Zhao, Shanyu" <shanyu.zhao@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lance Zimmerman <lance.zimmerman@atheros.com>,
-	Prem Kumar <Prem.Kumar@atheros.com>
-Subject: Re: Backporting other subsystems on Linux
-References: <380B2771CDD78E46856E6B788D9F1997D2468080@orsmsx503.amr.corp.intel.com> <BD672EAEE3AD2C47A7120B0973C3FB3A50F0AC156A@SC1EXMB-MBCL.global.atheros.com> <380B2771CDD78E46856E6B788D9F1997D27D86D2@orsmsx503.amr.corp.intel.com> <20110202220926.GB3035@tux> <20110202222645.GE3035@tux>
-In-Reply-To: <20110202222645.GE3035@tux>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/2011 11:26 PM, Luis R. Rodriguez wrote:
-> On Wed, Feb 02, 2011 at 02:09:26PM -0800, Luis Rodriguez wrote:
->> Increasing audience.
->>
->> On Wed, Feb 02, 2011 at 01:27:10PM -0800, Zhao, Shanyu wrote:
->>> Hi Luis,
->>>
->>> Thank you for the quick response. When I say USB, I didn't mean USB network
->>> drivers, I'm talking about USB host/device controller drivers or gadget
->>> drivers. For example, we can backport USB3 support to, say, 2.6.28.
->>>
->>> From what I understand, I can add any driver to your compat-wireless tree and
->>> build it the same way as other wireless drivers. Am I right?
->>
->> That's right.
->>
->>> Then your tree should really be called compat-drivers. :) I'm not sure if
->>> you're welcoming non-network related drivers.
+From: Chaoming Li <chaoming_li@realsil.com.cn>
 
-When adding more and more stuff we should probably rename
-compat-wireless to something else. ;-)
-I am fine with adding USB3 support, if Intel will help maintaining the
-stuff in compat-wireless after they added it.
+When a second module such as rtl8192ce or rtl8192cu links to rtlwifi, the attempt
+to register a rate-control mechanism fails with the warning shown below. The fix is to
+select the RC mechanism when rtlwifi is initialized.
 
->> What I really need to get to at some point is to use implement a
->> menuconfig thingy, we already drag the Kconfigs in but use config.mk for
->> makefile/dependency mapping. Patches welcomed.
-> 
-> BTW one idea I have as of recent is to consider using Hudson for automatic
-> build testing for compat-wireless but haven't yet mucked with it. Eventually
-> this will be more and more important as time goes by and we support older
-> kernels. The goal is to at the *very least* always support down to the last
-> stable 2.6 kernel listed on kernel.org, today that is 2.6.27 and I think its
-> a safe promise to commit to backporting *at least* to that kernel. We go
-> beyond 2.6.27 though today.
 
-Automatic compile testing is really needed for compat-wireless. There
-are often some special kernel version where it does not compile, like
-now. ;-)
+WARNING: at net/mac80211/rate.c:42 ieee80211_rate_control_register+0xc9/0x100 [mac80211]()
+Hardware name: HP Pavilion dv2700 Notebook PC
+Modules linked in: arc4 ecb rtl8192ce rtl8192cu(+) rtl8192c_common rtlwifi snd_hda_codec_conexant amd74xx(+) ide_core sg mac80211 snd_hda_intel snd_hda_codec i2c_nforce2 snd_pcm snd_timer cfg80211 snd k8temp hwmon serio_raw joydev i2c_core soundcore snd_page_alloc rfkill forcedeth video ac battery button ext3 jbd mbcache sd_mod ohci_hcd ahci libahci libata scsi_mod ehci_hcd usbcore fan processor thermal
+Pid: 2227, comm: modprobe Not tainted 2.6.38-rc6-wl+ #468
+Call Trace:
+ [<ffffffff8104a3da>] ? warn_slowpath_common+0x7a/0xb0
+ [<ffffffff8104a425>] ? warn_slowpath_null+0x15/0x20
+ [<ffffffffa02de409>] ? ieee80211_rate_control_register+0xc9/0x100 [mac80211]
+ [<ffffffffa03b3790>] ? rtl_rate_control_register+0x10/0x20 [rtlwifi]
+ [<ffffffffa03ab9c9>] ? rtl_init_core+0x189/0x620 [rtlwifi]
+ [<ffffffff811cfff8>] ? __raw_spin_lock_init+0x38/0x70
+ [<ffffffffa03b9dea>] ? rtl_usb_probe+0x709/0x82e [rtlwifi]
+ [<ffffffffa002a7fd>] ? usb_match_one_id+0x3d/0xc0 [usbcore]
+ [<ffffffffa002aae9>] ? usb_probe_interface+0xb9/0x160 [usbcore]
+ [<ffffffff8126ed19>] ? driver_probe_device+0x89/0x1a0
+ [<ffffffff8126eed3>] ? __driver_attach+0xa3/0xb0
+ [<ffffffff8126ee30>] ? __driver_attach+0x0/0xb0
+ [<ffffffff8126dd4e>] ? bus_for_each_dev+0x5e/0x90
+ [<ffffffff8126e9d9>] ? driver_attach+0x19/0x20
+ [<ffffffff8126e5e8>] ? bus_add_driver+0x158/0x290
+ [<ffffffff8126f151>] ? driver_register+0x71/0x140
+ [<ffffffff811cfff8>] ? __raw_spin_lock_init+0x38/0x70
+ [<ffffffffa002a2cc>] ? usb_register_driver+0xdc/0x190 [usbcore]
+ [<ffffffffa0013000>] ? rtl8192cu_init+0x0/0x20 [rtl8192cu]
+ [<ffffffffa001301e>] ? rtl8192cu_init+0x1e/0x20 [rtl8192cu]
+ [<ffffffff810002cf>] ? do_one_initcall+0x3f/0x180
+ [<ffffffff8108fd4b>] ? sys_init_module+0xbb/0x200
+ [<ffffffff81002c7b>] ? system_call_fastpath+0x16/0x1b
+ ---[ end trace 726271c07a47439e ]---
+rtlwifi:rtl_init_core():<0-0> rtl: Unable to register rtl_rc,use default RC !!
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
 
-Some time ago I started writing a small bash script which tries to build
-compat-wireless for various kernel versions and sends a email if
-something went wrong. This was more or less hacked together from the
-compat-wireless release script and some other scripts I have here. I
-stopped working on this after I recognized that my server is way to slow
-for running this script (compat-wireless build for one kernel toke more
-than 30 minutes).
+Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Using hudson or buildbot [2] is the better choice, but it should just
-take 1 to 2 hours to get this hacked script working. Luis do you have a
-server with hudson installed or a server capable for running hudson and
-building compat-wireless? My server has a Intel Celeron with 2.4 GHz and
-512MB Ram. I have to clean up my script before releasing it to someone
-else, but if someone is interest I have no problem with making it relay
-for use.
-
-[1] http://en.wikipedia.org/wiki/Hudson_(software)
-[2] http://en.wikipedia.org/wiki/BuildBot
-
-Hauke
+Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
+@@ -283,13 +283,7 @@ int rtl_init_core(struct ieee80211_hw *h
+ 	rtlmac->hw = hw;
+ 
+ 	/* <2> rate control register */
+-	if (rtl_rate_control_register()) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 ("rtl: Unable to register rtl_rc,"
+-			  "use default RC !!\n"));
+-	} else {
+-		hw->rate_control_algorithm = "rtl_rc";
+-	}
++	hw->rate_control_algorithm = "rtl_rc";
+ 
+ 	/*
+ 	 * <3> init CRDA must come after init
+@@ -325,8 +319,6 @@ int rtl_init_core(struct ieee80211_hw *h
+ 
+ void rtl_deinit_core(struct ieee80211_hw *hw)
+ {
+-	 /*RC*/
+-	rtl_rate_control_unregister();
+ }
+ 
+ void rtl_init_rx_config(struct ieee80211_hw *hw)
+@@ -945,11 +937,16 @@ MODULE_DESCRIPTION("Realtek 802.11n PCI
+ 
+ static int __init rtl_core_module_init(void)
+ {
++	if (rtl_rate_control_register())
++		printk(KERN_ERR "rtlwifi: Unable to register rtl_rc,"
++		       "use default RC !!\n");
+ 	return 0;
+ }
+ 
+ static void __exit rtl_core_module_exit(void)
+ {
++	 /*RC*/
++	rtl_rate_control_unregister();
+ }
+ 
+ module_init(rtl_core_module_init);
