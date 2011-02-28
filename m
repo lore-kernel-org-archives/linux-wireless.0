@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13050 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754008Ab1B1Pg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 10:36:58 -0500
-Subject: Re: [PATCH v3 4/5] iwlwifi: move check health code into iwl-rx.c
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1298899997-2372-4-git-send-email-sgruszka@redhat.com>
-References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
-	 <1298899997-2372-4-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Feb 2011 07:18:06 -0800
-Message-ID: <1298906286.5082.77.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:56280 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753128Ab1B1UHc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Feb 2011 15:07:32 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 44687540154
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 15:10:49 -0500 (EST)
+Subject: Compat-wireless release for 2011-02-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110228200731.97B0746520@repository3.orbit-lab.org>
+Date: Mon, 28 Feb 2011 15:07:31 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-02-28 at 05:33 -0800, Stanislaw Gruszka wrote:
-> Remove check_plcp_health and check_ack_health ops methods, they are
-> unneeded after iwlegacy driver split. Merge check health code into to
-> iwl-rx.c and make functions static.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   74d6d79..212223d  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   6dae501..6e14c4a  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + fa8596d...3f8c23b akpm-end   -> origin/akpm-end  (forced update)
+   86e2fe9..493f335  akpm-start -> origin/akpm-start
+   b13c9c0..db46904  history    -> origin/history
+ + b655770...5cfae13 master     -> origin/master  (forced update)
+   86e2fe9..493f335  stable     -> origin/stable
+ * [new tag]         next-20110228 -> next-20110228
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
+compat-wireless code metrics
 
+    831345 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1568 - % of code consists of backport work
