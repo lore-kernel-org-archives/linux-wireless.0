@@ -1,194 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f51.google.com ([74.125.83.51]:58234 "EHLO
-	mail-gw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758213Ab1CDDLu (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:47376 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757489Ab1CAUhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 22:11:50 -0500
-Received: by gwb15 with SMTP id 15so917880gwb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 19:11:50 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 1/7] mac80211: Support RSN information element on mesh interfaces
-Date: Thu,  3 Mar 2011 19:11:41 -0800
-Message-Id: <1299208307-9428-2-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
-References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+	Tue, 1 Mar 2011 15:37:00 -0500
+Received: by mail-ww0-f42.google.com with SMTP id 15so4909349wwe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 12:37:00 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC 8/9] wl12xx: prevent scheduling while suspending (WoW enabled)
+Date: Tue,  1 Mar 2011 22:36:43 +0200
+Message-Id: <1299011804-13899-9-git-send-email-eliad@wizery.com>
+In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+When WoW is enabled, the interface will stay up and the chip will
+be powered on, so we have to flush/cancel any remaining work, and
+prevent the irq handler from scheduling a new work until the system
+is resumed.
 
-Add RSN information element as a mesh setup parameter.
+Add 2 new flags:
+* WL1271_FLAG_SUSPENDED - the system is (about to be) suspended.
+* WL1271_FLAG_PENDING_WORK - there is a pending irq work which
+   should be scheduled when the system is being resumed.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Tested-by: Thomas Pedersen <thomas@cozybit.com>
+In order to wake-up the system while getting an irq, we initialize
+the device as wakeup device, and calling pm_wakeup_event() upon
+getting the interrupt (while the system is about to be suspended)
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- include/linux/nl80211.h    |    4 ++++
- include/net/cfg80211.h     |    4 ++++
- net/mac80211/cfg.c         |   19 ++++++++++++++++---
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/mesh.c        |    7 +++++++
- net/mac80211/tx.c          |    3 ++-
- net/wireless/nl80211.c     |   13 +++++++++++++
- 7 files changed, 48 insertions(+), 4 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   33 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/sdio.c   |   31 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 +++-
+ 3 files changed, 64 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3002218..4e0990b 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1690,6 +1690,9 @@ enum nl80211_meshconf_params {
-  * element that vendors will use to identify the path selection methods and
-  * metrics in use.
-  *
-+ * @NL80211_MESH_SETUP_RSN_IE: The Robust Security Network information element
-+ * use to advertise security capabilities of this mesh network.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-  */
-@@ -1698,6 +1701,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
- 	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
-+	NL80211_MESH_SETUP_RSN_IE,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a46022f..6de0567 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1086,6 +1086,24 @@ static int wl1271_op_start(struct ieee80211_hw *hw,
+ {
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 start resume=%d", !!wow);
  
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1ac5786..87c0bb6 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -656,6 +656,8 @@ struct mesh_config {
-  * @path_metric: which metric to use
-  * @vendor_ie: vendor information elements (optional)
-  * @vendor_ie_len: length of vendor information elements
-+ * @rsn_ie: robust secure network information elements (for SAE)
-+ * @rsn_ie_len: length of rsn_ie
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -666,6 +668,8 @@ struct mesh_setup {
- 	u8  path_metric;
- 	const u8 *vendor_ie;
- 	u8 vendor_ie_len;
-+	const u8 *rsn_ie;
-+	u8 rsn_ie_len;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7b701dc..9d64ed9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1030,15 +1030,28 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 		if (!new_ie)
- 			return -ENOMEM;
- 	}
-+	ifmsh->vendor_ie = new_ie;
-+	kfree(old_ie);
++	/* on resume we have to enable irq_work enqueuing */
++	if (wow) {
++		struct wl1271 *wl = hw->priv;
++		unsigned long flags;
 +
-+	/* then allocate the new rsn information element */
-+	new_ie = NULL;
-+	old_ie = ifmsh->rsn_ie;
-+
-+	ifmsh->rsn_ie_len = setup->rsn_ie_len;
-+	if (setup->rsn_ie_len) {
-+		new_ie = kmemdup(setup->rsn_ie, setup->rsn_ie_len,
-+				GFP_KERNEL);
-+		if (!new_ie)
-+			return -ENOMEM;
-+	}
-+	ifmsh->rsn_ie = new_ie;
-+	kfree(old_ie);
- 
- 	/* now copy the rest of the setup parameters */
- 	ifmsh->mesh_id_len = setup->mesh_id_len;
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
--	ifmsh->vendor_ie = new_ie;
--
--	kfree(old_ie);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a404017..fc27222 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -490,6 +490,8 @@ struct ieee80211_if_mesh {
- 	bool accepting_plinks;
- 	const u8 *vendor_ie;
- 	u8 vendor_ie_len;
-+	const u8 *rsn_ie;
-+	u8 rsn_ie_len;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2a57cc0..c0635c5 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -279,6 +279,13 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
- 
-+	if (sdata->u.mesh.rsn_ie) {
-+		int len = sdata->u.mesh.rsn_ie_len;
-+		const u8 *data = sdata->u.mesh.rsn_ie;
-+		if (skb_tailroom(skb) > len)
-+			memcpy(skb_put(skb, len), data, len);
++		wl1271_debug(DEBUG_MAC80211, "enabled wow triggers: 0x%x",
++			     wow->enabled_triggers);
++		spin_lock_irqsave(&wl->wl_lock, flags);
++		clear_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
++		if (test_and_clear_bit(WL1271_FLAG_PENDING_WORK, &wl->flags)) {
++			ieee80211_queue_work(wl->hw, &wl->irq_work);
++			set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
++			wl1271_debug(DEBUG_MAC80211,
++				     "enqueuing 'missing' irq_work");
++		}
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
 +	}
 +
- 	if (sdata->u.mesh.vendor_ie) {
- 		int len = sdata->u.mesh.vendor_ie_len;
- 		const u8 *data = sdata->u.mesh.vendor_ie;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 081dcaf..38db05e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2262,7 +2262,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 
- 		/* headroom, head length, tail length and maximum TIM length */
- 		skb = dev_alloc_skb(local->tx_headroom + 400 +
--				sdata->u.mesh.vendor_ie_len);
-+				sdata->u.mesh.vendor_ie_len +
-+				sdata->u.mesh.rsn_ie_len);
- 		if (!skb)
- 			goto out;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4ebce42..150e8ed 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2806,6 +2806,8 @@ static const struct nla_policy
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_MESH_SETUP_RSN_IE] = { .type = NLA_BINARY,
-+		.len = IEEE80211_MAX_DATA_LEN },
- };
- 
- static int nl80211_parse_mesh_config(struct genl_info *info,
-@@ -2915,6 +2917,17 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		setup->vendor_ie_len = nla_len(ieattr);
- 	}
- 
-+	if (tb[NL80211_MESH_SETUP_RSN_IE]) {
-+		struct nlattr *ieattr = tb[NL80211_MESH_SETUP_RSN_IE];
-+		u8 *eid = nla_data(ieattr);
-+		if (eid[0] != WLAN_EID_RSN)
-+			return -EINVAL;
-+		if (!is_valid_ie_attr(ieattr))
-+			return -EINVAL;
-+		setup->rsn_ie = nla_data(ieattr);
-+		setup->rsn_ie_len = nla_len(ieattr);
-+	}
+ 	/*
+ 	 * We have to delay the booting of the hardware because
+ 	 * we need to know the local MAC address before downloading and
+@@ -1109,6 +1127,21 @@ static void wl1271_op_stop(struct ieee80211_hw *hw,
+ 	struct wl1271 *wl = hw->priv;
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 stop suspend=%d", !!wow);
+ 	wl->wow_enabled = !!(wow && wow->enabled_triggers);
++	if (wl->wow_enabled) {
++		unsigned long flags;
 +
- 	return 0;
++		spin_lock_irqsave(&wl->wl_lock, flags);
++		set_bit(WL1271_FLAG_SUSPENDED, &wl->flags);
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
++
++		/* we don't want any remaining work */
++		wl1271_info("flushing remaining works\n");
++		flush_delayed_work(&wl->scan_complete_work);
++		flush_work(&wl->irq_work);
++		flush_work(&wl->tx_work);
++		flush_delayed_work(&wl->pspoll_work);
++		flush_delayed_work(&wl->elp_work);
++	}
  }
  
+ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 6083c3d..f5d4b21 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -75,9 +75,16 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		wl->elp_compl = NULL;
+ 	}
+ 
+-	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
++	if (test_bit(WL1271_FLAG_SUSPENDED, &wl->flags)) {
++		/* we shouldn't enqueue a work right now. mark it as pending */
++		set_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
++		wl1271_debug(DEBUG_IRQ, "not enqueuing work");
++		pm_wakeup_event(wl1271_sdio_wl_to_dev(wl), 0);
++	} else {
++		if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
++			ieee80211_queue_work(wl->hw, &wl->irq_work);
++		set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
++	}
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+@@ -266,6 +273,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 
+ 	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+ 	set_irq_wake(wl->irq, 1);
++	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 1);
++
+ 
+ 	disable_irq(wl->irq);
+ 
+@@ -304,6 +313,7 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	pm_runtime_get_noresume(&func->dev);
+ 
+ 	wl1271_unregister_hw(wl);
++	device_init_wakeup(wl1271_sdio_wl_to_dev(wl), 0);
+ 	set_irq_wake(wl->irq, 0);
+ 	free_irq(wl->irq, wl);
+ 	wl1271_free_hw(wl);
+@@ -316,9 +326,24 @@ static int wl1271_suspend(struct device *dev)
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+ 	struct wl1271 *wl = sdio_get_drvdata(func);
+ 	mmc_pm_flag_t sdio_flags;
++	unsigned long flags;
++	bool abort;
+ 	int ret = 0;
+ 
+ 	/*
++	 * if there is a pending irq work, we should abort the suspension.
++	 * (irq might come between mac80211 suspension and our suspension)
++	 * TODO: maybe remove it, since system will wake up anyway?
++	 */
++	spin_lock_irqsave(&wl->wl_lock, flags);
++	abort = !!test_bit(WL1271_FLAG_PENDING_WORK, &wl->flags);
++	spin_unlock_irqrestore(&wl->wl_lock, flags);
++	if (abort) {
++		wl1271_info("pending irq work - aborting suspend");
++		return -EBUSY;
++	}
++
++	/*
+ 	 * we need to look into wl to tell which suspend method to use.
+ 	 * we will have full power, ps mode, elp, and power off
+ 	 */
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index dd21818..2dc0b31 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -327,7 +327,9 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_PSPOLL_FAILURE,
+ 	WL1271_FLAG_STA_STATE_SENT,
+ 	WL1271_FLAG_FW_TX_BUSY,
+-	WL1271_FLAG_AP_STARTED
++	WL1271_FLAG_AP_STARTED,
++	WL1271_FLAG_SUSPENDED,
++	WL1271_FLAG_PENDING_WORK,
+ };
+ 
+ struct wl1271_link {
 -- 
 1.7.0.4
 
