@@ -1,100 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58883 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758329Ab1CaQVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:21:51 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/4] compat: add support for kernel 2.6.39
-Date: Thu, 31 Mar 2011 18:21:33 +0200
-Message-Id: <1301588495-16583-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
-References: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52775 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861Ab1CAK1d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2011 05:27:33 -0500
+Received: by wyg36 with SMTP id 36so4507990wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 02:27:32 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] wl12xx: wakeup chip from ELP during scan
+Date: Tue,  1 Mar 2011 12:27:26 +0200
+Message-Id: <1298975246-1720-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Commands are sometimes sent to FW on scan completion. Make sure the chip
+is awake to receive them. Sending commands while the chip is in ELP
+can cause SDIO read errors and/or crash the FW.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Ido Yariv <ido@wizery.com>
 ---
- include/linux/compat-2.6.39.h |   17 -----------------
- include/linux/compat-2.6.40.h |   27 +++++++++++++++++++++++++++
- include/linux/compat-2.6.h    |    1 +
- 3 files changed, 28 insertions(+), 17 deletions(-)
- create mode 100644 include/linux/compat-2.6.40.h
+ drivers/net/wireless/wl12xx/cmd.c  |    1 +
+ drivers/net/wireless/wl12xx/scan.c |   20 ++++++++++++++------
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/compat-2.6.39.h b/include/linux/compat-2.6.39.h
-index bf4442b..2c62d90 100644
---- a/include/linux/compat-2.6.39.h
-+++ b/include/linux/compat-2.6.39.h
-@@ -8,23 +8,6 @@
- #include <linux/tty.h>
- #include <linux/irq.h>
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 97ffd7a..f0aa7ab 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -63,6 +63,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 	cmd->status = 0;
  
--/*
-- * This is not part of The 2.6.37 kernel yet but we
-- * we use it to optimize the backport code we
-- * need to implement. Instead of using ifdefs
-- * to check what version of the check we use
-- * we just replace all checks on current code
-- * with this. I'll submit this upstream too, that
-- * way all we'd have to do is to implement this
-- * for older kernels, then we would not have to
-- * edit the upstrema code for backport efforts.
-- */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
--#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
--#else
--#define br_port_exists(dev)	(dev->br_port)
--#endif
--
- #define tiocmget(tty) tiocmget(tty, NULL)
- #define tiocmset(tty, set, clear) tiocmset(tty, NULL, set, clear)
+ 	WARN_ON(len % 4 != 0);
++	WARN_ON(test_bit(WL1271_FLAG_IN_ELP, &wl->flags));
  
-diff --git a/include/linux/compat-2.6.40.h b/include/linux/compat-2.6.40.h
-new file mode 100644
-index 0000000..42f9fee
---- /dev/null
-+++ b/include/linux/compat-2.6.40.h
-@@ -0,0 +1,27 @@
-+#ifndef LINUX_26_40_COMPAT_H
-+#define LINUX_26_40_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40))
-+
-+/*
-+ * This is not part of The 2.6.37 kernel yet but we
-+ * we use it to optimize the backport code we
-+ * need to implement. Instead of using ifdefs
-+ * to check what version of the check we use
-+ * we just replace all checks on current code
-+ * with this. I'll submit this upstream too, that
-+ * way all we'd have to do is to implement this
-+ * for older kernels, then we would not have to
-+ * edit the upstrema code for backport efforts.
-+ */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-+#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
-+#else
-+#define br_port_exists(dev)	(dev->br_port)
-+#endif
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40)) */
-+
-+#endif /* LINUX_26_40_COMPAT_H */
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 478f833..8e45fc0 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -32,5 +32,6 @@
- #include <linux/compat-2.6.37.h>
- #include <linux/compat-2.6.38.h>
- #include <linux/compat-2.6.39.h>
-+#include <linux/compat-2.6.40.h>
+ 	wl1271_write(wl, wl->cmd_box_addr, buf, len, false);
  
- #endif /* LINUX_26_COMPAT_H */
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 6f897b9..4c26977 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -27,6 +27,7 @@
+ #include "cmd.h"
+ #include "scan.h"
+ #include "acx.h"
++#include "ps.h"
+ 
+ void wl1271_scan_complete_work(struct work_struct *work)
+ {
+@@ -40,10 +41,11 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (wl->scan.state == WL1271_SCAN_STATE_IDLE) {
+-		mutex_unlock(&wl->mutex);
+-		return;
+-	}
++	if (wl->state == WL1271_STATE_OFF)
++		goto out;
++
++	if (wl->scan.state == WL1271_SCAN_STATE_IDLE)
++		goto out;
+ 
+ 	wl->scan.state = WL1271_SCAN_STATE_IDLE;
+ 	kfree(wl->scan.scanned_ch);
+@@ -52,13 +54,19 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 	ieee80211_scan_completed(wl->hw, false);
+ 
+ 	/* restore hardware connection monitoring template */
+-	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+-		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
++	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
++		if (wl1271_ps_elp_wakeup(wl, false) == 0) {
++			wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
++			wl1271_ps_elp_sleep(wl);
++		}
++	}
+ 
+ 	if (wl->scan.failed) {
+ 		wl1271_info("Scan completed due to error.");
+ 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 	}
++
++out:
+ 	mutex_unlock(&wl->mutex);
+ 
+ }
 -- 
 1.7.1
 
