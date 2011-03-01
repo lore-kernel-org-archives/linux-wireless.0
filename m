@@ -1,36 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52210 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753369Ab1CLNvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Mar 2011 08:51:40 -0500
-Message-ID: <4D7B7A68.2090900@openwrt.org>
-Date: Sat, 12 Mar 2011 14:51:36 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47655 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752512Ab1CANHa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2011 08:07:30 -0500
+Received: by fxm17 with SMTP id 17so4768765fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:07:29 -0800 (PST)
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC 0/9 v2] DFS/radar state/userspace handling
+Date: Tue, 1 Mar 2011 14:07:12 +0100
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	nbd@openwrt.org, dubowoj@neratec.com, zefir.kurtisi@neratec.com,
+	simon.wunderlich@saxnet.de
+References: <201102281740.37036.bernhard.schmidt@saxnet.de> <1298982486.6015.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1298982486.6015.10.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: fix aggregation related interoperability issues
-References: <1299888688-25201-1-git-send-email-nbd@openwrt.org> <20110312062632.GA6049@vasanth-laptop>
-In-Reply-To: <20110312062632.GA6049@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201103011407.13171.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-03-12 7:26 AM, Vasanthakumar Thiagarajan wrote:
-> On Sat, Mar 12, 2011 at 05:41:28AM +0530, Felix Fietkau wrote:
->> Some clients seems to keep track of their reorder window even after an
->> aggregation session has been disabled. This causes issues if there are
->> still retried but not completed frames pending for the TID.
->> To ensure that rx does not stall in such situations, set sendbar to 1
->> for any frame purged from the TID queue on teardown.
+On Tuesday, March 01, 2011 13:28:06 Johannes Berg wrote:
+> On Mon, 2011-02-28 at 17:40 +0100, Bernhard Schmidt wrote:
 > 
-> Once decided to to terminate the aggr session, sending a delba for that tid
-> seems to be the right thing.
-The session is terminated properly through a DELBA either way, my patch
-only affects what happens to frames during the cleanup, as some clients
-seem to have issues here. User reports confirm that this patch
-significantly improves connection stability.
+> > Implemented so far is the complete state machine, handling CAC and NOL
+> > as well as starting appropriate action in hostapd. Note, this is based
+> > on top of the 'dfs region support' work posted by Luis.
+> 
+> I'm not quite sure about all of this. First of all, you don't really
+> explain the global state vs. local state but you did say that you no
+> longer had global state, which clearly isn't true.
 
-- Felix
+Sorry about that.. it should have read:
+"..that states are *now* global and no per wiphy.."
+
+What I mean with that is that the interference flag/reporting, as
+well as the NOL is shared between all wiphys contrary to the previous
+version.
+
+> Also, what's the point in "struct radar" if there's only a single
+> instance of that, which is global? I'd rather have multiple global
+> variables I think -- but that might just be a matter of personal taste
+> or choice.
+
+Yeah, that 'struct radar' can be split up and moved into radar.c as
+static vars.
+
+> Finally, I think your code split is a little hard to understand. Is
+> there really any point in adding the code bit by bit into both cfg80211
+> and mac80211 at the same time? I'd rather see a few patches to make
+> cfg80211 complete and then implement it all in mac80211.
+
+I tried to group them by functionality and not by subsystem. But if
+you prefer that I can make a large blob for cfg80211.
+
+> Which brings me to another point -- there's no way to detect from
+> userspace whether or not this is all available.
+
+True, the only thing available right now is checking the error code
+for CAC_START. I'll fix that.
+ 
+> Finally, such details like not needing a timer -- a delayed work should
+> be sufficient, etc.
+> 
+> johannes
+> 
+> 
+
+-- 
+Best regards,
+
+Dipl.-Inf. (FH) Bernhard Schmidt (software development)
+
+saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
+Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
+managing director: Steffen Dreise - county court Chemnitz - HRB 23017
+http://www.saxnet.de
