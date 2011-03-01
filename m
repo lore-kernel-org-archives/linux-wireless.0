@@ -1,60 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4924 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596Ab1CTREi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Mar 2011 13:04:38 -0400
-cc: "Greg KH" <greg@kroah.com>,
-	linuxdriverproject <devel@linuxdriverproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-References: <op.vslagcb13ri7v4@arend-laptop>
- <op.vslaxakc3ri7v4@arend-laptop>
- <AANLkTim8SHdE8b9_gFLwbeEJM-uDegBDxU+AUJEb_rfc@mail.gmail.com>
- <1300626438.16689.21.camel@dev.znau.edu.ua>
-Subject: Re: new utility kernel module for detecting cores in newer
- chipsets
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"George Kashperko" <george@znau.edu.ua>
-Date: Sun, 20 Mar 2011 18:04:18 +0100
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vsni1gbi3ri7v4@arend-laptop>
-In-Reply-To: <1300626438.16689.21.camel@dev.znau.edu.ua>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Received: from he.sipsolutions.net ([78.46.109.217]:44311 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752668Ab1CATIB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2011 14:08:01 -0500
+Subject: Re: [PATCH] lib-average: Make config option selectable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Bruno Randolf <br1@einfach.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1299006185.28897.5.camel@marge>
+References: <1299006185.28897.5.camel@marge>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Mar 2011 20:07:59 +0100
+Message-ID: <1299006479.6015.22.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 20 Mar 2011 14:07:18 +0100, George Kashperko <george@znau.edu.ua>
-wrote:
+On Tue, 2011-03-01 at 20:03 +0100, Michael Buesch wrote:
+> Make CONFIG_AVERAGE selectable for out-of-tree users
+> such as compat-wireless.
 
->> I don't want to have support for AI in 10 places, even if this is
->> about staging area.
->>
-> Agree here completely. The only arguable point here I think could be
-> that AXI and SB should be different drivers but honestly they are too
-> much similar softwire-wise to even be placed in separate directories if
-> only bus managing code model is designed well.
+Is that really necessary? We haven't typically done this, and often just
+shipped the code in compat instead?
 
-Agree and a valid point at that as one would typically need either ssb or
-axi support. If with a little refactoring the ssb tree can provide two
-separate drivers that is fine by me if the axi flavour is not burdened by
-shortcomings of the the ssb driver, which you are said to have pointed out
-(I missed most of the discussion about this, sorry). In brcm80211 we have
-two drivers and one typically needs the ssb support and the other axi
-support. We abstracted the core access (not judging how well we did that)
-with an additional layer but there is actually no need when having
-separate drivers requiring either one or the other interconnect support.
-
-Depending on the driver it may depend on one of them or both, but with two
-separate modules this choice is up to the driver which makes most sense to
-me.
-
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
+johannes
 
