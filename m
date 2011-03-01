@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:47311 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754429Ab1COH6w convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45938 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755446Ab1CAUGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 03:58:52 -0400
-Received: by qyg14 with SMTP id 14so276270qyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 00:58:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinBTXduB-uQp7FqNjPdzUm5=0v8vrE79oi5Toez@mail.gmail.com>
-References: <AANLkTinBTXduB-uQp7FqNjPdzUm5=0v8vrE79oi5Toez@mail.gmail.com>
-Date: Tue, 15 Mar 2011 08:58:51 +0100
-Message-ID: <AANLkTikHx2J-zzCob+xVy04=RYX+K9T2HJ_14zyrto2J@mail.gmail.com>
-Subject: Re: Broadcom 4331 wireless device
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chris Neugebauer <chrisjrn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 1 Mar 2011 15:06:44 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 90242540186
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Mar 2011 15:10:02 -0500 (EST)
+Subject: Compat-wireless release for 2011-03-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110301200642.E10B34652C@repository3.orbit-lab.org>
+Date: Tue,  1 Mar 2011 15:06:42 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/15 Chris Neugebauer <chrisjrn@gmail.com>:
-> I've recently picked up a MacBook Pro 8,1.  Its onboard wireless is a
-> Broadcom 4331, which appears to be a very new chipset.  Has work begun
-> on support for this device, and if not, what help can I provide to get
-> work started on it (as a non-kernel developerey type)?
->
-> Thanks,
->
-> --Chris
->
-> P.S. Please CC me as I'm not on this list.
->
-> P.P.S lspci -vnn output:
->
-> 03:00.0 Network controller [0280]: Broadcom Corporation Device
-> [14e4:4331] (rev 02)
->        Subsystem: Apple Computer Inc. Device [106b:00d6]
->        Flags: bus master, fast devsel, latency 0, IRQ 11
->        Memory at a0600000 (64-bit, non-prefetchable) [size=16K]
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   212223d..f77cb6c  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 3f8c23b...a4ed5b8 akpm-end   -> origin/akpm-end  (forced update)
+   db46904..2ddedf9  history    -> origin/history
+ + 5cfae13...c9f8564 master     -> origin/master  (forced update)
+ * [new tag]         next-20110301 -> next-20110301
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-bcmdevs.h:
-#define BCM4331_D11N_ID         0x4331  /* 4331 802.11n dualband id */
-#define BCM4331_D11N2G_ID       0x4332  /* 4331 802.11n 2.4Ghz band id */
-#define BCM4331_D11N5G_ID       0x4333  /* 4331 802.11n 5Ghz band id */
+compat-wireless code metrics
 
-So yes, it looks like new BCM4331 chipset. AFAIK there is no support
-for it in wl. Plus no support in b43 or brcm80211.
-
--- 
-Rafał
+    831390 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1567 - % of code consists of backport work
