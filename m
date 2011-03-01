@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lider.pardus.org.tr ([193.140.100.216]:36645 "EHLO
-	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212Ab1C1G7s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 02:59:48 -0400
-Message-ID: <4D903114.2090905@pardus.org.tr>
-Date: Mon, 28 Mar 2011 09:56:20 +0300
-From: =?ISO-8859-9?Q?Ozan_=C7a=F0layan?= <ozan@pardus.org.tr>
+Received: from kroah.org ([198.145.64.141]:43602 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753971Ab1CAFqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2011 00:46:49 -0500
+Date: Mon, 28 Feb 2011 19:11:51 -0800
+From: Greg KH <greg@kroah.com>
+To: Javier Martinez Canillas <martinez.javier@gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 2/2] staging: brcm80211: Remove unused variables and
+ code clean up
+Message-ID: <20110301031151.GA7620@kroah.com>
+References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
+ <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Linksys WUSB600N v2 with rt2x00 driver doesn't work
-Content-Type: text/plain; charset=ISO-8859-9; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, Feb 27, 2011 at 09:54:15PM +0100, Javier Martinez Canillas wrote:
+> tsf_l and tsf_h variables where used in a code segment that is never compiled
+> so the variables remains unused. 
+> 
+> Remove those variables and the code never compiled as well.
+> 
+> Signed-off-by: Javier Martinez Canillas <martinez.javier@gmail.com>
+> ---
+>  drivers/staging/brcm80211/brcmsmac/wlc_mac80211.c |    9 ---------
 
-The mentioned dongle's vendor&product id is added to the rt2800usb 
-driver with the following commit:
+This doesn't apply anymore, care to redo it and resend?
 
-commit 5e31258945f60dff65952575625cac214a75893e
-Author: Gertjan van Wingerde <gwingerde@gmail.com>
-Date:   Wed Dec 23 00:03:21 2009 +0100
+thanks,
 
-     rt2x00: Add USB ID for Linksys WUSB 600N rev 2.
-
-     This is a rt2870 based device.
-
-     Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-     Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-On 2.6.37.5 with compat-wireless 2.6.38.3, the driver gets loaded, the 
-interface wlan0 is created but no scan results is returned. These are 
-what logged in dmesg after plugging the device:
-
-[336770.008134] usb 2-3: new high speed USB device using ehci_hcd and 
-address 6
-[336770.154067] usb 2-3: New USB device found, idVendor=1737, idProduct=0079
-[336770.154071] usb 2-3: New USB device strings: Mfr=1, Product=2, 
-SerialNumber=3
-[336770.154075] usb 2-3: Product: Linksys WUSB600N Wireless-N USB 
-Network Adapter with Dual-Band ver. 2
-[336770.154078] usb 2-3: Manufacturer: Linksys
-[336770.156447] usbip 2-3:1.0: this device 2-3 is not in match_busid 
-table. skip!
-[336770.171767] ieee80211 phy2: Selected rate control algorithm 
-'minstrel_ht'
-[336770.172614] Registered led device: rt2800usb-phy2::radio
-[336770.172653] Registered led device: rt2800usb-phy2::assoc
-[336770.172734] Registered led device: rt2800usb-phy2::quality
-[336770.900090] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-
-ozanDesktopI7x86_64 rt2x00 # ifconfig wlan0
-wlan0     Link encap:Ethernet  HWaddr 68:7F:74:F5:E8:1A
-           UP BROADCAST MULTICAST  MTU:1500  Metric:1
-           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-           collisions:0 txqueuelen:1000
-           RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
-
-ozanDesktopI7x86_64 rt2x00 # rfkill list
-2: phy2: Wireless LAN
-         Soft blocked: no
-         Hard blocked: no
-
+greg k-h
