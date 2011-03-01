@@ -1,47 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35060 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916Ab1CTXmk (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36990 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769Ab1CANPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Mar 2011 19:42:40 -0400
-Received: by iwn34 with SMTP id 34so5880689iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2011 16:42:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4D866714.80503@lockie.ca>
-References: <4D866714.80503@lockie.ca>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 21 Mar 2011 10:42:20 +1100
-Message-ID: <AANLkTim_YELaSk4X4uRf_nsyAThK7SiMAq3rDD_MZVmb@mail.gmail.com>
-Subject: Re: why would IRQ change?
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 1 Mar 2011 08:15:13 -0500
+Received: by mail-ww0-f44.google.com with SMTP id 22so4420741wwb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:15:12 -0800 (PST)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 3/7] wl12xx: Change claiming of the SDIO bus
+Date: Tue,  1 Mar 2011 15:14:40 +0200
+Message-Id: <1298985284-6048-4-git-send-email-ido@wizery.com>
+In-Reply-To: <1298985284-6048-1-git-send-email-ido@wizery.com>
+References: <1298985284-6048-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 21, 2011 at 07:44, James <bjlockie@lockie.ca> wrote:
-> Is there a tool to list what devices are assigned what IRQ?
->
-> This from an old kernel:
-> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
-> mem=0xffffc900017a0000, irq=18
->
-> This is from today:
-> ath9k 0000:02:09.0: PCI INT A -> Link[LNKB] -> GSI 17 (level, low) -> IRQ 17
-> ieee80211 phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
-> mem=0xffffc90001ba0000, irq=17
+The SDIO bus is claimed and released for each SDIO transaction. In
+addition to the few CPU cycles it takes to claim and release the bus, it
+may also cause undesired side effects such as the MMC host stopping its
+internal clocks.
 
-AFAIK, PCI interrupts numbers are just sequential numbers assigned by
-Linux - there is no significance to them, they are just a number for
-tracking which interrupt is assigned to which device - there is no
-"IRQ17" or "IRQ18" anywhere in any actual hardware.
+Since only the wl12xx_sdio driver drives this SDIO card, it is safe to
+claim the SDIO host once (on power on), and release it only when turning
+the power off.
 
-Thanks,
+This patch was inspired by Juuso Oikarinen's (juuso.oikarinen@nokia.com)
+patch "wl12xx: Change claiming of the (SDIO) bus".
 
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index d5e8748..b9c3747 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -106,8 +106,6 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 	int ret;
+ 	struct sdio_func *func = wl_to_func(wl);
+ 
+-	sdio_claim_host(func);
+-
+ 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
+ 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
+ 		wl1271_debug(DEBUG_SDIO, "sdio read 52 addr 0x%x, byte 0x%02x",
+@@ -123,8 +121,6 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
+ 	}
+ 
+-	sdio_release_host(func);
+-
+ 	if (ret)
+ 		wl1271_error("sdio read failed (%d)", ret);
+ }
+@@ -135,8 +131,6 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 	int ret;
+ 	struct sdio_func *func = wl_to_func(wl);
+ 
+-	sdio_claim_host(func);
+-
+ 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
+ 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
+ 		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
+@@ -152,8 +146,6 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 			ret = sdio_memcpy_toio(func, addr, buf, len);
+ 	}
+ 
+-	sdio_release_host(func);
+-
+ 	if (ret)
+ 		wl1271_error("sdio write failed (%d)", ret);
+ }
+@@ -170,7 +162,6 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
+ 
+ 	sdio_claim_host(func);
+ 	sdio_enable_func(func);
+-	sdio_release_host(func);
+ 
+ out:
+ 	return ret;
+@@ -180,7 +171,6 @@ static int wl1271_sdio_power_off(struct wl1271 *wl)
+ {
+ 	struct sdio_func *func = wl_to_func(wl);
+ 
+-	sdio_claim_host(func);
+ 	sdio_disable_func(func);
+ 	sdio_release_host(func);
+ 
 -- 
+1.7.1
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
