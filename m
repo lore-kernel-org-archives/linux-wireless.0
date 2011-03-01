@@ -1,48 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:42031 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418Ab1CCSvE (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:54380 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693Ab1CAFgM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 13:51:04 -0500
-Received: by wyg36 with SMTP id 36so1359358wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:51:03 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 15/19] rt2x00: Fix comment in rt2800pci
-Date: Thu, 3 Mar 2011 19:45:39 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201103031938.56423.IvDoorn@gmail.com> <201103031944.54527.IvDoorn@gmail.com> <201103031945.17614.IvDoorn@gmail.com>
-In-Reply-To: <201103031945.17614.IvDoorn@gmail.com>
+	Tue, 1 Mar 2011 00:36:12 -0500
+Date: Mon, 28 Feb 2011 23:36:09 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH V2] rtl8187: Change rate-control feedback
+Message-ID: <4d6c85c9.Gv0aZxorarbTk25I%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103031945.40473.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+The driver for the RTL8187L chips returns IEEE80211_TX_STAT_ACK for all
+packets, even if the maximum number of retries was exhausted. In addition
+it fails to setup max_rates in the ieee80211_hw struct, This behavior
+may be responsible for the problems noted in Bug 14168. As the bug is very
+old, testers have not been found, and I do not have the case where the
+indicated signal is less than -70 dBm.
 
-We don't use interrupt threads anymore. Fix the comment.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@kernel.org>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 7e610f6..b74a9d7 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -835,7 +835,7 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
- 	 *
- 	 * Furthermore we don't disable the TX_FIFO_STATUS
- 	 * interrupt here but leave it enabled so that the TX_STA_FIFO
--	 * can also be read while the interrupt thread gets executed.
-+	 * can also be read while the tx status tasklet gets executed.
- 	 *
- 	 * Since we have only one producer and one consumer we don't
- 	 * need to lock the kfifo.
--- 
-1.7.2.3
+V1 => V2: Protect against zero divide, and the case where the 16-bit retry
+	  counter wraps to zero. The latter is unlikely, but tested for
+	  completeness.
+---
 
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -869,23 +869,35 @@ static void rtl8187_work(struct work_str
+ 	/* The RTL8187 returns the retry count through register 0xFFFA. In
+ 	 * addition, it appears to be a cumulative retry count, not the
+ 	 * value for the current TX packet. When multiple TX entries are
+-	 * queued, the retry count will be valid for the last one in the queue.
+-	 * The "error" should not matter for purposes of rate setting. */
++	 * waiting in the queue, the retry count will be the total for all.
++	 * The "error" may matter for purposes of rate setting, but there is
++	 * no other choice with this hardware.
++	 */
+ 	struct rtl8187_priv *priv = container_of(work, struct rtl8187_priv,
+ 				    work.work);
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_hw *dev = priv->dev;
+ 	static u16 retry;
+ 	u16 tmp;
++	u16 avg_retry;
++	int length;
+ 
+ 	mutex_lock(&priv->conf_mutex);
+ 	tmp = rtl818x_ioread16(priv, (__le16 *)0xFFFA);
++	length = skb_queue_len(&priv->b_tx_status.queue);
++	if (unlikely(!length))
++		length = 1;
++	if (unlikely(tmp < retry))
++		tmp = retry;
++	avg_retry = (tmp - retry) / length;
+ 	while (skb_queue_len(&priv->b_tx_status.queue) > 0) {
+ 		struct sk_buff *old_skb;
+ 
+ 		old_skb = skb_dequeue(&priv->b_tx_status.queue);
+ 		info = IEEE80211_SKB_CB(old_skb);
+-		info->status.rates[0].count = tmp - retry + 1;
++		info->status.rates[0].count = avg_retry + 1;
++		if (info->status.rates[0].count > RETRY_COUNT)
++			info->flags &= ~IEEE80211_TX_STAT_ACK;
+ 		ieee80211_tx_status_irqsafe(dev, old_skb);
+ 	}
+ 	retry = tmp;
+@@ -931,8 +943,8 @@ static int rtl8187_start(struct ieee8021
+ 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
+ 				  RTL818X_TX_CONF_HW_SEQNUM |
+ 				  RTL818X_TX_CONF_DISREQQSIZE |
+-				  (7 << 8  /* short retry limit */) |
+-				  (7 << 0  /* long retry limit */) |
++				  (RETRY_COUNT << 8  /* short retry limit */) |
++				  (RETRY_COUNT << 0  /* long retry limit */) |
+ 				  (7 << 21 /* MAX TX DMA */));
+ 		rtl8187_init_urbs(dev);
+ 		rtl8187b_init_status_urb(dev);
+@@ -1376,6 +1388,9 @@ static int __devinit rtl8187_probe(struc
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		     IEEE80211_HW_SIGNAL_DBM |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS;
++	/* Initialize rate-control variables */
++	dev->max_rates = 1;
++	dev->max_rate_tries = RETRY_COUNT;
+ 
+ 	eeprom.data = dev;
+ 	eeprom.register_read = rtl8187_eeprom_register_read;
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
+@@ -35,6 +35,8 @@
+ #define RFKILL_MASK_8187_89_97	0x2
+ #define RFKILL_MASK_8198	0x4
+ 
++#define RETRY_COUNT		7
++
+ struct rtl8187_rx_info {
+ 	struct urb *urb;
+ 	struct ieee80211_hw *dev;
