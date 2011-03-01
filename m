@@ -1,27 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55461 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052Ab1CQAEl (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40068 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755952Ab1CAJMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 20:04:41 -0400
-Received: by iwn34 with SMTP id 34so2235169iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 17:04:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com>
-References: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 16 Mar 2011 17:04:21 -0700
-Message-ID: <AANLkTi=GPbB6EbWCGGjRupwsBLMaVt=ymO5hb9eU-Q+r@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k_hw: Fix pcie_serdes setting for AR9485 1.1 version.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 1 Mar 2011 04:12:50 -0500
+From: Greg Whiteley <greg.whiteley@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	Greg Whiteley <greg.whiteley@gmail.com>
+Subject: [PATCH] compat-wireless: rt2800pci (and rt2x00pci) don't unload on 'make unload'
+Date: Tue,  1 Mar 2011 20:12:36 +1100
+Message-Id: <1298970756-32328-1-git-send-email-greg.whiteley@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 25, 2011 at 4:01 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Add missing module names to scripts/unload.sh
 
-Was this a stable fix? If not why not?
+Signed-off-by: Greg Whiteley
+---
+ scripts/unload.sh |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/scripts/unload.sh b/scripts/unload.sh
+index 2af748a..abc5e72 100755
+--- a/scripts/unload.sh
++++ b/scripts/unload.sh
+@@ -21,8 +21,8 @@ MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
+ MODULES="$MODULES p54pci p54usb p54spi p54common"
+ MODULES="$MODULES rt2400pci rt2500pci rt61pci"
+ MODULES="$MODULES rt2500usb rt73usb"
+-MODULES="$MODULES rt2800usb rt2800lib"
+-MODULES="$MODULES rt2x00usb rt2x00lib"
++MODULES="$MODULES rt2800usb rt2800pci rt2800lib"
++MODULES="$MODULES rt2x00usb rt2x00pci rt2x00lib"
+ MODULES="$MODULES rtl8180 rtl8187 rtl8192ce rtlwifi"
+ MODULES="$MODULES mwl8k mac80211_hwsim"
+ MODULES="$MODULES at76c50x_usb at76_usb"
+-- 
+1.7.0.4
+
