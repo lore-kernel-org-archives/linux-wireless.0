@@ -1,124 +1,665 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33170 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754027Ab1CKU3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 15:29:35 -0500
-Message-ID: <4D7A8628.2030902@openwrt.org>
-Date: Fri, 11 Mar 2011 21:29:28 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, lrodriguez@atheros.com,
-	vasanth@atheros.com, mark@moxienet.com
-Subject: Re: [PATCH v3 4/4] ath9k: improve reliability of beacon transmission
- and stuck beacon handling
-References: <1299873695-1062-1-git-send-email-nbd@openwrt.org> <1299873695-1062-2-git-send-email-nbd@openwrt.org> <1299873695-1062-3-git-send-email-nbd@openwrt.org> <1299873695-1062-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1299873695-1062-4-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36990 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032Ab1CANPQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2011 08:15:16 -0500
+Received: by mail-ww0-f44.google.com with SMTP id 22so4420741wwb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:15:15 -0800 (PST)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 4/7] wl12xx: Switch to a threaded interrupt handler
+Date: Tue,  1 Mar 2011 15:14:41 +0200
+Message-Id: <1298985284-6048-5-git-send-email-ido@wizery.com>
+In-Reply-To: <1298985284-6048-1-git-send-email-ido@wizery.com>
+References: <1298985284-6048-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-03-11 9:01 PM, Felix Fietkau wrote:
-> ath9k calls ath9k_hw_stoptxdma every time it sends a beacon, however there
-> is not much point in doing that if the previous beacon and mcast traffic
-> went out properly. On AR9380, calling that function too often can result
-> in an increase of stuck beacons due to differences in the handling of the
-> queue enable/disable functionality.
-> 
-> With this patch, the queue will only be explicitly stopped if the previous
-> data frames were not sent successfully. With the beacon code being the
-> only remaining user of ath9k_hw_stoptxdma, this function can be simplified
-> in order to remove the now pointless attempts at waiting for transmission
-> completion, which would never happen at this point due to the different
-> method of tx scheduling of the beacon queue.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/beacon.c |   13 +-----
->  drivers/net/wireless/ath/ath9k/mac.c    |   68 +++---------------------------
->  drivers/net/wireless/ath/ath9k/mac.h    |    2 +-
->  3 files changed, 10 insertions(+), 73 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-> index a4bdfdb..6d2a545f 100644
-> --- a/drivers/net/wireless/ath/ath9k/beacon.c
-> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
-> @@ -373,6 +373,7 @@ void ath_beacon_tasklet(unsigned long data)
->  			ath_dbg(common, ATH_DBG_BSTUCK,
->  				"missed %u consecutive beacons\n",
->  				sc->beacon.bmisscnt);
-> +			ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
->  			ath9k_hw_bstuck_nfcal(ah);
->  		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
->  			ath_dbg(common, ATH_DBG_BSTUCK,
-> @@ -450,16 +451,6 @@ void ath_beacon_tasklet(unsigned long data)
->  		sc->beacon.updateslot = OK;
->  	}
->  	if (bfaddr != 0) {
-> -		/*
-> -		 * Stop any current dma and put the new frame(s) on the queue.
-> -		 * This should never fail since we check above that no frames
-> -		 * are still pending on the queue.
-> -		 */
-> -		if (!ath9k_hw_stoptxdma(ah, sc->beacon.beaconq)) {
-> -			ath_err(common, "beacon queue %u did not stop?\n",
-> -				sc->beacon.beaconq);
-> -		}
-> -
->  		/* NB: cabq traffic should already be queued and primed */
->  		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bfaddr);
->  		ath9k_hw_txstart(ah, sc->beacon.beaconq);
-> @@ -780,7 +771,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
->  		ah->imask &= ~ATH9K_INT_SWBA;
->  		ath9k_hw_set_interrupts(ah, ah->imask);
->  		tasklet_kill(&sc->bcon_tasklet);
-> -		ath9k_hw_stoptxdma(ah, sc->beacon.beaconq);
-> +		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
->  	}
->  	ath9k_ps_restore(sc);
->  }
-> diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-> index b4e9ed9..ff1f860 100644
-> --- a/drivers/net/wireless/ath/ath9k/mac.c
-> +++ b/drivers/net/wireless/ath/ath9k/mac.c
-> @@ -171,84 +171,30 @@ void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
->  }
->  EXPORT_SYMBOL(ath9k_hw_abort_tx_dma);
->  
-> -bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
-> +bool ath9k_hw_stop_dma_queue(struct ath_hw *ah, u32 q)
->  {
-> -#define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
-> +#define ATH9K_TX_STOP_DMA_TIMEOUT	1000    /* usec */
->  #define ATH9K_TIME_QUANTUM		100     /* usec */
-> -	struct ath_common *common = ath9k_hw_common(ah);
-> -	struct ath9k_hw_capabilities *pCap = &ah->caps;
-> -	struct ath9k_tx_queue_info *qi;
-> -	u32 tsfLow, j, wait;
-> -	u32 wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
-> -
-> -	if (q >= pCap->total_queues) {
-> -		ath_dbg(common, ATH_DBG_QUEUE,
-> -			"Stopping TX DMA, invalid queue: %u\n", q);
-> -		return false;
-> -	}
-> -
-> -	qi = &ah->txq[q];
-> -	if (qi->tqi_type == ATH9K_TX_QUEUE_INACTIVE) {
-> -		ath_dbg(common, ATH_DBG_QUEUE,
-> -			"Stopping TX DMA, inactive queue: %u\n", q);
-> -		return false;
-> -	}
-> +	int wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
-> +	int wait;
->  
->  	REG_WRITE(ah, AR_Q_TXD, 1 << q);
->  
->  	for (wait = wait_time; wait != 0; wait--) {
->  		if (ath9k_hw_numtxpending(ah, q) == 0)
->  			break;
-> -		udelay(ATH9K_TIME_QUANTUM);
-> -	}
-Forgot to fix the delay here - will send a v4 :)
+To achieve maximal throughput, it is very important to react to
+interrupts as soon as possible. Currently the interrupt handler wakes up
+a worker for handling interrupts in process context. A cleaner and more
+efficient design would be to request a threaded interrupt handler.  This
+handler's priority is very high, and can do blocking operations such as
+SDIO/SPI transactions.
 
-- Felix
+Some work can be deferred, mostly calls to mac80211 APIs
+(ieee80211_rx_ni and ieee80211_tx_status). By deferring such work to a
+different worker, we can keep the irq handler thread more I/O
+responsive. In addition, on multi-core systems the two threads can be
+scheduled on different cores, which will improve overall performance.
+
+The use of WL1271_FLAG_IRQ_PENDING & WL1271_FLAG_IRQ_RUNNING was
+changed. For simplicity, always query the FW for more pending
+interrupts. Since there are relatively long bursts of interrupts, the
+extra FW status read overhead is negligible. In addition, this enables
+registering the IRQ handler with the ONESHOT option.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |    2 +-
+ drivers/net/wireless/wl12xx/io.h      |    1 +
+ drivers/net/wireless/wl12xx/main.c    |  127 ++++++++++++++++++++------------
+ drivers/net/wireless/wl12xx/ps.c      |    6 +-
+ drivers/net/wireless/wl12xx/ps.h      |    2 +-
+ drivers/net/wireless/wl12xx/rx.c      |    3 +-
+ drivers/net/wireless/wl12xx/sdio.c    |   16 ++---
+ drivers/net/wireless/wl12xx/spi.c     |   19 ++---
+ drivers/net/wireless/wl12xx/tx.c      |    5 +-
+ drivers/net/wireless/wl12xx/wl12xx.h  |   13 +++-
+ 10 files changed, 113 insertions(+), 81 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index bebfa28..8e75b09 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -99,7 +99,7 @@ static void wl1271_debugfs_update_stats(struct wl1271 *wl)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
+index 844b32b..c1aac82 100644
+--- a/drivers/net/wireless/wl12xx/io.h
++++ b/drivers/net/wireless/wl12xx/io.h
+@@ -168,5 +168,6 @@ void wl1271_unregister_hw(struct wl1271 *wl);
+ int wl1271_init_ieee80211(struct wl1271 *wl);
+ struct ieee80211_hw *wl1271_alloc_hw(void);
+ int wl1271_free_hw(struct wl1271 *wl);
++irqreturn_t wl1271_irq(int irq, void *data);
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index ad5ea77..1a44f79 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -374,7 +374,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 	if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -635,16 +635,39 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 		(s64)le32_to_cpu(status->fw_localtime);
+ }
+ 
+-#define WL1271_IRQ_MAX_LOOPS 10
++static void wl1271_flush_deferred_work(struct wl1271 *wl)
++{
++	struct sk_buff *skb;
++
++	/* Pass all received frames to the network stack */
++	while ((skb = skb_dequeue(&wl->deferred_rx_queue)))
++		ieee80211_rx_ni(wl->hw, skb);
++
++	/* Return sent skbs to the network stack */
++	while ((skb = skb_dequeue(&wl->deferred_tx_queue)))
++		ieee80211_tx_status(wl->hw, skb);
++}
++
++static void wl1271_netstack_work(struct work_struct *work)
++{
++	struct wl1271 *wl =
++		container_of(work, struct wl1271, netstack_work);
++
++	do {
++		wl1271_flush_deferred_work(wl);
++	} while (skb_queue_len(&wl->deferred_rx_queue));
++}
+ 
+-static void wl1271_irq_work(struct work_struct *work)
++#define WL1271_IRQ_MAX_LOOPS 256
++
++irqreturn_t wl1271_irq(int irq, void *cookie)
+ {
+ 	int ret;
+ 	u32 intr;
+ 	int loopcount = WL1271_IRQ_MAX_LOOPS;
+-	unsigned long flags;
+-	struct wl1271 *wl =
+-		container_of(work, struct wl1271, irq_work);
++	struct wl1271 *wl = (struct wl1271 *)cookie;
++	bool done = false;
++	unsigned int defer_count;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -653,26 +676,27 @@ static void wl1271_irq_work(struct work_struct *work)
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, true);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	spin_lock_irqsave(&wl->wl_lock, flags);
+-	while (test_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags) && loopcount) {
+-		clear_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+-		spin_unlock_irqrestore(&wl->wl_lock, flags);
+-		loopcount--;
++	while (!done && loopcount--) {
++		/*
++		 * In order to avoid a race with the hardirq, clear the flag
++		 * before acknowledging the chip. Since the mutex is held,
++		 * wl1271_ps_elp_wakeup cannot be called concurrently.
++		 */
++		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
++		smp_mb__after_clear_bit();
+ 
+ 		wl1271_fw_status(wl, wl->fw_status);
+ 		intr = le32_to_cpu(wl->fw_status->common.intr);
++		intr &= WL1271_INTR_MASK;
+ 		if (!intr) {
+-			wl1271_debug(DEBUG_IRQ, "Zero interrupt received.");
+-			spin_lock_irqsave(&wl->wl_lock, flags);
++			done = true;
+ 			continue;
+ 		}
+ 
+-		intr &= WL1271_INTR_MASK;
+-
+ 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
+ 			wl1271_error("watchdog interrupt received! "
+ 				     "starting recovery.");
+@@ -682,7 +706,7 @@ static void wl1271_irq_work(struct work_struct *work)
+ 			goto out;
+ 		}
+ 
+-		if (intr & WL1271_ACX_INTR_DATA) {
++		if (likely(intr & WL1271_ACX_INTR_DATA)) {
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
+ 
+ 			wl1271_rx(wl, &wl->fw_status->common);
+@@ -701,6 +725,12 @@ static void wl1271_irq_work(struct work_struct *work)
+ 			if (wl->fw_status->common.tx_results_counter !=
+ 			    (wl->tx_results_count & 0xff))
+ 				wl1271_tx_complete(wl);
++
++			/* Make sure the deferred queues don't get too long */
++			defer_count = skb_queue_len(&wl->deferred_tx_queue) +
++				      skb_queue_len(&wl->deferred_rx_queue);
++			if (defer_count > WL1271_DEFERRED_QUEUE_LIMIT)
++				wl1271_flush_deferred_work(wl);
+ 		}
+ 
+ 		if (intr & WL1271_ACX_INTR_EVENT_A) {
+@@ -719,21 +749,16 @@ static void wl1271_irq_work(struct work_struct *work)
+ 
+ 		if (intr & WL1271_ACX_INTR_HW_AVAILABLE)
+ 			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_HW_AVAILABLE");
+-
+-		spin_lock_irqsave(&wl->wl_lock, flags);
+ 	}
+ 
+-	if (test_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	else
+-		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+-	spin_unlock_irqrestore(&wl->wl_lock, flags);
+-
+ 	wl1271_ps_elp_sleep(wl);
+ 
+ out:
+ 	mutex_unlock(&wl->mutex);
++
++	return IRQ_HANDLED;
+ }
++EXPORT_SYMBOL_GPL(wl1271_irq);
+ 
+ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ {
+@@ -974,7 +999,6 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 		goto out;
+ 
+ irq_disable:
+-		wl1271_disable_interrupts(wl);
+ 		mutex_unlock(&wl->mutex);
+ 		/* Unlocking the mutex in the middle of handling is
+ 		   inherently unsafe. In this case we deem it safe to do,
+@@ -983,7 +1007,9 @@ irq_disable:
+ 		   work function will not do anything.) Also, any other
+ 		   possible concurrent operations will fail due to the
+ 		   current state, hence the wl1271 struct should be safe. */
+-		cancel_work_sync(&wl->irq_work);
++		wl1271_disable_interrupts(wl);
++		wl1271_flush_deferred_work(wl);
++		cancel_work_sync(&wl->netstack_work);
+ 		mutex_lock(&wl->mutex);
+ power_off:
+ 		wl1271_power_off(wl);
+@@ -1010,14 +1036,15 @@ int __wl1271_plt_stop(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
+-	wl1271_disable_interrupts(wl);
+ 	wl1271_power_off(wl);
+ 
+ 	wl->state = WL1271_STATE_OFF;
+ 	wl->rx_counter = 0;
+ 
+ 	mutex_unlock(&wl->mutex);
+-	cancel_work_sync(&wl->irq_work);
++	wl1271_disable_interrupts(wl);
++	wl1271_flush_deferred_work(wl);
++	cancel_work_sync(&wl->netstack_work);
+ 	cancel_work_sync(&wl->recovery_work);
+ 	mutex_lock(&wl->mutex);
+ out:
+@@ -1171,7 +1198,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		break;
+ 
+ irq_disable:
+-		wl1271_disable_interrupts(wl);
+ 		mutex_unlock(&wl->mutex);
+ 		/* Unlocking the mutex in the middle of handling is
+ 		   inherently unsafe. In this case we deem it safe to do,
+@@ -1180,7 +1206,9 @@ irq_disable:
+ 		   work function will not do anything.) Also, any other
+ 		   possible concurrent operations will fail due to the
+ 		   current state, hence the wl1271 struct should be safe. */
+-		cancel_work_sync(&wl->irq_work);
++		wl1271_disable_interrupts(wl);
++		wl1271_flush_deferred_work(wl);
++		cancel_work_sync(&wl->netstack_work);
+ 		mutex_lock(&wl->mutex);
+ power_off:
+ 		wl1271_power_off(wl);
+@@ -1246,12 +1274,12 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
+ 
+ 	wl->state = WL1271_STATE_OFF;
+ 
+-	wl1271_disable_interrupts(wl);
+-
+ 	mutex_unlock(&wl->mutex);
+ 
++	wl1271_disable_interrupts(wl);
++	wl1271_flush_deferred_work(wl);
+ 	cancel_delayed_work_sync(&wl->scan_complete_work);
+-	cancel_work_sync(&wl->irq_work);
++	cancel_work_sync(&wl->netstack_work);
+ 	cancel_work_sync(&wl->tx_work);
+ 	cancel_delayed_work_sync(&wl->pspoll_work);
+ 	cancel_delayed_work_sync(&wl->elp_work);
+@@ -1527,7 +1555,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -1683,7 +1711,7 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -1912,7 +1940,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		goto out_unlock;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out_unlock;
+ 
+@@ -2015,7 +2043,7 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2041,7 +2069,7 @@ static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2069,7 +2097,7 @@ static int wl1271_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2548,7 +2576,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2603,7 +2631,7 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		conf_tid->apsd_conf[0] = 0;
+ 		conf_tid->apsd_conf[1] = 0;
+ 	} else {
+-		ret = wl1271_ps_elp_wakeup(wl, false);
++		ret = wl1271_ps_elp_wakeup(wl);
+ 		if (ret < 0)
+ 			goto out;
+ 
+@@ -2649,7 +2677,7 @@ static u64 wl1271_op_get_tsf(struct ieee80211_hw *hw)
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2738,7 +2766,7 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out_free_sta;
+ 
+@@ -2781,7 +2809,7 @@ static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
+ 	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -2814,7 +2842,7 @@ int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -3178,7 +3206,7 @@ static ssize_t wl1271_sysfs_store_bt_coex_state(struct device *dev,
+ 	if (wl->state == WL1271_STATE_OFF)
+ 		goto out;
+ 
+-	ret = wl1271_ps_elp_wakeup(wl, false);
++	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -3378,9 +3406,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 		for (j = 0; j < AP_MAX_LINKS; j++)
+ 			skb_queue_head_init(&wl->links[j].tx_queue[i]);
+ 
++	skb_queue_head_init(&wl->deferred_rx_queue);
++	skb_queue_head_init(&wl->deferred_tx_queue);
++
+ 	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
+ 	INIT_DELAYED_WORK(&wl->pspoll_work, wl1271_pspoll_work);
+-	INIT_WORK(&wl->irq_work, wl1271_irq_work);
++	INIT_WORK(&wl->netstack_work, wl1271_netstack_work);
+ 	INIT_WORK(&wl->tx_work, wl1271_tx_work);
+ 	INIT_WORK(&wl->recovery_work, wl1271_recovery_work);
+ 	INIT_DELAYED_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 5c347b1..971f13e 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -69,7 +69,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 	}
+ }
+ 
+-int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake)
++int wl1271_ps_elp_wakeup(struct wl1271 *wl)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(compl);
+ 	unsigned long flags;
+@@ -87,7 +87,7 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake)
+ 	 * the completion variable in one entity.
+ 	 */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+-	if (work_pending(&wl->irq_work) || chip_awake)
++	if (test_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+ 		pending = true;
+ 	else
+ 		wl->elp_compl = &compl;
+@@ -149,7 +149,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 	case STATION_ACTIVE_MODE:
+ 	default:
+ 		wl1271_debug(DEBUG_PSM, "leaving psm");
+-		ret = wl1271_ps_elp_wakeup(wl, false);
++		ret = wl1271_ps_elp_wakeup(wl);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/net/wireless/wl12xx/ps.h b/drivers/net/wireless/wl12xx/ps.h
+index fc1f4c1..c41bd0a 100644
+--- a/drivers/net/wireless/wl12xx/ps.h
++++ b/drivers/net/wireless/wl12xx/ps.h
+@@ -30,7 +30,7 @@
+ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 		       u32 rates, bool send);
+ void wl1271_ps_elp_sleep(struct wl1271 *wl);
+-int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake);
++int wl1271_ps_elp_wakeup(struct wl1271 *wl);
+ void wl1271_elp_work(struct work_struct *work);
+ void wl1271_ps_link_start(struct wl1271 *wl, u8 hlid, bool clean_queues);
+ void wl1271_ps_link_end(struct wl1271 *wl, u8 hlid);
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index 4e7a3b3..919b59f 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -129,7 +129,8 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length)
+ 
+ 	skb_trim(skb, skb->len - desc->pad_len);
+ 
+-	ieee80211_rx_ni(wl->hw, skb);
++	skb_queue_tail(&wl->deferred_rx_queue, skb);
++	ieee80211_queue_work(wl->hw, &wl->netstack_work);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index b9c3747..7ee9d29 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -60,7 +60,7 @@ static struct device *wl1271_sdio_wl_to_dev(struct wl1271 *wl)
+ 	return &(wl_to_func(wl)->dev);
+ }
+ 
+-static irqreturn_t wl1271_irq(int irq, void *cookie)
++static irqreturn_t wl1271_hardirq(int irq, void *cookie)
+ {
+ 	struct wl1271 *wl = cookie;
+ 	unsigned long flags;
+@@ -69,17 +69,14 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 
+ 	/* complete the ELP completion */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
++	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 	if (wl->elp_compl) {
+ 		complete(wl->elp_compl);
+ 		wl->elp_compl = NULL;
+ 	}
+-
+-	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+-	return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static void wl1271_sdio_disable_interrupts(struct wl1271 *wl)
+@@ -231,14 +228,14 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	wl->irq = wlan_data->irq;
+ 	wl->ref_clock = wlan_data->board_ref_clock;
+ 
+-	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
++	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
++				   IRQF_TRIGGER_RISING,
++				   DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
+ 		goto out_free;
+ 	}
+ 
+-	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+-
+ 	disable_irq(wl->irq);
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+@@ -261,7 +258,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+  out_irq:
+ 	free_irq(wl->irq, wl);
+ 
+-
+  out_free:
+ 	wl1271_free_hw(wl);
+ 
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 0132dad..df5a00f 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -320,28 +320,23 @@ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 	spi_sync(wl_to_spi(wl), &m);
+ }
+ 
+-static irqreturn_t wl1271_irq(int irq, void *cookie)
++static irqreturn_t wl1271_hardirq(int irq, void *cookie)
+ {
+-	struct wl1271 *wl;
++	struct wl1271 *wl = cookie;
+ 	unsigned long flags;
+ 
+ 	wl1271_debug(DEBUG_IRQ, "IRQ");
+ 
+-	wl = cookie;
+-
+ 	/* complete the ELP completion */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
++	set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 	if (wl->elp_compl) {
+ 		complete(wl->elp_compl);
+ 		wl->elp_compl = NULL;
+ 	}
+-
+-	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
+-		ieee80211_queue_work(wl->hw, &wl->irq_work);
+-	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+-	return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
+@@ -413,14 +408,14 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
++	ret = request_threaded_irq(wl->irq, wl1271_hardirq, wl1271_irq,
++				   IRQF_TRIGGER_RISING,
++				   DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
+ 		goto out_free;
+ 	}
+ 
+-	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+-
+ 	disable_irq(wl->irq);
+ 
+ 	ret = wl1271_init_ieee80211(wl);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index e7ada41..1e47a59 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -464,7 +464,7 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
+ 
+ 	while ((skb = wl1271_skb_dequeue(wl))) {
+ 		if (!woken_up) {
+-			ret = wl1271_ps_elp_wakeup(wl, false);
++			ret = wl1271_ps_elp_wakeup(wl);
+ 			if (ret < 0)
+ 				goto out_ack;
+ 			woken_up = true;
+@@ -589,7 +589,8 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 		     result->rate_class_index, result->status);
+ 
+ 	/* return the packet to the stack */
+-	ieee80211_tx_status(wl->hw, skb);
++	skb_queue_tail(&wl->deferred_tx_queue, skb);
++	ieee80211_queue_work(wl->hw, &wl->netstack_work);
+ 	wl1271_free_tx_id(wl, result->id);
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 6ee4de8..752dd93 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -320,7 +320,6 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_IN_ELP,
+ 	WL1271_FLAG_PSM,
+ 	WL1271_FLAG_PSM_REQUESTED,
+-	WL1271_FLAG_IRQ_PENDING,
+ 	WL1271_FLAG_IRQ_RUNNING,
+ 	WL1271_FLAG_IDLE,
+ 	WL1271_FLAG_IDLE_REQUESTED,
+@@ -404,6 +403,12 @@ struct wl1271 {
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+ 	int tx_queue_count;
+ 
++	/* Frames received, not handled yet by mac80211 */
++	struct sk_buff_head deferred_rx_queue;
++
++	/* Frames sent, not returned yet to mac80211 */
++	struct sk_buff_head deferred_tx_queue;
++
+ 	struct work_struct tx_work;
+ 
+ 	/* Pending TX frames */
+@@ -424,8 +429,8 @@ struct wl1271 {
+ 	/* Intermediate buffer, used for packet aggregation */
+ 	u8 *aggr_buf;
+ 
+-	/* The target interrupt mask */
+-	struct work_struct irq_work;
++	/* Network stack work  */
++	struct work_struct netstack_work;
+ 
+ 	/* Hardware recovery work */
+ 	struct work_struct recovery_work;
+@@ -556,6 +561,8 @@ int wl1271_plt_stop(struct wl1271 *wl);
+ #define WL1271_TX_QUEUE_LOW_WATERMARK  10
+ #define WL1271_TX_QUEUE_HIGH_WATERMARK 25
+ 
++#define WL1271_DEFERRED_QUEUE_LIMIT    64
++
+ /* WL1271 needs a 200ms sleep after power on, and a 20ms sleep before power
+    on in case is has been shut down shortly before */
+ #define WL1271_PRE_POWER_ON_SLEEP 20 /* in milliseconds */
+-- 
+1.7.1
+
