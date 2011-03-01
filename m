@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752348Ab1CUS4l (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50118 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548Ab1CANQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 14:56:41 -0400
-Subject: Re: Logs spammed by brcm80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <op.vspg80mq3ri7v4@arend-laptop>
-References: <4D878FBC.5010204@lwfinger.net> <op.vspg80mq3ri7v4@arend-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 19:56:34 +0100
-Message-ID: <1300733794.3804.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 1 Mar 2011 08:16:06 -0500
+Received: by wyg36 with SMTP id 36so4637678wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:16:04 -0800 (PST)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 7/7] wl12xx: Modify requested number of memory blocks
+Date: Tue,  1 Mar 2011 15:14:44 +0200
+Message-Id: <1298985284-6048-8-git-send-email-ido@wizery.com>
+In-Reply-To: <1298985284-6048-1-git-send-email-ido@wizery.com>
+References: <1298985284-6048-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-21 at 19:51 +0100, Arend van Spriel wrote:
-> On Mon, 21 Mar 2011 18:49:48 +0100, Larry Finger  
-> <Larry.Finger@lwfinger.net> wrote:
-> 
-> > With both BCM4313 and BCM943224 cards, brcm80211 spams my logs with  
-> > messages:
-> >
-> > wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 159/256 dur  
-> > 1778/1504
-> > wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 137/256 dur  
-> > 1602/1504
-> > wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 382/256 dur  
-> > 3562/1504
-> 
-> This actually means that mac80211 is giving us transmit packets which  
-> violate the txop duration. I am not sure whether this is actually true or  
-> we did not honour the conf_tx callback. I think we should put this one on  
-> our todo list.
+Tests have shown that the requested number of memory blocks is
+sub-optimal. Slightly modify the requested number of memory blocks for
+TX.
 
-Are you saying you expect mac80211 to fragment packets that don't fit
-into a txop? That's not done for sure.
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4e4aa42..165ed1e 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -304,7 +304,7 @@ static struct conf_drv_settings default_conf = {
+ 		.rx_block_num                 = 70,
+ 		.tx_min_block_num             = 40,
+ 		.dynamic_memory               = 0,
+-		.min_req_tx_blocks            = 104,
++		.min_req_tx_blocks            = 100,
+ 		.min_req_rx_blocks            = 22,
+ 		.tx_min                       = 27,
+ 	}
+-- 
+1.7.1
 
