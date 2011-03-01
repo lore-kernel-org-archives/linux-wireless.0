@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43406 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900Ab1CQPGo (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36990 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350Ab1CANPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 11:06:44 -0400
-Received: by gyf1 with SMTP id 1so1140567gyf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 08:06:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300354167.3774.0.camel@jlt3.sipsolutions.net>
-References: <AANLkTimQRgAr9aY_zs0L7hjXhECiR9w8V5Y7fbwrJ1DX@mail.gmail.com>
-	<1300354167.3774.0.camel@jlt3.sipsolutions.net>
-Date: Thu, 17 Mar 2011 08:06:42 -0700
-Message-ID: <AANLkTi=doS4LtZ3k9f6Lw+RhXOq5iF22-B9w1rGOMuMw@mail.gmail.com>
-Subject: Re: [PATCH] iw: Add send callback with optional debug handler
-From: Sean Robinson <seankrobinson@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=000e0cd5cf7252b30c049eaf02cb
+	Tue, 1 Mar 2011 08:15:06 -0500
+Received: by wwb22 with SMTP id 22so4420741wwb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:15:05 -0800 (PST)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 0/7] wl12xx: Optimizing throughput and CPU usage
+Date: Tue,  1 Mar 2011 15:14:37 +0200
+Message-Id: <1298985284-6048-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---000e0cd5cf7252b30c049eaf02cb
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+The following patches tweak the driver in multiple places to achieve maximal
+throughput and minimal CPU usage.
 
-  I have made the test syntax change you recommended and attached the
-gzipped 'git format-patch'.
+Throughput improved significantly with these patches, up to 50% increase in
+some cases.
 
-On Thu, Mar 17, 2011 at 2:29 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-03-16 at 17:28 -0700, Sean Robinson wrote:
->> libnl supports callbacks for send and recv. =C2=A0This patch enables cal=
-lbacks
->> for sent messages and uses the debug callback for the --debug option, as
->> the recv callbacks do.
->
-> I can't apply this, the patch is corrupted.
->
->> =C2=A0 =C2=A0 =C2=A0 cb =3D nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_D=
-EFAULT);
->> - =C2=A0 =C2=A0 if (!cb) {
->> + =C2=A0 =C2=A0 s_cb =3D nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFA=
-ULT);
->> + =C2=A0 =C2=A0 if (!(cb && s_cb)) {
->
-> I think (!cb || !s_cb) would be easier to read.
->
-> johannes
->
->
->
+Changes since v1:
+- Keep using the existing PG version mask & introduce an end-of-transaction
+  quirk
+- Make sure the deferred queues don't get too large
+- Prevent a theoretical endless loop in the interrupt handler
+- Flush the network stack work before cancelling it
 
+Ido Yariv (7):
+  wl12xx: Reorder data handling in irq_work
+  wl12xx: Do end-of-transactions transfers only if needed
+  wl12xx: Change claiming of the SDIO bus
+  wl12xx: Switch to a threaded interrupt handler
+  wl12xx: Switch to level trigger interrupts
+  wl12xx: Avoid redundant TX work
+  wl12xx: Modify requested number of memory blocks
 
+ drivers/net/wireless/wl12xx/boot.c    |    3 +
+ drivers/net/wireless/wl12xx/boot.h    |    5 +
+ drivers/net/wireless/wl12xx/debugfs.c |    2 +-
+ drivers/net/wireless/wl12xx/io.h      |    1 +
+ drivers/net/wireless/wl12xx/main.c    |  170 ++++++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/ps.c      |    6 +-
+ drivers/net/wireless/wl12xx/ps.h      |    2 +-
+ drivers/net/wireless/wl12xx/rx.c      |   11 ++-
+ drivers/net/wireless/wl12xx/sdio.c    |   26 +----
+ drivers/net/wireless/wl12xx/spi.c     |   19 ++---
+ drivers/net/wireless/wl12xx/tx.c      |   15 ++-
+ drivers/net/wireless/wl12xx/wl12xx.h  |   22 ++++-
+ 12 files changed, 178 insertions(+), 104 deletions(-)
 
---=20
-Sean Robinson
-WiFi Radar - http://wifi-radar.berlios.de
-Python WiFi - http://pythonwifi.wikispot.org
-pymnl - http://pymnl.wikispot.org
-
---000e0cd5cf7252b30c049eaf02cb
-Content-Type: application/x-gzip;
-	name="0001-Add-send-callbacks-with-optional-debug-handler.patch.gz"
-Content-Disposition: attachment;
-	filename="0001-Add-send-callbacks-with-optional-debug-handler.patch.gz"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gldt7d350
-
-H4sICB0igk0CAzAwMDEtQWRkLXNlbmQtY2FsbGJhY2tzLXdpdGgtb3B0aW9uYWwtZGVidWctaGFu
-ZGxlci5wYXRjaACtVNty0zAQfY6+YuEpaWwjJ07iplxaLoWHwjC0fQJGo5sdUcfKWDJth/LvrJQU
-MvDCMHiSyFrtOXvOSsppZ9cgy0OuD+dTKqaV4kXFuaITMZOzouCzspTzhS7E4YTDW9vCud5AvgBK
-l/EDE0pzcoo0S1ziLXywwrQOEx87nF51u+lxveamyaRdPyUvuddLuFj1SWB6yzskyXOgi+WsXBY5
-pHRBKTnvxRct/RI+vj+5ePHmM5woBU63CiRvGsHllYNr41dgN97YljegtOhrWPFWNbojpDGibcD1
-m43tvNtDVbbbEmEmdFp+zQDVGAcb7uUKdMtFo/cAZAfwsNbO8RrXArJ3+OJXelf3Pj3Sh3Cabhe2
-+hLgjoRwKLgnRtmMkHNTt1qltqpScfv3jUzTlIC5ziTcAT5zGIcHYzlUJlrAZtRaJTADBOsuCHHD
-8Qgbj6obvZ2nI0KUqSpUXBsP/FGkFHEgplX6Biazw2lR5lk2o3LKiwnklM6LIijY5ROsfI85PoYU
-EQkKCsMCMOA890aiDA+MbfeIybUaOt/10kPblHSS5yykaTiIQ4Jb0a/BKGbaTe/xRdwmBL4RGEjU
-7WGHRRo4wJ8EDtZxB5/Au8uzM5w6PEC4cISIn3WYFJgtjsj4t5hjIbqfuXY1Uro6RINwpb8adYP0
-9D6iuy4By3hXy6Noe1pS9DuelnlS/l/bg+8EgnOB9aNihmfIyqG5Zttz9gzenbEXz9nLV88vX8Py
-5+z05PLsYnRE0oGpYPhAihG2EM2zf6ca31PB3R08CEyjuC2DatOh1QrtqdiahxUeVq3AW4glgstW
-+8a0V7/uwKf24Sg0dIAQVDSJ77VFjO09qzqtWdyE0N+CFuFYFXT+3/sbLKGC0X51lIJmsUfOyivt
-mcOvFMPIkz7dxROIHcC2IHTrIazgPwzjvbcM7+oG75r+A4auovFdZXgM9LfqeL1Ini2yIssJ+QH5
-el2jrQUAAA==
---000e0cd5cf7252b30c049eaf02cb--
