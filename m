@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:56374 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754881Ab1CQR5F (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34681 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756323Ab1CBJhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 13:57:05 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 17 Mar 2011 10:53:10 -0700
-Subject: RE: [PATCH 00/11] remove configuration APIs from debugfs (part 2)
-Message-ID: <477F20668A386D41ADCC57781B1F704307FA4C35A9@SC-VEXCH1.marvell.com>
-References: <1300320574-10793-1-git-send-email-bzhao@marvell.com>
- <1300354343.3774.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1300354343.3774.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 2 Mar 2011 04:37:54 -0500
+Received: by fxm17 with SMTP id 17so5701974fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 01:37:53 -0800 (PST)
+From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 2/9] [{mac|nl}80211] Add 2 new radar channel flags
+Date: Wed, 2 Mar 2011 10:37:33 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"nbd@openwrt.org" <nbd@openwrt.org>,
+	"dubowoj@neratec.com" <dubowoj@neratec.com>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"simon.wunderlich@saxnet.de" <simon.wunderlich@saxnet.de>
+References: <201102281740.37036.bernhard.schmidt@saxnet.de> <201102281747.06564.bernhard.schmidt@saxnet.de> <20110301215412.GD6835@tux>
+In-Reply-To: <20110301215412.GD6835@tux>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103021037.34404.bernhard.schmidt@saxnet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
-ZW50OiBUaHVyc2RheSwgTWFyY2ggMTcsIDIwMTEgMjozMiBBTQ0KPiBUbzogQmluZyBaaGFvDQo+
-IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEpvaG4gVy4gTGludmlsbGU7IEFt
-aXRrdW1hciBLYXJ3YXI7IEtpcmFuIERpdmVrYXI7IFlvZ2VzaCBQb3dhcjsNCj4gTWFyYyBZYW5n
-OyBGcmFuayBIdWFuZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDAwLzExXSByZW1vdmUgY29uZmln
-dXJhdGlvbiBBUElzIGZyb20gZGVidWdmcyAocGFydCAyKQ0KPiANCj4gT24gV2VkLCAyMDExLTAz
-LTE2IGF0IDE3OjA5IC0wNzAwLCBCaW5nIFpoYW8gd3JvdGU6DQo+ID4gVGhpcyBzZXJpZXMgcmVt
-b3ZlcyBzb21lIG9mIHRoZSBjb25maWd1cmF0aW9uIEFQSXMgcGx1cyBzb21lIFdFUCBjb2RlDQo+
-ID4gY2xlYW51cHMNCj4gDQo+IEkgb2J2aW91c2x5IGhhdmUgbm8gaXNzdWVzIHdpdGggdGhpcywg
-YnV0IHlvdSBtaWdodCB3YW50IHRvIGtlZXAgdGhlIGdpdA0KPiBoaXN0b3J5IGZvciBhZnRlcndh
-cmRzIGZvciB3aGVuIEkgc3VwcG9zZSB5b3UnbGwgc3RhcnQgd29ya2luZyBvbiBhY3R1YWwNCj4g
-QVBJcyBmb3IgdGhlc2UgZmVhdHVyZXM/DQoNClRvIGtlZXAgdGhlIGdpdCBoaXN0b3J5LCBJIGNh
-biBzZW5kIGEgJ3B1bGwgcmVxdWVzdCcgdG8gSm9obiBhZnRlciB3ZSBjbGVhbiB1cCB0aGUgZGVi
-dWdmcyBBUElzIGFuZCBmaXggdGhlIHNldF9kZWZhdWx0X2tleSgpIGZ1bmN0aW9uLg0KDQpTaG91
-bGQgeW91IGhhdmUgYW55IG1vcmUgY29tbWVudHMsIEknbGwgYmUgbW9yZSB0aGFuIGhhcHB5IHRv
-IG1ha2UgdGhlIGNoYW5nZXMuDQoNClRoYW5rcywNCg0KQmluZw0KDQo=
+On Tuesday, March 01, 2011 22:54:12 Luis R. Rodriguez wrote:
+> On Mon, Feb 28, 2011 at 08:47:06AM -0800, Bernhard Schmidt wrote:
+> > DFS introduces 2 new flags a channel requiring radar detection
+> > might take. The interference flag indicates that interference was
+> > detected either during CAC or in-service monitoring and the
+> > channel is not to be used for the NOP period. The clear flag
+> > indicates that during a full CAC no interference was detected and
+> > it is allowed to open a BSS on that channel. The case were both
+> > flags are set is used to indicate that interference has been
+> > detected and we are in progress of closing on that channel.
+> 
+> What does closing mean?
+
+Channel closing time is the period between radar interference and the
+last transmission on a channel. After detected the interferences there
+must be short time frame where you can notify stations about switching
+to another channel (CSA).
+
+> > Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+> 
+> > ---
+> >  include/linux/nl80211.h |    6 ++++++
+> >  include/net/cfg80211.h  |   18 ++++++++++++------
+> >  net/mac80211/cfg.c      |    6 ++++++
+> >  net/mac80211/tx.c       |    6 ++++--
+> >  net/wireless/nl80211.c  |    4 ++++
+> >  5 files changed, 32 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> > index e3c9ec7..2282f56 100644
+> > --- a/include/linux/nl80211.h
+> > +++ b/include/linux/nl80211.h
+> > @@ -1371,6 +1371,10 @@ enum nl80211_band_attr {
+> >   *	(100 * dBm).
+> >   * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
+> >   *	currently defined
+> > + * @NL80211_FREQUENCY_ATTR_RADAR_CLEAR: during a full CAC no interference has
+> > + *	been detected.
+> 
+> Why do you need a flag for clear, can you simply count on the
+> lack of the flag as the "clear" state?
+
+No. There are 3 states a channel can be in, "usable", "available" and
+"unavailable" (as definied in ETSI v1.5.1). On initialization all
+channels are "usable", this is indicated by no flag at all. Only after
+a full CAC can a channel get "available" (the CLEAR flag) and is now
+allowed to be used for beaconing. "unavailable" channels are those
+on which interference has been detected, those are marked with
+INTERFERENCE, this channel becomes a "usable" (no flag) channel again
+after the non-occupancy period.
+
+-- 
+Best regards,
+
+Dipl.-Inf. (FH) Bernhard Schmidt (software development)
+
+saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
+Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
+managing director: Steffen Dreise - county court Chemnitz - HRB 23017
+http://www.saxnet.de
