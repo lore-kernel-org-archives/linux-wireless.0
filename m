@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:60656 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758165Ab1COTGY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 15:06:24 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 66305540424
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 15:10:10 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-15 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110315190622.8D98C40EA0@repository3.orbit-lab.org>
-Date: Tue, 15 Mar 2011 15:06:22 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mms3.broadcom.com ([216.31.210.19]:1397 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753984Ab1CBTYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2011 14:24:09 -0500
+To: "Brett Rudley" <brudley@broadcom.com>,
+	"Javier Martinez Canillas" <martinez.javier@gmail.com>
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH 1/2] staging: brcm80211: Add buf_size parameter to
+ ampdu_action handler function
+References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
+Date: Wed, 2 Mar 2011 20:23:43 +0100
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vrqdhre53ri7v4@arend-laptop>
+In-Reply-To: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 1a28402...68e17d8 akpm-end   -> origin/akpm-end  (forced update)
-   c44ed96..dc1b83a  akpm-start -> origin/akpm-start
-   93bb8a9..e3786d7  history    -> origin/history
- + c0ebee1...f69358a master     -> origin/master  (forced update)
-   c44ed96..dc1b83a  stable     -> origin/stable
- * [new tag]         next-20110315 -> next-20110315
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+On Sun, 27 Feb 2011 21:54:14 +0100, Javier Martinez Canillas  
+<martinez.javier@gmail.com> wrote:
 
-compat-wireless code metrics
+Hi Javier,
 
-    832392 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1553 - % of code consists of backport work
+> struct ieee80211_ops.ampdu_action function pointer definition now  
+> includes a
+> u8 buf_size parameter.
+>
+> Update wl_ops_ampdu_action handler function according to this new  
+> signature.
+>
+This currently gives a warning on staging-next branch:
+
+drivers/staging/brcm80211/brcmsmac/wl_mac80211.c:699: warning:  
+initialization from incompatible pointer type
+
+>
+> Signed-off-by: Javier Martinez Canillas <martinez.javier@gmail.com>
+
+Probably you have used a newer net/mac80211.h as reference which has not  
+yet landed on the staging-next branch.
+
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
