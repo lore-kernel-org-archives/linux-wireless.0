@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37906 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932945Ab1CWXtO (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:64190 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076Ab1CEJks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 19:49:14 -0400
-Received: by bwz15 with SMTP id 15so7104660bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 16:49:13 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 23 Mar 2011 19:49:13 -0400
-Message-ID: <AANLkTimi3OYP+MEJDxS+3GQMqVBZvt8hKzPK4T-XbRre@mail.gmail.com>
-Subject: widely supported ZigBee USB hardware?
-From: George Nychis <gnychis@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 5 Mar 2011 04:40:48 -0500
+From: bookjovi@gmail.com
+To: bookjovi@gmail.com
+Cc: "John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING
+	[WIREL...),
+	Johannes Berg <johannes@sipsolutions.net> (maintainer:MAC80211),
+	"David S. Miller" <davem@davemloft.net> (maintainer:NETWORKING
+	[GENERAL]),
+	linux-wireless@vger.kernel.org (open list:NETWORKING [WIREL...),
+	netdev@vger.kernel.org (open list:NETWORKING [GENERAL]),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] net: mac80211: fix compilation warning
+Date: Wed,  2 Mar 2011 18:32:33 -0500
+Message-Id: <1299108754-5492-1-git-send-email-bookjovi@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Jovi Zhang <bookjovi@gmail.com>
 
-I am trying to find a widely supported (and available) ZigBee USB
-device with Linux. I understand there are some GPL related issues with
-ZigBee, but there seems to be a couple related drivers available. In
-particular, this device:
-http://www.adaptivem2m.com/zigbee-technology/zigbee-usb-dongle.htm
+this commit fix compilation warning as following:
+net/mac80211/tx.c:1753: warning: unused variable mppath
 
-I could get this, but I wanted to get some general feedback first to
-see if there is something different that is more well updated. It
-seems like the last driver I could find for this was from 2007.
+Signed-off-by: Jovi Zhang <bookjovi@gmail.com>
+---
+ net/mac80211/tx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Has anyone had any personal experience with ZigBee and Linux and have
-any advice?
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index b0beaa5..e87b07f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1750,7 +1750,6 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	__le16 fc;
+ 	struct ieee80211_hdr hdr;
+ 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
+-	struct mesh_path *mppath = NULL;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+ 	int nh_pos, h_pos;
+@@ -1805,6 +1804,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
++		struct mesh_path *mppath = NULL;
++
+ 		if (!sdata->u.mesh.mshcfg.dot11MeshTTL) {
+ 			/* Do not send frames with mesh_ttl == 0 */
+ 			sdata->u.mesh.mshstats.dropped_frames_ttl++;
+-- 
+1.7.2.3
 
-Thanks!
-George
