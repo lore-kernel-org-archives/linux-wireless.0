@@ -1,120 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47084 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755276Ab1C3A4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:56:44 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:56:19 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 04/34] ath6kl: replace do while loop with function helpers on ar6000_avail_ev()
-Date: Tue, 29 Mar 2011 17:56:01 -0700
-Message-ID: <1301446591-15236-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64192 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980Ab1CBROa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2011 12:14:30 -0500
+Received: by fxm17 with SMTP id 17so194664fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 09:14:29 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>
+Subject: Re: Powersave broken on p54
+Date: Wed, 2 Mar 2011 18:13:52 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1299003142.6461.12.camel@maggie>
+In-Reply-To: <1299003142.6461.12.camel@maggie>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201103021813.52719.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This unwraps the do while loops in favor for function helpers.
+On Tuesday 01 March 2011 19:12:22 Michael Büsch wrote:
+> Hi,
+> 
+> I'm using compat-wireless-2011-02-25 on my p54-spi device (n810).
+> Powersave is pretty much completely broken with this release.
+> With an older release from several weeks ago it used to work, though.
+hmm, several weeks ago? Not alot was changed in the last few weeks,
+sure there was the rssi->dbm update (I hope you've already updated
+your eeprom image.) Then p54_flush and some tx_flag updates, but
+the driver's PS code was not touched.
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |   68 ++++++++++++++++++--------
- 1 files changed, 48 insertions(+), 20 deletions(-)
+> As soon as I enable PS, the link gets horrible latencies of
+> about 20 seconds or more per ping packet, for example.
+> It also saves hardly any power. (measured on the power supply).
+> 
+> Any ideas what could go wrong here?
+No idea, it looks like the ps-poll is broken, because
+"iwconfig wlanX power timeout 10" fixes the long delays
+almost immediately. [let's see if there's more]
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 846eea7..cbf2cb6 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -1586,6 +1586,52 @@ init_netdev(struct net_device *dev, char *name)
-     return;
- }
- 
-+static int __ath6kl_init_netdev(struct net_device *dev)
-+{
-+	int r;
-+
-+	rtnl_lock();
-+	r = ar6000_init(dev);
-+	rtnl_unlock();
-+
-+	if (r) {
-+		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000_avail: ar6000_init\n"));
-+		return r;
-+	}
-+
-+	return 0;
-+}
-+
-+#ifdef HTC_RAW_INTERFACE
-+static int ath6kl_init_netdev_wmi(struct net_device *dev)
-+{
-+	if (!eppingtest && bypasswmi)
-+		return 0;
-+
-+	return __ath6kl_init_netdev(dev);
-+}
-+#else
-+static int ath6kl_init_netdev_wmi(struct net_device *dev)
-+{
-+	return __ath6kl_init_netdev(dev);
-+}
-+#endif
-+
-+static int ath6kl_init_netdev(struct ar6_softc *ar)
-+{
-+	int r;
-+
-+        r = ar6000_sysfs_bmi_get_config(ar, wlaninitmode);
-+        if (r) {
-+		AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
-+				("ar6000_avail: "
-+				 "ar6000_sysfs_bmi_get_config failed\n"));
-+		return r;
-+        }
-+
-+	return ath6kl_init_netdev_wmi(ar->arNetDev);
-+}
-+
- /*
-  * HTC Event handlers
-  */
-@@ -1788,26 +1834,8 @@ ar6000_avail_ev(void *context, void *hif_handle)
-     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("BMI enabled: %d\n", wlaninitmode));
-     if ((wlaninitmode == WLAN_INIT_MODE_UDEV) ||
-         (wlaninitmode == WLAN_INIT_MODE_DRV)) {
--        do {
--            r = ar6000_sysfs_bmi_get_config(ar, wlaninitmode);
--            if (r) {
--                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000_avail: ar6000_sysfs_bmi_get_config failed\n"));
--                break;
--            }
--#ifdef HTC_RAW_INTERFACE
--            if (!eppingtest && bypasswmi) {
--                break; /* Don't call ar6000_init for ART */
--            }
--#endif 
--            rtnl_lock();
--            r = ar6000_init(dev);
--            rtnl_unlock();
--            if (r) {
--                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000_avail: ar6000_init\n"));
--            }
--        } while (false);
--
--        if (r)
-+	r = ath6kl_init_netdev(ar);
-+	if (r)
-             goto avail_ev_failed;
-     }
- 
--- 
-1.7.0.4
-
+Regards,
+	Chr
