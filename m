@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36456 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242Ab1CNQ4c convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 12:56:32 -0400
-Received: by iyb26 with SMTP id 26so5125807iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 09:56:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300121590-27998-1-git-send-email-ohad@wizery.com>
-References: <1300121590-27998-1-git-send-email-ohad@wizery.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Mon, 14 Mar 2011 18:56:10 +0200
-Message-ID: <AANLkTi=3UsQAsY40LAG-yCNz3sTsgF6Wbgb--Yw8DNwg@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: update bet_max_consecutive
-To: linux-wireless@vger.kernel.org
-Cc: "Coelho, Luciano" <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:60009 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756022Ab1CBRRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2011 12:17:43 -0500
+Subject: Re: Powersave broken on p54
+From: Michael Buesch <mb@bu3sch.de>
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <201103021813.52719.chunkeey@googlemail.com> (sfid-20110302_181438_600050_FFFFFFFF80E6967A)
+References: <1299003142.6461.12.camel@maggie>
+	 <201103021813.52719.chunkeey@googlemail.com>
+	 (sfid-20110302_181438_600050_FFFFFFFF80E6967A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Mar 2011 18:17:37 +0100
+Message-ID: <1299086257.13604.17.camel@marge>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 14, 2011 at 6:53 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> Allow early termination of 50 consecutive beacons.
->
-> This value is the recommended one by the 12xx's system/RF team,
-> and tests show that power consumption is improved as expected.
->
-> Reported-by: Ruthy Zaphir <ruthyz@ti.com>
-> Tested-by: Danil Shalumov <danils@ti.com>
-> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
-> ---
+On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
+> sure there was the rssi->dbm update (I hope you've already updated
+> your eeprom image.)
 
-- Luciano Coelho <luciano.coelho@nokia.com>
-+ Luciano Coelho <coelho@ti.com>
+What change to the eeprom is needed? My eeprom doesn't
+contain any rssi info (see recent NULL ptr fix).
 
-Sorry, my scripts are outdated.
+> No idea, it looks like the ps-poll is broken, because
+> "iwconfig wlanX power timeout 10" fixes the long delays
+> almost immediately. [let's see if there's more]
 
+So maybe it's a generic mac80211 bug? Are there other
+devices with PS issues?
 
->  drivers/net/wireless/wl12xx/main.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 8b3c8d1..4e6660d 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -254,7 +254,7 @@ static struct conf_drv_settings default_conf = {
->                .ps_poll_threshold           = 10,
->                .ps_poll_recovery_period     = 700,
->                .bet_enable                  = CONF_BET_MODE_ENABLE,
-> -               .bet_max_consecutive         = 10,
-> +               .bet_max_consecutive         = 50,
->                .psm_entry_retries           = 5,
->                .psm_exit_retries            = 255,
->                .psm_entry_nullfunc_retries  = 3,
-> --
-> 1.7.1
->
->
+-- 
+Greetings, Michael.
+
