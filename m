@@ -1,81 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.solarflare.com ([216.237.3.220]:24007 "EHLO
-	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517Ab1CPSNn (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:62640 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757860Ab1CBDrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 14:13:43 -0400
-Subject: Re: net-next-2.6 status...
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: David Miller <davem@davemloft.net>
-Cc: jpirko@redhat.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	eric.dumazet@gmail.com, linville@tuxdriver.com, kaber@trash.net
-In-Reply-To: <20110316.104236.104065822.davem@davemloft.net>
-References: <20110316.000251.189704695.davem@davemloft.net>
-	 <20110316073803.GB2780@psychotron.redhat.com>
-	 <20110316084022.GA2845@psychotron.brq.redhat.com>
-	 <20110316.104236.104065822.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Mar 2011 18:13:39 +0000
-Message-ID: <1300299219.2811.7.camel@bwh-desktop>
-Mime-Version: 1.0
+	Tue, 1 Mar 2011 22:47:20 -0500
+Date: Wed, 2 Mar 2011 00:47:35 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: pull request: bluetooth-next-2.6 2011-03-01
+Message-ID: <20110302034735.GA2202@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-16 at 10:42 -0700, David Miller wrote:
-> From: Jiri Pirko <jpirko@redhat.com>
-> Date: Wed, 16 Mar 2011 09:40:23 +0100
-> 
-> > Wed, Mar 16, 2011 at 08:38:03AM CET, jpirko@redhat.com wrote:
-> >>Wed, Mar 16, 2011 at 08:02:51AM CET, davem@davemloft.net wrote:
-> >>>From: Jiri Pirko <jpirko@redhat.com>
-> >>>Date: Wed, 16 Mar 2011 07:50:09 +0100
-> >>>
-> >>>>>Jiri, I know there is your patch set there, but I think you and Changli
-> >>>>>still need to go back and forth one more time wrt. orig_dev semantics.
-> >>>>>Since you have been posting this patch set for some time I'm still
-> >>>>>willing to apply it for this merge window, but please make haste and
-> >>>>>work out the remaining discussion.  Thank you.
-> >>>> 
-> >>>> Dave, you can apply the rest of the series and leave only the first
-> >>>> patch (af_packet) out. There's no dependency. We will figure out things
-> >>>> around origdev later.
-> >>>
-> >>>I was about to do that but I've found other problems.
-> >>>
-> >>>You cannot make the modifications you make to linux/if.h, those
-> >>>interface flags are visible to userspace.
-> >>
-> >>What do you suggest? To remove unused flags and leave gaps there or to
-> >>not to remove the flags at all?
-> > 
-> > Well, the following comment:
-> > <quote>
-> > /* Private (from user) interface flags (netdevice->priv_flags). */
-> > </quote>
-> > leads me to think that these flags should not be used by userspace.
-> > So maybe it may not be problem to change those values.
-> 
-> Comments don't block user applications from using defines we expose
-> to them.  The person who was wise enough to write that comment should
-> have also been wise enough to add appropriate __KERNEL__ protection
-> to the definitions.
+Hi John,
 
-Though, in this case, the priv_flags are not in any way visible to
-user-space, so it would be quite hard to find a use for them!
+Here is the latest batch of Bluetooth changes, they are most changes in the
+HCI Management interface both from Johan Hedberg and Szymon Janc. The rest are
+just clean ups and bug fixes.
 
-> They were not, therefore we are stuck with them forever.
+Please pull, thanks a lot!
 
-So should we also expose struct net_device_stats again?  During the
-introduction to 64-bit stats I changed and un-exported the definition,
-then later had to revert the definition but left it un-exported.  This
-broke compilation of iproute2, though in the process it revealed an
-existing bug: <http://thread.gmane.org/gmane.linux.network/169764>.
+The following changes since commit e46395a4b3d32d161d8b6d8e4a002972b1faae3e:
 
-Ben.
+  mac80211: make rate control Kconfig warning depend on mac80211 (2011-03-01 13:48:22 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
+
+Anand Gadiyar (2):
+      Bluetooth: fix build break on hci_sock.c
+      Bluetooth: remove unnecessary call to hci_sock_cleanup
+
+Anderson Briglia (1):
+      Bluetooth: Fix LE conn creation
+
+Gustavo F. Padovan (1):
+      Bluetooth: Remove duplicated BT_INFO() from L2CAP
+
+Johan Hedberg (8):
+      Bluetooth: Make pending_add return a pointer to the added entry
+      Bluetooth: Add mgmt_pair_device command
+      Bluetooth: Add management support for user confirmation request
+      Bluetooth: Fix mgmt_pin_code_reply command status opcode
+      Bluetooth: Fix mgmt_pin_code_reply return parameters
+      Bluetooth: Add mgmt_auth_failed event
+      Bluetooth: Fix inititial value for remote authentication requirements
+      Bluetooth: Fix unnecessary list traversal in mgmt_pending_remove
+
+Szymon Janc (8):
+      Bluetooth: Use proper command structure in remove_uuid
+      Bluetooth: Move index to common header in management interface
+      Bluetooth: Validate data size before accessing mgmt commands
+      Bluetooth: Fix possible NULL pointer dereference in cmd_complete                         
+      Bluetooth: Log all parameters in cmd_status for easier debugging                         
+      Bluetooth: Remove unused code from get_connections                                       
+      Bluetooth: Use variable name instead of type in sizeof()                                 
+      Bluetooth: Fix some small code style issues in mgmt.c                                    
+                                                                                               
+Ville Tervo (1):                                                                               
+      Bluetooth: Use ERR_PTR as return error from hci_connect                                  
+                                                                                               
+ include/net/bluetooth/hci.h      |   17 +                                                     
+ include/net/bluetooth/hci_core.h |   21 +                                                     
+ include/net/bluetooth/mgmt.h     |   73 ++--                                                  
+ net/bluetooth/af_bluetooth.c     |    4 +-                                                    
+ net/bluetooth/hci_conn.c         |    8 +-                                                    
+ net/bluetooth/hci_event.c        |   69 ++++-                                                 
+ net/bluetooth/hci_sock.c         |    2 +-                                                    
+ net/bluetooth/l2cap_core.c       |   13 +-                                                    
+ net/bluetooth/mgmt.c             |  751 +++++++++++++++++++++++++-------------                
+ net/bluetooth/sco.c              |    7 +-                                                    
+ 10 files changed, 663 insertions(+), 302 deletions(-)                                        
 
 -- 
-Ben Hutchings, Senior Software Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+Gustavo F. Padovan
+http://profusion.mobi
