@@ -1,63 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:45938 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924Ab1C0Uw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Mar 2011 16:52:57 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: 2.6.38-git18: Reported regressions from 2.6.37
-Date: Sun, 27 Mar 2011 22:48:38 +0200
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-References: <lDYNS4ATQ-N.A._aD.9m5jNB@chimera>
-In-Reply-To: <lDYNS4ATQ-N.A._aD.9m5jNB@chimera>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58655 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756093Ab1CBSqt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2011 13:46:49 -0500
+Received: by iyb26 with SMTP id 26so198798iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 10:46:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201103272248.38893.rjw@sisk.pl>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 2 Mar 2011 10:46:29 -0800
+Message-ID: <AANLkTinzfBmpJ6-O=o-zi+oh9miLRo-UZUM=MhcnQmk=@mail.gmail.com>
+Subject: Regulatory database improvements
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Kathy Giori <Kathy.Giori@atheros.com>,
+	Adrian Chadd <adrian.chadd@gmail.com>,
+	Prem Kumar <Prem.Kumar@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wireless-regdb@lists.infradead.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, March 27, 2011, Rafael J. Wysocki wrote:
-> This message contains a list of some regressions from 2.6.37,
-> for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
-> 
-> If you know of any other unresolved regressions from 2.6.37, please let us
-> know either and we'll add them to the list.  Also, please let us know
-> if any of the entries below are invalid.
-> 
-> Each entry from the list will be sent additionally in an automatic reply
-> to this message with CCs to the people involved in reporting and handling
-> the issue.
-> 
-> 
-> Listed regressions statistics:
-> 
->   Date          Total  Pending  Unresolved
->   ----------------------------------------
->   2011-03-27       88       26          26
->   2011-03-06       70       27          26
->   2011-02-21       51       18          17
->   2011-02-12       39       20          18
->   2011-02-03       19       11           7
+Just FYI, I'll be working on this when I get back from my vacation,
+I'll start reviewing this Monday March 14.
 
+http://wireless.kernel.org/en/developers/todo-list#Regulatory_database_improvements
 
-I forgot to mention that the tracking of regressions from 2.6.36 is now closed
-and the tracking of regressions from 2.6.38 is going to start after 2.6.39-rc1
-has been released.
+If anyone has any input on this definition or would like some please
+start thinking about it and we can start talking about it. For details
+as to *why* we are doing this you can lok at the wiki page above or
+also the thread:
 
-The meta-bug for the tracking of regressions from 2.6.38 is
-https://bugzilla.kernel.org/show_bug.cgi?id=32012
+http://marc.info/?t=123771257500005&r=1&w=2
 
-Thanks,
-Rafael
+  Luis
