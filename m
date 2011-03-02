@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33182 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756359Ab1CRSHV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 14:07:21 -0400
-Received: by bwz15 with SMTP id 15so3563914bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 11:07:20 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Stezenbach <js@sig21.net>
-Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers in AP and IBSS
-Date: Fri, 18 Mar 2011 19:05:31 +0100
-Cc: Juan Carlos Garza <juancarlosgarza@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com> <AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com> <20110318171222.GB12889@sig21.net>
-In-Reply-To: <20110318171222.GB12889@sig21.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103181905.32058.helmut.schaa@googlemail.com>
+Received: from mga01.intel.com ([192.55.52.88]:37333 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756459Ab1CBUPm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2011 15:15:42 -0500
+Subject: Re: [PATCH v3 5/5] iwlwifi: move remaining iwl-agn-rx.c code into
+ iwl-rx.c
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1298899997-2372-5-git-send-email-sgruszka@redhat.com>
+References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
+	 <1298899997-2372-5-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Mar 2011 12:00:09 -0800
+Message-ID: <1299096009.5082.127.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi Stanislaw,
 
-Am Freitag, 18. März 2011 schrieb Johannes Stezenbach:
-> On Fri, Mar 18, 2011 at 04:23:15PM +0100, Juan Carlos Garza wrote:
-> > I applied the patches (manually), and tested the stick.
-> > 
-> > The transfer of big loads now is successful. The
-> > "rt2800_txdone_entry_check:" warnings are still there, but they are
-> > less frequent (just like in the example i gave you with the laptop
-> > where it succeeded with the unpatched driver), some 5 warnings every
-> > 1, 2 or 3 seconds.
+On Mon, 2011-02-28 at 05:33 -0800, Stanislaw Gruszka wrote:
+> There is no need to have separate iwl-agn-rx.c file after iwlegacy
+> split.
 > 
-> Thanks for testing!  The occational "tx status missed" is unavoidable
-> due to hardware limitations.  My patches reduce the number of them,
-> but more importantly they fix a few issues with TX (status) timeout handling.
-> (IIRC false positives in TX timeout check, and fluash would wait for
-> TX queue empty which would never happen without the timer to reap
-> the status queue.)
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/Makefile     |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-rx.c |  264 -----------------------------
+>  drivers/net/wireless/iwlwifi/iwl-core.h   |    2 -
+>  drivers/net/wireless/iwlwifi/iwl-rx.c     |  226 ++++++++++++++++++++++++-
+>  4 files changed, 225 insertions(+), 269 deletions(-)
+>  delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-rx.c
 > 
-> I tested a lot with these patches and they work stable for me, however I
-> must admit I'm not sure why they help in your case (i.e. why does
-> bulk transfer stall without these patches?).
+I got the following warning:
 
-Just an assumption: In rt2800pci I had the problem that the tx status register
-sometimes suffered from overflows. And I was able to avoid the overflow by
-reading the TX_STA_FIFO register fast enough (in hard irq context).
+drivers/net/wireless/iwlwifi/iwl-rx.c:506:6: warning: symbol
+'iwl_rx_statistics' was not declared. Should it be static?
+drivers/net/wireless/iwlwifi/iwl-rx.c:575:6: warning: symbol
+'iwl_reply_statistics' was not declared. Should it be static?
+drivers/net/wireless/iwlwifi/iwl-rx.c:600:6: warning: symbol
+'iwl_rx_missed_beacon_notif' was not declared. Should it be static?
 
-And I guess your patch also changed the timing of TX_STA_FIFO reads is
-rt2800usb and thus reduces the number of overflows.
 
-However, this is just a shot in the dark.
+when I compile with sparse
 
-Helmut
+Thanks
+Wey
+
