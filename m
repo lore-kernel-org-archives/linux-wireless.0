@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:60189 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753465Ab1CaTE2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755939Ab1CBIZ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 15:04:28 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 4CDCA540424
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 15:08:47 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-31 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110331190427.57C5040EAF@repository3.orbit-lab.org>
-Date: Thu, 31 Mar 2011 15:04:27 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 2 Mar 2011 03:25:27 -0500
+Subject: Re: [PATCH 2/9] [{mac|nl}80211] Add 2 new radar channel flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Bernhard Schmidt <bernhard.schmidt@saxnet.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"nbd@openwrt.org" <nbd@openwrt.org>,
+	"dubowoj@neratec.com" <dubowoj@neratec.com>,
+	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
+	"simon.wunderlich@saxnet.de" <simon.wunderlich@saxnet.de>
+In-Reply-To: <20110301215412.GD6835@tux>
+References: <201102281740.37036.bernhard.schmidt@saxnet.de>
+	 <201102281747.06564.bernhard.schmidt@saxnet.de> <20110301215412.GD6835@tux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Mar 2011 09:25:17 +0100
+Message-ID: <1299054317.4076.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   8490f74..5113826  linux-2.6.38.y -> origin/linux-2.6.38.y
-   9e66bca..c625dee  linux-2.6.39.y -> origin/linux-2.6.39.y
-   c6e514a..7b4debf  master     -> origin/master
- * [new tag]         compat-wireless-2.6.38.2-2 -> compat-wireless-2.6.38.2-2
- * [new tag]         compat-wireless-v2.6.39-rc1-3 -> compat-wireless-v2.6.39-rc1-3
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-2.6.38.2-1 -> compat-wireless-2.6.38.2-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   6e14c4a..33712ab  linux-2.6.39.y -> origin/linux-2.6.39.y
-   6e14c4a..89e9cfb  master     -> origin/master
- * [new tag]         v2.6.39-rc1-1 -> v2.6.39-rc1-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 0812ceb...338bd4a akpm-end   -> origin/akpm-end  (forced update)
-   0ce790e..6aba74f  akpm-start -> origin/akpm-start
-   2661ba7..c435267  history    -> origin/history
- + ce247ee...e04c134 master     -> origin/master  (forced update)
-   0ce790e..6aba74f  stable     -> origin/stable
- * [new tag]         next-20110331 -> next-20110331
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/mwifiex] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+On Tue, 2011-03-01 at 13:54 -0800, Luis R. Rodriguez wrote:
 
-compat-wireless code metrics
+> > + * @NL80211_FREQUENCY_ATTR_RADAR_CLEAR: during a full CAC no interference has
+> > + *	been detected.
+> 
+> Why do you need a flag for clear, can you simply count on the
+> lack of the flag as the "clear" state?
 
-    832857 - Total upstream lines of code being pulled
-      2185 - backport code changes
-      1896 - backport code additions
-       289 - backport code deletions
-      7518 - backport from compat module
-      9703 - total backport code
-    1.1650 - % of code consists of backport work
+This really means CAC_DONE_AND_FOUND_CLEAR.
+
+Though now that has me wondering, maybe it should be CAC_DONE and BUSY
+as separate flags? But then the checks have to be (CAC_DONE && !BUSY),
+which is more expressive but also more complex and error prone.
+
+johannes
+
