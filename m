@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web161604.mail.bf1.yahoo.com ([98.139.210.173]:48584 "HELO
-	web161604.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752664Ab1CPRap (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38280 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab1CBNpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 13:30:45 -0400
-Message-ID: <519800.38851.qm@web161604.mail.bf1.yahoo.com>
-Date: Wed, 16 Mar 2011 10:24:05 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: rt2800usb stops working with big file transfers in AP and IBSS
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Juan Carlos Garza <juancarlosgarza@gmail.com>
-In-Reply-To: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com>
+	Wed, 2 Mar 2011 08:45:39 -0500
+Date: Wed, 2 Mar 2011 08:38:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hubert Tonneau <hubert.tonneau@fullpliant.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 32 bits executables with 64 bits kernel wifi issue
+Message-ID: <20110302133848.GA2536@tuxdriver.com>
+References: <0B3412811@briare1.fullpliant.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0B3412811@briare1.fullpliant.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hello
+On Wed, Mar 02, 2011 at 11:54:07AM +0000, Hubert Tonneau wrote:
+> Hi,
 > 
-> We have some Ralink RT3071 devices (Delock 88524) and we
-> need to
-> configure them either as Ad-Hoc or Access Point. In both
+> If I use a 32 bits kernel, then I can connect to any Wifi box,
+> but if I use a 64 bits kernel with 32 bits executables,
+> it will connect on some Wifi boxes (french Freebox), but fail to connect to others (french Livebox).
+> 
+> The wifi driver used is iwl3945.
+> When connection fails, WPA supplicant will report successfull association,
+> but udhcpc will fail to get a lease.
+> It does not seem to be related to a peticular kernel release: I tested with 2.6.36.4,
+> but get the same problem with 2.6.32.28 64 bits.
+> 
+> Regards,
+> Hubert Tonneau
 
-Hi,
+We have had a number of 32/64 compatibility problems with the wireless
+extensions API in the past.  I wonder if this is another one?
 
-I have both rt3070 & rt3071 USB dongles, they are notoriously unstable with rt2800usb because of the massive packet loss and duplicate packets - an issue which has not found its solution for over an year. I believe the problem stems from the chip's DMA irregularities.
+Does your version of wpa_supplicant support the "-Dnl80211" option
+(instead of "-Dwext")?  It might be worth trying that to see if it
+works better?
 
-I think this is exactly why you're experiencing transfer problems, due to packet losses. When you're connected, please try and ping your peer or gateway and confirm if you experience duplicate (DUP!) and/or packet losses as well.
-
-Walter
-
-
-      
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
