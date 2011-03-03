@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:43602 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753971Ab1CAFqt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 00:46:49 -0500
-Date: Mon, 28 Feb 2011 19:11:51 -0800
-From: Greg KH <greg@kroah.com>
-To: Javier Martinez Canillas <martinez.javier@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 2/2] staging: brcm80211: Remove unused variables and
- code clean up
-Message-ID: <20110301031151.GA7620@kroah.com>
-References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
- <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758687Ab1CCSs1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:48:27 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:27 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/19] rt2x00: Use unlikely for unexpected error condition in rt2x00_mac_tx
+Date: Thu, 3 Mar 2011 19:41:03 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031939.57117.IvDoorn@gmail.com> <201103031940.34167.IvDoorn@gmail.com>
+In-Reply-To: <201103031940.34167.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031941.04133.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 27, 2011 at 09:54:15PM +0100, Javier Martinez Canillas wrote:
-> tsf_l and tsf_h variables where used in a code segment that is never compiled
-> so the variables remains unused. 
-> 
-> Remove those variables and the code never compiled as well.
-> 
-> Signed-off-by: Javier Martinez Canillas <martinez.javier@gmail.com>
-> ---
->  drivers/staging/brcm80211/brcmsmac/wlc_mac80211.c |    9 ---------
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-This doesn't apply anymore, care to redo it and resend?
+rt2x00queue_write_tx_frame is unlikely to fail. Tell the compiler.
 
-thanks,
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 6715b77..9529d6f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -149,7 +149,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			goto exit_fail;
+ 	}
+ 
+-	if (rt2x00queue_write_tx_frame(queue, skb, false))
++	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
+ 		goto exit_fail;
+ 
+ 	if (rt2x00queue_threshold(queue))
+-- 
+1.7.2.3
+
