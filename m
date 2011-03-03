@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29530 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753610Ab1CaTRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 15:17:48 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 12:17:23 -0700
-Date: Thu, 31 Mar 2011 12:17:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] compat: backport netdev_refcnt_read.
-Message-ID: <20110331191744.GB7457@tux>
-References: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34181 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758631Ab1CCSan (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:30:43 -0500
+Date: Thu, 3 Mar 2011 13:19:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rick Jones <rick.jones2@hp.com>
+Cc: Dave =?iso-8859-1?Q?T=E4ht?= <d@taht.net>, sedat.dilek@gmail.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	bloat-devel@lists.bufferbloat.net, linux-kernel@vger.kernel.org
+Subject: Re: ANNOUNCE: debloat-testing kernel git tree
+Message-ID: <20110303181950.GD8969@tuxdriver.com>
+References: <20110225222210.GA3618@tuxdriver.com>
+ <AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
+ <87fwr9jxya.fsf@cruithne.co.teklibre.org>
+ <AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
+ <8739n9ii7z.fsf@cruithne.co.teklibre.org>
+ <AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
+ <87tyfph2az.fsf@cruithne.co.teklibre.org>
+ <1299176168.2157.14.camel@tardy>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1301588495-16583-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1299176168.2157.14.camel@tardy>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 31, 2011 at 09:21:32AM -0700, Hauke Mehrtens wrote:
-> Backport of upstream commit:
-> 	29b4433d991c88d86ca48a4c1cc33c671475be4b
-> 	net: percpu net_device refcount
+On Thu, Mar 03, 2011 at 10:16:08AM -0800, Rick Jones wrote:
+> > For wireless routers and cable home gateways especially, this research
+> > shows that the total un-managed buffers in your system should be less
+> > than 32.
 > 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
+> Would it be a good thing to start describing these queues not so much in
+> terms of packets but in terms of delay (or bandwidth X delay)?
+> 
+> Constants tend to live longer than they should, no matter how noble in
+> birth.
 
-Great, thanks, applied and pushed!
+Yes, it probably would -- that would be more meaningful between
+different technologies and/or for technologies that might have variable
+latencies due to shared media or whatnot.
 
-  Luis
+Now, the question becomes what patches to propose to make that
+happen... :-)
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
