@@ -1,31 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15210 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756302Ab1CNTXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 15:23:38 -0400
-Subject: Re: [PATCH] iwl3945: do not deprecate software scan
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1300108506-15490-1-git-send-email-sgruszka@redhat.com>
-References: <1300108506-15490-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Mar 2011 12:21:20 -0700
-Message-ID: <1300130480.24333.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42982 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758687Ab1CCSsl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:48:41 -0500
+Received: by mail-ww0-f44.google.com with SMTP id 22so1737707wwb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:40 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/19] rt2x00: Optimize TX descriptor memory layout
+Date: Thu, 3 Mar 2011 19:42:58 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031942.02498.IvDoorn@gmail.com> <201103031942.36144.IvDoorn@gmail.com>
+In-Reply-To: <201103031942.36144.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031942.58935.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-14 at 06:15 -0700, Stanislaw Gruszka wrote:
-> Software scanning can be used for workaround some performance problems,
-> so do not deprecate it.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlegacy/iwl3945-base.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
-> 
+Some fields only need to be u8 and for ifs and txop we can use the
+already available enums.
 
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.h |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 3305520..3fa2406 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -315,17 +315,17 @@ struct txentry_desc {
+ 
+ 		struct {
+ 			u16 mcs;
+-			u16 stbc;
+-			u16 ba_size;
+-			u16 mpdu_density;
+-			short txop;
++			u8 stbc;
++			u8 ba_size;
++			u8 mpdu_density;
++			enum txop txop;
+ 		} ht;
+ 	} u;
+ 
+ 	u16 rate_mode;
+ 
+ 	short retry_limit;
+-	short ifs;
++	enum ifs ifs;
+ 
+ 	enum cipher cipher;
+ 	u16 key_idx;
+-- 
+1.7.2.3
 
