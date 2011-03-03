@@ -1,119 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33346 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753316Ab1CKUBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 15:01:42 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	vasanth@atheros.com, mark@moxienet.com
-Subject: [PATCH v3 2/4] ath9k: fix stopping tx dma on reset
-Date: Fri, 11 Mar 2011 21:01:33 +0100
-Message-Id: <1299873695-1062-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1299873695-1062-1-git-send-email-nbd@openwrt.org>
-References: <1299873695-1062-1-git-send-email-nbd@openwrt.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630Ab1CCSsT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:48:19 -0500
+Received: by wyg36 with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:17 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 02/19] rt2x00: Make use of unlikely during tx status processing
+Date: Thu, 3 Mar 2011 19:39:27 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com>
+In-Reply-To: <201103031938.56423.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031939.28091.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some situations, stopping Tx DMA frequently fails, leading to messages
-like this:
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-ath: Failed to stop TX DMA in 100 msec after killing last frame
-ath: Failed to stop TX DMA!
+These conditions are unlikely to happen, tell the compiler.
 
-This patch uses a few MAC features to abort DMA globally instead of iterating
-over all hardware queues and attempting to stop them individually.
-Not only is that faster and works with a shorter timeout, it also makes the
-process much more reliable.
-
-With this change, I can no longer trigger these messages on AR9380,
-and on AR9280 they become much more rare.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/mac.c  |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mac.h  |    1 +
- drivers/net/wireless/ath/ath9k/xmit.c |   14 ++++++--------
- 3 files changed, 35 insertions(+), 8 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 5efc869..b4e9ed9 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -143,6 +143,34 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
- }
- EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index a768deb..9dbb598 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -726,7 +726,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
  
-+void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
-+{
-+	int i, q;
-+
-+	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
-+
-+	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
-+	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
-+	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
-+
-+	for (q = 0; q < AR_NUM_QCU; q++) {
-+		for (i = 0; i < 1000; i++) {
-+			if (i)
-+				udelay(5);
-+
-+			if (!ath9k_hw_numtxpending(ah, q))
-+				break;
-+		}
-+	}
-+
-+	REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
-+	REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
-+	REG_CLR_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
-+
-+	REG_WRITE(ah, AR_Q_TXD, 0);
-+}
-+EXPORT_SYMBOL(ath9k_hw_abort_tx_dma);
-+
- bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
- {
- #define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 04d58ae..d37c6d4 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -677,6 +677,7 @@ void ath9k_hw_cleartxdesc(struct ath_hw *ah, void *ds);
- u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q);
- bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
- bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
-+void ath9k_hw_abort_tx_dma(struct ath_hw *ah);
- void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs);
- bool ath9k_hw_set_txq_props(struct ath_hw *ah, int q,
- 			    const struct ath9k_tx_queue_info *qinfo);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e16136d..bb1d29e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1194,16 +1194,14 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return true;
+ 	while (kfifo_get(&rt2x00dev->txstatus_fifo, &status)) {
+ 		qid = rt2x00_get_field32(status, TX_STA_FIFO_PID_QUEUE);
+-		if (qid >= QID_RX) {
++		if (unlikely(qid >= QID_RX)) {
+ 			/*
+ 			 * Unknown queue, this shouldn't happen. Just drop
+ 			 * this tx status.
+@@ -747,7 +747,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 			break;
+ 		}
  
--	/* Stop beacon queue */
--	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
-+	ath9k_hw_abort_tx_dma(ah);
- 
--	/* Stop data queues */
-+	/* Check if any queue remains active */
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
--		if (ATH_TXQ_SETUP(sc, i)) {
--			txq = &sc->tx.txq[i];
--			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
--			npend += ath9k_hw_numtxpending(ah, txq->axq_qnum);
--		}
-+		if (!ATH_TXQ_SETUP(sc, i))
-+			continue;
-+
-+		npend += ath9k_hw_numtxpending(ah, sc->tx.txq[i].axq_qnum);
- 	}
- 
- 	if (npend)
+-		if (rt2x00queue_empty(queue)) {
++		if (unlikely(rt2x00queue_empty(queue))) {
+ 			/*
+ 			 * The queue is empty. Stop processing here
+ 			 * and drop the tx status.
 -- 
-1.7.3.2
+1.7.2.3
 
