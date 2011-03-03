@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46576 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751558Ab1CPJHF (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:58931 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752418Ab1CCTZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 05:07:05 -0400
-Subject: Re: [PATCH] mac80211: fix aggregation frame release during timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTi=8th1NyjQE4zvVcS21Dba3Ku_WhnwQS0ZR9+EH@mail.gmail.com>
-References: <507B31BE-2066-4434-870D-108F7DF912A6@cs.washington.edu>
-	 <1300263716.3761.1.camel@jlt3.sipsolutions.net>
-	 <AANLkTikir41uU_fG91w68D4JyFMPcFYKW4QFg-Ag_EUK@mail.gmail.com>
-	 <1300265348.3761.3.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=8th1NyjQE4zvVcS21Dba3Ku_WhnwQS0ZR9+EH@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Mar 2011 10:08:46 +0100
-Message-ID: <1300266526.3761.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 3 Mar 2011 14:25:42 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Joe Perches <joe@perches.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 3 Mar 2011 11:24:27 -0800
+Subject: RE: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
+Message-ID: <477F20668A386D41ADCC57781B1F704307F5150C5A@SC-VEXCH1.marvell.com>
+References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
+ <1299139646.4338.69.camel@Joe-Laptop>
+In-Reply-To: <1299139646.4338.69.camel@Joe-Laptop>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-16 at 02:00 -0700, Daniel Halperin wrote:
-
-> >> The syntax I used in our private mail was confusing and I tried to
-> >> simplify. Here, hyphens are just separators between frames (since R1,
-> >> R2 have two-letter identifiers). Does that clear it up?
-> >
-> > Oh. Right. Still though, what if it is x-R1-T-R2-y-...? This fixes
-> > x-T-R1-...-y-..., but shouldn't some release be possible in the other
-> > case as well?
-> >
-> 
-> Hmm -- you've got a point. That case wasn't handled by the original
-> code and my change only picks up my example but not yours.
-
-Right. I'm happy with your change anyhow, but I think I'd prefer if you
-moved the skipped test to the front (i.e. skipped && time...) since it's
-much cheaper. Then again I guess it doesn't really matter here...
-
-> One fix maybe is to also store the sequence of the frame that set the
-> timer when the buffer fires, and make sure to release up to that seq?
-> Or maybe the reception of an earlier frame SHOULD override the the
-> later frame's timeout, because it says the early part of the window is
-> "still alive".
-
-Yeah I was thinking the same a minute ago, if we get an earlier frame
-then the sender is definitely still aware that we're missing something
-there, so the timeout probably shouldn't hit.
-
-> I just don't see a good way to handle all cases (e.g.,
-> x-R3-R1-y-T-z-R2-w-T) without looping over the whole buffer.  (Here,
-> xyzw are skipped frames and R3 was received last.)  Again, long MAC
-> delays like BT could make this false, but I have to expect in most
-> cases R1/2/3 will be received pretty close to when T is.
-
-Right. Let's just leave it as is (plus your patch that we're
-discussing). It's a corner case anyway, and no good throughput can be
-expected from it.
-
-Did you ever get data on the window moving thing? Like maybe in your
-earlier message where you had
-
-> enqueued frame 31
-> <got compressed block-ack only missing frame 2>
-
-I'll go to your other email now.
-
-johannes
-
+SGkgSm9lLA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMuDQoNCj4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9lIFBlcmNoZXMgW21haWx0bzpqb2VAcGVyY2hlcy5jb21d
+DQo+IFNlbnQ6IFRodXJzZGF5LCBNYXJjaCAwMywgMjAxMSAxMjowNyBBTQ0KPiBUbzogQmluZyBa
+aGFvDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEpvaG4gVy4gTGludmls
+bGU7IEpvaGFubmVzIEJlcmc7IEFtaXRrdW1hciBLYXJ3YXI7IEtpcmFuIERpdmVrYXI7DQo+IFlv
+Z2VzaCBQb3dhcjsgTWFyYyBZYW5nOyBGcmFuayBIdWFuZw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
+IHYyXSBtd2lmaWV4OiByZW1vdmUgUFJJTlRNL0hFWERVTVAgYW5kIGFzc29jaWF0ZWQNCj4gDQo+
+IE9uIFdlZCwgMjAxMS0wMy0wMiBhdCAxNDozMSAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+
+IHVzZSBwcl9kZWJ1ZyBmYW1pbHkgQVBJcyBpbnN0ZWFkLg0KPiA+IE1FUlJPUi9NRkFUQUwvTU1T
+RzogcHJfZXJyLCBwcl93YXJuaW5nLCBwcl9ub3RpY2UNCj4gDQo+IFRyaXZpYToNCj4gDQo+IEl0
+IGxvb2tzIHRvIG1lIGFzIGlmIGFsbCB0aGUgTUZBVEFMIHNob3VsZA0KPiBtYXAgdG8gS0VSTl9F
+UlIuDQoNClllcy4NCk1FUlJPUiAmIE1GQVRBTDogbWFwcGVkIHRvIHByX2VyciB1c2luZyBLRVJO
+X0VSUi4NCk1NU0c6IG1hcHBlZCB0byBwcl9lcnIsIHByX3dhcm4sIG9yIHByX25vdGljZS4NCkkg
+d2lsbCBtYWtlIHRoZSBkZXNjcmlwdGlvbiBtb3JlIGNsZWFyLg0KDQo+IA0KPiBQbGVhc2UgdXNl
+IHByX2ZtdA0KPiAjZGVmaW5lIHByX2ZtdChmbXQpIEtCVUlMRF9NT0ROQU1FICI6ICIgZm10DQo+
+IHRvIHByZWZpeCAibXdpZmlleDogIiByYXRoZXIgdGhhbiBwdXQgaXQgZWFjaA0KPiBmb3JtYXQg
+c3RyaW5nLg0KDQpNYWtlIHNlbnNlLiBUaGFua3MgZm9yIHRoZSB0aXBzLiANCg0KPiANCj4gUGxl
+YXNlIHVzZSBwcl93YXJuIG5vdCBwcl93YXJuaW5nLg0KDQpPSy4NCg0KPiANCj4gSSByZWFsbHkg
+ZG9uJ3QgdGhpbmsgeW91IG5lZWQgdG8gYWRkIGFub3RoZXIgcHJlZml4DQo+IHN0cmluZyBsaWtl
+ICJlcnIiIGFuZCAiaW5mbyIgYW5kICJjbWQiIHRvIHRoZSB2YXJpb3VzDQo+IGxldmVscy4gIFRo
+ZSBvdXRwdXQgY29udGVudCBpcyBlbm91Z2ggdG8gZmlndXJlIGl0IG91dC4NCg0KVGhlIHB1cnBv
+c2Ugb2YgdGhlc2UgcHJlZml4IGxldmVscyAoZGF0YS9jbWQvZXZlbnQvaW50IGV0Yy4pDQppcyBm
+b3Igc2VsZWN0aXZlIHByaW50aW5nIHVzaW5nIGR5bmFtaWMgZGVidWcuIA0KVGhpcyB3YXkgSSBj
+YW4gZW5hYmxlIGFueSBjb21iaW5hdGlvbnMgb2YgdGhlbS4NCkZvciBleGFtcGxlLCBJIGNhbiBk
+byAiZm9ybWF0ICdtd2lmaWV4IGNtZCcgK3AiIGFuZA0KImZvcm1hdCAnbXdpZmlleCBldmVudCcg
+K3AiIHRvIGVuYWJsZSBkZWJ1Z2dpbmcgZm9yICJjbWQiIGFuZCAiZXZlbnQiIG9ubHkuDQoNCj4g
+DQo+IFBlcmhhcHMgdXNlIHVzZSBkZXYvbmV0ZGV2L3dpcGh5XzxsZXZlbD4gd2hlcmUgaXQgbWFr
+ZXMNCj4gc2Vuc2U/DQoNCkkgdGhvdWdodCB0aGF0IHRvby4gQnV0IHRoZXNlIEFQSXMgcmVxdWly
+ZSBhIHBhcmFtZXRlciBvZiAic3RydWN0IGRldmljZSAqIi4NClNvbWUgb2YgbXdpZmlleF8gZnVu
+Y3Rpb25zIGRvIG5vdCBoYXZlIHRoaXMgcGFyYW1ldGVyLg0KDQo+IA0KPiBZb3UndmUgc29tZXRp
+bWVzIGFkZGVkIF9fZnVuY19fIGFuZCBzb21ldGltZXMgdXNlZCBvcg0KPiBrZXB0IHNvbWUgc2hv
+cnRlbmVkIGZ1bmN0aW9uIG5hbWUgZXF1aXZhbGVudC4gIEl0J2QNCj4gcHJvYmFibHkgYmUgYmV0
+dGVyIHRvIGNvbnNpc3RlbnRseSB1c2UgX19mdW5jX18gd2hlcmUNCj4gYXBwcm9wcmlhdGUuDQoN
+Ck9LLg0KDQpUaGFua3MsDQoNCkJpbmcNCg0K
