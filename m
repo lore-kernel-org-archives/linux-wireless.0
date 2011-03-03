@@ -1,781 +1,438 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:33900 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753806Ab1CUU2w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 16:28:52 -0400
-Date: Mon, 21 Mar 2011 13:28:48 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: "Arend van Spriel" <arend@broadcom.com>
-Cc: george@znau.edu.ua, zajec5@gmail.com, mb@bu3sch.de,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] drivers: brcmaxi: provide amba axi functionality in
- separate module
-Message-Id: <20110321132848.e4e846a5.rdunlap@xenotime.net>
-In-Reply-To: <1300738586-7157-2-git-send-email-arend@broadcom.com>
-References: <1300738586-7157-1-git-send-email-arend@broadcom.com>
-	<1300738586-7157-2-git-send-email-arend@broadcom.com>
+Received: from jabba.london.02.net ([82.132.130.169]:39296 "EHLO mail.o2.co.uk"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758536Ab1CCTRE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 14:17:04 -0500
+Date: Thu, 3 Mar 2011 19:16:56 +0000
+From: Tony Houghton <h@realh.co.uk>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	ath9k-devel@lists.ath9k.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil@venema.h4ckr.net, Vivek Natarajan <vnatarajan@atheros.com>
+Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
+Message-ID: <20110303191656.73bba824@realh.co.uk>
+In-Reply-To: <AANLkTiksdt5fciyFZ_nphEYgLH6Ey_HSHHpY5Eg9pNqD@mail.gmail.com>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+	<20110225144718.63550601@realh.co.uk>
+	<AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
+	<20110225165745.4860afe0@realh.co.uk>
+	<20110226183542.75bc1786@realh.co.uk>
+	<AANLkTi=ZWmWZWMBSdGX8S9EfiRyv3eKEU9P3n0bfDAuJ@mail.gmail.com>
+	<20110302163051.425d1419@toddler>
+	<AANLkTinEA2NVxwWZJME-oChE6OEJc_TSTajMfe7f+3hm@mail.gmail.com>
+	<20110303143151.03dbe76b@toddler>
+	<AANLkTiksdt5fciyFZ_nphEYgLH6Ey_HSHHpY5Eg9pNqD@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/mixed; boundary="MP_/VB1ovY1rq1ua_Bn8rVT+1kY"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 21 Mar 2011 21:16:26 +0100 Arend van Spriel wrote:
+--MP_/VB1ovY1rq1ua_Bn8rVT+1kY
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> The open-source community is looking for a library which will detect
-> cores in a chip using axi backplane. This is an initial delivery of
-> what it could look like. Tested it with the brcm80211 driver.
-> ---
->  drivers/Kconfig          |    2 +
->  drivers/Makefile         |    1 +
->  drivers/brcmaxi/Makefile |   23 ++
->  drivers/brcmaxi/axi.c    |  859 ++++++++++++++++++++++++++++++++++++++++++++++
->  include/brcmaxi/axi.h    |  340 ++++++++++++++++++
->  5 files changed, 1225 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/brcmaxi/Makefile
->  create mode 100644 drivers/brcmaxi/axi.c
->  create mode 100644 include/brcmaxi/axi.h
-> 
-> diff --git a/drivers/Kconfig b/drivers/Kconfig
-> index 9bfb71f..2fee176 100644
-> --- a/drivers/Kconfig
-> +++ b/drivers/Kconfig
-> @@ -68,6 +68,8 @@ source "drivers/watchdog/Kconfig"
->  
->  source "drivers/ssb/Kconfig"
->  
-> +source "drivers/brcmaxi/Kconfig"
+On Thu, 3 Mar 2011 21:27:32 +0530
+Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 
-Where is that file? ^^^^^^^^^^^^^^
+> sudo modprobe ath9k debug=0xffffffff
 
-> +
->  source "drivers/mfd/Kconfig"
->  
->  source "drivers/regulator/Kconfig"
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index b423bb1..34bd6a6 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -110,6 +110,7 @@ obj-$(CONFIG_HID)		+= hid/
->  obj-$(CONFIG_PPC_PS3)		+= ps3/
->  obj-$(CONFIG_OF)		+= of/
->  obj-$(CONFIG_SSB)		+= ssb/
-> +obj-$(CONFIG_BRCMAXI)		+= brcmaxi/
->  obj-$(CONFIG_VHOST_NET)		+= vhost/
->  obj-$(CONFIG_VLYNQ)		+= vlynq/
->  obj-$(CONFIG_STAGING)		+= staging/
-> diff --git a/drivers/brcmaxi/Makefile b/drivers/brcmaxi/Makefile
-> new file mode 100644
-> index 0000000..0b1502c
-> --- /dev/null
-> +++ b/drivers/brcmaxi/Makefile
-> @@ -0,0 +1,23 @@
-> +#
-> +# Makefile for Broadcom AMBA AXI utility module
-> +#
-> +# Copyright (c) 2011 Broadcom Corporation
-> +#
-> +# Permission to use, copy, modify, and/or distribute this software for any
-> +# purpose with or without fee is hereby granted, provided that the above
-> +# copyright notice and this permission notice appear in all copies.
-> +#
-> +# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> +# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> +# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-> +# SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> +# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-> +# OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-> +# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> +
-> +MODULEPFX := brcmaxi
-> +
-> +ccflags-$(CONFIG_DEBUG_KERNEL) += -DDEBUG
-> +
-> +obj-m	+= $(MODULEPFX).o
-> +$(MODULEPFX)-objs	= axi.o
-> diff --git a/drivers/brcmaxi/axi.c b/drivers/brcmaxi/axi.c
-> new file mode 100644
-> index 0000000..359e72d
-> --- /dev/null
-> +++ b/drivers/brcmaxi/axi.c
-> @@ -0,0 +1,859 @@
-> +/*
-> + * Copyright (c) 2011 Broadcom Corporation
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +#define pr_fmt(fmt)	KBUILD_MODNAME ": " fmt
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/types.h>
-> +#include <linux/module.h>
-> +#include <linux/pci.h>
-> +#include <asm/byteorder.h>
-> +
-> +#include "axi.h"
-> +
-> +#define AXI_DESCRIPTION "Broadcom AXI utility library"
-> +
-> +MODULE_DESCRIPTION(AXI_DESCRIPTION);
-> +MODULE_AUTHOR("Broadcom Corporation");
-> +MODULE_LICENSE("Dual BSD/GPL");
-> +
-> +/* Enumeration ROM registers */
-> +#define	ER_EROMENTRY		0x000
-> +#define	ER_REMAPCONTROL		0xe00
-> +#define	ER_REMAPSELECT		0xe04
-> +#define	ER_MASTERSELECT		0xe10
-> +#define	ER_ITCR			0xf00
-> +#define	ER_ITIP			0xf04
-> +
-> +/* Enumeration ROM entries */
-> +#define	ER_TAG			0xe
-> +#define	ER_TAG1			0x6
-> +#define	ER_VALID		1
-> +#define	ER_CI			0
-> +#define	ER_MP			2
-> +#define	ER_ADD			4
-> +#define	ER_END			0xe
-> +#define	ER_BAD			0xffffffff
-> +
-> +/* EROM CompIdentA */
-> +#define	CIA_MFG_MASK		0xfff00000
-> +#define	CIA_MFG_SHIFT		20
-> +#define	CIA_CID_MASK		0x000fff00
-> +#define	CIA_CID_SHIFT		8
-> +#define	CIA_CCL_MASK		0x000000f0
-> +#define	CIA_CCL_SHIFT		4
-> +
-> +/* EROM CompIdentB */
-> +#define	CIB_REV_MASK		0xff000000
-> +#define	CIB_REV_SHIFT		24
-> +#define	CIB_NSW_MASK		0x00f80000
-> +#define	CIB_NSW_SHIFT		19
-> +#define	CIB_NMW_MASK		0x0007c000
-> +#define	CIB_NMW_SHIFT		14
-> +#define	CIB_NSP_MASK		0x00003e00
-> +#define	CIB_NSP_SHIFT		9
-> +#define	CIB_NMP_MASK		0x000001f0
-> +#define	CIB_NMP_SHIFT		4
-> +
-> +/* EROM MasterPortDesc */
-> +#define	MPD_MUI_MASK		0x0000ff00
-> +#define	MPD_MUI_SHIFT		8
-> +#define	MPD_MP_MASK		0x000000f0
-> +#define	MPD_MP_SHIFT		4
-> +
-> +/* EROM AddrDesc */
-> +#define	AD_ADDR_MASK		0xfffff000
-> +#define	AD_SP_MASK		0x00000f00
-> +#define	AD_SP_SHIFT		8
-> +#define	AD_ST_MASK		0x000000c0
-> +#define	AD_ST_SHIFT		6
-> +#define	AD_ST_SLAVE		0x00000000
-> +#define	AD_ST_BRIDGE		0x00000040
-> +#define	AD_ST_SWRAP		0x00000080
-> +#define	AD_ST_MWRAP		0x000000c0
-> +#define	AD_SZ_MASK		0x00000030
-> +#define	AD_SZ_SHIFT		4
-> +#define	AD_SZ_4K		0x00000000
-> +#define	AD_SZ_8K		0x00000010
-> +#define	AD_SZ_16K		0x00000020
-> +#define	AD_SZ_SZD		0x00000030
-> +#define	AD_AG32			0x00000008
-> +#define	AD_ADDR_ALIGN		0x00000fff
-> +#define	AD_SZ_BASE		0x00001000	/* 4KB */
-> +
-> +/* EROM SizeDesc */
-> +#define	SD_SZ_MASK		0xfffff000
-> +#define	SD_SG32			0x00000008
-> +#define	SD_SZ_ALIGN		0x00000fff
-> +
-> +/* resetctrl */
-> +#define	AIRC_RESET		1
-> +
-> +/* backplane address space accessed by BAR0 */
-> +#define	PCI_BAR0_WIN		0x80
-> +/* backplane address space accessed by second 4KB of BAR0 */
-> +#define	PCI_BAR0_WIN2		0xac
-> +
-> +/* definition for specifying padding fields */
-> +#define	_PADLINE(line)	pad ## line
-> +#define	_XSTR(line)	_PADLINE(line)
-> +#define	PAD		_XSTR(__LINE__)
-> +
-> +/**
-> + * struct axi_local - internal instance data
-> + *
-> + * @pub: @struct axi_instance pointer to public instance data.
-> + * @curcore: @struct axi_core pointer to active core.
+That debug option was what I needed. I'm attaching what I captured with
+netconsole leading up to a crash.
 
-struct prefix is '&', not '@'.
+I also found that I couldn't reproduce the problem while running on
+battery, but as soon as I connected the PSU it crashed the very next
+time I disabled wireless. I hadn't noticed that PSU/battery made a
+difference before, but it does seem to be an issue.
 
-> + * @bustype: @enum axi_bus referring to type of bus between axi and caller.
-> + * @enum_rom_ptr: pointer to system discovery enumeration rom.
-> + */
-> +struct axi_local {
-> +	struct axi_instance pub;
-> +	struct axi_core *curcore;
-> +	enum axi_bus bustype;
-> +	u32 *enum_rom_ptr;
-> +};
-> +
-> +/**
-> + * struct aidmp - device management plugin "wrapper" registers.
+--MP_/VB1ovY1rq1ua_Bn8rVT+1kY
+Content-Type: text/x-log
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=netconsole.log
 
-Missing kernel-doc description for all struct members.
-(or change /** to /* :)
+[  656.568676] ath: NETWORK SLEEP -> AWAKE
+[  656.573331] ath: disable IER
+[  656.573423] ath: enable IER
+[  656.573449] ath: AR_IMR 0x918414b0 IER 0x1
+[  656.573488] ath: AWAKE -> NETWORK SLEEP
+[  656.671069] ath: NETWORK SLEEP -> AWAKE
+[  656.675728] ath: disable IER
+[  656.675839] ath: enable IER
+[  656.675871] ath: AR_IMR 0x918414b0 IER 0x1
+[  656.675909] ath: AWAKE -> NETWORK SLEEP
+[  656.773479] ath: NETWORK SLEEP -> AWAKE
+[  656.778163] ath: disable IER
+[  656.778276] ath: enable IER
+[  656.778306] ath: AR_IMR 0x918414b0 IER 0x1
+[  656.778345] ath: AWAKE -> NETWORK SLEEP
+[  656.875865] ath: NETWORK SLEEP -> AWAKE
+[  656.880517] ath: disable IER
+[  656.880621] ath: enable IER
+[  656.880652] ath: AR_IMR 0x918414b0 IER 0x1
+[  656.880691] ath: AWAKE -> NETWORK SLEEP
+[  656.978277] ath: NETWORK SLEEP -> AWAKE
+[  656.982919] ath: disable IER
+[  656.983010] ath: enable IER
+[  656.983038] ath: AR_IMR 0x918414b0 IER 0x1
+[  656.983076] ath: AWAKE -> NETWORK SLEEP
+[  657.080663] ath: NETWORK SLEEP -> AWAKE
+[  657.085311] ath: disable IER
+[  657.085401] ath: enable IER
+[  657.085430] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.085468] ath: AWAKE -> NETWORK SLEEP
+[  657.183041] ath: NETWORK SLEEP -> AWAKE
+[  657.187720] ath: disable IER
+[  657.187812] ath: enable IER
+[  657.187839] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.187878] ath: AWAKE -> NETWORK SLEEP
+[  657.285466] ath: NETWORK SLEEP -> AWAKE
+[  657.290164] ath: disable IER
+[  657.290275] ath: enable IER
+[  657.290307] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.290345] ath: AWAKE -> NETWORK SLEEP
+[  657.387853] ath: NETWORK SLEEP -> AWAKE
+[  657.392509] ath: disable IER
+[  657.392590] ath: enable IER
+[  657.392608] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.392640] ath: AWAKE -> NETWORK SLEEP
+[  657.490269] ath: NETWORK SLEEP -> AWAKE
+[  657.494909] ath: disable IER
+[  657.495020] ath: enable IER
+[  657.495052] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.495090] ath: AWAKE -> NETWORK SLEEP
+[  657.592643] ath: NETWORK SLEEP -> AWAKE
+[  657.597299] ath: disable IER
+[  657.597390] ath: enable IER
+[  657.597417] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.597455] ath: AWAKE -> NETWORK SLEEP
+[  657.695037] ath: NETWORK SLEEP -> AWAKE
+[  657.699728] ath: disable IER
+[  657.699839] ath: enable IER
+[  657.699871] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.699909] ath: AWAKE -> NETWORK SLEEP
+[  657.797450] ath: NETWORK SLEEP -> AWAKE
+[  657.802098] ath: disable IER
+[  657.802191] ath: enable IER
+[  657.802209] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.802241] ath: AWAKE -> NETWORK SLEEP
+[  657.899841] ath: NETWORK SLEEP -> AWAKE
+[  657.904500] ath: disable IER
+[  657.904612] ath: enable IER
+[  657.904643] ath: AR_IMR 0x918414b0 IER 0x1
+[  657.904681] ath: AWAKE -> NETWORK SLEEP
+[  658.002248] ath: NETWORK SLEEP -> AWAKE
+[  658.006897] ath: disable IER
+[  658.006989] ath: enable IER
+[  658.007022] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.007060] ath: AWAKE -> NETWORK SLEEP
+[  658.104631] ath: NETWORK SLEEP -> AWAKE
+[  658.108051] ath: shortcal @89527
+[  658.108149] ath: listenTime=247 OFDM:0 errs=89/s CCK:2 errs=16/s ofdm_turn=1
+[  658.108224] ath: NF calibrated [ctl] [chain 0] is -115
+[  658.109291] ath: disable IER
+[  658.109399] ath: enable IER
+[  658.109425] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.109464] ath: AWAKE -> NETWORK SLEEP
+[  658.207056] ath: NETWORK SLEEP -> AWAKE
+[  658.208212] ath: listenTime=249 OFDM:0 errs=88/s CCK:2 errs=16/s ofdm_turn=1
+[  658.211693] ath: disable IER
+[  658.211797] ath: enable IER
+[  658.211825] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.211864] ath: AWAKE -> NETWORK SLEEP
+[  658.309434] ath: NETWORK SLEEP -> AWAKE
+[  658.314082] ath: disable IER
+[  658.314232] ath: enable IER
+[  658.314255] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.314294] ath: AWAKE -> NETWORK SLEEP
+[  658.411826] ath: NETWORK SLEEP -> AWAKE
+[  658.416489] ath: disable IER
+[  658.416571] ath: enable IER
+[  658.416594] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.416626] ath: AWAKE -> NETWORK SLEEP
+[  658.514243] ath: NETWORK SLEEP -> AWAKE
+[  658.518890] ath: disable IER
+[  658.519001] ath: enable IER
+[  658.519032] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.519071] ath: AWAKE -> NETWORK SLEEP
+[  658.616624] ath: NETWORK SLEEP -> AWAKE
+[  658.621286] ath: disable IER
+[  658.621377] ath: enable IER
+[  658.621404] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.621443] ath: AWAKE -> NETWORK SLEEP
+[  658.719044] ath: NETWORK SLEEP -> AWAKE
+[  658.723685] ath: disable IER
+[  658.723797] ath: enable IER
+[  658.723828] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.723866] ath: AWAKE -> NETWORK SLEEP
+[  658.821426] ath: NETWORK SLEEP -> AWAKE
+[  658.826147] ath: disable IER
+[  658.826264] ath: enable IER
+[  658.826295] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.826334] ath: AWAKE -> NETWORK SLEEP
+[  658.923813] ath: NETWORK SLEEP -> AWAKE
+[  658.928477] ath: disable IER
+[  658.928552] ath: enable IER
+[  658.928577] ath: AR_IMR 0x918414b0 IER 0x1
+[  658.928609] ath: AWAKE -> NETWORK SLEEP
+[  659.026244] ath: NETWORK SLEEP -> AWAKE
+[  659.030883] ath: disable IER
+[  659.030995] ath: enable IER
+[  659.031026] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.031064] ath: AWAKE -> NETWORK SLEEP
+[  659.128612] ath: NETWORK SLEEP -> AWAKE
+[  659.133273] ath: disable IER
+[  659.133385] ath: enable IER
+[  659.133416] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.133465] ath: AWAKE -> NETWORK SLEEP
+[  659.231035] ath: NETWORK SLEEP -> AWAKE
+[  659.235665] ath: disable IER
+[  659.235787] ath: enable IER
+[  659.235825] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.235863] ath: AWAKE -> NETWORK SLEEP
+[  659.333422] ath: NETWORK SLEEP -> AWAKE
+[  659.338119] ath: disable IER
+[  659.338228] ath: enable IER
+[  659.338262] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.338301] ath: AWAKE -> NETWORK SLEEP
+[  659.435801] ath: NETWORK SLEEP -> AWAKE
+[  659.440472] ath: disable IER
+[  659.440586] ath: enable IER
+[  659.440615] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.440654] ath: AWAKE -> NETWORK SLEEP
+[  659.538214] ath: NETWORK SLEEP -> AWAKE
+[  659.542869] ath: disable IER
+[  659.542960] ath: enable IER
+[  659.542987] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.543026] ath: AWAKE -> NETWORK SLEEP
+[  659.640605] ath: NETWORK SLEEP -> AWAKE
+[  659.645260] ath: disable IER
+[  659.645350] ath: enable IER
+[  659.645379] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.645417] ath: AWAKE -> NETWORK SLEEP
+[  659.743019] ath: NETWORK SLEEP -> AWAKE
+[  659.747666] ath: disable IER
+[  659.747770] ath: enable IER
+[  659.747801] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.747839] ath: AWAKE -> NETWORK SLEEP
+[  659.845408] ath: NETWORK SLEEP -> AWAKE
+[  659.850061] ath: disable IER
+[  659.850175] ath: enable IER
+[  659.850205] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.850243] ath: AWAKE -> NETWORK SLEEP
+[  659.947820] ath: NETWORK SLEEP -> AWAKE
+[  659.952453] ath: disable IER
+[  659.952567] ath: enable IER
+[  659.952596] ath: AR_IMR 0x918414b0 IER 0x1
+[  659.952635] ath: AWAKE -> NETWORK SLEEP
+[  660.050205] ath: NETWORK SLEEP -> AWAKE
+[  660.054844] ath: disable IER
+[  660.054942] ath: enable IER
+[  660.054968] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.055006] ath: AWAKE -> NETWORK SLEEP
+[  660.152590] ath: NETWORK SLEEP -> AWAKE
+[  660.157255] ath: disable IER
+[  660.157414] ath: enable IER
+[  660.157451] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.157496] ath: AWAKE -> NETWORK SLEEP
+[  660.255011] ath: NETWORK SLEEP -> AWAKE
+[  660.259661] ath: disable IER
+[  660.259786] ath: enable IER
+[  660.259815] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.259853] ath: AWAKE -> NETWORK SLEEP
+[  660.357398] ath: NETWORK SLEEP -> AWAKE
+[  660.362114] ath: disable IER
+[  660.362226] ath: enable IER
+[  660.362257] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.362296] ath: AWAKE -> NETWORK SLEEP
+[  660.459815] ath: NETWORK SLEEP -> AWAKE
+[  660.464772] ath: disable IER
+[  660.464882] ath: enable IER
+[  660.464914] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.464952] ath: AWAKE -> NETWORK SLEEP
+[  660.562196] ath: NETWORK SLEEP -> AWAKE
+[  660.566845] ath: disable IER
+[  660.566937] ath: enable IER
+[  660.566964] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.567002] ath: AWAKE -> NETWORK SLEEP
+[  660.664578] ath: NETWORK SLEEP -> AWAKE
+[  660.669250] ath: disable IER
+[  660.669365] ath: enable IER
+[  660.669393] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.669432] ath: AWAKE -> NETWORK SLEEP
+[  660.766992] ath: NETWORK SLEEP -> AWAKE
+[  660.771647] ath: disable IER
+[  660.771738] ath: enable IER
+[  660.771766] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.771804] ath: AWAKE -> NETWORK SLEEP
+[  660.869379] ath: NETWORK SLEEP -> AWAKE
+[  660.874052] ath: disable IER
+[  660.874164] ath: enable IER
+[  660.874195] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.874234] ath: AWAKE -> NETWORK SLEEP
+[  660.971804] ath: NETWORK SLEEP -> AWAKE
+[  660.976449] ath: disable IER
+[  660.976562] ath: enable IER
+[  660.976592] ath: AR_IMR 0x918414b0 IER 0x1
+[  660.976630] ath: AWAKE -> NETWORK SLEEP
+[  661.074187] ath: NETWORK SLEEP -> AWAKE
+[  661.078840] ath: disable IER
+[  661.078951] ath: enable IER
+[  661.078983] ath: AR_IMR 0x918414b0 IER 0x1
+[  661.079021] ath: AWAKE -> NETWORK SLEEP
+[  661.176604] ath: NETWORK SLEEP -> AWAKE
+[  661.181243] ath: disable IER
+[  661.181356] ath: enable IER
+[  661.181387] ath: AR_IMR 0x918414b0 IER 0x1
+[  661.181426] ath: AWAKE -> NETWORK SLEEP
+[  661.278987] ath: NETWORK SLEEP -> AWAKE
+[  661.283640] ath: disable IER
+[  661.283752] ath: enable IER
+[  661.283783] ath: AR_IMR 0x918414b0 IER 0x1
+[  661.283821] ath: AWAKE -> NETWORK SLEEP
+[  661.344896] ath: Configure tx [queue/halq] [0/0], aifs: 2, cw_min: 3, cw_max: 7, txop: 47
+[  661.344922] ath: Set queue properties for: 0
+[  661.344933] ath: Reset TX queue: 0
+[  661.344968] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.345022] ath: Configure tx [queue/halq] [1/1], aifs: 2, cw_min: 7, cw_max: 15, txop: 94
+[  661.345069] ath: Set queue properties for: 1
+[  661.345078] ath: Reset TX queue: 1
+[  661.345088] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.345145] ath: Configure tx [queue/halq] [2/2], aifs: 3, cw_min: 15, cw_max: 1023, txop: 0
+[  661.345191] ath: Set queue properties for: 2
+[  661.345200] ath: Reset TX queue: 2
+[  661.345209] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.345266] ath: Configure tx [queue/halq] [3/3], aifs: 7, cw_min: 15, cw_max: 1023, txop: 0
+[  661.345312] ath: Set queue properties for: 3
+[  661.345321] ath: Reset TX queue: 3
+[  661.345331] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.345390] ath: NETWORK SLEEP -> AWAKE
+[  661.345478] ath: 0xf4041071 => 0xf4041071
+[  661.345486] ath: new IMR 0x918414b0
+[  661.345496] ath: enable IER
+[  661.345516] ath: AR_IMR 0x918414b0 IER 0x1
+[  661.345570] ath: BSSID: 00:00:00:00:00:00 aid: 0x0
+[  661.345579] ath: ah->misc_mode 0x4
+[  661.345612] ath: BSS Changed PREAMBLE 0
+[  661.345620] ath: BSS Changed CTS PROT 0
+[  661.345628] ath: BSS Changed ASSOC 0
+[  661.345635] ath: Bss Info DISASSOC
+[  661.345645] wlan0: deauthenticating from 00:1f:9f:eb:41:e1 by local choice (reason=3)
+[  661.360110] ath: Set HW Key
+[  661.360229] ath: transmitting packet, skb: f5a94480
+[  661.360256] ath: qnum: 0, txq depth: 0
+[  661.360273] ath: link[0] (f63b652c)=363b6590 (f63b6590)
+[  661.360287] ath: Enable TXE on queue: 0
+[  661.360381] ath: disable IER
+[  661.360419] ath: tx queue 0 (363b6590), link f63b6590
+[  661.360426] ath: enable IER
+[  661.360444] ath: AR_IMR 0x918414b0 IER 0x1
+[  661.361133] ath: disable IER
+[  661.361177] ath: tx queue 0 (363b6590), link f63b6590
+[  661.361195] ath: TX complete: skb: f5a94480
+[  661.361219] ath: enable IER
+[  661.361245] ath: AR_IMR 0x918414b0 IER 0x1
+[  661.372083] ath: Set HW Key
+[  661.376651] ath: Marking phy0 as idle
+[  661.376674] ath: idle: disabling radio
+[  661.376691] ath: disable IER
+[  661.376952] ath: Disable MIB counters
+[  661.377035] ath: Disable MIB counters
+[  661.377114] ath: NF calibrated [ctl] [chain 0] is -115
+[  661.379715] ath: PDADC (0,   0): a280 03020100
+[  661.379730] ath: PDADC: Chain 0 | PDADC   0 Value   0 | PDADC   1 Value   1 | PDADC   2 Value   2 | PDADC   3 Value   3 |
+[  661.379740] ath: PDADC (0,   0): a284 07060504
+[  661.379750] ath: PDADC: Chain 0 | PDADC   4 Value   4 | PDADC   5 Value   5 | PDADC   6 Value   6 | PDADC   7 Value   7 |
+[  661.379760] ath: PDADC (0,   0): a288 0a0a0908
+[  661.379769] ath: PDADC: Chain 0 | PDADC   8 Value   8 | PDADC   9 Value   9 | PDADC  10 Value  10 | PDADC  11 Value  10 |
+[  661.379779] ath: PDADC (0,   0): a28c 110f0d0b
+[  661.379789] ath: PDADC: Chain 0 | PDADC  12 Value  11 | PDADC  13 Value  13 | PDADC  14 Value  15 | PDADC  15 Value  17 |
+[  661.379798] ath: PDADC (0,   0): a290 18161412
+[  661.379808] ath: PDADC: Chain 0 | PDADC  16 Value  18 | PDADC  17 Value  20 | PDADC  18 Value  22 | PDADC  19 Value  24 |
+[  661.379817] ath: PDADC (0,   0): a294 24201d1b
+[  661.379827] ath: PDADC: Chain 0 | PDADC  20 Value  27 | PDADC  21 Value  29 | PDADC  22 Value  32 | PDADC  23 Value  36 |
+[  661.379837] ath: PDADC (0,   0): a298 2f2c2926
+[  661.379847] ath: PDADC: Chain 0 | PDADC  24 Value  38 | PDADC  25 Value  41 | PDADC  26 Value  44 | PDADC  27 Value  47 |
+[  661.379862] ath: PDADC (0,   0): a29c 453f3933
+[  661.379876] ath: PDADC: Chain 0 | PDADC  28 Value  51 | PDADC  29 Value  57 | PDADC  30 Value  63 | PDADC  31 Value  69 |
+[  661.379886] ath: PDADC (0,   0): a2a0 5d57514b
+[  661.379895] ath: PDADC: Chain 0 | PDADC  32 Value  75 | PDADC  33 Value  81 | PDADC  34 Value  87 | PDADC  35 Value  93 |
+[  661.379905] ath: PDADC (0,   0): a2a4 756f6963
+[  661.379914] ath: PDADC: Chain 0 | PDADC  36 Value  99 | PDADC  37 Value 105 | PDADC  38 Value 111 | PDADC  39 Value 117 |
+[  661.379924] ath: PDADC (0,   0): a2a8 100e817b
+[  661.379933] ath: PDADC: Chain 0 | PDADC  40 Value 123 | PDADC  41 Value 129 | PDADC  42 Value  14 | PDADC  43 Value  16 |
+[  661.379943] ath: PDADC (0,   0): a2ac 18161412
+[  661.379952] ath: PDADC: Chain 0 | PDADC  44 Value  18 | PDADC  45 Value  20 | PDADC  46 Value  22 | PDADC  47 Value  24 |
+[  661.379962] ath: PDADC (0,   0): a2b0 1f1d1b19
+[  661.379971] ath: PDADC: Chain 0 | PDADC  48 Value  25 | PDADC  49 Value  27 | PDADC  50 Value  29 | PDADC  51 Value  31 |
+[  661.379982] ath: PDADC (0,   0): a2b4 2b282522
+[  661.379994] ath: PDADC: Chain 0 | PDADC  52 Value  34 | PDADC  53 Value  37 | PDADC  54 Value  40 | PDADC  55 Value  43 |
+[  661.380009] ath: PDADC (0,   0): a2b8 3a36322e
+[  661.380053] ath: PDADC: Chain 0 | PDADC  56 Value  46 | PDADC  57 Value  50 | PDADC  58 Value  54 | PDADC  59 Value  58 |
+[  661.380068] ath: PDADC (0,   0): a2bc 4a46423e
+[  661.380081] ath: PDADC: Chain 0 | PDADC  60 Value  62 | PDADC  61 Value  66 | PDADC  62 Value  70 | PDADC  63 Value  74 |
+[  661.380094] ath: PDADC (0,   0): a2c0 5e59544f
+[  661.380106] ath: PDADC: Chain 0 | PDADC  64 Value  79 | PDADC  65 Value  84 | PDADC  66 Value  89 | PDADC  67 Value  94 |
+[  661.380119] ath: PDADC (0,   0): a2c4 6d6d6863
+[  661.380132] ath: PDADC: Chain 0 | PDADC  68 Value  99 | PDADC  69 Value 104 | PDADC  70 Value 109 | PDADC  71 Value 109 |
+[  661.380145] ath: PDADC (0,   0): a2c8 6d6d6d6d
+[  661.380159] ath: PDADC: Chain 0 | PDADC  72 Value 109 | PDADC  73 Value 109 | PDADC  74 Value 109 | PDADC  75 Value 109 |
+[  661.380172] ath: PDADC (0,   0): a2cc 6d6d6d6d
+[  661.380184] ath: PDADC: Chain 0 | PDADC  76 Value 109 | PDADC  77 Value 109 | PDADC  78 Value 109 | PDADC  79 Value 109 |
+[  661.380198] ath: PDADC (0,   0): a2d0 6d6d6d6d
+[  661.380210] ath: PDADC: Chain 0 | PDADC  80 Value 109 | PDADC  81 Value 109 | PDADC  82 Value 109 | PDADC  83 Value 109 |
+[  661.380223] ath: PDADC (0,   0): a2d4 6d6d6d6d
+[  661.380235] ath: PDADC: Chain 0 | PDADC  84 Value 109 | PDADC  85 Value 109 | PDADC  86 Value 109 | PDADC  87 Value 109 |
+[  661.380249] ath: PDADC (0,   0): a2d8 6d6d6d6d
+[  661.380262] ath: PDADC: Chain 0 | PDADC  88 Value 109 | PDADC  89 Value 109 | PDADC  90 Value 109 | PDADC  91 Value 109 |
+[  661.380275] ath: PDADC (0,   0): a2dc 6d6d6d6d
+[  661.380289] ath: PDADC: Chain 0 | PDADC  92 Value 109 | PDADC  93 Value 109 | PDADC  94 Value 109 | PDADC  95 Value 109 |
+[  661.380303] ath: PDADC (0,   0): a2e0 6d6d6d6d
+[  661.380316] ath: PDADC: Chain 0 | PDADC  96 Value 109 | PDADC  97 Value 109 | PDADC  98 Value 109 | PDADC  99 Value 109 |
+[  661.380329] ath: PDADC (0,   0): a2e4 6d6d6d6d
+[  661.380341] ath: PDADC: Chain 0 | PDADC 100 Value 109 | PDADC 101 Value 109 | PDADC 102 Value 109 | PDADC 103 Value 109 |
+[  661.380354] ath: PDADC (0,   0): a2e8 6d6d6d6d
+[  661.380367] ath: PDADC: Chain 0 | PDADC 104 Value 109 | PDADC 105 Value 109 | PDADC 106 Value 109 | PDADC 107 Value 109 |
+[  661.380380] ath: PDADC (0,   0): a2ec 6d6d6d6d
+[  661.380392] ath: PDADC: Chain 0 | PDADC 108 Value 109 | PDADC 109 Value 109 | PDADC 110 Value 109 | PDADC 111 Value 109 |
+[  661.380405] ath: PDADC (0,   0): a2f0 6d6d6d6d
+[  661.380417] ath: PDADC: Chain 0 | PDADC 112 Value 109 | PDADC 113 Value 109 | PDADC 114 Value 109 | PDADC 115 Value 109 |
+[  661.380431] ath: PDADC (0,   0): a2f4 6d6d6d6d
+[  661.380444] ath: PDADC: Chain 0 | PDADC 116 Value 109 | PDADC 117 Value 109 | PDADC 118 Value 109 | PDADC 119 Value 109 |
+[  661.380457] ath: PDADC (0,   0): a2f8 6d6d6d6d
+[  661.380469] ath: PDADC: Chain 0 | PDADC 120 Value 109 | PDADC 121 Value 109 | PDADC 122 Value 109 | PDADC 123 Value 109 |
+[  661.380481] ath: PDADC (0,   0): a2fc 6d6d6d6d
+[  661.380494] ath: PDADC: Chain 0 | PDADC 124 Value 109 | PDADC 125 Value 109 | PDADC 126 Value 109 | PDADC 127 Value 109 |
+[  661.380542] ath: Getting spur idx:0 is2Ghz:1 val:8000
+[  661.382342] ath: Reset TX queue: 0
+[  661.382367] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.382383] ath: Reset TX queue: 1
+[  661.382396] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.382412] ath: Reset TX queue: 2
+[  661.382425] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.382437] ath: Reset TX queue: 3
+[  661.382451] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.382463] ath: Reset TXQ, inactive queue: 4
+[  661.382475] ath: Reset TXQ, inactive queue: 5
+[  661.382486] ath: Reset TXQ, inactive queue: 6
+[  661.382496] ath: Reset TXQ, inactive queue: 7
+[  661.382506] ath: Reset TX queue: 8
+[  661.382535] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.382547] ath: Reset TX queue: 9
+[  661.382572] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
+[  661.382595] ath: ah->misc_mode 0x4
+[  661.384209] ath: Running PA Calibration
+[  661.384933] ath: enabling ADC Gain Calibration.
+[  661.384945] ath: enabling ADC DC Calibration.
+[  661.384953] ath: enabling IQ Calibration.
+[  661.384963] ath: starting ADC Gain Calibration
+[  661.388029] ath: AWAKE -> FULL-SLEEP
+[  662.368089] cfg80211: Calling CRDA to update world regulatory domain
+[  662.370424] ath: FULL-SLEEP -> AWAKE
 
-> + */
-> +volatile struct aidmp {
-> +	u32 oobselina30;	/* 0x000 */
-> +	u32 oobselina74;	/* 0x004 */
-> +	u32 PAD[6];
-> +	u32 oobselinb30;	/* 0x020 */
-> +	u32 oobselinb74;	/* 0x024 */
-> +	u32 PAD[6];
-> +	u32 oobselinc30;	/* 0x040 */
-> +	u32 oobselinc74;	/* 0x044 */
-> +	u32 PAD[6];
-> +	u32 oobselind30;	/* 0x060 */
-> +	u32 oobselind74;	/* 0x064 */
-> +	u32 PAD[38];
-> +	u32 oobselouta30;	/* 0x100 */
-> +	u32 oobselouta74;	/* 0x104 */
-> +	u32 PAD[6];
-> +	u32 oobseloutb30;	/* 0x120 */
-> +	u32 oobseloutb74;	/* 0x124 */
-> +	u32 PAD[6];
-> +	u32 oobseloutc30;	/* 0x140 */
-> +	u32 oobseloutc74;	/* 0x144 */
-> +	u32 PAD[6];
-> +	u32 oobseloutd30;	/* 0x160 */
-> +	u32 oobseloutd74;	/* 0x164 */
-> +	u32 PAD[38];
-> +	u32 oobsynca;	/* 0x200 */
-> +	u32 oobseloutaen;	/* 0x204 */
-> +	u32 PAD[6];
-> +	u32 oobsyncb;	/* 0x220 */
-> +	u32 oobseloutben;	/* 0x224 */
-> +	u32 PAD[6];
-> +	u32 oobsyncc;	/* 0x240 */
-> +	u32 oobseloutcen;	/* 0x244 */
-> +	u32 PAD[6];
-> +	u32 oobsyncd;	/* 0x260 */
-> +	u32 oobseloutden;	/* 0x264 */
-> +	u32 PAD[38];
-> +	u32 oobaextwidth;	/* 0x300 */
-> +	u32 oobainwidth;	/* 0x304 */
-> +	u32 oobaoutwidth;	/* 0x308 */
-> +	u32 PAD[5];
-> +	u32 oobbextwidth;	/* 0x320 */
-> +	u32 oobbinwidth;	/* 0x324 */
-> +	u32 oobboutwidth;	/* 0x328 */
-> +	u32 PAD[5];
-> +	u32 oobcextwidth;	/* 0x340 */
-> +	u32 oobcinwidth;	/* 0x344 */
-> +	u32 oobcoutwidth;	/* 0x348 */
-> +	u32 PAD[5];
-> +	u32 oobdextwidth;	/* 0x360 */
-> +	u32 oobdinwidth;	/* 0x364 */
-> +	u32 oobdoutwidth;	/* 0x368 */
-> +	u32 PAD[37];
-> +	u32 ioctrlset;	/* 0x400 */
-> +	u32 ioctrlclear;	/* 0x404 */
-> +	u32 ioctrl;		/* 0x408 */
-> +	u32 PAD[61];
-> +	u32 iostatus;	/* 0x500 */
-> +	u32 PAD[127];
-> +	u32 ioctrlwidth;	/* 0x700 */
-> +	u32 iostatuswidth;	/* 0x704 */
-> +	u32 PAD[62];
-> +	u32 resetctrl;	/* 0x800 */
-> +	u32 resetstatus;	/* 0x804 */
-> +	u32 resetreadid;	/* 0x808 */
-> +	u32 resetwriteid;	/* 0x80c */
-> +	u32 PAD[60];
-> +	u32 errlogctrl;	/* 0x900 */
-> +	u32 errlogdone;	/* 0x904 */
-> +	u32 errlogstatus;	/* 0x908 */
-> +	u32 errlogaddrlo;	/* 0x90c */
-> +	u32 errlogaddrhi;	/* 0x910 */
-> +	u32 errlogid;	/* 0x914 */
-> +	u32 errloguser;	/* 0x918 */
-> +	u32 errlogflags;	/* 0x91c */
-> +	u32 PAD[56];
-> +	u32 intstatus;	/* 0xa00 */
-> +	u32 PAD[127];
-> +	u32 config;		/* 0xe00 */
-> +	u32 PAD[63];
-> +	u32 itcr;		/* 0xf00 */
-> +	u32 PAD[3];
-> +	u32 itipooba;	/* 0xf10 */
-> +	u32 itipoobb;	/* 0xf14 */
-> +	u32 itipoobc;	/* 0xf18 */
-> +	u32 itipoobd;	/* 0xf1c */
-> +	u32 PAD[4];
-> +	u32 itipoobaout;	/* 0xf30 */
-> +	u32 itipoobbout;	/* 0xf34 */
-> +	u32 itipoobcout;	/* 0xf38 */
-> +	u32 itipoobdout;	/* 0xf3c */
-> +	u32 PAD[4];
-> +	u32 itopooba;	/* 0xf50 */
-> +	u32 itopoobb;	/* 0xf54 */
-> +	u32 itopoobc;	/* 0xf58 */
-> +	u32 itopoobd;	/* 0xf5c */
-> +	u32 PAD[4];
-> +	u32 itopoobain;	/* 0xf70 */
-> +	u32 itopoobbin;	/* 0xf74 */
-> +	u32 itopoobcin;	/* 0xf78 */
-> +	u32 itopoobdin;	/* 0xf7c */
-> +	u32 PAD[4];
-> +	u32 itopreset;	/* 0xf90 */
-> +	u32 PAD[15];
-> +	u32 peripherialid4;	/* 0xfd0 */
-> +	u32 peripherialid5;	/* 0xfd4 */
-> +	u32 peripherialid6;	/* 0xfd8 */
-> +	u32 peripherialid7;	/* 0xfdc */
-> +	u32 peripherialid0;	/* 0xfe0 */
-> +	u32 peripherialid1;	/* 0xfe4 */
-> +	u32 peripherialid2;	/* 0xfe8 */
-> +	u32 peripherialid3;	/* 0xfec */
-> +	u32 componentid0;	/* 0xff0 */
-> +	u32 componentid1;	/* 0xff4 */
-> +	u32 componentid2;	/* 0xff8 */
-> +	u32 componentid3;	/* 0xffc */
-> +} aidmp_t;
-
-...
-
-> +/**
-> + * get_erom_ent - axi enumeration rom parsing
-
-Missing function parameter descriptions in kernel-doc.
-
-> + *
-> + * @returns enumeration rom entry
-
- * Returns: enumeration ROM entry
-
-Please see Documentation/kernel-doc-nano-HOWTO.txt for how to use
-kernel-doc notation in the Linux kernel source tree.
-
-> + */
-> +static u32
-> +get_erom_ent(u32 **eromptr, u32 mask, u32 match)
-> +{
-> +	u32 ent;
-> +	uint inv = 0, nom = 0;
-> +
-> +	while (true) {
-> +		ent = R_REG(*eromptr);
-> +		(*eromptr)++;
-> +
-> +		if (mask == 0)
-> +			break;
-> +
-> +		if ((ent & ER_VALID) == 0) {
-> +			inv++;
-> +			continue;
-> +		}
-> +
-> +		if (ent == (ER_END | ER_VALID))
-> +			break;
-> +
-> +		if ((ent & mask) == match)
-> +			break;
-> +
-> +		nom++;
-> +	}
-> +
-> +	if (inv + nom) {
-> +		pr_debug("%d invalid and %d non-matching entries\n",
-> +		       inv, nom);
-> +	}
-> +	pr_debug("%s: Returning ent 0x%08x\n", __func__, ent);
-> +	return ent;
-> +}
-
-...
-
-
-> diff --git a/include/brcmaxi/axi.h b/include/brcmaxi/axi.h
-> new file mode 100644
-> index 0000000..0988939
-> --- /dev/null
-> +++ b/include/brcmaxi/axi.h
-> @@ -0,0 +1,340 @@
-> +/*
-> + * Copyright (c) 2011 Broadcom Corporation
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-> + * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-> + * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-> + * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +
-> +#ifndef AXI_H_
-> +#define AXI_H_
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/types.h>
-> +
-> +/**
-> + * DOC: Introduction
-> + *
-> + * brcmaxi provides detection of chip cores in chipsets using the AMBA AXI
-> + * on-chip interconnect. It also provides basic functions to operate these
-> + * cores and obtain/modify common core control and status flags.
-> + */
-> +/**
-> + * DOC: Chip System Discovery
-> + *
-> + * The discovery of cores in the chip is done parsing through an enumeration
-> + * rom located on the chip. After using the @axi_open function by which the
-> + * calling code provides the type of bus present between calling code and the
-> + * enumeration rom, physical base address of the enumeration rom and virtual
-> + * address of currently mapped memory, the calling code needs to provide a
-> + * table of handlers using the macro @AXI_SET_HANDLERS. The argument should
-> + * be declared using the macro @AXI_CORE_HANDLER_TABLE. The actual scan is
-> + * initiated by calling @axi_scan.
-> + *
-> + * The user-provided handlers are called for each core that matches.
-> + *
-> + * NOTE: currently matching is only based on manufacturer and/or core ID.
-> + */
-> +/**
-> + * DOC: Core Utility Functions
-> + *
-> + * The core function provided are operating on an active core, which is selected
-> + * by using @axi_set_active_core. Before calling this function the calling code
-> + * must assure that interrupts from the currently active core are disabled.
-> + *
-> + * This active core approach is mainly in place for PCI bus where the registers
-> + * for a core and wrapper are accessed by moving the BAR windows.
-> + */
-> +/**
-
-This is not kernel-doc notation.  Change /** to /*.
-
-> + * Manufacturer Ids
-> + */
-> +#define	MFGID_ARM			0x43b
-> +#define	MFGID_BRCM			0x4bf
-> +#define	MFGID_MIPS			0x4a7
-> +
-> +/**
-
-ditto
-
-> + * Component Classes
-> + *
-> + * This is used to have a more specific core identification.
-> + */
-> +#define	CC_SIM				0
-> +#define	CC_EROM				1
-> +#define	CC_CORESIGHT			9
-> +#define	CC_VERIF			0xb
-> +#define	CC_OPTIMO			0xd
-> +#define	CC_GEN				0xe
-> +#define	CC_PRIMECELL			0xf
-> +
-> +/* Core Codes */
-> +#define	NODEV_CORE_ID		0x700	/* Invalid coreid */
-> +#define	CC_CORE_ID		0x800	/* chipcommon core */
-> +#define	ILINE20_CORE_ID		0x801	/* iline20 core */
-> +#define	SRAM_CORE_ID		0x802	/* sram core */
-> +#define	SDRAM_CORE_ID		0x803	/* sdram core */
-> +#define	PCI_CORE_ID		0x804	/* pci core */
-> +#define	MIPS_CORE_ID		0x805	/* mips core */
-> +#define	ENET_CORE_ID		0x806	/* enet mac core */
-> +#define	CODEC_CORE_ID		0x807	/* v90 codec core */
-> +#define	USB_CORE_ID		0x808	/* usb 1.1 host/device core */
-> +#define	ADSL_CORE_ID		0x809	/* ADSL core */
-> +#define	ILINE100_CORE_ID	0x80a	/* iline100 core */
-> +#define	IPSEC_CORE_ID		0x80b	/* ipsec core */
-> +#define	UTOPIA_CORE_ID		0x80c	/* utopia core */
-> +#define	PCMCIA_CORE_ID		0x80d	/* pcmcia core */
-> +#define	SOCRAM_CORE_ID		0x80e	/* internal memory core */
-> +#define	MEMC_CORE_ID		0x80f	/* memc sdram core */
-> +#define	OFDM_CORE_ID		0x810	/* OFDM phy core */
-> +#define	EXTIF_CORE_ID		0x811	/* external interface core */
-> +#define	D11_CORE_ID		0x812	/* 802.11 MAC core */
-> +#define	APHY_CORE_ID		0x813	/* 802.11a phy core */
-> +#define	BPHY_CORE_ID		0x814	/* 802.11b phy core */
-> +#define	GPHY_CORE_ID		0x815	/* 802.11g phy core */
-> +#define	MIPS33_CORE_ID		0x816	/* mips3302 core */
-> +#define	USB11H_CORE_ID		0x817	/* usb 1.1 host core */
-> +#define	USB11D_CORE_ID		0x818	/* usb 1.1 device core */
-> +#define	USB20H_CORE_ID		0x819	/* usb 2.0 host core */
-> +#define	USB20D_CORE_ID		0x81a	/* usb 2.0 device core */
-> +#define	SDIOH_CORE_ID		0x81b	/* sdio host core */
-> +#define	ROBO_CORE_ID		0x81c	/* roboswitch core */
-> +#define	ATA100_CORE_ID		0x81d	/* parallel ATA core */
-> +#define	SATAXOR_CORE_ID		0x81e	/* serial ATA & XOR DMA core */
-> +#define	GIGETH_CORE_ID		0x81f	/* gigabit ethernet core */
-> +#define	PCIE_CORE_ID		0x820	/* pci express core */
-> +#define	NPHY_CORE_ID		0x821	/* 802.11n 2x2 phy core */
-> +#define	SRAMC_CORE_ID		0x822	/* SRAM controller core */
-> +#define	MINIMAC_CORE_ID		0x823	/* MINI MAC/phy core */
-> +#define	ARM11_CORE_ID		0x824	/* ARM 1176 core */
-> +#define	ARM7S_CORE_ID		0x825	/* ARM7tdmi-s core */
-> +#define	LPPHY_CORE_ID		0x826	/* 802.11a/b/g phy core */
-> +#define	PMU_CORE_ID		0x827	/* PMU core */
-> +#define	SSNPHY_CORE_ID		0x828	/* 802.11n single-stream phy core */
-> +#define	SDIOD_CORE_ID		0x829	/* SDIO device core */
-> +#define	ARMCM3_CORE_ID		0x82a	/* ARM Cortex M3 core */
-> +#define	HTPHY_CORE_ID		0x82b	/* 802.11n 4x4 phy core */
-> +#define	MIPS74K_CORE_ID		0x82c	/* mips 74k core */
-> +#define	GMAC_CORE_ID		0x82d	/* Gigabit MAC core */
-> +#define	DMEMC_CORE_ID		0x82e	/* DDR1/2 memory controller core */
-> +#define	PCIERC_CORE_ID		0x82f	/* PCIE Root Complex core */
-> +#define	OCP_CORE_ID		0x830	/* OCP2OCP bridge core */
-> +#define	SC_CORE_ID		0x831	/* shared common core */
-> +#define	AHB_CORE_ID		0x832	/* OCP2AHB bridge core */
-> +#define	SPIH_CORE_ID		0x833	/* SPI host core */
-> +#define	I2S_CORE_ID		0x834	/* I2S core */
-> +#define	DMEMS_CORE_ID		0x835	/* SDR/DDR1 memory controller core */
-> +#define	DEF_SHIM_COMP		0x837	/* SHIM component in ubus/6362 */
-> +#define OOB_ROUTER_CORE_ID	0x367	/* OOB router core ID */
-> +#define	DEF_AI_COMP		0xfff	/* Default component, in ai chips it
-> +					 * maps all unused address ranges
-> +					 */
-> +
-> +#define AXI_CORE_SIZE		0x1000	/* each core has 4Kbytes registers */
-> +
-> +/* match for all values */
-> +#define AXI_ANY_ID		(~0)
-> +
-> +/**
-
-ditto
-
-> + * Common core control flags
-> + *
-> + * used in @axi_core_cflags.
-> + */
-> +#define	SICF_BIST_EN		0x8000
-> +#define	SICF_PME_EN		0x4000
-> +#define	SICF_CORE_BITS		0x3ffc
-> +#define	SICF_FGC		0x0002
-> +#define	SICF_CLOCK_EN		0x0001
-> +
-> +/*
-> + * Common core status flags
-> + *
-> + * used in @axi_core_sflags.
-> + */
-> +#define	SISF_BIST_DONE		0x8000
-> +#define	SISF_BIST_ERROR		0x4000
-> +#define	SISF_GATED_CLK		0x2000
-> +#define	SISF_DMA64		0x1000
-> +#define	SISF_CORE_BITS		0x0fff
-> +
-> +/**
-> + * enum axi_bus - bus by which AXI erom is accessed
-
-                                      EROM ? (in several places)
-
-> + */
-> +enum axi_bus {
-> +	AXI_AMBA_BUS,
-> +	AXI_PCI_BUS,
-> +	AXI_SDIO_BUS,
-> +	AXI_JTAG_BUS,
-> +	AXI_USB_BUS,
-> +	AXI_SPI_BUS,
-> +	AXI_RPC_BUS,
-> +};
-> +
-> +/**
-> + * struct axi_core - core information
-> + *
-> + * @id: component identifier
-> + * @ident_a: raw component identification data (part a)
-> + * @ident_b: raw component identification data (part b)
-> + * @phys_address: physical backplane address
-> + * @sec_phys_address: physical backplane address of 2nd register set
-> + * @wrap_phys_address: physical backplane address of controlling wrapper
-> + *
-> + */
-> +struct axi_core {
-> +	u32	mfg;
-> +	u32	id;
-> +	u32	rev;
-> +	u32	phys_address;
-> +	u32	phys_space;
-> +	u32	sec_phys_address;
-> +	u32	sec_phys_space;
-> +	u32	wrap_phys_address;
-> +
-> +	void	*regs;
-> +	void	*wrap;
-> +};
-> +
-> +/**
-
-Not kernel-doc notation.
-
-> + * forward declaration for handler in axi_core_handler structure.
-> + */
-> +struct axi_instance;
-> +
-> +struct axi_core_handler {
-> +	bool (*handler)(struct axi_instance *ai, struct axi_core *core);
-> +	u32 mfg_id;
-> +	u32 core_id;
-> +	u32 class;
-> +};
-> +
-> +#define AXI_CORE_HANDLER_TABLE(_table) \
-> +	static const struct axi_core_handler _table[]
-> +
-> +#define AXI_CORE(mfg, core, _handler) \
-> +	.handler = (_handler), .core_id = (core), \
-> +	.mfg_id = (mfg), .class = AXI_ANY_ID
-> +
-> +#define AXI_CORE_CLASS(mfg, core, _class, _handler) \
-> +	.handler = (_handler), .core_id = (core) \
-> +	.mfg_id = (mfg), .class = (_class)
-> +
-> +#define AXI_SET_HANDLERS(aih, _table) \
-> +	axi_set_handlers((aih), ARRAY_SIZE(_table), _table)
-> +
-> +/**
-> + * struct axi_instance - instance data
-> + *
-> + * @bustype: indicates how to get hold on enumeration rom
-> + * @pbus: bus access object
-> + * @handler_list: list of handler for detected cores
-
-Missing some struct member descriptions.
-
-> + */
-> +struct axi_instance {
-> +	void *pbus;
-> +	void *regs;
-> +
-> +	const struct axi_core_handler *handler_list;
-> +	size_t num_handler;
-> +
-> +	void *priv;
-> +};
-> +
-> +static inline void axi_set_handlers(struct axi_instance *aih, size_t n_handler,
-> +				    const struct axi_core_handler *list)
-> +{
-> +	aih->num_handler = n_handler;
-> +	aih->handler_list = list;
-> +}
-> +
-> +/**
-> + * axi_open - create instance.
-> + * @bus_type: &enum axi_bus specifies type of bus to access chipset.
-> + * @pbus: pointer to bus device structure.
-> + * @erom_base: physical address where enumeration srom is located.
-> + * @priv_size: additional memory appended to instance for caller to use.
-> + *
-> + * Creates the instance filling in the provided details.
-> + */
-> +struct axi_instance *axi_open(enum axi_bus bus_type, void *pbus,
-> +			      void *regs, u32 erom_base, u32 priv_size);
-> +/**
-> + * axi_close - release the instance.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + */
-> +void axi_close(struct axi_instance *aih);
-> +/**
-> + * axi_scan - scan the chipset for cores.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + */
-> +int axi_scan(struct axi_instance *aih);
-> +/**
-> + * axi_set_active_core - activate given core.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + * @ach: pointer to core to be activated.
-> + *
-> + * Activating a core will have the other operations
-> + * be acted upon the core activated here.
-> + */
-> +void *axi_set_active_core(struct axi_instance *aih, struct axi_core *ach);
-> +/**
-> + * axi_iscoreup - indicates core is reset and enabled.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + *
-> + * Indicates whether the active core has reset and is enabled.
-> + * Active core is set using @axi_set_active_core.
-> + */
-> +bool axi_iscoreup(struct axi_instance *aih);
-> +/**
-> + * axi_core_disable - disable the core.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + *
-> + * Disables the active core. Active core is set using @axi_set_active_core.
-> + */
-> +void axi_core_disable(struct axi_instance *aih, u32 bits);
-> +/**
-> + * axi_core_reset - reset and enable the core.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + *
-> + * Resets and enables the active core. Active core is set
-> + * using @axi_set_active_core.
-> + */
-> +void axi_core_reset(struct axi_instance *aih, u32 bits, u32 resetbits);
-> +/**
-> + * axi_flag - get axi flag.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + *
-> + * Retrieves the axi flag for the active core. Active core is set
-> + * using @axi_set_active_core.
-> + */
-> +uint axi_flag(struct axi_instance *aih);
-> +/**
-> + * axi_core_cflags - set core control flags.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + * @mask: mask indicating the bits to clear.
-> + * @val: value with bits to set. bits must be within mask.
-> + *
-> + * Set I/O control flags for the active core. Active core is set
-> + * using @axi_set_active_core. The function returns the resulting
-> + * value of the control flags. When called with with mask and val
-> + * parameters being 0 the current control flags are returned.
-> + */
-> +u32 axi_core_cflags(struct axi_instance *aih, u32 mask, u32 val);
-> +/**
-> + * axi_core_sflags - set core status flags.
-> + * @aih: &struct axi_instance pointer to the instance.
-> + * @mask: mask indicating the bits to clear.
-> + * @val: value with bits to set. bits must be within mask.
-> + *
-> + * Set I/O status flags for the active core. Active core is set
-> + * using @axi_set_active_core. The function returns the resulting
-> + * value of the status flags. When called with with mask and val
-> + * parameters being 0 the current status flags are returned.
-> + */
-> +u32 axi_core_sflags(struct axi_instance *aih, u32 mask, u32 val);
-> +
-> +#endif /* AXI_H_ */
-> -- 
-
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+--MP_/VB1ovY1rq1ua_Bn8rVT+1kY--
