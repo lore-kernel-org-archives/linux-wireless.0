@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57139 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755981Ab1CVNfg (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069Ab1CCSsx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 09:35:36 -0400
-Subject: Re: [PATCH 0/4] Add station BSS parameters to station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110321213812.76CD420891@glenhelen.mtv.corp.google.com>
-References: <20110321213812.76CD420891@glenhelen.mtv.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Mar 2011 14:35:33 +0100
-Message-ID: <1300800933.3746.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 3 Mar 2011 13:48:53 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:52 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 11/19] rt2x00: Use an enum instead of u16 for the rate_mode TX descriptor field
+Date: Thu, 3 Mar 2011 19:44:10 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031943.26328.IvDoorn@gmail.com> <201103031943.50656.IvDoorn@gmail.com>
+In-Reply-To: <201103031943.50656.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031944.11965.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-21 at 14:32 -0700, Paul Stewart wrote:
-> This allows user-space monitoring of BSS parameters for the associated
-> station.  This is useful for debugging and verifying that the paramaters
-> are as expected.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Nice set of patches, but I'm wondering if the station info really is the
-best place to put this information? It's not really strictly information
-about the station, but rather about the BSS that it created. OTOH, I'm
-not sure if we need to distinguish?
+This makes the code less error-prone.
 
-johannes
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 7f8528d..0c8b0c6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -323,7 +323,7 @@ struct txentry_desc {
+ 		} ht;
+ 	} u;
+ 
+-	u16 rate_mode;
++	enum rate_modulation rate_mode;
+ 
+ 	short retry_limit;
+ 
+-- 
+1.7.2.3
 
