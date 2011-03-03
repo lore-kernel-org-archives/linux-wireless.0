@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4839 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231Ab1CJAFv (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60460 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982Ab1CCP6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 19:05:51 -0500
-Date: Wed, 9 Mar 2011 19:05:02 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Christoph Lameter <cl@linux.com>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	David Rientjes <rientjes@google.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Nick Piggin <npiggin@kernel.dk>,
-	Dave Chinner <dchinner@redhat.com>,
-	linux-kernel@vger.kernel.org,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: <IRQ> [<ffffffff810c9204>] ? __alloc_pages_nodemask+0x622/0x696
-Message-ID: <20110310000502.GA13763@hash.localnet>
-References: <AANLkTikaLb_xan2ePfo9JCZ1w7RZ76wF8NUT2tYr0ZD=@mail.gmail.com> <alpine.DEB.2.00.1103051847100.8779@chino.kir.corp.google.com> <4D770178.9070908@gmail.com> <alpine.DEB.2.00.1103091254540.13353@chino.kir.corp.google.com> <4D77EEB4.9090404@gmail.com> <alpine.DEB.2.00.1103091549020.16989@router.home>
+	Thu, 3 Mar 2011 10:58:11 -0500
+Received: by bwz15 with SMTP id 15so1267595bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 07:58:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.00.1103091549020.16989@router.home>
+In-Reply-To: <20110303143151.03dbe76b@toddler>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+	<20110225144718.63550601@realh.co.uk>
+	<AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
+	<20110225165745.4860afe0@realh.co.uk>
+	<20110226183542.75bc1786@realh.co.uk>
+	<AANLkTi=ZWmWZWMBSdGX8S9EfiRyv3eKEU9P3n0bfDAuJ@mail.gmail.com>
+	<20110302163051.425d1419@toddler>
+	<AANLkTinEA2NVxwWZJME-oChE6OEJc_TSTajMfe7f+3hm@mail.gmail.com>
+	<20110303143151.03dbe76b@toddler>
+Date: Thu, 3 Mar 2011 21:27:32 +0530
+Message-ID: <AANLkTiksdt5fciyFZ_nphEYgLH6Ey_HSHHpY5Eg9pNqD@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tony Houghton <h@realh.co.uk>
+Cc: Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	ath9k-devel@lists.ath9k.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil@venema.h4ckr.net, Vivek Natarajan <vnatarajan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 09, 2011 at 03:54:24PM -0600, Christoph Lameter wrote:
-> [ 7419.322770] wlan0: associated
-> [ 7427.161366] ath: Failed to stop TX DMA in 100 msec after killing last frame
-> [ 7427.161432] ath: Failed to stop TX DMA!
-> [ 7434.492398] ath: Failed to stop TX DMA in 100 msec after killing last frame
-> [ 7434.492462] ath: Failed to stop TX DMA!
-> [ 7603.339047]
-> =============================================================================
-> [ 7603.339053] BUG radix_tree_node: Padding overwritten. 0xffff88000008fe00-0xffff88000008fe32
+On Thu, Mar 3, 2011 at 8:01 PM, Tony Houghton <h@realh.co.uk> wrote:
+> On Thu, 3 Mar 2011 10:51:15 +0530
+> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+>
+>> On Wed, Mar 2, 2011 at 10:00 PM, Tony Houghton <h@realh.co.uk> wrote:
+>> >
+>> > Is this still not reproducible? I'd like to do more to help trace
+>> > the problem but I'm a bit stuck. Is there something I can do to
+>> > make sure all the debug/log messages from ath9k appear on the
+>> > console?
+>>
+>> sudo dmesg -n 8?
+>
+> AFAICT that will just make sure the debug messages get logged, but not
+> make them appear anywhere the other messages aren't appearing eg on a
+> console or net console. I could try tail -f /dev/xconsole.
+>
+> The ath9k module has a "debug" parameter. It just says it's a mask and I
+> don't know how to use it. Do I set bits to enable or disable levels?
+> What value to log "everything"?
+>
 
-> Could the ath driver corrupt memory if the TX DMA cannot be stopped?
+Please make sure of the following things
+CONFIG_ATH_COMMON=m
+CONFIG_ATH_DEBUG=y
 
-Looks like ath_draintxq() can do something bad (e.g. DMA engine uses
-an old address from ath_tx_return_buffer()) if DMA is still active
-in ath_drain_all_txq().
+CONFIG_ATH9K_HW=m
+CONFIG_ATH9K_COMMON=m
+CONFIG_ATH9K=m
+CONFIG_ATH9K_DEBUGFS=y
+CONFIG_ATH9K_RATE_CONTROL=y
+CONFIG_ATH9K_HTC=m
+CONFIG_ATH9K_HTC_DEBUGFS=y
 
-But this is ath9k which I'm not so familiar with, maybe Luis can say.
+sudo modprobe ath9k debug=0xffffffff
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+you will get lot of messages from the debug log.
