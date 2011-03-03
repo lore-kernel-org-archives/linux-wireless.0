@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:63641 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753380Ab1CAQD5 (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:55194 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757489Ab1CCPpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 11:03:57 -0500
-Received: by iyb26 with SMTP id 26so4020250iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 08:03:56 -0800 (PST)
-Date: Tue, 1 Mar 2011 19:03:16 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Javier Martinez Canillas <martinez.javier@gmail.com>
-Cc: Greg KH <greg@kroah.com>, devel@driverdev.osuosl.org,
-	Dowan Kim <dowan@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, arend@broadcom.com
-Subject: Re: [PATCH 2/2] staging: brcm80211: Remove unused variables and
- code clean up
-Message-ID: <20110301160316.GT18043@bicker>
-References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
- <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
- <20110301031151.GA7620@kroah.com>
- <AANLkTi=zU-F=y2qn6B90F3esbNVkE6_nCOZS-dnTA4en@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTi=zU-F=y2qn6B90F3esbNVkE6_nCOZS-dnTA4en@mail.gmail.com>
+	Thu, 3 Mar 2011 10:45:12 -0500
+Received: by mail-wy0-f182.google.com with SMTP id 32so1354744wyb.13
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 07:45:05 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: Correctly set up protection if non-GF STAs are
+ present
+From: Luciano Coelho <coelho@ti.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1299059206-3919-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1299059206-3919-1-git-send-email-helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Mar 2011 17:45:09 +0200
+Message-ID: <1299167109.7039.9.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 01, 2011 at 04:37:55PM +0100, Javier Martinez Canillas wrote:
-> >> ---
-> >>  drivers/staging/brcm80211/brcmsmac/wlc_mac80211.c |    9 ---------
-> >
-> > This doesn't apply anymore, care to redo it and resend?
-> >
-> > thanks,
-> 
-> Sure Greg but I tried with today linux-next and the patch applies
-> cleanly. Maybe the problem are some patches that you have but haven't
-> reached linux-next yet.
-> 
-> Do you want me to wait a few days to redo and resend it or am I doing
-> something wrong?
+On Wed, 2011-03-02 at 10:46 +0100, Helmut Schaa wrote:
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
 
-Actually Arend has a different patch for this, that I guess fixes the
-#if 0 code instead of removing it.  Probably that's prefered.  I've
-asked him to submit it.
+This is good, thanks Helmut! We had some problems with earlier versions
+of our firmware where this was apparently not implemented, that's why we
+were setting it always to 0.
 
-regards,
-dan carpenter
+I added a description to your commit, hope you don't mind.
+
+Applied!
+
+-- 
+Cheers,
+Luca.
+
