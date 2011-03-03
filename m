@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:50307 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932Ab1CHFUc convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46834 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756823Ab1CCIVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 00:20:32 -0500
-Received: by wwa36 with SMTP id 36so488914wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2011 21:20:31 -0800 (PST)
+	Thu, 3 Mar 2011 03:21:20 -0500
+Received: by iyb26 with SMTP id 26so707096iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 00:21:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimVS6sBqMKHT841QWwgz93DURM5rUWcFXKXRHYo@mail.gmail.com>
-References: <AANLkTikYfE1pJfqcNcFT-SFQaAL2z91dpD1+8rOUZHr2@mail.gmail.com>
-	<AANLkTim+ZL6xG=rK6zg5Chrgdno3vuRB4x8TbZsrJv_f@mail.gmail.com>
-	<AANLkTimVS6sBqMKHT841QWwgz93DURM5rUWcFXKXRHYo@mail.gmail.com>
-Date: Tue, 8 Mar 2011 10:50:31 +0530
-Message-ID: <AANLkTi=sKKJ85nVzopsmnXW18hfjg+LZTy+2EBcqRE_r@mail.gmail.com>
-Subject: Re: WMM and 802.11n Qurery, please help!
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "M. A." <jdiq123@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <loom.20110303T091059-822@post.gmane.org>
+References: <AANLkTinzfBmpJ6-O=o-zi+oh9miLRo-UZUM=MhcnQmk=@mail.gmail.com> <loom.20110303T091059-822@post.gmane.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 3 Mar 2011 00:21:00 -0800
+Message-ID: <AANLkTinO8mVVFuZRJVSROr=7fGAj1G2x07KSS1c+bnNx@mail.gmail.com>
+Subject: Re: Regulatory database improvements
+To: jpo234 <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 8, 2011 at 2:39 AM, M. A. <jdiq123@googlemail.com> wrote:
-> Dear all,
+On Thu, Mar 3, 2011 at 12:14 AM, jpo234 <pommnitz@yahoo.com> wrote:
+> Luis R. Rodriguez <mcgrof@...> writes:
 >
-> Just an update to my previous query regarding the relation between WMM
-> and 802.11n:
+>> If anyone has any input on this definition or would like some please
+>> start thinking about it and we can start talking about it. For details
+>> as to *why* we are doing this you can lok at the wiki page above or
+>> also the thread:
 >
-> Now from what I understand, WMM (802.11e) is part of the 802.11n
-> standard as it uses features (like block-Ack) in the new (MAC layer)
-> enhancements such as frame aggregation.
->
-> When WMM is activated (via hostapd: wmm_enabled=1)  as well as frame
-> aggregation, I get around 230Mbps UDP/ 170Mbps TCP. When WMM is
-> deactivated I get 35  Mbps UDP and 27 Mbps TCP.
->
-> I tried to identify the causes of this decrease, so I disabled frame
-> Aggregation (A-MPDU) and disabled all the WMM associated parameters
-> like tx_queue_data* , wmm_ac_* (BK/BE/VI/VO) /(CW/TXOP/AIFS) etc. but
-> leaving the WMM option on (wmm_enabled=1). This gave around 45 Mbps
-> UDP and 33Mbps TCP.
+> Luis,
+> we have an amplifier attached to one card and not on the other in our system.
+> The amplified card requires different regulatory constraints from the "normal"
+> one. So, what I'd like to see are per wiphy regulatory settings, not global ones.
 
-Hi,
-  please read through the discussion in this thread "Why is wmm_param
-required for HT40- in mlme.c" in linux wireless mailing list
+How does an amplifier change regulatory rules? The rules are static,
+likely what you want is not per wiphy rules but per wiphy
+modifications to help you comply by the additions you are making. No?
 
->
->
-> So my question is what other WMM influencing factor is activated that
-> is causing the remaining throughput increase from 35 Mbps to 45 Mbps.
-> Also if someone could explain the WMM traffic identifier's (TID)
-> relevance in throughput improvement.
->
-> Thank you all very much
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+  Luis
