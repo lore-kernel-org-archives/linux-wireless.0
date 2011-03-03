@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:33613 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751863Ab1CVWTw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 18:19:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "Popa, Stefan A" <stefan.a.popa@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 22 Mar 2011 15:11:09 -0700
-Subject: RE: Marvell 88w8787 Linux Drivers for Wi-Fi and Bluetooth
-Message-ID: <477F20668A386D41ADCC57781B1F704307FA7913B9@SC-VEXCH1.marvell.com>
-References: <477F20668A386D41ADCC57781B1F704307FA7912D2@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307FA7912D2@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758451Ab1CCSsX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:48:23 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:22 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/19] rt2x00: Remove useless NULL check
+Date: Thu, 3 Mar 2011 19:39:56 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031939.28091.IvDoorn@gmail.com>
+In-Reply-To: <201103031939.28091.IvDoorn@gmail.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031939.57117.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[CC: linux-wireless and more people]
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Hi Stefan,
+Since tx_info->control.vif was already accessed before it cant't be NULL
+here.
 
-> Hi Bing,
-> 
-> I am a software developer at Intel. Currently I am working with 88w8787 Marvell wireless chip.
-> 
-> I have found your Wi-Fi Linux driver and firmware for 88w8787. Is there a different Linux driver and
-> firmware for 88w8787 Wi-Fi as the one available publicly?
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-We do have customized SD8787 driver/firmware for specific customers. But it is advised to use the upstream 'mwifiex' driver because the 'mwifiex' driver has been improved a lot based on the review comments from Johannes, John, and other people. 
-
-> 
-> I have some concerns about Bluetooth also and how does it work 88w8787 SDIO card on Linux.
-> 
-> Is it needed also for Bluetooth a special Linux driver and firmware as for Wi-Fi? Or this 88w8787
-> SDIO card works directly in Linux with the firmware provided for Wi-Fi and with standard Linux BT
-> SDIO driver?
-
-Currently there is a Bluetooth driver called 'btmrvl' that works for SD8688 only. We plan to submit a patch to enable 'btmrvl' to support SD8787 Bluetooth. Both 'mwifiex' and 'btmrvl' drivers will share the same firmware image.
-
-> 
-> Can you help us with these questions?
-
-Hope I answered your questions. Feel free to contact me if you have any more questions.
-
-Best Regards,
-
-Bing
-
-> 
-> Many thanks in advance for your help and support!
-> 
-> Have a nice day!
-> 
-> Best regards,
-> 
-> Stefan A. Popa
-> Open Source Technology Center
-> System Software Division Romania
-> Desk: +40 31 86 04 721
-> iNET: 8 845 1021
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index bf9bba3..b32ca31 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -221,8 +221,7 @@ static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
+ 	struct rt2x00_intf *intf = vif_to_intf(tx_info->control.vif);
+ 	unsigned long irqflags;
+ 
+-	if (!(tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) ||
+-	    unlikely(!tx_info->control.vif))
++	if (!(tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
+ 		return;
+ 
+ 	/*
+-- 
+1.7.2.3
 
