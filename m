@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51768 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758282Ab1COS3e (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34180 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758631Ab1CCSal (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 14:29:34 -0400
-Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com>
-References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
-	 <1299831238.5082.185.camel@wwguy-huron>
-	 <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
-	 <1300063647.24333.7.camel@wwguy-ubuntu>
-	 <AANLkTin_=k=7Y0XmEtZc952pm=wuCawJAXgq6fKFWZM+@mail.gmail.com>
-	 <1300189917.5596.10.camel@jlt3.sipsolutions.net>
-	 <1300193550.5596.16.camel@jlt3.sipsolutions.net>
-	 <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Mar 2011 19:29:28 +0100
-Message-ID: <1300213768.4139.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 3 Mar 2011 13:30:41 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1PvDIN-00042C-Mb
+	for linux-wireless@vger.kernel.org; Thu, 03 Mar 2011 13:30:39 -0500
+Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p23IOkUG012778
+	for <linux-wireless@vger.kernel.org>; Thu, 3 Mar 2011 13:24:46 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id p23IOkPV012776
+	for linux-wireless@vger.kernel.org; Thu, 3 Mar 2011 13:24:46 -0500
+Date: Thu, 3 Mar 2011 13:24:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 2.6.39 needs to be posted _now_
+Message-ID: <20110303182446.GE8969@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-15 at 11:16 -0700, Daniel Halperin wrote:
+You may have noticed that Linus has released 2.6.38-rc7.  So, the
+merge window is around the corner!
 
-> [341349.271337] New seq exceeds buffering window: 2797, 2766
+For those that need a reminder, the opening of the merge window is a
+_deadline_ for new features.  Once the merge window opens, only fixes
+will be accepted for 2.6.39.  In fact, any non-fix patches need to
+already be in wireless-next-2.6 when the merge window opens if you want
+them in 2.6.39.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-quick q (on the phone right now) - where's that message from?
+You have been warned...this means you!
 
-johannes
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
