@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57215 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239Ab1CVPUn (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59173 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150Ab1CCLum convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 11:20:43 -0400
-Subject: Re: [RFC 0/9] add WoW support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Mar 2011 16:20:42 +0100
-Message-ID: <1300807242.3746.47.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 3 Mar 2011 06:50:42 -0500
+Received: by wwb22 with SMTP id 22so1241521wwb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 03:50:41 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <op.vrqdhre53ri7v4@arend-laptop>
+References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com> <op.vrqdhre53ri7v4@arend-laptop>
+From: Javier Martinez Canillas <martinez.javier@gmail.com>
+Date: Thu, 3 Mar 2011 12:50:26 +0100
+Message-ID: <AANLkTik2y0ULwpDXNm+GzvXw0NGRpj0gUjbdBhjcO_1z@mail.gmail.com>
+Subject: Re: [PATCH 1/2] staging: brcm80211: Add buf_size parameter to
+ ampdu_action handler function
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In this third email, some thoughts about the internal APIs.
+>>
+> This currently gives a warning on staging-next branch:
+>
+> drivers/staging/brcm80211/brcmsmac/wl_mac80211.c:699: warning:
+> initialization from incompatible pointer type
+>
+>
+> Probably you have used a newer net/mac80211.h as reference which has not yet
+> landed on the staging-next branch.
+>
+> Gr. AvS
+> --
 
-For the model 2) that I described, I think the current APIs as
-implemented in this patchset are not effective. Remember that in this
-model, there's no change to how the chip operates, it just continues
-operating as before, while the host is suspended, and has no extra
-wakeup conditions, just the regular interrupt.
+Hi Arend,
 
-Things are more complex in the more traditional model, mostly depending
-on how we answer the questions I posed in my second email.
+I tried to compile the driver in today linux-next (which already has
+the patch applied) and doesn't gives any warning.
 
-However, ultimately I think we should move away from the start/stop
-model we've imposed right now. The model makes sense for the case where
-the device is shut down, but I think it doesn't make sense at all for
-the case where the device stays up, in whatever form.
+Please tell me if you still are having issues with it.
 
-Just looking at patch 4/9 in Eliad's series that I'm replying to, I
-think that it's clear that there's no sense in trying to keep the
-mac80211 logic for the wowlan suspend case.
+Thanks a lot.
 
-I think what we should do instead is this:
- 1) Add suspend/resume ops instead of going through stop/start and all
-    the deconfiguration / reconfiguration (of course keep all the
-    previous logic for drivers that don't implement suspend.)
-
- 2) Implement more iterators / accessors to allow drivers to get access
-    to more information. Some of that might not be necessary since at
-    resume in some cases the device might just go and request a restart,
-    but in other cases this might be necessary to simplify/avoid book-
-    keeping in drivers.
-
-Adding such APIs would allow drivers to be more in control of what
-happens at suspend, which given the complexity of how this might work,
-with configuring the driver etc.
-
-Thoughts?
-
-johannes
-
+-- 
+-----------------------------------------
+Javier Martínez Canillas
+(+34) 682 39 81 69
+PhD Student in High Performance Computing
+Computer Architecture and Operating System Department (CAOS)
+Universitat Autònoma de Barcelona
+Barcelona, Spain
