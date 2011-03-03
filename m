@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:46139 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750942Ab1C2TFc (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932182Ab1CCSsZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 15:05:32 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 220095401D1
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 15:09:47 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110329190531.41C7140EAB@repository3.orbit-lab.org>
-Date: Tue, 29 Mar 2011 15:05:31 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 3 Mar 2011 13:48:25 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:25 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/19] rt2x00: Add unlikely macro to special case tx status handling
+Date: Thu, 3 Mar 2011 19:40:33 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031939.28091.IvDoorn@gmail.com> <201103031939.57117.IvDoorn@gmail.com>
+In-Reply-To: <201103031939.57117.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031940.34167.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 2c348fb...55370d9 akpm-end   -> origin/akpm-end  (forced update)
-   16c29da..036a982  akpm-start -> origin/akpm-start
-   e5ca460..48aa660  history    -> origin/history
- + 285d731...74bdbee master     -> origin/master  (forced update)
-   16c29da..036a982  stable     -> origin/stable
- * [new tag]         next-20110329 -> next-20110329
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-compat-wireless code metrics
+This special case shouldn't happen very often. Only if a frame that
+is not intended to be aggregated ends up in an AMPDU _and_ was intended
+to be sent at a different MCS rate as the aggregate. Hence, using
+unlikely is justified.
 
-    832907 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1546 - % of code consists of backport work
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 7dba354..66ff8d5 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -681,7 +681,7 @@ void rt2800_txdone_entry(struct queue_entry *entry, u32 status)
+ 	 * confuse the rate control algortihm by providing clearly wrong
+ 	 * data.
+ 	 */
+-	if (aggr == 1 && ampdu == 0 && real_mcs != mcs) {
++	if (unlikely(aggr == 1 && ampdu == 0 && real_mcs != mcs)) {
+ 		skbdesc->tx_rate_idx = real_mcs;
+ 		mcs = real_mcs;
+ 	}
+-- 
+1.7.2.3
+
