@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61482 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026Ab1C2Ah1 (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:53066 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758762Ab1CCWIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 20:37:27 -0400
-Received: by iwn34 with SMTP id 34so4256552iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 17:37:26 -0700 (PDT)
+	Thu, 3 Mar 2011 17:08:23 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Joe Perches <joe@perches.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 3 Mar 2011 14:04:58 -0800
+Subject: RE: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
+Message-ID: <477F20668A386D41ADCC57781B1F704307F5150CCD@SC-VEXCH1.marvell.com>
+References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
+ <1299139646.4338.69.camel@Joe-Laptop>
+In-Reply-To: <1299139646.4338.69.camel@Joe-Laptop>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <201103281331.31575.IvDoorn@gmail.com>
-References: <201103281329.45470.IvDoorn@gmail.com> <201103281330.36856.IvDoorn@gmail.com>
- <201103281331.00838.IvDoorn@gmail.com> <201103281331.31575.IvDoorn@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 29 Mar 2011 11:37:06 +1100
-Message-ID: <BANLkTikZXhLtmzKrpyx3vHn9rBffM0YNaA@mail.gmail.com>
-Subject: Re: [PATCH 05/13] rt2x00: Restructure bw_comp calculationATCHDOG flag
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo,
-
-Subject seems to be incorrect.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+SGkgSm9lLA0KDQo+IFBsZWFzZSB1c2UgcHJfZm10DQo+ICNkZWZpbmUgcHJfZm10KGZtdCkgS0JV
+SUxEX01PRE5BTUUgIjogIiBmbXQNCj4gdG8gcHJlZml4ICJtd2lmaWV4OiAiIHJhdGhlciB0aGFu
+IHB1dCBpdCBlYWNoDQo+IGZvcm1hdCBzdHJpbmcuDQogDQpGb3IgcHJfZGVidWcsIHRoZSBvcmln
+aW5hbCAiZm10IiBpcyB1c2VkIHRvIGNvbnN0cnVjdCB0aGUgX2RkZWJ1ZyBkZXNjcmlwdG9yOg0K
+DQojZGVmaW5lIGR5bmFtaWNfcHJfZGVidWcoZm10LCAuLi4pIGRvIHsgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICBcDQogICAgICAgIHN0YXRpYyBzdHJ1Y3QgX2RkZWJ1ZyBkZXNjcmlw
+dG9yICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcDQogICAgICAgIF9fdXNlZCAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcDQog
+ICAgICAgIF9fYXR0cmlidXRlX18oKHNlY3Rpb24oIl9fdmVyYm9zZSIpLCBhbGlnbmVkKDgpKSkg
+PSAgICAgICAgICAgICBcDQogICAgICAgIHsgS0JVSUxEX01PRE5BTUUsIF9fZnVuY19fLCBfX0ZJ
+TEVfXywgZm10LCBfX0xJTkVfXywgICAgICAgICAgICBcDQogICAgICAgICAgICAgICAgX0RQUklO
+VEtfRkxBR1NfREVGQVVMVCB9OyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcDQouLi4u
+Li4NCg0KU28gdGhlIHByZWZpeCB3b24ndCBhcHBlYXIgaW4gZHluYW1pY19kZWJ1Zy9jb250cm9s
+IGFzIHRoZSAiZm9ybWF0IiBzdHJpbmcuDQoNCkRvIHlvdSB0aGluayB3ZSBzaG91bGQgdXNlIHBy
+X2ZtdChmbXQpIHRvIGNvbnN0cnVjdCBfZGRlYnVnIGRlc2NyaXB0b3I/DQogICAgICAgIHsgS0JV
+SUxEX01PRE5BTUUsIF9fZnVuY19fLCBfX0ZJTEVfXywgcHJfZm10KGZtdCksIF9fTElORV9fLCAg
+ICAgICAgICAgIFwNCg0KT3RoZXJ3aXNlLCBJIHN0aWxsIGhhdmUgdG8gYWRkICJtd2lmaWV4OiAi
+IHByZWZpeCBmb3IgZXZlcnkgcHJfZGVidWcoKSBjYWxsLg0KDQpUaGFua3MsDQoNCkJpbmcNCg0K
