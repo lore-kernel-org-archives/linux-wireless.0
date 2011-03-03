@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4442 "EHLO mms1.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:55925 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755755Ab1CXNdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 09:33:11 -0400
-To: "John Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Greg KH" <greg@kroah.com>
-Subject: Re: [PATCH] mac80211: rename RX_FLAG_TSFT
-References: <1298469968.4122.8.camel@jlt3.sipsolutions.net>
-Date: Thu, 24 Mar 2011 14:32:20 +0100
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vsunv6ae3ri7v4@arend-laptop>
-In-Reply-To: <1298469968.4122.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+	id S1758384Ab1CCSgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:36:17 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Fry, Donald H" <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2.6.39] iwlagn: report correct temperature for WiFi/BT devices.
+Date: Thu,  3 Mar 2011 10:20:41 -0800
+Message-Id: <1299176441-26704-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 23 Feb 2011 15:06:08 +0100, Johannes Berg  
-<johannes@sipsolutions.net> wrote:
+From: Fry, Donald H <donald.h.fry@intel.com>
 
->  drivers/staging/brcm80211/sys/wlc_mac80211.c  |    5 ++++-
+The temperature reported by 'cat /sys/class/net/wlan?/device/temperature'
+is incorrect for devices with BT capability.  Report the value from the
+correct statistics structure.  Tested with 130, 100, 6205 and 5300.
 
-Hi Johannes,
+Signed-off-by:  Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-2.6.38 has landed in staging-2.6 repository and I built our driver. It  
-gives build warning on above mentioned file.
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
->
-> --- wireless-testing.orig/include/net/mac80211.h	2011-02-23  
-> -	RX_FLAG_TSFT		= 1<<7,
-> +	RX_FLAG_MACTIME_MPDU	= 1<<7,
-
-> wireless-testing.orig/drivers/staging/brcm80211/sys/wlc_mac80211.c	2011-02-23  
-> 15:03:58.000000000 +0100
-> +++  
-> wireless-testing/drivers/staging/brcm80211/sys/wlc_mac80211.c	2011-02-23  
-> 15:04:48.000000000 +0100
-> @@ -6818,11 +6818,14 @@ prep_mac80211_status(struct wlc_info *wl
->  	ratespec_t rspec;
->  	unsigned char *plcp;
-> +#if 0
-> +	/* Clearly, this is bogus -- reading the TSF now is wrong */
->  	wlc_read_tsf(wlc, &tsf_l, &tsf_h);	/* mactime */
->  	rx_status->mactime = tsf_h;
->  	rx_status->mactime <<= 32;
->  	rx_status->mactime |= tsf_l;
-> -	rx_status->flag |= RX_FLAG_TSFT;
-> +	rx_status->flag |= RX_FLAG_MACTIME_MPDU; /* clearly wrong */
-> +#endif
-
-This piece of code has been '#if 0'-ed by you. Could you elaborate why  
-this is clearly wrong? Because of this the variables tsf_l and tsf_h are  
-not being used hence the warning.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index fd142be..87a9fd8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -533,9 +533,10 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
+ 
+ void iwlagn_temperature(struct iwl_priv *priv)
+ {
+-	/* store temperature from statistics (in Celsius) */
+-	priv->temperature =
+-		le32_to_cpu(priv->_agn.statistics.general.common.temperature);
++	/* store temperature from correct statistics (in Celsius) */
++	priv->temperature = le32_to_cpu((iwl_bt_statistics(priv)) ?
++		priv->_agn.statistics_bt.general.common.temperature :
++		priv->_agn.statistics.general.common.temperature);
+ 	iwl_tt_handler(priv);
+ }
+ 
 -- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
+1.7.0.4
 
