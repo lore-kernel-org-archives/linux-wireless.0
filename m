@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:59293 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:17186 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753766Ab1CYPrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 11:47:08 -0400
-Subject: Re: 2.6.38 iwlwifi 11n_disable=1
-From: wwguy <wey-yi.w.guy@intel.com>
-To: "tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D8CB794.9040102@canonical.com>
-References: <4D8CB794.9040102@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Mar 2011 08:44:34 -0700
-Message-ID: <1301067874.9139.7.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1758620Ab1CCSTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:19:41 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Fry, Donald H" <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>, stable@kernel.org
+Subject: [PATCH wireless-2.6] iwlagn: Support new 1000 microcode.
+Date: Thu,  3 Mar 2011 10:04:09 -0800
+Message-Id: <1299175449-7487-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tim,
+From: Fry, Donald H <donald.h.fry@intel.com>
 
-On Fri, 2011-03-25 at 08:41 -0700, Tim Gardner wrote:
-> Wey-Yi,
-> 
-> The Ubuntu Maverick release (2.6.35) has been carrying a user space 
-> patch in module-init-tools that disables 802.11n support by default 
-> using the 11n_disable module parameter. With the split in 2.6.38 into 
-> iwl3945 and iwlagn is it possible that we could now remove the module 
-> option for iwlagn? Will the 4965 adapters function correctly with 802.11n?
-> 
+iwlagn: Support new 1000 microcode.
 
-with both the driver split and new 5000 uCode available at
-(http://www.intellinuxwireless.org/?n=Downloads)
+New iwlwifi-1000 microcode requires driver support for API version 5.
+(There is no version 4)
 
-I believe we are in very good shape to have 11n support for both legacy
-and agn devices. (yes 4965 will have 11n support)
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CC: stable@kernel.org
+---
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-Please remove the module option to disable 11n support.
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thank you very much for the help.
-
-Wey
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index ba78bc8..507cab4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -49,7 +49,7 @@
+ #include "iwl-agn-debugfs.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL1000_UCODE_API_MAX 3
++#define IWL1000_UCODE_API_MAX 5
+ #define IWL100_UCODE_API_MAX 5
+ 
+ /* Lowest firmware API version supported */
+-- 
+1.7.0.4
 
