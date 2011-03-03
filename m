@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42881 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754893Ab1CWRhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 13:37:39 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 10:37:15 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 2/2] ath9k: Fix TX queue stuck issue.
-Date: Wed, 23 Mar 2011 23:07:22 +0530
-Message-ID: <1300901842-3350-2-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1300901842-3350-1-git-send-email-senthilkumar@atheros.com>
-References: <1300901842-3350-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:33610 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758471Ab1CCTaO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 14:30:14 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id p23JUBS5010621
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 3 Mar 2011 11:30:12 -0800
+Message-ID: <4D6FEC43.4040200@candelatech.com>
+Date: Thu, 03 Mar 2011 11:30:11 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Ath5k has trouble receiving pkts with multiple vifs on multiple APs.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 86271e460a66003dc1f4cbfd845adafb790b7587 introduced a
-regression that caused mac80211 queues in stopped state.
+We recently hit a problem with ath5k VIFs:
 
-ath_drain_all_txq is called in driver flush which would reset
-the stopped flag and the mac80211 queues were never started
-after that. iperf traffic is completely stalled due to this issue.
+32 station VIFS
+3 APs (on other systems)
+All APs have same password and SSID.
 
-Restart the mac80211 queues in driver flush only if the txqs were
-drained.
+Configure wpa_supplicant to force the 32 VIFS to associate with
+specific APs with the 'bssid' keyword.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+The association seems to work fine, but ARPs are only received by
+the VIFs on _one_ of the APs.  The others will not work until you
+make the STA promisc (by sniffing it, for example).
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 115f162..5248257 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2160,6 +2160,8 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 	if (!ath_drain_all_txq(sc, false))
- 		ath_reset(sc, false);
- 
-+	ieee80211_wake_queues(hw);
-+
- out:
- 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
- 	mutex_unlock(&sc->mutex);
+We cannot reproduce the problem on ath9k, so it seems an
+ath5k driver bug.
+
+I'm assuming that there is some issue where the NIC is filtering
+based on bssid or similar.  I'm going to go dig through the code,
+but if anyone has any suggestions, they are welcome.
+
+Thanks,
+Ben
+
 -- 
-1.7.3.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
