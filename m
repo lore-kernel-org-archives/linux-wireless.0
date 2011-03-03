@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:34848 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932123Ab1CCQ6A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 11:58:00 -0500
-Received: by mail-ww0-f43.google.com with SMTP id 15so1223783wwe.12
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 08:57:58 -0800 (PST)
-Subject: pull request: wl12xx 2011-03-03
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
+Received: from mail.perches.com ([173.55.12.10]:4076 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932248Ab1CCULA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 15:11:00 -0500
+Subject: RE: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
+From: Joe Perches <joe@perches.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307F5150C5A@SC-VEXCH1.marvell.com>
+References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
+	 <1299139646.4338.69.camel@Joe-Laptop>
+	 <477F20668A386D41ADCC57781B1F704307F5150C5A@SC-VEXCH1.marvell.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Mar 2011 18:58:01 +0200
-Message-ID: <1299171481.7039.72.camel@cumari>
+Date: Thu, 03 Mar 2011 12:10:58 -0800
+Message-ID: <1299183058.4338.148.camel@Joe-Laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Thu, 2011-03-03 at 11:24 -0800, Bing Zhao wrote:
+> For example, I can do "format 'mwifiex cmd' +p" and
+> "format 'mwifiex event' +p" to enable debugging for "cmd" and "event" only.
 
-One more pull request for 2.6.39, most likely the last.  The biggest
-change is a series of patches to improve throughput by Ido.  The other
-patches are mainly bugfixes and small cleanups.
+Cute.  That works.
 
-Please pull or let me know if there's any problem.  This tree is based
-on wireless-next/master.
+Most similar current uses are a
+integer bitmap equivalent.
 
-Thanks!
+echo bitmap_value > module_control_variable
 
-The following changes since commit e46395a4b3d32d161d8b6d8e4a002972b1faae3e:
+if (module_control_variable & type)
+	print...
 
-  mac80211: make rate control Kconfig warning depend on mac80211 (2011-03-01 13:48:22 -0500)
+I think that's cleaner and less error prone
+myself but opinions certainly vary.
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+> > Perhaps use use dev/netdev/wiphy_<level> where it makes
+> > sense?
+> I thought that too. But these APIs require a parameter of "struct device *".
+> Some of mwifiex_ functions do not have this parameter.
 
-Arik Nemtsov (1):
-      wl12xx: wakeup chip from ELP during scan
+Sure, but the places that do have an available
+struct device|net_device|wiphy should use the
+equivalent appropriate call.
 
-Helmut Schaa (1):
-      wl12xx: Correctly set up protection if non-GF STAs are present
-
-Ido Yariv (9):
-      wl12xx: Don't rely on runtime PM for toggling power
-      wl12xx: Remove private headers in wl1271_tx_reset
-      wl12xx: Reorder data handling in irq_work
-      wl12xx: Do end-of-transactions transfers only if needed
-      wl12xx: Change claiming of the SDIO bus
-      wl12xx: Switch to a threaded interrupt handler
-      wl12xx: Switch to level trigger interrupts
-      wl12xx: Avoid redundant TX work
-      wl12xx: Modify requested number of memory blocks
-
-Sebastien Jan (1):
-      wl12xx: fix the path to the wl12xx firmwares
-
- drivers/net/wireless/wl12xx/acx.c     |    3 +-
- drivers/net/wireless/wl12xx/boot.c    |    3 +
- drivers/net/wireless/wl12xx/boot.h    |    5 +
- drivers/net/wireless/wl12xx/cmd.c     |    1 +
- drivers/net/wireless/wl12xx/debugfs.c |    2 +-
- drivers/net/wireless/wl12xx/io.h      |    1 +
- drivers/net/wireless/wl12xx/main.c    |  170 ++++++++++++++++++++++-----------
- drivers/net/wireless/wl12xx/ps.c      |    6 +-
- drivers/net/wireless/wl12xx/ps.h      |    2 +-
- drivers/net/wireless/wl12xx/rx.c      |   11 ++-
- drivers/net/wireless/wl12xx/scan.c    |   20 +++-
- drivers/net/wireless/wl12xx/sdio.c    |   42 ++++----
- drivers/net/wireless/wl12xx/spi.c     |   19 ++---
- drivers/net/wireless/wl12xx/tx.c      |   47 +++++++---
- drivers/net/wireless/wl12xx/wl12xx.h  |   28 ++++-
- 15 files changed, 235 insertions(+), 125 deletions(-)
-
---
-Cheers,
-Luca.
-
-
-
+cheers, Joe
 
