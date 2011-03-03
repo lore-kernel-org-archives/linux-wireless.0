@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41176
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758560Ab1COVCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 17:02:44 -0400
-Date: Tue, 15 Mar 2011 14:03:21 -0700 (PDT)
-Message-Id: <20110315.140321.189689408.davem@davemloft.net>
-To: laijs@cn.fujitsu.com
-Cc: mingo@elte.hu, paulmck@linux.vnet.ibm.com, axboe@kernel.dk,
-	Trond.Myklebust@netapp.com, vladislav.yasevich@hp.com,
-	sri@us.ibm.com, viro@zeniv.linux.org.uk, eparis@redhat.com,
-	menage@google.com, kuznet@ms2.inr.ac.ru, pekkas@netcore.fi,
-	jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net,
-	johannes@sipsolutions.net, linville@tuxdriver.com, hadi@cyberus.ca,
-	jpirko@redhat.com, eric.dumazet@gmail.com, hagen@jauu.net,
-	randy.dunlap@oracle.com, jkosina@suse.cz, joe@perches.com,
-	u.kleine-koenig@pengutronix.de, ebiederm@xmission.com,
-	gregkh@suse.de, xemul@openvz.org, linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-sctp@vger.kernel.org,
-	netdev@vger.kernel.org, containers@lists.linux-foundation.org,
-	linux-decnet-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH 06/17] net,rcu: convert
- call_rcu(in6_dev_finish_destroy_rcu) to kfree_rcu()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4D7F3872.6090305@cn.fujitsu.com>
-References: <4D7F3610.6000809@cn.fujitsu.com>
-	<4D7F3872.6090305@cn.fujitsu.com>
+Received: from mail.perches.com ([173.55.12.10]:4072 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751612Ab1CCIH2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 03:07:28 -0500
+Subject: Re: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
+From: Joe Perches <joe@perches.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
+References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Mar 2011 00:07:26 -0800
+Message-ID: <1299139646.4338.69.camel@Joe-Laptop>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lai Jiangshan <laijs@cn.fujitsu.com>
-Date: Tue, 15 Mar 2011 17:59:14 +0800
+On Wed, 2011-03-02 at 14:31 -0800, Bing Zhao wrote:
+> use pr_debug family APIs instead.
+> MERROR/MFATAL/MMSG: pr_err, pr_warning, pr_notice
 
-> 
-> 
-> The rcu callback in6_dev_finish_destroy_rcu() just calls a kfree(),
-> so we use kfree_rcu() instead of the call_rcu(in6_dev_finish_destroy_rcu).
-> 
-> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+Trivia:
 
-Acked-by: David S. Miller <davem@davemloft.net>
+It looks to me as if all the MFATAL should
+map to KERN_ERR.
+
+Please use pr_fmt
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+to prefix "mwifiex: " rather than put it each
+format string. 
+
+Please use pr_warn not pr_warning.
+
+I really don't think you need to add another prefix
+string like "err" and "info" and "cmd" to the various
+levels.  The output content is enough to figure it out.
+
+Perhaps use use dev/netdev/wiphy_<level> where it makes
+sense?
+
+You've sometimes added __func__ and sometimes used or
+kept some shortened function name equivalent.  It'd
+probably be better to consistently use __func__ where
+appropriate.
+
