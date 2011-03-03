@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:63779 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964909Ab1CaQEw (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069Ab1CCStA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:04:52 -0400
+	Thu, 3 Mar 2011 13:49:00 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:49:00 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 13/19] rt2x00: Remove now unused crypto.aid field
+Date: Thu, 3 Mar 2011 19:44:53 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031944.11965.IvDoorn@gmail.com> <201103031944.33950.IvDoorn@gmail.com>
+In-Reply-To: <201103031944.33950.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4D8FBE88.3050907@lwfinger.net>
-References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
-	<4D8E5BA3.1090909@users.sourceforge.net>
-	<AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com>
-	<4D8E8B1E.3030709@users.sourceforge.net>
-	<4D8FBE88.3050907@lwfinger.net>
-Date: Fri, 1 Apr 2011 00:04:50 +0800
-Message-ID: <AANLkTi=0EM+97o-bdDW70C5tizn8_3HC+cSN-DkPA-g5@mail.gmail.com>
-Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
-From: wu zhangjin <wuzhangjin@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Roman Mamedov <rm@romanrm.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031944.54527.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 28, 2011 at 6:47 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-[...]
->
-> I think the commit message should be revised. A simple statement like "the
-> LED does not turn off when the rfkill switch is off" should be sufficient.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Yeah, the above statement is simpler ;-)
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h    |    1 -
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    6 ++----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Regards,
-Wu Zhangjin
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index e17e348..d5faeb1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -467,7 +467,6 @@ struct rt2x00lib_crypto {
+ 	const u8 *address;
+ 
+ 	u32 bssidx;
+-	u32 aid;
+ 
+ 	u8 key[16];
+ 	u8 tx_mic[8];
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 9529d6f..67c99c3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -519,11 +519,9 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	crypto.cmd = cmd;
+ 
+-	if (sta) {
+-		/* some drivers need the AID */
+-		crypto.aid = sta->aid;
++	if (sta)
+ 		crypto.address = sta->addr;
+-	} else
++	else
+ 		crypto.address = bcast_addr;
+ 
+ 	if (crypto.cipher == CIPHER_TKIP)
+-- 
+1.7.2.3
 
->
-> Larry
->
->
