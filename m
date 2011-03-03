@@ -1,54 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm11-vm0.bullet.mail.ird.yahoo.com ([77.238.189.218]:31243 "HELO
-	nm11-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755729Ab1CAIWD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 03:22:03 -0500
-Message-ID: <888027.91829.qm@web29506.mail.ird.yahoo.com>
-Date: Tue, 1 Mar 2011 08:22:01 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH V2] rtl8187: Change rate-control feedback
-To: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4d6c85c9.Gv0aZxorarbTk25I%Larry.Finger@lwfinger.net>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35605 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069Ab1CCSs5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 13:48:57 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 36so1356532wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:48:57 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 12/19] rt2x00: Fix rt2800 key assignment in multi bssid setups
+Date: Thu, 3 Mar 2011 19:44:33 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201103031938.56423.IvDoorn@gmail.com> <201103031943.50656.IvDoorn@gmail.com> <201103031944.11965.IvDoorn@gmail.com>
+In-Reply-To: <201103031944.11965.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103031944.33950.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 1/3/11, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-> The driver for the RTL8187L chips
-> returns IEEE80211_TX_STAT_ACK for all
-> packets, even if the maximum number of retries was
-> exhausted. In addition
-> it fails to setup max_rates in the ieee80211_hw struct,
-> This behavior
-> may be responsible for the problems noted in Bug 14168. As
-> the bug is very
-> old, testers have not been found, and I do not have the
-> case where the
-> indicated signal is less than -70 dBm.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@kernel.org>
-> ---
-> 
-> V1 => V2: Protect against zero divide, and the case
-> where the 16-bit retry
->       counter wraps to zero. The latter
-> is unlikely, but tested for
->       completeness.
+When setting up multiple BSSIDs in AP mode on an rt2800pci device we
+previously used the STAs AID to select an appropriate key slot. But
+since the AID is per VIF we can end up with two STAs having the same AID
+and thus using the same key index. This resulted in one STA overwriting
+the key information of another STA.
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Fix this by simply searching for the next unused entry in the pairwise
+key table.
 
-This may be style-thing - the meaning of some of the variables changes mid-routine. I think one alternative way (not necessarily better) is to unlock the mutex and return if length ==0, and something similiar to the register wrap-around?
+Also bring the key table init in sync with deleting keys by initializing
+the key table entries to 0 instead of 1.
 
-I'm okay with this as is though.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   43 +++++++++++++++++++++---------
+ 1 files changed, 30 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index d789d5b..ba87662 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1093,27 +1093,44 @@ int rt2800_config_shared_key(struct rt2x00_dev *rt2x00dev,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_config_shared_key);
+ 
++static inline int rt2800_find_pairwise_keyslot(struct rt2x00_dev *rt2x00dev)
++{
++	int idx;
++	u32 offset, reg;
++
++	/*
++	 * Search for the first free pairwise key entry and return the
++	 * corresponding index.
++	 *
++	 * Make sure the WCID starts _after_ the last possible shared key
++	 * entry (>32).
++	 *
++	 * Since parts of the pairwise key table might be shared with
++	 * the beacon frame buffers 6 & 7 we should only write into the
++	 * first 222 entries.
++	 */
++	for (idx = 33; idx <= 222; idx++) {
++		offset = MAC_WCID_ATTR_ENTRY(idx);
++		rt2800_register_read(rt2x00dev, offset, &reg);
++		if (!reg)
++			return idx;
++	}
++	return -1;
++}
++
+ int rt2800_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
+ 			       struct rt2x00lib_crypto *crypto,
+ 			       struct ieee80211_key_conf *key)
+ {
+ 	struct hw_key_entry key_entry;
+ 	u32 offset;
++	int idx;
+ 
+ 	if (crypto->cmd == SET_KEY) {
+-		/*
+-		 * 1 pairwise key is possible per AID, this means that the AID
+-		 * equals our hw_key_idx. Make sure the WCID starts _after_ the
+-		 * last possible shared key entry.
+-		 *
+-		 * Since parts of the pairwise key table might be shared with
+-		 * the beacon frame buffers 6 & 7 we should only write into the
+-		 * first 222 entries.
+-		 */
+-		if (crypto->aid > (222 - 32))
++		idx = rt2800_find_pairwise_keyslot(rt2x00dev);
++		if (idx < 0)
+ 			return -ENOSPC;
+-
+-		key->hw_key_idx = 32 + crypto->aid;
++		key->hw_key_idx = idx;
+ 
+ 		memcpy(key_entry.key, crypto->key,
+ 		       sizeof(key_entry.key));
+@@ -2443,7 +2460,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
+ 					      wcid, sizeof(wcid));
+ 
+-		rt2800_register_write(rt2x00dev, MAC_WCID_ATTR_ENTRY(i), 1);
++		rt2800_register_write(rt2x00dev, MAC_WCID_ATTR_ENTRY(i), 0);
+ 		rt2800_register_write(rt2x00dev, MAC_IVEIV_ENTRY(i), 0);
+ 	}
+ 
+-- 
+1.7.2.3
 
-
-      
