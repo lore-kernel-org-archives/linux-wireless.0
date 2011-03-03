@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:42898 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752933Ab1CURcy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 13:32:54 -0400
-Received: by wyb40 with SMTP id 40so5979944wyb.20
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 10:32:47 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: set the skbuff priority for dummy packets
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-In-Reply-To: <1300722362-20624-1-git-send-email-coelho@ti.com>
-References: <1300722362-20624-1-git-send-email-coelho@ti.com>
+Received: from mga11.intel.com ([192.55.52.93]:50475 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758339Ab1CCPfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 10:35:02 -0500
+Subject: Re: [PATCH v3 5/5] iwlwifi: move remaining iwl-agn-rx.c code into
+ iwl-rx.c
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110303091918.GA2190@redhat.com>
+References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
+	 <1298899997-2372-5-git-send-email-sgruszka@redhat.com>
+	 <1299096009.5082.127.camel@wwguy-huron>  <20110303091918.GA2190@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 19:32:07 +0200
-Message-ID: <1300728727.2593.241.camel@cumari>
+Date: Thu, 03 Mar 2011 07:19:33 -0800
+Message-ID: <1299165573.5082.128.camel@wwguy-huron>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-21 at 17:46 +0200, Luciano Coelho wrote:
-> The firmware requires dummy packets to be sent using TID 7
-> (WL1271_TID_MGMT).  Instead of hardcoding it in the tx_fill_hdr()
-> function, set it when creating the packet itself.
-> 
-> This requires Eliad's fix to set the actual TID in the TX descriptor.
-> 
-> Cc: Ido Yariv <ido@wizery.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+Hi Stanislaw,
 
-Applied.
+On Thu, 2011-03-03 at 01:19 -0800, Stanislaw Gruszka wrote:
+> Hello
+> 
+> On Wed, Mar 02, 2011 at 12:00:09PM -0800, Guy, Wey-Yi wrote:
+> > I got the following warning:
+> > 
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:506:6: warning: symbol
+> > 'iwl_rx_statistics' was not declared. Should it be static?
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:575:6: warning: symbol
+> > 'iwl_reply_statistics' was not declared. Should it be static?
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:600:6: warning: symbol
+> > 'iwl_rx_missed_beacon_notif' was not declared. Should it be static?
+> 
+> include "iwl-agh.h" should make warning go away, but perhaps
+> would be better to move all rx_handlers to iwl-rx.c, make them
+> statics and export only iwl_setup_rx_handlers ?
+> 
+I like the 2nd approach and make it "static", could you like to do it,
+or I can make the changes.
 
--- 
-Cheers,
-Luca.
+Thanks
+Wey
+
 
