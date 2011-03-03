@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45341 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535Ab1CDA0G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 19:26:06 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH Resend] ath9k: Fix txq memory address printing in debugfs.
-Date: Thu,  3 Mar 2011 16:25:59 -0800
-Message-Id: <1299198359-28594-1-git-send-email-greearb@candelatech.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2987 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758345Ab1CCPiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 10:38:13 -0500
+To: "Javier Martinez Canillas" <martinez.javier@gmail.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Dowan Kim" <dowan@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH 1/2] staging: brcm80211: Add buf_size parameter to
+ ampdu_action handler function
+References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
+ <op.vrqdhre53ri7v4@arend-laptop>
+ <AANLkTik2y0ULwpDXNm+GzvXw0NGRpj0gUjbdBhjcO_1z@mail.gmail.com>
+Date: Thu, 3 Mar 2011 16:38:01 +0100
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vrrxpnvs3ri7v4@arend-laptop>
+In-Reply-To: <AANLkTik2y0ULwpDXNm+GzvXw0NGRpj0gUjbdBhjcO_1z@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, 03 Mar 2011 12:50:26 +0100, Javier Martinez Canillas  
+<martinez.javier@gmail.com> wrote:
 
-No use printing addresses of pointers, just print the
-pointers themselves.
+> Hi Arend,
+>
+> I tried to compile the driver in today linux-next (which already has
+> the patch applied) and doesn't gives any warning.
+>
+> Please tell me if you still are having issues with it.
+>
+No issues. Your patch also landed in staging-next (I think) but  
+net/mac80211.h in staging-next still differs from linux-next so the  
+warning I mentioned will probably disappear soon.
+>
+> Thanks a lot.
+>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 e803b5c... 2cb42f9... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index e803b5c..2cb42f9 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -549,10 +549,10 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	PR("hw-tx-proc-desc: ", txprocdesc);
- 	len += snprintf(buf + len, size - len,
- 			"%s%11p%11p%10p%10p\n", "txq-memory-address:",
--			&(sc->tx.txq_map[WME_AC_BE]),
--			&(sc->tx.txq_map[WME_AC_BK]),
--			&(sc->tx.txq_map[WME_AC_VI]),
--			&(sc->tx.txq_map[WME_AC_VO]));
-+			sc->tx.txq_map[WME_AC_BE],
-+			sc->tx.txq_map[WME_AC_BK],
-+			sc->tx.txq_map[WME_AC_VI],
-+			sc->tx.txq_map[WME_AC_VO]);
- 	if (len >= size)
- 		goto done;
- 
+Gr. AvS
 -- 
-1.7.2.3
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
 
