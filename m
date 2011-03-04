@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47797 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932694Ab1CRVxA convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:41128 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750809Ab1CDHDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 17:53:00 -0400
-Received: by qwk3 with SMTP id 3so3122827qwk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 14:52:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300478510.15393.45.camel@dev.znau.edu.ua>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	<1300453433.13499.18.camel@dev.znau.edu.ua>
-	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	<AANLkTi=EeMKNsi9bxNg4RJre-pP=jqcGpbLPNtggSK0N@mail.gmail.com>
-	<1300463392.13499.110.camel@dev.znau.edu.ua>
-	<AANLkTi=GggwyGkDB+cBG-G3O2c5WdfjCpb5pk8=3yDKz@mail.gmail.com>
-	<1300471917.14872.28.camel@dev.znau.edu.ua>
-	<AANLkTikQ7W4GdY=USphz3FphyS-yEwN+X+jUPwq9x_6z@mail.gmail.com>
-	<1300478510.15393.45.camel@dev.znau.edu.ua>
-Date: Fri, 18 Mar 2011 22:52:59 +0100
-Message-ID: <AANLkTi=1XOxwS4tMc6eMcNGeHf_ZGaAH5MC97JsP7oWP@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 4 Mar 2011 02:03:08 -0500
+Received: by ewy10 with SMTP id 10so669389ewy.28
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 23:03:05 -0800 (PST)
+Subject: Re: Powersave broken on p54
+From: Luciano Coelho <coelho@ti.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1299086257.13604.17.camel@marge>
+References: <1299003142.6461.12.camel@maggie>
+	 <201103021813.52719.chunkeey@googlemail.com>
+	 (sfid-20110302_181438_600050_FFFFFFFF80E6967A)  <1299086257.13604.17.camel@marge>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 09:03:18 +0200
+Message-ID: <1299222198.7039.111.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/18 George Kashperko <george@znau.edu.ua>:
->  - read pci revision id/vendor id (pci_read_config_word), if required
-> to decide if second window is sliding or sprom (actually rev_id should
-> be sufficient for that) read offset 0x0000 from bar0 offset to get
-> chipid register value
+On Wed, 2011-03-02 at 18:17 +0100, Michael Buesch wrote:
+> On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
+> > sure there was the rssi->dbm update (I hope you've already updated
+> > your eeprom image.)
+> 
+> What change to the eeprom is needed? My eeprom doesn't
+> contain any rssi info (see recent NULL ptr fix).
+> 
+> > No idea, it looks like the ps-poll is broken, because
+> > "iwconfig wlanX power timeout 10" fixes the long delays
+> > almost immediately. [let's see if there's more]
+> 
+> So maybe it's a generic mac80211 bug? Are there other
+> devices with PS issues?
 
-Could you say something about WIN1 and WIN2? What are they for, can we
-use them somehow separately? What do you mean by second window being
-SPROM? We read sprom without any special window magic:
-sprom[i] = ioread16(bus->mmio + bus->sprom_offset + (i * 2));
-
-My understanding is limited to that:
-If we want to use device with CORE_ADDR and WRAP_ADDR we have to write
-CORE_ADDR to BAR0_WIN and WRAP_ADDR to BAR0_WIN2. Then we can use
-readl/writel.
+We have been having some problems with PSM on the wl12xx driver too.  It
+seems that it broke in the past couple of weeks as well.  So this is
+most likely a problem in mac80211.  I'll try to investigate this a bit
+more too.
 
 -- 
-Rafał
+Cheers,
+Luca.
+
