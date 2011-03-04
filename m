@@ -1,143 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44608 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932839Ab1CWT5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 15:57:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 01/10] ath9k_hw: embed the ath_ops callbacks in the ath_hw struct
-Date: Wed, 23 Mar 2011 20:57:24 +0100
-Message-Id: <1300910253-28189-1-git-send-email-nbd@openwrt.org>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:53192 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757015Ab1CDRLp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2011 12:11:45 -0500
+Received: by mail-wy0-f177.google.com with SMTP id 23so2419108wyf.36
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 09:11:42 -0800 (PST)
+Subject: Re: Powersave broken on p54
+From: Luciano Coelho <coelho@ti.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1299222198.7039.111.camel@cumari>
+References: <1299003142.6461.12.camel@maggie>
+	 <201103021813.52719.chunkeey@googlemail.com>
+	 (sfid-20110302_181438_600050_FFFFFFFF80E6967A)  <1299086257.13604.17.camel@marge>
+	 <1299222198.7039.111.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 19:11:41 +0200
+Message-ID: <1299258701.1824.4.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this change, loading the address to a register read/write function
-costs only one pointer dereference instead of two. On MIPS this reduces
-ath9k_hw binary size from 326k down to 321k.
+On Fri, 2011-03-04 at 09:03 +0200, Luciano Coelho wrote:
+> On Wed, 2011-03-02 at 18:17 +0100, Michael Buesch wrote:
+> > On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
+> > > sure there was the rssi->dbm update (I hope you've already updated
+> > > your eeprom image.)
+> > 
+> > What change to the eeprom is needed? My eeprom doesn't
+> > contain any rssi info (see recent NULL ptr fix).
+> > 
+> > > No idea, it looks like the ps-poll is broken, because
+> > > "iwconfig wlanX power timeout 10" fixes the long delays
+> > > almost immediately. [let's see if there's more]
+> > 
+> > So maybe it's a generic mac80211 bug? Are there other
+> > devices with PS issues?
+> 
+> We have been having some problems with PSM on the wl12xx driver too.  It
+> seems that it broke in the past couple of weeks as well.  So this is
+> most likely a problem in mac80211.  I'll try to investigate this a bit
+> more too.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   15 ++++++---------
- drivers/net/wireless/ath/ath9k/hw.h           |   16 +++++++++-------
- drivers/net/wireless/ath/ath9k/init.c         |    9 +++------
- 3 files changed, 18 insertions(+), 22 deletions(-)
+I've been investigating this problem a bit more and it seems that the
+symptom, at least, is that when we receive data with the
+more-data-buffered flag set, we immediately send a PS-poll which enables
+PS mode again.  My guess is that it shouldn't send PS-poll but a
+null-frame with PS mode off.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index fc67c93..4e26946 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -430,14 +430,6 @@ static void ath9k_regwrite_flush(void *hw_priv)
- 	mutex_unlock(&priv->wmi->multi_write_mutex);
- }
- 
--static const struct ath_ops ath9k_common_ops = {
--	.read = ath9k_regread,
--	.multi_read = ath9k_multi_regread,
--	.write = ath9k_regwrite,
--	.enable_write_buffer = ath9k_enable_regwrite_buffer,
--	.write_flush = ath9k_regwrite_flush,
--};
--
- static void ath_usb_read_cachesize(struct ath_common *common, int *csz)
- {
- 	*csz = L1_CACHE_BYTES >> 2;
-@@ -658,10 +650,15 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 	ah->hw_version.subsysid = 0; /* FIXME */
- 	ah->hw_version.usbdev = drv_info;
- 	ah->ah_flags |= AH_USE_EEPROM;
-+	ah->reg_ops.read = ath9k_regread;
-+	ah->reg_ops.multi_read = ath9k_multi_regread;
-+	ah->reg_ops.write = ath9k_regwrite;
-+	ah->reg_ops.enable_write_buffer = ath9k_enable_regwrite_buffer;
-+	ah->reg_ops.write_flush = ath9k_regwrite_flush;
- 	priv->ah = ah;
- 
- 	common = ath9k_hw_common(ah);
--	common->ops = &ath9k_common_ops;
-+	common->ops = &ah->reg_ops;
- 	common->bus_ops = &ath9k_usb_bus_ops;
- 	common->ah = ah;
- 	common->hw = priv->hw;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c819973..ef387a2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -65,24 +65,24 @@
- 
- /* Register read/write primitives */
- #define REG_WRITE(_ah, _reg, _val) \
--	ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
-+	(_ah)->reg_ops.write((_ah), (_val), (_reg))
- 
- #define REG_READ(_ah, _reg) \
--	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
-+	(_ah)->reg_ops.read((_ah), (_reg))
- 
- #define REG_READ_MULTI(_ah, _addr, _val, _cnt)		\
--	ath9k_hw_common(_ah)->ops->multi_read((_ah), (_addr), (_val), (_cnt))
-+	(_ah)->reg_ops.multi_read((_ah), (_addr), (_val), (_cnt))
- 
- #define ENABLE_REGWRITE_BUFFER(_ah)					\
- 	do {								\
--		if (ath9k_hw_common(_ah)->ops->enable_write_buffer)	\
--			ath9k_hw_common(_ah)->ops->enable_write_buffer((_ah)); \
-+		if ((_ah)->reg_ops.enable_write_buffer)	\
-+			(_ah)->reg_ops.enable_write_buffer((_ah)); \
- 	} while (0)
- 
- #define REGWRITE_BUFFER_FLUSH(_ah)					\
- 	do {								\
--		if (ath9k_hw_common(_ah)->ops->write_flush)		\
--			ath9k_hw_common(_ah)->ops->write_flush((_ah));	\
-+		if ((_ah)->reg_ops.write_flush)		\
-+			(_ah)->reg_ops.write_flush((_ah));	\
- 	} while (0)
- 
- #define SM(_v, _f)  (((_v) << _f##_S) & _f)
-@@ -657,6 +657,8 @@ struct ath_nf_limits {
- #define AH_UNPLUGGED    0x2 /* The card has been physically removed. */
- 
- struct ath_hw {
-+	struct ath_ops reg_ops;
-+
- 	struct ieee80211_hw *hw;
- 	struct ath_common common;
- 	struct ath9k_hw_version hw_version;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index cdb0f1c..b45fd3f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -196,11 +196,6 @@ static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
- 	return val;
- }
- 
--static const struct ath_ops ath9k_common_ops = {
--	.read = ath9k_ioread32,
--	.write = ath9k_iowrite32,
--};
--
- /**************************/
- /*     Initialization     */
- /**************************/
-@@ -551,6 +546,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	ah->hw = sc->hw;
- 	ah->hw_version.devid = devid;
- 	ah->hw_version.subsysid = subsysid;
-+	ah->reg_ops.read = ath9k_ioread32;
-+	ah->reg_ops.write = ath9k_iowrite32;
- 	sc->sc_ah = ah;
- 
- 	if (!pdata) {
-@@ -563,7 +560,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	}
- 
- 	common = ath9k_hw_common(ah);
--	common->ops = &ath9k_common_ops;
-+	common->ops = &ah->reg_ops;
- 	common->bus_ops = bus_ops;
- 	common->ah = ah;
- 	common->hw = sc->hw;
+I still need to refresh my PSM knowledge a bit more before I can
+continue studying this. ;)
+
+
 -- 
-1.7.3.2
+Cheers,
+Luca.
 
