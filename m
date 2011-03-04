@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33887 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754725Ab1CQSrJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32826 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932436Ab1CDSpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 14:47:09 -0400
-Received: by iwn34 with SMTP id 34so3112208iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:47:09 -0700 (PDT)
+	Fri, 4 Mar 2011 13:45:43 -0500
+Date: Fri, 4 Mar 2011 13:40:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Shan Wei <shanwei@cn.fujitsu.com>
+Cc: Larry.Finger@lwfinger.net, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-02-22
+Message-ID: <20110304184050.GC9866@tuxdriver.com>
+References: <20110222215229.GJ12153@tuxdriver.com>
+ <4D706C2E.40307@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinVaFcD8L9kOjPW-y7pVxR0ReHsLBy6=SG=8OJC@mail.gmail.com>
-References: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com>
- <AANLkTi=GPbB6EbWCGGjRupwsBLMaVt=ymO5hb9eU-Q+r@mail.gmail.com> <AANLkTinVaFcD8L9kOjPW-y7pVxR0ReHsLBy6=SG=8OJC@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 17 Mar 2011 11:46:33 -0700
-Message-ID: <AANLkTinPO7AFbtU2r4_8u99Vc7XQOYJ4==q+mWMtsapU@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k_hw: Fix pcie_serdes setting for AR9485 1.1 version.
-To: Vivek Natarajan <vnatarajan@atheros.com>,
-	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jack Lee <jack.lee@atheros.com>,
-	Carl Huang <carl.huang@atheros.com>,
-	David Quan <david.quan@atheros.com>,
-	Nael Atallah <nael.atallah@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D706C2E.40307@cn.fujitsu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 17, 2011 at 11:38 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Mar 16, 2011 at 5:04 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Feb 25, 2011 at 4:01 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
->>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->>
->> Was this a stable fix? If not why not?
->
-> This certainly smells like a stable fix
+On Fri, Mar 04, 2011 at 12:35:58PM +0800, Shan Wei wrote:
+> John W. Linville wrote, at 02/23/2011 05:52 AM:
+> > Please let me know if there are problems!
+> 
+> Fail to compile with attached config under net-next tree.
+>  
+> ======Error Begin================================================================
+> drivers/net/wireless/rtlwifi/rtl8192cu/built-in.o: In function `rtl92c_phy_sw_chnl':
+> /data2/net-next-2.6/drivers/net/wireless/rtlwifi/rtl8192cu/../rtl8192c/phy_common.c:803: multiple definition of `rtl92c_phy_sw_chnl'
+> drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:/data2/net-next-2.6/drivers/net/wireless/rtlwifi/rtl8192ce/../rtl8192c/phy_common.c:803: first defined here
+> drivers/net/wireless/rtlwifi/rtl8192cu/built-in.o: In function `rtl92c_fill_h2c_cmd':
 
-OK so AR9485 1.1 support did not make it into 2.6.38, and this fix is
-applicable only to AR9485 1.1 so the patch in question is not
-applicable to stable. The 2.6.38 release however does have AR9485 1.0
-support. Will we have any devices in the field with AR9485 1.0 ? Did
-that revision not require a similar fix? On 2.6.38 and on linux-next I
-see we have for 1.0:
+This is already fixed in wireless-next-2.6:
 
-                /* Awake Setting */
+commit 1472d3a87586eb7529d1d85f7c888055650b7208
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Wed Feb 23 10:24:58 2011 -0600
 
-                INIT_INI_ARRAY(&ah->iniPcieSerdes,
-                                ar9485_1_0_pcie_phy_pll_on_clkreq_disable_L1,
+    rtlwifi: rtl8192ce: rtl8192cu: Fix multiple def errors for allyesconfig buil
+    
+    As noted by Stephan Rothwell, an allyesconfig build fails since rtl8192cu
+    was merged with failures such as:
+    
+    drivers/net/wireless/rtlwifi/rtl8192cu/built-in.o: In function `rtl92c_phy_s
+    (.opd+0xf30): multiple definition of `rtl92c_phy_sw_chnl'
+    drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.opd+0xb70): first define
+    drivers/net/wireless/rtlwifi/rtl8192cu/built-in.o: In function `rtl92c_fill_
+    (.opd+0x288): multiple definition of `rtl92c_fill_h2c_cmd'
+    drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.opd+0x288): first define
+    
+    These are caused because the code shared between rtl8192ce and rtl8192cu
+    is included in both drivers. This has been fixed by creating a new modue tha
+    contains the shared code.
+    
+    Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-ARRAY_SIZE(ar9485_1_0_pcie_phy_pll_on_clkreq_disable_L1),
-                                2);
+It will be in my next pull request to Dave.
 
-                /* Sleep Setting */
-
-                INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-                                ar9485_1_0_pcie_phy_pll_on_clkreq_enable_L1,
-
-ARRAY_SIZE(ar9485_1_0_pcie_phy_pll_on_clkreq_enable_L1),
-                                2);
-
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
