@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44611 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932741Ab1CWT5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 15:57:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 09/10] ath9k_hw: remove ATH9K_HW_CAP_ENHANCEDPM
-Date: Wed, 23 Mar 2011 20:57:32 +0100
-Message-Id: <1300910253-28189-9-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1300910253-28189-8-git-send-email-nbd@openwrt.org>
-References: <1300910253-28189-1-git-send-email-nbd@openwrt.org>
- <1300910253-28189-2-git-send-email-nbd@openwrt.org>
- <1300910253-28189-3-git-send-email-nbd@openwrt.org>
- <1300910253-28189-4-git-send-email-nbd@openwrt.org>
- <1300910253-28189-5-git-send-email-nbd@openwrt.org>
- <1300910253-28189-6-git-send-email-nbd@openwrt.org>
- <1300910253-28189-7-git-send-email-nbd@openwrt.org>
- <1300910253-28189-8-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:57920 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143Ab1CDLcP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2011 06:32:15 -0500
+Subject: Re: [PATCH 2/7] mac80211: New constant definitions for SAE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <1299208307-9428-3-git-send-email-thomas@cozybit.com>
+References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+	 <1299208307-9428-3-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 12:32:12 +0100
+Message-ID: <1299238332.4348.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not used anywhere
+On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 --
- drivers/net/wireless/ath/ath9k/hw.h |    1 -
- 2 files changed, 0 insertions(+), 3 deletions(-)
+> +++ b/include/linux/nl80211.h
+> @@ -1817,6 +1817,7 @@ enum nl80211_bss_status {
+>   * @NL80211_AUTHTYPE_SHARED_KEY: Shared Key authentication (WEP only)
+>   * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
+>   * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
+> + * @NL80211_AUTHTYPE_SAE: Simultaneous Authentication of Equals
+>   * @__NL80211_AUTHTYPE_NUM: internal
+>   * @NL80211_AUTHTYPE_MAX: maximum valid auth algorithm
+>   * @NL80211_AUTHTYPE_AUTOMATIC: determine automatically (if necessary by
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5c676da..a2509dc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1903,8 +1903,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->rts_aggr_limit = (8 * 1024);
- 	}
- 
--	pCap->hw_caps |= ATH9K_HW_CAP_ENHANCEDPM;
--
- #if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	ah->rfsilent = ah->eep_ops->get_eeprom(ah, EEP_RF_SILENT);
- 	if (ah->rfsilent & EEP_RFSILENT_ENABLED) {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 296e51b..a0243b8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -174,7 +174,6 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_HT                         = BIT(0),
- 	ATH9K_HW_CAP_RFSILENT                   = BIT(1),
- 	ATH9K_HW_CAP_CST                        = BIT(2),
--	ATH9K_HW_CAP_ENHANCEDPM                 = BIT(3),
- 	ATH9K_HW_CAP_AUTOSLEEP                  = BIT(4),
- 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(5),
- 	ATH9K_HW_CAP_EDMA			= BIT(6),
--- 
-1.7.3.2
+I think some of the auth code in nl80211 or so needs to catch this.
+Maybe nl80211_valid_auth_type() wouldn't be the right place, but for now
+it doesn't look like we'd be able to support this in managed mode, yet
+it wouldn't get errors and at least in the cfg80211 SME fall back to
+using OPEN, which is no fun.
+
+johannes
 
