@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:48981 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751438Ab1CUPqs (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:62335 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759996Ab1CDTCf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 11:46:48 -0400
-Received: by ewy9 with SMTP id 9so1623141ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 08:46:46 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-Subject: [PATCH] wl12xx: set the skbuff priority for dummy packets
-Date: Mon, 21 Mar 2011 17:46:02 +0200
-Message-Id: <1300722362-20624-1-git-send-email-coelho@ti.com>
+	Fri, 4 Mar 2011 14:02:35 -0500
+Received: by vxi39 with SMTP id 39so2282291vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 11:02:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1299238580.4348.5.camel@jlt3.sipsolutions.net>
+References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+ <1299208307-9428-6-git-send-email-thomas@cozybit.com> <1299238580.4348.5.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 4 Mar 2011 11:01:59 -0800
+Message-ID: <AANLkTintngisxbaP1P+fJo4_jhWtrzJhSXmLHMGfMotH@mail.gmail.com>
+Subject: Re: [PATCH 5/7] nl80211: Let userspace set the authenticated flag for
+ a mesh peer
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware requires dummy packets to be sent using TID 7
-(WL1271_TID_MGMT).  Instead of hardcoding it in the tx_fill_hdr()
-function, set it when creating the packet itself.
+On Fri, Mar 4, 2011 at 3:36 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
+>> From: Javier Cardona <javier@cozybit.com>
+>
+> [snip (maybe more changelog would be nice)]
+>
+> So .. a more "traditional" approach, like we do in AP, would be to let
+> userspace manage the lifetime of STA entries in this case. In managed
+> mode, we don't, but there mac80211 currently handles the authentication.
+>
+> I think you should explore doing mesh more like the AP case. OTOH, I
+> don't know how the managed case with SAE would work.
 
-This requires Eliad's fix to set the actual TID in the TX descriptor.
+I see.  Instead of setting the AUTH flag, just create the station.  We
+would like to do this only for secure meshes, and continue letting the
+kernel manage mesh peers for "open" meshes without the need of
+userspace intervention.  We can certainly do it like you suggest, yes.
 
-Cc: Ido Yariv <ido@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    2 ++
- drivers/net/wireless/wl12xx/tx.c   |    3 ---
- 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 72e84a2..59e0f79 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1243,6 +1243,8 @@ int wl1271_tx_dummy_packet(struct wl1271 *wl)
- 	memset(skb->data, 0, TX_DUMMY_PACKET_SIZE);
- 
- 	skb->pkt_type = TX_PKT_TYPE_DUMMY_REQ;
-+	/* Dummy packets require the TID to be management */
-+	skb->priority = WL1271_TID_MGMT;
- 	/* CONF_TX_AC_VO */
- 	skb->queue_mapping = 0;
- 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index f3031cd..db9e47e 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -235,9 +235,6 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 			   TX_HW_ATTR_SESSION_COUNTER;
- 
- 		tx_attr |= TX_HW_ATTR_TX_DUMMY_REQ;
--
--		/* Dummy packets require the TID to be management */
--		desc->tid = WL1271_TID_MGMT;
- 	} else {
- 		/* configure the tx attributes */
- 		tx_attr =
 -- 
-1.7.1
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
