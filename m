@@ -1,138 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60546 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018Ab1C2SGf (ORCPT
+Received: from gerolde.archlinux.org ([66.211.214.132]:59097 "EHLO
+	archlinux.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760028Ab1CDWH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 14:06:35 -0400
-Received: by qyg14 with SMTP id 14so340819qyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 11:06:34 -0700 (PDT)
+	Fri, 4 Mar 2011 17:07:26 -0500
+From: =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
+To: Greg KH <greg@kroah.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mohammed Shafi <mshajakhan@atheros.com>,
+	Mohammed Shajakhan <Mohammed.Shajakhan@atheros.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	=?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
+Subject: [PATCH] ath9k: Fix ath9k prevents CPU to enter C3 states
+Date: Fri,  4 Mar 2011 23:00:30 +0100
+Message-Id: <1299276030-4084-1-git-send-email-thomas@archlinux.org>
+In-Reply-To: <20110304213713.GA31324@kroah.com>
+References: <20110304213713.GA31324@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <4D91697C.2050603@lockie.ca>
-References: <4D91697C.2050603@lockie.ca>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 29 Mar 2011 11:06:14 -0700
-Message-ID: <AANLkTikUfjM1eDprL_YDFuasVvTdpRoAzKXStJf-5C7e@mail.gmail.com>
-Subject: Re: regdomain
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 28, 2011 at 10:09 PM, James <bjlockie@lockie.ca> wrote:
-> I am in Canada so is 0x10 right?
+This is a backport of upstream commit 0f5cd45960173ba5b36727decbb4a241cbd35ef9.
 
-Nope, CA has these two mappings:
+The DMA latency issue is observed only in Intel pinetrail platforms
+but in the driver we had a default PM-QOS value of 55. This caused
+unnecessary power consumption and battery drain in other platforms.
 
-        {CTRY_CANADA, FCC3_FCCA, "CA"},
-        {CTRY_CANADA2, FCC6_FCCA, "CA"},
+Remove the pm-qos thing in the driver code and address the throughput
+issue in Intel pinetrail platfroms in user space using any one of
+the scripts in below links:
 
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/cpudmalatency.c
+http://johannes.sipsolutions.net/files/netlatency.c.txt
 
-> Is there a tool I can use to read the EEPROM?
+More details can be found in the following bugzilla link:
 
-The ath driver spits it out for you:
+https://bugzilla.kernel.org/show_bug.cgi?id=27532
 
-> ath: EEPROM regdomain: 0x10
+Signed-off-by: Thomas Bächler <thomas@archlinux.org>
+---
 
-That's it.
+I hope this is right, it seems to work for me.
+Luis or John, can you sign off on this just
+to be sure?
 
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: CO
-> ath: Regpair used: 0x10
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 ---
+ drivers/net/wireless/ath/ath9k/init.c  |    4 ----
+ drivers/net/wireless/ath/ath9k/main.c  |    4 ----
+ 3 files changed, 0 insertions(+), 11 deletions(-)
 
-Sorry for the confusion, 0x10 is a value that is used for a few
-countries, specifically, 0x10 maps to a name "FCC1_FCCA" and all these
-countries map to 0x10:
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c0b60ce..94bd9bc 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -21,7 +21,6 @@
+ #include <linux/device.h>
+ #include <linux/leds.h>
+ #include <linux/completion.h>
+-#include <linux/pm_qos_params.h>
+ 
+ #include "debug.h"
+ #include "common.h"
+@@ -647,8 +646,6 @@ struct ath_softc {
+ 	struct ath_descdma txsdma;
+ 
+ 	struct ath_ant_comb ant_comb;
+-
+-	struct pm_qos_request_list pm_qos_req;
+ };
+ 
+ struct ath_wiphy {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 14b8ab3..91d9b2a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -758,9 +758,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
+-	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+-			   PM_QOS_DEFAULT_VALUE);
+-
+ 	return 0;
+ 
+ error_world:
+@@ -829,7 +826,6 @@ void ath9k_deinit_device(struct ath_softc *sc)
+ 	}
+ 
+ 	ieee80211_unregister_hw(hw);
+-	pm_qos_remove_request(&sc->pm_qos_req);
+ 	ath_rx_cleanup(sc);
+ 	ath_tx_cleanup(sc);
+ 	ath9k_deinit_softc(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d1b0db4..cb0b2b9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1245,8 +1245,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 			ath9k_btcoex_timer_resume(sc);
+ 	}
+ 
+-	pm_qos_update_request(&sc->pm_qos_req, 55);
+-
+ mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+ 
+@@ -1425,8 +1423,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
+ 
+-	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+-
+ 	mutex_unlock(&sc->mutex);
+ 
+ 	ath_print(common, ATH_DBG_CONFIG, "Driver halt\n");
+-- 
+1.7.4.1
 
-mcgrof@tux ~/wireless-testing (git::master)$ grep FCC1_FCCA
-drivers/net/wireless/ath/regd_common.h
-	FCC1_FCCA = 0x10,
-	{FCC1_FCCA, CTL_FCC, CTL_FCC},
-	{CTRY_DEFAULT, FCC1_FCCA, "CO"},
-	{CTRY_COLOMBIA, FCC1_FCCA, "CO"},
-	{CTRY_DOMINICAN_REPUBLIC, FCC1_FCCA, "DO"},
-	{CTRY_GUAM, FCC1_FCCA, "GU"},
-	{CTRY_GUATEMALA, FCC1_FCCA, "GT"},
-	{CTRY_MEXICO, FCC1_FCCA, "MX"},
-	{CTRY_PANAMA, FCC1_FCCA, "PA"},
-	{CTRY_PUERTO_RICO, FCC1_FCCA, "PR"},
-
-In reality that print, " ath: Country alpha2 being used: CO" should
-say something like this:
-
- ath: Country alpha2 which can be used: CO, DO, GU, GT, MX, PA, PR
-
-But the Canada regulatory domain is indeed not being used. The differences:
-
-country CA:
-        (2402 - 2472 @ 40), (3, 27)
-        (5170 - 5250 @ 40), (3, 17)
-        (5250 - 5330 @ 40), (3, 20), DFS
-        (5490 - 5710 @ 40), (3, 20), DFS
-        (5735 - 5835 @ 40), (3, 30)
-
-country US:
-        (2402 - 2472 @ 40), (3, 27)
-        (5170 - 5250 @ 40), (3, 17)
-        (5250 - 5330 @ 40), (3, 20), DFS
-        (5490 - 5600 @ 40), (3, 20), DFS
-        (5650 - 5710 @ 40), (3, 20), DFS
-        (5735 - 5835 @ 40), (3, 30)
-
-In the US 5600-5650 was removed due to this commit:
-
-Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-Date:   Thu Nov 5 12:46:25 2009 -0500
-
-    wireless-regdb: update US rules for 5600 MHz - 5650 MHz
-
-    The FCC is trying to assist airports that use Terminal Doppler
-    Weather Radar (TDWR) systems in avoiding interference with
-    some outdoor wireless systems operating in the 5.4 GHz
-    (5470 MHz - 5725 MHz) band. One of the things they have decided
-    on is to disallow operation on the 5600 MHz - 5650 MHz frequency
-    range inclusive. What this means in practice is 5 GHz 802.11
-    devices programmed to operate in the US will have these
-    channels now disabled:
-
-     * 5600 MHz [120] (disabled)
-     * 5620 MHz [124] (disabled)
-     * 5640 MHz [128] (disabled)
-
-    Channel on 5660 MHz (132) will be left enabled as the channel
-    bandwidth is 20 MHz for legacy 802.11 networks but note that
-    HT40- will be disallowed for that channel. The HT40+ and HT40-
-    allowed channel map obviously changes. This is computed
-    dynamically on cfg80211 based on your allowed channel list.
-    For a US based device this is what you will get now
-    (excerpt from on /sys/kernel/debug/ieee80211/phy0):
-
-     .. etc ..
-    5540 HT40 -+
-    5560 HT40 -+
-    5580 HT40 -
-    5600 Disabled
-    5620 Disabled
-    5640 Disabled
-    5660 HT40  +
-    5680 HT40 -+
-     .. etc ..
-
-    The details on which this patch is based on is documented on
-    the FCC Knowledge based Publication Number: 443999 [1]
-
-    [1] https://fjallfoss.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=41732
-
-    Cc: Michael Green <Michael.Green@atheros.com>
-    Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
-    Cc: David Quan <David.Quan@atheros.com>
-    Cc: Vivek Natarajan <Vivek.Natarajan@atheros.com>
-    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-So that's all you are missing out on, and I would not be surprised if
-CA passed similar rules for their own reguatory domain, but the
-important thing is your card remains compliant with CA. Hope this
-clarifies things.
-
-  Luis
