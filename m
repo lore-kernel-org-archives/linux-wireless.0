@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43513 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758526Ab1CDDLz (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:57628 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759729Ab1CDTHC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 22:11:55 -0500
-Received: by yxs7 with SMTP id 7so614063yxs.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 19:11:54 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>
-Subject: [PATCH 4/7] mac80211: Accept mesh auth frames before a peer link has been established
-Date: Thu,  3 Mar 2011 19:11:44 -0800
-Message-Id: <1299208307-9428-5-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+	Fri, 4 Mar 2011 14:07:02 -0500
+Received: by vxi39 with SMTP id 39so2286085vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 11:07:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1299238635.4348.6.camel@jlt3.sipsolutions.net>
 References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+ <1299208307-9428-7-git-send-email-thomas@cozybit.com> <1299238635.4348.6.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 4 Mar 2011 11:06:41 -0800
+Message-ID: <AANLkTim-cdTV6dsZg9MmMFMejkN8SpNYr=RBY-s8kiF=@mail.gmail.com>
+Subject: Re: [PATCH 6/7] mac80211: Parse RSN information element to determine
+ if a peer needs authentication
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Fri, Mar 4, 2011 at 3:37 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
+>> From: Javier Cardona <javier@cozybit.com>
+>
+> [...]
+>
+> If you manage stations in userspace, then this code is unnecessary.
+> That'd be a big win in my eyes. The only thing the kernel would need to
+> know is not to create station entries, right?
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Tested-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/rx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+If userspace manages only rsn mesh stations then we do still need
+this.  That would be my preference:  only require an authentication
+daemon if you intend to join a secure mesh.  In the same way that you
+can connect to an open AP without a daemon.
+Would you object to this approach?
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5c1930b..fe0f1e3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -502,7 +502,8 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
- 
- 		if (ieee80211_is_probe_req(hdr->frame_control) ||
- 		    ieee80211_is_probe_resp(hdr->frame_control) ||
--		    ieee80211_is_beacon(hdr->frame_control))
-+		    ieee80211_is_beacon(hdr->frame_control) ||
-+		    ieee80211_is_auth(hdr->frame_control))
- 			return RX_CONTINUE;
- 
- 		return RX_DROP_MONITOR;
+
 -- 
-1.7.0.4
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
