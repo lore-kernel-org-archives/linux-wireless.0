@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45130 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272Ab1CKE3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 23:29:37 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/2] update for 2.6.39
-Date: Thu, 10 Mar 2011 20:13:25 -0800
-Message-Id: <1299816807-26813-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:56705 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030Ab1CDLaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2011 06:30:11 -0500
+Subject: Re: [PATCH 1/7] mac80211: Support RSN information element on mesh
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <1299208307-9428-2-git-send-email-thomas@cozybit.com>
+References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+	 <1299208307-9428-2-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 12:30:05 +0100
+Message-ID: <1299238205.4348.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add off-channel tx support for P2P
+On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
 
-Johannes Berg (2):
-  iwlagn: support off-channel TX
-  iwlagn: fix offchannel TX bug
+> +++ b/include/net/cfg80211.h
+> @@ -656,6 +656,8 @@ struct mesh_config {
+>   * @path_metric: which metric to use
+>   * @vendor_ie: vendor information elements (optional)
+>   * @vendor_ie_len: length of vendor information elements
+> + * @rsn_ie: robust secure network information elements (for SAE)
+> + * @rsn_ie_len: length of rsn_ie
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Is this really useful over just putting it into the vendor IE we already
+have? We already have code to split IEs properly (see ieee80211_ie_split
+etc in mac80211), so maybe there's no reason to add more API?
 
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |  135 ++++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   87 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-commands.h |    8 ++-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    6 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   12 ++-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   41 +++++----
- 6 files changed, 238 insertions(+), 51 deletions(-)
+johannes
 
