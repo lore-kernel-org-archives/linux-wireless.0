@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60204 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:43326 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751713Ab1CIKIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 05:08:15 -0500
-Date: Wed, 9 Mar 2011 11:06:56 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ivdoorn@gmail.com, Johannes Stezenbach <js@sig21.net>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: Unplugging usb wlan (rt73usb) hangs the system
-Message-ID: <20110309100651.GA23594@redhat.com>
-References: <4D6E7B55.6010905@pardus.org.tr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4D6E7B55.6010905@pardus.org.tr>
+	id S1752095Ab1CDREp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2011 12:04:45 -0500
+Subject: Re: [PATCH 3/3] iwlwifi: avoid too frequent recover from statistics
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1299257511-5241-3-git-send-email-sgruszka@redhat.com>
+References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
+	 <1299257511-5241-3-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 08:46:26 -0800
+Message-ID: <1299257186.5082.139.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 02, 2011 at 07:16:05PM +0200, Ozan Çağlayan wrote:
-> I have a bunch of different Edimax and Asus WLAN sticks that are working
-> very well in Linux 2.6.37.2 with the rt73usb driver. But there's a
-> really annoying problem which causes the system to hang upon unplugging
-> those sticks.
-> 
-> First X server goes. Then you can SSH into the machine for a while, and
-> then I/O operations will start to fail. Magic SysRQ can be used to
-> safely sync/unmount/reboot the system.
-> 
-> It's happening very frequently but there are times that nothing bad happens.
-> 
-> As far as I can tell, it happens much more frequently if you were
-> associated to an AP when you unplugged the stick but let me clear this
-> after testing plug/unplug without associating at all.
-> 
-> One thing that is quite sure is that after unplugging the stick, if you
-> do nothing with your keyboard, the problem seems not to appear, e.g. I'm
-> moving the mouse cursor for a while, no problem at all but once I hit
-> pageup/pagedown to browse on the current konsole screenbuffer, it hangs!
-> So the problem seems to be triggered after keyboard interrupts.
-> 
-> I've set up a netconsole connection and got the dmesg for a while.
-> There's no oops/warning/error but every 2 minutes another tasks
-> generates a stacktrace because of 120 seconds timeout. I'm attaching the
-> log.
+Hi Stanislaw,
 
-I can confirm problem exist in 2.6.37. I can not reproduce it in
-current wireless-testing. I did not investigate further, I guess
-issue is fixed by:
+On Fri, 2011-03-04 at 08:51 -0800, Stanislaw Gruszka wrote:
+> Usually H/W generate statistics notify once per about 100ms, but
+> sometimes we can receive notify in shorter time, even 2 ms.
+> 
+> This can be problem for plcp health and ack health checking.
+> 
+> I.e. with 2 plcp errors happens randomly in 2 ms duration, we
+> exceed plcp delta threshold equal to 100 (2*100/2).
+> 
+> Also checking ack's in short time, can results not necessary false
+> positive and firmware reset, for example when channel is noised and
+> we do not receive ACKs frames or when remote device does not send
+> ACKs at the moment.
+> 
+> Patch change code to do statistic check and possible recovery only
+> if 99ms elapsed from last check. Forced delay should assure we have
+> good statistic data to estimate hardware state.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-commit d7bb5f845f437662296adbfeaab8fbfce1c32289
-Author: Johannes Stezenbach <js@sig21.net>
-Date:   Mon Dec 13 12:32:49 2010 +0100
+this plcp and ack count getting really complicate and not sure really
+worth doing it? but ok for now
 
-    rt2x00: fix hang when unplugging USB device in us
+Wey
 
-Stanislaw
