@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42636 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866Ab1CKQQr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 11:16:47 -0500
-Received: by qyk7 with SMTP id 7so6006988qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 08:16:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4D7A3EAD.10306@lwfinger.net>
-References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
-	<AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
-	<4D798863.2060303@lwfinger.net>
-	<AANLkTim3c200SL3icCMV7VGcyEaBQ3d6b19vSOerThib@mail.gmail.com>
-	<4D7A3EAD.10306@lwfinger.net>
-Date: Fri, 11 Mar 2011 17:16:44 +0100
-Message-ID: <AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
-Subject: Re: Status of Broadcom 4353?
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "Chen, Xianwen" <xianwen.chen@gmail.com>,
-	linux-wireless@vger.kernel.org, Chaoxing Lin <CLin@3eti.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:4984 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758970Ab1CDARd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2011 19:17:33 -0500
+Subject: Re: [PATCH wireless-2.6] iwlagn: Support new 1000 microcode.
+From: wwguy <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Fry, Donald H" <donald.h.fry@intel.com>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <20110303192805.GG8969@tuxdriver.com>
+References: <1299175449-7487-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110303192805.GG8969@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Mar 2011 16:15:26 -0800
+Message-ID: <1299197726.2603.124.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/11 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 03/11/2011 09:05 AM, Chen, Xianwen wrote:
->>
->> Thanks a lot guys!
->>
->> I revisited http://linuxwireless.org/en/users/Drivers/brcm80211, but
->> did not find the firmware. Am I missing something?
->
-> The firmware is in the linux-firmware tree. You probably need to install the
-> latest package for your distro called "linux firmware" or "kernel firmware".
-> Otherwise
->
-> git clone
-> git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
->
-> The files you need will be in linux-firmware/brcm. Copy them to
-> /lib/firmware/brcm.
+On Thu, 2011-03-03 at 11:28 -0800, John W. Linville wrote:
+> On Thu, Mar 03, 2011 at 10:04:09AM -0800, Wey-Yi Guy wrote:
+> > From: Fry, Donald H <donald.h.fry@intel.com>
+> > 
+> > iwlagn: Support new 1000 microcode.
+> > 
+> > New iwlwifi-1000 microcode requires driver support for API version 5.
+> > (There is no version 4)
+> > 
+> > Signed-off-by: Don Fry <donald.h.fry@intel.com>
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > CC: stable@kernel.org
+> 
+> When will this microcode be released?
+> 
+We are working on last stage of regulatory and plan to release it next
+week.
 
-Or just use web gui :)
+Thanks
+Wey
 
-http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=tree;f=brcm;h=883e5732daa040c3c7d39b179c4b4b750db354cd;hb=HEAD
 
--- 
-Rafał
