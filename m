@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45862 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932266Ab1CCStS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60951 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759886Ab1CDTOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 13:49:18 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 22so1738699wwb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 10:49:18 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 18/19] rt2x00: Optimize getting the beacon queue structure.
-Date: Thu, 3 Mar 2011 19:46:55 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201103031938.56423.IvDoorn@gmail.com> <201103031946.09972.IvDoorn@gmail.com> <201103031946.30487.IvDoorn@gmail.com>
-In-Reply-To: <201103031946.30487.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103031946.56905.IvDoorn@gmail.com>
+	Fri, 4 Mar 2011 14:14:30 -0500
+Subject: Re: [PATCH 5/7] nl80211: Let userspace set the authenticated flag
+ for a mesh peer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+In-Reply-To: <AANLkTintngisxbaP1P+fJo4_jhWtrzJhSXmLHMGfMotH@mail.gmail.com>
+References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+	 <1299208307-9428-6-git-send-email-thomas@cozybit.com>
+	 <1299238580.4348.5.camel@jlt3.sipsolutions.net>
+	 <AANLkTintngisxbaP1P+fJo4_jhWtrzJhSXmLHMGfMotH@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 20:14:28 +0100
+Message-ID: <1299266068.3742.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+On Fri, 2011-03-04 at 11:01 -0800, Javier Cardona wrote:
+> On Fri, Mar 4, 2011 at 3:36 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
+> >> From: Javier Cardona <javier@cozybit.com>
+> >
+> > [snip (maybe more changelog would be nice)]
+> >
+> > So .. a more "traditional" approach, like we do in AP, would be to let
+> > userspace manage the lifetime of STA entries in this case. In managed
+> > mode, we don't, but there mac80211 currently handles the authentication.
+> >
+> > I think you should explore doing mesh more like the AP case. OTOH, I
+> > don't know how the managed case with SAE would work.
+> 
+> I see.  Instead of setting the AUTH flag, just create the station.  We
+> would like to do this only for secure meshes, and continue letting the
+> kernel manage mesh peers for "open" meshes without the need of
+> userspace intervention.
 
-In the spirit of optimizing the code to get the queue structure of TX queues,
-also optimize the code to get beacon queues. We can simply use the bcn queue
-field of the rt2x00_dev structure instead of using the rt2x00queue_get_queue
-function.
+Sure. I might argue that even in the "open" mesh case sometimes
+userspace would like to manage it, so I wouldn't make it depend on a
+"secure mesh" flag but rather on a "userspace manages peers" flag, but
+from a programming POV those would be the same, just a bit differently
+semantically.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+OTOH, that might not work when the mesh isn't secure since then there's
+no clear point like the auth handshake when the station needs to be
+added? Not quite sure here.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 5cd6575..5827787 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -293,7 +293,7 @@ static void rt2500pci_config_intf(struct rt2x00_dev *rt2x00dev,
- 				  struct rt2x00intf_conf *conf,
- 				  const unsigned int flags)
- {
--	struct data_queue *queue = rt2x00queue_get_queue(rt2x00dev, QID_BEACON);
-+	struct data_queue *queue = rt2x00dev->bcn;
- 	unsigned int bcn_preload;
- 	u32 reg;
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 7f58767..e7210a2 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -191,7 +191,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
--	struct data_queue *queue = rt2x00queue_get_queue(rt2x00dev, QID_BEACON);
-+	struct data_queue *queue = rt2x00dev->bcn;
- 	struct queue_entry *entry = NULL;
- 	unsigned int i;
- 
--- 
-1.7.2.3
+johannes
 
