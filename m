@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61436 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753194Ab1CPSvI convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:60360 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758523Ab1CDDLx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 14:51:08 -0400
-Received: by iwn34 with SMTP id 34so1967288iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 11:51:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4D8104FE.4030700@free.fr>
-References: <4D8104FE.4030700@free.fr>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Wed, 16 Mar 2011 11:50:48 -0700
-Message-ID: <AANLkTikfR+hr6O+vjqRBsJ5e5sN4xC00sjUhHaBXBwu1@mail.gmail.com>
-Subject: Re: can not compile ath9k driver for ubuntu 2.6.38-6-generic kernel
-To: Le Gluon du Net <legluondunet@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+	Thu, 3 Mar 2011 22:11:53 -0500
+Received: by gxk8 with SMTP id 8so626037gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 19:11:53 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 3/7] mac80211: Let user space receive and send mesh auth/deauth frames
+Date: Thu,  3 Mar 2011 19:11:43 -0800
+Message-Id: <1299208307-9428-4-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 16, 2011 at 11:44 AM, Le Gluon du Net <legluondunet@free.fr> wrote:
-> /home/legluondunet/Bureau/compat-wireless-2011-03-15/compat/compat-2.6.39.c:
-> In function ‘tty_set_termios’:
-> /home/legluondunet/Bureau/compat-wireless-2011-03-15/compat/compat-2.6.39.c:93:4:
-> error: ‘TASK_INTERRUPTIBLE’ undeclared (first use in this function)
-> /home/legluondunet/Bureau/compat-wireless-2011-03-15/compat/compat-2.6.39.c:93:4:
-> note: each undeclared identifier is reported only once for each function
+From: Javier Cardona <javier@cozybit.com>
 
-This looks like the same problem that cropped up on iwlwifi 32-bit
-last week.  That file is probably missing an include for linux/sched.h
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Tested-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 2543e48..bff7237 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -542,7 +542,9 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 	},
+ 	[NL80211_IFTYPE_MESH_POINT] = {
+ 		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++			BIT(IEEE80211_STYPE_AUTH >> 4) |
++			BIT(IEEE80211_STYPE_DEAUTH >> 4),
+ 	},
+ };
+ 
+-- 
+1.7.0.4
 
-Dan
