@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:42683 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757488Ab1CAUg6 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45080 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759928Ab1CDUGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 15:36:58 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 36so5089422wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 12:36:57 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC 7/9] wl12xx: save wl->wow_enabled on suspend
-Date: Tue,  1 Mar 2011 22:36:42 +0200
-Message-Id: <1299011804-13899-8-git-send-email-eliad@wizery.com>
-In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+	Fri, 4 Mar 2011 15:06:33 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 9BE0E540175
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Mar 2011 15:09:57 -0500 (EST)
+Subject: Compat-wireless release for 2011-03-04 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110304200631.D22A345796@repository3.orbit-lab.org>
+Date: Fri,  4 Mar 2011 15:06:31 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-save the WoW parameters we got in the .stop callback, so we will be
-able to consider them later (while suspending wl12xx_sdio/spi).
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   b8988ca..557ca24  linux-2.6.38.y -> origin/linux-2.6.38.y
+ * [new tag]         compat-wireless-v2.6.38-rc7-1 -> compat-wireless-v2.6.38-rc7-1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   f3ef28f..0dee4ea  linux-2.6.38.y -> origin/linux-2.6.38.y
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 880ce2e...e30f50b akpm-end   -> origin/akpm-end  (forced update)
+   dd9c154..cbdbb4c  akpm-start -> origin/akpm-start
+   b7498f3..d08c1d9  history    -> origin/history
+ + 2afa434...502d294 master     -> origin/master  (forced update)
+   dd9c154..cbdbb4c  stable     -> origin/stable
+ * [new tag]         next-20110304 -> next-20110304
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |    6 ++++--
- drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 3a7d788..a46022f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1084,7 +1084,7 @@ static struct notifier_block wl1271_dev_notifier = {
- static int wl1271_op_start(struct ieee80211_hw *hw,
- 			   struct cfg80211_wow *wow)
- {
--	wl1271_debug(DEBUG_MAC80211, "mac80211 start");
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 start resume=%d", !!wow);
- 
- 	/*
- 	 * We have to delay the booting of the hardware because
-@@ -1106,7 +1106,9 @@ static int wl1271_op_start(struct ieee80211_hw *hw,
- static void wl1271_op_stop(struct ieee80211_hw *hw,
- 			   struct cfg80211_wow *wow)
- {
--	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
-+	struct wl1271 *wl = hw->priv;
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 stop suspend=%d", !!wow);
-+	wl->wow_enabled = !!(wow && wow->enabled_triggers);
- }
- 
- static int wl1271_op_add_interface(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 338acc9..dd21818 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -521,6 +521,9 @@ struct wl1271 {
- 	bool ba_support;
- 	u8 ba_rx_bitmap;
- 
-+	/* tell sdio to stay awake (TODO: move to other place) */
-+	bool wow_enabled;
-+
- 	/*
- 	 * AP-mode - links indexed by HLID. The global and broadcast links
- 	 * are always active.
--- 
-1.7.0.4
-
+    831498 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1566 - % of code consists of backport work
