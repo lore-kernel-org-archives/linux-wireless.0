@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37077 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932135Ab1CRWmV convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:44712 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759723Ab1CDPuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 18:42:21 -0400
-Received: by qyk7 with SMTP id 7so1194605qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 15:42:20 -0700 (PDT)
+	Fri, 4 Mar 2011 10:50:04 -0500
+Received: by wyg36 with SMTP id 36so2210214wyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 07:50:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1300483139.15919.42.camel@dev.znau.edu.ua>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	<1300453433.13499.18.camel@dev.znau.edu.ua>
-	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	<1300460342.13499.60.camel@dev.znau.edu.ua>
-	<AANLkTimboGmJNdHHbzWdSGf14jenn+yag944A8GBEXtc@mail.gmail.com>
-	<1300483139.15919.42.camel@dev.znau.edu.ua>
-Date: Fri, 18 Mar 2011 23:42:20 +0100
-Message-ID: <AANLkTi=5nwO-xsCok3_R494qFGH-W5CwteP3j5Np9ZK0@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20110303191656.73bba824@realh.co.uk>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
+	<20110225144718.63550601@realh.co.uk>
+	<AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
+	<20110225165745.4860afe0@realh.co.uk>
+	<20110226183542.75bc1786@realh.co.uk>
+	<AANLkTi=ZWmWZWMBSdGX8S9EfiRyv3eKEU9P3n0bfDAuJ@mail.gmail.com>
+	<20110302163051.425d1419@toddler>
+	<AANLkTinEA2NVxwWZJME-oChE6OEJc_TSTajMfe7f+3hm@mail.gmail.com>
+	<20110303143151.03dbe76b@toddler>
+	<AANLkTiksdt5fciyFZ_nphEYgLH6Ey_HSHHpY5Eg9pNqD@mail.gmail.com>
+	<20110303191656.73bba824@realh.co.uk>
+Date: Fri, 4 Mar 2011 21:20:02 +0530
+Message-ID: <AANLkTikjQPVjkHZy29B9e=jgOyH__HB0ED0aSQALEc2t@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tony Houghton <h@realh.co.uk>
+Cc: Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	ath9k-devel@lists.ath9k.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil@venema.h4ckr.net, Vivek Natarajan <vnatarajan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/18 George Kashperko <george@znau.edu.ua>:
-> Well, I see this as following. In generic host life time there are
-> several states. These states are following:
-> 1. Host just started up, underlying backplane is powered up, we issued
-> backplane detect/scan. At this point at least some minimal windowed
-> access is up (if such required), not yet cores/devices are known.
-> 2. Backplane got identified, scanned, individual cores/devices
-> recognised, buscommon and buscore are registered with kernel to get them
-> matched with drivers, and then probed and set up.
-> 3. Buscommon and buscore are driven, host can finish with host specific
-> workarounds, both buscommon and buscore can get their _init entry points
-> called, we can setup host device irq routine, finally we can expose the
-> rest cores/devices to kernel.
+2011/3/4 Tony Houghton <h@realh.co.uk>:
+> On Thu, 3 Mar 2011 21:27:32 +0530
+> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 >
-> With that in mind here is my general host ops design pseudo code:
-> struct host_ops {
->        /* Init call we should get once both buscommon and buscore drivers are bound (state #3) */
->        int (*init)(struct bcmb_bus *bus);
+>> sudo modprobe ath9k debug=0xffffffff
 >
->        /* Regular backplane access ops */
->        u8 (*read(8|16|32))(struct bcmb_bus *bus, bcmb_addr_t addr);
->        void (*write(8|16|32))(struct bcmb_bus *bus, bcmb_addr_t addr, u(8|16|32) val);
->
->        /* For some theoretically hard-to-set-up before scan hosts we could keep scan_read32 */
->        u32 scan_read32(struct bcmb_bus *bus, bcmb_addr_t addr);
-> };
+> That debug option was what I needed. I'm attaching what I captured with
+> netconsole leading up to a crash.
 
-I don't think it makes much sense. If init is going to be called in
-state #3, what about some pre-init? set_master, request_region, xtal,
-iomap?
+Could not find something suspicious, but need to look more into it.
+The patch you mentioned adds support for new version of a  chip and I
+am not quite clear how it can directly cause a kernel lock. All those
+things added are mainly hardware code and need to see whether some
+thing basic is missed in the patch.
 
--- 
-Rafał
+>
+> I also found that I couldn't reproduce the problem while running on
+> battery, but as soon as I connected the PSU it crashed the very next
+> time I disabled wireless. I hadn't noticed that PSU/battery made a
+> difference before, but it does seem to be an issue.
+>
+
+Please see whether this is consistently reproducible.
+As a try can you please disable the network manager and use iw command
+to connect?
