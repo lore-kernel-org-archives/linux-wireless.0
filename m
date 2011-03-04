@@ -1,74 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60460 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753982Ab1CCP6L (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33280
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751746Ab1CDUYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 10:58:11 -0500
-Received: by bwz15 with SMTP id 15so1267595bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 07:58:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20110303143151.03dbe76b@toddler>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
-	<20110225144718.63550601@realh.co.uk>
-	<AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
-	<20110225165745.4860afe0@realh.co.uk>
-	<20110226183542.75bc1786@realh.co.uk>
-	<AANLkTi=ZWmWZWMBSdGX8S9EfiRyv3eKEU9P3n0bfDAuJ@mail.gmail.com>
-	<20110302163051.425d1419@toddler>
-	<AANLkTinEA2NVxwWZJME-oChE6OEJc_TSTajMfe7f+3hm@mail.gmail.com>
-	<20110303143151.03dbe76b@toddler>
-Date: Thu, 3 Mar 2011 21:27:32 +0530
-Message-ID: <AANLkTiksdt5fciyFZ_nphEYgLH6Ey_HSHHpY5Eg9pNqD@mail.gmail.com>
-Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Tony Houghton <h@realh.co.uk>
-Cc: Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil@venema.h4ckr.net, Vivek Natarajan <vnatarajan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 4 Mar 2011 15:24:30 -0500
+Date: Fri, 04 Mar 2011 12:25:07 -0800 (PST)
+Message-Id: <20110304.122507.226772696.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2011-03-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110304194018.GD9866@tuxdriver.com>
+References: <20110304194018.GD9866@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 3, 2011 at 8:01 PM, Tony Houghton <h@realh.co.uk> wrote:
-> On Thu, 3 Mar 2011 10:51:15 +0530
-> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
->
->> On Wed, Mar 2, 2011 at 10:00 PM, Tony Houghton <h@realh.co.uk> wrote:
->> >
->> > Is this still not reproducible? I'd like to do more to help trace
->> > the problem but I'm a bit stuck. Is there something I can do to
->> > make sure all the debug/log messages from ath9k appear on the
->> > console?
->>
->> sudo dmesg -n 8?
->
-> AFAICT that will just make sure the debug messages get logged, but not
-> make them appear anywhere the other messages aren't appearing eg on a
-> console or net console. I could try tail -f /dev/xconsole.
->
-> The ath9k module has a "debug" parameter. It just says it's a mask and I
-> don't know how to use it. Do I set bits to enable or disable levels?
-> What value to log "everything"?
->
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 4 Mar 2011 14:40:18 -0500
 
-Please make sure of the following things
-CONFIG_ATH_COMMON=m
-CONFIG_ATH_DEBUG=y
+> Yet another batch of new wireless bits intended for 2.6.39... :-)
+> 
+> Highlights in this round include AP-mode support for wl12xx, some
+> rtlwifi fixes (many build-related), some more b43 N-phy support
+> advancement, a big batch of ath9k_htc updates, and the refactoring of
+> iwlwifi to separate iwl3945 and iwl4965 support out into a new iwlegacy
+> driver.  Mixed-in, of course, is the usual batch of various driver and
+> mac80211 updates and fixes.
+> 
+> Please let me know if there are problems!
 
-CONFIG_ATH9K_HW=m
-CONFIG_ATH9K_COMMON=m
-CONFIG_ATH9K=m
-CONFIG_ATH9K_DEBUGFS=y
-CONFIG_ATH9K_RATE_CONTROL=y
-CONFIG_ATH9K_HTC=m
-CONFIG_ATH9K_HTC_DEBUGFS=y
-
-sudo modprobe ath9k debug=0xffffffff
-
-you will get lot of messages from the debug log.
+Pulled, thanks John.
