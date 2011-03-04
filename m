@@ -1,39 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42726
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751656Ab1CPHCO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 03:02:14 -0400
-Date: Wed, 16 Mar 2011 00:02:51 -0700 (PDT)
-Message-Id: <20110316.000251.189704695.davem@davemloft.net>
-To: jpirko@redhat.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, eric.dumazet@vger.kernel.org,
-	linville@tuxdriver.com, kaber@trash.net
-Subject: Re: net-next-2.6 status...
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110316065008.GA2780@psychotron.redhat.com>
-References: <20110315.160124.104058374.davem@davemloft.net>
-	<20110316065008.GA2780@psychotron.redhat.com>
+Received: from mga02.intel.com ([134.134.136.20]:47745 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759883Ab1CDRGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2011 12:06:15 -0500
+Subject: Re: [PATCH 2/3] iwlwifi: cleanup iwl_good_plcp_health
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1299257511-5241-2-git-send-email-sgruszka@redhat.com>
+References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
+	 <1299257511-5241-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 08:47:35 -0800
+Message-ID: <1299257255.5082.140.camel@wwguy-huron>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Pirko <jpirko@redhat.com>
-Date: Wed, 16 Mar 2011 07:50:09 +0100
-
->>Jiri, I know there is your patch set there, but I think you and Changli
->>still need to go back and forth one more time wrt. orig_dev semantics.
->>Since you have been posting this patch set for some time I'm still
->>willing to apply it for this merge window, but please make haste and
->>work out the remaining discussion.  Thank you.
+On Fri, 2011-03-04 at 08:51 -0800, Stanislaw Gruszka wrote:
+> Make iwl_good_plcp_health code easiest to read.
 > 
-> Dave, you can apply the rest of the series and leave only the first
-> patch (af_packet) out. There's no dependency. We will figure out things
-> around origdev later.
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  
 
-I was about to do that but I've found other problems.
-
-You cannot make the modifications you make to linux/if.h, those
-interface flags are visible to userspace.
