@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52314 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:48555 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590Ab1C2O2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 10:28:50 -0400
-Date: Tue, 29 Mar 2011 16:28:25 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] iwlegacy: fix bugs in change_interface
-Message-ID: <20110329142824.GA7320@redhat.com>
-References: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
- <20110329132231.GA6919@redhat.com>
- <1301405175.3834.15.camel@jlt3.sipsolutions.net>
- <1301405291.3834.16.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1301405291.3834.16.camel@jlt3.sipsolutions.net>
+	id S1759900Ab1CDRKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2011 12:10:07 -0500
+Subject: Re: [PATCH 1/3] iwlwifi: move rx handlers code to iwl-rx.c
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
+References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Mar 2011 08:52:41 -0800
+Message-ID: <1299257561.5082.145.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2011 at 03:28:11PM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2011-03-04 at 08:51 -0800, Stanislaw Gruszka wrote:
+> Put generic rx_handlers (except iwlagn_rx_reply_compressed_ba) to
+> iwl-rx.c . Make functions static and change prefix from iwlagn_ to
+> iwl_ . Beautify iwl_setup_rx_handlers and do some other minor coding
+> style changes.
 > 
-> If change_interface gets invoked during a firmware
-> restart, it may crash; prevent that from happening
-> by checking if ctx->vif is assigned.
-> 
-> Additionally, in my initial commit I forgot to set
-> the vif->p2p variable correctly, so fix that too.
-> 
-> Cc: stable@kernel.org [2.6.38+]
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |  235 -------------
+>  drivers/net/wireless/iwlwifi/iwl-agn.c     |  176 ----------
+>  drivers/net/wireless/iwlwifi/iwl-agn.h     |   13 +-
+>  drivers/net/wireless/iwlwifi/iwl-core.c    |   63 ----
+>  drivers/net/wireless/iwlwifi/iwl-core.h    |   18 +-
+>  drivers/net/wireless/iwlwifi/iwl-rx.c      |  523 ++++++++++++++++++++++++++--
+>  6 files changed, 500 insertions(+), 528 deletions(-)
 
-ACK
+> --
+We want to do the minimum change during driver split, so after the
+driver split, the iwlagn driver has the mixed iwl-agn-xxx and iwl-xxx
+files. We need to do the clean up again. this patch is ok for now, but
+we are planning to unify the filename and function name for iwlagn
+driver soon.
+
+Wey
+
+Wey
+
+
