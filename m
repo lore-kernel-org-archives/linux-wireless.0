@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:49314 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754587Ab1CHQ4i (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43513 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758526Ab1CDDLz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 11:56:38 -0500
-Received: by mail-iy0-f182.google.com with SMTP id 12so5879290iyj.13
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 08:56:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1299571030-11753-1-git-send-email-coelho@ti.com>
-References: <1299502396-11455-1-git-send-email-coelho@ti.com>
-	<1299571030-11753-1-git-send-email-coelho@ti.com>
-Date: Tue, 8 Mar 2011 18:56:37 +0200
-Message-ID: <AANLkTimYfoatwTWVZqGGoVEnX5nnYmo25m8UN4Z8DUnL@mail.gmail.com>
-Subject: Re: [PATCH v2] wl12xx: fixes for 1281/1283 support - Add acx commands
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: ido@wizery.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 Mar 2011 22:11:55 -0500
+Received: by yxs7 with SMTP id 7so614063yxs.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2011 19:11:54 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>
+Subject: [PATCH 4/7] mac80211: Accept mesh auth frames before a peer link has been established
+Date: Thu,  3 Mar 2011 19:11:44 -0800
+Message-Id: <1299208307-9428-5-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
+References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/8/11, Luciano Coelho <coelho@ti.com> wrote:
-> This patch fixes up some issues with patch 03/15 in the wl128x support
-> series:
->
-> * Fix endianess issues;
-> * Simplify sdio-specific block_size handling;
-> * Minor changes in comments
->
-> This has been compile-tested only.  I will test this changes after I
-> go through the whole series and, if everything is still ok, I'll merge
-> this patch into 03/15.
->
-> Cc: Shahar Levi <shahar_levi@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
-Looks good. Thanks for your fixes.
+From: Javier Cardona <javier@cozybit.com>
 
-Reviewed-by: Shahar Levi <shahar_levi@ti.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Tested-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/rx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5c1930b..fe0f1e3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -502,7 +502,8 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+ 
+ 		if (ieee80211_is_probe_req(hdr->frame_control) ||
+ 		    ieee80211_is_probe_resp(hdr->frame_control) ||
+-		    ieee80211_is_beacon(hdr->frame_control))
++		    ieee80211_is_beacon(hdr->frame_control) ||
++		    ieee80211_is_auth(hdr->frame_control))
+ 			return RX_CONTINUE;
+ 
+ 		return RX_DROP_MONITOR;
 -- 
-All the best,
-Shahar
+1.7.0.4
+
