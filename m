@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63924 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220Ab1CJP3V (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753145Ab1CETmK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 10:29:21 -0500
-Date: Thu, 10 Mar 2011 18:23:26 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Dan Williams <dcbw@redhat.com>, javier@cozybit.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] libertas: fix write past end of array in mesh_id_get()
-Message-ID: <20110310152326.GA2008@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 5 Mar 2011 14:42:10 -0500
+Subject: Re: [PATCH 1/4 v2] mac80211: Enable mesh security from userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTikAR4v8T48q7eSoOU+R+foqTUT+6Kr4U6ZnWwu7@mail.gmail.com>
+References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+	 <1299288252-28314-2-git-send-email-thomas@cozybit.com>
+	 <1299333920.3826.5.camel@jlt3.sipsolutions.net>
+	 <AANLkTikAR4v8T48q7eSoOU+R+foqTUT+6Kr4U6ZnWwu7@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 05 Mar 2011 20:42:07 +0100
+Message-ID: <1299354127.29845.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-defs.meshie.val.mesh_id is 32 chars long.  It's not supposed to be NUL
-terminated.  This code puts a terminator on the end to make it easier to
-print to sysfs.  The problem is that if the mesh_id fills the entire
-buffer the original code puts the terminator one spot past the end.
+On Sat, 2011-03-05 at 11:34 -0800, Javier Cardona wrote:
 
-The way the original code was written, there was a check to make sure
-that maxlen was less than PAGE_SIZE.  Since we know that maxlen is at
-most 34 chars, I just removed the check.
+> > That last check seems a bit pointless -- I'd trust userspace (aka allow
+> > it to shoot itself in the foot) and not check that there's RSN
+> > information when it says it wants security -- maybe WAPI will come up
+> > with mesh security at some point ;-)
+> 
+> Enabling security without an RSN will result in mesh node that can't
+> communicate with anyone in the mesh, secured or not.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+Right, well, I keep thinking that maybe a daemon could still run an
+unsecured mesh? But in any case I'm not so sure how that works at all --
+see my reply to the intro mail.
 
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-index acf3bf6..9d097b9 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
-@@ -918,7 +918,6 @@ static ssize_t mesh_id_get(struct device *dev, struct device_attribute *attr,
- 			   char *buf)
- {
- 	struct mrvl_mesh_defaults defs;
--	int maxlen;
- 	int ret;
- 
- 	ret = mesh_get_default_parameters(dev, &defs);
-@@ -931,13 +930,11 @@ static ssize_t mesh_id_get(struct device *dev, struct device_attribute *attr,
- 		defs.meshie.val.mesh_id_len = IEEE80211_MAX_SSID_LEN;
- 	}
- 
--	/* SSID not null terminated: reserve room for \0 + \n */
--	maxlen = defs.meshie.val.mesh_id_len + 2;
--	maxlen = (PAGE_SIZE > maxlen) ? maxlen : PAGE_SIZE;
-+	memcpy(buf, defs.meshie.val.mesh_id, defs.meshie.val.mesh_id_len);
-+	buf[defs.meshie.val.mesh_id_len] = '\n';
-+	buf[defs.meshie.val.mesh_id_len + 1] = '\0';
- 
--	defs.meshie.val.mesh_id[defs.meshie.val.mesh_id_len] = '\0';
--
--	return snprintf(buf, maxlen, "%s\n", defs.meshie.val.mesh_id);
-+	return defs.meshie.val.mesh_id_len + 1;
- }
- 
- /**
+> I prefer
+> keeping that check in place to avoid annoying misconfigurations.  You
+> still think it's pointless?  (In fact I was contemplating a more
+> strict check by returning EINVAL instead of ignoring the request when
+> userspace enables security and does not pass an RSN.)
+
+I don't see how that misconfiguration could ever happen since you
+wouldn't run the daemon if you don't want RSN, and iw would never set
+the secure flag?
+
+It just seems that if somebody wants to play with a protocol that
+doesn't use the RSN IE but maybe adapts WPA to it, we could still allow
+it to work.
+
+johannes
+
