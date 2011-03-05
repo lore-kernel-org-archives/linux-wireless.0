@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:46824 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822Ab1CZVUK (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:46312 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991Ab1CEFTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2011 17:20:10 -0400
-From: Wu Zhangjin <wuzhangjin@gmail.com>
-To: Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Wu Zhangjin <wuzhangjin@gmail.com>
-Subject: [RFC PATCH] rtl8187: Fix led support for rfkill
-Date: Sun, 27 Mar 2011 05:19:54 +0800
-Message-Id: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
+	Sat, 5 Mar 2011 00:19:32 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/4] mwifiex: remove struct ieee_bssco_2040
+Date: Fri,  4 Mar 2011 21:22:22 -0800
+Message-Id: <1299302545-9672-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-led can not be turned off normally when rfkill is blocked, the cause is
-the led_turn_off() function exit as not expected:
+This struct is not necessary.
 
-drivers/net/wireless/rtl818x/rtl8187/leds.c:
-
-static void led_turn_off(struct work_struct *work)
-{
-	[...]
-	/* Don't change the LED, when the device is down. */
-	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_UNSPECIFIED)
-		return ;
-	[...]
-
-When rfkill is blocked, the function calling order looks like this:
-
-net/mac80211/iface.c:
-
-ieee80211_do_stop
-	-> drv_remove_interface = rtl8187_remove_interface
-	-> ieee80211_stop_device
-		-> led_set_brightness
-			-> led_turn_off
-	-> drv_stop = rtl8187_stop
-
-rtl8187_remove_interface() set priv->vif to NULL, so, led_turn_off()
-will return and will not be able to turn off the led. delay the setting
-of priv->vif to rtl8187_stop() can solve it.
-
-Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/rtl818x/rtl8187/dev.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/11n.c  |    2 +-
+ drivers/net/wireless/mwifiex/fw.h   |    2 +-
+ drivers/net/wireless/mwifiex/ieee.h |    6 +-----
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index 2bb5297..1fea0cd 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -1007,6 +1007,9 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
- 	u32 reg;
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 49876e7..ffc005a 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -771,7 +771,7 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
+ 		       sizeof(struct mwifiex_ie_types_2040bssco));
+ 		bss_co_2040->header.type = cpu_to_le16(WLAN_EID_BSS_COEX_2040);
+ 		bss_co_2040->header.len =
+-		       cpu_to_le16(sizeof(struct ieee_bssco_2040));
++		       cpu_to_le16(sizeof(bss_co_2040->bss_co_2040));
  
- 	mutex_lock(&priv->conf_mutex);
-+
-+	priv->vif = NULL;
-+
- 	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
+ 		memcpy((u8 *) bss_co_2040 +
+ 		       sizeof(struct mwifiex_ie_types_header),
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 50f6df6..038d7d6 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1167,7 +1167,7 @@ struct mwifiex_ie_types_htinfo {
  
- 	reg = rtl818x_ioread8(priv, &priv->map->CMD);
-@@ -1067,10 +1070,7 @@ exit:
- static void rtl8187_remove_interface(struct ieee80211_hw *dev,
- 				     struct ieee80211_vif *vif)
- {
--	struct rtl8187_priv *priv = dev->priv;
--	mutex_lock(&priv->conf_mutex);
--	priv->vif = NULL;
--	mutex_unlock(&priv->conf_mutex);
-+	/* Nothing to do */
- }
+ struct mwifiex_ie_types_2040bssco {
+ 	struct mwifiex_ie_types_header header;
+-	struct ieee_bssco_2040 bss_co_2040;
++	u8 bss_co_2040;
+ } __packed;
  
- static int rtl8187_config(struct ieee80211_hw *dev, u32 changed)
+ struct mwifiex_ie_types_extcap {
+diff --git a/drivers/net/wireless/mwifiex/ieee.h b/drivers/net/wireless/mwifiex/ieee.h
+index c9f0964..877a9f8 100644
+--- a/drivers/net/wireless/mwifiex/ieee.h
++++ b/drivers/net/wireless/mwifiex/ieee.h
+@@ -152,10 +152,6 @@ struct ieee_types_wmm_parameter {
+ #define MWIFIEX_MAX_TRIPLET_802_11D		83
+ #define COUNTRY_CODE_LEN			3
+ 
+-struct ieee_bssco_2040 {
+-	u8 bss_co_2040_value;
+-} __packed;
+-
+ struct ieee_obss_scan_param {
+ 	u16 obss_scan_passive_dwell;
+ 	u16 obss_scan_active_dwell;
+@@ -168,7 +164,7 @@ struct ieee_obss_scan_param {
+ 
+ struct ieee_types_2040bssco {
+ 	struct ieee_types_header ieee_hdr;
+-	struct ieee_bssco_2040 bss_co_2040;
++	u8 bss_co_2040;
+ } __packed;
+ 
+ struct ieee_types_obss_scan_param {
 -- 
-1.7.1
+1.7.0.2
 
