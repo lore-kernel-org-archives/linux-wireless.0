@@ -1,85 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:53801 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755841Ab1CIBt4 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58310 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752978Ab1CETfU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 20:49:56 -0500
-Received: by pvg12 with SMTP id 12so9852pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 17:49:55 -0800 (PST)
+	Sat, 5 Mar 2011 14:35:20 -0500
+Received: by vws12 with SMTP id 12so2838021vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Mar 2011 11:35:19 -0800 (PST)
 MIME-Version: 1.0
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Tue, 8 Mar 2011 17:41:36 -0800
-Message-ID: <AANLkTi=wuAcm-25WHsRopc08UHEt9p0-5V=0GkpeqRK8@mail.gmail.com>
-Subject: [PATCH] mac80211: update minstrel_ht sample rate when probe is set
-To: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1299333920.3826.5.camel@jlt3.sipsolutions.net>
+References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+ <1299288252-28314-2-git-send-email-thomas@cozybit.com> <1299333920.3826.5.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Sat, 5 Mar 2011 11:34:59 -0800
+Message-ID: <AANLkTikAR4v8T48q7eSoOU+R+foqTUT+6Kr4U6ZnWwu7@mail.gmail.com>
+Subject: Re: [PATCH 1/4 v2] mac80211: Enable mesh security from userspace
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Waiting until the status is received can cause the same rate to be
-probed multiple times consecutively.
+On Sat, Mar 5, 2011 at 6:05 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2011-03-04 at 17:24 -0800, Thomas Pedersen wrote:
+>
+>
+>> +#define NL80211_MESH_SETUP_VENDOR_IE NL80211_MESH_SETUP_IE
+>
+>> -     NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
+>> +     NL80211_MESH_SETUP_IE,
+>> +     NL80211_MESH_SETUP_ENABLE_SECURITY,
+>
+> Clearly the intent was to be API compatible (ABI is guaranteed anyway),
+> but that seems to not work this way since the names don't match.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
----
- net/mac80211/rc80211_minstrel_ht.c |   15 +++++----------
- 1 files changed, 5 insertions(+), 10 deletions(-)
+Ouch, you are right.  Should have been
++#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
+We'll send a fixup.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c
-b/net/mac80211/rc80211_minstrel_ht.c
-index 775cf15..bce14fb 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -415,10 +415,8 @@ minstrel_ht_tx_status(void *priv, struct
-ieee80211_supported_band *sband,
- 		mi->sample_count--;
- 	}
+>> +     if (tb[NL80211_MESH_SETUP_IE]) {
+>>               struct nlattr *ieattr =
+>> -                     tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
+>> +                     tb[NL80211_MESH_SETUP_IE];
+>>               if (!is_valid_ie_attr(ieattr))
+>>                       return -EINVAL;
+>> -             setup->vendor_ie = nla_data(ieattr);
+>> -             setup->vendor_ie_len = nla_len(ieattr);
+>> +             setup->ie = nla_data(ieattr);
+>> +             setup->ie_len = nla_len(ieattr);
+>> +             if (eid_in_ie_attr(ieattr, WLAN_EID_RSN))
+>> +                     setup->is_secure =
+>> +                     nla_get_flag(tb[NL80211_MESH_SETUP_ENABLE_SECURITY]);
+>
+> That last check seems a bit pointless -- I'd trust userspace (aka allow
+> it to shoot itself in the foot) and not check that there's RSN
+> information when it says it wants security -- maybe WAPI will come up
+> with mesh security at some point ;-)
 
--	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) {
-+	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
- 		mi->sample_packets += info->status.ampdu_len;
--		minstrel_next_sample_idx(mi);
--	}
+Enabling security without an RSN will result in mesh node that can't
+communicate with anyone in the mesh, secured or not.   I prefer
+keeping that check in place to avoid annoying misconfigurations.  You
+still think it's pointless?  (In fact I was contemplating a more
+strict check by returning EINVAL instead of ignoring the request when
+userspace enables security and does not pass an RSN.)
 
- 	for (i = 0; !last; i++) {
- 		last = (i == IEEE80211_TX_MAX_RATES - 1) ||
-@@ -551,13 +549,14 @@ minstrel_get_sample_rate(struct minstrel_priv
-*mp, struct minstrel_ht_sta *mi)
- 	sample_idx = sample_table[mg->column][mg->index];
- 	mr = &mg->rates[sample_idx];
- 	sample_idx += mi->sample_group * MCS_GROUP_RATES;
-+	minstrel_next_sample_idx(mi);
-
- 	/*
- 	 * When not using MRR, do not sample if the probability is already
- 	 * higher than 95% to avoid wasting airtime
- 	 */
- 	if (!mp->has_mrr && (mr->probability > MINSTREL_FRAC(95, 100)))
--		goto next;
-+		return -1;
-
- 	/*
- 	 * Make sure that lower rates get sampled only occasionally,
-@@ -566,17 +565,13 @@ minstrel_get_sample_rate(struct minstrel_priv
-*mp, struct minstrel_ht_sta *mi)
- 	if (minstrel_get_duration(sample_idx) >
- 	    minstrel_get_duration(mi->max_tp_rate)) {
- 		if (mr->sample_skipped < 20)
--			goto next;
-+			return -1;
-
- 		if (mi->sample_slow++ > 2)
--			goto next;
-+			return -1;
- 	}
-
- 	return sample_idx;
--
--next:
--	minstrel_next_sample_idx(mi);
--	return -1;
- }
-
- static void
 -- 
-1.7.0.4
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
