@@ -1,86 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44362 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717Ab1CFO20 (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:46328 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148Ab1CEFTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 09:28:26 -0500
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 13/15] wl12xx: 1281/1283 support - Use different FW file for AP mode wl127x/wl128x chips
-Date: Sun,  6 Mar 2011 16:32:18 +0200
-Message-Id: <1299421940-26292-14-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	Sat, 5 Mar 2011 00:19:33 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/4] mwifiex: remove COUNTRY_CODE_LEN
+Date: Fri,  4 Mar 2011 21:22:25 -0800
+Message-Id: <1299302545-9672-4-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1299302545-9672-1-git-send-email-bzhao@marvell.com>
+References: <1299302545-9672-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+use IEEE80211_COUNTRY_STRING_LEN instead
 
-Choose a different FW for AP-mode wl127x and wl128x chips, base on chip
-ID at boot time.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |    5 ++++-
- drivers/net/wireless/wl12xx/sdio.c   |    3 ++-
- drivers/net/wireless/wl12xx/spi.c    |    3 ++-
- drivers/net/wireless/wl12xx/wl12xx.h |    3 ++-
- 4 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/fw.h          |    2 +-
+ drivers/net/wireless/mwifiex/ieee.h        |    1 -
+ drivers/net/wireless/mwifiex/main.h        |    4 ++--
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    8 +++-----
+ 4 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 6fda932..8ac3936 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -848,7 +848,10 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 038d7d6..861e64a 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1062,7 +1062,7 @@ struct host_cmd_ds_802_11_bg_scan_query_rsp {
  
- 	switch (wl->bss_type) {
- 	case BSS_TYPE_AP_BSS:
--		fw_name = WL1271_AP_FW_NAME;
-+		if (wl->chip.id == CHIP_ID_1283_PG20)
-+			fw_name = WL128X_AP_FW_NAME;
-+		else
-+			fw_name = WL127X_AP_FW_NAME;
- 		break;
- 	case BSS_TYPE_IBSS:
- 	case BSS_TYPE_STA_BSS:
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 521a187..5f4dd73 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -358,4 +358,5 @@ MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
- MODULE_FIRMWARE(WL1271_FW_NAME);
- MODULE_FIRMWARE(WL128X_FW_NAME);
--MODULE_FIRMWARE(WL1271_AP_FW_NAME);
-+MODULE_FIRMWARE(WL127X_AP_FW_NAME);
-+MODULE_FIRMWARE(WL128X_AP_FW_NAME);
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index abbb8dc..e4e9ea5 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -501,5 +501,6 @@ MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
- MODULE_FIRMWARE(WL1271_FW_NAME);
- MODULE_FIRMWARE(WL128X_FW_NAME);
--MODULE_FIRMWARE(WL1271_AP_FW_NAME);
-+MODULE_FIRMWARE(WL127X_AP_FW_NAME);
-+MODULE_FIRMWARE(WL128X_AP_FW_NAME);
- MODULE_ALIAS("spi:wl1271");
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 1114b7c..6fa760e 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -132,7 +132,8 @@ extern u32 wl12xx_debug_level;
+ struct mwifiex_ietypes_domain_param_set {
+ 	struct mwifiex_ie_types_header header;
+-	u8 country_code[COUNTRY_CODE_LEN];
++	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct ieee80211_country_ie_triplet triplet[1];
+ } __packed;
  
- #define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
- #define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
--#define WL1271_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
-+#define WL127X_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
-+#define WL128X_AP_FW_NAME "ti-connectivity/wl128x-fw-ap.bin"
+diff --git a/drivers/net/wireless/mwifiex/ieee.h b/drivers/net/wireless/mwifiex/ieee.h
+index 1c95780..c4f5c79 100644
+--- a/drivers/net/wireless/mwifiex/ieee.h
++++ b/drivers/net/wireless/mwifiex/ieee.h
+@@ -150,7 +150,6 @@ struct ieee_types_wmm_parameter {
+ } __packed;
  
- /*
-  * wl127x and wl128x are using the same NVS file name. However, the ini
+ #define MWIFIEX_MAX_TRIPLET_802_11D		83
+-#define COUNTRY_CODE_LEN			3
+ 
+ struct ieee_obss_scan_param {
+ 	u16 obss_scan_passive_dwell;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 41aeebd..6503feb 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -290,7 +290,7 @@ enum state_11d_t {
+ };
+ 
+ struct mwifiex_802_11d_domain_reg {
+-	u8 country_code[COUNTRY_CODE_LEN];
++	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
+ 	u8 no_of_triplet;
+ 	struct ieee80211_country_ie_triplet
+ 		triplet[MWIFIEX_MAX_TRIPLET_802_11D];
+@@ -430,7 +430,7 @@ struct mwifiex_private {
+ 	u8 cfg_bssid[6];
+ 	struct workqueue_struct *workqueue;
+ 	struct work_struct cfg_workqueue;
+-	u8 country_code[COUNTRY_CODE_LEN];
++	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct wps wps;
+ 	u8 scan_block;
+ };
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index cb56489..ebd40b2 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -853,11 +853,9 @@ int mwifiex_ret_802_11d_domain_info(struct mwifiex_private *priv,
+ 	u16 action = le16_to_cpu(domain_info->action);
+ 	u8 no_of_triplet = 0;
+ 
+-	no_of_triplet =
+-		(u8) ((le16_to_cpu(domain->header.len) -
+-					3) / sizeof(struct
+-					ieee80211_country_ie_triplet));
+-	/* Country code is 3 bytes */
++	no_of_triplet = (u8) ((le16_to_cpu(domain->header.len) -
++					IEEE80211_COUNTRY_STRING_LEN) /
++				sizeof(struct ieee80211_country_ie_triplet));
+ 
+ 	dev_dbg(priv->adapter->dev, "info: 11D Domain Info Resp:"
+ 			" no_of_triplet=%d\n", no_of_triplet);
 -- 
-1.7.0.4
+1.7.0.2
 
