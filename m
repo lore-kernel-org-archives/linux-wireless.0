@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56908 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752616Ab1CETu6 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:48324 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753467Ab1CERLU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 14:50:58 -0500
-Subject: Re: [PATCH 0/4 v2] {mac|nl}80211: Support for SAE mesh
- authentication in userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=sP0-cjuDu1XYGB2+UzHjyD_i1854AJQ=A4Bfn@mail.gmail.com>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
-	 <1299333960.3826.6.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=sP0-cjuDu1XYGB2+UzHjyD_i1854AJQ=A4Bfn@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 05 Mar 2011 20:50:55 +0100
-Message-ID: <1299354655.29845.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 5 Mar 2011 12:11:20 -0500
+MIME-Version: 1.0
+Date: Sat, 5 Mar 2011 18:11:20 +0100
+Message-ID: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
+Subject: brcm80211: the system freezes if booted with laptop wifi switch to OFF
+From: Francis Moreau <francis.moro@gmail.com>
+To: brudley@broadcom.com
+Cc: gregkh@suse.de, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-03-05 at 11:40 -0800, Javier Cardona wrote:
-> On Sat, Mar 5, 2011 at 6:06 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > I have a more generic question since I haven't seen the userspace bits:
+Hi,
 
-> There's a working prototype here:
-> https://github.com/cozybit/authsae/blob/master/linux/meshd-nl80211.c
-> The intent is to merge that functionality into wpa_supplicant at some point.
-> 
-> > How does userspace know when to authenticate with a new peer?
+I'm currently running 2.6.38-rc6, and if I boot with my WIFI switch
+set to off position, the system freezes entirely when bringing up the
+wlan0 interface.
 
-> Authentication is triggered by the reception of a beacon or presp from
-> a compatible mesh peer with security enabled.
+There's no trace so I don't really know how I can help to debug this further.
 
-Ok ... so I read from this that it actually parses out the beacon frames
-from scan results? It seems that it should rather signal beacon frames
-for unknown peers to userspace somehow, so userspace doesn't have to
-poll scan results?
-
-johannes
-
+Thanks
+-- 
+Francis
