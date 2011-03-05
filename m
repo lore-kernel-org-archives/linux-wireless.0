@@ -1,73 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mow302.securemx.jp ([210.130.202.52]:48815 "EHLO
-	mow.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753639Ab1CHMjC (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:48906 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186Ab1CEBZZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 07:39:02 -0500
-Date: Tue, 08 Mar 2011 21:39:47 +0900
-From: Takashi Kawamoto <tkawamoto@silex.jp>
-To: linux-wireless@vger.kernel.org
-Subject: AR9271 doesn't work on 12ch and 13ch
-Cc: Yoshitaka Imura <imura@silex.jp>
-Message-Id: <20110308211855.AF33.9AD4E5EB@silex.jp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+	Fri, 4 Mar 2011 20:25:25 -0500
+Received: by pzk35 with SMTP id 35so422226pzk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 17:25:25 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4 v2] mac80211: Enable mesh security from userspace
+Date: Fri,  4 Mar 2011 17:24:09 -0800
+Message-Id: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
+In-Reply-To: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear All,
+From: Javier Cardona <javier@cozybit.com>
 
-AR9271 cannot connect to an AP which operates on 12ch and 13ch.
-As long as I see the EEPROM content of my module, 0x8188 (CTRL_JAPAN1) 
-seems to be configured to the region domain code area.
+Userspace can enable mesh security by providing an RSN IE and setting
+the MESH_SETUP_ENABLE_SECURITY flag.
 
-[EEPROM dump]
--------------------------------------------------------
-78  1 99 B4  F E0  2  0 88 81 2A  0 5C 33 8E 65
-74 C1  1  1  0  0  0  0  0  0  0 7F  8  0  8  0
- 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
- 0  0  0  0  0  0  0  0  0  0  0  0  0 2C 20  0
-E2  0  D  0  2  E 1C BA  C  1  0  0  6 55  5  1
- E  E FF  0  0 2C  0  0  5  4  6 B0  0 60  0  0
- 0  1  0  0  0 80  0  0  0  0  0  0  0  0  0  0
- 0  0  0  0  0  0  0  0 70 8E AC  B 22 2A 3D 53
-4B 54 5E 6A 74  5 10 17 2F 6E 2C 3B 55 83 B0  D
-24 2A 3E 52 4C 54 60 6B 71  7 11 17 36 71 30 40
-5F 93 AF  E 13 2A 3E 51 4B 53 5F 6B 6E  7  A 18
-38 70 2C 44 62 9A AC 70 22 22 22 22 B8 22 22 22
-22 FF  0  0  0  0 70 22 22 20 1E 89 22 22 20 1E
-AC 22 22 20 1E 70 22 22 22 22 22 22 20 1E 89 22
-22 22 22 22 22 20 1E AC 22 22 22 22 22 22 20 1E
-70 1E 1E 1E 1E 1E 1E 1E 1C 89 1E 1E 1E 1E 1E 1E
-1E 1C AC 1E 1E 1E 1E 1E 1E 1E 1C 11 12 15 17 41
-42 45 47 31 32 35 37 70 22 75 62 A2 22  0  0 70
-22 75 62 A2 21  0  0 70 1A 75 62 A2 1E  0  0 7A
-12 7F 5C 93 5C 98 16 70 3C 75 7C AC 3C B8 3C 70
-3C 75 7C AC 3C  0  0 70 3C 75 7C AC 3C  0  0 7A
-3C 7F 7C 93 7C A2 3C 70 22 75 62 AC 22  0  0 70
-22 75 62 AC 22  0  0 70 22 75 62 AC 22  0  0 7A
-1E 7F 5E 93 5E A2 1E  0
--------------------------------------------------------
+Also, rename vendor_ie to just ie to reflect that the same attribute may
+be used to pass other IEs, like for instance RSN.
 
-The version of compat-wireless I use is 2011-01-30.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ include/linux/nl80211.h    |   13 +++++++++----
+ include/net/cfg80211.h     |   10 ++++++----
+ net/mac80211/cfg.c         |   16 ++++++++--------
+ net/mac80211/ieee80211_i.h |    5 +++--
+ net/mac80211/mesh.c        |    6 +++---
+ net/mac80211/mesh_plink.c  |    2 +-
+ net/mac80211/tx.c          |    2 +-
+ net/wireless/mesh.c        |    5 +++--
+ net/wireless/nl80211.c     |   39 ++++++++++++++++++++++++++++++++++-----
+ 9 files changed, 68 insertions(+), 30 deletions(-)
 
-I investigated the issue further, and found that priv->hw->wiphy->bands 
-includes from 1ch to 14ch (ath9k_set_hw_capab() in htc_drv_init.c), but 
-wdev->wiphy->bands includes from 1ch to 11ch (cfg80211_wext_giwrange() 
-in wext-compat.c). I still don't know why and when 12ch, 13ch and 14ch 
-are removed from the channel list.
-
-Anyone has any idea?
-
-
-
-Best Regards,
-Takashi Kawamoto
-
-==================================================
- Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
- silex technology,Inc. 
- Software Engineering Division
- Phone:+81-774-98-3877 FAX:+81-774-98-3678
-==================================================
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3002218..14a2a31 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -545,6 +545,7 @@ enum nl80211_commands {
+ /* source-level API compatibility */
+ #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
+ #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
++#define NL80211_MESH_SETUP_VENDOR_IE NL80211_MESH_SETUP_IE
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -1686,9 +1687,12 @@ enum nl80211_meshconf_params {
+  * vendor specific path metric or disable it to use the default Airtime
+  * metric.
+  *
+- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
+- * element that vendors will use to identify the path selection methods and
+- * metrics in use.
++ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
++ * robust security network ie, or a vendor specific information element that
++ * vendors will use to identify the path selection methods and metrics in use.
++ *
++ * @NL80211_MESH_SETUP_ENABLE_SECURITY: Enable this option if an authentication
++ * daemon will be authenticating mesh candidates.
+  *
+  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
+  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
+@@ -1697,7 +1701,8 @@ enum nl80211_mesh_setup_params {
+ 	__NL80211_MESH_SETUP_INVALID,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
+ 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
+-	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
++	NL80211_MESH_SETUP_IE,
++	NL80211_MESH_SETUP_ENABLE_SECURITY,
+ 
+ 	/* keep last */
+ 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1ac5786..9610123 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -654,8 +654,9 @@ struct mesh_config {
+  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
+  * @path_sel_proto: which path selection protocol to use
+  * @path_metric: which metric to use
+- * @vendor_ie: vendor information elements (optional)
+- * @vendor_ie_len: length of vendor information elements
++ * @ie: vendor information elements (optional)
++ * @ie_len: length of vendor information elements
++ * @is_secure: or not
+  *
+  * These parameters are fixed when the mesh is created.
+  */
+@@ -664,8 +665,9 @@ struct mesh_setup {
+ 	u8 mesh_id_len;
+ 	u8  path_sel_proto;
+ 	u8  path_metric;
+-	const u8 *vendor_ie;
+-	u8 vendor_ie_len;
++	const u8 *ie;
++	u8 ie_len;
++	bool is_secure;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7b701dc..9270c03 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1019,26 +1019,26 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
+ 	u8 *new_ie;
+ 	const u8 *old_ie;
+ 
+-	/* first allocate the new vendor information element */
++	/* allocate information elements */
+ 	new_ie = NULL;
+-	old_ie = ifmsh->vendor_ie;
++	old_ie = ifmsh->ie;
+ 
+-	ifmsh->vendor_ie_len = setup->vendor_ie_len;
+-	if (setup->vendor_ie_len) {
+-		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
++	ifmsh->ie_len = setup->ie_len;
++	if (setup->ie_len) {
++		new_ie = kmemdup(setup->ie, setup->ie_len,
+ 				GFP_KERNEL);
+ 		if (!new_ie)
+ 			return -ENOMEM;
+ 	}
++	ifmsh->ie = new_ie;
++	kfree(old_ie);
+ 
+ 	/* now copy the rest of the setup parameters */
+ 	ifmsh->mesh_id_len = setup->mesh_id_len;
+ 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
+ 	ifmsh->mesh_pp_id = setup->path_sel_proto;
+ 	ifmsh->mesh_pm_id = setup->path_metric;
+-	ifmsh->vendor_ie = new_ie;
+-
+-	kfree(old_ie);
++	ifmsh->is_secure = setup->is_secure;
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a404017..7d1cb36 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -488,8 +488,9 @@ struct ieee80211_if_mesh {
+ 	struct mesh_config mshcfg;
+ 	u32 mesh_seqnum;
+ 	bool accepting_plinks;
+-	const u8 *vendor_ie;
+-	u8 vendor_ie_len;
++	const u8 *ie;
++	u8 ie_len;
++	bool is_secure;
+ };
+ 
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 2a57cc0..1c244c0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
+ 	*pos++ = 0x00;
+ 
+-	if (sdata->u.mesh.vendor_ie) {
+-		int len = sdata->u.mesh.vendor_ie_len;
+-		const u8 *data = sdata->u.mesh.vendor_ie;
++	if (sdata->u.mesh.ie) {
++		int len = sdata->u.mesh.ie_len;
++		const u8 *data = sdata->u.mesh.ie;
+ 		if (skb_tailroom(skb) > len)
+ 			memcpy(skb_put(skb, len), data, len);
+ 	}
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 44b5393..c705b20 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		__le16 reason) {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
+-			sdata->u.mesh.vendor_ie_len);
++			sdata->u.mesh.ie_len);
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool include_plid = false;
+ 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 081dcaf..38f6c2d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 
+ 		/* headroom, head length, tail length and maximum TIM length */
+ 		skb = dev_alloc_skb(local->tx_headroom + 400 +
+-				sdata->u.mesh.vendor_ie_len);
++				sdata->u.mesh.ie_len);
+ 		if (!skb)
+ 			goto out;
+ 
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 73e39c1..c51e3c5 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -53,8 +53,9 @@ const struct mesh_config default_mesh_config = {
+ const struct mesh_setup default_mesh_setup = {
+ 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
+ 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
+-	.vendor_ie = NULL,
+-	.vendor_ie_len = 0,
++	.ie = NULL,
++	.ie_len = 0,
++	.is_secure = false,
+ };
+ 
+ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4ebce42..cc1ee41 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -284,6 +284,30 @@ static bool is_valid_ie_attr(const struct nlattr *attr)
+ 	return true;
+ }
+ 
++/* Check that an assumed valid IE attribute contains the given element ID */
++static bool eid_in_ie_attr(const struct nlattr *attr, u8 eid)
++{
++	const u8 *pos;
++	int len;
++
++	pos = nla_data(attr);
++	len = nla_len(attr);
++
++	while (len) {
++		u8 elemlen;
++		len -= 2;
++
++		if (pos[0] == eid)
++			return true;
++
++		elemlen = pos[1];
++		len -= elemlen;
++		pos += 2 + elemlen;
++	}
++
++	return false;
++}
++
+ /* message building helper */
+ static inline void *nl80211hdr_put(struct sk_buff *skb, u32 pid, u32 seq,
+ 				   int flags, u8 cmd)
+@@ -2804,7 +2828,8 @@ static const struct nla_policy
+ 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
+ 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
+-	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
++	[NL80211_MESH_SETUP_ENABLE_SECURITY] = { .type = NLA_FLAG },
++	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
+ 		.len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+@@ -2906,13 +2931,17 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
+ 		 IEEE80211_PATH_METRIC_VENDOR :
+ 		 IEEE80211_PATH_METRIC_AIRTIME;
+ 
+-	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
++
++	if (tb[NL80211_MESH_SETUP_IE]) {
+ 		struct nlattr *ieattr =
+-			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
++			tb[NL80211_MESH_SETUP_IE];
+ 		if (!is_valid_ie_attr(ieattr))
+ 			return -EINVAL;
+-		setup->vendor_ie = nla_data(ieattr);
+-		setup->vendor_ie_len = nla_len(ieattr);
++		setup->ie = nla_data(ieattr);
++		setup->ie_len = nla_len(ieattr);
++		if (eid_in_ie_attr(ieattr, WLAN_EID_RSN))
++			setup->is_secure =
++			nla_get_flag(tb[NL80211_MESH_SETUP_ENABLE_SECURITY]);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.1
 
