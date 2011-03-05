@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33280
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751746Ab1CDUYa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57055 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982Ab1CEOBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 15:24:30 -0500
-Date: Fri, 04 Mar 2011 12:25:07 -0800 (PST)
-Message-Id: <20110304.122507.226772696.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-03-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110304194018.GD9866@tuxdriver.com>
-References: <20110304194018.GD9866@tuxdriver.com>
+	Sat, 5 Mar 2011 09:01:46 -0500
+Subject: Re: [PATCH 4/4 v2] mac80211: Let userspace create stations when
+ mesh security is enabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Javier Cardona <javier@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1299288252-28314-5-git-send-email-thomas@cozybit.com>
+References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+	 <1299288252-28314-5-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 05 Mar 2011 15:01:40 +0100
+Message-ID: <1299333700.3826.2.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 4 Mar 2011 14:40:18 -0500
+On Fri, 2011-03-04 at 17:24 -0800, Thomas Pedersen wrote:
 
-> Yet another batch of new wireless bits intended for 2.6.39... :-)
-> 
-> Highlights in this round include AP-mode support for wl12xx, some
-> rtlwifi fixes (many build-related), some more b43 N-phy support
-> advancement, a big batch of ath9k_htc updates, and the refactoring of
-> iwlwifi to separate iwl3945 and iwl4965 support out into a new iwlegacy
-> driver.  Mixed-in, of course, is the usual batch of various driver and
-> mac80211 updates and fixes.
-> 
-> Please let me know if there are problems!
+> +++ b/net/mac80211/mesh_plink.c
+> @@ -105,7 +105,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+>  	if (!sta)
+>  		return NULL;
+>  
+> -	sta->flags = WLAN_STA_AUTHORIZED;
+> +	sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
+>  	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+>  	rate_control_rate_init(sta);
 
-Pulled, thanks John.
+This is just for consistency now, right? The AUTH flag isn't tested, but
+stations from userspace will have it set, afaiu?
+
+johannes
+
