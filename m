@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33984 "EHLO nbd.name"
+Received: from mms1.broadcom.com ([216.31.210.17]:3256 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753656Ab1C0O5s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Mar 2011 10:57:48 -0400
-Message-ID: <4D8F506B.8070808@openwrt.org>
-Date: Sun, 27 Mar 2011 16:57:47 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1753006Ab1CEPbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Mar 2011 10:31:03 -0500
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Sheldon Neuberger" <neuberger@gmail.com>
+Subject: Re: brcm80211: ieee80211_register_hw failed, status -22
+References: <AANLkTinm_O2e5G=zn9umQdRrysyyeX-yndcmD6-9J5Yf@mail.gmail.com>
+Date: Sat, 5 Mar 2011 16:30:43 +0100
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Klaus_M=FCller?= <kmueller@justmail.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: broken ath9k-driver - problems with creating new TCP-connections.
- Bad performance
-References: <4D8F28C1.4060402@justmail.de> <4D8F2F3E.9030802@openwrt.org> <4D8F4B9F.9010809@justmail.de>
-In-Reply-To: <4D8F4B9F.9010809@justmail.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vrvmnd103ri7v4@arend-laptop>
+In-Reply-To: <AANLkTinm_O2e5G=zn9umQdRrysyyeX-yndcmD6-9J5Yf@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-03-27 4:37 PM, Klaus Müller wrote:
-> Felix Fietkau wrote:
->>  On 2011-03-27 2:08 PM, Klaus Müller wrote:
->>>  Hello,
->>>
->>>  I'm running kernel 2.6.38.1 (from the OpenSuSE buildservice on OpenSuSE
->>>  11.4) and compat-wireless-2011-03-26 (the performance / functionality of
->>>  the driver delivered with 2.6.38.1 is unusable).
->>>  [...]
->>>  iwconfig wlan0
->>>
->>>  wlan0     IEEE 802.11bgn  ESSID:"ssid"
->>>             Mode:Managed  Frequency:2.412 GHz  Access Point:
->>>  00:25:33:22:11:00
->>>             Bit Rate=150 Mb/s   Tx-Power=17 dBm
->>>             Retry  long limit:7   RTS thr:off   Fragment thr:off
->>>             Encryption key:off
->>>             Power Management:on
->>>             Link Quality=14/70  Signal level=-63 dBm
->>>             Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>>             Tx excessive retries:4  Invalid misc:1423   Missed beacon:0
->>>
->>>
->>>  I run iwconfig 3 times in 7 seconds. The link quality alternated between
->>>  47 and 14.
->>>
->>  Have you tried switching your AP to HT20 instead of HT40 to see if that
->>  improves stability?
->
-> If the AP is set to HT20, this driver doesn't use IEEE 802.11n any more,
-> or, to say it more specific: the selected bit rate is max. 64 Mb/s and
-> the performance is even worse.
->
-> I'm wondering at all, why the ath9k driver doesn't switch to 300 Mb/s:
-> the rt3572sta-driver doesn't have any problem with both settings.
-AR9285 is a single stream chipset, so it only has one antenna and can't 
-do any MIMO.
+On Fri, 04 Mar 2011 13:59:34 +0100, Sheldon Neuberger  
+<neuberger@gmail.com> wrote:
 
-- Felix
+> I'm using compat-wireless-2011-03-03 and when the brcm80211 module
+> loads at boot up, I'm getting an an error. See dmesg below.
+>
+
+I had a look at the tarball. The warning originates from following WARN_ON  
+call.
+
+if (!have_band) {
+	WARN_ON(1);
+	return -EINVAL;
+}
+
+This would mean that the brcm80211 does not provide band information for  
+2.4GHz nor 5GHz bands. For the bcm4313 which is what you seem to have the  
+2.4 GHz band info should be provided. From the trace and log I see no  
+reason why brcm80211 would not fill this info.
+
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
