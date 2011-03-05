@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mirapoint21.brutele.be ([212.68.199.158]:30018 "EHLO
-	mirapoint21.brutele.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389Ab1CFU4r (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:52703 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab1CEQaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 15:56:47 -0500
-Message-ID: <4D73F506.50609@tvcablenet.be>
-Date: Sun, 06 Mar 2011 21:56:38 +0100
-From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
+	Sat, 5 Mar 2011 11:30:12 -0500
+Message-ID: <4D72650D.8070503@lwfinger.net>
+Date: Sat, 05 Mar 2011 10:30:05 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT 11/11] rtlwifi: rtl8192se: Modify rtlwifi routines to
- handle rtl8192se and add Makefile and Kconfig
-References: <4d732b88.lM+a0Gg928N+S/xO%Larry.Finger@lwfinger.net> <4D73EB12.3040102@tvcablenet.be> <4D73F209.8050406@lwfinger.net>
-In-Reply-To: <4D73F209.8050406@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jovi Zhang <bookjovi@gmail.com>
+CC: Ben Hutchings <bhutchings@solarflare.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"open list:NETWORKING [WIREL..." <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net: mac80211: fix compilation warning
+References: <1299108754-5492-1-git-send-email-bookjovi@gmail.com>	<1299328260.4277.92.camel@localhost> <AANLkTimnSvBKSL6_d3RxufxUL_C9wCM+Fz66_B5Sc0KE@mail.gmail.com>
+In-Reply-To: <AANLkTimnSvBKSL6_d3RxufxUL_C9wCM+Fz66_B5Sc0KE@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 06/03/11 21:43, Larry Finger a écrit :
-> On 03/06/2011 02:14 PM, François Valenduc wrote:
+On 03/05/2011 07:52 AM, Jovi Zhang wrote:
+> On Sat, Mar 5, 2011 at 8:31 PM, Ben Hutchings<bhutchings@solarflare.com>  wrote:
+>> On Wed, 2011-03-02 at 18:32 -0500, bookjovi@gmail.com wrote:
+>>> From: Jovi Zhang<bookjovi@gmail.com>
 >>>
->> Hello,
+>>> this commit fix compilation warning as following:
+>>> net/mac80211/tx.c:1753: warning: unused variable mppath
+>> [...]
 >>
->> It seems this patch is the same as the previous one (Merge routines
->> trx.c and trx.h for RTL8192SE). It doesn't add a Makefile and doesn't
->> contain KConfig entries.
+>> You clearly didn't try building this with CONFIG_MAC80211_MESH enabled.
 >>
->> François Valenduc
+> Sorry, indeed, maybe should be like this:
 >
-> Yes, I messed up my sending script. The correct patch now submitted.
->
-> Larry
->
-Sorry to annoy you again but either I am doing something wrong or this
-new patch doesn't apply on top of the 10 first patches. There seems to
-be problems in fuse.c, pci.c and core.c (all in
-drivers/net/wireless/rtlwifi).
+> +#ifdef CONFIG_MAC80211_MESH
+>         struct mesh_path *mppath = NULL;
+> +#endif
 
-François
+Linville likes "struct mesh_path *mppath __maybe_unused = NULL;" over the ifdef 
+form.
 
-François
-
-
+Larry
