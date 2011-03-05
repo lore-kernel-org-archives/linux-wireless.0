@@ -1,81 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58169 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767Ab1CAN0T (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58947 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076Ab1CEJyT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 08:26:19 -0500
-Received: by fxm17 with SMTP id 17so4786251fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:26:17 -0800 (PST)
-From: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC 0/9 v2] DFS/radar state/userspace handling
-Date: Tue, 1 Mar 2011 14:26:01 +0100
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	nbd@openwrt.org, dubowoj@neratec.com, zefir.kurtisi@neratec.com,
-	simon.wunderlich@saxnet.de
-References: <201102281740.37036.bernhard.schmidt@saxnet.de> <201103011407.13171.bernhard.schmidt@saxnet.de> <1298985321.6015.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1298985321.6015.18.camel@jlt3.sipsolutions.net>
+	Sat, 5 Mar 2011 04:54:19 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201103011426.01753.bernhard.schmidt@saxnet.de>
+In-Reply-To: <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	<20110304134648.GB9866@tuxdriver.com>
+	<1299251879.24333.3.camel@wwguy-ubuntu>
+	<AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	<AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	<AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+Date: Sat, 5 Mar 2011 09:54:18 +0000
+Message-ID: <AANLkTinMq34h-dxLc34AsUvw8C56QCQRJKNXs2V4_0Kc@mail.gmail.com>
+Subject: Re: 2.6.38-rc7, iwlagn crash
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, March 01, 2011 14:15:21 Johannes Berg wrote:
-> On Tue, 2011-03-01 at 14:07 +0100, Bernhard Schmidt wrote:
-> 
-> > Sorry about that.. it should have read:
-> > "..that states are *now* global and no per wiphy.."
-> > 
-> > What I mean with that is that the interference flag/reporting, as
-> > well as the NOL is shared between all wiphys contrary to the previous
-> > version.
-> 
-> Oh, ok.
-> 
-> > > Finally, I think your code split is a little hard to understand. Is
-> > > there really any point in adding the code bit by bit into both cfg80211
-> > > and mac80211 at the same time? I'd rather see a few patches to make
-> > > cfg80211 complete and then implement it all in mac80211.
-> > 
-> > I tried to group them by functionality and not by subsystem. But if
-> > you prefer that I can make a large blob for cfg80211.
-> 
-> No, splitting them up seems alright, I just wouldn't split up the
-> mac80211 bits across. You'll also find that when it comes to advertising
-> capabilities, you need mac80211 to advertise them to cfg80211, and then
-> you only want to advertise it once all functionality is in place.
+On 5 March 2011 09:45, Mathias Burén <mathias.buren@gmail.com> wrote:
+> On 5 March 2011 03:45, Mathias Burén <mathias.buren@gmail.com> wrote:
+>> On 4 March 2011 22:23, Mathias Burén <mathias.buren@gmail.com> wrote:
+>>> On 4 March 2011 15:17, wwguy <wey-yi.w.guy@intel.com> wrote:
+>>>> On Fri, 2011-03-04 at 05:46 -0800, John W. Linville wrote:
+>>>>> Cc'ing Wey-yi and linux-wireless...anyone else having problems with
+>>>>> iwlagn and IBSS?
+>>>>>
+>>>>> On Fri, Mar 04, 2011 at 03:27:22AM +0000, Mathias Burén wrote:
+>>>>> > Hi,
+>>>>> >
+>>>>> > (please cc as not subscribed)
+>>>>> >
+>>>>> >
+>>>>> >
+>>>>> > I think the crash happens when the phone attempts to get an IP, at
+>>>>> > least that's what the phone says right after/at the crash. Any ideas?
+>>>>> >
+>>>>> >
+>>>> forwarding to my team to work on it, any additional information you can
+>>>> provide?
+>>>>
+>>>> It is in IBSS mode, do you have any information can shared with us on
+>>>> your phone's model, setup, and ...
+>>>> if you can load the module with debug=0x43fff and provide the dmesg log,
+>>>> it will be very helpful
+>>>>
+>>>> Thanks
+>>>> Wey
+>>>>
+>>>>
+> (snip)
+>
+> I compiled my own kernel (downloaded 2.6.37-rc8 source, applied the
+> apparmor patch required for Ubuntu, copied over the config, make
+> oldconfig, enabled iwlwifi debug in menuconfig then compiled it),
+> booted it and loaded iwlagn with debug=0x43fff. Then I attempted the
+> same thing (Ubuntu Adhoc, no wireless security, trying to connect with
+> the phone).
+>
+> The entire dmesg can be found here:
+> http://www.privatepaste.com/download/49e6ead6c7
+>
+> Regards,
+> // Mathias
+>
 
-I see, so, basically, given there is an alternative for [PATCH 1/9]
-(get_channel) the only thing touching mac80211 is [PATCH 3/9], so, am
-I doing the right thing?
+Sorry, I created that file with dmesg > file. Here's the actual dmesg
+file from /var/log/dmesg :
+http://stuff.dyndns.org/logs/dmesg-2.6.38-rc7-iwldebug-apparmor.log
 
-> Now, for applying it might later make sense to just have a single patch
-> adding it, but it doesn't really matter as long as the code isn't really
-> used anyway since no driver advertises the capability.
-> 
-> > > Which brings me to another point -- there's no way to detect from
-> > > userspace whether or not this is all available.
-> > 
-> > True, the only thing available right now is checking the error code
-> > for CAC_START. I'll fix that.
-> 
-> One thing to keep in mind: I don't typically trust drivers, that is if
-> they don't advertise something cfg80211 won't allow it even if it might
-> still succeed. For example, if the driver doesn't advertise IBSS, but
-> would still permit adding IBSS, cfg80211 doesn't allow it. This makes
-> things more consistent and makes driver authors realise right away that
-> they need to advertise things.
-
-Got it, will add some kind of "radar-capability" flag for drivers.
-
--- 
-Best regards,
-
-Dipl.-Inf. (FH) Bernhard Schmidt (software development)
-
-saxnet GmbH, Willy-Brandt-Ring 1, 08606 Oelsnitz
-Tel. +49 (0) 3741 300 6. 100 - Fax +49 (0) 3741 300 6. 101
-managing director: Steffen Dreise - county court Chemnitz - HRB 23017
-http://www.saxnet.de
+// Mathias
