@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:57548 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758257Ab1COSbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 14:31:03 -0400
-Subject: Re: [PATCH 2/2] iwlwifi: setup agg queues with correct aggregation
- parameters
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <365ABD23-2A8B-4024-A039-879BAB879031@cs.washington.edu>
-References: <365ABD23-2A8B-4024-A039-879BAB879031@cs.washington.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Mar 2011 11:14:36 -0700
-Message-ID: <1300212876.5082.221.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:54622 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab1CEJP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Mar 2011 04:15:29 -0500
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=fRXHWVeZpR1X5pGAZjPGTt84ZPo1kWkPQhZps@mail.gmail.com>
+References: <1299076306-11955-1-git-send-email-geryk@ti.com>
+ <AANLkTik5Z_eAA_qWGB_rwoK3P1g4jMnM6hj26fje6JHf@mail.gmail.com>
+ <AANLkTimkoaZqn9SDEuc=vuazzqwA7Jrmz1hiwDWSXhM2@mail.gmail.com> <AANLkTi=fRXHWVeZpR1X5pGAZjPGTt84ZPo1kWkPQhZps@mail.gmail.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Sat, 5 Mar 2011 11:15:09 +0200
+Message-ID: <AANLkTin3UcHeJeRmjUYNNyHFitjv5GNg51uxm=63wtDG@mail.gmail.com>
+Subject: Re: [PATCH v2] linux-firmware: Initial release for Bluetooth init script
+To: Pavan Savoy <pavan_savoy@ti.com>
+Cc: Gery Kahn <gery.kahn@gmail.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On Sat, Mar 5, 2011 at 10:17 AM, Pavan Savoy <pavan_savoy@ti.com> wrote:
+> So, yes in case the firmware is going to be freely available from
+> now-onwards - will post a patch to expect smaller case file name.
 
-On Tue, 2011-03-15 at 11:25 -0700, Daniel Halperin wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> 
-> See this thread for more information:
-> http://comments.gmane.org/gmane.linux.kernel.wireless.general/66236
-> 
-> > the window size and frame limit should
-> > both match the information about the aggregation session, and be limited
-> > to what we and the peer would like to see.
-> >
-> > The bad thing is that we set up the queue when we get
-> > IEEE80211_AMPDU_TX_START, but we only know the window size when we get
-> > IEEE80211_AMPDU_TX_OPERATIONAL. However, I think we can change this
-> > since the first TX to the queue will only happen after _OPERATIONAL. We
-> > just need to refactor iwlagn_tx_agg_start() into the parts that can
-> > fail, and the parts that don't.
-> 
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Tested-by: Daniel Halperin <dhalperi@cs.washington.edu>
-> Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
-> ---
-> Dan says: ditto from previous patch.
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   46 +++++++++++++++++++---------
->  drivers/net/wireless/iwlwifi/iwl-agn.c    |    4 ++
->  drivers/net/wireless/iwlwifi/iwl-agn.h    |    3 ++
->  drivers/net/wireless/iwlwifi/iwl-dev.h    |    1 +
->  4 files changed, 39 insertions(+), 15 deletions(-)
+Well, right now we have users of st_kim, and we prefer using the
+firmware name that is currently expected by it. Otherwise it just
+won't work..
 
-I will prefer let us testing the patch first before push upstream.
+I understand the the lower case affinity, but that's second to not
+breaking the user experience IMHO.
 
-Wey
-
-
-
+Thanks,
+Ohad.
