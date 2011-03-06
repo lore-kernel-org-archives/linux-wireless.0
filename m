@@ -1,115 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27929 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758138Ab1CaPg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 11:36:57 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/3] iwlwifi: remove sync_cmd_mutex
-Date: Thu, 31 Mar 2011 17:36:28 +0200
-Message-Id: <1301585788-7331-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
-References: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-gw0-f51.google.com ([74.125.83.51]:48408 "EHLO
+	mail-gw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726Ab1CFRb2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 12:31:28 -0500
+Received: by gwb15 with SMTP id 15so2108227gwb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 09:31:28 -0800 (PST)
+Message-ID: <4D73C4EC.7090702@lwfinger.net>
+Date: Sun, 06 Mar 2011 11:31:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ben Ruijl <benruyl@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u: packet loss
+References: <AANLkTi=-KJ+OSvDGuxYvDYQZ2ZdS8G8obbvodOXd9zQD@mail.gmail.com> <AANLkTimTecR-W7iGzRWB_DxNVJoovK5SCuWfCmt8SUJo@mail.gmail.com> <AANLkTimx7=kYdWfe8FKL6oMyErE=3=GpXa-YrxkVVBG3@mail.gmail.com> <4D5AAC7C.6060509@lwfinger.net> <AANLkTikKsjmKeNdi9ugiNX-1W5qBKdxw-KexEYLnZJ1p@mail.gmail.com> <4D5AC011.5050007@lwfinger.net> <AANLkTin8viV=LXfv-ut0+U=Jo0MNCbm0KDE=h8Eaa0MK@mail.gmail.com> <AANLkTikmFj5EDaa3sY6d05XRCKwBWywtMaekmK1hCHPX@mail.gmail.com>
+In-Reply-To: <AANLkTikmFj5EDaa3sY6d05XRCKwBWywtMaekmK1hCHPX@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We now use priv->mutex to serialize sync command, remove old
-priv->sync_cmd_mutex and add assertion that priv->mutex must be locked.
+On 03/06/2011 03:52 AM, Ben Ruijl wrote:
+> Hi Larry,
+>
+> The iwconfig I sent you is wrong, because I switched routers. The
+> router I had was a wireless N router, with which I had 12 percent
+> packet loss. The iwconfig you are seeing is with a wireless G
+> connection and now I only have 1 percent packet loss: the same as you
+> have. It appears that the relative packet loss is greater with an N
+> connection.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    4 ----
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-hcmd.c |   13 +++++--------
- 3 files changed, 5 insertions(+), 13 deletions(-)
+I have no idea why the loss should be greater with the N router than with the G 
+router.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 0c49d1a..6f188fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2565,9 +2565,6 @@ static void __iwl_down(struct iwl_priv *priv)
- 	priv->bt_full_concurrent = false;
- 	priv->bt_ci_compliance = 0;
- 
--	/* Unblock any waiting calls */
--	wake_up_interruptible_all(&priv->wait_command_queue);
--
- 	/* Wipe out the EXIT_PENDING status bit if we are not actually
- 	 * exiting the module */
- 	if (!exit_pending)
-@@ -3814,7 +3811,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 	INIT_LIST_HEAD(&priv->free_frames);
- 
- 	mutex_init(&priv->mutex);
--	mutex_init(&priv->sync_cmd_mutex);
- 
- 	priv->ieee_channels = NULL;
- 	priv->ieee_rates = NULL;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 9e63bd8..ca30f95 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1306,7 +1306,6 @@ struct iwl_priv {
- 	spinlock_t hcmd_lock;	/* protect hcmd */
- 	spinlock_t reg_lock;	/* protect hw register access */
- 	struct mutex mutex;
--	struct mutex sync_cmd_mutex; /* enable serialization of sync commands */
- 
- 	/* basic pci-network driver stuff */
- 	struct pci_dev *pci_dev;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 02499f6..c71c0a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -171,14 +171,13 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	int cmd_idx;
- 	int ret;
- 
--	BUG_ON(cmd->flags & CMD_ASYNC);
-+	lockdep_assert_held(&priv->mutex);
- 
- 	 /* A synchronous command can not have a callback set. */
--	BUG_ON(cmd->callback);
-+	BUG_ON((cmd->flags & CMD_ASYNC) || cmd->callback);
- 
- 	IWL_DEBUG_INFO(priv, "Attempting to send sync command %s\n",
- 			get_cmd_string(cmd->id));
--	mutex_lock(&priv->sync_cmd_mutex);
- 
- 	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
- 	IWL_DEBUG_INFO(priv, "Setting HCMD_ACTIVE for command %s\n",
-@@ -189,7 +188,7 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		ret = cmd_idx;
- 		IWL_ERR(priv, "Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
--		goto out;
-+		return ret;
- 	}
- 
- 	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-@@ -229,8 +228,7 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		goto cancel;
- 	}
- 
--	ret = 0;
--	goto out;
-+	return 0;
- 
- cancel:
- 	if (cmd->flags & CMD_WANT_SKB) {
-@@ -248,8 +246,7 @@ fail:
- 		iwl_free_pages(priv, cmd->reply_page);
- 		cmd->reply_page = 0;
- 	}
--out:
--	mutex_unlock(&priv->sync_cmd_mutex);
-+
- 	return ret;
- }
- 
--- 
-1.7.1
+How is the 2.4 GHz part of the N router configured? What make/model is it, and 
+what firmware is it running? Do you have the latest version?
 
+My N router is a Netgear WNDR3300 normally running up to 270 Mbps at 5 GHz and 
+54 Mbps at 2.4 GHz; however, I changed it to run up to 270 Mbps in the 2.4 GHz 
+band. Again, I get 1% ping loss. My iwconfig output is
+
+wlan12    IEEE 802.11bgn  ESSID:"lwfdjf-n"  Nickname:"rtl_wifi"
+           Mode:Managed  Frequency:2.422 GHz  Access Point: C0:3F:0E:BE:2B:44
+           Bit Rate:270 Mb/s   Sensitivity:0/0
+           Retry:off   RTS thr:off   Fragment thr:off
+           Power Management:off
+           Link Quality=97/100  Signal level=100/100  Noise level=0/100
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+That link gets an upload speed measured with tcpperf of more than 80 Mbps.
+
+I do not know why your N link is so lossy. The possible reasons are outdated 
+firmware in the router that was established in the pre-N days, or you have 
+noise/interference that affects the HT setup more than a simple G configuration.
+
+Larry
