@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45904 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861Ab1CaNs1 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56127 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064Ab1CFXsQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 09:48:27 -0400
-Message-ID: <4D948624.3040605@suse.cz>
-Date: Thu, 31 Mar 2011 15:48:20 +0200
-From: Jiri Slaby <jslaby@suse.cz>
+	Sun, 6 Mar 2011 18:48:16 -0500
+Received: by iyb26 with SMTP id 26so3472262iyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 15:48:16 -0800 (PST)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	rmk+kernel@arm.linux.org.uk, devel@linuxdriverproject.org,
-	gregkh@suse.de, linux-wireless@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality
- in separate module
-References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <1301391619-4499-2-git-send-email-arend@broadcom.com> <4D91B856.8040302@suse.cz> <201103301453.48607.arnd@arndb.de>
-In-Reply-To: <201103301453.48607.arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1299447258.5082.164.camel@wwguy-huron>
+References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com> <1299447258.5082.164.camel@wwguy-huron>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Sun, 6 Mar 2011 15:47:55 -0800
+Message-ID: <AANLkTimNjxguAFcRr-mJr-pPMkf6zTxzm4k7oV+6zngG@mail.gmail.com>
+Subject: Re: [PATCH 1/3] iwlwifi: move rx handlers code to iwl-rx.c
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2011 02:53 PM, Arnd Bergmann wrote:
-> On Tuesday 29 March 2011, Jiri Slaby wrote:
->> On 03/29/2011 11:40 AM, Arend van Spriel wrote:
->>> --- /dev/null
->>> +++ b/drivers/brcmaxi/axi.c
->>> @@ -0,0 +1,786 @@
->> ...
->>> +/* resetctrl */
->>> +#define	AIRC_RESET		1
->>> +
->>> +/* definition for specifying padding fields */
->>> +#define	_PADLINE(line)	pad ## line
->>> +#define	_XSTR(line)	_PADLINE(line)
->>> +#define	PAD		_XSTR(__LINE__)
->>> +
->>> +/*
->>> + * struct aidmp - device management plugin "wrapper" registers.
->>> + */
->>> +struct aidmp {
->>
->> This looks like it should be __packed__.
-> 
-> Why that? Adding the packed attribute would enforce byte access but
-> not change the layout of the structure, so I think that would make
-> it worse not better.
+This fixes the error for me.
+Dan
 
-How it can? Packed only tells the compiler to have one byte alignment
-steps. And it should not matter here as all the members are 32-bit long.
-
-The structure seems to be something which maps to device registers. So
-for documentation purposes it should be packed. And to avoid later
-mistakes when the u32 are broken down to u8s and u16s.
-
-regards,
+index 7dc2d39..e3ba4d5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -30,6 +30,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/slab.h>
+ #include <net/mac80211.h>
++#include <linux/sched.h>
+ #include <asm/unaligned.h>
+ #include "iwl-eeprom.h"
+ #include "iwl-dev.h"
 -- 
-js
-suse labs
+1.7.0.4
+
+
+
+On Sun, Mar 6, 2011 at 1:34 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> Hi Stanislaw,
+>
+> On Fri, 2011-03-04 at 08:51 -0800, Stanislaw Gruszka wrote:
+>> Put generic rx_handlers (except iwlagn_rx_reply_compressed_ba) to
+>> iwl-rx.c . Make functions static and change prefix from iwlagn_ to
+>> iwl_ . Beautify iwl_setup_rx_handlers and do some other minor coding
+>> style changes.
+>>
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> ---
+> this patch break the compiling
+>
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778:17: error: undefined
+> identifier 'TASK_INTERRUPTIBLE'
+>  CC [M]  drivers/net/wireless/iwlwifi/iwl-rx.o
+> drivers/net/wireless/iwlwifi/iwl-rx.c: In function
+> ‘iwl_rx_card_state_notif’:
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
+> undeclared (first use in this function)
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
+> identifier is reported only once
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
+> appears in.)
+> make[1]: *** [drivers/net/wireless/iwlwifi/iwl-rx.o] Error 1
+> make: *** [_module_drivers/net/wireless/iwlwifi] Error 2
+>
+>
+> Thanks
+> Wey
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
