@@ -1,81 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:28767 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751008Ab1C1Lcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 07:32:45 -0400
-From: juuso.oikarinen@nokia.com
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] cfg80211: fix BSS double-unlinking (continued)
-Date: Mon, 28 Mar 2011 14:32:32 +0300
-Message-Id: <1301311952-27659-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:61362 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726Ab1CFRXs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 12:23:48 -0500
+Received: by wwb22 with SMTP id 22so4390109wwb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 09:23:47 -0800 (PST)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
+	David Gnedt <david.gnedt@davizone.at>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH 2/2] wl1251: fix elp_work race condition
+Date: Sun,  6 Mar 2011 19:23:37 +0200
+Message-Id: <1299432217-32139-3-git-send-email-notasas@gmail.com>
+In-Reply-To: <1299432217-32139-1-git-send-email-notasas@gmail.com>
+References: <1299432217-32139-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+While working on PS I've noticed elp_work is kicking rather often, and
+sometimes the chip is put to sleep before 5ms delay expires. This
+seems to happen because by the time wl1251_ps_elp_wakeup is called
+elp_work might still be pending. After wakeup is done, the processing
+may take some time, during which 5ms might expire and elp_work might
+get scheduled. In this case, ss soon as 1st thread finishes work and
+releases the mutex, elp_work will then put the device to sleep without
+5ms delay. In addition 1st thread will queue additional elp_work
+needlessly.
 
-This patch adds to the fix "fix BSS double-unlinking"
-(commit 3207390a8b58bfc1335750f91cf6783c48ca19ca) by Johannes Berg.
+Fix this by cancelling work in wl1251_ps_elp_wakeup instead.
 
-It turns out, that the double-unlinking scenario can also occur if expired
-BSS elements are removed whilst an interface is performing association.
-
-To work around that, replace list_del with list_del_init also in the
-"cfg80211_bss_expire" function, so that the check for whether the BSS still is
-in the list works correctly in cfg80211_unlink_bss.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
-v2: Small correction in patch title, separate function for the actual
-    unlinking of the bss
+ drivers/net/wireless/wl1251/ps.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
- net/wireless/scan.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index ea427f4..0be7b46 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -124,6 +124,15 @@ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
- }
+diff --git a/drivers/net/wireless/wl1251/ps.c b/drivers/net/wireless/wl1251/ps.c
+index 842155e..9cc5147 100644
+--- a/drivers/net/wireless/wl1251/ps.c
++++ b/drivers/net/wireless/wl1251/ps.c
+@@ -58,7 +58,6 @@ void wl1251_ps_elp_sleep(struct wl1251 *wl)
+ 	unsigned long delay;
  
- /* must hold dev->bss_lock! */
-+static void __cfg80211_unlink_bss(struct cfg80211_registered_device *dev,
-+				  struct cfg80211_internal_bss *bss)
-+{
-+	list_del_init(&bss->list);
-+	rb_erase(&bss->rbn, &dev->bss_tree);
-+	kref_put(&bss->ref, bss_release);
-+}
+ 	if (wl->psm) {
+-		cancel_delayed_work(&wl->elp_work);
+ 		delay = msecs_to_jiffies(ELP_ENTRY_DELAY);
+ 		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work, delay);
+ 	}
+@@ -69,6 +68,9 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
+ 	unsigned long timeout, start;
+ 	u32 elp_reg;
+ 
++	if (delayed_work_pending(&wl->elp_work))
++		cancel_delayed_work(&wl->elp_work);
 +
-+/* must hold dev->bss_lock! */
- void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
- {
- 	struct cfg80211_internal_bss *bss, *tmp;
-@@ -134,9 +143,7 @@ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
- 			continue;
- 		if (!time_after(jiffies, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE))
- 			continue;
--		list_del(&bss->list);
--		rb_erase(&bss->rbn, &dev->bss_tree);
--		kref_put(&bss->ref, bss_release);
-+		__cfg80211_unlink_bss(dev, bss);
- 		expired = true;
- 	}
+ 	if (!wl->elp)
+ 		return 0;
  
-@@ -662,11 +669,8 @@ void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
- 
- 	spin_lock_bh(&dev->bss_lock);
- 	if (!list_empty(&bss->list)) {
--		list_del_init(&bss->list);
-+		__cfg80211_unlink_bss(dev, bss);
- 		dev->bss_generation++;
--		rb_erase(&bss->rbn, &dev->bss_tree);
--
--		kref_put(&bss->ref, bss_release);
- 	}
- 	spin_unlock_bh(&dev->bss_lock);
- }
 -- 
-1.7.1
+1.6.3.3
 
