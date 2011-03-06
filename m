@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2365 "EHLO mms2.broadcom.com"
+Received: from plane.gmane.org ([80.91.229.3]:33153 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755557Ab1CWKvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 06:51:38 -0400
-To: "Randy Dunlap" <rdunlap@xenotime.net>
-cc: "george@znau.edu.ua" <george@znau.edu.ua>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"mb@bu3sch.de" <mb@bu3sch.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] drivers: brcmaxi: provide amba axi functionality in
- separate module
-References: <1300738586-7157-1-git-send-email-arend@broadcom.com>
- <1300738586-7157-2-git-send-email-arend@broadcom.com>
- <20110321132848.e4e846a5.rdunlap@xenotime.net>
-Date: Wed, 23 Mar 2011 11:51:16 +0100
+	id S1754418Ab1CFUoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 15:44:08 -0500
+Received: from public by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <public@plane.gmane.org>)
+	id 1PwKo6-0000uz-6N
+	for linux-wireless@vger.kernel.org; Sun, 06 Mar 2011 21:44:02 +0100
+Message-ID: <4D73F209.8050406@lwfinger.net>
+Date: Sun, 06 Mar 2011 14:43:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vsslrqf23ri7v4@arend-laptop>
-In-Reply-To: <20110321132848.e4e846a5.rdunlap@xenotime.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+To: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
+CC: Larry Finger
+	<public-Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@plane.gmane.org>,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org
+Subject: Re: [RFC/RFT 11/11] rtlwifi: rtl8192se: Modify rtlwifi routines to
+ handle rtl8192se and add Makefile and Kconfig
+References: <4d732b88.lM+a0Gg928N+S/xO%Larry.Finger@lwfinger.net> <4D73EB12.3040102@tvcablenet.be>
+In-Reply-To: <4D73EB12.3040102@tvcablenet.be>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 21 Mar 2011 21:28:48 +0100, Randy Dunlap <rdunlap@xenotime.net>  
-wrote:
 
-> ---
-> ~Randy
-> *** Remember to use Documentation/SubmitChecklist when testing your code  
-> ***
+
+On 03/06/2011 02:14 PM, François Valenduc wrote:
+>>
+> Hello,
 >
+> It seems this patch is the same as the previous one (Merge routines
+> trx.c and trx.h for RTL8192SE). It doesn't add a Makefile and doesn't
+> contain KConfig entries.
+>
+> François Valenduc
 
-Hi Randy,
+Yes, I messed up my sending script. The correct patch now submitted.
 
-One of the things I am facing in the code is the use of the volatile  
-keyword so I browsed another file in the Documentation folder:  
-volatile-considered-harmful.txt. As your name popped up I would like to  
-ask some questions. The register access macros in the brcmaxi module make  
-use of the accessor functions readb/w/l and writeb/w/l and the pointer  
-parameter is cast with volatile keyword, which I assume to be unneccessary  
-(reading the doc). Another instance uses it to avoid optimization. Here is  
-how the function is coded currently:
-
-void foobar(void *r, u32 val)
-{
-	volatile u32 dummy;
-
-	WR_REG(r, val);
-	dummy = RD_REG(r);
-}
-
-The register read is necessary to assure the register write is properly  
-flushed out in hardware. Could removing the volatile for the dummy  
-variable cause removal of the register read due to code optimization.
-
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
+Larry
 
