@@ -1,50 +1,1084 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32745 "EHLO mga11.intel.com"
+Received: from plane.gmane.org ([80.91.229.3]:40305 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751504Ab1CFVmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 16:42:47 -0500
-Subject: Re: [ipw3945-devel] can't compile iwlwifi latest wireless-testing
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <AANLkTimaVjAsW4g8kAfi=vQaPCabkj-ZO9vZw_Lex7KY@mail.gmail.com>
-References: <AANLkTimaVjAsW4g8kAfi=vQaPCabkj-ZO9vZw_Lex7KY@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 06 Mar 2011 13:26:49 -0800
-Message-ID: <1299446809.5082.161.camel@wwguy-huron>
-Mime-Version: 1.0
+	id S1754364Ab1CFUiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 15:38:08 -0500
+Received: from public by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <public@plane.gmane.org>)
+	id 1PwKQb-0006Wp-Jq
+	for linux-wireless@vger.kernel.org; Sun, 06 Mar 2011 21:19:45 +0100
+Message-ID: <4D73EB12.3040102@tvcablenet.be>
+Date: Sun, 06 Mar 2011 21:14:10 +0100
+From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
+MIME-Version: 1.0
+To: Larry Finger
+	<public-Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@plane.gmane.org>
+CC: public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org
+Subject: Re: [RFC/RFT 11/11] rtlwifi: rtl8192se: Modify rtlwifi routines to
+ handle rtl8192se and add Makefile and Kconfig
+References: <4d732b88.lM+a0Gg928N+S/xO%Larry.Finger@lwfinger.net>
+In-Reply-To: <4d732b88.lM+a0Gg928N+S/xO%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
 
 
-On Fri, 2011-03-04 at 16:15 -0800, Daniel Halperin wrote:
-> drivers/net/wireless/iwlwifi/iwl-rx.c: In function
-> ‘iwl_rx_card_state_notif’:
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
-> undeclared (first use in this function)
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
-> identifier is reported only once
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
-> appears in.)
+
+Le 06/03/11 07:36, Larry Finger a �crit :
+> From: Chaoming Li <chaoming_li-kXabqFNEczNtrwSWzY7KCg@public.gmane.org>
 > 
+> Merge routines trx.c and trx.h for RTL8192SE.
 > 
-> iwl-tx.c has an include for sched.h that isn't here and is probably
-> the problem.
+> Signed-off-by: Chaoming_Li <chaoming_li-kXabqFNEczNtrwSWzY7KCg@public.gmane.org>
+> Signed-off-by: Larry Finger <Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>
+> ---
 > 
+> Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+> ===================================================================
+> --- /dev/null
+> +++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+> @@ -0,0 +1,978 @@
+> +/******************************************************************************
+> + *
+> + * Copyright(c) 2009-2010  Realtek Corporation.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of version 2 of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along with
+> + * this program; if not, write to the Free Software Foundation, Inc.,
+> + * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+> + *
+> + * The full GNU General Public License is included in this distribution in the
+> + * file called LICENSE.
+> + *
+> + * Contact Information:
+> + * wlanfae <wlanfae-Rasf1IRRPZFBDgjK7y7TUQ@public.gmane.org>
+> + * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+> + * Hsinchu 300, Taiwan.
+> + *
+> + * Larry Finger <Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>
+> + *
+> + *****************************************************************************/
+> +
+> +#include "../wifi.h"
+> +#include "../pci.h"
+> +#include "../base.h"
+> +#include "reg.h"
+> +#include "def.h"
+> +#include "phy.h"
+> +#include "fw.h"
+> +#include "trx.h"
+> +#include "led.h"
+> +
+> +static u8 _rtl92se_map_hwqueue_to_fwqueue(__le16 fc, unsigned int skb_queue)
+> +{
+> +	u8 qsel;
+> +
+> +	if (unlikely(ieee80211_is_beacon(fc)))
+> +		return QSLT_BEACON;
+> +
+> +	if (ieee80211_is_mgmt(fc))
+> +		return QSLT_MGNT;
+> +
+> +	if (ieee80211_is_nullfunc(fc))
+> +		return QSLT_HIGH;
+> +
+> +	switch (skb_queue) {
+> +	case VO_QUEUE:
+> +		qsel = QSLT_VO;
+> +		break;
+> +	case VI_QUEUE:
+> +		qsel = QSLT_VI;
+> +		break;
+> +	case BE_QUEUE:
+> +		qsel = QSLT_BE;
+> +		break;
+> +	case BK_QUEUE:
+> +		qsel = QSLT_BK;
+> +		break;
+> +	default:
+> +		qsel = QSLT_BE;
+> +		RT_ASSERT(false, ("BE queue, skb_queue:%d, set qsel = 0x%X\n",
+> +				skb_queue, QSLT_BE));
+> +		break;
+> +	}
+> +	return qsel;
+> +}
+> +
+> +static int _rtl92se_rate_mapping(bool isht, u8 desc_rate, bool first_ampdu)
+> +{
+> +	int rate_idx = 0;
+> +
+> +	if (first_ampdu) {
+> +		if (false == isht) {
+> +			switch (desc_rate) {
+> +			case DESC92S_RATE1M:
+> +				rate_idx = 0;
+> +				break;
+> +			case DESC92S_RATE2M:
+> +				rate_idx = 1;
+> +				break;
+> +			case DESC92S_RATE5_5M:
+> +				rate_idx = 2;
+> +				break;
+> +			case DESC92S_RATE11M:
+> +				rate_idx = 3;
+> +				break;
+> +			case DESC92S_RATE6M:
+> +				rate_idx = 4;
+> +				break;
+> +			case DESC92S_RATE9M:
+> +				rate_idx = 5;
+> +				break;
+> +			case DESC92S_RATE12M:
+> +				rate_idx = 6;
+> +				break;
+> +			case DESC92S_RATE18M:
+> +				rate_idx = 7;
+> +				break;
+> +			case DESC92S_RATE24M:
+> +				rate_idx = 8;
+> +				break;
+> +			case DESC92S_RATE36M:
+> +				rate_idx = 9;
+> +				break;
+> +			case DESC92S_RATE48M:
+> +				rate_idx = 10;
+> +				break;
+> +			case DESC92S_RATE54M:
+> +				rate_idx = 11;
+> +				break;
+> +			default:
+> +				rate_idx = 0;
+> +				break;
+> +			}
+> +		} else {
+> +			rate_idx = 11;
+> +		}
+> +
+> +		return rate_idx;
+> +	}
+> +
+> +	switch (desc_rate) {
+> +	case DESC92S_RATE1M:
+> +		rate_idx = 0;
+> +		break;
+> +	case DESC92S_RATE2M:
+> +		rate_idx = 1;
+> +		break;
+> +	case DESC92S_RATE5_5M:
+> +		rate_idx = 2;
+> +		break;
+> +	case DESC92S_RATE11M:
+> +		rate_idx = 3;
+> +		break;
+> +	case DESC92S_RATE6M:
+> +		rate_idx = 4;
+> +		break;
+> +	case DESC92S_RATE9M:
+> +		rate_idx = 5;
+> +		break;
+> +	case DESC92S_RATE12M:
+> +		rate_idx = 6;
+> +		break;
+> +	case DESC92S_RATE18M:
+> +		rate_idx = 7;
+> +		break;
+> +	case DESC92S_RATE24M:
+> +		rate_idx = 8;
+> +		break;
+> +	case DESC92S_RATE36M:
+> +		rate_idx = 9;
+> +		break;
+> +	case DESC92S_RATE48M:
+> +		rate_idx = 10;
+> +		break;
+> +	case DESC92S_RATE54M:
+> +		rate_idx = 11;
+> +		break;
+> +	default:
+> +		rate_idx = 11;
+> +		break;
+> +	}
+> +	return rate_idx;
+> +}
+> +
+> +static u8 _rtl92s_query_rxpwrpercentage(char antpower)
+> +{
+> +	if ((antpower <= -100) || (antpower >= 20))
+> +		return 0;
+> +	else if (antpower >= 0)
+> +		return 100;
+> +	else
+> +		return 100 + antpower;
+> +}
+> +
+> +static u8 _rtl92s_evm_db_to_percentage(char value)
+> +{
+> +	char ret_val;
+> +	ret_val = value;
+> +
+> +	if (ret_val >= 0)
+> +		ret_val = 0;
+> +
+> +	if (ret_val <= -33)
+> +		ret_val = -33;
+> +
+> +	ret_val = 0 - ret_val;
+> +	ret_val *= 3;
+> +
+> +	if (ret_val == 99)
+> +		ret_val = 100;
+> +
+> +	return ret_val;
+> +}
+> +
+> +static long _rtl92se_translate_todbm(struct ieee80211_hw *hw,
+> +				     u8 signal_strength_index)
+> +{
+> +	long signal_power;
+> +
+> +	signal_power = (long)((signal_strength_index + 1) >> 1);
+> +	signal_power -= 95;
+> +	return signal_power;
+> +}
+> +
+> +static long _rtl92se_signal_scale_mapping(struct ieee80211_hw *hw,
+> +		long currsig)
+> +{
+> +	long retsig = 0;
+> +
+> +	/* Step 1. Scale mapping. */
+> +	if (currsig > 47)
+> +		retsig = 100;
+> +	else if (currsig > 14 && currsig <= 47)
+> +		retsig = 100 - ((47 - currsig) * 3) / 2;
+> +	else if (currsig > 2 && currsig <= 14)
+> +		retsig = 48 - ((14 - currsig) * 15) / 7;
+> +	else if (currsig >= 0)
+> +		retsig = currsig * 9 + 1;
+> +
+> +	return retsig;
+> +}
+> +
+> +
+> +static void _rtl92se_query_rxphystatus(struct ieee80211_hw *hw,
+> +		struct rtl_stats *pstats, u8 *pdesc,
+> +		struct rx_fwinfo *p_drvinfo,
+> +		bool packet_match_bssid, bool packet_toself,
+> +		bool packet_beacon)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct phy_sts_cck_8192s_t *cck_buf;
+> +	s8 rx_pwr_all = 0, rx_pwr[4];
+> +	u8 rf_rx_num = 0, evm, pwdb_all;
+> +	u8 i, max_spatial_stream;
+> +	u32 rssi, total_rssi = 0;
+> +	bool in_powersavemode = false;
+> +	bool is_cck_rate;
+> +
+> +	is_cck_rate = RX_HAL_IS_CCK_RATE(pdesc);
+> +	pstats->packet_matchbssid = packet_match_bssid;
+> +	pstats->packet_toself = packet_toself;
+> +	pstats->is_cck = is_cck_rate;
+> +	pstats->packet_beacon = packet_beacon;
+> +	pstats->is_cck = is_cck_rate;
+> +	pstats->rx_mimo_signalquality[0] = -1;
+> +	pstats->rx_mimo_signalquality[1] = -1;
+> +
+> +	if (is_cck_rate) {
+> +		u8 report, cck_highpwr;
+> +		cck_buf = (struct phy_sts_cck_8192s_t *)p_drvinfo;
+> +
+> +		if (!in_powersavemode)
+> +			cck_highpwr = (u8) rtl_get_bbreg(hw,
+> +					   RFPGA0_XA_HSSIPARAMETER2,
+> +					   0x200);
+> +		else
+> +			cck_highpwr = false;
+> +
+> +		if (!cck_highpwr) {
+> +			u8 cck_agc_rpt = cck_buf->cck_agc_rpt;
+> +			report = cck_buf->cck_agc_rpt & 0xc0;
+> +			report = report >> 6;
+> +			switch (report) {
+> +			case 0x3:
+> +				rx_pwr_all = -40 - (cck_agc_rpt & 0x3e);
+> +				break;
+> +			case 0x2:
+> +				rx_pwr_all = -20 - (cck_agc_rpt & 0x3e);
+> +				break;
+> +			case 0x1:
+> +				rx_pwr_all = -2 - (cck_agc_rpt & 0x3e);
+> +				break;
+> +			case 0x0:
+> +				rx_pwr_all = 14 - (cck_agc_rpt & 0x3e);
+> +				break;
+> +			}
+> +		} else {
+> +			u8 cck_agc_rpt = cck_buf->cck_agc_rpt;
+> +			report = p_drvinfo->cfosho[0] & 0x60;
+> +			report = report >> 5;
+> +			switch (report) {
+> +			case 0x3:
+> +				rx_pwr_all = -40 - ((cck_agc_rpt & 0x1f) << 1);
+> +				break;
+> +			case 0x2:
+> +				rx_pwr_all = -20 - ((cck_agc_rpt & 0x1f) << 1);
+> +				break;
+> +			case 0x1:
+> +				rx_pwr_all = -2 - ((cck_agc_rpt & 0x1f) << 1);
+> +				break;
+> +			case 0x0:
+> +				rx_pwr_all = 14 - ((cck_agc_rpt & 0x1f) << 1);
+> +				break;
+> +			}
+> +		}
+> +
+> +		pwdb_all = _rtl92s_query_rxpwrpercentage(rx_pwr_all);
+> +
+> +		/* CCK gain is smaller than OFDM/MCS gain,  */
+> +		/* so we add gain diff by experiences, the val is 6 */
+> +		pwdb_all += 6;
+> +		if (pwdb_all > 100)
+> +			pwdb_all = 100;
+> +		/* modify the offset to make the same gain index with OFDM. */
+> +		if (pwdb_all > 34 && pwdb_all <= 42)
+> +			pwdb_all -= 2;
+> +		else if (pwdb_all > 26 && pwdb_all <= 34)
+> +			pwdb_all -= 6;
+> +		else if (pwdb_all > 14 && pwdb_all <= 26)
+> +			pwdb_all -= 8;
+> +		else if (pwdb_all > 4 && pwdb_all <= 14)
+> +			pwdb_all -= 4;
+> +
+> +		pstats->rx_pwdb_all = pwdb_all;
+> +		pstats->recvsignalpower = rx_pwr_all;
+> +
+> +		if (packet_match_bssid) {
+> +			u8 sq;
+> +			if (pstats->rx_pwdb_all > 40) {
+> +				sq = 100;
+> +			} else {
+> +				sq = cck_buf->sq_rpt;
+> +				if (sq > 64)
+> +					sq = 0;
+> +				else if (sq < 20)
+> +					sq = 100;
+> +				else
+> +					sq = ((64 - sq) * 100) / 44;
+> +			}
+> +
+> +			pstats->signalquality = sq;
+> +			pstats->rx_mimo_signalquality[0] = sq;
+> +			pstats->rx_mimo_signalquality[1] = -1;
+> +		}
+> +	} else {
+> +		rtlpriv->dm.rfpath_rxenable[0] =
+> +		    rtlpriv->dm.rfpath_rxenable[1] = true;
+> +		for (i = RF90_PATH_A; i < RF90_PATH_MAX; i++) {
+> +			if (rtlpriv->dm.rfpath_rxenable[i])
+> +				rf_rx_num++;
+> +
+> +			rx_pwr[i] = ((p_drvinfo->gain_trsw[i] & 0x3f) * 2) -
+> +				      110;
+> +			rssi = _rtl92s_query_rxpwrpercentage(rx_pwr[i]);
+> +			total_rssi += rssi;
+> +			rtlpriv->stats.rx_snr_db[i] = (long)(p_drvinfo->rxsnr[i]
+> +							     / 2);
+> +
+> +			if (packet_match_bssid)
+> +				pstats->rx_mimo_signalstrength[i] = (u8) rssi;
+> +		}
+> +
+> +		rx_pwr_all = ((p_drvinfo->pwdb_all >> 1) & 0x7f) - 110;
+> +		pwdb_all = _rtl92s_query_rxpwrpercentage(rx_pwr_all);
+> +		pstats->rx_pwdb_all = pwdb_all;
+> +		pstats->rxpower = rx_pwr_all;
+> +		pstats->recvsignalpower = rx_pwr_all;
+> +
+> +		if (GET_RX_STATUS_DESC_RX_HT(pdesc) &&
+> +			GET_RX_STATUS_DESC_RX_MCS(pdesc) >= DESC92S_RATEMCS8 &&
+> +		    GET_RX_STATUS_DESC_RX_MCS(pdesc) <= DESC92S_RATEMCS15)
+> +			max_spatial_stream = 2;
+> +		else
+> +			max_spatial_stream = 1;
+> +
+> +		for (i = 0; i < max_spatial_stream; i++) {
+> +			evm = _rtl92s_evm_db_to_percentage(p_drvinfo->rxevm[i]);
+> +
+> +			if (packet_match_bssid) {
+> +				if (i == 0)
+> +					pstats->signalquality = (u8)(evm&0xff);
+> +				pstats->rx_mimo_signalquality[i] =
+> +					 (u8)(evm & 0xff);
+> +			}
+> +		}
+> +	}
+> +
+> +	if (is_cck_rate)
+> +		pstats->signalstrength = (u8)(_rtl92se_signal_scale_mapping(hw,
+> +				pwdb_all));
+> +	else if (rf_rx_num != 0)
+> +		pstats->signalstrength = (u8) (_rtl92se_signal_scale_mapping(hw,
+> +				total_rssi /= rf_rx_num));
+> +}
+> +
+> +static void _rtl92se_process_ui_rssi(struct ieee80211_hw *hw,
+> +				     struct rtl_stats *pstats)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+> +	u8 rfpath;
+> +	u32 last_rssi, tmpval;
+> +
+> +	if (pstats->packet_toself || pstats->packet_beacon) {
+> +		rtlpriv->stats.rssi_calculate_cnt++;
+> +
+> +		if (rtlpriv->stats.ui_rssi.total_num++ >=
+> +		    PHY_RSSI_SLID_WIN_MAX) {
+> +			rtlpriv->stats.ui_rssi.total_num =
+> +				 PHY_RSSI_SLID_WIN_MAX;
+> +			last_rssi = rtlpriv->stats.ui_rssi.elements[
+> +				rtlpriv->stats.ui_rssi.index];
+> +			rtlpriv->stats.ui_rssi.total_val -= last_rssi;
+> +		}
+> +
+> +		rtlpriv->stats.ui_rssi.total_val += pstats->signalstrength;
+> +		rtlpriv->stats.ui_rssi.elements[rtlpriv->stats.ui_rssi.index++]
+> +			 = pstats->signalstrength;
+> +
+> +		if (rtlpriv->stats.ui_rssi.index >= PHY_RSSI_SLID_WIN_MAX)
+> +			rtlpriv->stats.ui_rssi.index = 0;
+> +
+> +		tmpval = rtlpriv->stats.ui_rssi.total_val /
+> +			rtlpriv->stats.ui_rssi.total_num;
+> +		rtlpriv->stats.signal_strength = _rtl92se_translate_todbm(hw,
+> +			(u8) tmpval);
+> +		pstats->rssi = rtlpriv->stats.signal_strength;
+> +	}
+> +
+> +	if (!pstats->is_cck && pstats->packet_toself) {
+> +		for (rfpath = RF90_PATH_A; rfpath < rtlphy->num_total_rfpath;
+> +		     rfpath++) {
+> +			if (rtlpriv->stats.rx_rssi_percentage[rfpath] == 0) {
+> +				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+> +				    pstats->rx_mimo_signalstrength[rfpath];
+> +
+> +			}
+> +
+> +			if (pstats->rx_mimo_signalstrength[rfpath] >
+> +			    rtlpriv->stats.rx_rssi_percentage[rfpath]) {
+> +				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+> +				    ((rtlpriv->stats.rx_rssi_percentage[rfpath]
+> +					 * (RX_SMOOTH_FACTOR - 1)) +
+> +				     (pstats->rx_mimo_signalstrength[rfpath])) /
+> +				    (RX_SMOOTH_FACTOR);
+> +
+> +				rtlpriv->stats.rx_rssi_percentage[rfpath]++;
+> +			} else {
+> +				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+> +				    ((rtlpriv->stats.rx_rssi_percentage[rfpath]
+> +					 * (RX_SMOOTH_FACTOR - 1)) +
+> +				     (pstats->rx_mimo_signalstrength[rfpath])) /
+> +				    (RX_SMOOTH_FACTOR);
+> +			}
+> +
+> +		}
+> +	}
+> +}
+> +
+> +static void _rtl92se_update_rxsignalstatistics(struct ieee80211_hw *hw,
+> +					       struct rtl_stats *pstats)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	int weighting = 0;
+> +
+> +	if (rtlpriv->stats.recv_signal_power == 0)
+> +		rtlpriv->stats.recv_signal_power = pstats->recvsignalpower;
+> +
+> +	if (pstats->recvsignalpower > rtlpriv->stats.recv_signal_power)
+> +		weighting = 5;
+> +	else if (pstats->recvsignalpower < rtlpriv->stats.recv_signal_power)
+> +		weighting = -5;
+> +
+> +	rtlpriv->stats.recv_signal_power = (rtlpriv->stats.recv_signal_power * 5
+> +		 + pstats->recvsignalpower + weighting) / 6;
+> +}
+> +
+> +static void _rtl92se_process_pwdb(struct ieee80211_hw *hw,
+> +				  struct rtl_stats *pstats)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+> +	long undecorated_smoothed_pwdb = 0;
+> +
+> +	if (mac->opmode == NL80211_IFTYPE_ADHOC) {
+> +		return;
+> +	} else {
+> +		undecorated_smoothed_pwdb =
+> +		    rtlpriv->dm.undecorated_smoothed_pwdb;
+> +	}
+> +
+> +	if (pstats->packet_toself || pstats->packet_beacon) {
+> +		if (undecorated_smoothed_pwdb < 0)
+> +			undecorated_smoothed_pwdb = pstats->rx_pwdb_all;
+> +
+> +		if (pstats->rx_pwdb_all > (u32) undecorated_smoothed_pwdb) {
+> +			undecorated_smoothed_pwdb =
+> +			    (((undecorated_smoothed_pwdb) * (RX_SMOOTH_FACTOR
+> +			    - 1)) +
+> +			    (pstats->rx_pwdb_all)) / (RX_SMOOTH_FACTOR);
+> +
+> +			undecorated_smoothed_pwdb = undecorated_smoothed_pwdb
+> +						    + 1;
+> +		} else {
+> +			undecorated_smoothed_pwdb =
+> +			      (((undecorated_smoothed_pwdb) *
+> +			      (RX_SMOOTH_FACTOR - 1)) + (pstats->rx_pwdb_all)) /
+> +			      (RX_SMOOTH_FACTOR);
+> +		}
+> +
+> +		rtlpriv->dm.undecorated_smoothed_pwdb =
+> +		    undecorated_smoothed_pwdb;
+> +		_rtl92se_update_rxsignalstatistics(hw, pstats);
+> +	}
+> +}
+> +
+> +static void _rtl92se_process_ui_link_quality(struct ieee80211_hw *hw,
+> +					     struct rtl_stats *pstats)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	u32 last_evm = 0, n, tmpval;
+> +
+> +	if (pstats->signalquality != 0) {
+> +		if (pstats->packet_toself || pstats->packet_beacon) {
+> +
+> +			if (rtlpriv->stats.ui_link_quality.total_num++ >=
+> +			    PHY_LINKQUALITY_SLID_WIN_MAX) {
+> +				rtlpriv->stats.ui_link_quality.total_num =
+> +				    PHY_LINKQUALITY_SLID_WIN_MAX;
+> +				last_evm = rtlpriv->stats.ui_link_quality.
+> +					elements
+> +					[rtlpriv->stats.ui_link_quality.index];
+> +				rtlpriv->stats.ui_link_quality.total_val -=
+> +								 last_evm;
+> +			}
+> +
+> +			rtlpriv->stats.ui_link_quality.total_val +=
+> +			    pstats->signalquality;
+> +			rtlpriv->stats.ui_link_quality.elements[
+> +				rtlpriv->stats.ui_link_quality.index++] =
+> +			    pstats->signalquality;
+> +
+> +			if (rtlpriv->stats.ui_link_quality.index >=
+> +			    PHY_LINKQUALITY_SLID_WIN_MAX)
+> +				rtlpriv->stats.ui_link_quality.index = 0;
+> +
+> +			tmpval = rtlpriv->stats.ui_link_quality.total_val /
+> +			    rtlpriv->stats.ui_link_quality.total_num;
+> +			rtlpriv->stats.signal_quality = tmpval;
+> +
+> +			rtlpriv->stats.last_sigstrength_inpercent = tmpval;
+> +
+> +			for (n = 0; n < 2; n++) {
+> +				if (pstats->rx_mimo_signalquality[n] != -1) {
+> +					if (rtlpriv->stats.rx_evm_percentage[n]
+> +					    == 0) {
+> +						rtlpriv->stats.rx_evm_percentage
+> +						  [n] =
+> +						  pstats->rx_mimo_signalquality
+> +						  [n];
+> +					}
+> +
+> +					rtlpriv->stats.rx_evm_percentage[n] =
+> +					    ((rtlpriv->stats.rx_evm_percentage
+> +					    [n] * (RX_SMOOTH_FACTOR - 1))
+> +					    + (pstats->rx_mimo_signalquality
+> +					    [n] * 1)) /
+> +					    (RX_SMOOTH_FACTOR);
+> +				}
+> +			}
+> +		}
+> +	}
+> +}
+> +
+> +static void _rtl92se_process_phyinfo(struct ieee80211_hw *hw,
+> +				     u8 *buffer,
+> +				     struct rtl_stats *pcurrent_stats)
+> +{
+> +	if (!pcurrent_stats->packet_matchbssid &&
+> +	    !pcurrent_stats->packet_beacon)
+> +		return;
+> +
+> +	_rtl92se_process_ui_rssi(hw, pcurrent_stats);
+> +	_rtl92se_process_pwdb(hw, pcurrent_stats);
+> +	_rtl92se_process_ui_link_quality(hw, pcurrent_stats);
+> +}
+> +
+> +static void _rtl92se_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+> +		struct sk_buff *skb, struct rtl_stats *pstats,
+> +		u8 *pdesc, struct rx_fwinfo *p_drvinfo)
+> +{
+> +	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+> +	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+> +
+> +	struct ieee80211_hdr *hdr;
+> +	u8 *tmp_buf;
+> +	u8 *praddr;
+> +	u8 *psaddr;
+> +	__le16 fc;
+> +	u16 u_fc, type;
+> +	bool packet_matchbssid, packet_toself, packet_beacon;
+> +
+> +	tmp_buf = skb->data + pstats->rx_drvinfo_size + pstats->rx_bufshift;
+> +	hdr = (struct ieee80211_hdr *)tmp_buf;
+> +	fc = hdr->frame_control;
+> +	u_fc = le16_to_cpu(fc);
+> +	type = WLAN_FC_GET_TYPE(fc);
+> +	praddr = hdr->addr1;
+> +	psaddr = hdr->addr2;
+> +
+> +	packet_matchbssid = ((IEEE80211_FTYPE_CTL != type) &&
+> +	     (!compare_ether_addr(mac->bssid, (u_fc & IEEE80211_FCTL_TODS) ?
+> +			hdr->addr1 : (u_fc & IEEE80211_FCTL_FROMDS) ?
+> +			hdr->addr2 : hdr->addr3)) && (!pstats->hwerror) &&
+> +			(!pstats->crc) && (!pstats->icv));
+> +
+> +	packet_toself = packet_matchbssid &&
+> +	    (!compare_ether_addr(praddr, rtlefuse->dev_addr));
+> +
+> +	if (ieee80211_is_beacon(fc))
+> +		packet_beacon = true;
+> +
+> +	_rtl92se_query_rxphystatus(hw, pstats, pdesc, p_drvinfo,
+> +			packet_matchbssid, packet_toself, packet_beacon);
+> +	_rtl92se_process_phyinfo(hw, tmp_buf, pstats);
+> +}
+> +
+> +bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
+> +		struct ieee80211_rx_status *rx_status, u8 *pdesc,
+> +		struct sk_buff *skb)
+> +{
+> +	struct rx_fwinfo *p_drvinfo;
+> +	u32 phystatus = (u32)GET_RX_STATUS_DESC_PHY_STATUS(pdesc);
+> +
+> +	stats->length = (u16)GET_RX_STATUS_DESC_PKT_LEN(pdesc);
+> +	stats->rx_drvinfo_size = (u8)GET_RX_STATUS_DESC_DRVINFO_SIZE(pdesc) * 8;
+> +	stats->rx_bufshift	= (u8)(GET_RX_STATUS_DESC_SHIFT(pdesc) & 0x03);
+> +	stats->icv = (u16)GET_RX_STATUS_DESC_ICV(pdesc);
+> +	stats->crc = (u16)GET_RX_STATUS_DESC_CRC32(pdesc);
+> +	stats->hwerror = (u16)(stats->crc | stats->icv);
+> +	stats->decrypted = !GET_RX_STATUS_DESC_SWDEC(pdesc);
+> +
+> +	stats->rate = (u8)GET_RX_STATUS_DESC_RX_MCS(pdesc);
+> +	stats->shortpreamble = (u16)GET_RX_STATUS_DESC_SPLCP(pdesc);
+> +	stats->isampdu = (bool)(GET_RX_STATUS_DESC_PAGGR(pdesc) == 1);
+> +	stats->timestamp_low = GET_RX_STATUS_DESC_TSFL(pdesc);
+> +	stats->rx_is40Mhzpacket = (bool)GET_RX_STATUS_DESC_BW(pdesc);
+> +
+> +	if (stats->hwerror)
+> +		return false;
+> +
+> +	rx_status->freq = hw->conf.channel->center_freq;
+> +	rx_status->band = hw->conf.channel->band;
+> +
+> +	if (GET_RX_STATUS_DESC_CRC32(pdesc))
+> +		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+> +
+> +	if (!GET_RX_STATUS_DESC_SWDEC(pdesc))
+> +		rx_status->flag |= RX_FLAG_DECRYPTED;
+> +
+> +	if (GET_RX_STATUS_DESC_BW(pdesc))
+> +		rx_status->flag |= RX_FLAG_40MHZ;
+> +
+> +	if (GET_RX_STATUS_DESC_RX_HT(pdesc))
+> +		rx_status->flag |= RX_FLAG_HT;
+> +
+> +	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+> +
+> +	if (stats->decrypted)
+> +		rx_status->flag |= RX_FLAG_DECRYPTED;
+> +
+> +	rx_status->rate_idx = _rtl92se_rate_mapping((bool)
+> +			GET_RX_STATUS_DESC_RX_HT(pdesc),
+> +			(u8)GET_RX_STATUS_DESC_RX_MCS(pdesc),
+> +			(bool)GET_RX_STATUS_DESC_PAGGR(pdesc));
+> +
+> +
+> +	rx_status->mactime = GET_RX_STATUS_DESC_TSFL(pdesc);
+> +	if (phystatus == true) {
+> +		p_drvinfo = (struct rx_fwinfo *)(skb->data +
+> +			     stats->rx_bufshift);
+> +		_rtl92se_translate_rx_signal_stuff(hw, skb, stats, pdesc,
+> +						   p_drvinfo);
+> +	}
+> +
+> +	rx_status->signal = stats->rssi + 10;
+> +
+> +	return true;
+> +}
+> +
+> +void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
+> +		struct ieee80211_hdr *hdr, u8 *pdesc_tx,
+> +		struct ieee80211_tx_info *info, struct sk_buff *skb,
+> +		unsigned int queue_index, struct rtl_tcb_desc *ptcb_desc)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+> +	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+> +	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+> +
+> +	u8 *pdesc = (u8 *) pdesc_tx;
+> +	u8 *qc = ieee80211_get_qos_ctl(hdr);
+> +	u8 tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
+> +	u16 seq_number;
+> +	__le16 fc = hdr->frame_control;
+> +	u8 ReservedMacID = 0;
+> +	u8 fw_qsel = _rtl92se_map_hwqueue_to_fwqueue(fc, queue_index);
+> +	bool firstseg = (!(hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)));
+> +	bool lastseg = (!(hdr->frame_control &
+> +			cpu_to_le16(IEEE80211_FCTL_MOREFRAGS)));
+> +	dma_addr_t mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
+> +		    PCI_DMA_TODEVICE);
+> +
+> +	seq_number = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
+> +
+> +	rtl_get_tcb_desc(hw, info, skb, ptcb_desc);
+> +
+> +	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_DESC_SIZE_RTL8192S);
+> +
+> +	if (firstseg) {
+> +		if (rtlpriv->dm.useramask) {
+> +			/* set txdesc macId */
+> +			if (ptcb_desc->mac_id < 32) {
+> +				SET_TX_DESC_MACID(pdesc, ptcb_desc->mac_id);
+> +				ReservedMacID |= ptcb_desc->mac_id;
+> +			}
+> +		}
+> +		SET_TX_DESC_RSVD_MACID(pdesc, ReservedMacID);
+> +
+> +		SET_TX_DESC_TXHT(pdesc, ((ptcb_desc->hw_rate >=
+> +				 DESC92S_RATEMCS0) ? 1 : 0));
+> +
+> +		if (rtlhal->version == VERSION_8192S_ACUT) {
+> +			if (ptcb_desc->hw_rate == DESC92S_RATE1M ||
+> +				ptcb_desc->hw_rate  == DESC92S_RATE2M ||
+> +				ptcb_desc->hw_rate == DESC92S_RATE5_5M ||
+> +				ptcb_desc->hw_rate == DESC92S_RATE11M) {
+> +				ptcb_desc->hw_rate = DESC92S_RATE12M;
+> +			}
+> +		}
+> +
+> +		SET_TX_DESC_TX_RATE(pdesc, ptcb_desc->hw_rate);
+> +
+> +		if (ptcb_desc->use_shortgi || ptcb_desc->use_shortpreamble)
+> +			SET_TX_DESC_TX_SHORT(pdesc, 0);
+> +
+> +		/* Aggregation related */
+> +		if (mac->tids[tid].agg.agg_state == RTL_AGG_ON &&
+> +		    info->flags & IEEE80211_TX_CTL_AMPDU)
+> +			SET_TX_DESC_AGG_ENABLE(pdesc, 1);
+> +
+> +		/* For AMPDU, we must insert SSN into TX_DESC */
+> +		SET_TX_DESC_SEQ(pdesc, seq_number);
+> +
+> +		/* Protection mode related */
+> +		/* For 92S, if RTS/CTS are set, HW will execute RTS. */
+> +		/* We choose only one protection mode to execute */
+> +		SET_TX_DESC_RTS_ENABLE(pdesc, ((ptcb_desc->rts_enable &&
+> +				!ptcb_desc->cts_enable) ? 1 : 0));
+> +		SET_TX_DESC_CTS_ENABLE(pdesc, ((ptcb_desc->cts_enable) ?
+> +				       1 : 0));
+> +		SET_TX_DESC_RTS_STBC(pdesc, ((ptcb_desc->rts_stbc) ? 1 : 0));
+> +
+> +		SET_TX_DESC_RTS_RATE(pdesc, ptcb_desc->rts_rate);
+> +		SET_TX_DESC_RTS_BANDWIDTH(pdesc, 0);
+> +		SET_TX_DESC_RTS_SUB_CARRIER(pdesc, ptcb_desc->rts_sc);
+> +		SET_TX_DESC_RTS_SHORT(pdesc, ((ptcb_desc->rts_rate <=
+> +				      DESC92S_RATE54M) ?
+> +				      (ptcb_desc->rts_use_shortpreamble ?
+> +				      1 : 0)
+> +		       : (ptcb_desc->rts_use_shortgi ? 1 : 0)));
+> +
+> +
+> +		/* Set Bandwidth and sub-channel settings. */
+> +		if (mac->bw_40) {
+> +			if (ptcb_desc->packet_bw) {
+> +				SET_TX_DESC_TX_BANDWIDTH(pdesc, 1);
+> +				/* use duplicated mode */
+> +				SET_TX_DESC_TX_SUB_CARRIER(pdesc, 0);
+> +			} else {
+> +				SET_TX_DESC_TX_BANDWIDTH(pdesc, 0);
+> +				SET_TX_DESC_TX_SUB_CARRIER(pdesc,
+> +							  mac->cur_40_prime_sc);
+> +			}
+> +		} else {
+> +			SET_TX_DESC_TX_BANDWIDTH(pdesc, 0);
+> +			SET_TX_DESC_TX_SUB_CARRIER(pdesc, 0);
+> +		}
+> +
+> +		/* 3 Fill necessary field in First Descriptor */
+> +		/*DWORD 0*/
+> +		SET_TX_DESC_LINIP(pdesc, 0);
+> +		SET_TX_DESC_OFFSET(pdesc, 32);
+> +		SET_TX_DESC_PKT_SIZE(pdesc, (u16) skb->len);
+> +
+> +		/*DWORD 1*/
+> +		SET_TX_DESC_RA_BRSR_ID(pdesc, ptcb_desc->ratr_index);
+> +
+> +		/* Fill security related */
+> +		if (info->control.hw_key) {
+> +			struct ieee80211_key_conf *keyconf =
+> +						   info->control.hw_key;
+> +
+> +			switch (keyconf->cipher) {
+> +			case WLAN_CIPHER_SUITE_WEP40:
+> +			case WLAN_CIPHER_SUITE_WEP104:
+> +				SET_TX_DESC_SEC_TYPE(pdesc, 0x1);
+> +				break;
+> +			case WLAN_CIPHER_SUITE_TKIP:
+> +				SET_TX_DESC_SEC_TYPE(pdesc, 0x2);
+> +				break;
+> +			case WLAN_CIPHER_SUITE_CCMP:
+> +				SET_TX_DESC_SEC_TYPE(pdesc, 0x3);
+> +				break;
+> +			default:
+> +				SET_TX_DESC_SEC_TYPE(pdesc, 0x0);
+> +				break;
+> +
+> +			}
+> +		}
+> +
+> +		/* Set Packet ID */
+> +		SET_TX_DESC_PACKET_ID(pdesc, 0);
+> +
+> +		/* We will assign magement queue to BK. */
+> +		SET_TX_DESC_QUEUE_SEL(pdesc, fw_qsel);
+> +
+> +		/* Alwasy enable all rate fallback range */
+> +		SET_TX_DESC_DATA_RATE_FB_LIMIT(pdesc, 0x1F);
+> +
+> +		/* Fix: I don't kown why hw use 6.5M to tx when set it */
+> +		SET_TX_DESC_USER_RATE(pdesc,
+> +				      ptcb_desc->use_driver_rate ? 1 : 0);
+> +
+> +		/* Set NON_QOS bit. */
+> +		if (!ieee80211_is_data_qos(fc))
+> +			SET_TX_DESC_NON_QOS(pdesc, 1);
+> +
+> +	}
+> +
+> +	/* Fill fields that are required to be initialized
+> +	 * in all of the descriptors */
+> +	/*DWORD 0 */
+> +	SET_TX_DESC_FIRST_SEG(pdesc, (firstseg ? 1 : 0));
+> +	SET_TX_DESC_LAST_SEG(pdesc, (lastseg ? 1 : 0));
+> +
+> +	/* DWORD 7 */
+> +	SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16) skb->len);
+> +
+> +	/* DOWRD 8 */
+> +	SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, mapping);
+> +
+> +	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, ("\n"));
+> +}
+> +
+> +void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+> +	bool firstseg, bool lastseg, struct sk_buff *skb)
+> +{
+> +	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+> +	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+> +	struct rtl_tcb_desc *tcb_desc = (struct rtl_tcb_desc *)(skb->cb);
+> +
+> +	dma_addr_t mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
+> +			PCI_DMA_TODEVICE);
+> +
+> +    /* Clear all status	*/
+> +	CLEAR_PCI_TX_DESC_CONTENT(pdesc, TX_CMDDESC_SIZE_RTL8192S);
+> +
+> +	/* This bit indicate this packet is used for FW download. */
+> +	if (tcb_desc->cmd_or_init == DESC_PACKET_TYPE_INIT) {
+> +		/* For firmware downlaod we only need to set LINIP */
+> +		SET_TX_DESC_LINIP(pdesc, tcb_desc->last_inipkt);
+> +
+> +		/* 92SE must set as 1 for firmware download HW DMA error */
+> +		SET_TX_DESC_FIRST_SEG(pdesc, 1);
+> +		SET_TX_DESC_LAST_SEG(pdesc, 1);
+> +
+> +		/* 92SE need not to set TX packet size when firmware download */
+> +		SET_TX_DESC_PKT_SIZE(pdesc, (u16)(skb->len));
+> +		SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16)(skb->len));
+> +		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, mapping);
+> +
+> +		SET_TX_DESC_OWN(pdesc, 1);
+> +	} else { /* H2C Command Desc format (Host TXCMD) */
+> +		/* 92SE must set as 1 for firmware download HW DMA error */
+> +		SET_TX_DESC_FIRST_SEG(pdesc, 1);
+> +		SET_TX_DESC_LAST_SEG(pdesc, 1);
+> +
+> +		SET_TX_DESC_OFFSET(pdesc, 0x20);
+> +
+> +		/* Buffer size + command header */
+> +		SET_TX_DESC_PKT_SIZE(pdesc, (u16)(skb->len));
+> +		/* Fixed queue of H2C command */
+> +		SET_TX_DESC_QUEUE_SEL(pdesc, 0x13);
+> +
+> +		SET_BITS_TO_LE_4BYTE(skb->data, 24, 7, rtlhal->h2c_txcmd_seq);
+> +
+> +		SET_TX_DESC_TX_BUFFER_SIZE(pdesc, (u16)(skb->len));
+> +		SET_TX_DESC_TX_BUFFER_ADDRESS(pdesc, mapping);
+> +		SET_TX_DESC_OWN(pdesc, 1);
+> +	}
+> +}
+> +
+> +void rtl92se_set_desc(u8 *pdesc, bool istx, u8 desc_name, u8 *val)
+> +{
+> +	if (istx == true) {
+> +		switch (desc_name) {
+> +		case HW_DESC_OWN:
+> +			SET_TX_DESC_OWN(pdesc, 1);
+> +			break;
+> +		case HW_DESC_TX_NEXTDESC_ADDR:
+> +			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
+> +			break;
+> +		default:
+> +			RT_ASSERT(false, ("ERR txdesc :%d not process\n",
+> +				  desc_name));
+> +			break;
+> +		}
+> +	} else {
+> +		switch (desc_name) {
+> +		case HW_DESC_RXOWN:
+> +			SET_RX_STATUS_DESC_OWN(pdesc, 1);
+> +			break;
+> +		case HW_DESC_RXBUFF_ADDR:
+> +			SET_RX_STATUS__DESC_BUFF_ADDR(pdesc, *(u32 *) val);
+> +			break;
+> +		case HW_DESC_RXPKT_LEN:
+> +			SET_RX_STATUS_DESC_PKT_LEN(pdesc, *(u32 *) val);
+> +			break;
+> +		case HW_DESC_RXERO:
+> +			SET_RX_STATUS_DESC_EOR(pdesc, 1);
+> +			break;
+> +		default:
+> +			RT_ASSERT(false, ("ERR rxdesc :%d not process\n",
+> +				  desc_name));
+> +			break;
+> +		}
+> +	}
+> +}
+> +
+> +u32 rtl92se_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+> +{
+> +	u32 ret = 0;
+> +
+> +	if (istx == true) {
+> +		switch (desc_name) {
+> +		case HW_DESC_OWN:
+> +			ret = GET_TX_DESC_OWN(p_desc);
+> +			break;
+> +		case HW_DESC_TXBUFF_ADDR:
+> +			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(p_desc);
+> +			break;
+> +		default:
+> +			RT_ASSERT(false, ("ERR txdesc :%d not process\n",
+> +				  desc_name));
+> +			break;
+> +		}
+> +	} else {
+> +		switch (desc_name) {
+> +		case HW_DESC_OWN:
+> +			ret = GET_RX_STATUS_DESC_OWN(p_desc);
+> +			break;
+> +		case HW_DESC_RXPKT_LEN:
+> +			ret = GET_RX_STATUS_DESC_PKT_LEN(p_desc);
+> +			break;
+> +		default:
+> +			RT_ASSERT(false, ("ERR rxdesc :%d not process\n",
+> +				  desc_name));
+> +			break;
+> +		}
+> +	}
+> +	return ret;
+> +}
+> +
+> +void rtl92se_tx_polling(struct ieee80211_hw *hw, unsigned int hw_queue)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	rtl_write_word(rtlpriv, TP_POLL, BIT(0) << (hw_queue));
+> +}
+> +
+> Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/trx.h
+> ===================================================================
+> --- /dev/null
+> +++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192se/trx.h
+> @@ -0,0 +1,45 @@
+> +/******************************************************************************
+> + *
+> + * Copyright(c) 2009-2010  Realtek Corporation.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of version 2 of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along with
+> + * this program; if not, write to the Free Software Foundation, Inc.,
+> + * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+> + *
+> + * The full GNU General Public License is included in this distribution in the
+> + * file called LICENSE.
+> + *
+> + * Contact Information:
+> + * wlanfae <wlanfae-Rasf1IRRPZFBDgjK7y7TUQ@public.gmane.org>
+> + * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
+> + * Hsinchu 300, Taiwan.
+> + *
+> + * Larry Finger <Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>
+> + *
+> + *****************************************************************************/
+> +#ifndef __REALTEK_PCI92SE_TRX_H__
+> +#define __REALTEK_PCI92SE_TRX_H__
+> +
+> +void rtl92se_tx_fill_desc(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+> +	u8 *pdesc, struct ieee80211_tx_info *info, struct sk_buff* skb,
+> +	unsigned int qsel, struct rtl_tcb_desc *ptcb_desc);
+> +void rtl92se_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+> +			     bool b_firstseg, bool b_lastseg,
+> +			     struct sk_buff *skb);
+> +bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
+> +	struct ieee80211_rx_status *rx_status, u8 *pdesc, struct sk_buff *skb);
+> +void rtl92se_set_desc(u8 *pdesc, bool istx,	u8 desc_name, u8 *val);
+> +u32 rtl92se_get_desc(u8 *pdesc, bool istx, u8 desc_name);
+> +void rtl92se_tx_polling(struct ieee80211_hw *hw, unsigned int hw_queue);
+> +
+> +#endif
+> +
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-Stanislow last patch   
-commit 466a19a003f3b45a755bc85f967c21da947f9a00: iwlwifi: move rx
-handlers code to iwl-rx.c
-break the compile
+Hello,
 
-John, please revert the patch
+It seems this patch is the same as the previous one (Merge routines
+trx.c and trx.h for RTL8192SE). It doesn't add a Makefile and doesn't
+contain KConfig entries.
 
-Thanks
-Wey
-
+Fran�ois Valenduc
 
 
