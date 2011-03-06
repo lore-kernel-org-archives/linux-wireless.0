@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.24]:54119 "EHLO mgw-da01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751363Ab1CJIBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 03:01:52 -0500
-From: juuso.oikarinen@nokia.com
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Fix potential incorrect band in rx-status
-Date: Thu, 10 Mar 2011 10:01:43 +0200
-Message-Id: <1299744103-11077-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mirapoint21.brutele.be ([212.68.199.158]:30018 "EHLO
+	mirapoint21.brutele.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754389Ab1CFU4r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 15:56:47 -0500
+Message-ID: <4D73F506.50609@tvcablenet.be>
+Date: Sun, 06 Mar 2011 21:56:38 +0100
+From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT 11/11] rtlwifi: rtl8192se: Modify rtlwifi routines to
+ handle rtl8192se and add Makefile and Kconfig
+References: <4d732b88.lM+a0Gg928N+S/xO%Larry.Finger@lwfinger.net> <4D73EB12.3040102@tvcablenet.be> <4D73F209.8050406@lwfinger.net>
+In-Reply-To: <4D73F209.8050406@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Le 06/03/11 21:43, Larry Finger a écrit :
+> On 03/06/2011 02:14 PM, François Valenduc wrote:
+>>>
+>> Hello,
+>>
+>> It seems this patch is the same as the previous one (Merge routines
+>> trx.c and trx.h for RTL8192SE). It doesn't add a Makefile and doesn't
+>> contain KConfig entries.
+>>
+>> François Valenduc
+>
+> Yes, I messed up my sending script. The correct patch now submitted.
+>
+> Larry
+>
+Sorry to annoy you again but either I am doing something wrong or this
+new patch doesn't apply on top of the 10 first patches. There seems to
+be problems in fuse.c, pci.c and core.c (all in
+drivers/net/wireless/rtlwifi).
 
-The rx-status passed to mac80211 along with each received frame contains the
-band on which the frame was received. Under certain circumstances, this band
-information may be incorrect, causing in worst case a WARNING from mac80211,
-and causes the received frame to be dropped.
+François
 
-This scenario mainly occurs when performing connected-mode scans, when the
-received scan results are from the other band than the one currentl
-associated to.
+François
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/rx.c |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 919b59f..e58c453 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -48,18 +48,14 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 			     struct ieee80211_rx_status *status,
- 			     u8 beacon)
- {
--	enum ieee80211_band desc_band;
--
- 	memset(status, 0, sizeof(struct ieee80211_rx_status));
- 
--	status->band = wl->band;
--
- 	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) == WL1271_RX_DESC_BAND_BG)
--		desc_band = IEEE80211_BAND_2GHZ;
-+		status->band = IEEE80211_BAND_2GHZ;
- 	else
--		desc_band = IEEE80211_BAND_5GHZ;
-+		status->band = IEEE80211_BAND_5GHZ;
- 
--	status->rate_idx = wl1271_rate_to_idx(desc->rate, desc_band);
-+	status->rate_idx = wl1271_rate_to_idx(desc->rate, status->band);
- 
- #ifdef CONFIG_WL12XX_HT
- 	/* 11n support */
--- 
-1.7.1
 
