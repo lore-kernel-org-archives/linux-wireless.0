@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280Ab1CVOqj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 10:46:39 -0400
-Subject: Re: [RFC 0/9] add WoW support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+Received: from mga11.intel.com ([192.55.52.93]:32745 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751504Ab1CFVmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 16:42:47 -0500
+Subject: Re: [ipw3945-devel] can't compile iwlwifi latest wireless-testing
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <AANLkTimaVjAsW4g8kAfi=vQaPCabkj-ZO9vZw_Lex7KY@mail.gmail.com>
+References: <AANLkTimaVjAsW4g8kAfi=vQaPCabkj-ZO9vZw_Lex7KY@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Mar 2011 15:46:37 +0100
-Message-ID: <1300805197.3746.21.camel@jlt3.sipsolutions.net>
+Date: Sun, 06 Mar 2011 13:26:49 -0800
+Message-ID: <1299446809.5082.161.camel@wwguy-huron>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let's back up a bit on this and think about the design some more, since
-this touches a whole bunch of different things.
-
-First, I think there at least two WoWLAN models:
-
-1) The "traditional" model:
-
-In this model, the device handles many things, there are different
-wakeup triggers, for example:
- * magic packet
- * packet pattern
- * connection lost
- * GKT rekeying (although some devices may support this in firmware and
-   then don't wake up), or rekeying failure
- * rfkill (?)
- * random other things
-
-These are only available while connected to a (typically exactly one)
-AP. Also, importantly, some of these require explicit configuration.
-
-Additionally, some devices may support "network detection", a form of
-scanning and waking up the host if certain conditions are met.
+Hi Daniel,
 
 
-However, with that, we also get closer to
+On Fri, 2011-03-04 at 16:15 -0800, Daniel Halperin wrote:
+> drivers/net/wireless/iwlwifi/iwl-rx.c: In function
+> ‘iwl_rx_card_state_notif’:
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
+> undeclared (first use in this function)
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
+> identifier is reported only once
+> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
+> appears in.)
+> 
+> 
+> iwl-tx.c has an include for sched.h that isn't here and is probably
+> the problem.
+> 
+> 
+Stanislow last patch   
+commit 466a19a003f3b45a755bc85f967c21da947f9a00: iwlwifi: move rx
+handlers code to iwl-rx.c
+break the compile
 
-2) The "wake whenever there's something to do" model:
+John, please revert the patch
 
-I don't have a good name for this, really, but it's what the TI chip
-does right now -- it just wakes the host when there's something to do
-for it, whatever that might be. It's closer to Android's wake-lock model
-in a way I guess., the "network detection" would also be possible to
-implement with this in the TI chip since it has such functionality
-(which also doesn't depend on going to suspend, unlike ours which
-basically cannot be interleaved with other things).
+Thanks
+Wey
 
-
-Whichever model is used, however, there will be spurious wakeups. I hope
-there's some way of identifying which device woke up the system and then
-go to sleep again. I think the only reasonable use case for WoWlan is
-with some kind of "suspend manager" that evaluates this information and
-puts the system to sleep again as appropriate.
-
-This manager component might also connect to a network after "network
-detection" while suspended found something, and then suspend the system
-again with new triggers.
-
-johannes
 
 
