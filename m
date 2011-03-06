@@ -1,84 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52072 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755235Ab1CHTpD (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:44359 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753723Ab1CFO2Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 14:45:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <4D76833E.9010603@candelatech.com>
-References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>
-	<20110303135942.GA8969@tuxdriver.com>
-	<AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>
-	<20110307151201.GC2664@tuxdriver.com>
-	<AANLkTi=7RSdKhzGazQFUnBZqzMQskOSHq=7E08uan2vu@mail.gmail.com>
-	<4D767A4B.1060203@gmail.com>
-	<4D76833E.9010603@candelatech.com>
-Date: Tue, 8 Mar 2011 14:45:02 -0500
-Message-ID: <AANLkTikPQt+njjFPB6sJ-mEcsx6f-R6TAOhEd8egkqhH@mail.gmail.com>
-Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
- ath_stoprecv+0xc8/0xda [ath9k]()
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 6 Mar 2011 09:28:24 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 12/15] wl12xx: 1281/1283 support - Use 1 spare blocks for 128x STA, and 2 for the rest
+Date: Sun,  6 Mar 2011 16:32:17 +0200
+Message-Id: <1299421940-26292-13-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 8, 2011 at 2:27 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 03/08/2011 10:49 AM, Justin P. Mattock wrote:
->>
->> On 03/07/2011 07:22 AM, Mohammed Shafi wrote:
->>>
->>> On Mon, Mar 7, 2011 at 8:42 PM, John W.
->>> Linville<linville@tuxdriver.com> wrote:
->>>>
->>>> On Sun, Mar 06, 2011 at 12:47:05AM -0800, Justin Mattock wrote:
->>>>
->>>>> full dmesg here:
->>>>> http://fpaste.org/5JQp/
->>>>> let me know if I need to supply any info(also I can try a bisect, but
->>>>> am in the middle of changing residencies, so it might not be right
->>>>> away)
->>>>
->>>> One of the Atheros guys suggested that you change a DMA timeout value.
->>>> Did you try that?
->>>
->>> John it looks like increasing the timeout also does not seems to help.
->>> A user reported this issue in ath9k developer list and he told that
->>> increasing the timeout did not fix this issue.
->>>
->>>>
->>>> John
->>>> --
->>>> John W. Linville Someday the world will need a hero, and you
->>>> linville@tuxdriver.com might be all we have. Be ready.
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe
->>>> linux-wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>
->> at barnes and noble, and I see this has fired off again. will see if I
->> can reproduce and bisect.
->
-> This problem goes way back, and the driver has had lots of fixes in the
-> last few months, so I'm not sure if bisecting is going to
-> do you any good.
->
-> Thanks,
-> Ben
+From: Arik Nemtsov <arik@wizery.com>
 
-The warnings have been around since you added the check for the
-problem, right?  I remember initially it was a WARN_ON, and I'd get a
-steady flood of backtraces, and then it was switched to a
-WARN_ON_ONCE.  I see these on every platform I have (x86_64, IXP425
-and AR71xx) with AR9002 and AR9003.
+All FW except for 127x AP use 1 spare blocks for TX. Reflect this in
+the code.
+In case of GEM need 2 spare blocks in STA.
 
--Brian
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/tx.c |   20 +++++++++++++++++++-
+ drivers/net/wireless/wl12xx/tx.h |    3 ++-
+ 2 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 441c7de..9c0ec06 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -130,6 +130,7 @@ u8 wl1271_tx_get_hlid(struct sk_buff *skb)
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 				u32 buf_offset, u8 hlid)
+ {
++	struct ieee80211_tx_info *info;
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+ 	u32 total_blocks;
+@@ -154,7 +155,24 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 		total_blocks = total_len + TX_HW_BLOCK_SIZE - 1;
+ 	}
+ 
+-	total_blocks = total_blocks / TX_HW_BLOCK_SIZE + TX_HW_BLOCK_SPARE;
++	total_blocks = total_blocks / TX_HW_BLOCK_SIZE;
++
++	/* 127x AP works with 2 spare block. Everything else must use 1 */
++	if ((wl->chip.id != CHIP_ID_1283_PG20) &&
++	    (wl->bss_type == BSS_TYPE_AP_BSS)) {
++		total_blocks += TX_HW_BLOCK_WL127X_AP_SPARE;
++	} else {
++		total_blocks += TX_HW_BLOCK_SPARE;
++
++		info = IEEE80211_SKB_CB(skb);
++
++		/* In case of GEM need 2 spare blocks in STA */
++		if (info->control.hw_key &&
++		    info->control.hw_key->cipher == WL1271_CIPHER_SUITE_GEM &&
++		    wl->bss_type != BSS_TYPE_AP_BSS)
++			total_blocks += 1;
++	}
++
+ 	if (total_blocks <= wl->tx_blocks_available) {
+ 		desc = (struct wl1271_tx_hw_descr *)skb_push(
+ 			skb, total_len - skb->len);
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 0dbd8f5..b2f9e67 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -25,7 +25,8 @@
+ #ifndef __TX_H__
+ #define __TX_H__
+ 
+-#define TX_HW_BLOCK_SPARE                2
++#define TX_HW_BLOCK_WL127X_AP_SPARE      2
++#define TX_HW_BLOCK_SPARE                1
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
+-- 
+1.7.0.4
+
