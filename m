@@ -1,125 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64873 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932230Ab1C3OgQ (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58696 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496Ab1CGWhF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 10:36:16 -0400
-Received: by fxm17 with SMTP id 17so1097354fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 07:36:14 -0700 (PDT)
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH] wl12xx: fix roaming
-Date: Wed, 30 Mar 2011 16:35:59 +0200
-Message-Id: <1301495759-22507-1-git-send-email-ohad@wizery.com>
+	Mon, 7 Mar 2011 17:37:05 -0500
+Received: by qwd7 with SMTP id 7so3538478qwd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2011 14:37:03 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 7 Mar 2011 23:37:03 +0100
+Message-ID: <AANLkTikky+cwYO+S_QSebnyQRV9TftbeNZDzVN8EAT_7@mail.gmail.com>
+Subject: SSB bus driver documentation?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Cc: b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wl12xx device normally drops all frames coming from BSSID
-it is not joined with.
+I spent few hours trying to understand/track ssb code and I'm giving
+up now. I can not understand basic code flow.
 
-This behavior is configured today by the wl12xx driver in response
-to a handful of ieee80211_bss_change and ieee80211_conf_changed
-notification flags, such as BSS_CHANGED_ASSOC, BSS_CHANGED_BSSID,
-IEEE80211_CONF_CHANGE_IDLE, etc..
+We have some ssb_modinit, but I don't see it performing scanning bus
+at all. For some reason this function is aware of b43 bridge and gige
+driver. GigE driver doesn't seem to be module, while b43 seems to be.
+gige uses pci_device_id, while b43 uses ssb_device_id. I have no idea
+what b43 PCI bridge is. Flow seems to be ugly, at ssb_modinit we call
+ssb_gige_init which calls out ssb_driver_register. There is some magic
+"ssb_attach_queued_buses", which sounds like SSB (which is bus)
+attaching... buses.
 
-This breaks when we roam to a new BSSID, where authentication frames
-are sent before any BSS_CHANGED/CONF_CHANGED flags are received.
-When this happens the hardware silently drops the authentication
-responses, and the roaming fails.
+I wanted to at least understand when scanning of cores is done. I
+found "ssb_bus_scan", it is called from "ssb_bus_register". This
+function is called from code for every host, for example:
+ssb_bus_pcibus_register. This one seems to be called from
+ssb_pcihost_probe, however pcihost_wrapper is not module itself, it
+does not contains any devices table. This function seems to be
+registered with pci_register_driver from ssb_pcihost_register. That
+one gets called b43_pci_ssb_bridge_init. But damn, I don't remember
+anymore where I was 5 step ago. Not to mention whole code path.
 
-Ideally this aggressive filtering behavior of the device should be disabled
-upon a notification from mac80211. Such notification will take place
-after multi-channel support will be added: mac80211 will likely send a
-remain-on-channel notification to drivers when entering sensitive
-states (like authentication), otherwise the firmware might jump to
-different channels (to serve a different role).
 
-Until those notifications materialize, disable the hw BSSID filter
-when authentication requests are sent, so roaming would work.
+OK, I wrote all that to show you my confusion. I don't think asking
+any single questions will help understanding that. Is there any
+documentation I could read to get any basic understanding of ssb?
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/net/wireless/wl12xx/io.h   |    1 +
- drivers/net/wireless/wl12xx/main.c |    4 ++--
- drivers/net/wireless/wl12xx/tx.c   |   24 ++++++++++++++++++++++++
- 3 files changed, 27 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
-index e6199eb..36e1855 100644
---- a/drivers/net/wireless/wl12xx/io.h
-+++ b/drivers/net/wireless/wl12xx/io.h
-@@ -171,5 +171,6 @@ int wl1271_free_hw(struct wl1271 *wl);
- irqreturn_t wl1271_irq(int irq, void *data);
- bool wl1271_set_block_size(struct wl1271 *wl);
- int wl1271_tx_dummy_packet(struct wl1271 *wl);
-+void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 85cb4da..1ffab7f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1506,7 +1506,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	cancel_work_sync(&wl->recovery_work);
- }
- 
--static void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters)
-+void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters)
- {
- 	wl1271_set_default_filters(wl);
- 
-@@ -1628,7 +1628,7 @@ static int wl1271_unjoin(struct wl1271 *wl)
- 	clear_bit(WL1271_FLAG_JOINED, &wl->flags);
- 	memset(wl->bssid, 0, ETH_ALEN);
- 
--	/* stop filterting packets based on bssid */
-+	/* stop filtering packets based on bssid */
- 	wl1271_configure_filters(wl, FIF_OTHER_BSS);
- 
- out:
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index db9e47e..0ff6520 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -70,6 +70,28 @@ static void wl1271_free_tx_id(struct wl1271 *wl, int id)
- 	}
- }
- 
-+static int wl1271_tx_update_filters(struct wl1271 *wl,
-+						 struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr;
-+
-+	hdr = (struct ieee80211_hdr *)(skb->data +
-+				       sizeof(struct wl1271_tx_hw_descr));
-+
-+	/*
-+	 * stop bssid-based filtering before transmitting authentication
-+	 * requests. this way the hw will never drop authentication
-+	 * responses coming from BSSIDs it isn't familiar with (e.g. on
-+	 * roaming)
-+	 */
-+	if (!ieee80211_is_auth(hdr->frame_control))
-+		return 0;
-+
-+	wl1271_configure_filters(wl, FIF_OTHER_BSS);
-+
-+	return wl1271_acx_rx_config(wl, wl->rx_config, wl->rx_filter);
-+}
-+
- static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
- 						 struct sk_buff *skb)
- {
-@@ -350,6 +372,8 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
- 		wl1271_tx_regulate_link(wl, hlid);
-+	} else {
-+		wl1271_tx_update_filters(wl, skb);
- 	}
- 
- 	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+P.S.
+Even one more thing: try to guess by function's name what can it be
+responsible for: "ssb_bus_ssbbus_register". It is used by some
+/arch/mips/bcm47xx/setup.c, but I can not image digging into next
+driver to understand whole architecture :|
+
 -- 
-1.7.1
-
+Rafał
