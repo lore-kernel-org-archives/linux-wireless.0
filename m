@@ -1,151 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58934 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892Ab1CFIrJ convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:55246 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755208Ab1CGCPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 03:47:09 -0500
+	Sun, 6 Mar 2011 21:15:45 -0500
+Received: by gxk8 with SMTP id 8so1465423gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:15:44 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110303135942.GA8969@tuxdriver.com>
-References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>
-	<20110303135942.GA8969@tuxdriver.com>
-Date: Sun, 6 Mar 2011 00:47:05 -0800
-Message-ID: <AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>
-Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
- ath_stoprecv+0xc8/0xda [ath9k]()
-From: Justin Mattock <justinmattock@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16327.934993.631297@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:45:35 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 27/34] ath9k_htc: Drain pending TX frames properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 3, 2011 at 5:59 AM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Wed, Mar 02, 2011 at 09:47:43PM -0800, Justin Mattock wrote:
->> not sure what this is..(below)
->>
->>
->> [   33.951046] CE: hpet increased min_delta_ns to 20113 nsec
->> [   35.567319] EXT4-fs (sda3): re-mounted. Opts:
->> errors=panic,user_xattr,debug,acl,commit=600
->> [   36.350144] wlan0: authenticate with 00:0b:86:32:f8:60 (try 1)
->> [   36.352284] wlan0: authenticated
->> [   36.352396] wlan0: associate with 00:0b:86:32:f8:60 (try 1)
->> [   36.356854] wlan0: RX AssocResp from 00:0b:86:32:f8:60 (capab=0x421
->> status=0 aid=2)
->> [   36.356862] wlan0: associated
->> [   41.370318] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->> AR_DIAG_SW=0x42000020
->> [   41.370324] ath: Could not stop RX, we could be confusing the DMA
->> engine when we start RX up
->> [   41.370328] ------------[ cut here ]------------
->> [   41.370345] WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
->> ath_stoprecv+0xc8/0xda [ath9k]()
->> [   41.370349] Hardware name: MacBookPro2,2
->> [   41.370351] Modules linked in: hidp xfrm4_mode_transport xcbc
->> rmd160 sha512_generic rfcomm sco bnep l2cap ipt_REJECT xt_tcpudp
->> ipt_LOG iptable_nat nf_nat xt_state nf_conntrack_ftp nf_conntrack_ipv4
->> nf_conntrack nf_defrag_ipv4 iptable_filter ip_tables x_tables btusb
->> bluetooth evdev psmouse thermal fan container button ac battery video
->> ath9k ath9k_common ath9k_hw ath ttm drm aes_x86_64 lzo zlib ipcomp
->> xfrm_ipcomp crypto_null sha256_generic cbc des_generic cast5 blowfish
->> serpent camellia twofish_generic twofish_x86_64 twofish_common ctr ah4
->> esp4 authenc firewire_ohci firewire_core uhci_hcd ehci_hcd coretemp
->> acpi_cpufreq processor mperf appletouch applesmc
->> [   41.370430] Pid: 766, comm: kworker/u:4 Not tainted
->> 2.6.38-rc6-00116-g2821f46 #5
->> [   41.370434] Call Trace:
->> [   41.370444]  [<ffffffff810612c0>] ? warn_slowpath_common+0x80/0x98
->> [   41.370450]  [<ffffffff810612ed>] ? warn_slowpath_null+0x15/0x17
->> [   41.370458]  [<ffffffffa01c6438>] ? ath_stoprecv+0xc8/0xda [ath9k]
->> [   41.370467]  [<ffffffffa01c3a62>] ? ath_set_channel+0xb0/0x217 [ath9k]
->> [   41.370475]  [<ffffffffa01c3f89>] ? ath9k_config+0x3c0/0x4c3 [ath9k]
->> [   41.370482]  [<ffffffff8140fe8a>] ? ieee80211_hw_config+0x120/0x129
->> [   41.370487]  [<ffffffff81413902>] ? ieee80211_scan_work+0x2f8/0x496
->> [   41.370495]  [<ffffffffa01c7934>] ?
->> ath_tx_complete_poll_work+0xf3/0x102 [ath9k]
->> [   41.370501]  [<ffffffff8141360a>] ? ieee80211_scan_work+0x0/0x496
->> [   41.370506]  [<ffffffff810769c7>] ? process_one_work+0x266/0x3d7
->> [   41.370511]  [<ffffffff81076e9f>] ? worker_thread+0x1d6/0x350
->> [   41.370515]  [<ffffffff81076cc9>] ? worker_thread+0x0/0x350
->> [   41.370521]  [<ffffffff8107bdcf>] ? kthread+0x7d/0x85
->> [   41.370528]  [<ffffffff8102e064>] ? kernel_thread_helper+0x4/0x10
->> [   41.370533]  [<ffffffff8107bd52>] ? kthread+0x0/0x85
->> [   41.370537]  [<ffffffff8102e060>] ? kernel_thread_helper+0x0/0x10
->> [   41.370541] ---[ end trace 062f507148a6fa8e ]---
->>
->>
->> from what I remember I was at a local college(caltech) trying to
->> connect to their public wifi
->> in the public area. with no luck, then this popped up.
->> full dmesg here:
->>
->> http://fpaste.org/SKU4/
->
-> In ath_stoprecv:
->
->        if (!(ah->ah_flags & AH_UNPLUGGED) &&
->            unlikely(!stopped)) {
->                ath_err(ath9k_hw_common(sc->sc_ah),
->                        "Could not stop RX, we could be "
->                        "confusing the DMA engine when we start RX up\n");
->                ATH_DBG_WARN_ON_ONCE(!stopped);
->        }
->
-> The Atheros guys will have to comment.
->
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-well even at home this seems to be firing off. was watching movies,music, etc..
+When doing a channel set or a reset operation the pending
+frames queued up for transmission have to be flushed and
+sent to mac80211. Fixing this has to be done in two separate
+steps:
 
-[21471.152404] ------------[ cut here ]------------
-[21471.152426] WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
-ath_stoprecv+0xc8/0xda [ath9k]()
-[21471.152429] Hardware name: MacBookPro2,2
-[21471.152431] Modules linked in: hidp xfrm4_mode_transport xcbc
-rmd160 sha512_generic rfcomm sco bnep l2cap ipt_REJECT xt_tcpudp
-ipt_LOG iptable_nat nf_nat xt_state nf_conntrack_ftp nf_conntrack_ipv4
-nf_conntrack nf_defrag_ipv4 iptable_filter ip_tables x_tables btusb
-bluetooth evdev psmouse thermal fan container button ac battery video
-ath9k ath9k_common ath9k_hw ath ttm drm aes_x86_64 lzo zlib ipcomp
-xfrm_ipcomp crypto_null sha256_generic cbc des_generic cast5 blowfish
-serpent camellia twofish_generic twofish_x86_64 twofish_common ctr ah4
-esp4 authenc firewire_ohci firewire_core uhci_hcd ehci_hcd coretemp
-acpi_cpufreq processor mperf appletouch applesmc
-[21471.152492] Pid: 4637, comm: kworker/u:2 Not tainted
-2.6.38-rc7-00143-gd1b152c #7
-[21471.152495] Call Trace:
-[21471.152504]  [<ffffffff810612c0>] ? warn_slowpath_common+0x80/0x98
-[21471.152508]  [<ffffffff810612ed>] ? warn_slowpath_null+0x15/0x17
-[21471.152514]  [<ffffffffa01c6438>] ? ath_stoprecv+0xc8/0xda [ath9k]
-[21471.152520]  [<ffffffffa01c3a62>] ? ath_set_channel+0xb0/0x217 [ath9k]
-[21471.152526]  [<ffffffffa01c3f89>] ? ath9k_config+0x3c0/0x4c3 [ath9k]
-[21471.152532]  [<ffffffff814101fe>] ? ieee80211_hw_config+0x120/0x129
-[21471.152536]  [<ffffffff81413c76>] ? ieee80211_scan_work+0x2f8/0x496
-[21471.152541]  [<ffffffff8141dccc>] ? ieee80211_iface_work+0x28d/0x2a6
-[21471.152547]  [<ffffffffa01c7934>] ?
-ath_tx_complete_poll_work+0xf3/0x102 [ath9k]
-[21471.152550]  [<ffffffff8141397e>] ? ieee80211_scan_work+0x0/0x496
-[21471.152555]  [<ffffffff8107697f>] ? process_one_work+0x266/0x3d7
-[21471.152558]  [<ffffffff81076e57>] ? worker_thread+0x1d6/0x350
-[21471.152561]  [<ffffffff81076c81>] ? worker_thread+0x0/0x350
-[21471.152566]  [<ffffffff8107bd87>] ? kthread+0x7d/0x85
-[21471.152572]  [<ffffffff8102e064>] ? kernel_thread_helper+0x4/0x10
-[21471.152575]  [<ffffffff8107bd0a>] ? kthread+0x0/0x85
-[21471.152578]  [<ffffffff8102e060>] ? kernel_thread_helper+0x0/0x10
-[21471.152581] ---[ end trace 11eeb73d205c9b43 ]---
+  * Flush queued frames and kill the URB TX completion handler.
+  * Complete all the frames that in the TX pending queue.
 
-full dmesg here:
-http://fpaste.org/5JQp/
-let me know if I need to supply any info(also I can try a bisect, but
-am in the middle of changing residencies, so it might not be right
-away)
+This patch adds proper support for draining and all the callsites
+namely, channel change/reset/idle/stop are fixed. A separate queue
+is used for handling failed frames.
 
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c       |   55 +++++++++---------------
+ drivers/net/wireless/ath/ath9k/htc.h           |    6 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    8 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    3 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |   15 ++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  |   31 +++++++++++++-
+ 6 files changed, 69 insertions(+), 49 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index a8134f8..47fdd19 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -133,7 +133,19 @@ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
+ 
+ 	while ((skb = __skb_dequeue(list)) != NULL) {
+ 		dev_kfree_skb_any(skb);
+-		TX_STAT_INC(skb_dropped);
++	}
++}
++
++static inline void ath9k_skb_queue_complete(struct hif_device_usb *hif_dev,
++					    struct sk_buff_head *queue,
++					    bool txok)
++{
++	struct sk_buff *skb;
++
++	while ((skb = __skb_dequeue(queue)) != NULL) {
++		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
++					  skb, txok);
++		(txok) ? TX_STAT_INC(skb_success) : TX_STAT_INC(skb_failed);
+ 	}
+ }
+ 
+@@ -141,7 +153,7 @@ static void hif_usb_tx_cb(struct urb *urb)
+ {
+ 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
+ 	struct hif_device_usb *hif_dev;
+-	struct sk_buff *skb;
++	bool txok = true;
+ 
+ 	if (!tx_buf || !tx_buf->hif_dev)
+ 		return;
+@@ -155,10 +167,7 @@ static void hif_usb_tx_cb(struct urb *urb)
+ 	case -ECONNRESET:
+ 	case -ENODEV:
+ 	case -ESHUTDOWN:
+-		/*
+-		 * The URB has been killed, free the SKBs.
+-		 */
+-		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
++		txok = false;
+ 
+ 		/*
+ 		 * If the URBs are being flushed, no need to add this
+@@ -167,41 +176,19 @@ static void hif_usb_tx_cb(struct urb *urb)
+ 		spin_lock(&hif_dev->tx.tx_lock);
+ 		if (hif_dev->tx.flags & HIF_USB_TX_FLUSH) {
+ 			spin_unlock(&hif_dev->tx.tx_lock);
++			ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
+ 			return;
+ 		}
+ 		spin_unlock(&hif_dev->tx.tx_lock);
+ 
+-		/*
+-		 * In the stop() case, this URB has to be added to
+-		 * the free list.
+-		 */
+-		goto add_free;
++		break;
+ 	default:
++		txok = false;
+ 		break;
+ 	}
+ 
+-	/*
+-	 * Check if TX has been stopped, this is needed because
+-	 * this CB could have been invoked just after the TX lock
+-	 * was released in hif_stop() and kill_urb() hasn't been
+-	 * called yet.
+-	 */
+-	spin_lock(&hif_dev->tx.tx_lock);
+-	if (hif_dev->tx.flags & HIF_USB_TX_STOP) {
+-		spin_unlock(&hif_dev->tx.tx_lock);
+-		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
+-		goto add_free;
+-	}
+-	spin_unlock(&hif_dev->tx.tx_lock);
+-
+-	/* Complete the queued SKBs. */
+-	while ((skb = __skb_dequeue(&tx_buf->skb_queue)) != NULL) {
+-		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
+-					  skb, 1);
+-		TX_STAT_INC(skb_completed);
+-	}
++	ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, txok);
+ 
+-add_free:
+ 	/* Re-initialize the SKB queue */
+ 	tx_buf->len = tx_buf->offset = 0;
+ 	__skb_queue_head_init(&tx_buf->skb_queue);
+@@ -274,7 +261,7 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
+ 	ret = usb_submit_urb(tx_buf->urb, GFP_ATOMIC);
+ 	if (ret) {
+ 		tx_buf->len = tx_buf->offset = 0;
+-		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
++		ath9k_skb_queue_complete(hif_dev, &tx_buf->skb_queue, false);
+ 		__skb_queue_head_init(&tx_buf->skb_queue);
+ 		list_move_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
+ 		hif_dev->tx.tx_buf_cnt++;
+@@ -344,7 +331,7 @@ static void hif_usb_stop(void *hif_handle, u8 pipe_id)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+-	ath9k_skb_queue_purge(hif_dev, &hif_dev->tx.tx_skb_queue);
++	ath9k_skb_queue_complete(hif_dev, &hif_dev->tx.tx_skb_queue, false);
+ 	hif_dev->tx.tx_skb_cnt = 0;
+ 	hif_dev->tx.flags |= HIF_USB_TX_STOP;
+ 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 332175e..fc8730e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -268,6 +268,7 @@ struct ath9k_htc_tx {
+ 	u8 flags;
+ 	int queued_cnt;
+ 	struct sk_buff_head tx_queue;
++	struct sk_buff_head tx_failed;
+ 	DECLARE_BITMAP(tx_slot, MAX_TX_BUF_NUM);
+ 	spinlock_t tx_lock;
+ };
+@@ -302,8 +303,8 @@ struct ath_tx_stats {
+ 	u32 buf_queued;
+ 	u32 buf_completed;
+ 	u32 skb_queued;
+-	u32 skb_completed;
+-	u32 skb_dropped;
++	u32 skb_success;
++	u32 skb_failed;
+ 	u32 cab_queued;
+ 	u32 queue_stats[WME_NUM_AC];
+ };
+@@ -538,6 +539,7 @@ void ath9k_htc_check_stop_queues(struct ath9k_htc_priv *priv);
+ void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv);
+ int ath9k_htc_tx_get_slot(struct ath9k_htc_priv *priv);
+ void ath9k_htc_tx_clear_slot(struct ath9k_htc_priv *priv, int slot);
++void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv);
+ 
+ int ath9k_rx_init(struct ath9k_htc_priv *priv);
+ void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 6fc6cb7..91a486c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -88,11 +88,11 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 			"%20s : %10u\n", "SKBs queued",
+ 			priv->debug.tx_stats.skb_queued);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs completed",
+-			priv->debug.tx_stats.skb_completed);
++			"%20s : %10u\n", "SKBs success",
++			priv->debug.tx_stats.skb_success);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs dropped",
+-			priv->debug.tx_stats.skb_dropped);
++			"%20s : %10u\n", "SKBs failed",
++			priv->debug.tx_stats.skb_failed);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "CAB queued",
+ 			priv->debug.tx_stats.cab_queued);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 92e4b31..dc0b33d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -429,9 +429,8 @@ void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
+ 
+ 	/* Stop TX */
+ 	ieee80211_stop_queues(hw);
+-	htc_stop(priv->htc);
++	ath9k_htc_tx_drain(priv);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+-	skb_queue_purge(&priv->tx.tx_queue);
+ 
+ 	/* Stop RX */
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index c7e056b..fb9ff11 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -193,7 +193,9 @@ void ath9k_htc_reset(struct ath9k_htc_priv *priv)
+ 
+ 	ath9k_htc_stop_ani(priv);
+ 	ieee80211_stop_queues(priv->hw);
+-	htc_stop(priv->htc);
++
++	ath9k_htc_tx_drain(priv);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+@@ -248,7 +250,9 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+-	htc_stop(priv->htc);
++
++	ath9k_htc_tx_drain(priv);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+@@ -263,6 +267,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 
+ 	if (!fastcc)
+ 		caldata = &priv->caldata;
++
+ 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (ret) {
+ 		ath_err(common,
+@@ -960,16 +965,14 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	ath9k_htc_ps_wakeup(priv);
+-	htc_stop(priv->htc);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+ 
+ 	tasklet_kill(&priv->rx_tasklet);
+-	tasklet_kill(&priv->tx_tasklet);
+-
+-	skb_queue_purge(&priv->tx.tx_queue);
+ 
++	ath9k_htc_tx_drain(priv);
+ 	ath9k_wmi_event_drain(priv);
+ 
+ 	mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 944440c..9e0c34b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -423,6 +423,26 @@ send_mac80211:
+ 	ieee80211_tx_status(priv->hw, skb);
+ }
+ 
++void ath9k_htc_tx_drain(struct ath9k_htc_priv *priv)
++{
++	struct sk_buff *skb = NULL;
++
++	/*
++	 * Ensure that all pending TX frames are flushed,
++	 * and that the TX completion tasklet is killed.
++	 */
++	htc_stop(priv->htc);
++	tasklet_kill(&priv->tx_tasklet);
++
++	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
++	}
++
++	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
++	}
++}
++
+ void ath9k_tx_tasklet(unsigned long data)
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+@@ -432,6 +452,10 @@ void ath9k_tx_tasklet(unsigned long data)
+ 		ath9k_htc_tx_process(priv, skb);
+ 	}
+ 
++	while ((skb = skb_dequeue(&priv->tx.tx_failed)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
++	}
++
+ 	/* Wake TX queues if needed */
+ 	ath9k_htc_check_wake_queues(priv);
+ }
+@@ -445,13 +469,18 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+ 	tx_ctl = HTC_SKB_CB(skb);
+ 	tx_ctl->txok = txok;
+ 
+-	skb_queue_tail(&priv->tx.tx_queue, skb);
++	if (txok)
++		skb_queue_tail(&priv->tx.tx_queue, skb);
++	else
++		skb_queue_tail(&priv->tx.tx_failed, skb);
++
+ 	tasklet_schedule(&priv->tx_tasklet);
+ }
+ 
+ int ath9k_tx_init(struct ath9k_htc_priv *priv)
+ {
+ 	skb_queue_head_init(&priv->tx.tx_queue);
++	skb_queue_head_init(&priv->tx.tx_failed);
+ 	return 0;
+ }
+ 
 -- 
-Justin P. Mattock
+1.7.4.1
+
