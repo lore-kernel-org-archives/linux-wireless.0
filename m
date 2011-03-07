@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51805 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753486Ab1C0MgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Mar 2011 08:36:17 -0400
-Message-ID: <4D8F2F3E.9030802@openwrt.org>
-Date: Sun, 27 Mar 2011 14:36:14 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63297 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755077Ab1CGCOu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 21:14:50 -0500
+Received: by gxk8 with SMTP id 8so1465250gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:14:50 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Klaus_M=FCller?= <kmueller@justmail.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: broken ath9k-driver - problems with creating new TCP-connections.
- Bad performance
-References: <4D8F28C1.4060402@justmail.de>
-In-Reply-To: <4D8F28C1.4060402@justmail.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16273.903585.68122@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:44:41 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 19/34] ath9k_htc: Sync MGMT/DATA packet headers with firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-03-27 2:08 PM, Klaus Müller wrote:
-> Hello,
->
-> I'm running kernel 2.6.38.1 (from the OpenSuSE buildservice on OpenSuSE
-> 11.4) and compat-wireless-2011-03-26 (the performance / functionality of
-> the driver delivered with 2.6.38.1 is unusable).
-> [...]
-> iwconfig wlan0
->
-> wlan0     IEEE 802.11bgn  ESSID:"ssid"
->            Mode:Managed  Frequency:2.412 GHz  Access Point:
-> 00:25:33:22:11:00
->            Bit Rate=150 Mb/s   Tx-Power=17 dBm
->            Retry  long limit:7   RTS thr:off   Fragment thr:off
->            Encryption key:off
->            Power Management:on
->            Link Quality=14/70  Signal level=-63 dBm
->            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->            Tx excessive retries:4  Invalid misc:1423   Missed beacon:0
->
->
-> I run iwconfig 3 times in 7 seconds. The link quality alternated between
-> 47 and 14.
->
-Have you tried switching your AP to HT20 instead of HT40 to see if that 
-improves stability?
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-- Felix
+Add a new cookie field that would be filled by the host.
+This can be used to match the TX status WMI event with
+the appropriate packet.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 5f30d91..294feb1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -85,7 +85,8 @@ struct tx_frame_hdr {
+ 	__be32 flags; /* ATH9K_HTC_TX_* */
+ 	u8 key_type;
+ 	u8 keyix;
+-	u8 reserved[26];
++	u8 cookie;
++	u8 pad;
+ } __packed;
+ 
+ struct tx_mgmt_hdr {
+@@ -95,7 +96,8 @@ struct tx_mgmt_hdr {
+ 	u8 flags;
+ 	u8 key_type;
+ 	u8 keyix;
+-	u16 reserved;
++	u8 cookie;
++	u8 pad;
+ } __packed;
+ 
+ struct tx_beacon_header {
+-- 
+1.7.4.1
+
