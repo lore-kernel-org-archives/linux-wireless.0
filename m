@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:50475 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755674Ab1CRTnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 15:43:55 -0400
-Date: Fri, 18 Mar 2011 20:16:15 +0100
-From: Ignacy Gawedzki <i@lri.fr>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Dividing by a non-static value in carl9170-fw?
-Message-ID: <20110318191615.GA10032@zenon.in.qult.net>
-References: <20110116031600.GA21973@zenon.in.qult.net>
- <201101161245.54221.chunkeey@googlemail.com>
- <20110116124833.GA4711@zenon.in.qult.net>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:33324 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370Ab1CGLdI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 06:33:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110116124833.GA4711@zenon.in.qult.net>
+In-Reply-To: <op.vryqz6qt3ri7v4@arend-laptop>
+References: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
+	<op.vryqz6qt3ri7v4@arend-laptop>
+Date: Mon, 7 Mar 2011 12:33:07 +0100
+Message-ID: <AANLkTinbrbkUO-ycAsX4cLEoM6avPeiYEZZ-zKtavfqq@mail.gmail.com>
+Subject: Re: brcm80211: the system freezes if booted with laptop wifi switch
+ to OFF
+From: Francis Moreau <francis.moro@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Mar 7, 2011 at 8:56 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>
+> Some time ago we (broadcom) submitted a patch for rfkill functionality (ie.
+> wifi switch) to staging-2.6 repository. I looked up the tagged version you
+> are referring to in the linux-next repository and it seems that the patch I
+> mentioned is not included in there.
 
-On Sun, Jan 16, 2011 at 01:48:33PM +0100, thus spake Ignacy Gawedzki:
-> On Sun, Jan 16, 2011 at 12:45:53PM +0100, thus spake Christian Lamparter:
-> > No need for a hack, just get a udivsi3_i4i.S (a good place is the linux kernel
-> > library sources in arch/sh/lib, you could also import one from the original
-> > ar9170fw.git) and place it into carlfw/src. Next, you need to modify the
-> > carlfw/CMakeLists.txt: add src/udivsi3_i4i.S to carl9170_lib_src and put
-> > "set_source_files_properties(src/udivsi3_i4i.S PROPERTIES LANGUAGE C)"
-> > a few lines further down.
-> > 
-> > compile...
-> > 
-> > [Note: you probably have to change the name of the __udivsi3_i4i symbol 
-> > to ___udivsi3_i4i too]
-> 
-> Great, thanks for the hint, I'll try that as soon as I can.
+Would it be possible to submit it one more time ?
 
-So I finally got the time to test that solution.  Compilation worked like a
-charm indeed, thanks.  All seemed fine until I ran that code.  Indeed the
-result of the division is completely off. :(
-
-For instance, if I have A = 17719, B = 44, then A / B gives C = 12886, instead
-of the expected 402.  It is as though the result was multiplied by 32.
-
-At this point, it is much simpler for me to simply return both A and B, and to
-perform the division on the host's CPU instead of in the FW.  Unless I commit
-some gross error and there is a more elegant solution around, I'll stick with
-that one, since I don't feel like debugging udivsi3_i4i. :/
-
-Ignacy
-
+Thanks
 -- 
-Information wants to be beer, or something like that.
+Francis
