@@ -1,142 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38288 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758417Ab1CaPg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 11:36:58 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/3] iwlwifi: more priv->mutex serialization
-Date: Thu, 31 Mar 2011 17:36:27 +0200
-Message-Id: <1301585788-7331-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
-References: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:41125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751169Ab1CGTCQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 14:02:16 -0500
+Subject: Re: [PATCH] iwlagn: fix offchannel TX bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+In-Reply-To: <20110307185429.GD2664@tuxdriver.com>
+References: <1299350139.29845.4.camel@jlt3.sipsolutions.net>
+	 <20110307185429.GD2664@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Mar 2011 20:02:15 +0100
+Message-ID: <1299524535.6739.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check status bits with mutex taken, because when we wait for mutex
-unlock, status can change. Patch should also make remaining sync
-commands be send with priv->mutex taken. That will prevent execute
-these commands when we are currently reset firmware, what could
-possibly cause troubles.
+On Mon, 2011-03-07 at 13:54 -0500, John W. Linville wrote:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   34 ++++++++++++++++++-------------
- 1 files changed, 20 insertions(+), 14 deletions(-)
+> > --- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-03-05 19:32:58.000000000 +0100
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-03-05 19:33:08.000000000 +0100
+> > @@ -3171,7 +3171,7 @@ static int iwl_mac_offchannel_tx(struct
+> >   out:
+> >  	mutex_unlock(&priv->mutex);
+> >   free:
+> > -	if (ret)
+> > +	if (ret < 0)
+> >  		kfree_skb(skb);
+> >  
+> >  	return ret;
+> 
+> OK, I give-up...what tree is this against? :-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7adc60e..0c49d1a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -483,12 +483,14 @@ static void iwl_bg_bt_full_concurrency(struct work_struct *work)
- 		container_of(work, struct iwl_priv, bt_full_concurrency);
- 	struct iwl_rxon_context *ctx;
- 
-+	mutex_lock(&priv->mutex);
-+
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto out;
- 
- 	/* dont send host command if rf-kill is on */
- 	if (!iwl_is_ready_rf(priv))
--		return;
-+		goto out;
- 
- 	IWL_DEBUG_INFO(priv, "BT coex in %s mode\n",
- 		       priv->bt_full_concurrent ?
-@@ -498,15 +500,15 @@ static void iwl_bg_bt_full_concurrency(struct work_struct *work)
- 	 * LQ & RXON updated cmds must be sent before BT Config cmd
- 	 * to avoid 3-wire collisions
- 	 */
--	mutex_lock(&priv->mutex);
- 	for_each_context(priv, ctx) {
- 		if (priv->cfg->ops->hcmd->set_rxon_chain)
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv, ctx);
- 		iwlcore_commit_rxon(priv, ctx);
- 	}
--	mutex_unlock(&priv->mutex);
- 
- 	priv->cfg->ops->hcmd->send_bt_config(priv);
-+out:
-+	mutex_unlock(&priv->mutex);
- }
- 
- /**
-@@ -2814,10 +2816,13 @@ static void iwl_bg_init_alive_start(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, init_alive_start.work);
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+	mutex_lock(&priv->mutex);
-+
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
-+		mutex_unlock(&priv->mutex);
- 		return;
-+	}
- 
--	mutex_lock(&priv->mutex);
- 	priv->cfg->ops->lib->init_alive_start(priv);
- 	mutex_unlock(&priv->mutex);
- }
-@@ -2827,15 +2832,16 @@ static void iwl_bg_alive_start(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, alive_start.work);
- 
-+	mutex_lock(&priv->mutex);
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
-+		goto unlock;
- 
- 	/* enable dram interrupt */
- 	if (priv->cfg->ops->lib->isr_ops.reset)
- 		priv->cfg->ops->lib->isr_ops.reset(priv);
- 
--	mutex_lock(&priv->mutex);
- 	iwl_alive_start(priv);
-+unlock:
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -3457,21 +3463,22 @@ void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
-+	mutex_lock(&priv->mutex);
-+
- 	if (iwl_is_rfkill(priv))
--		goto out_exit;
-+		goto out;
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
- 	    test_bit(STATUS_SCANNING, &priv->status))
--		goto out_exit;
-+		goto out;
- 
- 	if (!iwl_is_associated_ctx(ctx))
--		goto out_exit;
-+		goto out;
- 
- 	/* channel switch in progress */
- 	if (priv->switch_rxon.switch_in_progress == true)
--		goto out_exit;
-+		goto out;
- 
--	mutex_lock(&priv->mutex);
- 	if (priv->cfg->ops->lib->set_channel_switch) {
- 
- 		ch = channel->hw_value;
-@@ -3527,7 +3534,6 @@ void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 	}
- out:
- 	mutex_unlock(&priv->mutex);
--out_exit:
- 	if (!priv->switch_rxon.switch_in_progress)
- 		ieee80211_chswitch_done(ctx->vif, false);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
--- 
-1.7.1
+Oh dang, it's against our own tree and I thought we'd already sent out
+the patch "iwlagn: support off-channel TX". Clearly, that isn't the
+case. Wey-yi, can you please merge this fix with the patch?
+
+Sorry about that!
+
+johannes
 
