@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32947 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752407Ab1CXJGg (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:33418 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519Ab1CGVJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 05:06:36 -0400
-Subject: Re: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND
- and friends
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve@android.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	devel@linuxdriverproject.org, Naveen Singh <nsingh@atheros.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Vipin Mehta <vmehta@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1300957495.3807.7.camel@jlt3.sipsolutions.net>
-References: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
-	 <AANLkTikurVF_-u8gTqM3ireKia28zMrkXRyrvdNTob7e@mail.gmail.com>
-	 <1300957495.3807.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Mar 2011 10:06:30 +0100
-Message-ID: <1300957590.3807.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 7 Mar 2011 16:09:28 -0500
+Received: by wyg36 with SMTP id 36so4589360wyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2011 13:09:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTim+ZL6xG=rK6zg5Chrgdno3vuRB4x8TbZsrJv_f@mail.gmail.com>
+References: <AANLkTikYfE1pJfqcNcFT-SFQaAL2z91dpD1+8rOUZHr2@mail.gmail.com>
+	<AANLkTim+ZL6xG=rK6zg5Chrgdno3vuRB4x8TbZsrJv_f@mail.gmail.com>
+Date: Mon, 7 Mar 2011 21:09:26 +0000
+Message-ID: <AANLkTimVS6sBqMKHT841QWwgz93DURM5rUWcFXKXRHYo@mail.gmail.com>
+Subject: Re: WMM and 802.11n Qurery, please help!
+From: "M. A." <jdiq123@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-24 at 10:04 +0100, Johannes Berg wrote:
-> On Wed, 2011-03-23 at 17:47 -0700, Arve Hjønnevåg wrote:
-> 
-> > There is no planned replacement for early suspend, and it will
-> > probably be dropped form the android kernel at some point. The wifi
-> > driver use it to enter a lower operating state when the screen is off.
-> > If you driver does have any other way to put the driver in this state
-> > you need to add an interface that lets user-space select that state
-> > directly.
-> 
-> The interface is called "ip link set wlan0 down".
+Dear all,
 
-Or, in fact, just powersaving mode. But I don't think for a wifi driver
-there's any need for special driver specific states.
+Just an update to my previous query regarding the relation between WMM
+and 802.11n:
 
-johannes
+Now from what I understand, WMM (802.11e) is part of the 802.11n
+standard as it uses features (like block-Ack) in the new (MAC layer)
+enhancements such as frame aggregation.
 
+When WMM is activated (via hostapd: wmm_enabled=1)  as well as frame
+aggregation, I get around 230Mbps UDP/ 170Mbps TCP. When WMM is
+deactivated I get 35  Mbps UDP and 27 Mbps TCP.
+
+I tried to identify the causes of this decrease, so I disabled frame
+Aggregation (A-MPDU) and disabled all the WMM associated parameters
+like tx_queue_data* , wmm_ac_* (BK/BE/VI/VO) /(CW/TXOP/AIFS) etc. but
+leaving the WMM option on (wmm_enabled=1). This gave around 45 Mbps
+UDP and 33Mbps TCP.
+
+
+So my question is what other WMM influencing factor is activated that
+is causing the remaining throughput increase from 35 Mbps to 45 Mbps.
+Also if someone could explain the WMM traffic identifier's (TID)
+relevance in throughput improvement.
+
+Thank you all very much
