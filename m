@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web57402.mail.re1.yahoo.com ([66.196.100.53]:42889 "HELO
-	web57402.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758073Ab1COPlV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 11:41:21 -0400
-Message-ID: <183581.36039.qm@web57402.mail.re1.yahoo.com>
-Date: Tue, 15 Mar 2011 08:41:19 -0700 (PDT)
-From: Joe Gunn <armadefuego@yahoo.com>
-Subject: [PATCH 2.6.38-rc8-wl 1/1] orinoco: Maintain lock until entry removed from list
-To: orinoco-devel@lists.sourceforge.net
-Cc: linux-wireless@vger.kernel.org
+Received: from mx1.redhat.com ([209.132.183.28]:32687 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070Ab1CGNMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 08:12:50 -0500
+Date: Mon, 7 Mar 2011 14:12:17 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	Ingo Molnar <mingo@elte.hu>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: Undefined TASK_INTERRUPTIBLE (Was: Re: [PATCH 1/3] iwlwifi: move
+ rx handlers code to iwl-rx.c)
+Message-ID: <20110307131217.GA9571@redhat.com>
+References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
+ <1299447258.5082.164.camel@wwguy-huron>
+ <AANLkTimNjxguAFcRr-mJr-pPMkf6zTxzm4k7oV+6zngG@mail.gmail.com>
+ <20110307081241.GA2216@redhat.com>
+ <1299489602.2308.1.camel@twins>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1299489602.2308.1.camel@twins>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing an entry from the scan_list should be performed while holding the lock.
-Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
----
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index f3d396e..62c6b2b 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -1376,13 +1376,13 @@ static void orinoco_process_scan_results(struct work_struct *work)
- 
- 	spin_lock_irqsave(&priv->scan_lock, flags);
- 	list_for_each_entry_safe(sd, temp, &priv->scan_list, list) {
--		spin_unlock_irqrestore(&priv->scan_lock, flags);
- 
- 		buf = sd->buf;
- 		len = sd->len;
- 		type = sd->type;
- 
- 		list_del(&sd->list);
-+		spin_unlock_irqrestore(&priv->scan_lock, flags);
- 		kfree(sd);
- 
- 		if (len > 0) {
+On Mon, Mar 07, 2011 at 10:20:02AM +0100, Peter Zijlstra wrote:
+> On Mon, 2011-03-07 at 09:12 +0100, Stanislaw Gruszka wrote:
+> > 
+> > But perhaps we need a more generic fix in wait.h for the future. Maybe
+> > we should decouple definitions of TASK_INTERRUPTIBLE and friends from
+> > sched.h into separate header and include that header in wait.h as
+> > well?
+> 
+> No! That only makes the mess worse, the only sane option is to fix
+> things so that wait.h can include sched.h and that is non-trivial.
 
+I was not aware of recent discussion
+http://marc.info/?t=129829886000004&r=1&w=2
 
-
-      
