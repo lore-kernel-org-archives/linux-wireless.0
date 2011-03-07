@@ -1,52 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:54729 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753099Ab1CHNLR (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:35618 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755066Ab1CGCNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 08:11:17 -0500
-Received: by mail-ww0-f51.google.com with SMTP id 40so871110wwj.8
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 05:11:16 -0800 (PST)
-Subject: Re: [PATCH 06/15] wl12xx: 1281/1283 support - New boot sequence
-From: Luciano Coelho <coelho@ti.com>
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-	 <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 15:11:16 +0200
-Message-ID: <1299589876.1816.67.camel@cumari>
-Mime-Version: 1.0
+	Sun, 6 Mar 2011 21:13:08 -0500
+Received: by mail-yi0-f46.google.com with SMTP id 27so1454482yia.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:13:08 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16171.486222.209974@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:42:59 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 04/34] ath9k_htc: Configure the beacon queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-03-06 at 16:32 +0200, Shahar Levi wrote:
-> -       clk |= (wl->ref_clock << 1) << 4;
-> +       if (wl->chip.id == CHIP_ID_1283_PG20) {
-> +               if (is_ref_clk == false)
-> +                       clk |= ((wl->tcxo_clock & 0x3) << 1) << 4;
-> +               else
-> +                       clk |= ((wl->ref_clock & 0x3) << 1) << 4;
-> +       } else
-> +               clk |= ((wl->ref_clock & 0x3) << 1) << 4;
-> +
->         wl1271_write32(wl, DRPW_SCRATCH_START, clk); 
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Can you explain why you changed the wl127x part as well? For wl127x
-you're essentially changing:
+Set operating parameters (cwmin, cwmax) for the beacon queue
+in AP mode.
 
-clk |= (wl->ref_clock << 1) << 4;
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   77 ++++++++++++++---------
+ 1 files changed, 46 insertions(+), 31 deletions(-)
 
-to:
-
-clk |= ((wl->ref_clock & 0x3) << 1) << 4;
-
-This means that CONF_REF_CLK_38_4_M_XTAL will be treated in the same way
-as CONF_REF_CLK_19_2_E.  Is that right? If it is, it must be addressed
-in a separate patch and not as part of the Quattro series.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 52b6907..5f15896 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -18,6 +18,50 @@
+ 
+ #define FUDGE 2
+ 
++void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
++{
++	struct ath_hw *ah = priv->ah;
++	struct ath9k_tx_queue_info qi, qi_be;
++
++	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
++	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
++
++	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
++
++	if (priv->ah->opmode == NL80211_IFTYPE_AP) {
++		qi.tqi_aifs = 1;
++		qi.tqi_cwmin = 0;
++		qi.tqi_cwmax = 0;
++	} else if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
++		int qnum = priv->hwq_map[WME_AC_BE];
++
++		ath9k_hw_get_txq_props(ah, qnum, &qi_be);
++
++		qi.tqi_aifs = qi_be.tqi_aifs;
++
++		/*
++		 * For WIFI Beacon Distribution
++		 * Long slot time  : 2x cwmin
++		 * Short slot time : 4x cwmin
++		 */
++		if (ah->slottime == ATH9K_SLOT_TIME_20)
++			qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
++		else
++			qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
++
++		qi.tqi_cwmax = qi_be.tqi_cwmax;
++
++	}
++
++	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
++		ath_err(ath9k_hw_common(ah),
++			"Unable to update beacon queue %u!\n", priv->beaconq);
++	} else {
++		ath9k_hw_resettxqueue(ah, priv->beaconq);
++	}
++}
++
++
+ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 					struct htc_beacon_config *bss_conf)
+ {
+@@ -179,6 +223,8 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
+ 		bss_conf->beacon_interval, nexttbtt, imask,
+ 		!!(intval & ATH9K_BEACON_RESET_TSF));
+ 
++	ath9k_htc_beaconq_config(priv);
++
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
+ 	priv->cur_beacon_conf.bmiss_cnt = 0;
+@@ -351,37 +397,6 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv)
+ 	ath9k_htc_send_beacon(priv, slot);
+ }
+ 
+-/* Currently, only for IBSS */
+-void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+-{
+-	struct ath_hw *ah = priv->ah;
+-	struct ath9k_tx_queue_info qi, qi_be;
+-	int qnum = priv->hwq_map[WME_AC_BE];
+-
+-	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
+-	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
+-
+-	ath9k_hw_get_txq_props(ah, qnum, &qi_be);
+-
+-	qi.tqi_aifs = qi_be.tqi_aifs;
+-	/* For WIFI Beacon Distribution
+-	 * Long slot time  : 2x cwmin
+-	 * Short slot time : 4x cwmin
+-	 */
+-	if (ah->slottime == ATH9K_SLOT_TIME_20)
+-		qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
+-	else
+-		qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
+-	qi.tqi_cwmax = qi_be.tqi_cwmax;
+-
+-	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
+-		ath_err(ath9k_hw_common(ah),
+-			"Unable to update beacon queue %u!\n", qnum);
+-	} else {
+-		ath9k_hw_resettxqueue(ah, priv->beaconq);
+-	}
+-}
+-
+ void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif)
+ {
 -- 
-Cheers,
-Luca.
+1.7.4.1
 
