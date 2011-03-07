@@ -1,139 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:52366 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753848Ab1CWNrT (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:51536 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755136Ab1CGCQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 09:47:19 -0400
-Date: Wed, 23 Mar 2011 14:55:13 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: Add nl80211 event for deletion of a station entry
-Message-ID: <20110323125513.GB26467@jm.kir.nu>
+	Sun, 6 Mar 2011 21:16:33 -0500
+Received: by gxk8 with SMTP id 8so1465578gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:16:32 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16375.933094.853917@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:46:23 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 34/34] ath9k_htc: Use separate URB pool for management frames
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate an NL80211_CMD_DEL_STATION event when a station entry in
-mac80211 is deleted to match with the NL80211_CMD_NEW_STATION event
-that is used when the entry was added. This is needed, e.g., to allow
-user space to remove a peer from RSN IBSS Authenticator state machine
-to avoid re-authentication and re-keying delays when the peer is not
-reachable anymore.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Beacon transmission needs to involve as little latency
+as possible after receiving a SWBA event from the target.
+Since packets are buffered to use TX stream mode, beacon
+frames sometimes gets queued up and are not sent out immediately.
+Fix this by decoupling management frame transmission from the
+normal data path and send them out immediately.
 
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- include/net/cfg80211.h  |    9 +++++++++
- net/mac80211/sta_info.c |    2 ++
- net/wireless/mlme.c     |    9 +++++++++
- net/wireless/nl80211.c  |   33 +++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    3 +++
- 5 files changed, 56 insertions(+)
+ drivers/net/wireless/ath/ath9k/hif_usb.c |  116 +++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
+ 2 files changed, 108 insertions(+), 9 deletions(-)
 
---- wireless-testing.orig/include/net/cfg80211.h	2011-03-23 14:21:41.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2011-03-23 14:22:48.000000000 +0200
-@@ -2667,6 +2667,15 @@ void cfg80211_new_sta(struct net_device
- 		      struct station_info *sinfo, gfp_t gfp);
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 4fb9585..e7cccf8 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -80,7 +80,7 @@ static void hif_usb_regout_cb(struct urb *urb)
  
- /**
-+ * cfg80211_del_sta - notify userspace about deletion of a station
-+ *
-+ * @dev: the netdev
-+ * @mac_addr: the station's address
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp);
-+
-+/**
-  * cfg80211_rx_mgmt - notification of received, unprocessed management frame
-  * @dev: network device
-  * @freq: Frequency on which the frame was received in MHz
---- wireless-testing.orig/net/mac80211/sta_info.c	2011-03-23 14:17:47.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.c	2011-03-23 14:19:50.000000000 +0200
-@@ -698,6 +698,8 @@ static int __must_check __sta_info_destr
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 	cancel_work_sync(&sta->drv_unblock_wk);
+ 	if (cmd) {
+ 		ath9k_htc_txcompletion_cb(cmd->hif_dev->htc_handle,
+-					  cmd->skb, 1);
++					  cmd->skb, true);
+ 		kfree(cmd);
+ 	}
  
-+	cfg80211_del_sta(sdata->dev, sta->sta.addr, GFP_KERNEL);
-+
- 	rate_control_remove_sta_debugfs(sta);
- 	ieee80211_sta_debugfs_remove(sta);
- 
---- wireless-testing.orig/net/wireless/mlme.c	2011-03-23 14:17:51.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2011-03-23 14:31:42.000000000 +0200
-@@ -770,6 +770,15 @@ void cfg80211_new_sta(struct net_device
- }
- EXPORT_SYMBOL(cfg80211_new_sta);
- 
-+void cfg80211_del_sta(struct net_device *dev, const u8 *mac_addr, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = dev->ieee80211_ptr->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_sta_del_event(rdev, dev, mac_addr, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_del_sta);
-+
- struct cfg80211_mgmt_registration {
- 	struct list_head list;
- 
---- wireless-testing.orig/net/wireless/nl80211.c	2011-03-23 14:17:54.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2011-03-23 14:31:01.000000000 +0200
-@@ -5966,6 +5966,39 @@ void nl80211_send_sta_event(struct cfg80
- 				nl80211_mlme_mcgrp.id, gfp);
+@@ -126,6 +126,90 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
+ 	return ret;
  }
  
-+void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev, const u8 *mac_addr,
-+				gfp_t gfp)
++static void hif_usb_mgmt_cb(struct urb *urb)
 +{
-+	struct sk_buff *msg;
-+	void *hdr;
++	struct cmd_buf *cmd = (struct cmd_buf *)urb->context;
++	struct hif_device_usb *hif_dev = cmd->hif_dev;
++	bool txok = true;
 +
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
++	if (!cmd || !cmd->skb || !cmd->hif_dev)
 +		return;
 +
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_STATION);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
++	switch (urb->status) {
++	case 0:
++		break;
++	case -ENOENT:
++	case -ECONNRESET:
++	case -ENODEV:
++	case -ESHUTDOWN:
++		txok = false;
++
++		/*
++		 * If the URBs are being flushed, no need to complete
++		 * this packet.
++		 */
++		spin_lock(&hif_dev->tx.tx_lock);
++		if (hif_dev->tx.flags & HIF_USB_TX_FLUSH) {
++			spin_unlock(&hif_dev->tx.tx_lock);
++			dev_kfree_skb_any(cmd->skb);
++			kfree(cmd);
++			return;
++		}
++		spin_unlock(&hif_dev->tx.tx_lock);
++
++		break;
++	default:
++		txok = false;
++		break;
 +	}
 +
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
++	skb_pull(cmd->skb, 4);
++	ath9k_htc_txcompletion_cb(cmd->hif_dev->htc_handle,
++				  cmd->skb, txok);
++	kfree(cmd);
 +}
 +
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct net_device *netdev, u32 nlpid,
- 		      int freq, const u8 *buf, size_t len, gfp_t gfp)
---- wireless-testing.orig/net/wireless/nl80211.h	2011-03-23 14:23:31.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.h	2011-03-23 14:23:48.000000000 +0200
-@@ -79,6 +79,9 @@ void nl80211_send_remain_on_channel_canc
- void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 			    struct net_device *dev, const u8 *mac_addr,
- 			    struct station_info *sinfo, gfp_t gfp);
-+void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
-+				struct net_device *dev, const u8 *mac_addr,
-+				gfp_t gfp);
++static int hif_usb_send_mgmt(struct hif_device_usb *hif_dev,
++			     struct sk_buff *skb)
++{
++	struct urb *urb;
++	struct cmd_buf *cmd;
++	int ret = 0;
++	__le16 *hdr;
++
++	urb = usb_alloc_urb(0, GFP_ATOMIC);
++	if (urb == NULL)
++		return -ENOMEM;
++
++	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
++	if (cmd == NULL) {
++		usb_free_urb(urb);
++		return -ENOMEM;
++	}
++
++	cmd->skb = skb;
++	cmd->hif_dev = hif_dev;
++
++	hdr = (__le16 *) skb_push(skb, 4);
++	*hdr++ = cpu_to_le16(skb->len);
++	*hdr++ = cpu_to_le16(ATH_USB_TX_STREAM_MODE_TAG);
++
++	usb_fill_bulk_urb(urb, hif_dev->udev,
++			 usb_sndbulkpipe(hif_dev->udev, USB_WLAN_TX_PIPE),
++			 skb->data, skb->len,
++			 hif_usb_mgmt_cb, cmd);
++
++	usb_anchor_urb(urb, &hif_dev->mgmt_submitted);
++	ret = usb_submit_urb(urb, GFP_ATOMIC);
++	if (ret) {
++		usb_unanchor_urb(urb);
++		kfree(cmd);
++	}
++	usb_free_urb(urb);
++
++	return ret;
++}
++
+ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
+ 					 struct sk_buff_head *list)
+ {
+@@ -277,6 +361,7 @@ static int hif_usb_send_tx(struct hif_device_usb *hif_dev, struct sk_buff *skb)
+ {
+ 	struct ath9k_htc_tx_ctl *tx_ctl;
+ 	unsigned long flags;
++	int ret = 0;
  
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct net_device *netdev, u32 nlpid, int freq,
-
+ 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+ 
+@@ -291,25 +376,33 @@ static int hif_usb_send_tx(struct hif_device_usb *hif_dev, struct sk_buff *skb)
+ 		return -ENOMEM;
+ 	}
+ 
+-	__skb_queue_tail(&hif_dev->tx.tx_skb_queue, skb);
+-	hif_dev->tx.tx_skb_cnt++;
++	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 
+ 	tx_ctl = HTC_SKB_CB(skb);
+ 
+-	/* Send normal/mgmt/beacon frames immediately */
+-	if (tx_ctl->type != ATH9K_HTC_AMPDU)
+-		__hif_usb_tx(hif_dev);
++	/* Mgmt/Beacon frames don't use the TX buffer pool */
++	if ((tx_ctl->type == ATH9K_HTC_MGMT) ||
++	    (tx_ctl->type == ATH9K_HTC_BEACON)) {
++		ret = hif_usb_send_mgmt(hif_dev, skb);
++	}
++
++	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
++
++	if ((tx_ctl->type == ATH9K_HTC_NORMAL) ||
++	    (tx_ctl->type == ATH9K_HTC_AMPDU)) {
++		__skb_queue_tail(&hif_dev->tx.tx_skb_queue, skb);
++		hif_dev->tx.tx_skb_cnt++;
++	}
+ 
+ 	/* Check if AMPDUs have to be sent immediately */
+-	if ((tx_ctl->type == ATH9K_HTC_AMPDU) &&
+-	    (hif_dev->tx.tx_buf_cnt == MAX_TX_URB_NUM) &&
++	if ((hif_dev->tx.tx_buf_cnt == MAX_TX_URB_NUM) &&
+ 	    (hif_dev->tx.tx_skb_cnt < 2)) {
+ 		__hif_usb_tx(hif_dev);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static void hif_usb_start(void *hif_handle)
+@@ -341,6 +434,8 @@ static void hif_usb_stop(void *hif_handle)
+ 				 &hif_dev->tx.tx_pending, list) {
+ 		usb_kill_urb(tx_buf->urb);
+ 	}
++
++	usb_kill_anchored_urbs(&hif_dev->mgmt_submitted);
+ }
+ 
+ static int hif_usb_send(void *hif_handle, u8 pipe_id, struct sk_buff *skb)
+@@ -659,6 +754,8 @@ static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+ 		kfree(tx_buf->buf);
+ 		kfree(tx_buf);
+ 	}
++
++	usb_kill_anchored_urbs(&hif_dev->mgmt_submitted);
+ }
+ 
+ static int ath9k_hif_usb_alloc_tx_urbs(struct hif_device_usb *hif_dev)
+@@ -670,6 +767,7 @@ static int ath9k_hif_usb_alloc_tx_urbs(struct hif_device_usb *hif_dev)
+ 	INIT_LIST_HEAD(&hif_dev->tx.tx_pending);
+ 	spin_lock_init(&hif_dev->tx.tx_lock);
+ 	__skb_queue_head_init(&hif_dev->tx.tx_skb_queue);
++	init_usb_anchor(&hif_dev->mgmt_submitted);
+ 
+ 	for (i = 0; i < MAX_TX_URB_NUM; i++) {
+ 		tx_buf = kzalloc(sizeof(struct tx_buf), GFP_KERNEL);
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 8b98d64..f59df48 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -93,6 +93,7 @@ struct hif_device_usb {
+ 	struct usb_anchor regout_submitted;
+ 	struct usb_anchor rx_submitted;
+ 	struct usb_anchor reg_in_submitted;
++	struct usb_anchor mgmt_submitted;
+ 	struct sk_buff *remain_skb;
+ 	const char *fw_name;
+ 	int rx_remain_len;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.4.1
+
