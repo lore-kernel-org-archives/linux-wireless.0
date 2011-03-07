@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863Ab1COWRL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 18:17:11 -0400
-Subject: [PATCH] mac80211: add comment about reordering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Mar 2011 23:17:01 +0100
-Message-ID: <1300227421.12606.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from wipro-blr-out01.wipro.com ([203.91.198.74]:57557 "EHLO
+	wipro-blr-out02.wipro.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751169Ab1CGGvh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 01:51:37 -0500
+From: <raghunathan.kailasanathan@wipro.com>
+To: <m.sujith@gmail.com>, <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Date: Mon, 7 Mar 2011 12:13:35 +0530
+Subject: RE: [ath9k-devel] [RFC 00/34] ath9k_htc AP mode
+Message-ID: <6D6CA94E9F944C45ABD35E9F7E1CAE619EC1314D7D@BLR-SJP-MB02.wipro.com>
+References: <19828.16017.691812.916489@gargle.gargle.HOWL>
+ <19828.16530.504829.571343@gargle.gargle.HOWL>
+In-Reply-To: <19828.16530.504829.571343@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Took me a minute to figure this out, maybe
-it's better documented...
+> -----Original Message-----
+> From: ath9k-devel-bounces@lists.ath9k.org [mailto:ath9k-devel-
+> bounces@lists.ath9k.org] On Behalf Of Sujith
+> Sent: Monday, March 07, 2011 7:49 AM
+> To: linux-wireless
+> Cc: ath9k-devel
+> Subject: [ath9k-devel] [RFC 00/34] ath9k_htc AP mode
+> 
+> Sujith wrote:
+> > This is the current patchset for enabing AP mode for ath9k_htc.
+> > TX status processing has been enabled in the FW and the host driver
+> > has been updated accordingly. TX filtering hasn't been fixed yet,
+> > though.
+> >
+> > The updated FW can be found at:
+> > http://linuxwireless.org/en/users/Drivers/ath9k_htc#AP_Mode
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |    2 ++
- 1 file changed, 2 insertions(+)
+So this patchset deprecates the one you posted in January ?
+Could you please make available a unified patchset ?
 
---- a/net/mac80211/rx.c	2011-03-15 23:14:55.000000000 +0100
-+++ b/net/mac80211/rx.c	2011-03-15 23:15:25.000000000 +0100
-@@ -706,6 +706,8 @@ static bool ieee80211_sta_manage_reorder
- 	/*
- 	 * If the current MPDU is in the right order and nothing else
- 	 * is stored we can process it directly, no need to buffer it.
-+	 * If it is first but there's something stored, we may be able
-+	 * to release frames after this one.
- 	 */
- 	if (mpdu_seq_num == tid_agg_rx->head_seq_num &&
- 	    tid_agg_rx->stored_mpdu_num == 0) {
-
-
+--Raghu
