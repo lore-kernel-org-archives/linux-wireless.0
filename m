@@ -1,88 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50129 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab1CHQW2 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160Ab1CGOss (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 11:22:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <1299597447.4676.25.camel@jlt3.sipsolutions.net>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	<20110304134648.GB9866@tuxdriver.com>
-	<1299251879.24333.3.camel@wwguy-ubuntu>
-	<AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-	<AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-	<AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-	<1299334144.3826.8.camel@jlt3.sipsolutions.net>
-	<AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
-	<1299597447.4676.25.camel@jlt3.sipsolutions.net>
-Date: Tue, 8 Mar 2011 16:22:27 +0000
-Message-ID: <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
-Subject: Re: 2.6.38-rc7, iwlagn warning
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Mar 2011 09:48:48 -0500
+Subject: [PATCH] mac80211: fix scan race, simplify code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Mar 2011 15:48:41 +0100
+Message-ID: <1299509321.6739.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2011 15:17, Johannes Berg <johannes@sipsolutions.net> wrote:
-> FWIW, I'm changing the subject since "crash" bothers me, it's not even
-> close to a crash.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Of course, sorry.
+The scan code has a race that Michael reported
+he ran into, but it's easy to fix while at the
+same time simplifying the code.
 
-> On Sat, 2011-03-05 at 23:45 +0000, Mathias Burén wrote:
->
->> I got it again, with the newly compiled kernel. However, I've been
->> trying for 20 minutes now and when I load iwlagn with the debug
->> parameter I can't seem to get the warning. I was monitoring dmesg with
->> "watch --interval=1 "dmesg|tail -n40"" but I never saw the warning. As
->> soon as I removed the module, and inserted it again without the debug
->> option I could reproduce the warning. Here are some dmesg logs:
->
-> Curious.
->
->> no debug, crash 1: http://www.privatepaste.com/download/06539404a8
->> no debug, crash 2: http://www.privatepaste.com/download/a6be5f5c81
->
-> And I'd prefer if you also stopped using the word crash. Nothing
-> crashed. All you got was a stack trace because I put a warning there.
-> Really, not the end of the world, and in fact it probably has very
-> little or even no effect on functionality.
->
+The race resulted in the following warning:
 
-Got it.
+------------[ cut here ]------------
+WARNING: at net/mac80211/scan.c:310 ieee80211_rx_bss_free+0x20c/0x4b8 [mac80211]()
+Modules linked in: [...]
+[<c0033edc>] (unwind_backtrace+0x0/0xe0) from [<c004f2a4>] (warn_slowpath_common+0x4c/0x64)
+[... backtrace wasn't useful ...]
 
-> However ... actually looking at the log files I'm totally confused what
-> it is that you're doing. Something appears to be continually switching
-> between interface modes, even using wireless extensions, yet it really
-> wants to be IBSS all the time. What's causing all this pointless
-> switching? It'd be useful to figure that out, but I'm not sure how. What
-> applications are you running that manage wireless? Are you, by any
-> chance, running wpa_supplicant manually in addition to network-manager?
+Reported-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/scan.c |   64 +++++++++++++++++++---------------------------------
+ 1 file changed, 24 insertions(+), 40 deletions(-)
 
-I'm using NetworkManager, I haven't started anything else manually. I
-don't know why it switches modes like that, it happens on 2 laptops
-(both Ubuntu 10.10) so it could very well be some NetworkManager
-related issue.
+--- a/net/mac80211/scan.c	2011-03-07 14:04:40.000000000 +0100
++++ b/net/mac80211/scan.c	2011-03-07 14:23:35.000000000 +0100
+@@ -259,10 +259,12 @@ static bool ieee80211_prep_hw_scan(struc
+ 	return true;
+ }
+ 
+-static bool __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
++static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
+ 				       bool was_hw_scan)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	bool on_oper_chan;
++	bool enable_beacons = false;
+ 
+ 	lockdep_assert_held(&local->mtx);
+ 
+@@ -276,12 +278,12 @@ static bool __ieee80211_scan_completed(s
+ 		aborted = true;
+ 
+ 	if (WARN_ON(!local->scan_req))
+-		return false;
++		return;
+ 
+ 	if (was_hw_scan && !aborted && ieee80211_prep_hw_scan(local)) {
+ 		int rc = drv_hw_scan(local, local->scan_sdata, local->hw_scan_req);
+ 		if (rc == 0)
+-			return false;
++			return;
+ 	}
+ 
+ 	kfree(local->hw_scan_req);
+@@ -295,26 +297,11 @@ static bool __ieee80211_scan_completed(s
+ 	local->scanning = 0;
+ 	local->scan_channel = NULL;
+ 
+-	return true;
+-}
+-
+-static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
+-					      bool was_hw_scan)
+-{
+-	struct ieee80211_local *local = hw_to_local(hw);
+-	bool on_oper_chan;
+-	bool enable_beacons = false;
+-
+-	mutex_lock(&local->mtx);
+ 	on_oper_chan = ieee80211_cfg_on_oper_channel(local);
+ 
+-	WARN_ON(local->scanning & (SCAN_SW_SCANNING | SCAN_HW_SCANNING));
+-
+-	if (was_hw_scan || !on_oper_chan) {
+-		if (WARN_ON(local->scan_channel))
+-			local->scan_channel = NULL;
++	if (was_hw_scan || !on_oper_chan)
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+-	} else
++	else
+ 		/* Set power back to normal operating levels. */
+ 		ieee80211_hw_config(local, 0);
+ 
+@@ -332,7 +319,6 @@ static void __ieee80211_scan_completed_f
+ 	}
+ 
+ 	ieee80211_recalc_idle(local);
+-	mutex_unlock(&local->mtx);
+ 
+ 	ieee80211_mlme_notify_scan_completed(local);
+ 	ieee80211_ibss_notify_scan_completed(local);
+@@ -687,12 +673,14 @@ void ieee80211_scan_work(struct work_str
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, scan_work.work);
+-	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
++	struct ieee80211_sub_if_data *sdata;
+ 	unsigned long next_delay = 0;
+-	bool aborted, hw_scan, finish;
++	bool aborted, hw_scan;
+ 
+ 	mutex_lock(&local->mtx);
+ 
++	sdata = local->scan_sdata;
++
+ 	if (test_and_clear_bit(SCAN_COMPLETED, &local->scanning)) {
+ 		aborted = test_and_clear_bit(SCAN_ABORTED, &local->scanning);
+ 		goto out_complete;
+@@ -756,17 +744,11 @@ void ieee80211_scan_work(struct work_str
+ 	} while (next_delay == 0);
+ 
+ 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
+-	mutex_unlock(&local->mtx);
+-	return;
++	goto out;
+ 
+ out_complete:
+ 	hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
+-	finish = __ieee80211_scan_completed(&local->hw, aborted, hw_scan);
+-	mutex_unlock(&local->mtx);
+-	if (finish)
+-		__ieee80211_scan_completed_finish(&local->hw, hw_scan);
+-	return;
+-
++	__ieee80211_scan_completed(&local->hw, aborted, hw_scan);
+ out:
+ 	mutex_unlock(&local->mtx);
+ }
+@@ -836,7 +818,6 @@ int ieee80211_request_internal_scan(stru
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ {
+ 	bool abortscan;
+-	bool finish = false;
+ 
+ 	/*
+ 	 * We are only canceling software scan, or deferred scan that was not
+@@ -856,14 +837,17 @@ void ieee80211_scan_cancel(struct ieee80
+ 
+ 	mutex_lock(&local->mtx);
+ 	abortscan = local->scan_req && !test_bit(SCAN_HW_SCANNING, &local->scanning);
+-	if (abortscan)
+-		finish = __ieee80211_scan_completed(&local->hw, true, false);
+-	mutex_unlock(&local->mtx);
+-
+ 	if (abortscan) {
+-		/* The scan is canceled, but stop work from being pending */
+-		cancel_delayed_work_sync(&local->scan_work);
++		/*
++		 * The scan is canceled, but stop work from being pending.
++		 *
++		 * If the work is currently running, it must be blocked on
++		 * the mutex, but we'll set scan_sdata = NULL and it'll
++		 * simply exit once it acquires the mutex.
++		 */
++		cancel_delayed_work(&local->scan_work);
++		/* and clean up */
++		__ieee80211_scan_completed(&local->hw, true, false);
+ 	}
+-	if (finish)
+-		__ieee80211_scan_completed_finish(&local->hw, false);
++	mutex_unlock(&local->mtx);
+ }
 
-> Irregardless of that though, there's clearly some kind of bug in the
-> driver since the TX power setting times out, and then as a result we get
-> the warning.
->
-> Would you be willing to enable tracing and capture a trace using
-> trace-cmd, by running 'trace-cmd record -e mac80211 -e iwlwifi'?
->
-> johannes
->
->
 
-I've since upgraded to 2.6.38-rc8 (same config). Looking around in the
-config, is it CONFIG_FUNCTION_TRACER I need to enable, and is that it?
-(kernel function tracer)
-
-// Mathias
