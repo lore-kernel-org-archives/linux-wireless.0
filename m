@@ -1,137 +1,498 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20483 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757024Ab1CNR7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:59:32 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:10 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 14/38] ath6kl: remove-typedef HIF_SCATTER_REQ_PRIV
-Date: Mon, 14 Mar 2011 10:58:48 -0700
-Message-ID: <1300125552-24422-15-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:40265 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849Ab1CGCNn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 21:13:43 -0500
+Received: by pwi15 with SMTP id 15so692257pwi.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:13:43 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16205.996628.615181@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:43:33 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 09/34] ath9k_htc: Move debug code to a separate file
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s HIF_SCATTER_REQ_PRIV \
-	"struct hif_scatter_req_priv" drivers/staging/ath6kl/
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Tested-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 ---
- .../hif/sdio/linux_sdio/include/hif_internal.h     |    8 +++-----
- .../ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c   |   14 +++++++-------
- 2 files changed, 10 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile        |    2 +
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |  219 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |  212 -----------------------
+ 3 files changed, 221 insertions(+), 212 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_debug.c
 
-diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/include/hif_internal.h b/drivers/staging/ath6kl/hif/sdio/linux_sdio/include/hif_internal.h
-index e2d2266..99885e3 100644
---- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/include/hif_internal.h
-+++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/include/hif_internal.h
-@@ -47,8 +47,6 @@
- #define HIF_MBOX2_BLOCK_SIZE               HIF_MBOX_BLOCK_SIZE
- #define HIF_MBOX3_BLOCK_SIZE               HIF_MBOX_BLOCK_SIZE
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 4d66ca8..239987c 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -48,4 +48,6 @@ ath9k_htc-y +=	htc_hst.o \
+ 		htc_drv_init.o \
+ 		htc_drv_gpio.o
  
--struct _HIF_SCATTER_REQ_PRIV;
--
- typedef struct bus_request {
-     struct bus_request *next;       /* link list of available requests */
-     struct bus_request *inusenext;  /* link list of in use requests */
-@@ -59,7 +57,7 @@ typedef struct bus_request {
-     u32 request;
-     void *context;
-     int status;
--    struct _HIF_SCATTER_REQ_PRIV *pScatterReq;      /* this request is a scatter request */
-+    struct hif_scatter_req_priv *pScatterReq;      /* this request is a scatter request */
- } BUS_REQUEST;
- 
- struct hif_device {
-@@ -100,13 +98,13 @@ void AddToAsyncList(HIF_DEVICE *device, BUS_REQUEST *busrequest);
- #define MAX_SCATTER_ENTRIES_PER_REQ      16
- #define MAX_SCATTER_REQ_TRANSFER_SIZE    32*1024
- 
--typedef struct _HIF_SCATTER_REQ_PRIV {
-+struct hif_scatter_req_priv {
-     HIF_SCATTER_REQ     *pHifScatterReq;  /* HIF scatter request with allocated entries */   
-     HIF_DEVICE          *device;          /* this device */
-     BUS_REQUEST         *busrequest;      /* request associated with request */
-         /* scatter list for linux */    
-     struct scatterlist  sgentries[MAX_SCATTER_ENTRIES_PER_REQ];   
--} HIF_SCATTER_REQ_PRIV;
++ath9k_htc-$(CONFIG_ATH9K_HTC_DEBUGFS) += htc_drv_debug.o
++
+ obj-$(CONFIG_ATH9K_HTC) += ath9k_htc.o
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+new file mode 100644
+index 0000000..8b679aa
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -0,0 +1,219 @@
++/*
++ * Copyright (c) 2010-2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "htc.h"
++
++static struct dentry *ath9k_debugfs_root;
++
++static int ath9k_debugfs_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
++
++static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	struct ath9k_htc_target_stats cmd_rsp;
++	char buf[512];
++	unsigned int len = 0;
++	int ret = 0;
++
++	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
++
++	WMI_CMD(WMI_TGT_STATS_CMDID);
++	if (ret)
++		return -EINVAL;
++
++
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%19s : %10u\n", "TX Short Retries",
++			be32_to_cpu(cmd_rsp.tx_shortretry));
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%19s : %10u\n", "TX Long Retries",
++			be32_to_cpu(cmd_rsp.tx_longretry));
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%19s : %10u\n", "TX Xretries",
++			be32_to_cpu(cmd_rsp.tx_xretries));
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%19s : %10u\n", "TX Unaggr. Xretries",
++			be32_to_cpu(cmd_rsp.ht_txunaggr_xretry));
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%19s : %10u\n", "TX Xretries (HT)",
++			be32_to_cpu(cmd_rsp.ht_tx_xretries));
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%19s : %10u\n", "TX Rate", priv->debug.txrate);
++
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_tgt_stats = {
++	.read = read_file_tgt_stats,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
 +};
++
++static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
++			      size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	char buf[512];
++	unsigned int len = 0;
++
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "Buffers queued",
++			priv->debug.tx_stats.buf_queued);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "Buffers completed",
++			priv->debug.tx_stats.buf_completed);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs queued",
++			priv->debug.tx_stats.skb_queued);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs completed",
++			priv->debug.tx_stats.skb_completed);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs dropped",
++			priv->debug.tx_stats.skb_dropped);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "CAB queued",
++			priv->debug.tx_stats.cab_queued);
++
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "BE queued",
++			priv->debug.tx_stats.queue_stats[WME_AC_BE]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "BK queued",
++			priv->debug.tx_stats.queue_stats[WME_AC_BK]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "VI queued",
++			priv->debug.tx_stats.queue_stats[WME_AC_VI]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "VO queued",
++			priv->debug.tx_stats.queue_stats[WME_AC_VO]);
++
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_xmit = {
++	.read = read_file_xmit,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++static ssize_t read_file_recv(struct file *file, char __user *user_buf,
++			      size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	char buf[512];
++	unsigned int len = 0;
++
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs allocated",
++			priv->debug.rx_stats.skb_allocated);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs completed",
++			priv->debug.rx_stats.skb_completed);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs Dropped",
++			priv->debug.rx_stats.skb_dropped);
++
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_recv = {
++	.read = read_file_recv,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++int ath9k_htc_init_debug(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	if (!ath9k_debugfs_root)
++		return -ENOENT;
++
++	priv->debug.debugfs_phy = debugfs_create_dir(wiphy_name(priv->hw->wiphy),
++						     ath9k_debugfs_root);
++	if (!priv->debug.debugfs_phy)
++		goto err;
++
++	priv->debug.debugfs_tgt_stats = debugfs_create_file("tgt_stats", S_IRUSR,
++						    priv->debug.debugfs_phy,
++						    priv, &fops_tgt_stats);
++	if (!priv->debug.debugfs_tgt_stats)
++		goto err;
++
++
++	priv->debug.debugfs_xmit = debugfs_create_file("xmit", S_IRUSR,
++						       priv->debug.debugfs_phy,
++						       priv, &fops_xmit);
++	if (!priv->debug.debugfs_xmit)
++		goto err;
++
++	priv->debug.debugfs_recv = debugfs_create_file("recv", S_IRUSR,
++						       priv->debug.debugfs_phy,
++						       priv, &fops_recv);
++	if (!priv->debug.debugfs_recv)
++		goto err;
++
++	return 0;
++
++err:
++	ath9k_htc_exit_debug(ah);
++	return -ENOMEM;
++}
++
++void ath9k_htc_exit_debug(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	debugfs_remove(priv->debug.debugfs_recv);
++	debugfs_remove(priv->debug.debugfs_xmit);
++	debugfs_remove(priv->debug.debugfs_tgt_stats);
++	debugfs_remove(priv->debug.debugfs_phy);
++}
++
++int ath9k_htc_debug_create_root(void)
++{
++	ath9k_debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
++	if (!ath9k_debugfs_root)
++		return -ENOENT;
++
++	return 0;
++}
++
++void ath9k_htc_debug_remove_root(void)
++{
++	debugfs_remove(ath9k_debugfs_root);
++	ath9k_debugfs_root = NULL;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 81dfe07..59710e7 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -16,10 +16,6 @@
  
- #define ATH_DEBUG_SCATTER  ATH_DEBUG_MAKE_MODULE_MASK(0)
+ #include "htc.h"
  
-diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c
-index 196d33d..9f07040 100644
---- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c
-+++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c
-@@ -87,7 +87,7 @@ int DoHifReadWriteScatter(HIF_DEVICE *device, BUS_REQUEST *busrequest)
-     struct mmc_request      mmcreq;
-     struct mmc_command      cmd;
-     struct mmc_data         data;
--    HIF_SCATTER_REQ_PRIV   *pReqPriv;   
-+    struct hif_scatter_req_priv   *pReqPriv;   
-     HIF_SCATTER_REQ        *pReq;       
-     int                status = 0;
-     struct                  scatterlist *pSg;
-@@ -203,7 +203,7 @@ static int HifReadWriteScatter(HIF_DEVICE *device, HIF_SCATTER_REQ *pReq)
- {
-     int             status = A_EINVAL;
-     u32 request = pReq->Request;
--    HIF_SCATTER_REQ_PRIV *pReqPriv = (HIF_SCATTER_REQ_PRIV *)pReq->HIFPrivate[0];
-+    struct hif_scatter_req_priv *pReqPriv = (struct hif_scatter_req_priv *)pReq->HIFPrivate[0];
-     
-     do {
-         
-@@ -279,7 +279,7 @@ int SetupHIFScatterSupport(HIF_DEVICE *device, struct hif_device_scatter_support
- {
-     int              status = A_ERROR;
-     int                   i;
--    HIF_SCATTER_REQ_PRIV *pReqPriv;
-+    struct hif_scatter_req_priv *pReqPriv;
-     BUS_REQUEST          *busrequest;
-         
-     do {
-@@ -297,11 +297,11 @@ int SetupHIFScatterSupport(HIF_DEVICE *device, struct hif_device_scatter_support
-         
-         for (i = 0; i < MAX_SCATTER_REQUESTS; i++) {    
-                 /* allocate the private request blob */
--            pReqPriv = (HIF_SCATTER_REQ_PRIV *)A_MALLOC(sizeof(HIF_SCATTER_REQ_PRIV));
-+            pReqPriv = (struct hif_scatter_req_priv *)A_MALLOC(sizeof(struct hif_scatter_req_priv));
-             if (NULL == pReqPriv) {
-                 break;    
-             }
--            A_MEMZERO(pReqPriv, sizeof(HIF_SCATTER_REQ_PRIV));
-+            A_MEMZERO(pReqPriv, sizeof(struct hif_scatter_req_priv));
-                 /* save the device instance*/
-             pReqPriv->device = device;      
-                 /* allocate the scatter request */
-@@ -358,7 +358,7 @@ int SetupHIFScatterSupport(HIF_DEVICE *device, struct hif_device_scatter_support
-     /* clean up scatter support */
- void CleanupHIFScatterResources(HIF_DEVICE *device)
- {
--    HIF_SCATTER_REQ_PRIV    *pReqPriv;
-+    struct hif_scatter_req_priv    *pReqPriv;
-     HIF_SCATTER_REQ         *pReq;
-     
-         /* empty the free list */
-@@ -371,7 +371,7 @@ void CleanupHIFScatterResources(HIF_DEVICE *device)
-             break;    
-         }   
-         
--        pReqPriv = (HIF_SCATTER_REQ_PRIV *)pReq->HIFPrivate[0];
-+        pReqPriv = (struct hif_scatter_req_priv *)pReq->HIFPrivate[0];
-         A_ASSERT(pReqPriv != NULL);
-         
-         if (pReqPriv->busrequest != NULL) {
+-#ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-static struct dentry *ath9k_debugfs_root;
+-#endif
+-
+ /*************/
+ /* Utilities */
+ /*************/
+@@ -720,214 +716,6 @@ static int ath9k_htc_tx_aggr_oper(struct ath9k_htc_priv *priv,
+ 	return ret;
+ }
+ 
+-/*********/
+-/* DEBUG */
+-/*********/
+-
+-#ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-
+-static int ath9k_debugfs_open(struct inode *inode, struct file *file)
+-{
+-	file->private_data = inode->i_private;
+-	return 0;
+-}
+-
+-static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
+-				   size_t count, loff_t *ppos)
+-{
+-	struct ath9k_htc_priv *priv = file->private_data;
+-	struct ath9k_htc_target_stats cmd_rsp;
+-	char buf[512];
+-	unsigned int len = 0;
+-	int ret = 0;
+-
+-	memset(&cmd_rsp, 0, sizeof(cmd_rsp));
+-
+-	WMI_CMD(WMI_TGT_STATS_CMDID);
+-	if (ret)
+-		return -EINVAL;
+-
+-
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%19s : %10u\n", "TX Short Retries",
+-			be32_to_cpu(cmd_rsp.tx_shortretry));
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%19s : %10u\n", "TX Long Retries",
+-			be32_to_cpu(cmd_rsp.tx_longretry));
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%19s : %10u\n", "TX Xretries",
+-			be32_to_cpu(cmd_rsp.tx_xretries));
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%19s : %10u\n", "TX Unaggr. Xretries",
+-			be32_to_cpu(cmd_rsp.ht_txunaggr_xretry));
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%19s : %10u\n", "TX Xretries (HT)",
+-			be32_to_cpu(cmd_rsp.ht_tx_xretries));
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%19s : %10u\n", "TX Rate", priv->debug.txrate);
+-
+-	if (len > sizeof(buf))
+-		len = sizeof(buf);
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static const struct file_operations fops_tgt_stats = {
+-	.read = read_file_tgt_stats,
+-	.open = ath9k_debugfs_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+-static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+-			      size_t count, loff_t *ppos)
+-{
+-	struct ath9k_htc_priv *priv = file->private_data;
+-	char buf[512];
+-	unsigned int len = 0;
+-
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "Buffers queued",
+-			priv->debug.tx_stats.buf_queued);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "Buffers completed",
+-			priv->debug.tx_stats.buf_completed);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs queued",
+-			priv->debug.tx_stats.skb_queued);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs completed",
+-			priv->debug.tx_stats.skb_completed);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs dropped",
+-			priv->debug.tx_stats.skb_dropped);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "CAB queued",
+-			priv->debug.tx_stats.cab_queued);
+-
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "BE queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_BE]);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "BK queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_BK]);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "VI queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_VI]);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "VO queued",
+-			priv->debug.tx_stats.queue_stats[WME_AC_VO]);
+-
+-	if (len > sizeof(buf))
+-		len = sizeof(buf);
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static const struct file_operations fops_xmit = {
+-	.read = read_file_xmit,
+-	.open = ath9k_debugfs_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+-static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+-			      size_t count, loff_t *ppos)
+-{
+-	struct ath9k_htc_priv *priv = file->private_data;
+-	char buf[512];
+-	unsigned int len = 0;
+-
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs allocated",
+-			priv->debug.rx_stats.skb_allocated);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs completed",
+-			priv->debug.rx_stats.skb_completed);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"%20s : %10u\n", "SKBs Dropped",
+-			priv->debug.rx_stats.skb_dropped);
+-
+-	if (len > sizeof(buf))
+-		len = sizeof(buf);
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static const struct file_operations fops_recv = {
+-	.read = read_file_recv,
+-	.open = ath9k_debugfs_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+-int ath9k_htc_init_debug(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+-
+-	if (!ath9k_debugfs_root)
+-		return -ENOENT;
+-
+-	priv->debug.debugfs_phy = debugfs_create_dir(wiphy_name(priv->hw->wiphy),
+-						     ath9k_debugfs_root);
+-	if (!priv->debug.debugfs_phy)
+-		goto err;
+-
+-	priv->debug.debugfs_tgt_stats = debugfs_create_file("tgt_stats", S_IRUSR,
+-						    priv->debug.debugfs_phy,
+-						    priv, &fops_tgt_stats);
+-	if (!priv->debug.debugfs_tgt_stats)
+-		goto err;
+-
+-
+-	priv->debug.debugfs_xmit = debugfs_create_file("xmit", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_xmit);
+-	if (!priv->debug.debugfs_xmit)
+-		goto err;
+-
+-	priv->debug.debugfs_recv = debugfs_create_file("recv", S_IRUSR,
+-						       priv->debug.debugfs_phy,
+-						       priv, &fops_recv);
+-	if (!priv->debug.debugfs_recv)
+-		goto err;
+-
+-	return 0;
+-
+-err:
+-	ath9k_htc_exit_debug(ah);
+-	return -ENOMEM;
+-}
+-
+-void ath9k_htc_exit_debug(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+-
+-	debugfs_remove(priv->debug.debugfs_recv);
+-	debugfs_remove(priv->debug.debugfs_xmit);
+-	debugfs_remove(priv->debug.debugfs_tgt_stats);
+-	debugfs_remove(priv->debug.debugfs_phy);
+-}
+-
+-int ath9k_htc_debug_create_root(void)
+-{
+-	ath9k_debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
+-	if (!ath9k_debugfs_root)
+-		return -ENOENT;
+-
+-	return 0;
+-}
+-
+-void ath9k_htc_debug_remove_root(void)
+-{
+-	debugfs_remove(ath9k_debugfs_root);
+-	ath9k_debugfs_root = NULL;
+-}
+-
+-#endif /* CONFIG_ATH9K_HTC_DEBUGFS */
+-
+ /*******/
+ /* ANI */
+ /*******/
 -- 
-1.7.4.15.g7811d
+1.7.4.1
 
