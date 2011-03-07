@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60304 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755251Ab1CSJor (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2011 05:44:47 -0400
-Received: by wya21 with SMTP id 21so4526973wya.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 02:44:46 -0700 (PDT)
-Message-ID: <4D847B0D.3070502@voltaelectronics.com>
-Date: Sat, 19 Mar 2011 10:44:45 +0100
-From: Stefano Davolio - Volta Electronics
-	<s.davolio@voltaelectronics.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Jacopo Mondi <j.mondi@voltaelectronics.com>
-Subject: Is setting tx power effective on ar9170?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:35286 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753635Ab1CGQzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 11:55:01 -0500
+Subject: Re: [PATCH] p54spi: Update kconfig help text
+From: Michael Buesch <mb@bu3sch.de>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <201103071742.09073.chunkeey@googlemail.com> (sfid-20110307_174226_236287_00977258)
+References: <1299501084.5665.13.camel@marge>
+	 <201103071742.09073.chunkeey@googlemail.com>
+	 (sfid-20110307_174226_236287_00977258)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Mar 2011 17:54:54 +0100
+Message-ID: <1299516894.5665.15.camel@marge>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+On Mon, 2011-03-07 at 17:42 +0100, Christian Lamparter wrote:
+> On Monday 07 March 2011 13:31:24 Michael Buesch wrote:
+> > This updates the p54spi Kconfig help text.
+> > The driver works well on n8x0, so remove the words "experimental" and "untested".
+> > 
+> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> ACK, we'll take your word of it.
+> Any news about the power save issue?
+> Was it "fixed" by a recent commit or is it no
+> longer a problem? 
 
-we are developing a custom device based on an ar9170 atheros
-chipset.
-We use ar9170usb driver from linux-omap-2.6.36, but we are experiencing
-problems setting the device txpower.
-Changing txpower seems to not have any effect on the received signal (on the router).
-Can someone confirm that this feature is currently implemented and
-working in ar9170usb driver (we use the one-stage firmware, we also
-tried the open source firmware version, nothing changed).
+No I disabled PS as a workaround. Of course, that's
+not the real fix I'm hoping for :)
 
-Do you suggest using new carl9170? Is the tx power setting implemented
-in the new version?
-
-
-Thank you, we hope you can help us.
-
-  Stefano Davolio
+-- 
+Greetings, Michael.
 
