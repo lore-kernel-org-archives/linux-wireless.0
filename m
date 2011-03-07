@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sidious.london.02.net ([82.132.130.152]:40919 "EHLO
-	mail.o2.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752222Ab1CFWEm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 17:04:42 -0500
-Date: Sun, 6 Mar 2011 22:04:37 +0000
-From: Tony Houghton <h@realh.co.uk>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil@venema.h4ckr.net, Vivek Natarajan <vnatarajan@atheros.com>
-Subject: Re: [ath9k-devel] ath9k causes lockups since kernel 2.6.35
-Message-ID: <20110306220437.63f7f4ea@realh.co.uk>
-In-Reply-To: <AANLkTikjQPVjkHZy29B9e=jgOyH__HB0ED0aSQALEc2t@mail.gmail.com>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<AANLkTiksoeKhMaFarSDVCbcDbZx6iWHkYzrg--1NcKKA@mail.gmail.com>
-	<20110225144718.63550601@realh.co.uk>
-	<AANLkTinu9NgnZZmieh2PU6e-iShOkapV9kcVe8YGtPHG@mail.gmail.com>
-	<20110225165745.4860afe0@realh.co.uk>
-	<20110226183542.75bc1786@realh.co.uk>
-	<AANLkTi=ZWmWZWMBSdGX8S9EfiRyv3eKEU9P3n0bfDAuJ@mail.gmail.com>
-	<20110302163051.425d1419@toddler>
-	<AANLkTinEA2NVxwWZJME-oChE6OEJc_TSTajMfe7f+3hm@mail.gmail.com>
-	<20110303143151.03dbe76b@toddler>
-	<AANLkTiksdt5fciyFZ_nphEYgLH6Ey_HSHHpY5Eg9pNqD@mail.gmail.com>
-	<20110303191656.73bba824@realh.co.uk>
-	<AANLkTikjQPVjkHZy29B9e=jgOyH__HB0ED0aSQALEc2t@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:33759 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751504Ab1CGBqF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 20:46:05 -0500
+Subject: Re: [ipw3945-devel] can't compile iwlwifi latest wireless-testing
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20110307012714.GA2465@tuxdriver.com>
+References: <AANLkTimaVjAsW4g8kAfi=vQaPCabkj-ZO9vZw_Lex7KY@mail.gmail.com>
+	 <1299446809.5082.161.camel@wwguy-huron>
+	 <20110307012714.GA2465@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 06 Mar 2011 17:30:19 -0800
+Message-ID: <1299461419.5082.170.camel@wwguy-huron>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 4 Mar 2011 21:20:02 +0530
-Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+Hi John,
 
-> 2011/3/4 Tony Houghton <h@realh.co.uk>:  
-> >
-> > I also found that I couldn't reproduce the problem while running on
-> > battery, but as soon as I connected the PSU it crashed the very next
-> > time I disabled wireless. I hadn't noticed that PSU/battery made a
-> > difference before, but it does seem to be an issue.
-> >  
+On Sun, 2011-03-06 at 17:27 -0800, John W. Linville wrote:
+> On Sun, Mar 06, 2011 at 01:26:49PM -0800, Guy, Wey-Yi wrote:
+> > Hi Daniel,
+> > 
+> > 
+> > On Fri, 2011-03-04 at 16:15 -0800, Daniel Halperin wrote:
+> > > drivers/net/wireless/iwlwifi/iwl-rx.c: In function
+> > > ‘iwl_rx_card_state_notif’:
+> > > drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
+> > > undeclared (first use in this function)
+> > > drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
+> > > identifier is reported only once
+> > > drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
+> > > appears in.)
+> > > 
+> > > 
+> > > iwl-tx.c has an include for sched.h that isn't here and is probably
+> > > the problem.
+> > > 
+> > > 
+> > Stanislow last patch   
+> > commit 466a19a003f3b45a755bc85f967c21da947f9a00: iwlwifi: move rx
+> > handlers code to iwl-rx.c
+> > break the compile
+> > 
+> > John, please revert the patch
 > 
-> Please see whether this is consistently reproducible.  
+> That seems a bit silly.  Does adding an include for sched.h to iwl-rx.c
+> fix the build issue?
+> 
+> I wonder why this builds fine for me?  What arch fails to build?
 
-No, today it crashed on battery power. Something else must have been
-different too when I tried on battery before, because I restarted the
-wireless several times without problem, and usually it crashes almost
-every time.
+yes, adding sched.h works just fine and it is easy to fix, just not sure
+should we add a patch and leave the compile broken or revert the patch
+then re-submit with one line added. both works for me; just don't like
+have the code can not compile at one point. :-)
 
-> As a try can you please disable the network manager and use iw command
-> to connect?  
+it is my regular ubuntu 32 bit build system for me and nothing
+different, not sure why works for you?
 
-I tried wicd early on, that crashed too.
+Thanks
+Wey
+
+
