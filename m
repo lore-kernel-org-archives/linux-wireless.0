@@ -1,163 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20456 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753169Ab1CNR7V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:59:21 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:58:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 04/38] ath6kl: remove-typedef HCI_TRANSPORT_CONFIG_INFO
-Date: Mon, 14 Mar 2011 10:58:38 -0700
-Message-ID: <1300125552-24422-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:64142 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752918Ab1CGSrz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 13:47:55 -0500
+Received: by vxi39 with SMTP id 39so3963751vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2011 10:47:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1299356769.29845.12.camel@jlt3.sipsolutions.net>
+References: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
+ <1299356245-13926-1-git-send-email-javier@cozybit.com> <1299356769.29845.12.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Mon, 7 Mar 2011 10:47:33 -0800
+Message-ID: <AANLkTinFXU+bh=A-qPgQ8oh2GZs7XhPbJe4s3WZMy-0D@mail.gmail.com>
+Subject: Re: [PATCH 1/4 v3] mac80211: Enable mesh security from userspace
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s HCI_TRANSPORT_CONFIG_INFO \
-	"struct hci_transport_config_info" drivers/staging/ath6kl/
+On Sat, Mar 5, 2011 at 12:26 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2011-03-05 at 12:17 -0800, Javier Cardona wrote:
+>> Userspace can enable mesh security by providing an RSN IE and setting
+>> the MESH_SETUP_ENABLE_SECURITY flag.
+>>
+>> Also, rename vendor_ie to just ie to reflect that the same attribute may
+>> be used to pass other IEs, like for instance RSN.
+>>
+>> Changes from v2: (from Johannes)
+>>  - Fix API backward compatibilty of NL80211_MESH_SETUP_IE
+>>  - Remove check for presence of RSN IE
+>
+> Should be after --- really :-)
 
-Tested-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h          |    2 +-
- .../ath6kl/htc2/AR6000/ar6k_gmbox_hciuart.c        |    6 +++---
- drivers/staging/ath6kl/include/hci_transport_api.h |    6 +++---
- .../staging/ath6kl/os/linux/export_hci_transport.c |    2 +-
- drivers/staging/ath6kl/os/linux/hci_bridge.c       |    4 ++--
- .../ath6kl/os/linux/include/export_hci_transport.h |    2 +-
- 6 files changed, 11 insertions(+), 11 deletions(-)
+Ah, so it stays out of the git commit message, right?  OK.
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index 88ef25a..4b69f91 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -361,7 +361,7 @@ static INLINE int DevSetupGMbox(struct ar6k_device *pDev) {
- #ifdef ATH_AR6K_ENABLE_GMBOX
- 
-     /* GMBOX protocol modules must expose each of these internal APIs */
--HCI_TRANSPORT_HANDLE GMboxAttachProtocol(struct ar6k_device *pDev, HCI_TRANSPORT_CONFIG_INFO *pInfo);
-+HCI_TRANSPORT_HANDLE GMboxAttachProtocol(struct ar6k_device *pDev, struct hci_transport_config_info *pInfo);
- int             GMboxProtocolInstall(struct ar6k_device *pDev);
- void                 GMboxProtocolUninstall(struct ar6k_device *pDev);
- 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox_hciuart.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox_hciuart.c
-index 78da8a1..c7e8f71 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox_hciuart.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox_hciuart.c
-@@ -57,7 +57,7 @@
- #define BTPWRSAV_TIMEOUT_MS       1  
- 
- struct gmbox_proto_hci_uart {
--    HCI_TRANSPORT_CONFIG_INFO   HCIConfig;
-+    struct hci_transport_config_info   HCIConfig;
-     bool                      HCIAttached;
-     bool                      HCIStopped;
-     u32 RecvStateFlags;
-@@ -936,7 +936,7 @@ static int NotifyTransportReady(struct gmbox_proto_hci_uart  *pProt)
- 
- /***********  HCI UART protocol implementation ************************************************/
- 
--HCI_TRANSPORT_HANDLE HCI_TransportAttach(void *HTCHandle, HCI_TRANSPORT_CONFIG_INFO *pInfo)
-+HCI_TRANSPORT_HANDLE HCI_TransportAttach(void *HTCHandle, struct hci_transport_config_info *pInfo)
- {
-     struct gmbox_proto_hci_uart  *pProtocol = NULL; 
-     struct ar6k_device           *pDev;
-@@ -961,7 +961,7 @@ HCI_TRANSPORT_HANDLE HCI_TransportAttach(void *HTCHandle, HCI_TRANSPORT_CONFIG_I
-             break;    
-         }
-         
--        memcpy(&pProtocol->HCIConfig, pInfo, sizeof(HCI_TRANSPORT_CONFIG_INFO));
-+        memcpy(&pProtocol->HCIConfig, pInfo, sizeof(struct hci_transport_config_info));
-         
-         A_ASSERT(pProtocol->HCIConfig.pHCIPktRecv != NULL);
-         A_ASSERT(pProtocol->HCIConfig.pHCISendComplete != NULL);
-diff --git a/drivers/staging/ath6kl/include/hci_transport_api.h b/drivers/staging/ath6kl/include/hci_transport_api.h
-index 8ab692d..7fa44f0 100644
---- a/drivers/staging/ath6kl/include/hci_transport_api.h
-+++ b/drivers/staging/ath6kl/include/hci_transport_api.h
-@@ -85,7 +85,7 @@ typedef struct {
-     int    IOBlockPad;    /* I/O block padding required (always a power of 2) */
- } HCI_TRANSPORT_PROPERTIES;
- 
--typedef struct _HCI_TRANSPORT_CONFIG_INFO {
-+struct hci_transport_config_info {
-     int      ACLRecvBufferWaterMark;     /* low watermark to trigger recv refill */
-     int      EventRecvBufferWaterMark;   /* low watermark to trigger recv refill */  
-     int      MaxSendQueueDepth;          /* max number of packets in the single send queue */
-@@ -99,7 +99,7 @@ typedef struct _HCI_TRANSPORT_CONFIG_INFO {
-     HCI_TRANSPORT_RECV_REFILL          pHCIPktRecvRefill;
-     HCI_TRANSPORT_RECV_ALLOC           pHCIPktRecvAlloc;
-     HCI_TRANSPORT_SEND_FULL            pHCISendFull;
--} HCI_TRANSPORT_CONFIG_INFO;
-+};
- 
- /* ------ Function Prototypes ------ */
- /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-@@ -113,7 +113,7 @@ typedef struct _HCI_TRANSPORT_CONFIG_INFO {
-   @example:
-   @see also: HCI_TransportDetach
- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
--HCI_TRANSPORT_HANDLE HCI_TransportAttach(void *HTCHandle, HCI_TRANSPORT_CONFIG_INFO *pInfo);
-+HCI_TRANSPORT_HANDLE HCI_TransportAttach(void *HTCHandle, struct hci_transport_config_info *pInfo);
- 
- /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   @desc: Detach from the HCI transport module
-diff --git a/drivers/staging/ath6kl/os/linux/export_hci_transport.c b/drivers/staging/ath6kl/os/linux/export_hci_transport.c
-index 168d6f7..fd87526 100644
---- a/drivers/staging/ath6kl/os/linux/export_hci_transport.c
-+++ b/drivers/staging/ath6kl/os/linux/export_hci_transport.c
-@@ -36,7 +36,7 @@
- #include "AR6002/hw4.0/hw/uart_reg.h"
- #include "AR6002/hw4.0/hw/rtc_wlan_reg.h"
- 
--HCI_TRANSPORT_HANDLE (*_HCI_TransportAttach)(void *HTCHandle, HCI_TRANSPORT_CONFIG_INFO *pInfo);
-+HCI_TRANSPORT_HANDLE (*_HCI_TransportAttach)(void *HTCHandle, struct hci_transport_config_info *pInfo);
- void (*_HCI_TransportDetach)(HCI_TRANSPORT_HANDLE HciTrans);
- int    (*_HCI_TransportAddReceivePkts)(HCI_TRANSPORT_HANDLE HciTrans, HTC_PACKET_QUEUE *pQueue);
- int    (*_HCI_TransportSendPkt)(HCI_TRANSPORT_HANDLE HciTrans, HTC_PACKET *pPacket, bool Synchronous);
-diff --git a/drivers/staging/ath6kl/os/linux/hci_bridge.c b/drivers/staging/ath6kl/os/linux/hci_bridge.c
-index 61ce094..d0b6814 100644
---- a/drivers/staging/ath6kl/os/linux/hci_bridge.c
-+++ b/drivers/staging/ath6kl/os/linux/hci_bridge.c
-@@ -469,7 +469,7 @@ int ar6000_setup_hci(void *ar)
- int ar6000_setup_hci(AR_SOFTC_T *ar)
- #endif
- {
--    HCI_TRANSPORT_CONFIG_INFO config;
-+    struct hci_transport_config_info config;
-     int                  status = 0;
-     int                       i;
-     HTC_PACKET                *pPacket;
-@@ -521,7 +521,7 @@ int ar6000_setup_hci(AR_SOFTC_T *ar)
-             FreeHTCStruct(pHcidevInfo,pPacket);                
-         }
-         
--        A_MEMZERO(&config,sizeof(HCI_TRANSPORT_CONFIG_INFO));        
-+        A_MEMZERO(&config,sizeof(struct hci_transport_config_info));        
-         config.ACLRecvBufferWaterMark = MAX_ACL_RECV_BUFS / 2;
-         config.EventRecvBufferWaterMark = MAX_EVT_RECV_BUFS / 2;
-         config.MaxSendQueueDepth = MAX_HCI_WRITE_QUEUE_DEPTH;
-diff --git a/drivers/staging/ath6kl/os/linux/include/export_hci_transport.h b/drivers/staging/ath6kl/os/linux/include/export_hci_transport.h
-index 51187f6..cf66717 100644
---- a/drivers/staging/ath6kl/os/linux/include/export_hci_transport.h
-+++ b/drivers/staging/ath6kl/os/linux/include/export_hci_transport.h
-@@ -25,7 +25,7 @@
- #include "hci_transport_api.h"
- #include "common_drv.h"
- 
--extern HCI_TRANSPORT_HANDLE (*_HCI_TransportAttach)(void *HTCHandle, HCI_TRANSPORT_CONFIG_INFO *pInfo);
-+extern HCI_TRANSPORT_HANDLE (*_HCI_TransportAttach)(void *HTCHandle, struct hci_transport_config_info *pInfo);
- extern void (*_HCI_TransportDetach)(HCI_TRANSPORT_HANDLE HciTrans);
- extern int    (*_HCI_TransportAddReceivePkts)(HCI_TRANSPORT_HANDLE HciTrans, HTC_PACKET_QUEUE *pQueue);
- extern int    (*_HCI_TransportSendPkt)(HCI_TRANSPORT_HANDLE HciTrans, HTC_PACKET *pPacket, bool Synchronous);
+>> + * @is_secure: or not
+>
+> Given what we just discussed over in the other thread, should we rename
+> this to "userspace_station_mgmt" or something like that?
+
+Are you suggesting to change the name of the flag both in nl80211 and cfg80211?
+
+Currently ENABLE_SECURITY means "let userspace manage stations", but
+also "ok to accept mesh management frames from secure mesh peers".
+And when the Authenticated Mesh Peering Exchange is implemented, it
+will probably mean "verify mesh peering frames in userspace" and
+"protect mesh peering frames".  You either do all these tasks or none,
+so for nl80211 I would prefer a single flag.
+
+For cfg80211 I have no clear opinion: two flags
+(userspace_station_mgmt and is_secure)? one?.  Let me know what makes
+more sense to you and we'll do it.
+
+> Also, does it make sense to advertise support for this somehow?
+> Otherwise the new tools will have strange failure cases on older
+> kernels;
+
+Ah, I see.  Older kernels would not return an error to userspace if an
+attempt to set a non existing flag was made, right?
+Are you suggesting to define something like an
+NL80211_MESHCONF_CAPABILITIES mask?
+
+> and I can also imagine situations where the mesh APIs are in
+> firmware or so that can't cope with userspace station mgmt.
+
+Ah mesh in firmware... who would want to do that? :)
+
+
 -- 
-1.7.4.15.g7811d
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
