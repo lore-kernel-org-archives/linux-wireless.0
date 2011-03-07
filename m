@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:28129 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756960Ab1CIOyB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 09:54:01 -0500
-Date: Wed, 9 Mar 2011 09:53:57 -0500
-From: Jason <linuxdriverproject@lakedaemon.net>
-To: George Nychis <gnychis@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
-	hharte2@gmail.com, devel@linuxdriverproject.org
-Subject: Re: looking for more details on BCM4329, access to 802.11 header
-Message-ID: <20110309145357.GD10509@titan.lakedaemon.net>
-References: <AANLkTikwBUjSXJf+EUeM+kPhMg3PG0Y22S4BYKVVm8S2@mail.gmail.com> <20110307140140.GC10509@titan.lakedaemon.net> <AANLkTi=TaeNnJ3u+HXojkbHvjsH+Z7C_=3Tg98NMNg1A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=TaeNnJ3u+HXojkbHvjsH+Z7C_=3Tg98NMNg1A@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49541 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754986Ab1CGIXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 03:23:00 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlwifi: fix iwl-rx.c compilation
+Date: Mon,  7 Mar 2011 09:22:24 +0100
+Message-Id: <1299486144-8985-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 09, 2011 at 12:59:33AM -0500, George Nychis wrote:
-> This was a *huge* help to get this response from you, thanks a bunch for that.
-> 
+My commit 466a19a003f3b45a755bc85f967c21da947f9a00 "iwlwifi: move rx
+handlers code to iwl-rx.c" breaks compilation on 32 bits. Fix that.
 
-No problem, I wish this particular idea could be higher on my project
-list. ;-)
+Reported-by: Guy, Wey-Yi <wey-yi.w.guy@intel.com>
+Reported-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> I'd love to poke GregKG's staging tree and the mac80211 driver for the
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 7dc2d39..6f9a2fa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -29,6 +29,7 @@
+ 
+ #include <linux/etherdevice.h>
+ #include <linux/slab.h>
++#include <linux/sched.h>
+ #include <net/mac80211.h>
+ #include <asm/unaligned.h>
+ #include "iwl-eeprom.h"
+-- 
+1.7.1
 
-s/GregKG/GregKH/
-
-> bcm4329.  I did some searching for the staging tree, and the only
-> address I could find was:
-> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
-> 
-
-In my tree I did the following:
-$ git remote add staging-2.6 \
-git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
-
-$ git remote update staging-2.6
-...successful output...
-
-So, it looks like you're using the old url, try this:
-
-$ git clone \
-git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
-
-Then, you'll want the staging-next branch.
-
-hth,
-
-Jason.
