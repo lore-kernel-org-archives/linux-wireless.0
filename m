@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33759 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751504Ab1CGBqF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 20:46:05 -0500
-Subject: Re: [ipw3945-devel] can't compile iwlwifi latest wireless-testing
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20110307012714.GA2465@tuxdriver.com>
-References: <AANLkTimaVjAsW4g8kAfi=vQaPCabkj-ZO9vZw_Lex7KY@mail.gmail.com>
-	 <1299446809.5082.161.camel@wwguy-huron>
-	 <20110307012714.GA2465@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 06 Mar 2011 17:30:19 -0800
-Message-ID: <1299461419.5082.170.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:47324 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159Ab1CGCOY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 21:14:24 -0500
+Received: by yxs7 with SMTP id 7so1452952yxs.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:14:23 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16246.623659.384085@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:44:14 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 15/34] ath9k_htc: Sync struct ath9k_htc_target_vif with FW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-On Sun, 2011-03-06 at 17:27 -0800, John W. Linville wrote:
-> On Sun, Mar 06, 2011 at 01:26:49PM -0800, Guy, Wey-Yi wrote:
-> > Hi Daniel,
-> > 
-> > 
-> > On Fri, 2011-03-04 at 16:15 -0800, Daniel Halperin wrote:
-> > > drivers/net/wireless/iwlwifi/iwl-rx.c: In function
-> > > ‘iwl_rx_card_state_notif’:
-> > > drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
-> > > undeclared (first use in this function)
-> > > drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
-> > > identifier is reported only once
-> > > drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
-> > > appears in.)
-> > > 
-> > > 
-> > > iwl-tx.c has an include for sched.h that isn't here and is probably
-> > > the problem.
-> > > 
-> > > 
-> > Stanislow last patch   
-> > commit 466a19a003f3b45a755bc85f967c21da947f9a00: iwlwifi: move rx
-> > handlers code to iwl-rx.c
-> > break the compile
-> > 
-> > John, please revert the patch
-> 
-> That seems a bit silly.  Does adding an include for sched.h to iwl-rx.c
-> fix the build issue?
-> 
-> I wonder why this builds fine for me?  What arch fails to build?
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |   11 ++---------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++++----
+ 2 files changed, 6 insertions(+), 13 deletions(-)
 
-yes, adding sched.h works just fine and it is easy to fix, just not sure
-should we add a patch and leave the compile broken or revert the patch
-then re-submit with one line added. both works for me; just don't like
-have the code can not compile at one point. :-)
-
-it is my regular ubuntu 32 bit build system for me and nothing
-different, not sure why works for you?
-
-Thanks
-Wey
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 72aa04e..b134d41 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -117,17 +117,10 @@ struct ath9k_htc_cap_target {
+ 
+ struct ath9k_htc_target_vif {
+ 	u8 index;
+-	u8 des_bssid[ETH_ALEN];
+-	__be32 opmode;
++	u8 opmode;
+ 	u8 myaddr[ETH_ALEN];
+-	u8 bssid[ETH_ALEN];
+-	u32 flags;
+-	u32 flags_ext;
+-	u16 ps_sta;
+-	__be16 rtsthreshold;
+ 	u8 ath_cap;
+-	u8 node;
+-	s8 mcast_rate;
++	__be16 rtsthreshold;
+ } __packed;
+ 
+ #define ATH_HTC_STA_AUTH  0x0001
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 9bb20f3..4002267 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -349,7 +349,7 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
+ 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
+ 	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
+ 
+-	hvif.opmode = cpu_to_be32(HTC_M_MONITOR);
++	hvif.opmode = HTC_M_MONITOR;
+ 	hvif.index = ffz(priv->vif_slot);
+ 
+ 	WMI_CMD_BUF(WMI_VAP_CREATE_CMDID, &hvif);
+@@ -1039,13 +1039,13 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+-		hvif.opmode = cpu_to_be32(HTC_M_STA);
++		hvif.opmode = HTC_M_STA;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
++		hvif.opmode = HTC_M_IBSS;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+-		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
++		hvif.opmode = HTC_M_HOSTAP;
+ 		break;
+ 	default:
+ 		ath_err(common,
+-- 
+1.7.4.1
 
