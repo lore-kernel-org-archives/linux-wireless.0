@@ -1,88 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47164 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755201Ab1C3A5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:57:31 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:06 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 22/34] ath6kl: use CONFIG_ATH6KL_ENABLE_COEXISTENCE
-Date: Tue, 29 Mar 2011 17:56:19 -0700
-Message-ID: <1301446591-15236-23-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:42336 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400Ab1CGNbD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 08:31:03 -0500
+Received: by iyb26 with SMTP id 26so3901267iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2011 05:31:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4D74BC3C.1080203@cn.fujitsu.com>
+References: <4D74BC3C.1080203@cn.fujitsu.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 8 Mar 2011 00:30:42 +1100
+Message-ID: <AANLkTi=T0eeNXrfBLdiPGch1X5EnHY+WrqYekXnZ+5=-@mail.gmail.com>
+Subject: Re: [PATCH] wireless: used kzalloc instead of kmalloc & memset
+To: Shan Wei <shanwei@cn.fujitsu.com>
+Cc: buytenh@wantstofly.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_ATH6KL_ENABLE_COEXISTENCE gets enabled we define
-another flag called ENABLE_COEXISTENCE, just use
-CONFIG_ATH6KL_ENABLE_COEXISTENCE since that is already defined
-by the generated autoconf header file from the kernel.
+On Mon, Mar 7, 2011 at 22:06, Shan Wei <shanwei@cn.fujitsu.com> wrote:
+> Use kcalloc or kzalloc rather than the combination of kmalloc and memset.
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/Makefile              |    4 ----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    8 ++++----
- 2 files changed, 4 insertions(+), 8 deletions(-)
+[snip]
 
-diff --git a/drivers/staging/ath6kl/Makefile b/drivers/staging/ath6kl/Makefile
-index b0f711e..1d3f239 100644
---- a/drivers/staging/ath6kl/Makefile
-+++ b/drivers/staging/ath6kl/Makefile
-@@ -29,10 +29,6 @@ ccflags-y += -I$(obj)/os
- ccflags-y += -I$(obj)/bmi/include
- ccflags-y += -I$(obj)/include/common/AR6002/hw4.0
- 
--ifeq ($(CONFIG_ATH6KL_ENABLE_COEXISTENCE),y)
--ccflags-y += -DENABLE_COEXISTENCE
--endif
--
- ifeq ($(CONFIG_AR600x_DUAL_ANTENNA),y)
- ccflags-y += -DAR600x_DUAL_ANTENNA
- endif
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 8f9e4b2..1798889 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -2334,10 +2334,10 @@ u8 ar6000_endpoint_id2_ac(void * devt, HTC_ENDPOINT_ID ep )
- int ar6000_target_config_wlan_params(struct ar6_softc *ar)
- {
-     int status = 0;
--#if defined(ENABLE_COEXISTENCE)
-+#if defined(CONFIG_ATH6KL_ENABLE_COEXISTENCE)
-     WMI_SET_BTCOEX_COLOCATED_BT_DEV_CMD sbcb_cmd;
-     WMI_SET_BTCOEX_FE_ANT_CMD sbfa_cmd;
--#endif /* ENABLE_COEXISTENCE */
-+#endif /* CONFIG_ATH6KL_ENABLE_COEXISTENCE */
- 
- #ifdef CONFIG_HOST_TCMD_SUPPORT
-     if (ar->arTargetMode != AR6000_WLAN_MODE) {
-@@ -2355,7 +2355,7 @@ int ar6000_target_config_wlan_params(struct ar6_softc *ar)
-         status = A_ERROR;
-     }
- 
--#if defined(ENABLE_COEXISTENCE)
-+#if defined(CONFIG_ATH6KL_ENABLE_COEXISTENCE)
-     /* Configure the type of BT collocated with WLAN */
-     memset(&sbcb_cmd, 0, sizeof(WMI_SET_BTCOEX_COLOCATED_BT_DEV_CMD));
- #ifdef CONFIG_AR600x_BT_QCOM
-@@ -2387,7 +2387,7 @@ int ar6000_target_config_wlan_params(struct ar6_softc *ar)
-         AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Unable to set fornt end antenna configuration\n"));
-         status = A_ERROR;
-     }
--#endif /* ENABLE_COEXISTENCE */
-+#endif /* CONFIG_ATH6KL_ENABLE_COEXISTENCE */
- 
- #if WLAN_CONFIG_IGNORE_POWER_SAVE_FAIL_EVENT_DURING_SCAN
-     if ((wmi_pmparams_cmd(ar->arWmi, 0, 1, 0, 0, 1, IGNORE_POWER_SAVE_FAIL_EVENT_DURING_SCAN)) != 0) {
+> Signed-off-by: Shan Wei <shanwei@cn.fujitsu.com>
+> ---
+>  drivers/net/wireless/mwl8k.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index df5959f..43776e6 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -1056,13 +1056,12 @@ static int mwl8k_rxq_init(struct ieee80211_hw *hw, int index)
+>        }
+>        memset(rxq->rxd, 0, size);
+>
+> -       rxq->buf = kmalloc(MWL8K_RX_DESCS * sizeof(*rxq->buf), GFP_KERNEL);
+> +       rxq->buf = kzalloc(MWL8K_RX_DESCS * sizeof(*rxq->buf), GFP_KERNEL);
+
+Random nit, you're changing this from kmalloc to kzalloc when it would
+be trivial to change it to kcalloc instead if you don't restrict the T
+variable in your semantic patch to a type.
+
+Thanks,
+
 -- 
-1.7.0.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
