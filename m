@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:54996 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751914Ab1CDKFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 05:05:08 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PvRsh-0003Zh-UM
-	for linux-wireless@vger.kernel.org; Fri, 04 Mar 2011 11:05:07 +0100
-Received: from proxyext.iabg.de ([proxyext.iabg.de])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 11:05:07 +0100
-Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 11:05:07 +0100
-To: linux-wireless@vger.kernel.org
-From: jpo234 <pommnitz@yahoo.com>
-Subject: Re: [PATCH] ath5k:  Put hardware in PROMISC mode if there is more than 1 stations.
-Date: Fri, 4 Mar 2011 10:04:57 +0000 (UTC)
-Message-ID: <loom.20110304T110306-345@post.gmane.org>
-References: <1299191945-13257-1-git-send-email-greearb@candelatech.com>
-Mime-Version: 1.0
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:62495 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755077Ab1CGCOo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 21:14:44 -0500
+Received: by mail-yw0-f46.google.com with SMTP id 3so1451423ywj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:14:43 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16267.98904.690249@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:44:35 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 18/34] ath9k_htc: Reduce TX queue size
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-| From: Ben Greear <greearb@...>
-|  
-| It seems ath5k has issues receiving broadcast packets (ARPs) when
-| using multiple STA interfaces associated with multiple APs.
-| This patch ensures the NIC is always in PROMISC mode if there
-| are more than 1 stations associated.
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-Is this a band aid or a real fix? 
+The current max queue length of 1024 is quite large
+and unnecessary. 256 suffices well enough even for high
+throughput situations.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 7b9d863..f82b32b 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -31,7 +31,7 @@
+ 
+ /* FIXME: Verify these numbers (with Windows) */
+ #define MAX_TX_URB_NUM  8
+-#define MAX_TX_BUF_NUM  1024
++#define MAX_TX_BUF_NUM  256
+ #define MAX_TX_BUF_SIZE 32768
+ #define MAX_TX_AGGR_NUM 20
+ 
+-- 
+1.7.4.1
 
