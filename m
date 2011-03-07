@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:59194 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933787Ab1CXUnT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58522 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413Ab1CGTAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 16:43:19 -0400
-Date: Thu, 24 Mar 2011 17:43:50 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth-2.6 2011-03-24
-Message-ID: <20110324204349.GL2236@joana>
+	Mon, 7 Mar 2011 14:00:45 -0500
+Date: Mon, 7 Mar 2011 13:54:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: [PATCH] iwlagn: fix offchannel TX bug
+Message-ID: <20110307185429.GD2664@tuxdriver.com>
+References: <1299350139.29845.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1299350139.29845.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Sat, Mar 05, 2011 at 07:35:39PM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In the case where remain-on-channel rather than
+> offchannel TX should be used, my offchannel TX
+> patch introduced a bug because mac80211 will
+> use the now-freed SKB.
+> 
+> iwlagn shouldn't free the SKB when it returns 1
+> here since then the SKB will still be used.
+> 
+> Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-03-05 19:32:58.000000000 +0100
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-03-05 19:33:08.000000000 +0100
+> @@ -3171,7 +3171,7 @@ static int iwl_mac_offchannel_tx(struct
+>   out:
+>  	mutex_unlock(&priv->mutex);
+>   free:
+> -	if (ret)
+> +	if (ret < 0)
+>  		kfree_skb(skb);
+>  
+>  	return ret;
 
-Here is my first pull request of fixes for 2.6.39-rc1, the two critical fixes
-are HCI_RESET command synchronization that fixes an issues with loosing some
-HCI commands responses. And a warning shut up in HCI code by Thomas Gleixner.
-The other fixes are all important.
-
-Please pull, thanks. :)
-
-The following changes since commit d78f4b3e2c4dfb9487624f7157af04ab4260e189:
-
-  ath9k: Fix TX queue stuck issue. (2011-03-23 15:22:05 -0400)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
-
-Andrei Emeltchenko (1):
-      Bluetooth: delete hanging L2CAP channel
-
-Gustavo F. Padovan (1):
-      Bluetooth: Fix HCI_RESET command synchronization
-
-Johan Hedberg (1):
-      Bluetooth: Fix missing hci_dev_lock_bh in user_confirm_reply
-
-Marc-Antoine Perennou (1):
-      Bluetooth: add support for Apple MacBook Pro 8,2
-
-Suraj Sumangala (1):
-      Bluetooth: Increment unacked_frames count only the first transmit
-
-Thomas Gleixner (1):
-      Bluetooth: Fix warning with hci_cmd_timer
-
-Vinicius Costa Gomes (1):
-      Bluetooth: Fix sending LE data over USB
-
- drivers/bluetooth/btusb.c   |    6 +++++-
- include/net/bluetooth/hci.h |    2 ++
- net/bluetooth/hci_core.c    |   10 ++++++++--
- net/bluetooth/hci_event.c   |    4 +++-
- net/bluetooth/l2cap_core.c  |    4 +++-
- net/bluetooth/l2cap_sock.c  |    5 +++--
- net/bluetooth/mgmt.c        |    2 ++
- 7 files changed, 26 insertions(+), 7 deletions(-)
+OK, I give-up...what tree is this against? :-)
 
 -- 
-Gustavo F. Padovan
-http://profusion.mobi
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
