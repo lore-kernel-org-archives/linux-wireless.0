@@ -1,77 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50139 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751713Ab1CJNDh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 08:03:37 -0500
-Message-ID: <4D78CC26.4050402@openwrt.org>
-Date: Thu, 10 Mar 2011 14:03:34 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41096 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754930Ab1CGCNB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2011 21:13:01 -0500
+Received: by ywj3 with SMTP id 3so1451190ywj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:13:01 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 3/4] ath9k: fix the .flush driver op implementation
-References: <1299717303-42430-1-git-send-email-nbd@openwrt.org> <1299717303-42430-2-git-send-email-nbd@openwrt.org> <1299717303-42430-3-git-send-email-nbd@openwrt.org> <20110310092559.GC28100@vasanth-laptop>
-In-Reply-To: <20110310092559.GC28100@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16164.595483.968074@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:42:52 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 03/34] ath9k_htc: Add TSF adjust capability
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-03-10 10:25 AM, Vasanthakumar Thiagarajan wrote:
-> On Thu, Mar 10, 2011 at 06:05:02AM +0530, Felix Fietkau wrote:
->> ath9k has a timeout of 60ms for the flush, but instead waiting 60 ms for
->> all tx activity to finish, it resets it for every single queue.
-> 
-> No, it does not do reset for every queue.
-You're right, I got confused by the diff and my recollection of an old
-version of the flush op ;)
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
->> +	for (j = 0; j < timeout; j++) {
->> +		int npend = 0;
->> +		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
->> +			if (!ATH_TXQ_SETUP(sc, i))
->> +				continue;
->>  
->> -		if (drop || ath9k_has_pending_frames(sc, txq)) {
->> -			ath_dbg(common, ATH_DBG_QUEUE, "Drop frames from hw queue:%d\n",
->> -				txq->axq_qnum);
->> -			spin_lock_bh(&txq->axq_lock);
->> -			txq->txq_flush_inprogress = true;
->> -			spin_unlock_bh(&txq->axq_lock);
->> -
->> -			ath9k_ps_wakeup(sc);
->> -			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
->> -			npend = ath9k_hw_numtxpending(ah, txq->axq_qnum);
->> -			ath9k_ps_restore(sc);
->> -			if (npend)
->> -				break;
->> -
->> -			ath_draintxq(sc, txq, false);
->> -			txq->txq_flush_inprogress = false;
->> +			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
->>  		}
->> -	}
->>  
->> -	if (npend) {
->> -		ath_reset(sc, false);
->> -		txq->txq_flush_inprogress = false;
->> +		if (!npend)
->> +		    goto out;
->> +
->> +		usleep_range(1000, 2000);
-> 
-> Existing flush gives about 60ms for every q, that is reasonable
-> time, but this 60ms for all the queues is too small. This flush
-> is also called before sending null func in PS, so reset after
-> hw queue stuck is necessary to find the hang early on.
-So maybe we should set it to something like 200ms for all? Anything more
-than that seems a bit excessive.
-I intend to add some more restrictions for the queue lengths soon, then
-we can reduce this timeout even further.
+In multi-interface mode, beacons/probe responses that are
+sent out must have their timestamp field updated. Calculate
+the TSF adjustment value for each beaconing interface and set it
+in the frame properly.
 
-> The usage of txq_flush_inprogress needs to be removed in other
-> places in xmit.
-OK
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h            |    3 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   36 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    5 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   12 +++++++-
+ 4 files changed, 54 insertions(+), 2 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index f7897e8..4f86598 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -245,6 +245,7 @@ struct ath9k_htc_vif {
+ 	u16 seq_no;
+ 	bool beacon_configured;
+ 	int bslot;
++	__le64 tsfadjust;
+ };
+ 
+ struct ath9k_vif_iter_data {
+@@ -477,6 +478,8 @@ void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif);
+ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 			    struct ieee80211_vif *vif);
++void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
++			     struct ieee80211_vif *vif);
+ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv);
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index b4ff240..52b6907 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -238,6 +238,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 	struct tx_beacon_header beacon_hdr;
+ 	struct ath9k_htc_tx_ctl tx_ctl;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_mgmt *mgmt;
+ 	struct sk_buff *beacon;
+ 	u8 *tx_fhdr;
+ 
+@@ -261,6 +262,13 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
+ 		return;
+ 	}
+ 
++	/*
++	 * Update the TSF adjust value here, the HW will
++	 * add this value for every beacon.
++	 */
++	mgmt = (struct ieee80211_mgmt *)beacon->data;
++	mgmt->u.beacon.timestamp = avp->tsfadjust;
++
+ 	info = IEEE80211_SKB_CB(beacon);
+ 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+ 		struct ieee80211_hdr *hdr =
+@@ -410,6 +418,34 @@ void ath9k_htc_remove_bslot(struct ath9k_htc_priv *priv,
+ 		"Removed interface at beacon slot: %d\n", avp->bslot);
+ }
+ 
++/*
++ * Calculate the TSF adjustment value for all slots
++ * other than zero.
++ */
++void ath9k_htc_set_tsfadjust(struct ath9k_htc_priv *priv,
++			     struct ieee80211_vif *vif)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath9k_htc_vif *avp = (struct ath9k_htc_vif *)vif->drv_priv;
++	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	u64 tsfadjust;
++
++	if (avp->bslot == 0)
++		return;
++
++	/*
++	 * The beacon interval cannot be different for multi-AP mode,
++	 * and we reach here only for VIF slots greater than zero,
++	 * so beacon_interval is guaranteed to be set in cur_conf.
++	 */
++	tsfadjust = cur_conf->beacon_interval * avp->bslot / ATH9K_HTC_MAX_BCN_VIF;
++	avp->tsfadjust = cpu_to_le64(TU_TO_USEC(tsfadjust));
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"tsfadjust is: %llu for bslot: %d\n",
++		(unsigned long long)tsfadjust, avp->bslot);
++}
++
+ static void ath9k_htc_beacon_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ {
+ 	bool *beacon_configured = (bool *)data;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 293a9b3..6926ac0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1291,8 +1291,10 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	ath9k_htc_set_opmode(priv);
+ 
+ 	if ((priv->ah->opmode == NL80211_IFTYPE_AP) &&
+-	    !(priv->op_flags & OP_ANI_RUNNING))
++	    !(priv->op_flags & OP_ANI_RUNNING)) {
++		ath9k_hw_set_tsfadjust(priv->ah, 1);
+ 		ath9k_htc_start_ani(priv);
++	}
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"Attach a VIF of type: %d at idx: %d\n", vif->type, avp->index);
+@@ -1652,6 +1654,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && bss_conf->enable_beacon) {
+ 		ath_dbg(common, ATH_DBG_CONFIG,
+ 			"Beacon enabled for BSS: %pM\n", bss_conf->bssid);
++		ath9k_htc_set_tsfadjust(priv, vif);
+ 		priv->op_flags |= OP_ENABLE_BEACON;
+ 		ath9k_htc_beacon_config(priv, vif);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 4a4f27b..b3f9485 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -82,11 +82,12 @@ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
+ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_mgmt *mgmt;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sta *sta = tx_info->control.sta;
+ 	struct ieee80211_vif *vif = tx_info->control.vif;
+ 	struct ath9k_htc_sta *ista;
+-	struct ath9k_htc_vif *avp;
++	struct ath9k_htc_vif *avp = NULL;
+ 	struct ath9k_htc_tx_ctl tx_ctl;
+ 	enum htc_endpoint_id epid;
+ 	u16 qnum;
+@@ -195,6 +196,15 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 
+ 		memset(&mgmt_hdr, 0, sizeof(struct tx_mgmt_hdr));
+ 
++		/*
++		 * Set the TSF adjust value for probe response
++		 * frame also.
++		 */
++		if (avp && unlikely(ieee80211_is_probe_resp(fc))) {
++			mgmt = (struct ieee80211_mgmt *)skb->data;
++			mgmt->u.probe_resp.timestamp = avp->tsfadjust;
++		}
++
+ 		tx_ctl.type = ATH9K_HTC_NORMAL;
+ 
+ 		mgmt_hdr.node_idx = sta_idx;
+-- 
+1.7.4.1
+
