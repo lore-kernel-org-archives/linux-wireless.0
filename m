@@ -1,57 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Message-Id: <4D81FA730200002300029F0F@novprvlin0050.provo.novell.com>
-Date: Wed, 16 Mar 2011 19:11:31 -0600
-From: "Joey Lee" <jlee@novell.com>
-To: <mihai.dontu@gmail.com>
-Cc: <zajec5@gmail.com>, <linux-kernel@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<platform-driver-x86@vger.kernel.org>
-Subject: Re: [b43] usb device disconnects automatically after 1s
-References: <201103170018.32061.mihai.dontu@gmail.com>
- <201103170022.24290.mihai.dontu@gmail.com>
- <AANLkTi=-B0e4VT_v+F23Q+hG_zn=JnVbmVHnFpETVrZu@mail.gmail.com>
- <201103170106.58746.mihai.dontu@gmail.com>
-In-Reply-To: <201103170106.58746.mihai.dontu@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from dakia2.marvell.com ([65.219.4.35]:34180 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754333Ab1CGTLZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 14:11:25 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] ieee80211: add IEEE80211_COUNTRY_STRING_LEN definition
+Date: Mon,  7 Mar 2011 11:14:23 -0800
+Message-Id: <1299525263-14156-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Cc. to platform driver guys.
+and make use of it in wireless drivers
 
-於 四，2011-03-17 於 01:06 +0200，Mihai Donțu 提到：
-> On Thursday 17 March 2011 00:35:02 Rafał Miłecki wrote:
-> > 2011/3/16 Mihai Donțu <mihai.dontu@gmail.com>:
-> > > Added linux-usb and linux-wireless to CC.
-> > > 
-> > > On Thursday 17 March 2011 00:18:31 Mihai Donțu wrote:
-> > >> Hi,
-> > >> 
-> > >> I have just upgraded to 2.6.38 and discovered that I can't use my
-> > >> wireless device (BCM4312 802.11a/b/g). I press Fn + F2, the bluetooth
-> > >> led lights and after a second it turns off by itself. In dmesg I'm
-> > >> seeing the following:
-> > >> 
-> > >> [   88.167212] usb 1-2.2: new full speed USB device using ehci_hcd and
-> > >> address 5
-> > >> [   88.782330] usb 1-2.2: USB disconnect, address 5
-> > >> 
-> > >> I switched to 2.6.37 until I'll have some time to bisect this. In the
-> > >> mean time I have attached the output of lspci, interrupts and dmesg.
-> > 
-> > I suspect it's WMI related. What is your machine?
-> 
-> It's a Dell Latitude D520 but I can't find a link with full specs (in 
-> English).
-> 
-> > Please check:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=31002
-> > http://comments.gmane.org/gmane.linux.acpi.devel/49577
-> > 
-> > I can't help you more, I just noticed such a issue reported on ACPI
-> > ML, you have to dig into this yourself (or someone else may help you).
-> 
-> Thanks for the links. I'll see if I can get anywhere from there.
-> 
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/at76c50x-usb.h        |    2 +-
+ drivers/net/wireless/ipw2x00/ipw2200.h     |    2 +-
+ drivers/net/wireless/libertas/host.h       |    2 +-
+ drivers/net/wireless/wl1251/wl12xx_80211.h |    3 +--
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    3 +--
+ include/linux/ieee80211.h                  |    3 +++
+ 6 files changed, 8 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/at76c50x-usb.h b/drivers/net/wireless/at76c50x-usb.h
+index 4a37447..f14a654 100644
+--- a/drivers/net/wireless/at76c50x-usb.h
++++ b/drivers/net/wireless/at76c50x-usb.h
+@@ -290,7 +290,7 @@ struct mib_mac_mgmt {
+ 	u8 res;
+ 	u8 multi_domain_capability_implemented;
+ 	u8 multi_domain_capability_enabled;
+-	u8 country_string[3];
++	u8 country_string[IEEE80211_COUNTRY_STRING_LEN];
+ 	u8 reserved[3];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
+index d7d049c..d9e1d9b 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.h
++++ b/drivers/net/wireless/ipw2x00/ipw2200.h
+@@ -961,7 +961,7 @@ struct ipw_country_channel_info {
+ struct ipw_country_info {
+ 	u8 id;
+ 	u8 length;
+-	u8 country_str[3];
++	u8 country_str[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct ipw_country_channel_info groups[7];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+index 5eac135..6cb6935 100644
+--- a/drivers/net/wireless/libertas/host.h
++++ b/drivers/net/wireless/libertas/host.h
+@@ -387,7 +387,7 @@ struct lbs_offset_value {
+ struct mrvl_ie_domain_param_set {
+ 	struct mrvl_ie_header header;
+ 
+-	u8 country_code[3];
++	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct ieee80211_country_ie_triplet triplet[MAX_11D_TRIPLETS];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/wl1251/wl12xx_80211.h b/drivers/net/wireless/wl1251/wl12xx_80211.h
+index 1846280..1417b14 100644
+--- a/drivers/net/wireless/wl1251/wl12xx_80211.h
++++ b/drivers/net/wireless/wl1251/wl12xx_80211.h
+@@ -54,7 +54,6 @@
+ 
+ /* This really should be 8, but not for our firmware */
+ #define MAX_SUPPORTED_RATES 32
+-#define COUNTRY_STRING_LEN 3
+ #define MAX_COUNTRY_TRIPLETS 32
+ 
+ /* Headers */
+@@ -98,7 +97,7 @@ struct country_triplet {
+ 
+ struct wl12xx_ie_country {
+ 	struct wl12xx_ie_header header;
+-	u8 country_string[COUNTRY_STRING_LEN];
++	u8 country_string[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct country_triplet triplets[MAX_COUNTRY_TRIPLETS];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_80211.h b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+index 67dcf8f..18fe542 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx_80211.h
++++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+@@ -55,7 +55,6 @@
+ 
+ /* This really should be 8, but not for our firmware */
+ #define MAX_SUPPORTED_RATES 32
+-#define COUNTRY_STRING_LEN 3
+ #define MAX_COUNTRY_TRIPLETS 32
+ 
+ /* Headers */
+@@ -99,7 +98,7 @@ struct country_triplet {
+ 
+ struct wl12xx_ie_country {
+ 	struct wl12xx_ie_header header;
+-	u8 country_string[COUNTRY_STRING_LEN];
++	u8 country_string[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct country_triplet triplets[MAX_COUNTRY_TRIPLETS];
+ } __packed;
+ 
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 294169e..2d1c611 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1325,6 +1325,9 @@ enum {
+ /* Although the spec says 8 I'm seeing 6 in practice */
+ #define IEEE80211_COUNTRY_IE_MIN_LEN	6
+ 
++/* The Country String field of the element shall be 3 octets in length */
++#define IEEE80211_COUNTRY_STRING_LEN	3
++
+ /*
+  * For regulatory extension stuff see IEEE 802.11-2007
+  * Annex I (page 1141) and Annex J (page 1147). Also
+-- 
+1.7.0.2
 
