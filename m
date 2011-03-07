@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:50029 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932375Ab1CCVAQ (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:40265 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755137Ab1CGCN4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 16:00:16 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 3 Mar 2011 12:58:48 -0800
-Subject: RE: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
-Message-ID: <477F20668A386D41ADCC57781B1F704307F5150CAB@SC-VEXCH1.marvell.com>
-References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
-	 <1299139646.4338.69.camel@Joe-Laptop>
-	 <477F20668A386D41ADCC57781B1F704307F5150C5A@SC-VEXCH1.marvell.com>
- <1299183058.4338.148.camel@Joe-Laptop>
-In-Reply-To: <1299183058.4338.148.camel@Joe-Laptop>
-Content-Type: text/plain; charset="utf-8"
+	Sun, 6 Mar 2011 21:13:56 -0500
+Received: by mail-pw0-f46.google.com with SMTP id 15so692257pwi.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:13:56 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16219.455263.765424@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:43:47 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 11/34] ath9k_htc: Fix RX length check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9lLA0KDQo+ID4gSSB0aG91Z2h0IHRoYXQgdG9vLiBCdXQgdGhlc2UgQVBJcyByZXF1aXJl
-IGEgcGFyYW1ldGVyIG9mICJzdHJ1Y3QgZGV2aWNlICoiLg0KPiA+IFNvbWUgb2YgbXdpZmlleF8g
-ZnVuY3Rpb25zIGRvIG5vdCBoYXZlIHRoaXMgcGFyYW1ldGVyLg0KPiANCj4gU3VyZSwgYnV0IHRo
-ZSBwbGFjZXMgdGhhdCBkbyBoYXZlIGFuIGF2YWlsYWJsZQ0KPiBzdHJ1Y3QgZGV2aWNlfG5ldF9k
-ZXZpY2V8d2lwaHkgc2hvdWxkIHVzZSB0aGUNCj4gZXF1aXZhbGVudCBhcHByb3ByaWF0ZSBjYWxs
-Lg0KDQpTdXJlbHkgSSBjYW4gZG8gdGhhdC4NCg0KVGhhbmtzLA0KDQpCaW5nDQoNCg==
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+
+The length of the received SKB could be equal to
+HTC_RX_FRAME_HEADER_SIZE in case of packets with phy/crc errors,
+in which case they are dropped without being processed.
+Fix this check so that the error counters are updated correctly.
+
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index a62495d..7cd3e4e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -525,8 +525,9 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	int last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	__le16 fc;
+ 
+-	if (skb->len <= HTC_RX_FRAME_HEADER_SIZE) {
+-		ath_err(common, "Corrupted RX frame, dropping\n");
++	if (skb->len < HTC_RX_FRAME_HEADER_SIZE) {
++		ath_err(common, "Corrupted RX frame, dropping (len: %d)\n",
++			skb->len);
+ 		goto rx_next;
+ 	}
+ 
+-- 
+1.7.4.1
+
