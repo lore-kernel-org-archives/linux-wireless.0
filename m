@@ -1,157 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:41267 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754218Ab1COFCr convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:37337 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755232Ab1CGCPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 01:02:47 -0400
-Received: by pwi15 with SMTP id 15so50498pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 22:02:46 -0700 (PDT)
+	Sun, 6 Mar 2011 21:15:38 -0500
+Received: by yxs7 with SMTP id 7so1453196yxs.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:15:37 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTin2ob-EOmY_iqxZbQ98dTA6_vAGsGWrMNKBZTVV@mail.gmail.com>
-References: <AANLkTin2ob-EOmY_iqxZbQ98dTA6_vAGsGWrMNKBZTVV@mail.gmail.com>
-Date: Tue, 15 Mar 2011 10:32:46 +0530
-Message-ID: <AANLkTinRhmByJFoMLsN82ZVfvRa=WOsKVhAcbk8hX2Pv@mail.gmail.com>
-Subject: Re: [ath9k-devel] Override Minstrel HT RC to set an MCS bitrate (mask)
-From: Mohammed Shafi <shafi.ath9k@gmail.com>
-To: "M. A." <jdiq123@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19828.16321.43903.393153@gargle.gargle.HOWL>
+Date: Mon, 7 Mar 2011 07:45:29 +0530
+To: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: [RFC 26/34] ath9k_htc: Use helper functions for TX processing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 8, 2011 at 11:10 PM, M. A. <jdiq123@googlemail.com> wrote:
-> Hi all,
->
-> My question is how can I modify Minstrel HT rate control to be able to
-> override it (by a boolean or otherwise) to select an MCS or specific
-> rate index from user space (such that once set it driver will only try
-> sending at that rate until unset then driver will resort back to
-> Minstrel RC).
+From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
 
-I don't think we can fix the MCS rate index from user space, may be we
-need a hack.
-iw  dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
-and this is only for legacy rates.
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |  137 +++++++++++++------------
+ 1 files changed, 73 insertions(+), 64 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index ee5b3e2..944440c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -325,8 +325,8 @@ send:
+ 	return htc_send(priv->htc, skb);
+ }
+ 
+-static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
+-				    struct ath9k_htc_sta *ista, u8 tid)
++static inline bool __ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
++					     struct ath9k_htc_sta *ista, u8 tid)
+ {
+ 	bool ret = false;
+ 
+@@ -338,89 +338,98 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
+ 	return ret;
+ }
+ 
+-void ath9k_tx_tasklet(unsigned long data)
++static void ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
++				    struct ieee80211_vif *vif,
++				    struct sk_buff *skb)
+ {
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+-	struct ath9k_htc_tx_ctl *tx_ctl;
+-	struct ieee80211_vif *vif;
+ 	struct ieee80211_sta *sta;
+ 	struct ieee80211_hdr *hdr;
+-	struct ieee80211_tx_info *tx_info;
+-	struct sk_buff *skb = NULL;
+ 	__le16 fc;
+-	bool txok;
+-	int slot;
+ 
+-	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
++	hdr = (struct ieee80211_hdr *) skb->data;
++	fc = hdr->frame_control;
+ 
+-		slot = strip_drv_header(priv, skb);
+-		if (slot < 0) {
+-			dev_kfree_skb_any(skb);
+-			continue;
+-		}
++	rcu_read_lock();
+ 
+-		tx_ctl = HTC_SKB_CB(skb);
+-		hdr = (struct ieee80211_hdr *) skb->data;
+-		fc = hdr->frame_control;
+-		tx_info = IEEE80211_SKB_CB(skb);
+-		vif = tx_info->control.vif;
+-		txok = tx_ctl->txok;
++	sta = ieee80211_find_sta(vif, hdr->addr1);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
+ 
+-		memset(&tx_info->status, 0, sizeof(tx_info->status));
++	if (sta && conf_is_ht(&priv->hw->conf) &&
++	    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
++		if (ieee80211_is_data_qos(fc)) {
++			u8 *qc, tid;
++			struct ath9k_htc_sta *ista;
+ 
+-		/*
+-		 * URB submission failed for this frame, it never reached
+-		 * the target.
+-		 */
+-		if (!txok)
+-			goto send_mac80211;
++			qc = ieee80211_get_qos_ctl(hdr);
++			tid = qc[0] & 0xf;
++			ista = (struct ath9k_htc_sta *)sta->drv_priv;
++			if (__ath9k_htc_check_tx_aggr(priv, ista, tid)) {
++				ieee80211_start_tx_ba_session(sta, tid, 0);
++				spin_lock_bh(&priv->tx.tx_lock);
++				ista->tid_state[tid] = AGGR_PROGRESS;
++				spin_unlock_bh(&priv->tx.tx_lock);
++			}
++		}
++	}
+ 
+-		tx_info->flags |= IEEE80211_TX_STAT_ACK;
++	rcu_read_unlock();
++}
+ 
+-		if (!vif)
+-			goto send_mac80211;
++static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
++				 struct sk_buff *skb)
++{
++	struct ieee80211_vif *vif;
++	struct ath9k_htc_tx_ctl *tx_ctl;
++	struct ieee80211_tx_info *tx_info;
++	bool txok;
++	int slot;
+ 
+-		rcu_read_lock();
++	slot = strip_drv_header(priv, skb);
++	if (slot < 0) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 
+-		sta = ieee80211_find_sta(vif, hdr->addr1);
+-		if (!sta) {
+-			rcu_read_unlock();
+-			goto send_mac80211;
+-		}
++	tx_ctl = HTC_SKB_CB(skb);
++	txok = tx_ctl->txok;
++	tx_info = IEEE80211_SKB_CB(skb);
++	vif = tx_info->control.vif;
+ 
+-		/* Check if we need to start aggregation */
++	memset(&tx_info->status, 0, sizeof(tx_info->status));
+ 
+-		if (sta && conf_is_ht(&priv->hw->conf) &&
+-		    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
+-			if (ieee80211_is_data_qos(fc)) {
+-				u8 *qc, tid;
+-				struct ath9k_htc_sta *ista;
++	/*
++	 * URB submission failed for this frame, it never reached
++	 * the target.
++	 */
++	if (!txok || !vif)
++		goto send_mac80211;
+ 
+-				qc = ieee80211_get_qos_ctl(hdr);
+-				tid = qc[0] & 0xf;
+-				ista = (struct ath9k_htc_sta *)sta->drv_priv;
++	tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 
+-				if (ath9k_htc_check_tx_aggr(priv, ista, tid)) {
+-					ieee80211_start_tx_ba_session(sta, tid, 0);
+-					spin_lock_bh(&priv->tx.tx_lock);
+-					ista->tid_state[tid] = AGGR_PROGRESS;
+-					spin_unlock_bh(&priv->tx.tx_lock);
+-				}
+-			}
+-		}
++	ath9k_htc_check_tx_aggr(priv, vif, skb);
+ 
+-		rcu_read_unlock();
++send_mac80211:
++	spin_lock_bh(&priv->tx.tx_lock);
++	if (WARN_ON(--priv->tx.queued_cnt < 0))
++		priv->tx.queued_cnt = 0;
++	spin_unlock_bh(&priv->tx.tx_lock);
+ 
+-	send_mac80211:
+-		spin_lock_bh(&priv->tx.tx_lock);
+-		if (WARN_ON(--priv->tx.queued_cnt < 0))
+-			priv->tx.queued_cnt = 0;
+-		spin_unlock_bh(&priv->tx.tx_lock);
++	ath9k_htc_tx_clear_slot(priv, slot);
++
++	/* Send status to mac80211 */
++	ieee80211_tx_status(priv->hw, skb);
++}
+ 
+-		ath9k_htc_tx_clear_slot(priv, slot);
++void ath9k_tx_tasklet(unsigned long data)
++{
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
++	struct sk_buff *skb = NULL;
+ 
+-		/* Send status to mac80211 */
+-		ieee80211_tx_status(priv->hw, skb);
++	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
++		ath9k_htc_tx_process(priv, skb);
+ 	}
+ 
+ 	/* Wake TX queues if needed */
+-- 
+1.7.4.1
 
->
-> I have been able to change other kernel parameters at runtime(echo
-> /sys/kernel/debug/ieee80211/...) by passing them through (fops) to
-> DebugFs. however I am unsure of what parameters to pass through in the
-> case of MCS rate fixing and what modifications to the code are
-> required to achieve this.
-
-don't know and I am not sure whether this can be easily done.
-
->
->
-> Also I have been told that these sections of code facilitate the
-> masking of rates;
->
-> =========================================================================
-> include/net/cfg80211.h: cfg80211_bitrate_mask
-> -------------------------------------------------------------------------------------------------------
-> /*
->  * cfg80211_bitrate_mask - masks for bitrate control
->  */
-> struct cfg80211_bitrate_mask {
->        struct {
->                u32 legacy;
->                /* TODO: add support for masking MCS rates; e.g.: */
->                /* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
->        } control[IEEE80211_NUM_BANDS];
-> };
-> -------------------------------------------------------------------------------------------------------
-> net/mac80211/cfg.c ieee80211_set_bitrate_mask
-> -------------------------------------------------------------------------------------------------------
-> static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
->                                      struct net_device *dev,
->                                      const u8 *addr,
->                                      const struct cfg80211_bitrate_mask *mask)
-> {
->        struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->        struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
->        int i;
->
->        /*
->         * This _could_ be supported by providing a hook for
->         * drivers for this function, but at this point it
->         * doesn't seem worth bothering.
->         */
->        if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
->                return -EOPNOTSUPP;
->
->
->        for (i = 0; i < IEEE80211_NUM_BANDS; i++)
->                sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
->
->        return 0;
-> }
-> -------------------------------------------------------------------------------------------------------
-> net/wireless/nl80211.c: nl80211_set_tx_bitrate_mask
-> -------------------------------------------------------------------------------------------------------
-> static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
->                                       struct genl_info *info)
-> {
->        struct nlattr *tb[NL80211_TXRATE_MAX + 1];
->        struct cfg80211_registered_device *rdev = info->user_ptr[0];
->        struct cfg80211_bitrate_mask mask;
->        int rem, i;
->        struct net_device *dev = info->user_ptr[1];
->        struct nlattr *tx_rates;
->        struct ieee80211_supported_band *sband;
->
->        if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
->                return -EINVAL;
->
->        if (!rdev->ops->set_bitrate_mask)
->                return -EOPNOTSUPP;
->
->        memset(&mask, 0, sizeof(mask));
->        /* Default to all rates enabled */
->        for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
->                sband = rdev->wiphy.bands[i];
->                mask.control[i].legacy =
->                        sband ? (1 << sband->n_bitrates) - 1 : 0;
->        }
->
->        /*
->         * The nested attribute uses enum nl80211_band as the index. This maps
->         * directly to the enum ieee80211_band values used in cfg80211.
->         */
->        nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
->        {
->                enum ieee80211_band band = nla_type(tx_rates);
->                if (band < 0 || band >= IEEE80211_NUM_BANDS)
->                        return -EINVAL;
->                sband = rdev->wiphy.bands[band];
->                if (sband == NULL)
->                        return -EINVAL;
->                nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
->                          nla_len(tx_rates), nl80211_txattr_policy);
->                if (tb[NL80211_TXRATE_LEGACY]) {
->                        mask.control[band].legacy = rateset_to_mask(
->                                sband,
->                                nla_data(tb[NL80211_TXRATE_LEGACY]),
->                                nla_len(tb[NL80211_TXRATE_LEGACY]));
->                        if (mask.control[band].legacy == 0)
->                                return -EINVAL;
->                }
->        }
->
->        return rdev->ops->set_bitrate_mask(&rdev->wiphy, dev, NULL, &mask);
-> }
-
-As you see everything is for legacy thing and for MCS it's a TODO section.
-
-> ====================================================================================================================
->
->
-> Any help is much appreciated!
->
-> Thank you all very much
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
