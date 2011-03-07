@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60079 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45965 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756049Ab1CHQpz (ORCPT
+	with ESMTP id S1752470Ab1CGLpB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 11:45:55 -0500
-Subject: Re: 2.6.38-rc7, iwlagn warning
+	Mon, 7 Mar 2011 06:45:01 -0500
+Subject: Re: WARN_ON in ieee80211_scan_completed_finish triggered
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	 <20110304134648.GB9866@tuxdriver.com>
-	 <1299251879.24333.3.camel@wwguy-ubuntu>
-	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
-	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
-	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Ben Greear <greearb@candelatech.com>
+In-Reply-To: <1299498147.5665.3.camel@marge>
+References: <1299443142.1292.6.camel@marge>
+	 <1299491485.3790.2.camel@jlt3.sipsolutions.net>
+	 (sfid-20110307_105130_457515_FFFFFFFF997C7B78)  <1299498147.5665.3.camel@marge>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 17:45:50 +0100
-Message-ID: <1299602750.3734.2.camel@jlt3.sipsolutions.net>
+Date: Mon, 07 Mar 2011 12:44:57 +0100
+Message-ID: <1299498297.3790.3.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-08 at 16:22 +0000, Mathias Burén wrote:
+On Mon, 2011-03-07 at 12:42 +0100, Michael Buesch wrote:
+> On Mon, 2011-03-07 at 10:51 +0100, Johannes Berg wrote:
+> > On Sun, 2011-03-06 at 21:25 +0100, Michael Buesch wrote:
+> > > I just noticed the following warning on my p54spi device
+> > > with compat-wireless-2011-02-25 (OpenWrt):
+> > > 
+> > 
+> > > [ 1182.826599] WARNING: at net/mac80211/scan.c:310 ieee80211_rx_bss_free+0x20c/0x4b8 [mac80211]()
+> > 
+> > Unfortunately the backtrace gives no hint at all, is it possible that
+> > there was an ifdown that canceled the scan?
+> 
+> I don't think there was an ifdown.
 
-> I'm using NetworkManager, I haven't started anything else manually. I
-> don't know why it switches modes like that, it happens on 2 laptops
-> (both Ubuntu 10.10) so it could very well be some NetworkManager
-> related issue.
+Ok
 
-Actually, before you do the tracing, can we get the supplicant logs? See
-http://live.gnome.org/NetworkManager/Debugging under "Debugging WiFi
-connections".
+> It seems that it happened right after a regulatory
+> update. See printk timestamps in the full kernel log:
+
+> [ 1182.269927] cfg80211: Calling CRDA for country: DE
+> [ 1182.369659] cfg80211: Regulatory domain changed to country: DE
+> [ 1182.376586] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> [ 1182.386138] cfg80211:     (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> [ 1182.395385] cfg80211:     (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> [ 1182.404449] cfg80211:     (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> [ 1182.413146] cfg80211:     (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
+> [ 1182.821472] ------------[ cut here ]------------
+> [ 1182.826599] WARNING: at /home/mb/develop/svn/openwrt_n810/trunk/build_dir/linux-omap24xx/compat-wireless-2011-02-25/net/mac80211/scan.c:310 ieee80211_rx_bss_free+0x20c/0x4b8 [mac80211]()
+
+It's still almost half a second, and the regulatory update was because
+you connected to an AP that had a country IE. It could be related, but I
+doubt it.
 
 johannes
 
