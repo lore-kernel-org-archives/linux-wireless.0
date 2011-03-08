@@ -1,85 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42869 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752653Ab1CWRh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 13:37:29 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 10:37:05 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 1/2] ath9k: Fix kernel panic caused by invalid rate index access.
-Date: Wed, 23 Mar 2011 23:07:21 +0530
-Message-ID: <1300901842-3350-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:37807 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756477Ab1CHVEF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 16:04:05 -0500
+Message-ID: <4D7699BF.1000602@gmail.com>
+Date: Tue, 08 Mar 2011 13:03:59 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ben Greear <greearb@candelatech.com>
+CC: Brian Prodoehl <bprodoehl@gmail.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ath9k-devel@atheros.com
+Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536 ath_stoprecv+0xc8/0xda
+ [ath9k]()
+References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>	<20110303135942.GA8969@tuxdriver.com>	<AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>	<20110307151201.GC2664@tuxdriver.com>	<AANLkTi=7RSdKhzGazQFUnBZqzMQskOSHq=7E08uan2vu@mail.gmail.com>	<4D767A4B.1060203@gmail.com>	<4D76833E.9010603@candelatech.com> <AANLkTikPQt+njjFPB6sJ-mEcsx6f-R6TAOhEd8egkqhH@mail.gmail.com> <4D768A9A.7090201@candelatech.com>
+In-Reply-To: <4D768A9A.7090201@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the recent tx status optimization in mac80211, we bail out as
-and and when invalid rate index is found. So the behavior of resetting
-rate idx to -1 and count to 0 has changed for the rate indexes that
-were not part of the driver's retry series.
+On 03/08/2011 11:59 AM, Ben Greear wrote:
+> On 03/08/2011 11:45 AM, Brian Prodoehl wrote:
+>> On Tue, Mar 8, 2011 at 2:27 PM, Ben Greear<greearb@candelatech.com>
+>> wrote:
+>>> On 03/08/2011 10:49 AM, Justin P. Mattock wrote:
+>>>>
+>>>> On 03/07/2011 07:22 AM, Mohammed Shafi wrote:
+>>>>>
+>>>>> On Mon, Mar 7, 2011 at 8:42 PM, John W.
+>>>>> Linville<linville@tuxdriver.com> wrote:
+>>>>>>
+>>>>>> On Sun, Mar 06, 2011 at 12:47:05AM -0800, Justin Mattock wrote:
+>>>>>>
+>>>>>>> full dmesg here:
+>>>>>>> http://fpaste.org/5JQp/
+>>>>>>> let me know if I need to supply any info(also I can try a bisect,
+>>>>>>> but
+>>>>>>> am in the middle of changing residencies, so it might not be right
+>>>>>>> away)
+>>>>>>
+>>>>>> One of the Atheros guys suggested that you change a DMA timeout
+>>>>>> value.
+>>>>>> Did you try that?
+>>>>>
+>>>>> John it looks like increasing the timeout also does not seems to help.
+>>>>> A user reported this issue in ath9k developer list and he told that
+>>>>> increasing the timeout did not fix this issue.
+>>>>>
+>>>>>>
+>>>>>> John
+>>>>>> --
+>>>>>> John W. Linville Someday the world will need a hero, and you
+>>>>>> linville@tuxdriver.com might be all we have. Be ready.
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>>> linux-wireless" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>>>>>
+>>>>>
+>>>>
+>>>> at barnes and noble, and I see this has fired off again. will see if I
+>>>> can reproduce and bisect.
+>>>
+>>> This problem goes way back, and the driver has had lots of fixes in the
+>>> last few months, so I'm not sure if bisecting is going to
+>>> do you any good.
+>>>
+>>> Thanks,
+>>> Ben
+>>
+>> The warnings have been around since you added the check for the
+>> problem, right? I remember initially it was a WARN_ON, and I'd get a
+>> steady flood of backtraces, and then it was switched to a
+>> WARN_ON_ONCE. I see these on every platform I have (x86_64, IXP425
+>> and AR71xx) with AR9002 and AR9003.
+>
+> I don't think I added the original check, but either way, it's
+> an old problem and bisecting it is unlikely to help.
+>
+> I can't believe that the Atheros guys really are unable reproduce
+> this, but I can believe that it might be very difficult to
+> actually understand and fix.
+>
+> At least in my testing, I see it quite often, but it doesn't
+> seem to cause any serious harm. We do occasionally see crashes,
+> especially on module unload for a heavily utilized system, or
+> one that is constantly trying and failing to associate,
+> so it could be related to this.
+>
+> Also, my patches to decrease scan and work_work related channel changes
+> made this harder to hit for our test cases.
+>
+> Thanks,
+> Ben
+>
 
-This has resulted in ath9k using incorrect rate table index which
-caused the system to panic. Ideally ath9k need to loop only for the
-indexes that were part of the retry series and so simply use hw->max_rates
-as the loop counter.
 
-Pasted the stack trace of the panic issue for reference.
+well I would do the bisect if I can easily reproduce this, but if this 
+has been back since 2.6.2* or the initial release of ath9k then doing 
+the bisect wont work.
 
-[  754.093192] BUG: unable to handle kernel paging request at ffff88046a9025b0
-[  754.093256] IP: [<ffffffffa02eac49>] ath_tx_status+0x209/0x2f0 [ath9k]
-[  754.094888] Call Trace:
-[  754.094903]  <IRQ>
-[  754.094928]  [<ffffffffa051f883>] ieee80211_tx_status+0x203/0x9e0 [mac80211]
-[  754.094975]  [<ffffffffa053e305>] ? __ieee80211_wake_queue+0x125/0x140 [mac80211]
-[  754.095017]  [<ffffffffa02e66c9>] ath_tx_complete_buf+0x1b9/0x370 [ath9k]
-[  754.095054]  [<ffffffffa02e6fcf>] ath_tx_complete_aggr+0x51f/0xb50 [ath9k]
-[  754.095098]  [<ffffffffa05382a3>] ? ieee80211_prepare_and_rx_handle+0x173/0xab0 [mac80211]
-[  754.095148]  [<ffffffff81350e62>] ? _raw_spin_unlock_irqrestore+0x32/0x40
-[  754.095186]  [<ffffffffa02e9735>] ath_tx_tasklet+0x365/0x4b0 [ath9k]
-[  754.095224]  [<ffffffff8107a2a2>] ? clockevents_program_event+0x62/0xa0
-[  754.095261]  [<ffffffffa02e2628>] ath9k_tasklet+0x168/0x1c0 [ath9k]
-[  754.095298]  [<ffffffff8105599b>] tasklet_action+0x6b/0xe0
-[  754.095331]  [<ffffffff81056278>] __do_softirq+0x98/0x120
-[  754.095361]  [<ffffffff8100cd5c>] call_softirq+0x1c/0x30
-[  754.095393]  [<ffffffff8100efb5>] do_softirq+0x65/0xa0
-[  754.095423]  [<ffffffff810563fd>] irq_exit+0x8d/0x90
-[  754.095453]  [<ffffffff8100ebc1>] do_IRQ+0x61/0xe0
-[  754.095482]  [<ffffffff81351413>] ret_from_intr+0x0/0x15
-[  754.095513]  <EOI>
-[  754.095531]  [<ffffffff81014375>] ? native_sched_clock+0x15/0x70
-[  754.096475]  [<ffffffffa02bcfa6>] ? acpi_idle_enter_bm+0x24d/0x285 [processor]
-[  754.096475]  [<ffffffffa02bcf9f>] ? acpi_idle_enter_bm+0x246/0x285 [processor]
-[  754.096475]  [<ffffffff8127fab2>] cpuidle_idle_call+0x82/0x100
-[  754.096475]  [<ffffffff8100a236>] cpu_idle+0xa6/0xf0
-[  754.096475]  [<ffffffff81339bc1>] rest_init+0x91/0xa0
-[  754.096475]  [<ffffffff814efccd>] start_kernel+0x3fd/0x408
-[  754.096475]  [<ffffffff814ef347>] x86_64_start_reservations+0x132/0x136
-[  754.096475]  [<ffffffff814ef451>] x86_64_start_kernel+0x106/0x115
-[  754.096475] RIP  [<ffffffffa02eac49>] ath_tx_status+0x209/0x2f0 [ath9k]
+as for the warning message itself, seems the system is fine after this 
+hits(just fires of on certain locations).
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 960d717..a3241cd 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1328,7 +1328,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = hdr->frame_control;
--	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
-+	for (i = 0; i < sc->hw->max_rates; i++) {
- 		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
- 		if (!rate->count)
- 			break;
--- 
-1.7.3.4
-
+Justin P. Mattock
