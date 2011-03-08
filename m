@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:49954 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934427Ab1CYDdP (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:28225 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752337Ab1CHK3W convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 23:33:15 -0400
-Received: by pvg12 with SMTP id 12so88246pvg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 20:33:15 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 8 Mar 2011 05:29:22 -0500
+From: "Ferraton, Jean RegisX" <jean.regisx.ferraton@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 8 Mar 2011 10:28:31 +0000
+Subject: Question: patches from linux-bluetooth to linux-wireless
+Message-ID: <6E42A1B4DD2F7B4D80A1F26BB498BF9F8C9F86D17C@irsmsx501.ger.corp.intel.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19852.3238.455471.399990@gargle.gargle.HOWL>
-Date: Fri, 25 Mar 2011 09:01:50 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, Jouni.Malinen@atheros.com
-Subject: Re: [PATCH 1/3] ath9k: fix beacon timer handling issues
-In-Reply-To: <4D8C0512.5010608@openwrt.org>
-References: <1300827259-42910-1-git-send-email-nbd@openwrt.org>
-	<19852.783.629604.122760@gargle.gargle.HOWL>
-	<4D8C0512.5010608@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> The HW TSF reset was still issued before the code would activate the
-> timers (with the write to AR_TIMER_MODE), so I don't think this changes
-> the behaviour of the timers.
-> Since the timers are scheduled for absolute TSF32 values and (in case of
-> a reset being issued) always set to TU_TO_USEC(intval / ATH_BCBUF), that
-> leaves enough time for the timers to settle in after the TSF reset, so I
-> don't expect any race conditions there.
+Hi,
 
-Hm, alright.
+This morning, I've submitted a patch regarding bluetooth-rfcomm in the linux-bluetooth list.
+My question is to know if I have also to submit this patch to the linux-wireless list or if patches submitted to linux-bluetooth are automatically transmitted and pushed to the linux-bluetooth list???
 
-Sujith
+Thanks in advance
+
+Jean Régis
+
+
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
