@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43258 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754192Ab1C0TCx (ORCPT
+Received: from ksp.mff.cuni.cz ([195.113.26.206]:41602 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751281Ab1CHG63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Mar 2011 15:02:53 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 6BB26540154
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2011 15:07:03 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-27 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110327190251.9E43F40EAB@repository3.orbit-lab.org>
-Date: Sun, 27 Mar 2011 15:02:51 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 8 Mar 2011 01:58:29 -0500
+Date: Tue, 8 Mar 2011 07:58:19 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Tianji Li <Tianji.Li@nuim.ie>
+Cc: rick.jones2@hp.com, Dave T?ht <d@taht.net>, sedat.dilek@gmail.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	bloat-devel@lists.bufferbloat.net, linux-kernel@vger.kernel.org
+Subject: Re: ANNOUNCE: debloat-testing kernel git tree
+Message-ID: <20110308065819.GA1357@ucw.cz>
+References: <20110225222210.GA3618@tuxdriver.com>
+ <AANLkTingkcc-dvs_8Nr0vYXdXvuDHEn6sz14tnHzLp8W@mail.gmail.com>
+ <87fwr9jxya.fsf@cruithne.co.teklibre.org>
+ <AANLkTinpG-xAC-VV-j7EBJB522+BqCyyFd_6N3KEr2Cf@mail.gmail.com>
+ <8739n9ii7z.fsf@cruithne.co.teklibre.org>
+ <AANLkTi=Cp7N4xqPyU6KWF6DOzFytxaA2BeoXhnhsZ6dp@mail.gmail.com>
+ <87tyfph2az.fsf@cruithne.co.teklibre.org>
+ <1299176168.2157.14.camel@tardy>
+ <4D6FEFD4.9010608@nuim.ie>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D6FEFD4.9010608@nuim.ie>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+On Thu 2011-03-03 13:45:24, Tianji Li wrote:
+> 
+> 
+> On 03/03/2011 12:16 PM, Rick Jones wrote:
+> >>For wireless routers and cable home gateways especially, this research
+> >>shows that the total un-managed buffers in your system should be less
+> >>than 32.
+> >
+> >Would it be a good thing to start describing these queues not so much in
+> >terms of packets but in terms of delay (or bandwidth X delay)?
+> >
+> 
+> The unit of bandwidth is something like Mbps, that of delay can be
+> second, so bandwidth X delay --> Mb, which is the unit of packet
+> size. So both packets and delay should have the same effect for
+> sizing buffers.
 
-compat-wireless code metrics
-
-    832860 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1547 - % of code consists of backport work
+Bandwidth varies greatly with time. On cellphone, you can go from
+5KB/sec GPRS to 300KB/sec HSDPA and back...
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
