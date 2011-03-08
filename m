@@ -1,92 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:46136 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab1CEEYT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 23:24:19 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] mwifiex: make a shorter name of hotplug_device
-Date: Fri,  4 Mar 2011 20:27:06 -0800
-Message-Id: <1299299227-8849-1-git-send-email-bzhao@marvell.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:53067 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755587Ab1CHDFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2011 22:05:10 -0500
+Message-ID: <4D759C2B.1050400@cn.fujitsu.com>
+Date: Tue, 08 Mar 2011 11:02:03 +0800
+From: Shan Wei <shanwei@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: buytenh@wantstofly.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: used kzalloc instead of kmalloc & memset
+References: <4D74BC3C.1080203@cn.fujitsu.com> <AANLkTi=T0eeNXrfBLdiPGch1X5EnHY+WrqYekXnZ+5=-@mail.gmail.com>
+In-Reply-To: <AANLkTi=T0eeNXrfBLdiPGch1X5EnHY+WrqYekXnZ+5=-@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-change "struct device *hotplug_device;" to "struct device *dev;"
+Julian Calaby wrote, at 03/07/2011 09:30 PM:
+>> -       rxq->buf = kmalloc(MWL8K_RX_DESCS * sizeof(*rxq->buf), GFP_KERNEL);
+>> +       rxq->buf = kzalloc(MWL8K_RX_DESCS * sizeof(*rxq->buf), GFP_KERNEL);
+> 
+> Random nit, you're changing this from kmalloc to kzalloc when it would
+> be trivial to change it to kcalloc instead if you don't restrict the T
+> variable in your semantic patch to a type.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Thanks for your review.
+here patch-v2.
+
+==========================================
+[PATCH v2] wireless: use kcalloc instead of kmalloc & memset
+
+Use kcalloc or kzalloc rather than the combination of kmalloc and memset.
+
+Thanks coccicheck for detecting this.
+(http://coccinelle.lip6.fr/)
+
+
+
+Signed-off-by: Shan Wei <shanwei@cn.fujitsu.com>
 ---
- drivers/net/wireless/mwifiex/main.c |    5 ++---
- drivers/net/wireless/mwifiex/main.h |    2 +-
- drivers/net/wireless/mwifiex/sdio.c |    4 ++--
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mwl8k.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index e08b7a0..df97e79 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -433,8 +433,7 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
- 	default:
- 		break;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index df5959f..3695227 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1056,13 +1056,12 @@ static int mwl8k_rxq_init(struct ieee80211_hw *hw, int index)
  	}
--	err = request_firmware(&adapter->firmware, fw_name,
--			       adapter->hotplug_device);
-+	err = request_firmware(&adapter->firmware, fw_name, adapter->dev);
+ 	memset(rxq->rxd, 0, size);
  
- 	if (err < 0) {
- 		PRINTM(MFATAL, "request_firmware() failed, error code =%#x\n",
-@@ -759,7 +758,7 @@ static struct mwifiex_private *mwifiex_add_interface(
+-	rxq->buf = kmalloc(MWL8K_RX_DESCS * sizeof(*rxq->buf), GFP_KERNEL);
++	rxq->buf = kcalloc(MWL8K_RX_DESCS, sizeof(*rxq->buf), GFP_KERNEL);
+ 	if (rxq->buf == NULL) {
+ 		wiphy_err(hw->wiphy, "failed to alloc RX skbuff list\n");
+ 		pci_free_consistent(priv->pdev, size, rxq->rxd, rxq->rxd_dma);
+ 		return -ENOMEM;
+ 	}
+-	memset(rxq->buf, 0, MWL8K_RX_DESCS * sizeof(*rxq->buf));
  
- 	mwifiex_init_priv_params(priv, dev);
+ 	for (i = 0; i < MWL8K_RX_DESCS; i++) {
+ 		int desc_size;
+@@ -1347,13 +1346,12 @@ static int mwl8k_txq_init(struct ieee80211_hw *hw, int index)
+ 	}
+ 	memset(txq->txd, 0, size);
  
--	SET_NETDEV_DEV(dev, adapter->hotplug_device);
-+	SET_NETDEV_DEV(dev, adapter->dev);
+-	txq->skb = kmalloc(MWL8K_TX_DESCS * sizeof(*txq->skb), GFP_KERNEL);
++	txq->skb = kcalloc(MWL8K_TX_DESCS, sizeof(*txq->skb), GFP_KERNEL);
+ 	if (txq->skb == NULL) {
+ 		wiphy_err(hw->wiphy, "failed to alloc TX skbuff list\n");
+ 		pci_free_consistent(priv->pdev, size, txq->txd, txq->txd_dma);
+ 		return -ENOMEM;
+ 	}
+-	memset(txq->skb, 0, MWL8K_TX_DESCS * sizeof(*txq->skb));
  
- 	/* Register network device */
- 	if (register_netdev(dev)) {
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 0211942..41aeebd 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -515,7 +515,7 @@ struct mwifiex_adapter {
- 	u8 priv_num;
- 	struct mwifiex_drv_mode *drv_mode;
- 	const struct firmware *firmware;
--	struct device *hotplug_device;
-+	struct device *dev;
- 	bool surprise_removed;
- 	u32 fw_release_number;
- 	u32 revision_id;
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 0144ecf..4df8186 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1584,7 +1584,7 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	sdio_release_host(func);
- 	sdio_set_drvdata(func, card);
- 
--	adapter->hotplug_device = &func->dev;
-+	adapter->dev = &func->dev;
- 
- 	return 0;
- 
-@@ -1907,7 +1907,7 @@ mwifiex_sdio_cleanup_module(void)
- 		goto exit;
- 
- 	if (adapter->is_suspended)
--		mwifiex_sdio_resume(adapter->hotplug_device);
-+		mwifiex_sdio_resume(adapter->dev);
- 
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		if ((GET_BSS_ROLE(adapter->priv[i]) == MWIFIEX_BSS_ROLE_STA) &&
+ 	for (i = 0; i < MWL8K_TX_DESCS; i++) {
+ 		struct mwl8k_tx_desc *tx_desc;
 -- 
-1.7.0.2
-
+1.6.3.3
