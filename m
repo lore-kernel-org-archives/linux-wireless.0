@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49183 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753533Ab1CYOar (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 10:30:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mow302.securemx.jp ([210.130.202.52]:48815 "EHLO
+	mow.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753639Ab1CHMjC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 07:39:02 -0500
+Date: Tue, 08 Mar 2011 21:39:47 +0900
+From: Takashi Kawamoto <tkawamoto@silex.jp>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix a crash in minstrel_ht in HT mode with no supported MCS rates
-Date: Fri, 25 Mar 2011 15:30:38 +0100
-Message-Id: <1301063438-20460-1-git-send-email-nbd@openwrt.org>
+Subject: AR9271 doesn't work on 12ch and 13ch
+Cc: Yoshitaka Imura <imura@silex.jp>
+Message-Id: <20110308211855.AF33.9AD4E5EB@silex.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a client connects in HT mode but does not provide any valid MCS
-rates, the function that finds the next sample rate gets stuck in an
-infinite loop.
-Fix this by falling back to legacy rates if no usable MCS rates are found.
+Dear All,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- net/mac80211/rc80211_minstrel_ht.c |   25 ++++++++++++++++++-------
- 1 files changed, 18 insertions(+), 7 deletions(-)
+AR9271 cannot connect to an AP which operates on 12ch and 13ch.
+As long as I see the EEPROM content of my module, 0x8188 (CTRL_JAPAN1) 
+seems to be configured to the region domain code area.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 8212a8b..dbdebed 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -659,18 +659,14 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
- 	struct ieee80211_local *local = hw_to_local(mp->hw);
- 	u16 sta_cap = sta->ht_cap.cap;
-+	int n_supported = 0;
- 	int ack_dur;
- 	int stbc;
- 	int i;
- 
- 	/* fall back to the old minstrel for legacy stations */
--	if (!sta->ht_cap.ht_supported) {
--		msp->is_ht = false;
--		memset(&msp->legacy, 0, sizeof(msp->legacy));
--		msp->legacy.r = msp->ratelist;
--		msp->legacy.sample_table = msp->sample_table;
--		return mac80211_minstrel.rate_init(priv, sband, sta, &msp->legacy);
--	}
-+	if (!sta->ht_cap.ht_supported)
-+		goto use_legacy;
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(minstrel_mcs_groups) !=
- 		MINSTREL_MAX_STREAMS * MINSTREL_STREAM_GROUPS);
-@@ -725,7 +721,22 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 
- 		mi->groups[i].supported =
- 			mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
-+
-+		if (mi->groups[i].supported)
-+			n_supported++;
- 	}
-+
-+	if (!n_supported)
-+		goto use_legacy;
-+
-+	return;
-+
-+use_legacy:
-+	msp->is_ht = false;
-+	memset(&msp->legacy, 0, sizeof(msp->legacy));
-+	msp->legacy.r = msp->ratelist;
-+	msp->legacy.sample_table = msp->sample_table;
-+	return mac80211_minstrel.rate_init(priv, sband, sta, &msp->legacy);
- }
- 
- static void
--- 
-1.7.3.2
+[EEPROM dump]
+-------------------------------------------------------
+78  1 99 B4  F E0  2  0 88 81 2A  0 5C 33 8E 65
+74 C1  1  1  0  0  0  0  0  0  0 7F  8  0  8  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0 2C 20  0
+E2  0  D  0  2  E 1C BA  C  1  0  0  6 55  5  1
+ E  E FF  0  0 2C  0  0  5  4  6 B0  0 60  0  0
+ 0  1  0  0  0 80  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0 70 8E AC  B 22 2A 3D 53
+4B 54 5E 6A 74  5 10 17 2F 6E 2C 3B 55 83 B0  D
+24 2A 3E 52 4C 54 60 6B 71  7 11 17 36 71 30 40
+5F 93 AF  E 13 2A 3E 51 4B 53 5F 6B 6E  7  A 18
+38 70 2C 44 62 9A AC 70 22 22 22 22 B8 22 22 22
+22 FF  0  0  0  0 70 22 22 20 1E 89 22 22 20 1E
+AC 22 22 20 1E 70 22 22 22 22 22 22 20 1E 89 22
+22 22 22 22 22 20 1E AC 22 22 22 22 22 22 20 1E
+70 1E 1E 1E 1E 1E 1E 1E 1C 89 1E 1E 1E 1E 1E 1E
+1E 1C AC 1E 1E 1E 1E 1E 1E 1E 1C 11 12 15 17 41
+42 45 47 31 32 35 37 70 22 75 62 A2 22  0  0 70
+22 75 62 A2 21  0  0 70 1A 75 62 A2 1E  0  0 7A
+12 7F 5C 93 5C 98 16 70 3C 75 7C AC 3C B8 3C 70
+3C 75 7C AC 3C  0  0 70 3C 75 7C AC 3C  0  0 7A
+3C 7F 7C 93 7C A2 3C 70 22 75 62 AC 22  0  0 70
+22 75 62 AC 22  0  0 70 22 75 62 AC 22  0  0 7A
+1E 7F 5E 93 5E A2 1E  0
+-------------------------------------------------------
+
+The version of compat-wireless I use is 2011-01-30.
+
+I investigated the issue further, and found that priv->hw->wiphy->bands 
+includes from 1ch to 14ch (ath9k_set_hw_capab() in htc_drv_init.c), but 
+wdev->wiphy->bands includes from 1ch to 11ch (cfg80211_wext_giwrange() 
+in wext-compat.c). I still don't know why and when 12ch, 13ch and 14ch 
+are removed from the channel list.
+
+Anyone has any idea?
+
+
+
+Best Regards,
+Takashi Kawamoto
+
+==================================================
+ Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
+ silex technology,Inc. 
+ Software Engineering Division
+ Phone:+81-774-98-3877 FAX:+81-774-98-3678
+==================================================
 
