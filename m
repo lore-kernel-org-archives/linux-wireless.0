@@ -1,86 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:57059 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752909Ab1CUOpG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 10:45:06 -0400
-Date: Mon, 21 Mar 2011 07:46:03 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	John Linville <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	linux-wireless@vger.kernel.org
-Subject: Re: new utility kernel module for detecting cores in newer chipsets
-Message-ID: <20110321144603.GA7645@kroah.com>
-References: <20110319234524.GA7493@kroah.com>
- <op.vsmyhmei3ri7v4@arend-laptop>
- <20110320145421.GA13962@kroah.com>
- <op.vsnd1a1i3ri7v4@arend-laptop>
- <20110320162200.GA17030@kroah.com>
- <op.vsng7q1j3ri7v4@arend-laptop>
- <20110320185216.GD19375@kroah.com>
- <AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
- <20110321140505.GA7321@kroah.com>
- <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50129 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871Ab1CHQW2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 11:22:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
+In-Reply-To: <1299597447.4676.25.camel@jlt3.sipsolutions.net>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	<20110304134648.GB9866@tuxdriver.com>
+	<1299251879.24333.3.camel@wwguy-ubuntu>
+	<AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	<AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	<AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	<1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	<AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+	<1299597447.4676.25.camel@jlt3.sipsolutions.net>
+Date: Tue, 8 Mar 2011 16:22:27 +0000
+Message-ID: <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+Subject: Re: 2.6.38-rc7, iwlagn warning
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 21, 2011 at 03:27:49PM +0100, Rafał Miłecki wrote:
-> 2011/3/21 Greg KH <greg@kroah.com>:
-> > On Mon, Mar 21, 2011 at 11:12:55AM +0100, Rafał Miłecki wrote:
-> >> Sorry, but you seem to be deaf to my and George's comments.
-> >
-> > Me?
-> >
-> >> What's wrong with that?
-> >
-> > What's wrong with what?  You provided no context in this message, so I
-> > have absolutely no idea what you are referring to.
-> >
-> > totally confused,
-> 
-> Did you receive two following e-mails (in this thread):
-> 1) From: Rafał Miłecki <zajec5@gmail.com>
-> Date: 20 03 2011 10:55
-> 2) From: George Kashperko <george@znau.edu.ua>
-> Date: 20 03 2011 14:07
-> ?
+On 8 March 2011 15:17, Johannes Berg <johannes@sipsolutions.net> wrote:
+> FWIW, I'm changing the subject since "crash" bothers me, it's not even
+> close to a crash.
 
-In digging through my archives, yes I did.
+Of course, sorry.
 
-But the proper thing to do is to quote portions in which you refer to
-when talking about them.  Otherwise the reciever can easily be lost.
+> On Sat, 2011-03-05 at 23:45 +0000, Mathias Burén wrote:
+>
+>> I got it again, with the newly compiled kernel. However, I've been
+>> trying for 20 minutes now and when I load iwlagn with the debug
+>> parameter I can't seem to get the warning. I was monitoring dmesg with
+>> "watch --interval=1 "dmesg|tail -n40"" but I never saw the warning. As
+>> soon as I removed the module, and inserted it again without the debug
+>> option I could reproduce the warning. Here are some dmesg logs:
+>
+> Curious.
+>
+>> no debug, crash 1: http://www.privatepaste.com/download/06539404a8
+>> no debug, crash 2: http://www.privatepaste.com/download/a6be5f5c81
+>
+> And I'd prefer if you also stopped using the word crash. Nothing
+> crashed. All you got was a stack trace because I put a warning there.
+> Really, not the end of the world, and in fact it probably has very
+> little or even no effect on functionality.
+>
 
-Remember, some of us get _thousands_ of emails a day.  Remembering
-context based on a subject: line is impossible, especially when the
-thread is long gone from my inbox and buried in my archive.
+Got it.
 
-> The case is, we discussed ssb/ai driver layout few days ago. George
-> shared idea of layout I agree with, nobody shared any objections. If
-> everything goes fine, we should have nicely modularized driver/project
-> supporting Broadcom's buses.
-> 
-> In this situation I'm not really interested is simple ai driver
-> stripped from brcm80211. According to me, it would led to harder
-> maintenance and harder implementation of support for such a driver in
-> b43.
+> However ... actually looking at the log files I'm totally confused what
+> it is that you're doing. Something appears to be continually switching
+> between interface modes, even using wireless extensions, yet it really
+> wants to be IBSS all the time. What's causing all this pointless
+> switching? It'd be useful to figure that out, but I'm not sure how. What
+> applications are you running that manage wireless? Are you, by any
+> chance, running wpa_supplicant manually in addition to network-manager?
 
-Ok, and I trust that you and Michael will work things out.
+I'm using NetworkManager, I haven't started anything else manually. I
+don't know why it switches modes like that, it happens on 2 laptops
+(both Ubuntu 10.10) so it could very well be some NetworkManager
+related issue.
 
-I have no objections to what you want at all, why do you think I do?
-I'm just handling getting the stuff in drivers/staging/ out of there,
-that's it.  I trust the rest of you all to handle the design decisions
-properly.
+> Irregardless of that though, there's clearly some kind of bug in the
+> driver since the TX power setting times out, and then as a result we get
+> the warning.
+>
+> Would you be willing to enable tracing and capture a trace using
+> trace-cmd, by running 'trace-cmd record -e mac80211 -e iwlwifi'?
+>
+> johannes
+>
+>
 
-And as there is no code here yet to complain about, I fail to see any
-problem yet :)
+I've since upgraded to 2.6.38-rc8 (same config). Looking around in the
+config, is it CONFIG_FUNCTION_TRACER I need to enable, and is that it?
+(kernel function tracer)
 
-thanks,
-
-greg k-h
+// Mathias
