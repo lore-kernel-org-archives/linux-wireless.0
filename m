@@ -1,104 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:36014 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752333Ab1C2Av5 (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:54729 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753099Ab1CHNLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 20:51:57 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/4] mwifiex: remove unused radio_on variable and macros
-Date: Mon, 28 Mar 2011 17:55:43 -0700
-Message-Id: <1301360144-4986-3-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1301360144-4986-1-git-send-email-bzhao@marvell.com>
-References: <1301360144-4986-1-git-send-email-bzhao@marvell.com>
+	Tue, 8 Mar 2011 08:11:17 -0500
+Received: by mail-ww0-f51.google.com with SMTP id 40so871110wwj.8
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 05:11:16 -0800 (PST)
+Subject: Re: [PATCH 06/15] wl12xx: 1281/1283 support - New boot sequence
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
+References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	 <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Mar 2011 15:11:16 +0200
+Message-ID: <1299589876.1816.67.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marc Yang <yangyang@marvell.com>
+On Sun, 2011-03-06 at 16:32 +0200, Shahar Levi wrote:
+> -       clk |= (wl->ref_clock << 1) << 4;
+> +       if (wl->chip.id == CHIP_ID_1283_PG20) {
+> +               if (is_ref_clk == false)
+> +                       clk |= ((wl->tcxo_clock & 0x3) << 1) << 4;
+> +               else
+> +                       clk |= ((wl->ref_clock & 0x3) << 1) << 4;
+> +       } else
+> +               clk |= ((wl->ref_clock & 0x3) << 1) << 4;
+> +
+>         wl1271_write32(wl, DRPW_SCRATCH_START, clk); 
 
-The radio_on variable is defined but never used.
+Can you explain why you changed the wl127x part as well? For wl127x
+you're essentially changing:
 
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/fw.h        |    3 ---
- drivers/net/wireless/mwifiex/init.c      |    1 -
- drivers/net/wireless/mwifiex/ioctl.h     |    1 -
- drivers/net/wireless/mwifiex/main.h      |    1 -
- drivers/net/wireless/mwifiex/sta_ioctl.c |    3 ---
- 5 files changed, 0 insertions(+), 9 deletions(-)
+clk |= (wl->ref_clock << 1) << 4;
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 6593e07..2d93391 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -875,9 +875,6 @@ struct host_cmd_ds_802_11_snmp_mib {
- 	u8 value[1];
- } __packed;
- 
--#define RADIO_ON                                0x01
--#define RADIO_OFF                               0x00
--
- struct mwifiex_rate_scope {
- 	__le16 type;
- 	__le16 length;
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index bad436d..6fcdaa9 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -234,7 +234,6 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	memset(adapter->bcn_buf, 0, sizeof(adapter->bcn_buf));
- 	adapter->bcn_buf_end = adapter->bcn_buf;
- 
--	adapter->radio_on = RADIO_ON;
- 	adapter->multiple_dtim = 1;
- 
- 	adapter->local_listen_interval = 0;	/* default value in firmware
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 7e0d316..d01160a 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -193,7 +193,6 @@ struct mwifiex_bss_info {
- 	u32 bss_chan;
- 	u32 region_code;
- 	u32 media_connected;
--	u32 radio_on;
- 	u32 max_power_level;
- 	u32 min_power_level;
- 	u32 adhoc_state;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 12b9a36..c26f704 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -611,7 +611,6 @@ struct mwifiex_adapter {
- 	u16 curr_tx_buf_size;
- 	u32 ioport;
- 	enum MWIFIEX_HARDWARE_STATUS hw_status;
--	u16 radio_on;
- 	u16 number_of_antenna;
- 	u32 fw_cap_info;
- 	/* spin lock for interrupt handling */
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index abad07e..b163507 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -790,9 +790,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
- 	/* Connection status */
- 	info->media_connected = priv->media_connected;
- 
--	/* Radio status */
--	info->radio_on = adapter->radio_on;
--
- 	/* Tx power information */
- 	info->max_power_level = priv->max_tx_power_level;
- 	info->min_power_level = priv->min_tx_power_level;
+to:
+
+clk |= ((wl->ref_clock & 0x3) << 1) << 4;
+
+This means that CONF_REF_CLK_38_4_M_XTAL will be treated in the same way
+as CONF_REF_CLK_19_2_E.  Is that right? If it is, it must be addressed
+in a separate patch and not as part of the Quattro series.
+
+
 -- 
-1.7.0.2
+Cheers,
+Luca.
 
