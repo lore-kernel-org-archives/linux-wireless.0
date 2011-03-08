@@ -1,134 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:35618 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755066Ab1CGCNI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:13:08 -0500
-Received: by mail-yi0-f46.google.com with SMTP id 27so1454482yia.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:13:08 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19828.16171.486222.209974@gargle.gargle.HOWL>
-Date: Mon, 7 Mar 2011 07:42:59 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC 04/34] ath9k_htc: Configure the beacon queue
+Received: from mx1.redhat.com ([209.132.183.28]:61989 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752046Ab1CHSPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 13:15:24 -0500
+Subject: Re: 2.6.38-rc7, iwlagn warning
+From: Dan Williams <dcbw@redhat.com>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wwguy <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 08 Mar 2011 12:16:46 -0600
+In-Reply-To: <AANLkTimgroA-LoAR1WftEZxNnBHtUwSGENpdWMEPMKaF@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	 <20110304134648.GB9866@tuxdriver.com>
+	 <1299251879.24333.3.camel@wwguy-ubuntu>
+	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
+	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+	 <1299602750.3734.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
+	 <1299604680.3734.4.camel@jlt3.sipsolutions.net>
+	 <AANLkTimgroA-LoAR1WftEZxNnBHtUwSGENpdWMEPMKaF@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1299608207.31279.19.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Tue, 2011-03-08 at 17:54 +0000, Mathias Burén wrote:
+> On 8 March 2011 17:18, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2011-03-08 at 17:13 +0000, Mathias Burén wrote:
+> >
+> >> 1299604089.756872: WPS: UUID based on MAC address - hexdump(len=16):
+> >> cc fa a1 31 39 a7 5c 33 96 d8 eb 09 dd fe 7f 0f
+> >> 1299604089.768927: ssid - hexdump_ascii(len=11):
+> >>      55 62 75 6e 74 75 41 64 68 6f 63                  UbuntuAdhoc
+> >> 1299604094.005785: ssid - hexdump_ascii(len=11):
+> >>      55 62 75 6e 74 75 41 64 68 6f 63                  UbuntuAdhoc
+> >>
+> >> Anything else I can try/provide?
+> >
+> > Could you do the -dddt thing as explained on the link I had before?
+> >
+> > Obviously, we're now looking for the cause -- while the warning still
+> > shouldn't happen *even if userspace is misbehaving*. The trace will
+> > hopefully help me figure out why we get the warning, I'll look at it
+> > later.
+> >
+> > johannes
+> >
+> >
+> 
+> I think the wpa_supplicant log file is generated correctly now, see:
+> http://www.2shared.com/file/QTkhZ1VC/wpa_supplicant.html
 
-Set operating parameters (cwmin, cwmax) for the beacon queue
-in AP mode.
+Could you also grab /var/log/daemon.log or /var/log/NetworkManager.log,
+whichever one exists?  And just to  make sure, when this problem
+happens, there is only one wpa_supplicant running at the time, right?
+Is something like wicd also running?
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   77 ++++++++++++++---------
- 1 files changed, 46 insertions(+), 31 deletions(-)
+The logs there look like something external is telling the supplicant to
+disassociate, which could be NM or some other tool, but NM should not be
+exhibiting this behavior if NM itself was used to start the adhoc
+network.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 52b6907..5f15896 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -18,6 +18,50 @@
- 
- #define FUDGE 2
- 
-+void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
-+{
-+	struct ath_hw *ah = priv->ah;
-+	struct ath9k_tx_queue_info qi, qi_be;
-+
-+	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
-+	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
-+
-+	ath9k_hw_get_txq_props(ah, priv->beaconq, &qi);
-+
-+	if (priv->ah->opmode == NL80211_IFTYPE_AP) {
-+		qi.tqi_aifs = 1;
-+		qi.tqi_cwmin = 0;
-+		qi.tqi_cwmax = 0;
-+	} else if (priv->ah->opmode == NL80211_IFTYPE_ADHOC) {
-+		int qnum = priv->hwq_map[WME_AC_BE];
-+
-+		ath9k_hw_get_txq_props(ah, qnum, &qi_be);
-+
-+		qi.tqi_aifs = qi_be.tqi_aifs;
-+
-+		/*
-+		 * For WIFI Beacon Distribution
-+		 * Long slot time  : 2x cwmin
-+		 * Short slot time : 4x cwmin
-+		 */
-+		if (ah->slottime == ATH9K_SLOT_TIME_20)
-+			qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
-+		else
-+			qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
-+
-+		qi.tqi_cwmax = qi_be.tqi_cwmax;
-+
-+	}
-+
-+	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
-+		ath_err(ath9k_hw_common(ah),
-+			"Unable to update beacon queue %u!\n", priv->beaconq);
-+	} else {
-+		ath9k_hw_resettxqueue(ah, priv->beaconq);
-+	}
-+}
-+
-+
- static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 					struct htc_beacon_config *bss_conf)
- {
-@@ -179,6 +223,8 @@ static void ath9k_htc_beacon_config_ap(struct ath9k_htc_priv *priv,
- 		bss_conf->beacon_interval, nexttbtt, imask,
- 		!!(intval & ATH9K_BEACON_RESET_TSF));
- 
-+	ath9k_htc_beaconq_config(priv);
-+
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
- 	priv->cur_beacon_conf.bmiss_cnt = 0;
-@@ -351,37 +397,6 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv)
- 	ath9k_htc_send_beacon(priv, slot);
- }
- 
--/* Currently, only for IBSS */
--void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
--{
--	struct ath_hw *ah = priv->ah;
--	struct ath9k_tx_queue_info qi, qi_be;
--	int qnum = priv->hwq_map[WME_AC_BE];
--
--	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
--	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
--
--	ath9k_hw_get_txq_props(ah, qnum, &qi_be);
--
--	qi.tqi_aifs = qi_be.tqi_aifs;
--	/* For WIFI Beacon Distribution
--	 * Long slot time  : 2x cwmin
--	 * Short slot time : 4x cwmin
--	 */
--	if (ah->slottime == ATH9K_SLOT_TIME_20)
--		qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
--	else
--		qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
--	qi.tqi_cwmax = qi_be.tqi_cwmax;
--
--	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
--		ath_err(ath9k_hw_common(ah),
--			"Unable to update beacon queue %u!\n", qnum);
--	} else {
--		ath9k_hw_resettxqueue(ah, priv->beaconq);
--	}
--}
--
- void ath9k_htc_assign_bslot(struct ath9k_htc_priv *priv,
- 			    struct ieee80211_vif *vif)
- {
--- 
-1.7.4.1
+Dan
+
 
