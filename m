@@ -1,82 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:47438 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751504Ab1CGCKg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52814 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755657Ab1CHQ1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:10:36 -0500
-Received: by yxs7 with SMTP id 7so1452154yxs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:10:36 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19828.16017.691812.916489@gargle.gargle.HOWL>
-Date: Mon, 7 Mar 2011 07:40:25 +0530
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: ath9k-devel <ath9k-devel@lists.ath9k.org>
-Subject: [RFC 00/34] ath9k_htc AP mode
+	Tue, 8 Mar 2011 11:27:07 -0500
+Subject: Re: 2.6.38-rc7, iwlagn warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	 <20110304134648.GB9866@tuxdriver.com>
+	 <1299251879.24333.3.camel@wwguy-ubuntu>
+	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
+	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Mar 2011 17:26:59 +0100
+Message-ID: <1299601619.3734.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the current patchset for enabing AP mode for ath9k_htc.
-TX status processing has been enabled in the FW and the host
-driver has been updated accordingly. TX filtering hasn't been fixed
-yet, though.
+On Tue, 2011-03-08 at 16:22 +0000, Mathias Burén wrote:
 
-The updated FW can be found at: http://linuxwireless.org/en/users/Drivers/ath9k_htc#AP_Mode
+> > Would you be willing to enable tracing and capture a trace using
+> > trace-cmd, by running 'trace-cmd record -e mac80211 -e iwlwifi'?
 
-Sujith Manoharan (34):
-  ath9k_htc: Fix WMI and beacon header
-  ath9k_htc: Add beacon slots
-  ath9k_htc: Add TSF adjust capability
-  ath9k_htc: Configure the beacon queue
-  ath9k_htc: Handle buffered frames in AP mode
-  ath9k_htc: Enable AP mode
-  ath9k_htc: Fix beacon miss under heavy load
-  ath9k_htc: Queue WMI events
-  ath9k_htc: Move debug code to a separate file
-  ath9k_htc: Add RX error statistics
-  ath9k_htc: Fix RX length check
-  ath9k_htc: Remove unused WMI commands
-  ath9k_htc: Use SKB's private area for TX parameters
-  ath9k_htc: Sync struct ath9k_htc_target_sta with FW
-  ath9k_htc: Sync struct ath9k_htc_target_vif with FW
-  ath9k_htc: Remove unused WMI_WLAN_TXCOMP_EVENTID
-  ath9k_htc: Move TX specific stuff to a separate structure
-  ath9k_htc: Reduce TX queue size
-  ath9k_htc: Sync MGMT/DATA packet headers with firmware
-  ath9k_htc: Add a new WMI event WMI_TXSTATUS_EVENTID
-  ath9k_htc: Increase URB count for REG_IN pipe
-  ath9k_htc: Fix TX queue management
-  ath9k_htc: Introduce new HTC API
-  ath9k_htc: Move endpoint header parsing to TX tasklet
-  ath9k_htc: Add TX slots
-  ath9k_htc: Use helper functions for TX processing
-  ath9k_htc: Drain pending TX frames properly
-  ath9k_htc: Optimize HTC start/stop API
-  ath9k_htc: Drain packets on station removal
-  ath9k_htc: Add support for TX completion
-  ath9k_htc: Add a debugfs file to dump TX slot information
-  ath9k_htc: Add a debugfs file showing endpoint status
-  ath9k_htc: Add a timer to cleanup WMI events
-  ath9k_htc: Use separate URB pool for management frames
+> I've since upgraded to 2.6.38-rc8 (same config). Looking around in the
+> config, is it CONFIG_FUNCTION_TRACER I need to enable, and is that it?
+> (kernel function tracer)
 
- drivers/net/wireless/ath/ath9k/Makefile         |    2 +
- drivers/net/wireless/ath/ath9k/hif_usb.c        |  320 +++++++++----
- drivers/net/wireless/ath/ath9k/hif_usb.h        |    7 +-
- drivers/net/wireless/ath/ath9k/htc.h            |  163 +++++---
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |  315 +++++++++++--
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c  |  406 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c   |   12 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |   20 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |  322 +++----------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |  583 ++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/htc_hst.c        |   50 +-
- drivers/net/wireless/ath/ath9k/htc_hst.h        |   14 +-
- drivers/net/wireless/ath/ath9k/wmi.c            |  119 +++--
- drivers/net/wireless/ath/ath9k/wmi.h            |   65 +++-
- 14 files changed, 1758 insertions(+), 640 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+You need CONFIG_MAC80211_DRIVER_API_TRACER and
+CONFIG_IWLWIFI_DEVICE_TRACING (and their prerequisites, which you can
+find in menuconfig by hitting the slash ("/") key and searching for
+these config symbols, remove the CONFIG_ prefix)
 
--- 
-1.7.4.1
+johannes
 
