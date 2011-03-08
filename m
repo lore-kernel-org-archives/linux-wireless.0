@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:57709 "EHLO coco.kroah.org"
+Received: from purkki.adurom.net ([80.68.90.206]:56016 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756639Ab1CAPsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 10:48:23 -0500
-Date: Tue, 1 Mar 2011 10:48:40 -0500
-From: Greg KH <greg@kroah.com>
-To: Javier Martinez Canillas <martinez.javier@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH 2/2] staging: brcm80211: Remove unused variables and
- code clean up
-Message-ID: <20110301154840.GA27312@kroah.com>
-References: <1298840055-5044-1-git-send-email-martinez.javier@gmail.com>
- <1298840055-5044-2-git-send-email-martinez.javier@gmail.com>
- <20110301031151.GA7620@kroah.com>
- <AANLkTi=zU-F=y2qn6B90F3esbNVkE6_nCOZS-dnTA4en@mail.gmail.com>
+	id S1753377Ab1CHHnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 02:43:55 -0500
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Re: Powersave broken on p54
+References: <1299003142.6461.12.camel@maggie>
+	<201103021813.52719.chunkeey@googlemail.com>
+	<1299086257.13604.17.camel@marge>
+	<201103021918.30528.chunkeey@googlemail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 08 Mar 2011 09:43:53 +0200
+In-Reply-To: <201103021918.30528.chunkeey@googlemail.com> (Christian Lamparter's message of "Wed\, 2 Mar 2011 19\:18\:30 +0100")
+Message-ID: <87oc5m2h1i.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTi=zU-F=y2qn6B90F3esbNVkE6_nCOZS-dnTA4en@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 01, 2011 at 04:37:55PM +0100, Javier Martinez Canillas wrote:
-> >> ---
-> >>  drivers/staging/brcm80211/brcmsmac/wlc_mac80211.c |    9 ---------
-> >
-> > This doesn't apply anymore, care to redo it and resend?
-> >
-> > thanks,
-> 
-> Sure Greg but I tried with today linux-next and the patch applies
-> cleanly. Maybe the problem are some patches that you have but haven't
-> reached linux-next yet.
-> 
-> Do you want me to wait a few days to redo and resend it or am I doing
-> something wrong?
+Christian Lamparter <chunkeey@googlemail.com> writes:
 
-I applied all of these patches while on a very long plane flight, and
-didn't get them to git.kernel.org until after the linux-next pulls
-happened for todays linux-next.
+> On Wednesday 02 March 2011 18:17:37 Michael Buesch wrote:
+>> On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
+>> > sure there was the rssi->dbm update (I hope you've already updated
+>> > your eeprom image.)
+>> 
+>> What change to the eeprom is needed? My eeprom doesn't
+>> contain any rssi info (see recent NULL ptr fix).
+>
+> I think you should (re-)add it, I don't know what the
+> firmware is doing with it, but maybe Kalle knows more?
 
-So try it tomorrow, all of the changes should be there then and you
-should be able to regenerate it then.
+Most probably it's just to get good rssi values for received frames
+which is passed to the host. I doubt that the rssi calibration values
+are used anything useful inside the firmware. But as always, anything
+is possible :)
 
-If not, please let me know.
-
-Or, you can always work off of the staging-next branch of the
-staging-2.6 tree in my git tree if you don't want to use linux-next,
-it's your choice.
-
-thanks,
-
-greg k-h
+-- 
+Kalle Valo
