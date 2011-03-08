@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2250 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752185Ab1C2PMn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 11:12:43 -0400
-Message-ID: <4D91F6DA.50808@canonical.com>
-Date: Tue, 29 Mar 2011 09:12:26 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: wwguy <wey-yi.w.guy@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 2.6.38 iwlwifi 11n_disable=1
-References: <4D8CB794.9040102@canonical.com> <1301067874.9139.7.camel@wwguy-ubuntu>
-In-Reply-To: <1301067874.9139.7.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:59514 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462Ab1CHR13 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 12:27:29 -0500
+Subject: Re: 2.6.38-rc7, iwlagn warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	 <20110304134648.GB9866@tuxdriver.com>
+	 <1299251879.24333.3.camel@wwguy-ubuntu>
+	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
+	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+	 <1299602750.3734.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Mar 2011 18:27:25 +0100
+Message-ID: <1299605245.3734.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/25/2011 09:44 AM, wwguy wrote:
-> Hi Tim,
->
-> On Fri, 2011-03-25 at 08:41 -0700, Tim Gardner wrote:
->> Wey-Yi,
->>
->> The Ubuntu Maverick release (2.6.35) has been carrying a user space
->> patch in module-init-tools that disables 802.11n support by default
->> using the 11n_disable module parameter. With the split in 2.6.38 into
->> iwl3945 and iwlagn is it possible that we could now remove the module
->> option for iwlagn? Will the 4965 adapters function correctly with 802.11n?
->>
->
-> with both the driver split and new 5000 uCode available at
-> (http://www.intellinuxwireless.org/?n=Downloads)
->
-> I believe we are in very good shape to have 11n support for both legacy
-> and agn devices. (yes 4965 will have 11n support)
->
-> Please remove the module option to disable 11n support.
->
-> Thank you very much for the help.
->
-> Wey
->
->
+On Tue, 2011-03-08 at 17:13 +0000, Mathias Burén wrote:
 
-It seems that not everyone's experience has been superior: 
-https://bugs.launchpad.net/ubuntu/+source/linux-firmware/+bug/630748/comments/70
+> trace http://www.2shared.com/file/XIqwsRt0/trace.html
+> dmesg http://www.2shared.com/file/vShUfLjr/dmesg-warning-no-connection.html
 
-I'm enabling 802.11n support for non-legacy iwlwifi devices in natty for 
-now. We'll see how it works out.
+Just to confirm -- these were taken at the same time?
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+johannes
+
