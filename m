@@ -1,94 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2633 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754162Ab1CGSZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 13:25:21 -0500
-To: "Francis Moreau" <francis.moro@gmail.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
-Subject: Re: brcm80211: the system freezes if booted with laptop wifi
- switch to OFF
-References: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
- <op.vryqz6qt3ri7v4@arend-laptop>
- <AANLkTinbrbkUO-ycAsX4cLEoM6avPeiYEZZ-zKtavfqq@mail.gmail.com>
- <op.vry7kwq83ri7v4@arend-laptop>
- <AANLkTinWOFPUqmv6PbQMy6xnsAptGKUjoAHoxB65LCy9@mail.gmail.com>
-Date: Mon, 7 Mar 2011 19:25:07 +0100
-MIME-Version: 1.0
-From: "Arend van Spriel" <arend@broadcom.com>
-Message-ID: <op.vrzj35j33ri7v4@arend-laptop>
-In-Reply-To: <AANLkTinWOFPUqmv6PbQMy6xnsAptGKUjoAHoxB65LCy9@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed;
- delsp=yes
+Received: from he.sipsolutions.net ([78.46.109.217]:36956 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682Ab1CHPRd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 10:17:33 -0500
+Subject: Re: 2.6.38-rc7, iwlagn warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	 <20110304134648.GB9866@tuxdriver.com>
+	 <1299251879.24333.3.camel@wwguy-ubuntu>
+	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Mar 2011 16:17:27 +0100
+Message-ID: <1299597447.4676.25.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 07 Mar 2011 18:29:47 +0100, Francis Moreau  
-<francis.moro@gmail.com> wrote:
+FWIW, I'm changing the subject since "crash" bothers me, it's not even
+close to a crash.
 
-> On Mon, Mar 7, 2011 at 2:54 PM, Arend van Spriel <arend@broadcom.com>  
-> wrote:
->>
->> I don't know what the origin is of your kernel so please provide some
->> details on that.
->
-> What kind of information do you need ?
->
-> As you probably noticed the kernel I'm running is 2.6.38-rc6.
->
+On Sat, 2011-03-05 at 23:45 +0000, Mathias Burén wrote:
 
-Yup. However, that is not unique by itself. Did you get it from a git  
-repository like linux-next maintained by Stephen Rothwell or linux-2.6  
-maintained by Linus Torvalds, or did you download a kernel snapshot from  
-ftp.kernel.org.
+> I got it again, with the newly compiled kernel. However, I've been
+> trying for 20 minutes now and when I load iwlagn with the debug
+> parameter I can't seem to get the warning. I was monitoring dmesg with
+> "watch --interval=1 "dmesg|tail -n40"" but I never saw the warning. As
+> soon as I removed the module, and inserted it again without the debug
+> option I could reproduce the warning. Here are some dmesg logs:
 
->
-> Revelant part of lscpi:
->
-> 12:00.0 Network controller: Broadcom Corporation Device 4727 (rev 01)
-> 	Subsystem: Dell Device 0010
-> 	Flags: bus master, fast devsel, latency 0, IRQ 17
-> 	Memory at fbb00000 (64-bit, non-prefetchable) [size=16K]
-> 	Capabilities: <access denied>
-> 	Kernel driver in use: brcm80211
-> 	Kernel modules: brcm80211
->
+Curious. 
 
-Always useful to know what hardware you are using. Thanks.
+> no debug, crash 1: http://www.privatepaste.com/download/06539404a8
+> no debug, crash 2: http://www.privatepaste.com/download/a6be5f5c81
 
->
->> The patch itself can be found in the linuxdriver email
->> archive:
->>
->> http://driverdev.linuxdriverproject.org/pipermail/devel/2011-January/011381.html
->>
->
-> Do you want me to give it a try ?
->
+And I'd prefer if you also stopped using the word crash. Nothing
+crashed. All you got was a stack trace because I put a warning there.
+Really, not the end of the world, and in fact it probably has very
+little or even no effect on functionality.
 
-I don't think it will apply cleanly, but sure go ahead.
 
->
->> Not sure whether it applies to whatever you have. I just tried your  
->> scenario
->> with my driver and hardware and no freezes during boot.
->
-> My scenario is:
->
->    - set the switch to OFF
->    - insmod the module
->    - bring up/configure the interface
+However ... actually looking at the log files I'm totally confused what
+it is that you're doing. Something appears to be continually switching
+between interface modes, even using wireless extensions, yet it really
+wants to be IBSS all the time. What's causing all this pointless
+switching? It'd be useful to figure that out, but I'm not sure how. What
+applications are you running that manage wireless? Are you, by any
+chance, running wpa_supplicant manually in addition to network-manager?
 
-That's a bit different, but could you elaborate on the last step. Are you  
-using iw, wpa_supplicant, etc. or relying on NetworkManager.
+Irregardless of that though, there's clearly some kind of bug in the
+driver since the TX power setting times out, and then as a result we get
+the warning.
 
-Gr. AvS
--- 
-"The most merciful thing in the world, I think, is the inability of the  
-human
-mind to correlate all its contents." - "The Call of Cthulhu"
+Would you be willing to enable tracing and capture a trace using
+trace-cmd, by running 'trace-cmd record -e mac80211 -e iwlwifi'?
+
+johannes
 
