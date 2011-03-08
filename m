@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:7621 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131Ab1CUViO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60079 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756049Ab1CHQpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 17:38:14 -0400
-Received: from kpbe19.cbf.corp.google.com (kpbe19.cbf.corp.google.com [172.25.105.83])
-	by smtp-out.google.com with ESMTP id p2LLcD6x006099
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 14:38:13 -0700
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by kpbe19.cbf.corp.google.com with ESMTP id p2LLcCCe015357
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 14:38:12 -0700
-From: Paul Stewart <pstew@google.com>
-Date: Mon, 21 Mar 2011 14:32:59 -0700
-Subject: [PATCH 0/4] Add station BSS parameters to station
-To: linux-wireless@vger.kernel.org
-Message-Id: <20110321213812.76CD420891@glenhelen.mtv.corp.google.com>
+	Tue, 8 Mar 2011 11:45:55 -0500
+Subject: Re: 2.6.38-rc7, iwlagn warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	 <20110304134648.GB9866@tuxdriver.com>
+	 <1299251879.24333.3.camel@wwguy-ubuntu>
+	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
+	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Mar 2011 17:45:50 +0100
+Message-ID: <1299602750.3734.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows user-space monitoring of BSS parameters for the associated
-station.  This is useful for debugging and verifying that the paramaters
-are as expected.
+On Tue, 2011-03-08 at 16:22 +0000, Mathias Burén wrote:
 
-Paul Stewart (4):
-  nl80211: Add station info flags and intervals
-  cfg80211: Add station info to station struct
-  nl80211: Add bss info to station message
-  mac80211: Add bss info to that exported to station
+> I'm using NetworkManager, I haven't started anything else manually. I
+> don't know why it switches modes like that, it happens on 2 laptops
+> (both Ubuntu 10.10) so it could very well be some NetworkManager
+> related issue.
 
- include/linux/nl80211.h |   35 ++++++++++++++++++++++++++++++++++-
- include/net/cfg80211.h  |   34 ++++++++++++++++++++++++++++++++++
- net/mac80211/cfg.c      |   13 ++++++++++++-
- net/wireless/nl80211.c  |   21 ++++++++++++++++++++-
- 4 files changed, 100 insertions(+), 3 deletions(-)
+Actually, before you do the tracing, can we get the supplicant logs? See
+http://live.gnome.org/NetworkManager/Debugging under "Debugging WiFi
+connections".
 
--- 
-1.7.3.1
+johannes
 
