@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59910 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:49455 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750766Ab1CJJ3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 04:29:11 -0500
-Date: Thu, 10 Mar 2011 10:27:54 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Subject: Re: Problem with BCM943224
-Message-ID: <20110310092753.GA2323@redhat.com>
-References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
- <4D77A06E.3050902@lwfinger.net>
- <AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
- <4D77AD18.60804@lwfinger.net>
- <AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
- <4D77B4B6.8030603@lwfinger.net>
- <AANLkTinEC5b6-vP_zc2RE2Juc8YFx8nkEK7isvQw+UVX@mail.gmail.com>
+	id S1751404Ab1CHHju (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 02:39:50 -0500
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Subject: Re: [PATCH 17/18] wl1251: enable tx path in monitor mode if necessary for packet injection
+References: <4D45A79A.1030102@davizone.at> <4D45B7DC.3060303@davizone.at>
+	<8762t5dptt.fsf@purkki.adurom.net> <4D473F16.4010102@davizone.at>
+	<87bp2vbcem.fsf@purkki.adurom.net> <4D5EDE0E.9060004@davizone.at>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 08 Mar 2011 09:39:48 +0200
+In-Reply-To: <4D5EDE0E.9060004@davizone.at> (David Gnedt's message of "Fri\, 18 Feb 2011 22\:01\:02 +0100")
+Message-ID: <87sjuy2h8b.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTinEC5b6-vP_zc2RE2Juc8YFx8nkEK7isvQw+UVX@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 09, 2011 at 07:04:01PM +0100, Rafał Miłecki wrote:
-> Do you think buying some more expensive adapter could help? The newest
-> offered by hwtools seems to be:
-> http://www.hwtools.net/Adapter/MP2H.html
-> (ver 2.2). It is not so expensive at all, $15 without shipping.
-> 
-> I've already written to them with question about BCM943224
-> compatibility (they don't have that chipset on their list).
-> 
-> Stanisław: I remember you telling that you have such a adapter. Do you
-> maybe have access to some BCM943224/BCM94313 card? Could you test that
-> combo for me, please?
+David Gnedt <david.gnedt@davizone.at> writes:
 
-I have new laptop at home with some bcm device, don't know exacly what
-version, but most likely is somehting that you listed or similar. I'll
-test and let you now next week. I planned to replace wireless adapter
-on that laptop anyway.
+> Am 2011-02-01 23:47, schrieb Kalle Valo:
+>> What frames are we talking about exactly? (I can't test this right now.)
+>
+> They look to me like CTS-to-Self frames. I have attached a sample of
+> them. There is no other RTS/CTS traffic on the same channel.
 
-> The only other solution I can see is to buy motherboard with mini PCIe
-> slot. There are some *D410P* (BLKD410PT, BOXD410PT, BLKD410PTL,
-> D410PT) and D510MO having such a slow (and Atom CPU.... :/). Kernel
-> compilation would be disaster but I think I could live with that.
+IIRC correctly bluetooth coexistance sends CTS-to-Self frames before
+firmware is giving airtime to bluetooth. I'm guessing that's the
+reason why you are seeing these frames.
 
-If you configure out all unnedded drivers/features, compilation time
-should not be so bad.
-
-> Do
-> you think such a boards would be compatible with Broadcom's cards?
-
-I think any miniPCIe host should be compatibile with any miniPCIe device.
-
-Cheers
-Stanislaw
+-- 
+Kalle Valo
