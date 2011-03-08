@@ -1,112 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20513 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757073Ab1CNR7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:59:45 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 22/38] ath6kl: remove-typedef HTC_INIT_INFO
-Date: Mon, 14 Mar 2011 10:58:56 -0700
-Message-ID: <1300125552-24422-23-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:48000 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755447Ab1CHUGd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 15:06:33 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 812695401CC
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Mar 2011 15:10:05 -0500 (EST)
+Subject: Compat-wireless release for 2011-03-08 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110308200631.BA07645935@repository3.orbit-lab.org>
+Date: Tue,  8 Mar 2011 15:06:31 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s HTC_INIT_INFO \
-	"struct htc_init_info" drivers/staging/ath6kl/
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + abdd788...e110091 akpm-end   -> origin/akpm-end  (forced update)
+   fb62c00..214d93b  akpm-start -> origin/akpm-start
+   2ad4b4f..4e20f6f  history    -> origin/history
+ + c45165c...50dc6c3 master     -> origin/master  (forced update)
+   fb62c00..214d93b  stable     -> origin/stable
+ * [new tag]         next-20110308 -> next-20110308
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Tested-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/htc2/htc.c            |    4 ++--
- drivers/staging/ath6kl/htc2/htc_internal.h   |    2 +-
- drivers/staging/ath6kl/include/htc_api.h     |    6 +++---
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |    2 +-
- 4 files changed, 7 insertions(+), 7 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/staging/ath6kl/htc2/htc.c b/drivers/staging/ath6kl/htc2/htc.c
-index 2a065b4..810fe7b 100644
---- a/drivers/staging/ath6kl/htc2/htc.c
-+++ b/drivers/staging/ath6kl/htc2/htc.c
-@@ -90,7 +90,7 @@ static void HTCCleanup(HTC_TARGET *target)
- }
- 
- /* registered target arrival callback from the HIF layer */
--HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
-+HTC_HANDLE HTCCreate(void *hif_handle, struct htc_init_info *pInfo)
- {
-     HTC_TARGET              *target = NULL;
-     int                 status = 0;
-@@ -130,7 +130,7 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
-         target->Device.MessagePendingCallback = HTCRecvMessagePendingHandler;
-         target->EpWaitingForBuffers = ENDPOINT_MAX;
- 
--        memcpy(&target->HTCInitInfo,pInfo,sizeof(HTC_INIT_INFO));
-+        memcpy(&target->HTCInitInfo,pInfo,sizeof(struct htc_init_info));
-         
-         ResetEndpointStates(target);
-           
-diff --git a/drivers/staging/ath6kl/htc2/htc_internal.h b/drivers/staging/ath6kl/htc2/htc_internal.h
-index deff62a..c5727ca 100644
---- a/drivers/staging/ath6kl/htc2/htc_internal.h
-+++ b/drivers/staging/ath6kl/htc2/htc_internal.h
-@@ -132,7 +132,7 @@ typedef struct _HTC_TARGET {
-     u8 LastTrailer[256];
-     u8 LastTrailerLength;
- #endif
--    HTC_INIT_INFO               HTCInitInfo;
-+    struct htc_init_info               HTCInitInfo;
-     u8 HTCTargetVersion;
-     int                         MaxMsgPerBundle;       /* max messages per bundle for HTC */
-     bool                      SendBundlingEnabled;   /* run time enable for send bundling (dynamic) */
-diff --git a/drivers/staging/ath6kl/include/htc_api.h b/drivers/staging/ath6kl/include/htc_api.h
-index ad25d3e..5878417 100644
---- a/drivers/staging/ath6kl/include/htc_api.h
-+++ b/drivers/staging/ath6kl/include/htc_api.h
-@@ -43,10 +43,10 @@ typedef void *HTC_HANDLE;
- 
- typedef u16 HTC_SERVICE_ID;
- 
--typedef struct _HTC_INIT_INFO {
-+struct htc_init_info {
-     void   *pContext;           /* context for target failure notification */
-     void   (*TargetFailure)(void *Instance, int Status);
--} HTC_INIT_INFO;
-+};
- 
- /* per service connection send completion */
- typedef void   (*HTC_EP_SEND_PKT_COMPLETE)(void *,HTC_PACKET *);
-@@ -269,7 +269,7 @@ struct htc_endpoint_stats {
-   @example:
-   @see also: HTCDestroy
- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
--HTC_HANDLE HTCCreate(void *HifDevice, HTC_INIT_INFO *pInfo);
-+HTC_HANDLE HTCCreate(void *HifDevice, struct htc_init_info *pInfo);
- /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   @desc: Get the underlying HIF device handle
-   @function name: HTCGetHifDevice
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index b739943..ebfe1e8 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -1599,7 +1599,7 @@ ar6000_avail_ev(void *context, void *hif_handle)
-     void *ar_netif;
-     AR_SOFTC_T *ar;
-     int device_index = 0;
--    HTC_INIT_INFO  htcInfo;
-+    struct htc_init_info  htcInfo;
- #ifdef ATH6K_CONFIG_CFG80211
-     struct wireless_dev *wdev;
- #endif /* ATH6K_CONFIG_CFG80211 */
--- 
-1.7.4.15.g7811d
-
+    831955 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1560 - % of code consists of backport work
