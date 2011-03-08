@@ -1,59 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33737 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755828Ab1CAV7O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 16:59:14 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 13:58:52 -0800
-Date: Tue, 1 Mar 2011 13:58:56 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"nbd@openwrt.org" <nbd@openwrt.org>,
-	"dubowoj@neratec.com" <dubowoj@neratec.com>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"simon.wunderlich@saxnet.de" <simon.wunderlich@saxnet.de>
-Subject: Re: [PATCH 4/9] [cfg80211] add preliminary radar processing code
-Message-ID: <20110301215856.GF6835@tux>
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
- <201102281748.50054.bernhard.schmidt@saxnet.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55925 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750909Ab1CHRkb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 12:40:31 -0500
+Received: by wya21 with SMTP id 21so196722wya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 09:40:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201102281748.50054.bernhard.schmidt@saxnet.de>
+Date: Tue, 8 Mar 2011 17:40:30 +0000
+Message-ID: <AANLkTin2ob-EOmY_iqxZbQ98dTA6_vAGsGWrMNKBZTVV@mail.gmail.com>
+Subject: Override Minstrel HT RC to set an MCS bitrate (mask)
+From: "M. A." <jdiq123@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 08:48:49AM -0800, Bernhard Schmidt wrote:
-> --- /dev/null
-> +++ b/net/wireless/radar.c
-> @@ -0,0 +1,86 @@
-> +/*
-> + * Radar handling
-> + *
-> + * Copyright 2011 Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/ieee80211.h>
-> +#include <net/cfg80211.h>
-> +#include "radar.h"
-> +
-> +static struct radar_parameters regdomain_params[] = {
-> +	{ 60, 1800, 1000 },	/* FCC, correct? */
-> +	{ 60, 1800, 1000 },	/* ETSI */
-> +	{ 60, 1800, 1000 },	/* JP, correct? */
-> +};
+Hi all,
 
-If FCC or JP are not supported, I rather code not be present for it, or some
-sort of flag for now to allow the radar enablement thingy to fail all the
-time. In fact if FCC / JP regions are not supported you should not even
-be able to operate in the mode of operation desired if your target channel
-is a DFS one. If you do enter into an allowed non-DFS channel for that region
-and you later try to switch to a DFS chanel then we'd hit another failure.
+My question is how can I modify Minstrel HT rate control to be able to
+override it (by a boolean or otherwise) to select an MCS or specific
+rate index from user space (such that once set it driver will only try
+sending at that rate until unset then driver will resort back to
+Minstrel RC).
 
-  Luis
+I have been able to change other kernel parameters at runtime(echo
+/sys/kernel/debug/ieee80211/...) by passing them through (fops) to
+DebugFs. however I am unsure of what parameters to pass through in the
+case of MCS rate fixing and what modifications to the code are
+required to achieve this.
+
+
+Also I have been told that these sections of code facilitate the
+masking of rates;
+
+=========================================================================
+include/net/cfg80211.h: cfg80211_bitrate_mask
+-------------------------------------------------------------------------------------------------------
+/*
+ * cfg80211_bitrate_mask - masks for bitrate control
+ */
+struct cfg80211_bitrate_mask {
+	struct {
+		u32 legacy;
+		/* TODO: add support for masking MCS rates; e.g.: */
+		/* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
+	} control[IEEE80211_NUM_BANDS];
+};
+-------------------------------------------------------------------------------------------------------
+net/mac80211/cfg.c ieee80211_set_bitrate_mask
+-------------------------------------------------------------------------------------------------------
+static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+				      struct net_device *dev,
+				      const u8 *addr,
+				      const struct cfg80211_bitrate_mask *mask)
+{
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+	int i;
+
+	/*
+	 * This _could_ be supported by providing a hook for
+	 * drivers for this function, but at this point it
+	 * doesn't seem worth bothering.
+	 */
+	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+		return -EOPNOTSUPP;
+
+
+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
+
+	return 0;
+}
+-------------------------------------------------------------------------------------------------------
+net/wireless/nl80211.c: nl80211_set_tx_bitrate_mask
+-------------------------------------------------------------------------------------------------------
+static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+				       struct genl_info *info)
+{
+	struct nlattr *tb[NL80211_TXRATE_MAX + 1];
+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+	struct cfg80211_bitrate_mask mask;
+	int rem, i;
+	struct net_device *dev = info->user_ptr[1];
+	struct nlattr *tx_rates;
+	struct ieee80211_supported_band *sband;
+
+	if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
+		return -EINVAL;
+
+	if (!rdev->ops->set_bitrate_mask)
+		return -EOPNOTSUPP;
+
+	memset(&mask, 0, sizeof(mask));
+	/* Default to all rates enabled */
+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+		sband = rdev->wiphy.bands[i];
+		mask.control[i].legacy =
+			sband ? (1 << sband->n_bitrates) - 1 : 0;
+	}
+
+	/*
+	 * The nested attribute uses enum nl80211_band as the index. This maps
+	 * directly to the enum ieee80211_band values used in cfg80211.
+	 */
+	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
+	{
+		enum ieee80211_band band = nla_type(tx_rates);
+		if (band < 0 || band >= IEEE80211_NUM_BANDS)
+			return -EINVAL;
+		sband = rdev->wiphy.bands[band];
+		if (sband == NULL)
+			return -EINVAL;
+		nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+			  nla_len(tx_rates), nl80211_txattr_policy);
+		if (tb[NL80211_TXRATE_LEGACY]) {
+			mask.control[band].legacy = rateset_to_mask(
+				sband,
+				nla_data(tb[NL80211_TXRATE_LEGACY]),
+				nla_len(tb[NL80211_TXRATE_LEGACY]));
+			if (mask.control[band].legacy == 0)
+				return -EINVAL;
+		}
+	}
+
+	return rdev->ops->set_bitrate_mask(&rdev->wiphy, dev, NULL, &mask);
+}
+====================================================================================================================
+
+
+Any help is much appreciated!
+
+Thank you all very much
