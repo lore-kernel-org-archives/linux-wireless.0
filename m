@@ -1,104 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47173 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754188Ab1C3DHJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36961 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754911Ab1CHPST (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 23:07:09 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 3so354559ywj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 20:07:09 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v5 09/10] mac80211: send notification on new peer candidate for our secure mesh
-Date: Tue, 29 Mar 2011 19:06:06 -0700
-Message-Id: <1301450767-27045-10-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
-References: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
+	Tue, 8 Mar 2011 10:18:19 -0500
+Subject: Re: 2.6.38-rc7, iwlagn crash
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
+	 <20110304134648.GB9866@tuxdriver.com>
+	 <1299251879.24333.3.camel@wwguy-ubuntu>
+	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
+	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
+	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
+	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Mar 2011 16:18:13 +0100
+Message-ID: <1299597493.4676.26.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Sat, 2011-03-05 at 23:45 +0000, Mathias Burén wrote:
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c       |    4 +---
- net/mac80211/mesh.h       |    3 ++-
- net/mac80211/mesh_plink.c |   18 +++++++++++++-----
- 3 files changed, 16 insertions(+), 9 deletions(-)
+> however the "UbuntuAdhoc" network appears very rarely
+> on the phone (and I get a notification every other second on the
+> laptop "UbuntuAdhoc disconnected").
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 47a26c0..1120797 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -590,9 +590,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	if (elems.mesh_id && elems.mesh_config &&
- 	    mesh_matches_local(&elems, sdata)) {
- 		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
--
--		mesh_neighbour_update(mgmt->sa, supp_rates, sdata,
--				      mesh_peer_accepts_plinks(&elems));
-+		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
- 	}
- }
- 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index b99e230..10acf1c 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -226,7 +226,8 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata);
- /* Mesh plinks */
- void mesh_neighbour_update(u8 *hw_addr, u32 rates,
--		struct ieee80211_sub_if_data *sdata, bool add);
-+		struct ieee80211_sub_if_data *sdata,
-+		struct ieee802_11_elems *ie);
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
- void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
- void mesh_plink_broken(struct sta_info *sta);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index b327e0e..84e5b05 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -237,8 +237,9 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data *sdata,
--			   bool peer_accepting_plinks)
-+void mesh_neighbour_update(u8 *hw_addr, u32 rates,
-+		struct ieee80211_sub_if_data *sdata,
-+		struct ieee802_11_elems *elems)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-@@ -248,8 +249,14 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data
- 	sta = sta_info_get(sdata, hw_addr);
- 	if (!sta) {
- 		rcu_read_unlock();
--
--		sta = mesh_plink_alloc(sdata, hw_addr, rates);
-+		/* Userspace handles peer allocation when security is enabled
-+		 * */
-+		if (sdata->u.mesh.is_secure)
-+			cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
-+					elems->ie_start, elems->total_len,
-+					GFP_KERNEL);
-+		else
-+			sta = mesh_plink_alloc(sdata, hw_addr, rates);
- 		if (!sta)
- 			return;
- 		if (sta_info_insert_rcu(sta)) {
-@@ -260,7 +267,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates, struct ieee80211_sub_if_data
- 
- 	sta->last_rx = jiffies;
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
--	if (peer_accepting_plinks && sta->plink_state == PLINK_LISTEN &&
-+	if (mesh_peer_accepts_plinks(elems) &&
-+			sta->plink_state == PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
- 			sdata->u.mesh.mshcfg.auto_open_plinks)
- 		mesh_plink_open(sta);
--- 
-1.7.4.1
+FWIW, this is definitely due to the continuous pointless mode switching
+I pointed out in my other mail.
+
+johannes
 
