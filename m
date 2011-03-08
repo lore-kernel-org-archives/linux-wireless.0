@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36462 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145Ab1CETmK (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54938 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab1CHT2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 14:42:10 -0500
-Subject: Re: [PATCH 1/4 v2] mac80211: Enable mesh security from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
+	Tue, 8 Mar 2011 14:28:14 -0500
+Message-ID: <4D76833E.9010603@candelatech.com>
+Date: Tue, 08 Mar 2011 11:27:58 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTikAR4v8T48q7eSoOU+R+foqTUT+6Kr4U6ZnWwu7@mail.gmail.com>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
-	 <1299288252-28314-2-git-send-email-thomas@cozybit.com>
-	 <1299333920.3826.5.camel@jlt3.sipsolutions.net>
-	 <AANLkTikAR4v8T48q7eSoOU+R+foqTUT+6Kr4U6ZnWwu7@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 05 Mar 2011 20:42:07 +0100
-Message-ID: <1299354127.29845.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ath9k-devel@atheros.com
+Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536 ath_stoprecv+0xc8/0xda
+ [ath9k]()
+References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>	<20110303135942.GA8969@tuxdriver.com>	<AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>	<20110307151201.GC2664@tuxdriver.com> <AANLkTi=7RSdKhzGazQFUnBZqzMQskOSHq=7E08uan2vu@mail.gmail.com> <4D767A4B.1060203@gmail.com>
+In-Reply-To: <4D767A4B.1060203@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-03-05 at 11:34 -0800, Javier Cardona wrote:
+On 03/08/2011 10:49 AM, Justin P. Mattock wrote:
+> On 03/07/2011 07:22 AM, Mohammed Shafi wrote:
+>> On Mon, Mar 7, 2011 at 8:42 PM, John W.
+>> Linville<linville@tuxdriver.com> wrote:
+>>> On Sun, Mar 06, 2011 at 12:47:05AM -0800, Justin Mattock wrote:
+>>>
+>>>> full dmesg here:
+>>>> http://fpaste.org/5JQp/
+>>>> let me know if I need to supply any info(also I can try a bisect, but
+>>>> am in the middle of changing residencies, so it might not be right
+>>>> away)
+>>>
+>>> One of the Atheros guys suggested that you change a DMA timeout value.
+>>> Did you try that?
+>>
+>> John it looks like increasing the timeout also does not seems to help.
+>> A user reported this issue in ath9k developer list and he told that
+>> increasing the timeout did not fix this issue.
+>>
+>>>
+>>> John
+>>> --
+>>> John W. Linville Someday the world will need a hero, and you
+>>> linville@tuxdriver.com might be all we have. Be ready.
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe
+>>> linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>
+> at barnes and noble, and I see this has fired off again. will see if I
+> can reproduce and bisect.
 
-> > That last check seems a bit pointless -- I'd trust userspace (aka allow
-> > it to shoot itself in the foot) and not check that there's RSN
-> > information when it says it wants security -- maybe WAPI will come up
-> > with mesh security at some point ;-)
-> 
-> Enabling security without an RSN will result in mesh node that can't
-> communicate with anyone in the mesh, secured or not.
+This problem goes way back, and the driver has had lots of fixes in the
+last few months, so I'm not sure if bisecting is going to
+do you any good.
 
-Right, well, I keep thinking that maybe a daemon could still run an
-unsecured mesh? But in any case I'm not so sure how that works at all --
-see my reply to the intro mail.
+Thanks,
+Ben
 
-> I prefer
-> keeping that check in place to avoid annoying misconfigurations.  You
-> still think it's pointless?  (In fact I was contemplating a more
-> strict check by returning EINVAL instead of ignoring the request when
-> userspace enables security and does not pass an RSN.)
+>
+> full dmesg:
+>
+> http://fpaste.org/6sIH/
+>
+> Justin P. Mattock
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at http://www.tux.org/lkml/
 
-I don't see how that misconfiguration could ever happen since you
-wouldn't run the daemon if you don't want RSN, and iw would never set
-the secure flag?
 
-It just seems that if somebody wants to play with a protocol that
-doesn't use the RSN IE but maybe adapts WPA to it, we could still allow
-it to work.
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
