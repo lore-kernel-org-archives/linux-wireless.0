@@ -1,175 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47138 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755309Ab1C3A5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:57:08 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:56:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 13/34] ath6kl: remove USER_KEYS define
-Date: Tue, 29 Mar 2011 17:56:10 -0700
-Message-ID: <1301446591-15236-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:37815 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754767Ab1CIPow (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 10:44:52 -0500
+Received: by vws12 with SMTP id 12so565481vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 07:44:51 -0800 (PST)
+Message-ID: <4D77A06E.3050902@lwfinger.net>
+Date: Wed, 09 Mar 2011 09:44:46 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Problem with BCM943224
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+In-Reply-To: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is always defined so just keep the code.
+On 03/09/2011 04:59 AM, Rafał Miłecki wrote:
+> I've 14e4:4353 labeled as BCM943224HMS / DW1520
+>
+> [  199.009268] brcm80211: module is from the staging directory, the
+> quality is unknown, you have been warned.
+> [  199.022493] brcm80211 0000:03:00.0: enabling device (0000 ->  0002)
+> [  199.022529] brcm80211 0000:03:00.0: PCI INT A ->  GSI 28 (level,
+> low) ->  IRQ 28
+> [  199.022543] brcm80211 0000:03:00.0: setting latency timer to 64
+> [  199.050090] cfg80211: World regulatory domain updated:
+> [  199.050096] cfg80211:     (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp)
+> [  199.050101] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz),
+> (300 mBi, 2000 mBm)
+> [  199.050105] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz),
+> (300 mBi, 2000 mBm)
+> [  199.050109] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz),
+> (300 mBi, 2000 mBm)
+> [  199.050113] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz),
+> (300 mBi, 2000 mBm)
+> [  199.050117] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz),
+> (300 mBi, 2000 mBm)
+> [  199.297803] Found chip of unknown type (0xffffffff)
+> [  199.297808] wl0: wlc_bmac_attach: si_attach failed
+> [  199.297813] wl0: wlc_bmac_attach: failed with err 11
+> [  199.297818] wl0: wlc_attach: failed with err 11
+> [  199.297856] brcm80211: wlc_attach() failed with code 11
+> [  199.297882] brcm80211: wl_pci_probe: wl_attach failed!
+>
+> [  343.223842] wl: module license 'unspecified' taints kernel.
+> [  343.223849] Disabling lock debugging due to kernel taint
+> [  343.256069] wl 0000:03:00.0: setting latency timer to 64
+> [  343.258760] eth%d: 5.100.82.38 driver failed with code 11
+>
+> It seems all reads are 1 (0xffffffff). Can this be some bug in driver?
+> Can this be because I use adapter mini PCIe to PCIe x1? I remember
+> such a situation when I connected adapter to PCIe x16 and used N-PHY
+> card SSB based.
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/Makefile                    |    1 -
- drivers/staging/ath6kl/os/linux/ar6000_drv.c       |   11 -----------
- .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    5 -----
- .../staging/ath6kl/os/linux/include/athdrv_linux.h |    2 --
- 4 files changed, 0 insertions(+), 19 deletions(-)
+A read of all 1's is a symptom of reading a non-existent register. I would 
+certainly suspect the adapter.
 
-diff --git a/drivers/staging/ath6kl/Makefile b/drivers/staging/ath6kl/Makefile
-index a86dd5a..d7441e7 100644
---- a/drivers/staging/ath6kl/Makefile
-+++ b/drivers/staging/ath6kl/Makefile
-@@ -110,7 +110,6 @@ ifeq ($(CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK),y)
- ccflags-y += -DATH6KL_SKIP_ABI_VERSION_CHECK
- endif
- 
--ccflags-y += -DUSER_KEYS
- ccflags-y += -DNO_SYNC_FLUSH
- ccflags-y += -DHTC_EP_STAT_PROFILING
- ccflags-y += -DWAPI_ENABLE
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 2a5abe0..abde256 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -349,9 +349,7 @@ static void ar6000_cookie_cleanup(struct ar6_softc *ar);
- static void ar6000_free_cookie(struct ar6_softc *ar, struct ar_cookie * cookie);
- static struct ar_cookie *ar6000_alloc_cookie(struct ar6_softc *ar);
- 
--#ifdef USER_KEYS
- static int ar6000_reinstall_keys(struct ar6_softc *ar,u8 key_op_ctrl);
--#endif
- 
- #ifdef CONFIG_AP_VIRTUAL_ADAPTER_SUPPORT
- struct net_device *arApNetDev;
-@@ -1926,10 +1924,8 @@ ar6000_stop_endpoint(struct net_device *dev, bool keepprofile, bool getdbglogs)
-                     ar6000_disconnect_event(ar, DISCONNECT_CMD, ar->arBssid, 0, NULL, 0);
-                 }
-             }
--#ifdef USER_KEYS
-             ar->user_savedkeys_stat = USER_SAVEDKEYS_STAT_INIT;
-             ar->user_key_ctrl      = 0;
--#endif
-         }
- 
-          AR_DEBUG_PRINTF(ATH_DEBUG_INFO,("%s(): WMI stopped\n", __func__));
-@@ -4347,7 +4343,6 @@ skip_key:
-         wireless_send_event(ar->arNetDev, IWEVCUSTOM, &wrqu, buf);
-     }
- 
--#ifdef USER_KEYS
-     if (ar->user_savedkeys_stat == USER_SAVEDKEYS_STAT_RUN &&
-         ar->user_saved_keys.keyOk == true)
-     {
-@@ -4360,7 +4355,6 @@ skip_key:
-         }
-         ar6000_reinstall_keys(ar, key_op_ctrl);
-     }
--#endif /* USER_KEYS */
- 
-     netif_wake_queue(ar->arNetDev);
- 
-@@ -4581,13 +4575,11 @@ ar6000_disconnect_event(struct ar6_softc *ar, u8 reason, u8 *bssid,
-         reconnect_flag = 0;
-     }
- 
--#ifdef USER_KEYS
-     if (reason != CSERV_DISCONNECT)
-     {
-         ar->user_savedkeys_stat = USER_SAVEDKEYS_STAT_INIT;
-         ar->user_key_ctrl      = 0;
-     }
--#endif /* USER_KEYS */
- 
-     netif_stop_queue(ar->arNetDev);
-     A_MEMZERO(ar->arBssid, sizeof(ar->arBssid));
-@@ -5713,9 +5705,7 @@ void ap_wapi_rekey_event(struct ar6_softc *ar, u8 type, u8 *mac)
- }
- #endif
- 
--#ifdef USER_KEYS
- static int
--
- ar6000_reinstall_keys(struct ar6_softc *ar, u8 key_op_ctrl)
- {
-     int status = 0;
-@@ -5760,7 +5750,6 @@ _reinstall_keys_out:
- 
-     return status;
- }
--#endif /* USER_KEYS */
- 
- 
- void
-diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-index 5b053ab..23427cf 100644
---- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-+++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
-@@ -92,8 +92,6 @@
- #endif
- 
- 
--#ifdef USER_KEYS
--
- #define USER_SAVEDKEYS_STAT_INIT     0
- #define USER_SAVEDKEYS_STAT_RUN      1
- 
-@@ -104,7 +102,6 @@ struct USER_SAVEDKEYS {
-     CRYPTO_TYPE               keyType;
-     bool                    keyOk;
- };
--#endif
- 
- #define DBG_INFO        0x00000001
- #define DBG_ERROR       0x00000002
-@@ -540,11 +537,9 @@ struct ar6_softc {
-     u32 log_cnt;
-     u32 dbglog_init_done;
-     u32 arConnectCtrlFlags;
--#ifdef USER_KEYS
-     s32 user_savedkeys_stat;
-     u32 user_key_ctrl;
-     struct USER_SAVEDKEYS   user_saved_keys;
--#endif
-     USER_RSSI_THOLD rssi_map[12];
-     u8 arUserBssFilter;
-     u16 ap_profile_flag;    /* AP mode */
-diff --git a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
-index 065b09b..3d5f01d 100644
---- a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
-+++ b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
-@@ -620,7 +620,6 @@ typedef enum {
-  */
- #define AR6000_XIOCTL_WMI_SET_TXOP                      57
- 
--#ifdef USER_KEYS
- /*
-  * arguments:
-  * UINT32 cmd (AR6000_XIOCTL_USER_SETKEYS)
-@@ -628,7 +627,6 @@ typedef enum {
-  * uses struct ar6000_user_setkeys_info
-  */
- #define AR6000_XIOCTL_USER_SETKEYS                      58
--#endif /* USER_KEYS */
- 
- #define AR6000_XIOCTL_WMI_SET_KEEPALIVE                 59
- /*
--- 
-1.7.0.4
+I have a PCI Express extender for my HP laptop. Although it avoids the problem 
+of the white-listed WLAN modules in the BIOS, not all cards work with it. 
+Perhaps there is a critical timing issue.
 
+I just tested again. My BCM4322 (14e4:432b) works with both b43 and wl in the 
+extender. For the record, the upload speeds are 8 Mbps with b43 and 15 Mbps with 
+wl in the 2.4 GHz band (router max 54 Mbps). In the 5 GHz band, the router is 
+set for 270 Mbps max and wl gets 80 Mbps. Of course, the 5 GHz band in b43 is 
+inactive.
+
+Larry
