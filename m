@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:58827 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750820Ab1CDHQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 02:16:47 -0500
-Message-ID: <4D709148.2000101@cn.fujitsu.com>
-Date: Fri, 04 Mar 2011 15:14:16 +0800
-From: Shan Wei <shanwei@cn.fujitsu.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54497 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932127Ab1CIRLs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 12:11:48 -0500
+Received: by fxm17 with SMTP id 17so683378fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 09:11:47 -0800 (PST)
+Message-ID: <4D77B4B6.8030603@lwfinger.net>
+Date: Wed, 09 Mar 2011 11:11:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: johannes@sipsolutions.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	stefano.brivio@polimi.it, mattias.nissler@gmx.de,
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH net-next] mac80211: remove unused macros
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Problem with BCM943224
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com> <4D77A06E.3050902@lwfinger.net> <AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com> <4D77AD18.60804@lwfinger.net> <AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
+In-Reply-To: <AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compile test only.
+On 03/09/2011 10:53 AM, Gábor Stefanik wrote:
+> 2011/3/9 Larry Finger<Larry.Finger@lwfinger.net>:
+>> On 03/09/2011 10:26 AM, Rafał Miłecki wrote:
+>>>
+>>> BCM4322 is not a problem for me as well. I can use BCM4312, BCM4321,
+>>> BCM4322 with my adapter without problem.
+>>>
+>>> It's BCM943224 that I hit this problem with.
+>>>
+>>> AFAIR you have some AI based card. Could you test this with your
+>>> extender for me?
+>>
+>> Sorry, I have no AI-based card. I checked for a BCM4313 on Ebay a couple of
+>> weeks ago and couldn't find one. I know that Dell ships that card in some
+>> laptops, but I couldn't find the part on their web site. Does anyone know
+>> the Dell part number?
+>
+> Not Dell, but HP: 593836-001
+>
+> http://shop.ebay.com/?_from=R40&_trksid=m570&_nkw=593836-001
+>
+> Sells below $15.
+
+Gábor and Rafał,
+
+Thanks for the links and search hints. I just bought a BCM94313 and a BCM943224. 
+When they arrive, I'll let you know what I learn about using them on the extender.
+
+Larry
 
 
-Signed-off-by: Shan Wei <shanwei@cn.fujitsu.com>
----
- net/mac80211/key.h         |    1 -
- net/mac80211/rc80211_pid.h |    3 ---
- net/mac80211/work.c        |    1 -
- 3 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 8106aa1..4ddbe27 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -21,7 +21,6 @@
- 
- #define WEP_IV_LEN		4
- #define WEP_ICV_LEN		4
--#define ALG_TKIP_KEY_LEN	32
- #define ALG_CCMP_KEY_LEN	16
- #define CCMP_HDR_LEN		8
- #define CCMP_MIC_LEN		8
-diff --git a/net/mac80211/rc80211_pid.h b/net/mac80211/rc80211_pid.h
-index 1a873f0..6510f8e 100644
---- a/net/mac80211/rc80211_pid.h
-+++ b/net/mac80211/rc80211_pid.h
-@@ -24,9 +24,6 @@
- /* Fixed point arithmetic shifting amount. */
- #define RC_PID_ARITH_SHIFT		8
- 
--/* Fixed point arithmetic factor. */
--#define RC_PID_ARITH_FACTOR		(1 << RC_PID_ARITH_SHIFT)
--
- /* Proportional PID component coefficient. */
- #define RC_PID_COEFF_P			15
- /* Integral PID component coefficient. */
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 204f0a4..e73c8ca 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -30,7 +30,6 @@
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
--#define IEEE80211_MAX_PROBE_TRIES 5
- 
- enum work_action {
- 	WORK_ACT_MISMATCH,
--- 
-1.6.3.3
