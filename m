@@ -1,89 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm12.bullet.mail.ukl.yahoo.com ([217.146.183.186]:43382 "HELO
-	nm12.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751035Ab1CZVjH (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:54694 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753904Ab1CIIQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2011 17:39:07 -0400
-Message-ID: <4D8E5BA3.1090909@users.sourceforge.net>
-Date: Sat, 26 Mar 2011 21:33:23 +0000
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-MIME-Version: 1.0
-To: Wu Zhangjin <wuzhangjin@gmail.com>
-CC: Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
-References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
-In-Reply-To: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 9 Mar 2011 03:16:21 -0500
+Received: by wwj40 with SMTP id 40so217993wwj.32
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 00:16:19 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: fixes for 1281/1283 support - New boot sequence
+From: Luciano Coelho <coelho@ti.com>
+To: "Levi, Shahar" <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTi=hswVxfrn-E9gLORiAqBA=2B3dBC77mtBe6W_J@mail.gmail.com>
+References: <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
+	 <1299591449-14741-1-git-send-email-coelho@ti.com>
+	 <AANLkTi=hswVxfrn-E9gLORiAqBA=2B3dBC77mtBe6W_J@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Mar 2011 10:16:21 +0200
+Message-ID: <1299658581.1816.92.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wu Zhangjin wrote:
-> led can not be turned off normally when rfkill is blocked, the cause is
-> the led_turn_off() function exit as not expected:
+On Tue, 2011-03-08 at 20:15 +0200, Levi, Shahar wrote:
+> On Tue, Mar 8, 2011 at 3:37 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+> > index e0d60ab..ffdcb7e 100644
+> > --- a/drivers/net/wireless/wl12xx/boot.c
+> > +++ b/drivers/net/wireless/wl12xx/boot.c
+> > @@ -533,46 +533,42 @@ static int wl128x_switch_fref(struct wl1271 *wl, bool *is_ref_clk)
+> >
+> >        /* if working on XTAL-only mode go directly to TCXO TO FREF SWITCH */
+> >        if ((wl->ref_clock == CONF_REF_CLK_38_4_M_XTAL) ||
+> > -           (wl->ref_clock == CONF_REF_CLK_26_M_XTAL)) {
+> > -               wl1271_debug(DEBUG_BOOT, "XTAL-only mode go directly to"
+> > -                                        " TCXO TO FREF SWITCH");
+> I believe that debug should be say in that function that check the ref value.
 
-Hmm. While this sounds more sensible, is it needed? And what does the windows 
-driver do?
+Sorry, I disagree.  This debug message is actually saying what is
+happening when the ref_clock value is *_XTAL and what happens cannot be
+seen in this part of the code, only in the part that calls this
+function.
 
-I think there are two kind of LEDs - one that comes on and off with the rfkill 
-switch; Larry or Herton makes the 2nd one, if there is one, blink while there is 
-traffic (and stay steady on otherwise).
+In fact, I almost removed this debug message completely, because there
+are way too many debug messages that are good during implementation, but
+shouldn't go out when the implementation is working.
 
-> 
-> drivers/net/wireless/rtl818x/rtl8187/leds.c:
-> 
-> static void led_turn_off(struct work_struct *work)
-> {
-> 	[...]
-> 	/* Don't change the LED, when the device is down. */
-> 	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_UNSPECIFIED)
-> 		return ;
-> 	[...]
-> 
-> When rfkill is blocked, the function calling order looks like this:
-> 
-> net/mac80211/iface.c:
-> 
-> ieee80211_do_stop
-> 	-> drv_remove_interface = rtl8187_remove_interface
-> 	-> ieee80211_stop_device
-> 		-> led_set_brightness
-> 			-> led_turn_off
-> 	-> drv_stop = rtl8187_stop
-> 
-> rtl8187_remove_interface() set priv->vif to NULL, so, led_turn_off()
-> will return and will not be able to turn off the led. delay the setting
-> of priv->vif to rtl8187_stop() can solve it.
-> 
-> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
-> ---
->  drivers/net/wireless/rtl818x/rtl8187/dev.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> index 2bb5297..1fea0cd 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> @@ -1007,6 +1007,9 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
->  	u32 reg;
->  
->  	mutex_lock(&priv->conf_mutex);
-> +
-> +	priv->vif = NULL;
-> +
->  	rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
->  
->  	reg = rtl818x_ioread8(priv, &priv->map->CMD);
-> @@ -1067,10 +1070,7 @@ exit:
->  static void rtl8187_remove_interface(struct ieee80211_hw *dev,
->  				     struct ieee80211_vif *vif)
->  {
-> -	struct rtl8187_priv *priv = dev->priv;
-> -	mutex_lock(&priv->conf_mutex);
-> -	priv->vif = NULL;
-> -	mutex_unlock(&priv->conf_mutex);
-> +	/* Nothing to do */
->  }
->  
->  static int rtl8187_config(struct ieee80211_hw *dev, u32 changed)
+I'll keep it (for now) after the function is called.
+
+
+> > @@ -788,18 +778,8 @@ int wl1271_load_firmware(struct wl1271 *wl)
+> >        /* WL1271: The reference driver skips steps 7 to 10 (jumps directly
+> >         * to upload_fw) */
+> >
+> > -       if (wl->chip.id == CHIP_ID_1283_PG20) {
+> > -               /*
+> > -                * Configure SDIO/wSPI DS according to the following table:
+> > -                * 00   8mA.
+> > -                * 01   4mA (default).
+> > -                * 10   6mA.
+> > -                * 11   2mA.
+> > -                * Write bits [1:0] of Register 0xd14
+> > -                * data is in pWlanParams->PlatformConfiguration bits [2:1]
+> Those two lines above is redundant. however I believe the comment
+> should be stay.
+
+This comment is useless in this part of the code.  If it should be
+somewhere, it should be where the macros are defined.  But even there, I
+think it doesn't add any value, because it's so obvious.
+
+
+> > diff --git a/drivers/net/wireless/wl12xx/boot.h b/drivers/net/wireless/wl12xx/boot.h
+> > index daaf0e7..429c926 100644
+> > --- a/drivers/net/wireless/wl12xx/boot.h
+> > +++ b/drivers/net/wireless/wl12xx/boot.h
+> > @@ -125,7 +125,12 @@ struct wl1271_static_data {
+> >  #define MCS_PLL_N_REG_VAL            0x07
+> >
+> >  #define SDIO_IO_DS                   0xd14
+> > +
+> > +/* SDIO/wSPI DS configuration values */
+> > +#define HCI_IO_DS_8MA                0
+> > +#define HCI_IO_DS_4MA                1 /* default */
+> >  #define HCI_IO_DS_6MA                2
+> > +#define HCI_IO_DS_2MA                4
+> This value should be 3.
+
+Ooops! Good that you noticed, thanks! I'll fix it.
+
+
+-- 
+Cheers,
+Luca.
+
