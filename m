@@ -1,77 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58788 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757831Ab1CONf2 (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:49667 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529Ab1CIWKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 09:35:28 -0400
-Received: by wwa36 with SMTP id 36so728790wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 06:35:27 -0700 (PDT)
+	Wed, 9 Mar 2011 17:10:03 -0500
+Message-ID: <4D77FAB4.4010204@gmail.com>
+Date: Wed, 09 Mar 2011 14:09:56 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110315131907.6f06a221@toddler>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<20110314164812.4c0cfc29@toddler>
-	<AANLkTimSZrGCzBaB9K=WVO7faGNM-+qeKEE2qzjkPnSD@mail.gmail.com>
-	<20110315131907.6f06a221@toddler>
-Date: Tue, 15 Mar 2011 19:05:27 +0530
-Message-ID: <AANLkTi=Gub1JAO21qtRjxVWrtc6Masp1siF3NHntgcvp@mail.gmail.com>
-Subject: Re: Could ath9k and rt2800pci bugs be related?
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Tony Houghton <h@realh.co.uk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Ben Greear <greearb@candelatech.com>,
+	Brian Prodoehl <bprodoehl@gmail.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ath9k-devel@atheros.com
+Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536 ath_stoprecv+0xc8/0xda
+ [ath9k]()
+References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>	<20110303135942.GA8969@tuxdriver.com>	<AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>	<20110307151201.GC2664@tuxdriver.com>	<AANLkTi=7RSdKhzGazQFUnBZqzMQskOSHq=7E08uan2vu@mail.gmail.com>	<4D767A4B.1060203@gmail.com>	<4D76833E.9010603@candelatech.com> <AANLkTikPQt+njjFPB6sJ-mEcsx6f-R6TAOhEd8egkqhH@mail.gmail.com> <4D768A9A.7090201@candelatech.com> <4D7699BF.1000602@gmail.com> <4D76D1DB.4070404@openwrt.org>
+In-Reply-To: <4D76D1DB.4070404@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 15, 2011 at 6:49 PM, Tony Houghton <h@realh.co.uk> wrote:
-> On Tue, 15 Mar 2011 13:17:40 +0530
-> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
->
->> On Mon, Mar 14, 2011 at 10:18 PM, Tony Houghton <h@realh.co.uk> wrote:
->> >
->> > I've just bought an Acer Aspire Revo 3700 and this had very similar
->> > symptoms with a different adapter. Luckily another customer had
->> > posted about it on the vendor's website and his fix works for me.
->> > The fix is to blacklist the rt2800pci module and the rt2860sta
->> > driver seems to work quite happily without it.
+On 03/08/2011 05:03 PM, Felix Fietkau wrote:
+> On 2011-03-08 10:03 PM, Justin P. Mattock wrote:
+>> On 03/08/2011 11:59 AM, Ben Greear wrote:
+>>> On 03/08/2011 11:45 AM, Brian Prodoehl wrote:
+>>>> On Tue, Mar 8, 2011 at 2:27 PM, Ben Greear<greearb@candelatech.com>
+>>>> wrote:
+>>>>> On 03/08/2011 10:49 AM, Justin P. Mattock wrote:
+>>>>>>
+>>>>>> On 03/07/2011 07:22 AM, Mohammed Shafi wrote:
+>>>>>>>
+>>>>>>> On Mon, Mar 7, 2011 at 8:42 PM, John W.
+>>>>>>> Linville<linville@tuxdriver.com>  wrote:
+>>>>>>>>
+>>>>>>>> On Sun, Mar 06, 2011 at 12:47:05AM -0800, Justin Mattock wrote:
+>>>>>>>>
+>>>>>>>>> full dmesg here:
+>>>>>>>>> http://fpaste.org/5JQp/
+>>>>>>>>> let me know if I need to supply any info(also I can try a bisect,
+>>>>>>>>> but
+>>>>>>>>> am in the middle of changing residencies, so it might not be right
+>>>>>>>>> away)
+>>>>>>>>
+>>>>>>>> One of the Atheros guys suggested that you change a DMA timeout
+>>>>>>>> value.
+>>>>>>>> Did you try that?
+>>>>>>>
+>>>>>>> John it looks like increasing the timeout also does not seems to help.
+>>>>>>> A user reported this issue in ath9k developer list and he told that
+>>>>>>> increasing the timeout did not fix this issue.
+>>>>>>>
+>>>>>>>>
+>>>>>>>> John
+>>>>>>>> --
+>>>>>>>> John W. Linville Someday the world will need a hero, and you
+>>>>>>>> linville@tuxdriver.com might be all we have. Be ready.
+>>>>>>>> --
+>>>>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>>>>> linux-wireless" in
+>>>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>>>>>>>
+>>>>>>>
+>>>>>>
+>>>>>> at barnes and noble, and I see this has fired off again. will see if I
+>>>>>> can reproduce and bisect.
+>>>>>
+>>>>> This problem goes way back, and the driver has had lots of fixes in the
+>>>>> last few months, so I'm not sure if bisecting is going to
+>>>>> do you any good.
+>>>>>
+>>>>> Thanks,
+>>>>> Ben
+>>>>
+>>>> The warnings have been around since you added the check for the
+>>>> problem, right? I remember initially it was a WARN_ON, and I'd get a
+>>>> steady flood of backtraces, and then it was switched to a
+>>>> WARN_ON_ONCE. I see these on every platform I have (x86_64, IXP425
+>>>> and AR71xx) with AR9002 and AR9003.
+>>>
+>>> I don't think I added the original check, but either way, it's
+>>> an old problem and bisecting it is unlikely to help.
+>>>
+>>> I can't believe that the Atheros guys really are unable reproduce
+>>> this, but I can believe that it might be very difficult to
+>>> actually understand and fix.
+>>>
+>>> At least in my testing, I see it quite often, but it doesn't
+>>> seem to cause any serious harm. We do occasionally see crashes,
+>>> especially on module unload for a heavily utilized system, or
+>>> one that is constantly trying and failing to associate,
+>>> so it could be related to this.
+>>>
+>>> Also, my patches to decrease scan and work_work related channel changes
+>>> made this harder to hit for our test cases.
+>>>
+>>> Thanks,
+>>> Ben
+>>>
 >>
->> can you please check by disabling the supicious rt modules and see
->> whether this problems happens.
+>>
+>> well I would do the bisect if I can easily reproduce this, but if this
+>> has been back since 2.6.2* or the initial release of ath9k then doing
+>> the bisect wont work.
+>>
+>> as for the warning message itself, seems the system is fine after this
+>> hits(just fires of on certain locations).
+>>
+>> Justin P. Mattock
+> Please try this patch (posted to linux-wireless@) and see if it fixes
+> this issue in your tests.
 >
-> Yes, I did blacklist rt2800pci and the system works correctly without
-> the module loaded. Even the wireless connection still works.
-
-Ok still there is also one or two guys reporting this locking issue,
-so we need to be very sure.
-
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index cb559e3..a9c3f46 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -413,9 +413,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+>   	 * mode interface or when in monitor mode. AP mode does not need this
+>   	 * since it receives all in-BSS frames anyway.
+>   	 */
+> -	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP)&&
+> -	     (sc->rx.rxfilter&  FIF_PROMISC_IN_BSS)) ||
+> -	    (sc->sc_ah->is_monitoring))
+> +	if (sc->sc_ah->is_monitoring)
+>   		rfilt |= ATH9K_RX_FILTER_PROM;
 >
->> for quick check please try with the latest compat wireless.
+>   	if (sc->rx.rxfilter&  FIF_CONTROL)
 >
-> How do I do that?
->
-> I would also be willing to add extra debugging messages to ath9k to help
-> track down the AR9285 problem. I'm a C programmer, but not a kernel
-> hacker so I think I would need some advice about which functions to
-> examine.
 >
 
-No its nothing to do with kernel hacking, its just a wireless package.
-instead of compiling the whole kernel or wireless testing, we can
-install a wireless package within our linux distribution in few
-minutes. This package is called compat-wireless which includes latest
-fixes in wireless testing.
-more information in:
-http://wireless.kernel.org/en/users/Download
 
-1.now download the compat wireless package in
-http://linuxwireless.org/download/compat-wireless-2.6/
-2. cd compat-wireless-...
-3. As you are suspicious about rt modules remove them in config.mk
-4.now do ./scripts/driver-select ath9k
-5.make
-6.make install
-7.make unload
-8.sudo modprobe ath9k
+patch applied: here is what I am seeing:
 
-thanks,
-shafi
+[ 1532.142246] FIREWALL:INPUT IN=wlan0 OUT= 
+MAC=01:00:5e:00:00:01:00:1e:e5:7a:64:79:08:00 SRC=192.168.180.1 
+DST=224.0.0.1 LEN=28 TOS=0x00 PREC=0x00 TTL=1 ID=0 DF PROTO=2
+[ 1534.089408] FIREWALL:INPUT IN=wlan0 OUT= 
+MAC=ff:ff:ff:ff:ff:ff:00:18:de:9c:0f:ef:08:00 SRC=192.168.180.213 
+DST=192.168.180.255 LEN=229 TOS=0x00 PREC=0x00 TTL=128 ID=10897 
+PROTO=UDP SPT=138 DPT=138 LEN=209
+[ 1575.870714] FIREWALL:INPUT IN=wlan0 OUT= 
+MAC=ff:ff:ff:ff:ff:ff:40:a6:d9:b8:58:7c:08:00 SRC=0.0.0.0 
+DST=255.255.255.255 LEN=328 TOS=0x00 PREC=0x00 TTL=255 ID=64945 
+PROTO=UDP SPT=68 DPT=67 LEN=308
+[ 1579.323946] ath: Timeout while waiting for nf to load: 
+AR_PHY_AGC_CONTROL=0x41d1a
+[ 1658.504988] FIREWALL:INPUT IN=wlan0 OUT= 
+MAC=01:00:5e:00:00:01:00:1e:e5:7a:64:79:08:00 SRC=192.168.180.1 
+DST=224.0.0.1 LEN=28 TOS=0x00 PREC=0x00 TTL=1 ID=0 DF PROTO=2
+[ 1681.342000] FIREWALL:INPUT IN=wlan0 OUT= 
+MAC=ff:ff:ff:ff:ff:ff:00:c0:a8:db:bd:af:08:00 SRC=192.168.180.54 
+DST=192.168.180.255 LEN=240 TOS=0x00 PREC=0x00 TTL=64 ID=19778 PROTO=UDP 
+SPT=138 DPT=138 LEN=220
+
+full dmesg is here:
+http://fpaste.org/jwTK/
+
+Justin P. Mattock
+
+
