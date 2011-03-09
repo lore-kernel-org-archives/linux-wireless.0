@@ -1,103 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:35363 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933058Ab1CaBJq (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:53801 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755841Ab1CIBt4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 21:09:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/2] mwifiex: remove struct mwifiex_802_11_fixed_ies
-Date: Wed, 30 Mar 2011 18:12:45 -0700
-Message-Id: <1301533965-10878-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1301533965-10878-1-git-send-email-bzhao@marvell.com>
-References: <1301533965-10878-1-git-send-email-bzhao@marvell.com>
+	Tue, 8 Mar 2011 20:49:56 -0500
+Received: by pvg12 with SMTP id 12so9852pvg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 17:49:55 -0800 (PST)
+MIME-Version: 1.0
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Tue, 8 Mar 2011 17:41:36 -0800
+Message-ID: <AANLkTi=wuAcm-25WHsRopc08UHEt9p0-5V=0GkpeqRK8@mail.gmail.com>
+Subject: [PATCH] mac80211: update minstrel_ht sample rate when probe is set
+To: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct mwifiex_802_11_fixed_ies is not necessary.
-struct mwifiex_event_wep_icv_err is not used any more.
+Waiting until the status is received can cause the same rate to be
+probed multiple times consecutively.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
 ---
- drivers/net/wireless/mwifiex/fw.h   |   14 --------------
- drivers/net/wireless/mwifiex/scan.c |   16 ++++++++--------
- 2 files changed, 8 insertions(+), 22 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |   15 +++++----------
+ 1 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index d981265..2b93811 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -343,20 +343,6 @@ enum ENH_PS_MODES {
- #define EVENT_GET_BSS_TYPE(event_cause)         \
- 	(((event_cause) >> 24) & 0x00ff)
- 
--struct mwifiex_event_wep_icv_err {
--	u16 reason_code;
--	u8 src_mac_addr[ETH_ALEN];
--	u8 wep_key_index;
--	u8 wep_key_length;
--	u8 key[WLAN_KEY_LEN_WEP104];
--};
+diff --git a/net/mac80211/rc80211_minstrel_ht.c
+b/net/mac80211/rc80211_minstrel_ht.c
+index 775cf15..bce14fb 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -415,10 +415,8 @@ minstrel_ht_tx_status(void *priv, struct
+ieee80211_supported_band *sband,
+ 		mi->sample_count--;
+ 	}
+
+-	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) {
++	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
+ 		mi->sample_packets += info->status.ampdu_len;
+-		minstrel_next_sample_idx(mi);
+-	}
+
+ 	for (i = 0; !last; i++) {
+ 		last = (i == IEEE80211_TX_MAX_RATES - 1) ||
+@@ -551,13 +549,14 @@ minstrel_get_sample_rate(struct minstrel_priv
+*mp, struct minstrel_ht_sta *mi)
+ 	sample_idx = sample_table[mg->column][mg->index];
+ 	mr = &mg->rates[sample_idx];
+ 	sample_idx += mi->sample_group * MCS_GROUP_RATES;
++	minstrel_next_sample_idx(mi);
+
+ 	/*
+ 	 * When not using MRR, do not sample if the probability is already
+ 	 * higher than 95% to avoid wasting airtime
+ 	 */
+ 	if (!mp->has_mrr && (mr->probability > MINSTREL_FRAC(95, 100)))
+-		goto next;
++		return -1;
+
+ 	/*
+ 	 * Make sure that lower rates get sampled only occasionally,
+@@ -566,17 +565,13 @@ minstrel_get_sample_rate(struct minstrel_priv
+*mp, struct minstrel_ht_sta *mi)
+ 	if (minstrel_get_duration(sample_idx) >
+ 	    minstrel_get_duration(mi->max_tp_rate)) {
+ 		if (mr->sample_skipped < 20)
+-			goto next;
++			return -1;
+
+ 		if (mi->sample_slow++ > 2)
+-			goto next;
++			return -1;
+ 	}
+
+ 	return sample_idx;
 -
--struct mwifiex_802_11_fixed_ies {
--	u8 time_stamp[8];
--	__le16 beacon_interval;
--	__le16 capabilities;
--};
--
- struct mwifiex_ie_types_header {
- 	__le16 type;
- 	__le16 len;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 69ea32f..64ed60a 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1210,7 +1210,8 @@ mwifiex_interpret_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 	struct ieee_types_ds_param_set *ds_param_set;
- 	struct ieee_types_cf_param_set *cf_param_set;
- 	struct ieee_types_ibss_param_set *ibss_param_set;
--	struct mwifiex_802_11_fixed_ies fixed_ie;
-+	__le16 beacon_interval;
-+	__le16 capabilities;
- 	u8 *current_ptr;
- 	u8 *rate;
- 	u8 element_len;
-@@ -1283,22 +1284,21 @@ mwifiex_interpret_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 	bss_entry->beacon_buf_size = bytes_left_for_current_beacon;
- 
- 	/* Time stamp is 8 bytes long */
--	memcpy(fixed_ie.time_stamp, current_ptr, 8);
- 	memcpy(bss_entry->time_stamp, current_ptr, 8);
- 	current_ptr += 8;
- 	bytes_left_for_current_beacon -= 8;
- 
- 	/* Beacon interval is 2 bytes long */
--	memcpy(&fixed_ie.beacon_interval, current_ptr, 2);
--	bss_entry->beacon_period = le16_to_cpu(fixed_ie.beacon_interval);
-+	memcpy(&beacon_interval, current_ptr, 2);
-+	bss_entry->beacon_period = le16_to_cpu(beacon_interval);
- 	current_ptr += 2;
- 	bytes_left_for_current_beacon -= 2;
- 
- 	/* Capability information is 2 bytes long */
--	memcpy(&fixed_ie.capabilities, current_ptr, 2);
--	dev_dbg(adapter->dev, "info: InterpretIE: fixed_ie.capabilities=0x%X\n",
--	       fixed_ie.capabilities);
--	bss_entry->cap_info_bitmap = le16_to_cpu(fixed_ie.capabilities);
-+	memcpy(&capabilities, current_ptr, 2);
-+	dev_dbg(adapter->dev, "info: InterpretIE: capabilities=0x%X\n",
-+	       capabilities);
-+	bss_entry->cap_info_bitmap = le16_to_cpu(capabilities);
- 	current_ptr += 2;
- 	bytes_left_for_current_beacon -= 2;
- 
+-next:
+-	minstrel_next_sample_idx(mi);
+-	return -1;
+ }
+
+ static void
 -- 
-1.7.0.2
-
+1.7.0.4
