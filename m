@@ -1,44 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:43063 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755003Ab1CMOYR convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53093 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755663Ab1CIQaw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Mar 2011 10:24:17 -0400
-Received: by qyg14 with SMTP id 14so3703530qyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Mar 2011 07:24:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <op.vr99odoz3ri7v4@arend-laptop>
-References: <33960.57403.qm@web34205.mail.mud.yahoo.com>
-	<op.vr99odoz3ri7v4@arend-laptop>
-Date: Sun, 13 Mar 2011 15:24:15 +0100
-Message-ID: <AANLkTinFJt92Ai_DGWDE7VrTV4gb0h7Dz6rW_Hb7nvnt@mail.gmail.com>
-Subject: Re: Broadcom USB Dongle Wifi BCM4323
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: HiEn <vhpham80@yahoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Mar 2011 11:30:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: bloat-devel@lists.bufferbloat.net, me@bobcopeland.com,
+	mickflemm@gmail.com, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] wireless: add support for ethtool_ops->{get,set}_ringparam
+Date: Wed,  9 Mar 2011 11:21:22 -0500
+Message-Id: <1299687684-19638-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/13 Arend van Spriel <arend@broadcom.com>:
-> On Sun, 13 Mar 2011 10:18:32 +0100, HiEn <vhpham80@yahoo.com> wrote:
->
->> Hi Arend,
->> I've tried but could not find the driver source code (linux) for BCM4323
->> (USB Wifi Dongle).   Could you please give me some advise?
->>
->> Thanks and best regards,
->>
->
-> Well, you did not find it because there is no open-source support for it.
-> Both b43 and brcm80211 drivers do not provide usb support (see table at
-> http://wireless.kernel.org/en/users/Drivers/b43#Known_PCI_devices). It is
-> suggested to use ndiswrapper, but I guess that is not your goal as you are
-> looking for source code.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ include/net/cfg80211.h |    4 ++++
+ net/wireless/ethtool.c |   33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+), 0 deletions(-)
 
-Does anyone have some hardware knowledge about that card? Is this
-standard SSB/AI bus with USB host? Or some totally different hardware?
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 1ac5786..25f546f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1364,6 +1364,10 @@ struct cfg80211_ops {
+ 
+ 	int	(*set_antenna)(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant);
+ 	int	(*get_antenna)(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant);
++
++	int	(*set_ringparam)(struct wiphy *wiphy, u32 tx, u32 rx);
++	void	(*get_ringparam)(struct wiphy *wiphy,
++				 u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
+ };
+ 
+ /*
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index ca4c825..9bde4d1 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -1,5 +1,6 @@
+ #include <linux/utsname.h>
+ #include <net/cfg80211.h>
++#include "core.h"
+ #include "ethtool.h"
+ 
+ static void cfg80211_get_drvinfo(struct net_device *dev,
+@@ -37,9 +38,41 @@ static void cfg80211_get_regs(struct net_device *dev, struct ethtool_regs *regs,
+ 	regs->len = 0;
+ }
+ 
++static void cfg80211_get_ringparam(struct net_device *dev,
++				   struct ethtool_ringparam *rp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++
++	memset(rp, 0, sizeof(*rp));
++
++	if (rdev->ops->get_ringparam)
++		rdev->ops->get_ringparam(wdev->wiphy,
++					 &rp->tx_pending, &rp->tx_max_pending,
++					 &rp->rx_pending, &rp->rx_max_pending);
++}
++
++static int cfg80211_set_ringparam(struct net_device *dev,
++				  struct ethtool_ringparam *rp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++
++	if (rp->rx_mini_pending != 0 || rp->rx_jumbo_pending != 0)
++		return -EINVAL;
++
++	if (rdev->ops->set_ringparam)
++		return rdev->ops->set_ringparam(wdev->wiphy,
++						rp->tx_pending, rp->rx_pending);
++
++	return -ENOTSUPP;
++}
++
+ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_drvinfo = cfg80211_get_drvinfo,
+ 	.get_regs_len = cfg80211_get_regs_len,
+ 	.get_regs = cfg80211_get_regs,
+ 	.get_link = ethtool_op_get_link,
++	.get_ringparam = cfg80211_get_ringparam,
++	.set_ringparam = cfg80211_set_ringparam,
+ };
 -- 
-Rafał
+1.7.4
+
