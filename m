@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45146 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754118Ab1CQMRr convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54833 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab1CIQuk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 08:17:47 -0400
-Received: by fxm17 with SMTP id 17so2614942fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 05:17:46 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers in AP and IBSS
-Date: Thu, 17 Mar 2011 13:16:02 +0100
-Cc: Juan Carlos Garza <juancarlosgarza@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com>
-In-Reply-To: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com>
+	Wed, 9 Mar 2011 11:50:40 -0500
+Received: by qwd7 with SMTP id 7so531436qwd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 08:50:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103171316.02636.helmut.schaa@googlemail.com>
+In-Reply-To: <4D77AD18.60804@lwfinger.net>
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+	<4D77A06E.3050902@lwfinger.net>
+	<AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
+	<4D77AD18.60804@lwfinger.net>
+Date: Wed, 9 Mar 2011 17:50:39 +0100
+Message-ID: <AANLkTi=W_YKiMQg78PGzdwjWDxxXjThEUD2=y3xvSNdm@mail.gmail.com>
+Subject: Re: Problem with BCM943224
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 16. M�rz 2011 schrieb Juan Carlos Garza:
-> When configured as ad-hoc mode, it won't allow to turn off power
-> savings (iwconfig wlan5 power off <-- fails)
+W dniu 9 marca 2011 17:38 użytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisał:
+> On 03/09/2011 10:26 AM, Rafał Miłecki wrote:
+>>
+>> BCM4322 is not a problem for me as well. I can use BCM4312, BCM4321,
+>> BCM4322 with my adapter without problem.
+>>
+>> It's BCM943224 that I hit this problem with.
+>>
+>> AFAIR you have some AI based card. Could you test this with your
+>> extender for me?
+>
+> Sorry, I have no AI-based card. I checked for a BCM4313 on Ebay a couple of
+> weeks ago and couldn't find one. I know that Dell ships that card in some
+> laptops, but I couldn't find the part on their web site. Does anyone know
+> the Dell part number?
 
-AdHoc powersave is not supported and as such is never enabled.
- 
-> What else can I do? How can I get more debug information about what's happening?
+For 4313 just type BCM94313 on ebay. Unfortunately price is quite
+high, about $40 - $50.
 
-Build rt2x00 with CONFIG_RT2X00_DEBUG and attach your kernel log here
-after reproducing this issue please.
+For 43224, just type BCM943224, it's much cheaper, about $10 - $25.
 
-Helmut
+In few days I can give you HP model I got shipped with 4313.
+
+-- 
+Rafał
