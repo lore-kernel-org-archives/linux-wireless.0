@@ -1,73 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:47167 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756338Ab1CXJc5 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53092 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755612Ab1CIQaw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 05:32:57 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arve =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	devel@linuxdriverproject.org, Naveen Singh <nsingh@atheros.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Vipin Mehta <vmehta@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND and friends
-References: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
-	<AANLkTikurVF_-u8gTqM3ireKia28zMrkXRyrvdNTob7e@mail.gmail.com>
-	<1300957495.3807.7.camel@jlt3.sipsolutions.net>
-	<1300957590.3807.8.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 24 Mar 2011 11:32:40 +0200
-In-Reply-To: <1300957590.3807.8.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Thu\, 24 Mar 2011 10\:06\:30 +0100")
-Message-ID: <87k4fouamf.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 9 Mar 2011 11:30:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: bloat-devel@lists.bufferbloat.net, me@bobcopeland.com,
+	mickflemm@gmail.com, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] ath5k: implement ieee80211_ops->{get,set}_ringparam
+Date: Wed,  9 Mar 2011 11:21:24 -0500
+Message-Id: <1299687684-19638-3-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1299687684-19638-1-git-send-email-linville@tuxdriver.com>
+References: <1299687684-19638-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+set_ringparam only allows changes to tx ring at this time.
 
-> On Thu, 2011-03-24 at 10:04 +0100, Johannes Berg wrote:
->> On Wed, 2011-03-23 at 17:47 -0700, Arve Hjønnevåg wrote:
->> 
->> > There is no planned replacement for early suspend, and it will
->> > probably be dropped form the android kernel at some point. The wifi
->> > driver use it to enter a lower operating state when the screen is off.
->> > If you driver does have any other way to put the driver in this state
->> > you need to add an interface that lets user-space select that state
->> > directly.
->> 
->> The interface is called "ip link set wlan0 down".
->
-> Or, in fact, just powersaving mode.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c         |    3 +-
+ drivers/net/wireless/ath/ath5k/base.h         |    1 +
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |   43 +++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+), 1 deletions(-)
 
-Exactly.
-
-> But I don't think for a wifi driver there's any need for special
-> driver specific states.
-
-In maemo, to save power, we decreased the dynamic power save timeout
-whenever display was turned off. This was all done from user space and
-wifi driver in the kernel was completely unaware of the display state.
-But I think this is still a hack and we should save as much as
-possible power in all cases, despite the display state. Instead power
-save parameters should automatically change based on the transfer
-characteristics.
-
-Few examples what I mean:
-
-o if idle or very little traffic -> more aggressive power save
-o if latency critical packets (dns requests, higher qos classes etc)
-  -> decrease latency
-o if active data transfer -> increase throughput
-
-And before someone suggests adding dynamic timeout variable to
-nl80211: I think it's very much implementation specific parameter. Not
-all drivers support it and it might be that even in future mac80211
-uses something else. So having the timeout variable in nl80211 is not
-a long term solution.
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index e6ff62e..4d7f21e 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -943,6 +943,7 @@ ath5k_txq_setup(struct ath5k_softc *sc,
+ 		spin_lock_init(&txq->lock);
+ 		txq->setup = true;
+ 		txq->txq_len = 0;
++		txq->txq_max = ATH5K_TXQ_LEN_MAX;
+ 		txq->txq_poll_mark = false;
+ 		txq->txq_stuck = 0;
+ 	}
+@@ -1534,7 +1535,7 @@ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto drop_packet;
+ 	}
+ 
+-	if (txq->txq_len >= ATH5K_TXQ_LEN_MAX)
++	if (txq->txq_len >= txq->txq_max)
+ 		ieee80211_stop_queue(hw, txq->qnum);
+ 
+ 	spin_lock_irqsave(&sc->txbuflock, flags);
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 8d1df1f..978f1f4 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -86,6 +86,7 @@ struct ath5k_txq {
+ 	spinlock_t		lock;	/* lock on q and link */
+ 	bool			setup;
+ 	int			txq_len; /* number of queued buffers */
++	int			txq_max; /* max allowed num of queued buffers */
+ 	bool			txq_poll_mark;
+ 	unsigned int		txq_stuck;	/* informational counter */
+ };
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index c9b0b67..9be29b7 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -740,6 +740,47 @@ ath5k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ }
+ 
+ 
++static void ath5k_get_ringparam(struct ieee80211_hw *hw,
++				u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	*tx = sc->txqs[AR5K_TX_QUEUE_ID_DATA_MIN].txq_max;
++
++	*tx_max = ATH5K_TXQ_LEN_MAX;
++	*rx = *rx_max = ATH_RXBUF;
++}
++
++
++static int ath5k_set_ringparam(struct ieee80211_hw *hw, u32 tx, u32 rx)
++{
++	struct ath5k_softc *sc = hw->priv;
++	u16 qnum;
++
++	/* only support setting tx ring size for now */
++	if (rx != ATH_RXBUF)
++		return -EINVAL;
++
++	/* restrict tx ring size min/max */
++	if (!tx || tx > ATH5K_TXQ_LEN_MAX)
++		return -EINVAL;
++
++	for (qnum = 0; qnum < ARRAY_SIZE(sc->txqs); qnum++) {
++		if (!sc->txqs[qnum].setup)
++			continue;
++		if (sc->txqs[qnum].qnum < AR5K_TX_QUEUE_ID_DATA_MIN ||
++		    sc->txqs[qnum].qnum > AR5K_TX_QUEUE_ID_DATA_MAX)
++			continue;
++
++		sc->txqs[qnum].txq_max = tx;
++		if (sc->txqs[qnum].txq_len >= sc->txqs[qnum].txq_max)
++			ieee80211_stop_queue(hw, sc->txqs[qnum].qnum);
++	}
++
++	return 0;
++}
++
++
+ const struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx			= ath5k_tx,
+ 	.start			= ath5k_start,
+@@ -778,4 +819,6 @@ const struct ieee80211_ops ath5k_hw_ops = {
+ 	/* .napi_poll		= not implemented */
+ 	.set_antenna		= ath5k_set_antenna,
+ 	.get_antenna		= ath5k_get_antenna,
++	.set_ringparam		= ath5k_set_ringparam,
++	.get_ringparam		= ath5k_get_ringparam,
+ };
 -- 
-Kalle Valo
+1.7.4
+
