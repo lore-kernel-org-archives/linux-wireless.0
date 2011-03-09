@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26445 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46780 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753947Ab1C1U5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 16:57:39 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:15 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@openwrt.org>,
-	<stable@kernel.org>, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/9] ath9k_hw: fix potential spurious tx error bit interpretation
-Date: Mon, 28 Mar 2011 13:57:11 -0700
-Message-ID: <1301345835-11401-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
-References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+	id S1757135Ab1CIKhM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 05:37:12 -0500
+Date: Wed, 9 Mar 2011 11:36:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ivdoorn@gmail.com, Johannes Stezenbach <js@sig21.net>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: Unplugging usb wlan (rt73usb) hangs the system
+Message-ID: <20110309103633.GB23594@redhat.com>
+References: <4D6E7B55.6010905@pardus.org.tr>
+ <20110309100651.GA23594@redhat.com>
+ <4D77539A.90300@pardus.org.tr>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4D77539A.90300@pardus.org.tr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Hello
 
-commit ff32d9cd2c4107224a28f39d3c72eec66d566e09 upstream
+On Wed, Mar 09, 2011 at 12:16:58PM +0200, Ozan Çağlayan wrote:
+> On 09.03.2011 12:06, Stanislaw Gruszka wrote:
+> 
+> > 
+> > I can confirm problem exist in 2.6.37. I can not reproduce it in
+> > current wireless-testing. I did not investigate further, I guess
+> > issue is fixed by:
+> > 
+> > commit d7bb5f845f437662296adbfeaab8fbfce1c32289
+> > Author: Johannes Stezenbach <js@sig21.net>
+> > Date:   Mon Dec 13 12:32:49 2010 +0100
+> > 
+> >     rt2x00: fix hang when unplugging USB device in us
+> > 
+> 
+> Hi, I'll test ASAP and if we confirm that it's the fix, it should be (it
+> should have been actually with a commit message that serious) CC'ed to
+> stable@kernel.org.
 
-According to documentation, AR_ExcessiveRetries, AR_Filtered and
-AR_FIFOUnderrun are only valid if AR_FrmXmitOK is clear.
+Plese test also that one.
 
-Not checking this might result in suboptimal FIFO settings, unnecessary
-retransmissions, or other connectivity issues.
+commit 070192dd2975c0e97bbdeac7623b755235c6db7d
+Author: Ivo van Doorn <ivdoorn@gmail.com>
+Date:   Thu Nov 4 20:41:05 2010 +0100
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+    rt2x00: Fix crash on USB unplug
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 50dda39..cebb97b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -227,18 +227,21 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	ts->ts_status = 0;
- 	ts->ts_flags = 0;
- 
-+	if (ads->ds_txstatus9 & AR_TxOpExceeded)
-+		ts->ts_status |= ATH9K_TXERR_XTXOP;
-+
- 	if (ads->ds_txstatus1 & AR_FrmXmitOK)
- 		ts->ts_status |= ATH9K_TX_ACKED;
--	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
--		ts->ts_status |= ATH9K_TXERR_XRETRY;
--	if (ads->ds_txstatus1 & AR_Filtered)
--		ts->ts_status |= ATH9K_TXERR_FILT;
--	if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
--		ts->ts_status |= ATH9K_TXERR_FIFO;
--		ath9k_hw_updatetxtriglevel(ah, true);
-+	else {
-+		if (ads->ds_txstatus1 & AR_ExcessiveRetries)
-+			ts->ts_status |= ATH9K_TXERR_XRETRY;
-+		if (ads->ds_txstatus1 & AR_Filtered)
-+			ts->ts_status |= ATH9K_TXERR_FILT;
-+		if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
-+			ts->ts_status |= ATH9K_TXERR_FIFO;
-+			ath9k_hw_updatetxtriglevel(ah, true);
-+		}
- 	}
--	if (ads->ds_txstatus9 & AR_TxOpExceeded)
--		ts->ts_status |= ATH9K_TXERR_XTXOP;
- 	if (ads->ds_txstatus1 & AR_TxTimerExpired)
- 		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
- 
--- 
-1.7.4.15.g7811d
-
+Thanks 
+Stanislaw
