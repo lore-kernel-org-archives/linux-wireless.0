@@ -1,156 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:61862 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755230Ab1CGCPY (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:53894 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751953Ab1CIUHO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:15:24 -0500
-Received: by yia27 with SMTP id 27so1455009yia.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:15:24 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19828.16307.740229.796316@gargle.gargle.HOWL>
-Date: Mon, 7 Mar 2011 07:45:15 +0530
-To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC 24/34] ath9k_htc: Move endpoint header parsing to TX tasklet
+	Wed, 9 Mar 2011 15:07:14 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 0F0D55400B5
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Mar 2011 15:10:48 -0500 (EST)
+Subject: Compat-wireless release for 2011-03-09 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110309200712.3F40040E8E@repository3.orbit-lab.org>
+Date: Wed,  9 Mar 2011 15:07:12 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + e110091...9cfa781 akpm-end   -> origin/akpm-end  (forced update)
+   214d93b..a5abba9  akpm-start -> origin/akpm-start
+   4e20f6f..71aaf6b  history    -> origin/history
+ + 50dc6c3...ab200f7 master     -> origin/master  (forced update)
+   214d93b..a5abba9  stable     -> origin/stable
+ * [new tag]         next-20110309 -> next-20110309
+ * [new tag]         v2.6.38-rc8 -> v2.6.38-rc8
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-There is no need to do endpoint header removal in the ISR.
-Also, this is needed when TX slot management is added later on.
-Use a helper function to strip the driver header.
+compat-wireless code metrics
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   68 ++++++++++++++++--------
- 2 files changed, 46 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index af747de..5425483 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -274,6 +274,7 @@ struct ath9k_htc_tx {
- struct ath9k_htc_tx_ctl {
- 	u8 type; /* ATH9K_HTC_* */
- 	u8 epid;
-+	u8 txok;
- };
- 
- static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index d17662f..7b218da 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -104,6 +104,30 @@ static enum htc_endpoint_id get_htc_epid(struct ath9k_htc_priv *priv,
- 	return epid;
- }
- 
-+static inline int strip_drv_header(struct ath9k_htc_priv *priv,
-+				   struct sk_buff *skb)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_tx_ctl *tx_ctl;
-+
-+	tx_ctl = HTC_SKB_CB(skb);
-+
-+	if (tx_ctl->epid == priv->mgmt_ep) {
-+		skb_pull(skb, sizeof(struct tx_mgmt_hdr));
-+	} else if ((tx_ctl->epid == priv->data_bk_ep) ||
-+		   (tx_ctl->epid == priv->data_be_ep) ||
-+		   (tx_ctl->epid == priv->data_vi_ep) ||
-+		   (tx_ctl->epid == priv->data_vo_ep) ||
-+		   (tx_ctl->epid == priv->cab_ep)) {
-+		skb_pull(skb, sizeof(struct tx_frame_hdr));
-+	} else {
-+		ath_err(common, "Unsupported EPID: %d\n", tx_ctl->epid);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
- 		       struct ath9k_tx_queue_info *qinfo)
- {
-@@ -281,22 +305,40 @@ static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
- void ath9k_tx_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-+	struct ath9k_htc_tx_ctl *tx_ctl;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb = NULL;
- 	__le16 fc;
-+	bool txok;
- 
- 	while ((skb = skb_dequeue(&priv->tx.tx_queue)) != NULL) {
- 
-+		if (strip_drv_header(priv, skb) < 0) {
-+			dev_kfree_skb_any(skb);
-+			continue;
-+		}
-+
-+		tx_ctl = HTC_SKB_CB(skb);
- 		hdr = (struct ieee80211_hdr *) skb->data;
- 		fc = hdr->frame_control;
- 		tx_info = IEEE80211_SKB_CB(skb);
- 		vif = tx_info->control.vif;
-+		txok = tx_ctl->txok;
- 
- 		memset(&tx_info->status, 0, sizeof(tx_info->status));
- 
-+		/*
-+		 * URB submission failed for this frame, it never reached
-+		 * the target.
-+		 */
-+		if (!txok)
-+			goto send_mac80211;
-+
-+		tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+
- 		if (!vif)
- 			goto send_mac80211;
- 
-@@ -350,30 +392,10 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
- 		    enum htc_endpoint_id ep_id, bool txok)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) drv_priv;
--	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct ieee80211_tx_info *tx_info;
--
--	if (!skb)
--		return;
--
--	if (ep_id == priv->mgmt_ep) {
--		skb_pull(skb, sizeof(struct tx_mgmt_hdr));
--	} else if ((ep_id == priv->data_bk_ep) ||
--		   (ep_id == priv->data_be_ep) ||
--		   (ep_id == priv->data_vi_ep) ||
--		   (ep_id == priv->data_vo_ep) ||
--		   (ep_id == priv->cab_ep)) {
--		skb_pull(skb, sizeof(struct tx_frame_hdr));
--	} else {
--		ath_err(common, "Unsupported TX EPID: %d\n", ep_id);
--		dev_kfree_skb_any(skb);
--		return;
--	}
--
--	tx_info = IEEE80211_SKB_CB(skb);
-+	struct ath9k_htc_tx_ctl *tx_ctl;
- 
--	if (txok)
--		tx_info->flags |= IEEE80211_TX_STAT_ACK;
-+	tx_ctl = HTC_SKB_CB(skb);
-+	tx_ctl->txok = txok;
- 
- 	skb_queue_tail(&priv->tx.tx_queue, skb);
- 	tasklet_schedule(&priv->tx_tasklet);
--- 
-1.7.4.1
-
+    831955 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1560 - % of code consists of backport work
