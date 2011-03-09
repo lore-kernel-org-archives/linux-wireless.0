@@ -1,143 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:24132 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756912Ab1CRUCp (ORCPT
+Received: from mow302.securemx.jp ([210.130.202.52]:41326 "EHLO
+	mow.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347Ab1CIAkr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 16:02:45 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000028912.msg
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 22:01:39 +0200
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <AANLkTikQ7W4GdY=USphz3FphyS-yEwN+X+jUPwq9x_6z@mail.gmail.com>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	 <1300453433.13499.18.camel@dev.znau.edu.ua>
-	 <AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	 <AANLkTi=EeMKNsi9bxNg4RJre-pP=jqcGpbLPNtggSK0N@mail.gmail.com>
-	 <1300463392.13499.110.camel@dev.znau.edu.ua>
-	 <AANLkTi=GggwyGkDB+cBG-G3O2c5WdfjCpb5pk8=3yDKz@mail.gmail.com>
-	 <1300471917.14872.28.camel@dev.znau.edu.ua>
-	 <AANLkTikQ7W4GdY=USphz3FphyS-yEwN+X+jUPwq9x_6z@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 18 Mar 2011 22:01:50 +0200
-Message-Id: <1300478510.15393.45.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Tue, 8 Mar 2011 19:40:47 -0500
+Date: Wed, 09 Mar 2011 09:41:04 +0900
+From: Takashi Kawamoto <tkawamoto@silex.jp>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Subject: Re: AR9271 doesn't work on 12ch and 13ch
+Cc: linux-wireless@vger.kernel.org, Yoshitaka Imura <imura@silex.jp>
+In-Reply-To: <AANLkTi=pZs3QSABoPeG8Z0Z7COzLQDG-uO36uWeMkOnx@mail.gmail.com>
+References: <20110308211855.AF33.9AD4E5EB@silex.jp> <AANLkTi=pZs3QSABoPeG8Z0Z7COzLQDG-uO36uWeMkOnx@mail.gmail.com>
+Message-Id: <20110309093724.BF94.9AD4E5EB@silex.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Mohammed,
 
-> 2011/3/18 George Kashperko <george@znau.edu.ua>:
-> >> I don't see the point where my patch is in conflict with your idea.
-> > Not your patch, just scan_read32, scan_switchcore, ssb_iounmap,
-> > ssb_ioremap. So far ssb_core_name is fine.
-> > Yet again, ssb code model is core-sentric which is not actually true
-> > from the hardware pint of view. With few workarounds it works fine for
-> > sb. For axi we will have more of these.
+The below is dmesg log.
+
+=======================================================================
+Compat-wireless backport release: compat-wireless-2011-01-06-3-g8db1608
+Backport based on linux-next.git next-20110121
+cfg80211: Calling CRDA to update world regulatory domain
+usb 1-2: ath9k_htc: Transferred FW: ar9271.fw, size: 51280
+usb 1-2: ath9k_htc: HTC initialized with 33 credits
+ath: EEPROM regdomain: 0x8188
+ath: EEPROM indicates we should expect a country code
+ath: doing EEPROM country->regdmn map search
+ath: country maps to regdmn code: 0x40
+ath: Country alpha2 being used: JP
+ath: Regpair used: 0x40
+cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (N/A mBi, 2000 mBm)
+cfg80211: Disabling freq 2467 MHz as custom regd has no rule that fits a 20 MHz wide channel
+cfg80211: Disabling freq 2472 MHz as custom regd has no rule that fits a 20 MHz wide channel
+cfg80211: Disabling freq 2484 MHz as custom regd has no rule that fits a 20 MHz wide channel
+cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2402000 KHz - 2472000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2457000 KHz - 2482000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2457000 KHz - 2482000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Updating information on frequency 2484 MHz for a 20 MHz width channel with regulatory rule:
+cfg80211: 2474000 KHz - 2494000 KHz @  KHz), (600 mBi, 2000 mBm)
+cfg80211: Pending regulatory request, waiting for it to be processed...
+usb 1-2: ath9k_htc: USB layer initialized
+usbcore: registered new interface driver ath9k_hif_usb
+=======================================================================
+
+The following logs seems to be clue. I will check them. Thank you.
+-----------------------------------------------------------------------
+...
+cfg80211: Disabling freq 2467 MHz as custom regd has no rule that fits a 20 MHz wide channel
+cfg80211: Disabling freq 2472 MHz as custom regd has no rule that fits a 20 MHz wide channel
+cfg80211: Disabling freq 2484 MHz as custom regd has no rule that fits a 20 MHz wide channel
+...
+-----------------------------------------------------------------------
+
+
+
+Best Regards,
+Takashi Kawamoto
+
+On Tue, 8 Mar 2011 20:27:07 +0530
+Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+
+> On Tue, Mar 8, 2011 at 6:09 PM, Takashi Kawamoto <tkawamoto@silex.jp> wrote:
+> > Dear All,
 > >
-> > scan_read32, scan_switchcore, ssb_iounmap, ssb_ioremap are all
-> > host-driven services. In ssb model host is operating cores and therefore
-> > requires all that switch, scan_read, map, unmap etc. While with model
-> > where host is providing not core but backplane access the only routine
-> > among those above you need is scan_read32 and nothing more (actually you
-> > don't need it too as host ops with read(8|16|32) are completely
-> > sufficient for scanning). The purpose of scan_read32 for ssb model is
-> > that ssb_bus_ops are operating cores which you don't have at the moment
-> > when scanning. With host ops designed as u32 (*read32)(struct host
-> > *host, phys_addr_t addr) host will do what it supposed to - manage its
-> > means of backplane physical access and will have absolutely no need to
-> > break into understanding what the core/sprom/otp/etc. is.
+> > AR9271 cannot connect to an AP which operates on 12ch and 13ch.
+> > As long as I see the EEPROM content of my module, 0x8188 (CTRL_JAPAN1)
+> > seems to be configured to the region domain code area.
+> >
+> > [EEPROM dump]
+> > -------------------------------------------------------
+> > 78  1 99 B4  F E0  2  0 88 81 2A  0 5C 33 8E 65
+> > 74 C1  1  1  0  0  0  0  0  0  0 7F  8  0  8  0
+> >  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+> >  0  0  0  0  0  0  0  0  0  0  0  0  0 2C 20  0
+> > E2  0  D  0  2  E 1C BA  C  1  0  0  6 55  5  1
+> >  E  E FF  0  0 2C  0  0  5  4  6 B0  0 60  0  0
+> >  0  1  0  0  0 80  0  0  0  0  0  0  0  0  0  0
+> >  0  0  0  0  0  0  0  0 70 8E AC  B 22 2A 3D 53
+> > 4B 54 5E 6A 74  5 10 17 2F 6E 2C 3B 55 83 B0  D
+> > 24 2A 3E 52 4C 54 60 6B 71  7 11 17 36 71 30 40
+> > 5F 93 AF  E 13 2A 3E 51 4B 53 5F 6B 6E  7  A 18
+> > 38 70 2C 44 62 9A AC 70 22 22 22 22 B8 22 22 22
+> > 22 FF  0  0  0  0 70 22 22 20 1E 89 22 22 20 1E
+> > AC 22 22 20 1E 70 22 22 22 22 22 22 20 1E 89 22
+> > 22 22 22 22 22 20 1E AC 22 22 22 22 22 22 20 1E
+> > 70 1E 1E 1E 1E 1E 1E 1E 1C 89 1E 1E 1E 1E 1E 1E
+> > 1E 1C AC 1E 1E 1E 1E 1E 1E 1E 1C 11 12 15 17 41
+> > 42 45 47 31 32 35 37 70 22 75 62 A2 22  0  0 70
+> > 22 75 62 A2 21  0  0 70 1A 75 62 A2 1E  0  0 7A
+> > 12 7F 5C 93 5C 98 16 70 3C 75 7C AC 3C B8 3C 70
+> > 3C 75 7C AC 3C  0  0 70 3C 75 7C AC 3C  0  0 7A
+> > 3C 7F 7C 93 7C A2 3C 70 22 75 62 AC 22  0  0 70
+> > 22 75 62 AC 22  0  0 70 22 75 62 AC 22  0  0 7A
+> > 1E 7F 5E 93 5E A2 1E  0
+> > -------------------------------------------------------
+> >
+> > The version of compat-wireless I use is 2011-01-30.
+> >
+> > I investigated the issue further, and found that priv->hw->wiphy->bands
+> > includes from 1ch to 14ch (ath9k_set_hw_capab() in htc_drv_init.c), but
+> > wdev->wiphy->bands includes from 1ch to 11ch (cfg80211_wext_giwrange()
+> > in wext-compat.c). I still don't know why and when 12ch, 13ch and 14ch
+> > are removed from the channel list.
+> >
+> > Anyone has any idea?
 > 
-> That's what I wanted to hear from the beginning, thanks! :)
+> Please post the kernel log /dmesg with CONFIG_CFG80211_REG_DEBUG=y
+> enabled in config.mk of your compat wireless. This might also be
+> helpful.
 > 
-> The reason I implemented scan_switchcore is early stage, when I
-> prepare bus for reading EROM:
-> erombase = ai_scan_read32(bus, 0, SSB_CHIPCO_EROM);
-> pci_write_config_dword(bus->host_pci, PCI_BAR0_WIN, erombase);
-> In above you can see my hack which works for PCI host only. This hack
-> I wanted to replace with scan_switchcore and that functions seems to
-> perform exactly this operation.
-> 
-> AFAIU we need to adjust PCI_BAR0_WIN and PCI_BAR0_WIN2 later, when we
-> already have info about core from EROM. In early stage we can not use
-> that.
-> 
-> Anyway with what you said now, I'll re-read your mails again, to fully
-> understand your POV.
+> >
+> >
+> >
+> > Best Regards,
+> > Takashi Kawamoto
+> >
+> > ==================================================
+> >  Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
+> >  silex technology,Inc.
+> >  Software Engineering Division
+> >  Phone:+81-774-98-3877 FAX:+81-774-98-3678
+> > ==================================================
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-You still look through the prism of the ssb model. There is absolutely
-nothing which prevents PCI(e) host driver to setup windowed access right
-away at the _probe before even trying to feed the bcmb code with any
-data for detection/scanning/etc. For more generic implementation
-scan_read32 still seems to be useful one, but again you can build the
-code to use regular host-provided read(8|16|32) ops for the same purpose
-as initial scan_read32 as soon as they provide access in regard to
-backplane physicall addresses, not cores. As for switch_core - yet again
-its host service, and only windowed accesses' hosts. And in any case
-host have absolutely _no_ reason to operate cores. The only thigns the
-host should care of are:
- ~ provide access to backplane physicall address range;
- ~ manage buscore (mostly that part which is on the host bus side);
- ~ manage host bus interrupt(s);
-
-Sample generic host startup:
-* probe
-~ initial host device power up and setup (that part of buscore core that
-interconnected to host bus the host is at). For e. g. pci(e) its:
-  - pci_enable_device
-  - pci_request_regions
-  - pci_set_master
-  - pci_iomap
-  - powerup (like xtal for pci)
-  - host-specific workarounds (like ldo_war)
-~ setup windowed access
-  - read pci revision id/vendor id (pci_read_config_word), if required
-to decide if second window is sliding or sprom (actually rev_id should
-be sufficient for that) read offset 0x0000 from bar0 offset to get
-chipid register value
-  - at this point host have all the required information to decide on
-amount on host-to-backplane windows available and their configuration;
-  - call some bcmb_add_bus to get bus detected/scanned/whatever.
-
-At this point scanning code is good to go with any of
-bcmb_scan_read32(struct hnd_host *host, phys_addr_t addr) or
-bcmb_read32(struct hnd_host *host, phys_addr_t addr) as both of them do
-exactly the same.
-
-Either bcmb_scan_read32/bcmb_read32 need window switching or not depends
-on the host implementation and is part of the host code. Generic
-scanning/detection/etc. code have absolutely nothing to do with window
-switching. They are there in ssb because of the design decisions made
-towards core-sentric implementation. Desicions which I'm sure should not
-blind you while planning for new sb/ai support code.
-
-e. g. for embeddable read implementation will be like following pseudo
-code
-u32 bcmb_read32(struct hnd_host *host, phys_addr_t addr)
-{
-	return ioread32(phys_addr_to_embedded(host, addr));
-}
-
-while for e. g. pci it could be something like next (again not a real
-code, just a general idea):
-u32 bcmb_read32(struct hnd_host *host, phys_addr_t addr)
-{
-	struct pci_win *win;
-	u32;
-
-	win = phys_addr_to_pci_win(host, addr);
-	claim_win(win);
-	tmp = ioread(phys_addr_to_win(win, addr);
-	release_win(win);
-	return tmp;
-}
-
-Have nice day,
-George
-
+==================================================
+ Takashi Kawamoto (E-Mail : tkawamoto@silex.jp)
+ silex technology,Inc. 
+ Software Engineering Division
+ Phone:+81-774-98-3877 FAX:+81-774-98-3678
+==================================================
 
