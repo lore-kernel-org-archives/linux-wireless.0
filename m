@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from briare1.fullpliant.org ([78.227.24.35]:56371 "HELO
-	briare1.fullpliant.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753457Ab1CBRBx (ORCPT
+Received: from lider.pardus.org.tr ([193.140.100.216]:54861 "EHLO
+	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834Ab1CIKQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 12:01:53 -0500
-From: Hubert Tonneau <hubert.tonneau@fullpliant.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 32 bits executables with 64 bits kernel wifi issue
-Date: Wed, 02 Mar 2011 18:03:06 GMT
-Message-ID: <0B34I5711@briare1.fullpliant.org>
-Content-Type: text/plain; charset=utf-8
+	Wed, 9 Mar 2011 05:16:52 -0500
+Message-ID: <4D77539A.90300@pardus.org.tr>
+Date: Wed, 09 Mar 2011 12:16:58 +0200
+From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ivdoorn@gmail.com, Johannes Stezenbach <js@sig21.net>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: Unplugging usb wlan (rt73usb) hangs the system
+References: <4D6E7B55.6010905@pardus.org.tr> <20110309100651.GA23594@redhat.com>
+In-Reply-To: <20110309100651.GA23594@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
->
-> Does your version of wpa_supplicant support the "-Dnl80211" option
-> (instead of "-Dwext")?  It might be worth trying that to see if it
-> works better?
+On 09.03.2011 12:06, Stanislaw Gruszka wrote:
 
-Your assertion that I was using -Dwext was right.
+> 
+> I can confirm problem exist in 2.6.37. I can not reproduce it in
+> current wireless-testing. I did not investigate further, I guess
+> issue is fixed by:
+> 
+> commit d7bb5f845f437662296adbfeaab8fbfce1c32289
+> Author: Johannes Stezenbach <js@sig21.net>
+> Date:   Mon Dec 13 12:32:49 2010 +0100
+> 
+>     rt2x00: fix hang when unplugging USB device in us
+> 
 
-The WPA supplicant I use (v0.6.9) has support for -Dnl80211
-and using it does not change the situation: works in 32 bits mode,
-does not work on some wifi box with 64 bits kernel and 32 bits executables.
+Hi, I'll test ASAP and if we confirm that it's the fix, it should be (it
+should have been actually with a commit message that serious) CC'ed to
+stable@kernel.org.
 
-Regards,
-Hubert Tonneau
+Thanks!
+
+
+-- 
+Ozan Caglayan
+
+Pardus Linux
+http://www.pardus.org.tr/eng
