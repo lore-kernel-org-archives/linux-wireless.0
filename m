@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56278 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab1CPKIT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 06:08:19 -0400
-Subject: Re: [PATCH] mac80211: fix comment regarding aggregation buf_size
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: John Linville <linville@tuxdriver.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTi=r-iktQVn8b1=iCh0PFDDP=mSVBUeqBfxa5e_B@mail.gmail.com>
-References: <1300268390.3761.14.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=r-iktQVn8b1=iCh0PFDDP=mSVBUeqBfxa5e_B@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Mar 2011 11:09:55 +0100
-Message-ID: <1300270195.3761.18.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:1852 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756909Ab1CIJDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 04:03:55 -0500
+To: "gregkh@suse.de" <gregkh@suse.de>,
+	"Francis Moreau" <francis.moro@gmail.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
+Subject: Re: brcm80211: the system freezes if booted with laptop wifi
+ switch to OFF
+References: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
+Date: Wed, 9 Mar 2011 10:03:41 +0100
+MIME-Version: 1.0
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vr2jgfwg3ri7v4@arend-laptop>
+In-Reply-To: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-16 at 02:47 -0700, Daniel Halperin wrote:
+On Sat, 05 Mar 2011 18:11:20 +0100, Francis Moreau  
+<francis.moro@gmail.com> wrote:
 
-> <dan starts here>
-> 
-> > + *     possible with a buf_size of 8:
-> > + *      - TX: 1.....7
-> > + *      - RX: 2.....7 (lost frame #1),
-> > + *      - TX:         89...1...
-> > + *     which is invalid since #1 was now re-transmitted well past the
-> > + *     buffer size of 7. The correct way to retransmit #1 would be:
-> > + *      - TX:         1       or
-> > + *      - TX:         18
-> > + *     though the standard allows:
-> > + *      - TX:         81
-> > + *     The following might happen, but will violate buffering assumptions as above if frame 1 is lost again
-> > + *      - TX:         189.....
+> Hi,
+>
+> I'm currently running 2.6.38-rc6, and if I boot with my WIFI switch
+> set to off position, the system freezes entirely when bringing up the
+> wlan0 interface.
+>
+> There's no trace so I don't really know how I can help to debug this  
+> further.
+>
+> Thanks
 
-Oh, oops, yes you're right. Will respin the patch.
+Hi Greg,
 
-johannes
+A while ago I submitted a patch for this issue and it was marked as new  
+functionality so only to be included in the staging-next branch. However,  
+as the system freezes without this patch it might be a good idea to submit  
+the patch for staging-linus branch as well to include it in linus tree. Do  
+you agree? If so I will prepare a backported version of the patch and send  
+it to you.
+
+Gr. AvS
+-- 
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
 
