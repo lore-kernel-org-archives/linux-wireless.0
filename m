@@ -1,56 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:62781 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757074Ab1CRRgB (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:47267 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932108Ab1CIRji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 13:36:01 -0400
-Received: by gyf1 with SMTP id 1so1662952gyf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 10:36:00 -0700 (PDT)
+	Wed, 9 Mar 2011 12:39:38 -0500
+Received: by mail-iw0-f175.google.com with SMTP id 10so770607iwn.6
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 09:39:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1300416312-16808-1-git-send-email-lrodriguez@atheros.com>
-References: <1300416312-16808-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 18 Mar 2011 10:35:40 -0700
-Message-ID: <AANLkTik8iUxgniVHB2UBC359GxrmAxUTLGL-_eZ7Gtom@mail.gmail.com>
-Subject: Re: [PATCH] ath6kl: fix device registration ordering
-To: gregkh@suse.de
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, vmehta@atheros.com,
-	devel@linuxdriverproject.org, naveen.singh@atheros.com,
-	stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1299681430.1816.101.camel@cumari>
+References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	<1299421940-26292-11-git-send-email-shahar_levi@ti.com>
+	<1299681430.1816.101.camel@cumari>
+Date: Wed, 9 Mar 2011 19:39:37 +0200
+Message-ID: <AANLkTimJMnjdqYQjKDFV01LTFCrvXoW+kRmn0VxdJ-Ab@mail.gmail.com>
+Subject: Re: [PATCH 10/15] wl12xx: 1281/1283 support - Set WiFi & BT cox
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 17, 2011 at 7:45 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Defer device registration to cfg80211 until it is ready.
-> This fixes a race against udev whereby device events
-> (both udev and RTNL) might be emitted with an unregistered
-> device specification (wlan%d).
+On 3/9/11, Luciano Coelho <coelho@ti.com> wrote:
+> On Sun, 2011-03-06 at 16:32 +0200, Shahar Levi wrote:
+>> Set different Cox setting between wl127x and wl128x.
+>>
+>> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> ---
+>>  drivers/net/wireless/wl12xx/acx.c  |    5 +++++
+>>  drivers/net/wireless/wl12xx/main.c |    6 +++++-
+>>  2 files changed, 10 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/wl12xx/acx.c
+>> b/drivers/net/wireless/wl12xx/acx.c
+>> index f0345e6..e970b71 100644
+>> --- a/drivers/net/wireless/wl12xx/acx.c
+>> +++ b/drivers/net/wireless/wl12xx/acx.c
+>> @@ -554,6 +554,11 @@ int wl1271_acx_sg_cfg(struct wl1271 *wl)
+>>  		goto out;
+>>  	}
+>>
+>> +	if (wl->chip.id == CHIP_ID_1283_PG20)
+>> +		c->params[CONF_SG_BT_LOAD_RATIO] = 50;
+>> +	else
+>> +		c->params[CONF_SG_BT_LOAD_RATIO] = 200;
+>> +
 >
-> This fixes a race on ath6kl on systems where the device
-> boots up really quickly to the the point udev and the
-> respective userspace daemon tries to start mucking with
-> the device prior to the device being initialized properly.
+> You can't change this value in the global array.  This needs to be
+> changed only in the allocated ACX.  I'll change it before taking it in.
 >
-> This fixes this bug:
+> Also, I think it's cleaner to keep the correct value for wl127x in the
+> global array (as was before) and only change the value for wl128x here
+> in this function.
 >
-> http://code.google.com/p/chromium-os/issues/detail?id=13159
+>> diff --git a/drivers/net/wireless/wl12xx/main.c
+>> b/drivers/net/wireless/wl12xx/main.c
+>> index 32d963d..f8e9e3f 100644
+>> --- a/drivers/net/wireless/wl12xx/main.c
+>> +++ b/drivers/net/wireless/wl12xx/main.c
+>> @@ -54,7 +54,11 @@ static struct conf_drv_settings default_conf = {
+>>  			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
+>>  			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
+>>  			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
+>> -			[CONF_SG_BT_LOAD_RATIO]                     = 50,
+>> +			/*
+>> +			 * CONF_SG_BT_LOAD_RATIO has wl127x or wl128x dependency
+>> +			 * (set in wl1271_acx_sg_cfg()
+>> +			 */
+>> +			[CONF_SG_BT_LOAD_RATIO]                     = 0,
+>>  			[CONF_SG_AUTO_PS_MODE]                      = 1,
+>>  			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
+>>  			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
 >
-> Without this loading of ath6kl will fail.
+> Previously, the value used for wl127x was 50, from the default global
+> settings.  Now you're using 200 for wl127x.  This looks suspicious.  You
+> now use 50 (which was the value for wl127x) for wl128x and 200 for
+> wl127x.
 >
-> Cc: stable@kernel.org
-> Cc: Naveen Singh <naveen.singh@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> At least the change for wl127x should be done in a separate patch.
+It was incorrect value for wl127x. That patch fixes that and set
+wl128x value. I can do the fix for wl127x in separate patch.
 
-Please disregard this for now, I am testing ath6k right now on x86_64
-where it has a failure upon load and it oopses, likely due to this
-patch and what I believe is wiphy_unregister() being called twice.
-I'll fix the oops first and then resubmit a v2. If you do not hit a
-failure upon load though then the patch would help your issues with
-udev, but still we must handle the failure cases better. My failure
-are because I'm using an x86_64 box to test ath6kl and its buggy
-there.
-
-  Luis
+>
+> --
+> Cheers,
+> Luca.
+>
+>
+-- 
+All the best,
+Shahar
