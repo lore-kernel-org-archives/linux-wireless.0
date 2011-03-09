@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:52703 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725Ab1CEQaM (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61288 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757196Ab1CISED convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 11:30:12 -0500
-Message-ID: <4D72650D.8070503@lwfinger.net>
-Date: Sat, 05 Mar 2011 10:30:05 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 9 Mar 2011 13:04:03 -0500
+Received: by qyg14 with SMTP id 14so702682qyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 10:04:01 -0800 (PST)
 MIME-Version: 1.0
-To: Jovi Zhang <bookjovi@gmail.com>
-CC: Ben Hutchings <bhutchings@solarflare.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"open list:NETWORKING [WIREL..." <linux-wireless@vger.kernel.org>,
-	"open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: mac80211: fix compilation warning
-References: <1299108754-5492-1-git-send-email-bookjovi@gmail.com>	<1299328260.4277.92.camel@localhost> <AANLkTimnSvBKSL6_d3RxufxUL_C9wCM+Fz66_B5Sc0KE@mail.gmail.com>
-In-Reply-To: <AANLkTimnSvBKSL6_d3RxufxUL_C9wCM+Fz66_B5Sc0KE@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4D77B4B6.8030603@lwfinger.net>
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+	<4D77A06E.3050902@lwfinger.net>
+	<AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
+	<4D77AD18.60804@lwfinger.net>
+	<AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
+	<4D77B4B6.8030603@lwfinger.net>
+Date: Wed, 9 Mar 2011 19:04:01 +0100
+Message-ID: <AANLkTinEC5b6-vP_zc2RE2Juc8YFx8nkEK7isvQw+UVX@mail.gmail.com>
+Subject: Re: Problem with BCM943224
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/05/2011 07:52 AM, Jovi Zhang wrote:
-> On Sat, Mar 5, 2011 at 8:31 PM, Ben Hutchings<bhutchings@solarflare.com>  wrote:
->> On Wed, 2011-03-02 at 18:32 -0500, bookjovi@gmail.com wrote:
->>> From: Jovi Zhang<bookjovi@gmail.com>
->>>
->>> this commit fix compilation warning as following:
->>> net/mac80211/tx.c:1753: warning: unused variable mppath
->> [...]
->>
->> You clearly didn't try building this with CONFIG_MAC80211_MESH enabled.
->>
-> Sorry, indeed, maybe should be like this:
->
-> +#ifdef CONFIG_MAC80211_MESH
->         struct mesh_path *mppath = NULL;
-> +#endif
+Do you think buying some more expensive adapter could help? The newest
+offered by hwtools seems to be:
+http://www.hwtools.net/Adapter/MP2H.html
+(ver 2.2). It is not so expensive at all, $15 without shipping.
 
-Linville likes "struct mesh_path *mppath __maybe_unused = NULL;" over the ifdef 
-form.
+I've already written to them with question about BCM943224
+compatibility (they don't have that chipset on their list).
 
-Larry
+Stanisław: I remember you telling that you have such a adapter. Do you
+maybe have access to some BCM943224/BCM94313 card? Could you test that
+combo for me, please?
+
+The only other solution I can see is to buy motherboard with mini PCIe
+slot. There are some *D410P* (BLKD410PT, BOXD410PT, BLKD410PTL,
+D410PT) and D510MO having such a slow (and Atom CPU.... :/). Kernel
+compilation would be disaster but I think I could live with that. Do
+you think such a boards would be compatible with Broadcom's cards?
+
+-- 
+Rafał
