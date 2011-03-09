@@ -1,96 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:10877 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754245Ab1CXJtD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 05:49:03 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 02:48:39 -0700
-Message-ID: <4D8B138A.9050204@atheros.com>
-Date: Thu, 24 Mar 2011 15:18:58 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Mohammed Shajakhan <Mohammed.Shajakhan@Atheros.com>
-CC: Sujith <m.sujith@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: cleanup few redundant macros
-References: <1300957576-2734-1-git-send-email-mshajakhan@atheros.com> <19851.4373.967588.536327@gargle.gargle.HOWL> <4D8B130E.6090307@atheros.com>
-In-Reply-To: <4D8B130E.6090307@atheros.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:49792 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752169Ab1CIIl7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 03:41:59 -0500
+Received: by mail-fx0-f41.google.com with SMTP id 5so349203fxm.14
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 00:41:57 -0800 (PST)
+Subject: Re: [PATCH 08/15] wl12xx: 1281/1283 support - Improve Tx & Rx path
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1299421940-26292-9-git-send-email-shahar_levi@ti.com>
+References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+	 <1299421940-26292-9-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Mar 2011 10:41:48 +0200
+Message-ID: <1299660108.1816.95.camel@cumari>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 24 March 2011 03:16 PM, Mohammed Shajakhan wrote:
-> On Thursday 24 March 2011 03:08 PM, Sujith wrote:
->    
->> Mohammed Shafi Shajakhan wrote:
->>
->>      
->>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>>
->>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
->>> ---
->>>    drivers/net/wireless/ath/ath9k/ath9k.h  |    4 ----
->>>    drivers/net/wireless/ath/ath9k/common.c |    2 +-
->>>    drivers/net/wireless/ath/ath9k/mac.c    |    2 --
->>>    3 files changed, 1 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
->>> index 099bd41..24b747c 100644
->>> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
->>> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
->>> @@ -120,13 +120,11 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
->>>    /* RX / TX */
->>>    /***********/
->>>
->>> -#define ATH_MAX_ANTENNA         3
->>>    #define ATH_RXBUF               512
->>>    #define ATH_TXBUF               512
->>>    #define ATH_TXBUF_RESERVE       5
->>>    #define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
->>>    #define ATH_TXMAXTRY            13
->>> -#define ATH_MGT_TXMAXTRY        4
->>>
->>>    #define TID_TO_WME_AC(_tid)				\
->>>    	((((_tid) == 0) || ((_tid) == 3)) ? WME_AC_BE :	\
->>> @@ -688,8 +686,6 @@ void ath9k_ps_restore(struct ath_softc *sc);
->>>
->>>    u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate);
->>>
->>> -void ath9k_set_bssid_mask(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
->>> -
->>>    void ath_start_rfkill_poll(struct ath_softc *sc);
->>>    extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
->>>    void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
->>> diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
->>> index 615e682..16ba8c6 100644
->>> --- a/drivers/net/wireless/ath/ath9k/common.c
->>> +++ b/drivers/net/wireless/ath/ath9k/common.c
->>> @@ -116,7 +116,7 @@ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
->>>
->>>    	if (chan->band == IEEE80211_BAND_2GHZ) {
->>>    		ichan->chanmode = CHANNEL_G;
->>> -		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM | CHANNEL_G;
->>> +		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM;
->>>
->>>        
->> There's a reason for this: 8813262ea79acf9daa0e03901bdfe93db4dc4ca5
->> If channel handling has been cleaned up since then, this can be removed.
->>      
->>
->>      
-> Oh Ok thanks, I will resend the patch without that change.
-> but anyway CHANNEL_G is defined as (CHANNEL_2GHZ|CHANNEL_OFDM).
-> Please tell me what I am missing.
->    
-Now this change is correct?
->> Sujith
->> .
->>
->>
->>      
-> .
->
->    
+On Sun, 2011-03-06 at 16:32 +0200, Shahar Levi wrote:
+> Reduced bus transactions in Tx & Rx path
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
+
+
+
+
+> diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+> index 919b59f..c95ae19 100644
+> --- a/drivers/net/wireless/wl12xx/rx.c
+> +++ b/drivers/net/wireless/wl12xx/rx.c
+
+[...]
+
+> @@ -204,7 +211,8 @@ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_common_status *status)
+>  	 * Write the driver's packet counter to the FW. This is only required
+>  	 * for older hardware revisions
+>  	 */
+> -	if (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION)
+> +	if ((wl->chip.id != CHIP_ID_1283_PG20) &&
+> +	    (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION))
+>  		wl1271_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
+>  }
+
+The WL12XX_QUIRK_END_OF_TRANSACTION is only enabled for wl127x, so no
+need to check that it's not wl128x here.
+
+> @@ -537,7 +550,8 @@ out_ack:
+>  		 * Interrupt the firmware with the new packets. This is only
+>  		 * required for older hardware revisions
+>  		 */
+> -		if (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION)
+> +		if ((wl->chip.id != CHIP_ID_1283_PG20) &&
+> +		    (wl->quirks & WL12XX_QUIRK_END_OF_TRANSACTION))
+>  			wl1271_write32(wl, WL1271_HOST_WR_ACCESS,
+>  				       wl->tx_packets_count);
+>  
+
+Same thing here.
+
+I'll remove these unnecessary checks.
+
+
+-- 
+Cheers,
+Luca.
+
