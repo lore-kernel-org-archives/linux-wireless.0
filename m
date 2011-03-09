@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54837 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755201Ab1CKUqV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 15:46:21 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	greearb@candelatech.com
-Subject: [PATCH v2] mac80211: fix channel type recalculation with HT and non-HT interfaces
-Date: Fri, 11 Mar 2011 21:45:51 +0100
-Message-Id: <1299876351-3329-1-git-send-email-nbd@openwrt.org>
+Received: from mail.deathmatch.net ([72.66.92.28]:2725 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932142Ab1CIDvo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 22:51:44 -0500
+Date: Tue, 8 Mar 2011 22:51:46 -0500
+From: me@bobcopeland.com
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, mickflemm@gmail.com
+Subject: Re: [PATCH] ath5k: restrict AR5K_TX_QUEUE_ID_DATA_MAX to reflect
+	the [0,3] range
+Message-ID: <20110309035146.GA16481@hash.localnet>
+References: <1299620160-27837-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1299620160-27837-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running an AP interface along with the cooked monitor interface created
-by hostapd, adding an interface and deleting it again triggers a channel type
-recalculation during which the (non-HT) monitor interface takes precedence
-over the HT AP interface, thus causing the channel type to be set to non-HT.
-Fix this by ensuring that a more wide channel type will not be overwritten
-by a less wide channel type.
+On Tue, Mar 08, 2011 at 04:36:00PM -0500, John W. Linville wrote:
+> This just matches reality...
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> ..or am I missing something?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/chan.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+No, your change looks right to me. 
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 5b24740..889c3e9 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -77,6 +77,9 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 		switch (tmp->vif.bss_conf.channel_type) {
- 		case NL80211_CHAN_NO_HT:
- 		case NL80211_CHAN_HT20:
-+			if (superchan > tmp->vif.bss_conf.channel_type)
-+				break;
-+
- 			superchan = tmp->vif.bss_conf.channel_type;
- 			break;
- 		case NL80211_CHAN_HT40PLUS:
+Acked-by: Bob Copeland <me@bobcopeland.com>
+
 -- 
-1.7.3.2
+Bob Copeland %% www.bobcopeland.com
 
