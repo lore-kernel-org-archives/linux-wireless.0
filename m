@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50475 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758339Ab1CCPfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 10:35:02 -0500
-Subject: Re: [PATCH v3 5/5] iwlwifi: move remaining iwl-agn-rx.c code into
- iwl-rx.c
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110303091918.GA2190@redhat.com>
-References: <1298899997-2372-1-git-send-email-sgruszka@redhat.com>
-	 <1298899997-2372-5-git-send-email-sgruszka@redhat.com>
-	 <1299096009.5082.127.camel@wwguy-huron>  <20110303091918.GA2190@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Mar 2011 07:19:33 -0800
-Message-ID: <1299165573.5082.128.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:28129 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756960Ab1CIOyB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 09:54:01 -0500
+Date: Wed, 9 Mar 2011 09:53:57 -0500
+From: Jason <linuxdriverproject@lakedaemon.net>
+To: George Nychis <gnychis@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	hharte2@gmail.com, devel@linuxdriverproject.org
+Subject: Re: looking for more details on BCM4329, access to 802.11 header
+Message-ID: <20110309145357.GD10509@titan.lakedaemon.net>
+References: <AANLkTikwBUjSXJf+EUeM+kPhMg3PG0Y22S4BYKVVm8S2@mail.gmail.com> <20110307140140.GC10509@titan.lakedaemon.net> <AANLkTi=TaeNnJ3u+HXojkbHvjsH+Z7C_=3Tg98NMNg1A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=TaeNnJ3u+HXojkbHvjsH+Z7C_=3Tg98NMNg1A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-
-On Thu, 2011-03-03 at 01:19 -0800, Stanislaw Gruszka wrote:
-> Hello
+On Wed, Mar 09, 2011 at 12:59:33AM -0500, George Nychis wrote:
+> This was a *huge* help to get this response from you, thanks a bunch for that.
 > 
-> On Wed, Mar 02, 2011 at 12:00:09PM -0800, Guy, Wey-Yi wrote:
-> > I got the following warning:
-> > 
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:506:6: warning: symbol
-> > 'iwl_rx_statistics' was not declared. Should it be static?
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:575:6: warning: symbol
-> > 'iwl_reply_statistics' was not declared. Should it be static?
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:600:6: warning: symbol
-> > 'iwl_rx_missed_beacon_notif' was not declared. Should it be static?
+
+No problem, I wish this particular idea could be higher on my project
+list. ;-)
+
+> I'd love to poke GregKG's staging tree and the mac80211 driver for the
+
+s/GregKG/GregKH/
+
+> bcm4329.  I did some searching for the staging tree, and the only
+> address I could find was:
+> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
 > 
-> include "iwl-agh.h" should make warning go away, but perhaps
-> would be better to move all rx_handlers to iwl-rx.c, make them
-> statics and export only iwl_setup_rx_handlers ?
-> 
-I like the 2nd approach and make it "static", could you like to do it,
-or I can make the changes.
 
-Thanks
-Wey
+In my tree I did the following:
+$ git remote add staging-2.6 \
+git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
 
+$ git remote update staging-2.6
+...successful output...
 
+So, it looks like you're using the old url, try this:
+
+$ git clone \
+git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
+
+Then, you'll want the staging-next branch.
+
+hth,
+
+Jason.
