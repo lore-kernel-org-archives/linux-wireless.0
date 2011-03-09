@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from void.printf.net ([89.145.121.20]:45043 "EHLO void.printf.net"
+Received: from nbd.name ([46.4.11.11]:36621 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754260Ab1CYRwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 13:52:53 -0400
-From: Chris Ball <cjb@laptop.org>
-To: Nicolas Pitre <nico@fluxnic.net>
-Cc: Wilson Loi <wlsloi@gmail.com>, Ohad Ben-Cohen <ohad@wizery.com>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Gao Yunpeng <yunpeng.gao@intel.com>
-Subject: Re: [PATCH v1 2/2] sdio: add power_restore support with MMC_PM_KEEP_POWER mode
-References: <AANLkTi=CSK8nRF7CTzsq06Bk8Cr74ZcwJBf53_wWbpnv@mail.gmail.com>
-	<AANLkTimvLzgO1VHAbYz0uh-TVBGdLr-aDcyaGyzS2QMi@mail.gmail.com>
-	<AANLkTimevrNU+JC=KvMzpGfip7cimPMo2cmBzvPiMb9R@mail.gmail.com>
-	<AANLkTi=Zh2mY8SDRR6431=ykGOLAZJfmgAoDp09aV+O_@mail.gmail.com>
-	<alpine.LFD.2.00.1103251315080.11889@xanadu.home>
-Date: Fri, 25 Mar 2011 13:48:53 -0400
-In-Reply-To: <alpine.LFD.2.00.1103251315080.11889@xanadu.home> (Nicolas
-	Pitre's message of "Fri, 25 Mar 2011 13:17:34 -0400 (EDT)")
-Message-ID: <m3ei5vks56.fsf@pullcord.laptop.org>
+	id S1756512Ab1CIBPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 20:15:43 -0500
+Message-ID: <4D76D4BD.7070509@openwrt.org>
+Date: Wed, 09 Mar 2011 02:15:41 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, Kyungwan.Nam@atheros.com
+Subject: Re: [PATCH 2.6.38] ath9k: remove support for the FIF_PROMISC_IN_BSS
+ filter flag
+References: <1299631692-69094-1-git-send-email-nbd@openwrt.org> <4D76D2C3.2000909@candelatech.com>
+In-Reply-To: <4D76D2C3.2000909@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 2011-03-09 2:07 AM, Ben Greear wrote:
+> On 03/08/2011 04:48 PM, Felix Fietkau wrote:
+>> The hardware rx filter flag triggered by FIF_PROMISC_IN_BSS is overly broad
+>> and covers even frames with PHY errors. When this flag is enabled, this message
+>> shows up frequently during scanning or hardware resets:
+>>
+>> ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+>>
+>> Since promiscuous mode is usually not particularly useful, yet enabled by
+>> default by bridging (either used normally in 4-addr mode, or with hacks
+>> for various virtualization software), we should sacrifice it for better
+>> reliability during normal operation.
+>>
+>> This patch leaves it enabled if there are active monitor mode interfaces, since
+>> it's very useful for debugging.
+>>
+>> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>> Cc: stable@kernel.org
+>> ---
+>>   drivers/net/wireless/ath/ath9k/recv.c |    4 +---
+>>   1 files changed, 1 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index cb559e3..a9c3f46 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -413,9 +413,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+>>   	 * mode interface or when in monitor mode. AP mode does not need this
+>>   	 * since it receives all in-BSS frames anyway.
+>>   	 */
+>> -	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP)&&
+>> -	     (sc->rx.rxfilter&  FIF_PROMISC_IN_BSS)) ||
+>> -	    (sc->sc_ah->is_monitoring))
+>> +	if (sc->sc_ah->is_monitoring)
+>>   		rfilt |= ATH9K_RX_FILTER_PROM;
+>>
+>>   	if (sc->rx.rxfilter&  FIF_CONTROL)
+> 
+> Should we enable this flag if we have multiple STA
+> interfaces?  I had to add something to ath5k recently
+> to put it into promisc to properly handle multiple STAs
+> associated with different APs, for instance.
+No, multiple interfaces is handled by the BSSID mask.
 
-On Fri, Mar 25 2011, Nicolas Pitre wrote:
-> On Sat, 26 Mar 2011, Wilson Loi wrote:
->
->> Sorry, this is the first time I sent a patch.
->> 
->> There are two case for the WLAN SDIO card to do power saving.
->> 1. Totally cut off the power of WLAN network interface.
->> 2. offload the network state to WLAN SDIO firmware.
->
-> Case #2 is already supported with current code.  Patches for the 
-> libertas driver are in the OLPC repository (no idea if they were 
-> submitted upstream yet).
+> Do you have any idea *why* enabling this flag causes the DMA error
+> messages?
+I don't know why exactly it happens, but it probably cannot be explained
+without going to the details of the inner workings of the MAC/baseband
+interaction. But as I mentioned in the description, this flag is overly
+broad and doesn't just bypass the address match, but lets all kinds of
+other crap through as well - in many situations where even 'normal'
+promiscuous behavior would be completely useless.
+I think because of that, disabling it for non-monitor operation is the
+right thing to do.
 
-Yes, they're upstream now.  libertas/if_sdio.c:if_sdio_suspend() sets
-MMC_PM_KEEP_POWER if a wakeup source has been set with "ethtool wol".
-
-- Chris.
--- 
-Chris Ball   <cjb@laptop.org>   <http://printf.net/>
-One Laptop Per Child
+- Felix
