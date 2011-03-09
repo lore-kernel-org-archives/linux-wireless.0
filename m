@@ -1,176 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47182 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755351Ab1C3A5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:57:42 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:17 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 27/34] ath6kl: cleanup allocation and getting of the hif dev
-Date: Tue, 29 Mar 2011 17:56:24 -0700
-Message-ID: <1301446591-15236-28-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59669 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488Ab1CIF7e convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 00:59:34 -0500
+Received: by bwz15 with SMTP id 15so410863bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 21:59:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110307140140.GC10509@titan.lakedaemon.net>
+References: <AANLkTikwBUjSXJf+EUeM+kPhMg3PG0Y22S4BYKVVm8S2@mail.gmail.com>
+	<20110307140140.GC10509@titan.lakedaemon.net>
+Date: Wed, 9 Mar 2011 00:59:33 -0500
+Message-ID: <AANLkTi=TaeNnJ3u+HXojkbHvjsH+Z7C_=3Tg98NMNg1A@mail.gmail.com>
+Subject: Re: looking for more details on BCM4329, access to 802.11 header
+From: George Nychis <gnychis@gmail.com>
+To: Jason <linuxdriverproject@lakedaemon.net>
+Cc: linux-wireless@vger.kernel.org, Bcm43xx-dev@lists.berlios.de,
+	hharte2@gmail.com, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removes verbose debug messages and checks that are just
-not needed, and renames the functions to something more
-sensible. While we clean this up, just move the routines
-above and remove the forward declarations.
+Hi Jason,
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- .../staging/ath6kl/hif/sdio/linux_sdio/src/hif.c   |   65 +++++++++-----------
- 1 files changed, 28 insertions(+), 37 deletions(-)
+This was a *huge* help to get this response from you, thanks a bunch for that.
 
-diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-index 1752b33..c862a19 100644
---- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-+++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
-@@ -58,8 +58,6 @@ static int hifDeviceResume(struct device *dev);
- #endif /* CONFIG_PM */
- static int hifDeviceInserted(struct sdio_func *func, const struct sdio_device_id *id);
- static void hifDeviceRemoved(struct sdio_func *func);
--static struct hif_device *addHifDevice(struct sdio_func *func);
--static struct hif_device *getHifDevice(struct sdio_func *func);
- static void delHifDevice(struct hif_device * device);
- static int Func0_CMD52WriteByte(struct mmc_card *card, unsigned int address, unsigned char byte);
- static int Func0_CMD52ReadByte(struct mmc_card *card, unsigned int address, unsigned char *byte);
-@@ -69,6 +67,26 @@ module_param(reset_sdio_on_unload, int, 0644);
- 
- extern u32 nohifscattersupport;
- 
-+static struct hif_device *ath6kl_alloc_hifdev(struct sdio_func *func)
-+{
-+	struct hif_device *hifdevice;
-+
-+	hifdevice = kzalloc(sizeof(struct hif_device), GFP_KERNEL);
-+
-+#if HIF_USE_DMA_BOUNCE_BUFFER
-+	hifdevice->dma_buffer = kmalloc(HIF_DMA_BUFFER_SIZE, GFP_KERNEL);
-+#endif
-+	hifdevice->func = func;
-+	hifdevice->powerConfig = HIF_DEVICE_POWER_UP;
-+	sdio_set_drvdata(func, hifdevice);
-+
-+	return hifdevice;
-+}
-+
-+static struct hif_device *ath6kl_get_hifdev(struct sdio_func *func)
-+{
-+	return (struct hif_device *) sdio_get_drvdata(func);
-+}
- 
- /* ------ Static Variables ------ */
- static const struct sdio_device_id ar6k_id_table[] = {
-@@ -774,7 +792,7 @@ hifIRQHandler(struct sdio_func *func)
-     struct hif_device *device;
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifIRQHandler\n"));
- 
--    device = getHifDevice(func);
-+    device = ath6kl_get_hifdev(func);
-     atomic_set(&device->irqHandling, 1);
-     /* release the host during ints so we can pick it back up when we process cmds */
-     sdio_release_host(device->func);
-@@ -829,8 +847,8 @@ static int hifDeviceInserted(struct sdio_func *func, const struct sdio_device_id
- 		    ("AR6000: hifDeviceInserted, Function: 0x%X, Vendor ID: 0x%X, Device ID: 0x%X, block size: 0x%X/0x%X\n",
- 		     func->num, func->vendor, func->device, func->max_blksize, func->cur_blksize));
- 
--    addHifDevice(func);
--    device = getHifDevice(func);
-+    ath6kl_alloc_hifdev(func);
-+    device = ath6kl_get_hifdev(func);
- 
-     device->id = id;
-     device->is_disabled = true;
-@@ -951,7 +969,7 @@ static int hifDisableFunc(struct hif_device *device, struct sdio_func *func)
-     int status = 0;
- 
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDisableFunc\n"));
--    device = getHifDevice(func);
-+    device = ath6kl_get_hifdev(func);
-     if (!IS_ERR(device->async_task)) {
-         init_completion(&device->async_completion);
-         device->async_shutdown = 1;
-@@ -1000,7 +1018,7 @@ static int hifEnableFunc(struct hif_device *device, struct sdio_func *func)
-     int ret = 0;
-     
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifEnableFunc\n"));
--    device = getHifDevice(func);
-+    device = ath6kl_get_hifdev(func);
- 
-     if (device->is_disabled) {
-        /* enable the SDIO function */
-@@ -1079,7 +1097,7 @@ static int hifDeviceSuspend(struct device *dev)
-     int status = 0;
-     struct hif_device *device;   
- 
--    device = getHifDevice(func);
-+    device = ath6kl_get_hifdev(func);
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceSuspend\n"));
-     if (device && device->claimedContext && osdrvCallbacks.deviceSuspendHandler) {
-         device->is_suspend = true; /* set true first for PowerStateChangeNotify(..) */
-@@ -1107,7 +1125,7 @@ static int hifDeviceResume(struct device *dev)
-     int status = 0;
-     struct hif_device *device;   
- 
--    device = getHifDevice(func);
-+    device = ath6kl_get_hifdev(func);
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceResume\n"));
-     if (device && device->claimedContext && osdrvCallbacks.deviceSuspendHandler) {
-         status = osdrvCallbacks.deviceResumeHandler(device->claimedContext);
-@@ -1128,7 +1146,7 @@ static void hifDeviceRemoved(struct sdio_func *func)
-     AR_DEBUG_ASSERT(func != NULL);
- 
-     AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +hifDeviceRemoved\n"));
--    device = getHifDevice(func);
-+    device = ath6kl_get_hifdev(func);
-     if (device->claimedContext != NULL) {
-         status = osdrvCallbacks.deviceRemovedHandler(device->claimedContext, device);
-     }
-@@ -1178,33 +1196,6 @@ int hifWaitForPendingRecv(struct hif_device *device)
-     return 0;
- }
-     
--
--static struct hif_device *
--addHifDevice(struct sdio_func *func)
--{
--    struct hif_device *hifdevice;
--    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: addHifDevice\n"));
--    AR_DEBUG_ASSERT(func != NULL);
--    hifdevice = kzalloc(sizeof(struct hif_device), GFP_KERNEL);
--    AR_DEBUG_ASSERT(hifdevice != NULL);
--#if HIF_USE_DMA_BOUNCE_BUFFER
--    hifdevice->dma_buffer = kmalloc(HIF_DMA_BUFFER_SIZE, GFP_KERNEL);
--    AR_DEBUG_ASSERT(hifdevice->dma_buffer != NULL);
--#endif
--    hifdevice->func = func;
--    hifdevice->powerConfig = HIF_DEVICE_POWER_UP;
--    sdio_set_drvdata(func, hifdevice);
--    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: addHifDevice; 0x%p\n", hifdevice));
--    return hifdevice;
--}
--
--static struct hif_device *
--getHifDevice(struct sdio_func *func)
--{
--    AR_DEBUG_ASSERT(func != NULL);
--    return (struct hif_device *)sdio_get_drvdata(func);
--}
--
- static void
- delHifDevice(struct hif_device * device)
- {
--- 
-1.7.0.4
+I'd love to poke GregKG's staging tree and the mac80211 driver for the
+bcm4329.  I did some searching for the staging tree, and the only
+address I could find was:
+git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
 
+But whenever I try to clone it, it just hangs up on me.  "fatal: The
+remote end hung up unexpectedly" ... is there another location that
+I'm not finding?
+
+I can definitely give cyanogenmod a shot, I had it running on my old
+G1 at one point.  Let me toss it on my Incredible and see where we can
+go.
+
+I actually tried to go the wl1271 on my Droid1 first with this code:
+http://android.git.kernel.org/?p=platform/hardware/ti/wlan.git;a=tree
+
+I am able to read the 802.11 header in the kernel module before it
+gets translated to an Ethernet frame.  That was a great step towards
+what I wanted, I just needed to then kick it in to promiscuous mode.
+The mode is disabled, but I figured I could reconfigure the RX filter.
+ I changed the RX filter to disable BSSID filtering, but I was still
+only getting packets destined to my MAC.
+
+But, then I found this comment which appears to state that the
+firmware sets the local MAC address filter (plus broadcast traffic):
+http://android.git.kernel.org/?p=platform/hardware/ti/wlan.git;a=blob;f=wl1271/TWD/Ctrl/CmdBldCmd.c#l147
+
+So it seems like the firmware is preventing the driver from removing
+the BSSID filter on the wl1271.  But, as you mentioned the N900 was
+able to kick it in to promiscuous mode which must be changing this
+filter.  Is it using a different firmware?  But, I'm going to explore
+the in-kernel driver for this as you mentioned.  I will start poking
+around that.
+
+Thanks again, I really appreciate it.
+
+- George
+
+
+On Mon, Mar 7, 2011 at 9:01 AM, Jason <linuxdriverproject@lakedaemon.net> wrote:
+> On Sun, Mar 06, 2011 at 11:11:48PM -0500, George Nychis wrote:
+>> Hi all,
+>>
+>> I was really hoping to be able to access 802.11 headers of received
+>> packets on a BCM4329 chip embedded on my HTC Incredible.  However, the
+>> further and further I dug in to the source code for the kernel and
+>> BCM4329 driver, the more and more I became less hopeful.  But, I'm
+>> hoping someone with some more knowledge on this chipset might be able
+>> to help (especially you, Howard!).
+>>
+>
+> Most development work for Broadcom wifi is occurring in GregKH's staging
+> tree, I've included the linuxdriverproject ml in the CC.  It's in
+> drivers/staging/brcm80211, it's a mac80211 driver that includes support
+> for bcm4329.  You may have more luck with it.
+>
+> If you're feeling really frisky, try cyanogenmod [1] as your base system,
+> it's running 2.6.37 on my Nexus One right now.  Here's how to build for
+> the Incredible [2].  It shouldn't be too far of a leap to get brcm80211
+> running on it.
+>
+> As a side note, the same holds for the TI wl1271 (right model?) found in
+> the HTC G1 and Nokia N900.  The in-kernel driver has much better support
+> for mac80211.  Android, by default uses the out-of-tree version, the
+> N900 used the in-tree version.  The N900 could go into monitor mode
+> without modification once you had root access.
+>
+>> The HTC Incredible has the wireless driver loaded as a module, and
+>> builds it straight from the kernel tree:
+>> http://android.git.kernel.org/?p=kernel/msm.git;a=tree;f=drivers/net/wireless/bcm4329;h=01f09252ff9b80379e6db6dbb22af4fcba004982;hb=HEAD
+>
+> AFAICT, this driver will never make it into Linus' tree.  All of Broadcom's
+> efforts are on merging staging/brcm80211 into mainline.
+>
+> hth,
+>
+> Jason.
+>
+> [1] http://www.cyanogenmod.com
+> [2]
+> http://wiki.cyanogenmod.com/index.php?title=Compile_CyanogenMod_for_Incredible
+>
