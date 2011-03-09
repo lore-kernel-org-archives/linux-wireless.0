@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49541 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754986Ab1CGIXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 03:23:00 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] iwlwifi: fix iwl-rx.c compilation
-Date: Mon,  7 Mar 2011 09:22:24 +0100
-Message-Id: <1299486144-8985-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:55003 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754855Ab1CIBH1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2011 20:07:27 -0500
+Message-ID: <4D76D2C3.2000909@candelatech.com>
+Date: Tue, 08 Mar 2011 17:07:15 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, Kyungwan.Nam@atheros.com
+Subject: Re: [PATCH 2.6.38] ath9k: remove support for the FIF_PROMISC_IN_BSS
+ filter flag
+References: <1299631692-69094-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299631692-69094-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My commit 466a19a003f3b45a755bc85f967c21da947f9a00 "iwlwifi: move rx
-handlers code to iwl-rx.c" breaks compilation on 32 bits. Fix that.
+On 03/08/2011 04:48 PM, Felix Fietkau wrote:
+> The hardware rx filter flag triggered by FIF_PROMISC_IN_BSS is overly broad
+> and covers even frames with PHY errors. When this flag is enabled, this message
+> shows up frequently during scanning or hardware resets:
+>
+> ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+>
+> Since promiscuous mode is usually not particularly useful, yet enabled by
+> default by bridging (either used normally in 4-addr mode, or with hacks
+> for various virtualization software), we should sacrifice it for better
+> reliability during normal operation.
+>
+> This patch leaves it enabled if there are active monitor mode interfaces, since
+> it's very useful for debugging.
+>
+> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+> Cc: stable@kernel.org
+> ---
+>   drivers/net/wireless/ath/ath9k/recv.c |    4 +---
+>   1 files changed, 1 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index cb559e3..a9c3f46 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -413,9 +413,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+>   	 * mode interface or when in monitor mode. AP mode does not need this
+>   	 * since it receives all in-BSS frames anyway.
+>   	 */
+> -	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP)&&
+> -	     (sc->rx.rxfilter&  FIF_PROMISC_IN_BSS)) ||
+> -	    (sc->sc_ah->is_monitoring))
+> +	if (sc->sc_ah->is_monitoring)
+>   		rfilt |= ATH9K_RX_FILTER_PROM;
+>
+>   	if (sc->rx.rxfilter&  FIF_CONTROL)
 
-Reported-by: Guy, Wey-Yi <wey-yi.w.guy@intel.com>
-Reported-by: Daniel Halperin <dhalperi@cs.washington.edu>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Should we enable this flag if we have multiple STA
+interfaces?  I had to add something to ath5k recently
+to put it into promisc to properly handle multiple STAs
+associated with different APs, for instance.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 7dc2d39..6f9a2fa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -29,6 +29,7 @@
- 
- #include <linux/etherdevice.h>
- #include <linux/slab.h>
-+#include <linux/sched.h>
- #include <net/mac80211.h>
- #include <asm/unaligned.h>
- #include "iwl-eeprom.h"
+Do you have any idea *why* enabling this flag causes the DMA error
+messages?
+
+Thanks,
+Ben
+
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
