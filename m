@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:18458 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754730Ab1C3Wyc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 18:54:32 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 15:54:07 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2.6.38.2] iwlegacy: fix bugs in change_interface
-Date: Wed, 30 Mar 2011 15:54:28 -0700
-Message-ID: <1301525668-23041-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:4839 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231Ab1CJAFv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 19:05:51 -0500
+Date: Wed, 9 Mar 2011 19:05:02 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Christoph Lameter <cl@linux.com>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	David Rientjes <rientjes@google.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Nick Piggin <npiggin@kernel.dk>,
+	Dave Chinner <dchinner@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: <IRQ> [<ffffffff810c9204>] ? __alloc_pages_nodemask+0x622/0x696
+Message-ID: <20110310000502.GA13763@hash.localnet>
+References: <AANLkTikaLb_xan2ePfo9JCZ1w7RZ76wF8NUT2tYr0ZD=@mail.gmail.com> <alpine.DEB.2.00.1103051847100.8779@chino.kir.corp.google.com> <4D770178.9070908@gmail.com> <alpine.DEB.2.00.1103091254540.13353@chino.kir.corp.google.com> <4D77EEB4.9090404@gmail.com> <alpine.DEB.2.00.1103091549020.16989@router.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.1103091549020.16989@router.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Mar 09, 2011 at 03:54:24PM -0600, Christoph Lameter wrote:
+> [ 7419.322770] wlan0: associated
+> [ 7427.161366] ath: Failed to stop TX DMA in 100 msec after killing last frame
+> [ 7427.161432] ath: Failed to stop TX DMA!
+> [ 7434.492398] ath: Failed to stop TX DMA in 100 msec after killing last frame
+> [ 7434.492462] ath: Failed to stop TX DMA!
+> [ 7603.339047]
+> =============================================================================
+> [ 7603.339053] BUG radix_tree_node: Padding overwritten. 0xffff88000008fe00-0xffff88000008fe32
 
-If change_interface gets invoked during a firmware
-restart, it may crash; prevent that from happening
-by checking if ctx->vif is assigned.
+> Could the ath driver corrupt memory if the TX DMA cannot be stopped?
 
-Additionally, in my initial commit I forgot to set
-the vif->p2p variable correctly, so fix that too.
+Looks like ath_draintxq() can do something bad (e.g. DMA engine uses
+an old address from ath_tx_return_buffer()) if DMA is still active
+in ath_drain_all_txq().
 
-Backport to 2.6.38.2 by Luis.
+But this is ath9k which I'm not so familiar with, maybe Luis can say.
 
-Cc: stable@kernel.org [2.6.38+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-Johannes, I had to backport this for the v2.6.38.2 compat-wireless
-release so I'm sending this backport for your review.
-
- drivers/net/wireless/iwlwifi/iwl-core.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index efbde1f..3a054db 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1867,6 +1867,15 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	mutex_lock(&priv->mutex);
- 
-+	if (!ctx->vif || !iwl_is_ready_rf(priv)) {
-+	/*
-+	 * Huh? But wait ... this can maybe happen when
-+	 * we're in the middle of a firmware restart!
-+	 */
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
- 
- 	if (!(interface_modes & BIT(newtype))) {
-@@ -1894,6 +1903,7 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	/* success */
- 	iwl_teardown_interface(priv, vif, true);
- 	vif->type = newtype;
-+	vif->p2p = newp2p;
- 	err = iwl_setup_interface(priv, ctx);
- 	WARN_ON(err);
- 	/*
 -- 
-1.7.4.15.g7811d
+Bob Copeland %% www.bobcopeland.com
 
