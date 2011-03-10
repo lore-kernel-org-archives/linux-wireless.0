@@ -1,160 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:65082 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754725Ab1CQS7K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 14:59:10 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 26so3126341iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:59:10 -0700 (PDT)
-From: Brian Cavagnolo <brian@cozybit.com>
+Received: from nbd.name ([46.4.11.11]:53866 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751934Ab1CJNlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 08:41:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH 2/9] mwl8k: update to ap firmware API version 2
-Date: Thu, 17 Mar 2011 11:58:42 -0700
-Message-Id: <1300388329-15380-2-git-send-email-brian@cozybit.com>
-In-Reply-To: <1300388329-15380-1-git-send-email-brian@cozybit.com>
-References: <1300388329-15380-1-git-send-email-brian@cozybit.com>
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, mark@moxienet.com
+Subject: [PATCH v2 2/4] ath9k: fix stopping tx dma on reset
+Date: Thu, 10 Mar 2011 14:41:37 +0100
+Message-Id: <1299764499-76251-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299764499-76251-1-git-send-email-nbd@openwrt.org>
+References: <1299764499-76251-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware APIv2 adds the following enhancements:
+In some situations, stopping Tx DMA frequently fails, leading to messages
+like this:
 
--- capabilities are reported by the firmware
--- API supports up to 8 dedicated AMPDU streams
--- optional packet timestamping and expiration can be enabled.
-   Specifically, packets that are queued in firmware for longer
-   than 500ms will be dropped if this option is used.
+ath: Failed to stop TX DMA in 100 msec after killing last frame
+ath: Failed to stop TX DMA!
 
-Based on work by "Nishant Sarmukadam" <nishants@marvell.com>
+This patch uses a few MAC features to abort DMA globally instead of iterating
+over all hardware queues and attempting to stop them individually.
+Not only is that faster and works with a shorter timeout, it also makes the
+process much more reliable.
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+With this change, I can no longer trigger these messages on AR9380,
+and on AR9280 they become much more rare.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mwl8k.c |   41 ++++++++++++++++++++++++++++++++++-------
- 1 files changed, 34 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/mac.c  |   27 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mac.h  |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c |   14 ++++++--------
+ 3 files changed, 34 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 8fefed2..9db66d5 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -86,6 +86,7 @@ MODULE_PARM_DESC(ap_mode_default,
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 5efc869..188af17 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -143,6 +143,33 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
+ }
+ EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
  
- #define MWL8K_RX_QUEUES		1
- #define MWL8K_TX_QUEUES		4
-+#define MWL8K_MAX_AMPDU_QUEUES	8
- 
- struct rxd_ops {
- 	int rxd_size;
-@@ -159,6 +160,9 @@ struct mwl8k_priv {
- 	u32 ap_macids_supported;
- 	u32 sta_macids_supported;
- 
-+	/* Ampdu stream information */
-+	u8 num_ampdu_queues;
++void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
++{
++	int i, q;
 +
- 	/* firmware access */
- 	struct mutex fw_mutex;
- 	struct task_struct *fw_mutex_owner;
-@@ -190,8 +194,8 @@ struct mwl8k_priv {
- 	int pending_tx_pkts;
- 
- 	struct mwl8k_rx_queue rxq[MWL8K_RX_QUEUES];
--	struct mwl8k_tx_queue txq[MWL8K_TX_QUEUES];
--	u32 txq_offset[MWL8K_TX_QUEUES];
-+	struct mwl8k_tx_queue txq[MWL8K_TX_QUEUES + MWL8K_MAX_AMPDU_QUEUES];
-+	u32 txq_offset[MWL8K_TX_QUEUES + MWL8K_MAX_AMPDU_QUEUES];
- 
- 	bool radio_on;
- 	bool radio_short_preamble;
-@@ -1322,7 +1326,7 @@ struct mwl8k_tx_desc {
- 	__le16 pkt_len;
- 	__u8 dest_MAC_addr[ETH_ALEN];
- 	__le32 next_txd_phys_addr;
--	__le32 reserved;
-+	__le32 timestamp;
- 	__le16 rate_info;
- 	__u8 peer_id;
- 	__u8 tx_frag_cnt;
-@@ -2023,13 +2027,16 @@ struct mwl8k_cmd_get_hw_spec_ap {
- 	__le32 wcbbase2;
- 	__le32 wcbbase3;
- 	__le32 fw_api_version;
-+	__le32 caps;
-+	__le32 num_of_ampdu_queues;
-+	__le32 wcbbase_ampdu[MWL8K_MAX_AMPDU_QUEUES];
- } __packed;
- 
- static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
- {
- 	struct mwl8k_priv *priv = hw->priv;
- 	struct mwl8k_cmd_get_hw_spec_ap *cmd;
--	int rc;
-+	int rc, i;
- 	u32 api_version;
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-@@ -2061,10 +2068,17 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
- 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
- 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
- 		priv->hw_rev = cmd->hw_rev;
--		mwl8k_setup_2ghz_band(hw);
-+		mwl8k_set_caps(hw, le32_to_cpu(cmd->caps));
- 		priv->ap_macids_supported = 0x000000ff;
- 		priv->sta_macids_supported = 0x00000000;
--
-+		priv->num_ampdu_queues = le32_to_cpu(cmd->num_of_ampdu_queues);
-+		if (priv->num_ampdu_queues > MWL8K_MAX_AMPDU_QUEUES) {
-+			wiphy_warn(hw->wiphy, "fw reported %d ampdu queues"
-+				   " but we only support %d.\n",
-+				   priv->num_ampdu_queues,
-+				   MWL8K_MAX_AMPDU_QUEUES);
-+			priv->num_ampdu_queues = MWL8K_MAX_AMPDU_QUEUES;
++	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
++
++	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
++	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
++	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
++
++	for (q = 0; q < AR_NUM_QCU; q++) {
++		for (i = 1000; i > 0; i--) {
++			if (!ath9k_hw_numtxpending(ah, q))
++				break;
++
++			udelay(5);
 +		}
- 		off = le32_to_cpu(cmd->rxwrptr) & 0xffff;
- 		iowrite32(priv->rxq[0].rxd_dma, priv->sram + off);
- 
-@@ -2075,6 +2089,10 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
- 		priv->txq_offset[1] = le32_to_cpu(cmd->wcbbase1) & 0xffff;
- 		priv->txq_offset[2] = le32_to_cpu(cmd->wcbbase2) & 0xffff;
- 		priv->txq_offset[3] = le32_to_cpu(cmd->wcbbase3) & 0xffff;
++	}
 +
-+		for (i = 0; i < priv->num_ampdu_queues; i++)
-+			priv->txq_offset[i + MWL8K_TX_QUEUES] =
-+				le32_to_cpu(cmd->wcbbase_ampdu[i]) & 0xffff;
++	REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
++	REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
++	REG_CLR_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
++
++	REG_WRITE(ah, AR_Q_TXD, 0);
++}
++EXPORT_SYMBOL(ath9k_hw_abort_tx_dma);
++
+ bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
+ {
+ #define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 04d58ae..d37c6d4 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -677,6 +677,7 @@ void ath9k_hw_cleartxdesc(struct ath_hw *ah, void *ds);
+ u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q);
+ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
+ bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
++void ath9k_hw_abort_tx_dma(struct ath_hw *ah);
+ void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs);
+ bool ath9k_hw_set_txq_props(struct ath_hw *ah, int q,
+ 			    const struct ath9k_tx_queue_info *qinfo);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index e16136d..bb1d29e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1194,16 +1194,14 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 	if (sc->sc_flags & SC_OP_INVALID)
+ 		return true;
+ 
+-	/* Stop beacon queue */
+-	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++	ath9k_hw_abort_tx_dma(ah);
+ 
+-	/* Stop data queues */
++	/* Check if any queue remains active */
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (ATH_TXQ_SETUP(sc, i)) {
+-			txq = &sc->tx.txq[i];
+-			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+-			npend += ath9k_hw_numtxpending(ah, txq->axq_qnum);
+-		}
++		if (!ATH_TXQ_SETUP(sc, i))
++			continue;
++
++		npend += ath9k_hw_numtxpending(ah, sc->tx.txq[i].axq_qnum);
  	}
  
- done:
-@@ -2103,6 +2121,14 @@ struct mwl8k_cmd_set_hw_spec {
- 	__le32 total_rxd;
- } __packed;
- 
-+/* If enabled, MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY will cause
-+ * packets to expire 500 ms after the timestamp in the tx descriptor.  That is,
-+ * the packets that are queued for more than 500ms, will be dropped in the
-+ * hardware. This helps minimizing the issues caused due to head-of-line
-+ * blocking where a slow client can hog the bandwidth and affect traffic to a
-+ * faster client.
-+ */
-+#define MWL8K_SET_HW_SPEC_FLAG_ENABLE_LIFE_TIME_EXPIRY	0x00000400
- #define MWL8K_SET_HW_SPEC_FLAG_HOST_DECR_MGMT		0x00000080
- #define MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_PROBERESP	0x00000020
- #define MWL8K_SET_HW_SPEC_FLAG_HOSTFORM_BEACON		0x00000010
-@@ -4434,7 +4460,7 @@ enum {
- 	MWL8366,
- };
- 
--#define MWL8K_8366_AP_FW_API 1
-+#define MWL8K_8366_AP_FW_API 2
- #define _MWL8K_8366_AP_FW(api) "mwl8k/fmimage_8366_ap-" #api ".fw"
- #define MWL8K_8366_AP_FW(api) _MWL8K_8366_AP_FW(api)
- 
-@@ -4650,6 +4676,7 @@ static int mwl8k_probe_hw(struct ieee80211_hw *hw)
- 	 * total number of queues from the result CMD_GET_HW_SPEC, so for this
- 	 * case we must initialize the tx queues after.
- 	 */
-+	priv->num_ampdu_queues = 0;
- 	if (!priv->ap_fw) {
- 		rc = mwl8k_init_txqs(hw);
- 		if (rc)
+ 	if (npend)
 -- 
-1.7.1.1
+1.7.3.2
 
