@@ -1,118 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20479 "EHLO mail.atheros.com"
+Received: from nbd.name ([46.4.11.11]:55891 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757028Ab1CNR7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:59:31 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:08 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 12/38] ath6kl: remove-typedef HIF_PENDING_EVENTS_INFO
-Date: Mon, 14 Mar 2011 10:58:46 -0700
-Message-ID: <1300125552-24422-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+	id S1752732Ab1CJWql (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 17:46:41 -0500
+Message-ID: <4D794E3F.2090309@openwrt.org>
+Date: Thu, 10 Mar 2011 23:18:39 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Mark Mentovai <mark@moxienet.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, vasanth@atheros.com
+Subject: Re: [PATCH v2 3/4] ath9k: fix the .flush driver op implementation
+References: <1299764499-76251-1-git-send-email-nbd@openwrt.org>	<1299764499-76251-2-git-send-email-nbd@openwrt.org>	<1299764499-76251-3-git-send-email-nbd@openwrt.org> <AANLkTim69R72cvpd=ACxfP8+xGNZoXRJa43=RAPzxiBv@mail.gmail.com>
+In-Reply-To: <AANLkTim69R72cvpd=ACxfP8+xGNZoXRJa43=RAPzxiBv@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s HIF_PENDING_EVENTS_INFO \
-	"struct hif_pending_events_info" drivers/staging/ath6kl/
+On 2011-03-10 10:55 PM, Mark Mentovai wrote:
+> Felix Fietkau wrote:
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> [...]
+>>  static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+>>  {
+>>        struct ath_softc *sc = hw->priv;
+>> +       int timeout = 200; /* ms */
+>> +       int i, j;
+>>
+>> +       ath9k_ps_wakeup(sc);
+>>        mutex_lock(&sc->mutex);
+>>
+>>        cancel_delayed_work_sync(&sc->tx_complete_work);
+>>
+>> +       if (drop)
+>> +               timeout = 1;
+>>
+>> +       for (j = 0; j < timeout; j++) {
+>> +               int npend = 0;
+>> +               for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+>> +                       if (!ATH_TXQ_SETUP(sc, i))
+>> +                               continue;
+>>
+>> +                       npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
+>>                }
+>> +
+>> +               if (!npend)
+>> +                   goto out;
+>> +
+>> +               usleep_range(1000, 2000);
+>>        }
+>>
+>> +       if (!ath_drain_all_txq(sc, false))
+>>                ath_reset(sc, false);
+>>
+>> +out:
+>>        ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+>>        mutex_unlock(&sc->mutex);
+>> +       ath9k_ps_restore(sc);
+>>  }
+> 
+> My only comment here is that you still hit the sleep even on the last
+> pass through the loop when it isn’t strictly necessary. Practically,
+> the only place this would be realized is the case where |drop| is set.
+> In this scenario, the code formerly didn’t sleep at all, but now can
+> sleep for 1-2ms. I couldn’t find any calls to drv_flush with |drop|
+> set, though, so it might just be an academic concern.
+> 
+> The delay loops in v2 patches 2/4 and 4/4 also share this
+> characteristic (although with shorter timeouts, and delays instead of
+> sleeps). Have you considered restructuring these loops to avoid the
+> final waits?
+> 
+> This is admittedly a pretty minor thing.
+Makes sense, I'll send a v3.
 
-Tested-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/bmi/src/bmi.c             |    2 +-
- drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c |    8 ++++----
- drivers/staging/ath6kl/include/hif.h             |    6 +++---
- 3 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/staging/ath6kl/bmi/src/bmi.c b/drivers/staging/ath6kl/bmi/src/bmi.c
-index a9615b7..34d1bef 100644
---- a/drivers/staging/ath6kl/bmi/src/bmi.c
-+++ b/drivers/staging/ath6kl/bmi/src/bmi.c
-@@ -790,7 +790,7 @@ bmiBufferReceive(HIF_DEVICE *device,
-     int status;
-     u32 address;
-     u32 mboxAddress[HTC_MAILBOX_NUM_MAX];
--    HIF_PENDING_EVENTS_INFO     hifPendingEvents;
-+    struct hif_pending_events_info     hifPendingEvents;
-     static HIF_PENDING_EVENTS_FUNC getPendingEventsFunc = NULL;
-     
-     if (!pendingEventsFuncCheck) {
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c
-index bac4f93..ca6abb4 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c
-@@ -74,7 +74,7 @@ int DevPollMboxMsgRecv(struct ar6k_device *pDev,
- 
-         if (pDev->GetPendingEventsFunc != NULL) {
- 
--            HIF_PENDING_EVENTS_INFO events;
-+            struct hif_pending_events_info events;
- 
- #ifdef THREAD_X
- 			events.Polling =1;
-@@ -319,7 +319,7 @@ static void DevGetEventAsyncHandler(void *Context, HTC_PACKET *pPacket)
- 
-         if (pDev->GetPendingEventsFunc != NULL) {
-                 /* the HIF layer collected the information for us */
--            HIF_PENDING_EVENTS_INFO *pEvents = (HIF_PENDING_EVENTS_INFO *)pPacket->pBuffer;
-+            struct hif_pending_events_info *pEvents = (struct hif_pending_events_info *)pPacket->pBuffer;
-             if (pEvents->Events & HIF_RECV_MSG_AVAIL) {
-                 lookAhead = pEvents->LookAhead;
-                 if (0 == lookAhead) {
-@@ -439,7 +439,7 @@ int DevCheckPendingRecvMsgsAsync(void *context)
-         if (pDev->GetPendingEventsFunc) {
-                 /* HIF layer has it's own mechanism, pass the IO to it.. */
-             status = pDev->GetPendingEventsFunc(pDev->HIFDevice,
--                                                (HIF_PENDING_EVENTS_INFO *)pIOPacket->pBuffer,
-+                                                (struct hif_pending_events_info *)pIOPacket->pBuffer,
-                                                 pIOPacket);
- 
-         } else {
-@@ -490,7 +490,7 @@ static int ProcessPendingIRQs(struct ar6k_device *pDev, bool *pDone, bool *pASyn
-             }
- 
-             if (pDev->GetPendingEventsFunc != NULL) {
--                HIF_PENDING_EVENTS_INFO events;
-+                struct hif_pending_events_info events;
- 
- #ifdef THREAD_X
-             events.Polling= 0;
-diff --git a/drivers/staging/ath6kl/include/hif.h b/drivers/staging/ath6kl/include/hif.h
-index 4f9be8a..8d0c94e 100644
---- a/drivers/staging/ath6kl/include/hif.h
-+++ b/drivers/staging/ath6kl/include/hif.h
-@@ -343,7 +343,7 @@ typedef struct osdrv_callbacks {
-                                            needs to read the register table to figure out what */
- #define HIF_RECV_MSG_AVAIL   (1 << 1)   /* pending recv packet */
- 
--typedef struct _HIF_PENDING_EVENTS_INFO {
-+struct hif_pending_events_info {
-     u32 Events;
-     u32 LookAhead;
-     u32 AvailableRecvBytes;
-@@ -351,12 +351,12 @@ typedef struct _HIF_PENDING_EVENTS_INFO {
-     u32 Polling;
-     u32 INT_CAUSE_REG;
- #endif
--} HIF_PENDING_EVENTS_INFO;
-+};
- 
-     /* function to get pending events , some HIF modules use special mechanisms
-      * to detect packet available and other interrupts */
- typedef int ( *HIF_PENDING_EVENTS_FUNC)(HIF_DEVICE              *device,
--                                             HIF_PENDING_EVENTS_INFO *pEvents,
-+                                             struct hif_pending_events_info *pEvents,
-                                              void                    *AsyncContext);
- 
- #define HIF_MASK_RECV    true
--- 
-1.7.4.15.g7811d
-
+- Felix
