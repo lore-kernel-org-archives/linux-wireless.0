@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59637 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751831Ab1CYTFx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 15:05:53 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 441CB5403BC
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2011 15:10:00 -0400 (EDT)
-Subject: Compat-wireless release for 2011-03-25 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110325190552.5C8C140EAB@repository3.orbit-lab.org>
-Date: Fri, 25 Mar 2011 15:05:52 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from nbd.name ([46.4.11.11]:53863 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368Ab1CJNlp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 08:41:45 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, mark@moxienet.com
+Subject: [PATCH v2 1/4] ath9k_hw: fix REG_SET_BIT and REG_CLR_BIT for multiple bits
+Date: Thu, 10 Mar 2011 14:41:36 +0100
+Message-Id: <1299764499-76251-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + e3ec91f...f1829e8 akpm-end   -> origin/akpm-end  (forced update)
-   4bbba11..d39dd11  akpm-start -> origin/akpm-start
-   06d6614..d820e1b  history    -> origin/history
- + 0af3dae...380d3c6 master     -> origin/master  (forced update)
-   4bbba11..d39dd11  stable     -> origin/stable
- * [new tag]         next-20110325 -> next-20110325
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-compat-wireless code metrics
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index ef79f4c..6650fd4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -95,9 +95,9 @@
+ #define REG_READ_FIELD(_a, _r, _f) \
+ 	(((REG_READ(_a, _r) & _f) >> _f##_S))
+ #define REG_SET_BIT(_a, _r, _f) \
+-	REG_WRITE(_a, _r, REG_READ(_a, _r) | _f)
++	REG_WRITE(_a, _r, REG_READ(_a, _r) | (_f))
+ #define REG_CLR_BIT(_a, _r, _f) \
+-	REG_WRITE(_a, _r, REG_READ(_a, _r) & ~_f)
++	REG_WRITE(_a, _r, REG_READ(_a, _r) & ~(_f))
+ 
+ #define DO_DELAY(x) do {			\
+ 		if ((++(x) % 64) == 0)          \
+-- 
+1.7.3.2
 
-    832860 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1547 - % of code consists of backport work
