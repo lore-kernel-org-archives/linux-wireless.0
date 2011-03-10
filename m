@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:46175 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712Ab1CAFEO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 00:04:14 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [RFC v2 0/2] hexdump dynamic debug
-Date: Mon, 28 Feb 2011 21:06:54 -0800
-Message-Id: <1298956016-30673-1-git-send-email-bzhao@marvell.com>
+Received: from lo.gmane.org ([80.91.229.12]:56630 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342Ab1CJK2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 05:28:44 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Pxd6m-0008C9-G7
+	for linux-wireless@vger.kernel.org; Thu, 10 Mar 2011 11:28:40 +0100
+Received: from 212.44.20.129.ip.redstone-isp.net ([212.44.20.129])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 11:28:40 +0100
+Received: from arend by 212.44.20.129.ip.redstone-isp.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 11:28:40 +0100
+To: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend@broadcom.com>
+Subject: Re: Problem with BCM943224
+Date: Thu, 10 Mar 2011 10:28:28 +0000 (UTC)
+Message-ID: <loom.20110310T112254-310@post.gmane.org>
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds hexdump macros utilizing dynamic debug.
+Rafał Miłecki <zajec5@...> writes:
 
-v2: rebase against linux-next.git tree and split into 2 patches
+> 
+> It seems all reads are 1 (0xffffffff). Can this be some bug in driver?
+> Can this be because I use adapter mini PCIe to PCIe x1? I remember
+> such a situation when I connected adapter to PCIe x16 and used N-PHY
+> card SSB based.
+> 
 
-Bing Zhao (2):
-  dynamic debug: add dynamic_hexdump_debug macro
-  printk: add hexdump_debug macro
+I am using a Dell laptop (Latitude E6410) with 43224 installed and no
+issues with it. We also have a test setup over here which is a desktop
+model in which we use the 4313 in half-mini-pci to PCIe x1 adapter. Also
+had 43224 in same adapter and both did not give issues with the si_attach,
+which scans the chipset for the cores. Reading back 0xFFFFFFFF is reason
+to abort this scan and end in a failure.
 
- include/linux/dynamic_debug.h |   22 ++++++++++++++++++++++
- include/linux/printk.h        |   14 ++++++++++++++
- 2 files changed, 36 insertions(+), 0 deletions(-)
+Gr. AvS
+
 
