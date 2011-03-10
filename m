@@ -1,29 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45730 "EHLO coco.kroah.org"
+Received: from mail.atheros.com ([12.19.149.2]:51178 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755226Ab1CNTOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 15:14:11 -0400
-Date: Mon, 14 Mar 2011 11:59:32 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: gregkh@suse.de, vmehta@atheros.com, devel@linuxdriverproject.org,
-	naveen.singh@atheros.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/38] ath6kl: remove typedefs part II
-Message-ID: <20110314185932.GA27441@kroah.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+	id S1751420Ab1CJFf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 00:35:59 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 21:35:36 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath9k_hw: Increase the wait count for nf load.
+Date: Thu, 10 Mar 2011 11:05:43 +0530
+Message-ID: <1299735343-915-3-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1299735343-915-2-git-send-email-vnatarajan@atheros.com>
+References: <1299735343-915-1-git-send-email-vnatarajan@atheros.com>
+ <1299735343-915-2-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 14, 2011 at 10:58:34AM -0700, Luis R. Rodriguez wrote:
-> Greg, here is my second cleanup series for ath6kl. This series addresses
-> more typedef removals. Given that I have so many and they all do the
-> same, and are tested I'm submitting them all in one series. I can really
-> split it but you can just do that yourself if you believe this is really
-> necessary. Either way they all go tested.
+Increasing the wait count makes the nf load pass in
+most of the cases.
 
-Nice, all applied now, thanks.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index b4a92a4..8649581 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -262,7 +262,7 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	 * since 250us often results in NF load timeout and causes deaf
+ 	 * condition during stress testing 12/12/2009
+ 	 */
+-	for (j = 0; j < 1000; j++) {
++	for (j = 0; j < 10000; j++) {
+ 		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
+ 		     AR_PHY_AGC_CONTROL_NF) == 0)
+ 			break;
+@@ -278,7 +278,7 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	 * here, the baseband nf cal will just be capped by our present
+ 	 * noisefloor until the next calibration timer.
+ 	 */
+-	if (j == 1000) {
++	if (j == 10000) {
+ 		ath_dbg(common, ATH_DBG_ANY,
+ 			"Timeout while waiting for nf to load: AR_PHY_AGC_CONTROL=0x%x\n",
+ 			REG_READ(ah, AR_PHY_AGC_CONTROL));
+-- 
+1.6.3.3
+
