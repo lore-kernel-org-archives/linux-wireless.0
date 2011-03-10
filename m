@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33300 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157Ab1CXGux (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 02:50:53 -0400
-Received: by vws1 with SMTP id 1so6253012vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 23:50:52 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:55370 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751054Ab1CJJdR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 04:33:17 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 01:32:54 -0800
+Date: Thu, 10 Mar 2011 15:02:54 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 2/4] ath9k: fix stopping tx dma on reset
+Message-ID: <20110310093254.GD28100@vasanth-laptop>
+References: <1299717303-42430-1-git-send-email-nbd@openwrt.org> <1299717303-42430-2-git-send-email-nbd@openwrt.org> <20110310085847.GB28100@vasanth-laptop>
 MIME-Version: 1.0
-In-Reply-To: <201103232358.29966.helmut.schaa@googlemail.com>
-References: <201103232358.29966.helmut.schaa@googlemail.com>
-Date: Thu, 24 Mar 2011 08:50:52 +0200
-Message-ID: <AANLkTi=BLTJhxYf552GLW1zG-AvVdeKj86e2K-vEm_Wy@mail.gmail.com>
-Subject: Re: Aggregation problem with rt2800 AP and Intel 5100 STA
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: users@rt2x00.serialmonkey.com, Jay Hung <Jay_Hung@ralinktech.com>,
-	Eddy Tsai <Eddy_Tsai@ralinktech.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110310085847.GB28100@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> According to 802.11n-2009 the BA originator could send a BlockAckReq if
-> an AMPDU is not BlockAcked in time. However, I never see the hw sending a
-> BlockAckReq.
->
+On Thu, Mar 10, 2011 at 02:28:47PM +0530, Vasanthakumar Thiagarajan wrote:
+> On Thu, Mar 10, 2011 at 06:05:01AM +0530, Felix Fietkau wrote:
+> > +bool ath9k_hw_abort_tx_dma(struct ath_hw *ah)
+> > +{
+> > +	int i, q;
+> > +
+> > +	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
+> > +
+> > +	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
+> > +	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
+> > +	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
+> > +
+> > +	for (q = 0; q < AR_NUM_QCU; q++) {
+> > +		for (i = 1000; i > 0; i--) {
+> > +			if (!ath9k_hw_numtxpending(ah, q))
+> > +				break;
+> > +
+> > +			udelay(5);
+> > +		}
+> > +	}
+> > +	if (!i)
+> > +		return false;
+> 
+> Here the assumption looks like a reset would follow to configure
+> those registers back, may be some comment will be useful.
+> 
 
-Not sending BAR (BlockAckReq) can be quite problematic. The originator
-needs to send BAR to tell the recipient that the frames that are
-pending in the reordering buffer can be released to the upper level
-even if there are holes in the packet sequence. Not sending BAR could
-in theory lead to deadlock. In practice, most implementations of
-reordering buffers release frames out of order after timeout.
+Also a hw reset is not guaranteed to follow this,
+call of ath_drain_all_txq() in .flush(), for ex.
 
-taken from rx.c of mac80211:
-/*
- * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
- * the skb was added to the buffer longer than this time ago, the earlier
- * frames that have not yet been received are assumed to be lost and the skb
- * can be released for processing. This may also release other skb's from the
- * reorder buffer if there are no additional gaps between the frames.
- *
- * Callers must hold tid_agg_rx->reorder_lock.
- */
-#define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
-
-I am quite surprised that you see that frames are "stuck in the
-driver". This would mean that the windows drivers's implementation of
-the reordering buffer doesn't have timer... or I miss something...
-
-> At least, I hacked rt2x00 to set IEEE80211_TX_STAT_AMPDU_NO_BACK for failed
-> aggregated frames such that mac80211 sends a BlockAckReq for this failed MPDU
-> and this indeed seems to improve the situation but doesn't fix it completely.
-
-Can you please be more specific by "improve situation" ? better TPT ?
-lower packet loss ?
-What do you mean by not fixed completely ?
-Do you track packets out of the driver ?
+Vasanth
