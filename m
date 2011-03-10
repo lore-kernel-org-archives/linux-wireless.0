@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26451 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753947Ab1C1U5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 16:57:42 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:57:17 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Jack Lee <jack.lee@atheros.com>,
-	Carl Huang <carl.huang@atheros.com>,
-	David Quan <david.quan@atheros.com>,
-	Nael Atallah <nael.atallah@atheros.com>,
-	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 6/9] ath9k_hw: ASPM interoperability fix for AR9380/AR9382
-Date: Mon, 28 Mar 2011 13:57:12 -0700
-Message-ID: <1301345835-11401-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
-References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:46502 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020Ab1CJSfd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 13:35:33 -0500
+Received: by gxk8 with SMTP id 8so777842gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 10:35:32 -0800 (PST)
+Message-ID: <4D7919F1.3070106@lwfinger.net>
+Date: Thu, 10 Mar 2011 12:35:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Problem with BCM943224
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>	<4D77A06E.3050902@lwfinger.net>	<AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>	<4D77AD18.60804@lwfinger.net> <AANLkTikb8z-NqGdgWz9Ua+8pWm3Vts2uT9sh7ez6OYVB@mail.gmail.com>
+In-Reply-To: <AANLkTikb8z-NqGdgWz9Ua+8pWm3Vts2uT9sh7ez6OYVB@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 58c5296991d233f2e492aa7a884635bba478cf12 upstream
+On 03/10/2011 11:40 AM, Rafał Miłecki wrote:
+>
+> I guess you do not need that anymore, but I said to check, so... That
+> notebook that was shipped with BCM4313 is HP G62-A10sw.
+>
+> I've taken BCM4313 from that notebook and put it in my cheap adapter.
+> It didn't work (again, all reads 1). It seems that my adapter does not
+> like any AI based card. It accepts SSB based cards only. At least now
+> I know it is not my BCM943223 that is faulty, but adapter. I'm sure
+> BCM4313 is fine, because it works OK in that HP notebook.
+>
+> Bad news: that dumb, dumb, dumb HP has 14e4:4727 (BCM4313)
+> whitelisted, but 14e4:4353 (BCM43224) is blacklisted. Who the hell
+> designed that :|
 
-There is an interoperability with AR9382/AR9380 in L1 state with a
-few root complexes which can cause a hang. This is fixed by
-setting some work around bits on the PCIE PHY. We fix by using
-a new ini array to modify these bits when the radio is idle.
+The lawyers. HP's argument is that it cannot allow any combination that has not 
+been tested for regulatory compliance. It carries about as much validity as 
+Broadcom's lawyers not allowing redistribution of firmware for regulatory 
+reasons. I've gotten quite good at hot plugging the PCIe card while at the GRUB 
+prompt. Someday, I'll get mad enough to rewrite that part of the BIOS.
 
-Cc: stable@kernel.org
-Cc: Jack Lee <jack.lee@atheros.com>
-Cc: Carl Huang <carl.huang@atheros.com>
-Cc: David Quan <david.quan@atheros.com>
-Cc: Nael Atallah <nael.atallah@atheros.com>
-Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Other than these screwy BIOS problems, I like HP laptops, but I don't think I'll 
+get another of theirs due to this whitelisting problem. I think Dell does not 
+have this difficulty. Unfortunately, they seem to offer very few setups with AMD 
+processors - my choice.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index a14a5e4..c655cd2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -1842,7 +1842,7 @@ static const u32 ar9300_2p2_soc_preamble[][2] = {
- 
- static const u32 ar9300PciePhy_pll_on_clkreq_disable_L1_2p2[][2] = {
- 	/* Addr      allmodes  */
--	{0x00004040, 0x08212e5e},
-+	{0x00004040, 0x0821265e},
- 	{0x00004040, 0x0008003b},
- 	{0x00004044, 0x00000000},
- };
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index c2a0571..cd8e0bd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -95,8 +95,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 	/* Sleep Setting */
- 
- 	INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--		       ar9300PciePhy_clkreq_enable_L1_2p2,
--		       ARRAY_SIZE(ar9300PciePhy_clkreq_enable_L1_2p2),
-+		       ar9300PciePhy_pll_on_clkreq_disable_L1_2p2,
-+		       ARRAY_SIZE(ar9300PciePhy_pll_on_clkreq_disable_L1_2p2),
- 		       2);
- 
- 	/* Fast clock modal settings */
--- 
-1.7.4.15.g7811d
-
+Larry
