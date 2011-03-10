@@ -1,36 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37462
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756546Ab1CWTkq (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59128 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751368Ab1CJFWy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 15:40:46 -0400
-Date: Wed, 23 Mar 2011 12:41:25 -0700 (PDT)
-Message-Id: <20110323.124125.258090419.davem@davemloft.net>
-To: tony.olech@elandigitalsystems.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: mailing list problem
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1300899473.4413.1.camel@apple-mac>
-References: <1300899473.4413.1.camel@apple-mac>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 10 Mar 2011 00:22:54 -0500
+Received: by wwa36 with SMTP id 36so1540685wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 21:22:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimm0umg3rZDwYU4KGLbaCQgAA_QKCpoY9NiscLT@mail.gmail.com>
+References: <AANLkTimm0umg3rZDwYU4KGLbaCQgAA_QKCpoY9NiscLT@mail.gmail.com>
+Date: Thu, 10 Mar 2011 10:52:53 +0530
+Message-ID: <AANLkTimNs9DzhX=_=qAw_uZ5doxQnZ=9mOhcVcTUaCt5@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: do not enable ps if 802.1x controlled port is unblocked
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Jason Young <a.young.jason@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tony Olech <tony.olech@elandigitalsystems.com>
-Date: Wed, 23 Mar 2011 16:57:53 +0000
+On Thu, Mar 10, 2011 at 8:26 AM, Jason Young <a.young.jason@gmail.com> wrote:
+> If dynamic_ps is disabled, enabling power save before the 4-way
+> handshake completes may delay the station from being authorized to
+> send/receive traffic, i.e. increase roaming times. It may also result in
+> a failed 4-way handshake depending on the AP's timing requirements and
+> beacon interval, and the station's listen interval.
+>
+> To fix this, prevent power save from being enabled while the station
+> isn't authorized and recalculate power save whenever the station's
+> authorized state changes.
+>
+> Signed-off-by: Jason Young <a.young.jason@gmail.com>
+> ---
+>  net/mac80211/cfg.c  |    3 +++
+>  net/mac80211/mlme.c |   37 ++++++++++++++++++++++++++++++++-----
+>  2 files changed, 35 insertions(+), 5 deletions(-)
+>
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 7b701dc..6a7bdeb 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -834,6 +834,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+>
+>        rcu_read_unlock();
+>
+> +       if (params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
+> +               ieee80211_recalc_ps(local, -1);
+> +
+>        return 0;
+>  }
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index cc984bd..64d92d5 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -613,6 +613,37 @@ static void ieee80211_change_ps(struct
+> ieee80211_local *local)
 
-> either this mailing list is not working, or someone
-> has removed me from it.
-> 
-> why?
+Patch fails to apply in the above line.  Please correct the newline
+error. I think you had manually modified the patch for 80 char limit
+after creating it. It is not necessary and you can send it as it is.
 
-First, this is absolutely the wrong place to deal with mailing
-list subscription issues.  The appropriate place is
-postmaster@vger.kernel.org
-
-Nobody subscribe to this list cares to hear about your problem,
-nor are they able to do anything about it.
-
-Secondly, you were unsubscribed from the mailing lists because
-you ran over quota and started bouncing.
+Vivek.
