@@ -1,146 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47530 "EHLO mail.atheros.com"
+Received: from nbd.name ([46.4.11.11]:36686 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755263Ab1COOZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 10:25:40 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 07:25:17 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 4/4] ath: Speedup key set/reset ops for HTC driver
-Date: Tue, 15 Mar 2011 19:55:38 +0530
-Message-ID: <1300199138-11851-4-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1300199138-11851-1-git-send-email-rmanoharan@atheros.com>
-References: <1300199138-11851-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754317Ab1CJAfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2011 19:35:09 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/4] ath9k: fix the .flush driver op implementation
+Date: Thu, 10 Mar 2011 01:35:02 +0100
+Message-Id: <1299717303-42430-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299717303-42430-2-git-send-email-nbd@openwrt.org>
+References: <1299717303-42430-1-git-send-email-nbd@openwrt.org>
+ <1299717303-42430-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By enabling buffered register write for ath9k_htc driver
-avoids unnecessary dissociation while rekeying phase under
-heavy traffic exchange.
+ath9k has a timeout of 60ms for the flush, but instead waiting 60 ms for
+all tx activity to finish, it resets it for every single queue.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+This patch simplifies the flush op and reuses ath_drain_all_txq for
+flushing out pending frames if necessary.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/key.c |   32 ++++++++++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   55 +++++++++++---------------------
+ 1 files changed, 19 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
-index 37b8e11..0d4f39c 100644
---- a/drivers/net/wireless/ath/key.c
-+++ b/drivers/net/wireless/ath/key.c
-@@ -23,6 +23,14 @@
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2e228aa..0e9f748 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2128,54 +2128,37 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
  
- #define REG_READ			(common->ops->read)
- #define REG_WRITE(_ah, _reg, _val)	(common->ops->write)(_ah, _val, _reg)
-+#define ENABLE_REGWRITE_BUFFER(_ah)			\
-+	if (common->ops->enable_write_buffer)		\
-+		common->ops->enable_write_buffer((_ah));
-+
-+#define REGWRITE_BUFFER_FLUSH(_ah)			\
-+	if (common->ops->write_flush)			\
-+		common->ops->write_flush((_ah));
-+
+ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ {
+-#define ATH_FLUSH_TIMEOUT	60 /* ms */
+ 	struct ath_softc *sc = hw->priv;
+-	struct ath_txq *txq = NULL;
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int i, j, npend = 0;
++	int timeout = 60; /* ms */
++	int i, j;
  
- #define IEEE80211_WEP_NKID      4       /* number of key ids */
+ 	mutex_lock(&sc->mutex);
  
-@@ -42,6 +50,8 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry)
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
  
- 	keyType = REG_READ(ah, AR_KEYTABLE_TYPE(entry));
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (!ATH_TXQ_SETUP(sc, i))
+-			continue;
+-		txq = &sc->tx.txq[i];
++	if (drop)
++		timeout = 1;
  
-+	ENABLE_REGWRITE_BUFFER(ah);
-+
- 	REG_WRITE(ah, AR_KEYTABLE_KEY0(entry), 0);
- 	REG_WRITE(ah, AR_KEYTABLE_KEY1(entry), 0);
- 	REG_WRITE(ah, AR_KEYTABLE_KEY2(entry), 0);
-@@ -66,6 +76,8 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry)
+-		if (!drop) {
+-			for (j = 0; j < ATH_FLUSH_TIMEOUT; j++) {
+-				if (!ath9k_has_pending_frames(sc, txq))
+-					break;
+-				usleep_range(1000, 2000);
+-			}
+-		}
++	for (j = 0; j < timeout; j++) {
++		int npend = 0;
++		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
++			if (!ATH_TXQ_SETUP(sc, i))
++				continue;
  
- 	}
- 
-+	REGWRITE_BUFFER_FLUSH(ah);
-+
- 	return true;
- }
- EXPORT_SYMBOL(ath_hw_keyreset);
-@@ -104,9 +116,13 @@ static bool ath_hw_keysetmac(struct ath_common *common,
- 	} else {
- 		macLo = macHi = 0;
- 	}
-+	ENABLE_REGWRITE_BUFFER(ah);
-+
- 	REG_WRITE(ah, AR_KEYTABLE_MAC0(entry), macLo);
- 	REG_WRITE(ah, AR_KEYTABLE_MAC1(entry), macHi | unicast_flag);
- 
-+	REGWRITE_BUFFER_FLUSH(ah);
-+
- 	return true;
- }
- 
-@@ -223,6 +239,8 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 			mic3 = get_unaligned_le16(k->kv_txmic + 0) & 0xffff;
- 			mic4 = get_unaligned_le32(k->kv_txmic + 4);
- 
-+			ENABLE_REGWRITE_BUFFER(ah);
-+
- 			/* Write RX[31:0] and TX[31:16] */
- 			REG_WRITE(ah, AR_KEYTABLE_KEY0(micentry), mic0);
- 			REG_WRITE(ah, AR_KEYTABLE_KEY1(micentry), mic1);
-@@ -236,6 +254,8 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 			REG_WRITE(ah, AR_KEYTABLE_TYPE(micentry),
- 				  AR_KEYTABLE_TYPE_CLR);
- 
-+			REGWRITE_BUFFER_FLUSH(ah);
-+
- 		} else {
- 			/*
- 			 * TKIP uses four key cache entries (two for group
-@@ -258,6 +278,8 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 			mic0 = get_unaligned_le32(k->kv_mic + 0);
- 			mic2 = get_unaligned_le32(k->kv_mic + 4);
- 
-+			ENABLE_REGWRITE_BUFFER(ah);
-+
- 			/* Write MIC key[31:0] */
- 			REG_WRITE(ah, AR_KEYTABLE_KEY0(micentry), mic0);
- 			REG_WRITE(ah, AR_KEYTABLE_KEY1(micentry), 0);
-@@ -270,8 +292,12 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 			REG_WRITE(ah, AR_KEYTABLE_KEY4(micentry), 0);
- 			REG_WRITE(ah, AR_KEYTABLE_TYPE(micentry),
- 				  AR_KEYTABLE_TYPE_CLR);
-+
-+			REGWRITE_BUFFER_FLUSH(ah);
+-		if (drop || ath9k_has_pending_frames(sc, txq)) {
+-			ath_dbg(common, ATH_DBG_QUEUE, "Drop frames from hw queue:%d\n",
+-				txq->axq_qnum);
+-			spin_lock_bh(&txq->axq_lock);
+-			txq->txq_flush_inprogress = true;
+-			spin_unlock_bh(&txq->axq_lock);
+-
+-			ath9k_ps_wakeup(sc);
+-			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+-			npend = ath9k_hw_numtxpending(ah, txq->axq_qnum);
+-			ath9k_ps_restore(sc);
+-			if (npend)
+-				break;
+-
+-			ath_draintxq(sc, txq, false);
+-			txq->txq_flush_inprogress = false;
++			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
  		}
+-	}
  
-+		ENABLE_REGWRITE_BUFFER(ah);
+-	if (npend) {
+-		ath_reset(sc, false);
+-		txq->txq_flush_inprogress = false;
++		if (!npend)
++		    goto out;
 +
- 		/* MAC address registers are reserved for the MIC entry */
- 		REG_WRITE(ah, AR_KEYTABLE_MAC0(micentry), 0);
- 		REG_WRITE(ah, AR_KEYTABLE_MAC1(micentry), 0);
-@@ -283,7 +309,11 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 		 */
- 		REG_WRITE(ah, AR_KEYTABLE_KEY0(entry), key0);
- 		REG_WRITE(ah, AR_KEYTABLE_KEY1(entry), key1);
-+
-+		REGWRITE_BUFFER_FLUSH(ah);
- 	} else {
-+		ENABLE_REGWRITE_BUFFER(ah);
-+
- 		/* Write key[47:0] */
- 		REG_WRITE(ah, AR_KEYTABLE_KEY0(entry), key0);
- 		REG_WRITE(ah, AR_KEYTABLE_KEY1(entry), key1);
-@@ -296,6 +326,8 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
- 		REG_WRITE(ah, AR_KEYTABLE_KEY4(entry), key4);
- 		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry), keyType);
- 
-+		REGWRITE_BUFFER_FLUSH(ah);
-+
- 		/* Write MAC address for the entry */
- 		(void) ath_hw_keysetmac(common, entry, mac);
++		usleep_range(1000, 2000);
  	}
+ 
++	ath9k_ps_wakeup(sc);
++	ath_drain_all_txq(sc, false);
++	ath9k_ps_restore(sc);
++
++out:
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+ 	mutex_unlock(&sc->mutex);
+ }
 -- 
-1.7.4.1
+1.7.3.2
 
