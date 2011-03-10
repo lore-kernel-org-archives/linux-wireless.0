@@ -1,92 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36385 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755476Ab1C3DGz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 23:06:55 -0400
-Received: by yxs7 with SMTP id 7so357678yxs.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 20:06:55 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v5 04/10] nl80211: let userspace authenticate stations
-Date: Tue, 29 Mar 2011 19:06:01 -0700
-Message-Id: <1301450767-27045-5-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
-References: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:51176 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750957Ab1CJFfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 00:35:53 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 21:35:30 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath9k_hw: Fix PLL initialization for AR9485.
+Date: Thu, 10 Mar 2011 11:05:42 +0530
+Message-ID: <1299735343-915-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1299735343-915-1-git-send-email-vnatarajan@atheros.com>
+References: <1299735343-915-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Increase the delay to make sure the initialization of pll
+passes.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- include/linux/nl80211.h |    2 ++
- net/mac80211/cfg.c      |    6 ++++++
- net/wireless/nl80211.c  |    5 ++++-
- 3 files changed, 12 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 91e3a8d..ca4b546 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1169,6 +1169,7 @@ enum nl80211_iftype {
-  *	with short barker preamble
-  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
-  * @NL80211_STA_FLAG_MFP: station uses management frame protection
-+ * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
-  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
-  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
-  */
-@@ -1178,6 +1179,7 @@ enum nl80211_sta_flags {
- 	NL80211_STA_FLAG_SHORT_PREAMBLE,
- 	NL80211_STA_FLAG_WME,
- 	NL80211_STA_FLAG_MFP,
-+	NL80211_STA_FLAG_AUTHENTICATED,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9a34381..338b075 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -701,7 +701,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
  
- 	/* keep last */
- 	__NL80211_STA_FLAG_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 4f73085..c57d653 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -675,6 +675,12 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 		if (set & BIT(NL80211_STA_FLAG_MFP))
- 			sta->flags |= WLAN_STA_MFP;
+ 		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x1142c);
+-		udelay(100);
++		udelay(1000);
+ 
+ 		REG_WRITE(ah, AR_RTC_PLL_CONTROL2, 0x886666);
+ 
+@@ -713,7 +713,7 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 		REG_RMW_FIELD(ah, AR_CH0_BB_DPLL3,
+ 			      AR_CH0_DPLL3_PHASE_SHIFT, DPLL3_PHASE_SHIFT_VAL);
+ 		REG_WRITE(ah, AR_RTC_PLL_CONTROL, 0x142c);
+-		udelay(110);
++		udelay(1000);
  	}
-+
-+	if (mask & BIT(NL80211_STA_FLAG_AUTHENTICATED)) {
-+		sta->flags &= ~WLAN_STA_AUTH;
-+		if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
-+			sta->flags |= WLAN_STA_AUTH;
-+	}
- 	spin_unlock_irqrestore(&sta->flaglock, flags);
  
- 	/*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5878f2b..e76dc79 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1922,6 +1922,7 @@ static const struct nla_policy sta_flags_policy[NL80211_STA_FLAG_MAX + 1] = {
- 	[NL80211_STA_FLAG_SHORT_PREAMBLE] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_WME] = { .type = NLA_FLAG },
- 	[NL80211_STA_FLAG_MFP] = { .type = NLA_FLAG },
-+	[NL80211_STA_FLAG_AUTHENTICATED] = { .type = NLA_FLAG },
- };
- 
- static int parse_station_flags(struct genl_info *info,
-@@ -2262,7 +2263,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			err = -EINVAL;
- 		if (params.supported_rates)
- 			err = -EINVAL;
--		if (params.sta_flags_mask)
-+		if (params.sta_flags_mask &
-+				~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
-+				  BIT(NL80211_STA_FLAG_AUTHORIZED)))
- 			err = -EINVAL;
- 		break;
- 	default:
+ 	pll = ath9k_hw_compute_pll_control(ah, chan);
 -- 
-1.7.4.1
+1.6.3.3
 
