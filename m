@@ -1,111 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37807 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756477Ab1CHVEF (ORCPT
+Received: from mail.3eti.com ([65.220.88.139]:56253 "EHLO 3eSpam.3eti.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753494Ab1CJXIb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 16:04:05 -0500
-Message-ID: <4D7699BF.1000602@gmail.com>
-Date: Tue, 08 Mar 2011 13:03:59 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Thu, 10 Mar 2011 18:08:31 -0500
+From: Chaoxing Lin <CLin@3eti.com>
+To: "'Chen, Xianwen'" <xianwen.chen@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Status of Broadcom 4353?
+Date: Thu, 10 Mar 2011 23:08:28 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D05722584@RockMX01.rock.corp>
+References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+ <AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
+In-Reply-To: <AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Brian Prodoehl <bprodoehl@gmail.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@atheros.com
-Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536 ath_stoprecv+0xc8/0xda
- [ath9k]()
-References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>	<20110303135942.GA8969@tuxdriver.com>	<AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>	<20110307151201.GC2664@tuxdriver.com>	<AANLkTi=7RSdKhzGazQFUnBZqzMQskOSHq=7E08uan2vu@mail.gmail.com>	<4D767A4B.1060203@gmail.com>	<4D76833E.9010603@candelatech.com> <AANLkTikPQt+njjFPB6sJ-mEcsx6f-R6TAOhEd8egkqhH@mail.gmail.com> <4D768A9A.7090201@candelatech.com>
-In-Reply-To: <4D768A9A.7090201@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2011 11:59 AM, Ben Greear wrote:
-> On 03/08/2011 11:45 AM, Brian Prodoehl wrote:
->> On Tue, Mar 8, 2011 at 2:27 PM, Ben Greear<greearb@candelatech.com>
->> wrote:
->>> On 03/08/2011 10:49 AM, Justin P. Mattock wrote:
->>>>
->>>> On 03/07/2011 07:22 AM, Mohammed Shafi wrote:
->>>>>
->>>>> On Mon, Mar 7, 2011 at 8:42 PM, John W.
->>>>> Linville<linville@tuxdriver.com> wrote:
->>>>>>
->>>>>> On Sun, Mar 06, 2011 at 12:47:05AM -0800, Justin Mattock wrote:
->>>>>>
->>>>>>> full dmesg here:
->>>>>>> http://fpaste.org/5JQp/
->>>>>>> let me know if I need to supply any info(also I can try a bisect,
->>>>>>> but
->>>>>>> am in the middle of changing residencies, so it might not be right
->>>>>>> away)
->>>>>>
->>>>>> One of the Atheros guys suggested that you change a DMA timeout
->>>>>> value.
->>>>>> Did you try that?
->>>>>
->>>>> John it looks like increasing the timeout also does not seems to help.
->>>>> A user reported this issue in ath9k developer list and he told that
->>>>> increasing the timeout did not fix this issue.
->>>>>
->>>>>>
->>>>>> John
->>>>>> --
->>>>>> John W. Linville Someday the world will need a hero, and you
->>>>>> linville@tuxdriver.com might be all we have. Be ready.
->>>>>> --
->>>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>>> linux-wireless" in
->>>>>> the body of a message to majordomo@vger.kernel.org
->>>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>>>>>
->>>>>
->>>>
->>>> at barnes and noble, and I see this has fired off again. will see if I
->>>> can reproduce and bisect.
->>>
->>> This problem goes way back, and the driver has had lots of fixes in the
->>> last few months, so I'm not sure if bisecting is going to
->>> do you any good.
->>>
->>> Thanks,
->>> Ben
->>
->> The warnings have been around since you added the check for the
->> problem, right? I remember initially it was a WARN_ON, and I'd get a
->> steady flood of backtraces, and then it was switched to a
->> WARN_ON_ONCE. I see these on every platform I have (x86_64, IXP425
->> and AR71xx) with AR9002 and AR9003.
->
-> I don't think I added the original check, but either way, it's
-> an old problem and bisecting it is unlikely to help.
->
-> I can't believe that the Atheros guys really are unable reproduce
-> this, but I can believe that it might be very difficult to
-> actually understand and fix.
->
-> At least in my testing, I see it quite often, but it doesn't
-> seem to cause any serious harm. We do occasionally see crashes,
-> especially on module unload for a heavily utilized system, or
-> one that is constantly trying and failing to associate,
-> so it could be related to this.
->
-> Also, my patches to decrease scan and work_work related channel changes
-> made this harder to hit for our test cases.
->
-> Thanks,
-> Ben
->
+Is it possible that the firmware file your card needs is not in your Linux distribution? Upgrading kernel does not give you firmware file.
+
+Usually, if this is the case, you may see some error log in "dmesg"
+
+Just through a possibility, I don't have broadcom radios. But this scenario happened to me for my Intel "Ultimate N 6300"
 
 
-well I would do the bisect if I can easily reproduce this, but if this 
-has been back since 2.6.2* or the initial release of ath9k then doing 
-the bisect wont work.
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Chen, Xianwen
+Sent: Thursday, March 10, 2011 6:04 PM
+To: linux-wireless@vger.kernel.org
+Subject: Re: Status of Broadcom 4353?
 
-as for the warning message itself, seems the system is fine after this 
-hits(just fires of on certain locations).
+Thanks a lot guys!
 
-Justin P. Mattock
+I tried both latest stable kernel (linux-2.6.37) and latest mainline
+kernel (linux-2.6.38-rc8) with
+  CONFIG_BRCM80211=y
+  CONFIG_BRCM80211_PCI=y
+. No wlan0 turns up yet.
+
+Any more hint please?
+
+Xianwen
+
+
+On Thu, Mar 10, 2011 at 8:14 PM, Brett Rudley <brudley@broadcom.com> wrote:
+> Its not intuitive, but 0x4353 is the PCI device ID of the 43224 dual band card which does run under brcm80211.
+>
+> Regards
+> Brett
+
+
+On Thu, Mar 10, 2011 at 7:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> There are two ways that Broadcom chips are connected to a PCIe interface -
+> one uses the SSB interconnect, and the other does not. In b43, only chips
+> with SSB are supported. As the 4353 device does not use SSB, b43 does not
+> work with it. Whether it ever will is being discussed.
+>
+> You should use either the brcm80211 driver from compat-wireless or kernels
+> 2.6.37, or later. You may also use the wl driver from Broadcom if you are
+> willing to run closed-source software. That driver does not use mac80211.
+>
+> Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
