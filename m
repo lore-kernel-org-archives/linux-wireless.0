@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:46977 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601Ab1CNPbU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 11:31:20 -0400
-Received: by wwa36 with SMTP id 36so5798155wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 08:31:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <96025834431BF6428294777AA66CB92B027A0A66420D@MAIL-2.UNINE.CH>
-References: <96025834431BF6428294777AA66CB92B027A0A66420D@MAIL-2.UNINE.CH>
-Date: Mon, 14 Mar 2011 21:01:18 +0530
-Message-ID: <AANLkTi=iuL_=3XV3cgKSq9zx8i0KSfA+MSNpbmDPsjW-@mail.gmail.com>
-Subject: Re: question about setting up mesh network
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: MONAKHOV Alexey <alexey.monakhov@unine.ch>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.128.24]:54119 "EHLO mgw-da01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751363Ab1CJIBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 03:01:52 -0500
+From: juuso.oikarinen@nokia.com
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: Fix potential incorrect band in rx-status
+Date: Thu, 10 Mar 2011 10:01:43 +0200
+Message-Id: <1299744103-11077-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 11, 2011 at 7:24 PM, MONAKHOV Alexey
-<alexey.monakhov@unine.ch> wrote:
-> Hi guys,
->
-> I have several questions about 802.11s, 802.11n and mesh networks in Linux (2.6.37.1 kernel)
-> with these devices
-> alix3d2 device (http://pcengines.ch/alix3d2.htm) with this card (http://pcengines.ch/dnma92.htm  Atheros AR9220  chipset).
-> and I am trying to configure mesh netwroks with these commands
->
->  iw dev wlan0 interface add mesh_iface type mp mesh_id mesh_id
->  iwconfig mesh_iface essid monaale_mesh
->  ifconfig mesh_iface 192.168.3.80
->  ifconfig mesh_iface up
->
-> 1.
-> I am using node with 2 wi-fi interfaces - my question is how to make a bridge with these 2 interfaces? Now I set 1 channel for one interface and 2 channel for the other one and traffic goes from one interface to other without any bridge - why?
->
-> 2.
-> I can see that olsrd daemon is running, my question is how can I enable 802.11s routing ? (kernel was compiled with CONFIG_MAC80211_MESH=y option)
->
-> 3.
-> how to be sure that mesh is operationg in 802.11n mode? now the speed is 54 Mb\sec but accoring to iwconfig command I can see wlan1 IEEE 802.11abgn interface enabled.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-802.11n is not supported for mesh mode. iw dev wlan0 link will be more
-accurate. I don't know about other things as I am not familiar with
-mesh.
+The rx-status passed to mac80211 along with each received frame contains the
+band on which the frame was received. Under certain circumstances, this band
+information may be incorrect, causing in worst case a WARNING from mac80211,
+and causes the received frame to be dropped.
 
->
-> 4.
-> how can I determine my neighbors IP addresses. i.e. I  get a list of nearest nodes with
-> iw dev mesh station dump command, abd how determine IP of MAC? ( without arp cache because it is empty).
-> also do you know if it is possible to determine MAC (or IP) address of the neighbor from which IP package came to my node (not the source IP by my 1-hop neighbor who forwarded package to me). As I understand there is no such information in the IP or layer2 header.
->
-> thanks in advance,
-> Alexey.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This scenario mainly occurs when performing connected-mode scans, when the
+received scan results are from the other band than the one currentl
+associated to.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/rx.c |   10 +++-------
+ 1 files changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index 919b59f..e58c453 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -48,18 +48,14 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 			     struct ieee80211_rx_status *status,
+ 			     u8 beacon)
+ {
+-	enum ieee80211_band desc_band;
+-
+ 	memset(status, 0, sizeof(struct ieee80211_rx_status));
+ 
+-	status->band = wl->band;
+-
+ 	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) == WL1271_RX_DESC_BAND_BG)
+-		desc_band = IEEE80211_BAND_2GHZ;
++		status->band = IEEE80211_BAND_2GHZ;
+ 	else
+-		desc_band = IEEE80211_BAND_5GHZ;
++		status->band = IEEE80211_BAND_5GHZ;
+ 
+-	status->rate_idx = wl1271_rate_to_idx(desc->rate, desc_band);
++	status->rate_idx = wl1271_rate_to_idx(desc->rate, status->band);
+ 
+ #ifdef CONFIG_WL12XX_HT
+ 	/* 11n support */
+-- 
+1.7.1
+
