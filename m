@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41176 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392Ab1C1LhN (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:35650 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119Ab1CJEV2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 07:37:13 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 21so2745055wya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 04:37:13 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/13] rt2x00: Add an error message when trying to send on a full queue
-Date: Mon, 28 Mar 2011 13:35:51 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201103281329.45470.IvDoorn@gmail.com> <201103281334.52023.IvDoorn@gmail.com> <201103281335.23166.IvDoorn@gmail.com>
-In-Reply-To: <201103281335.23166.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103281335.53224.IvDoorn@gmail.com>
+	Wed, 9 Mar 2011 23:21:28 -0500
+Received: by vxi39 with SMTP id 39so1210245vxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 20:21:27 -0800 (PST)
+From: Mark Mentovai <mark@moxienet.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH 2/4] ath9k: fix stopping tx dma on reset
+Date: Wed, 9 Mar 2011 23:21:24 -0500
+Message-Id: <5AF19632-CBB6-497C-8B47-1522BA6EA9F9@moxienet.com>
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Mime-Version: 1.0 (Apple Message framework v1082)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+> --- a/drivers/net/wireless/ath/ath9k/mac.c
+[...]
+> +bool ath9k_hw_abort_tx_dma(struct ath_hw *ah)
+[...]
+> +	for (q = 0; q < AR_NUM_QCU; q++) {
+> +		for (i = 1000; i > 0; i--) {
+> +			if (!ath9k_hw_numtxpending(ah, q))
+> +				break;
+> +
+> +			udelay(5);
+> +		}
+> +	}
+> +	if (!i)
+> +		return false;
 
-We already tell mac80211 to stop the queue when we hit a certain
-threshold. Hence, it shouldn't happen at all that a frame gets queued
-for tx on a full queue. Add an error message for this case.
+Awesome-looking patch set.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+What’s the return value of this function supposed to mean? As written, it only returns false there’s anything left pending on the final queue. Notably, if the inner loop ran for all 999 iterations and ath9k_hw_numtxpending never returned false, the code above would effectively ignore that condition.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 5d89259..9fc4a1e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -482,8 +482,11 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 	struct skb_frame_desc *skbdesc;
- 	u8 rate_idx, rate_flags;
- 
--	if (unlikely(rt2x00queue_full(queue)))
-+	if (unlikely(rt2x00queue_full(queue))) {
-+		ERROR(queue->rt2x00dev,
-+		      "Dropping frame due to full tx queue %d.\n", queue->qid);
- 		return -ENOBUFS;
-+	}
- 
- 	if (unlikely(test_and_set_bit(ENTRY_OWNER_DEVICE_DATA,
- 				      &entry->flags))) {
--- 
-1.7.2.3
-
+I’m less concerned about the return value (because it actually seems that the function could be declared void, you don’t use the return value anywhere) than I am about the REG_CLR_BIT and REG_WRITE operations that follow. It seems that you might be either missing those in cases where they should happen, or performing them in cases where they shouldn’t. Did you mean to leave AR_Q_TXD set when something is left pending on the final hardware queue?
