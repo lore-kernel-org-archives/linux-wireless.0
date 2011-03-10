@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:59323 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757055Ab1CRUXG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 16:23:06 -0400
-Received: by mail-iw0-f174.google.com with SMTP id 34so4370073iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 13:23:06 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/5 v4] mac80211: Let user space receive and send mesh auth/deauth frames
-Date: Fri, 18 Mar 2011 13:22:09 -0700
-Message-Id: <1300479732-25920-3-git-send-email-javier@cozybit.com>
-In-Reply-To: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:54708 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752050Ab1CJI7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 03:59:11 -0500
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 00:58:49 -0800
+Date: Thu, 10 Mar 2011 14:28:47 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 2/4] ath9k: fix stopping tx dma on reset
+Message-ID: <20110310085847.GB28100@vasanth-laptop>
+References: <1299717303-42430-1-git-send-email-nbd@openwrt.org> <1299717303-42430-2-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1299717303-42430-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Mar 10, 2011 at 06:05:01AM +0530, Felix Fietkau wrote:
+> +bool ath9k_hw_abort_tx_dma(struct ath_hw *ah)
+> +{
+> +	int i, q;
+> +
+> +	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
+> +
+> +	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
+> +	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
+> +	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
+> +
+> +	for (q = 0; q < AR_NUM_QCU; q++) {
+> +		for (i = 1000; i > 0; i--) {
+> +			if (!ath9k_hw_numtxpending(ah, q))
+> +				break;
+> +
+> +			udelay(5);
+> +		}
+> +	}
+> +	if (!i)
+> +		return false;
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Here the assumption looks like a reset would follow to configure
+those registers back, may be some comment will be useful.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 562d298..0ae9b22 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -545,7 +545,9 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 	},
- 	[NL80211_IFTYPE_MESH_POINT] = {
- 		.tx = 0xffff,
--		.rx = BIT(IEEE80211_STYPE_ACTION >> 4),
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+			BIT(IEEE80211_STYPE_AUTH >> 4) |
-+			BIT(IEEE80211_STYPE_DEAUTH >> 4),
- 	},
- };
- 
--- 
-1.7.1
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index e16136d..bb1d29e 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -1194,16 +1194,14 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+>  	if (sc->sc_flags & SC_OP_INVALID)
+>  		return true;
+>  
+> -	/* Stop beacon queue */
+> -	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+> +	ath9k_hw_abort_tx_dma(ah);
+>  
+> -	/* Stop data queues */
+> +	/* Check if any queue remains active */
+>  	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+> -		if (ATH_TXQ_SETUP(sc, i)) {
+> -			txq = &sc->tx.txq[i];
+> -			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+> -			npend += ath9k_hw_numtxpending(ah, txq->axq_qnum);
+> -		}
+> +		if (!ATH_TXQ_SETUP(sc, i))
+> +			continue;
+> +
+> +		npend += ath9k_hw_numtxpending(ah, sc->tx.txq[i].axq_qnum);
 
+This can be moved to ath9k_hw_abort_tx_dma() and make it return
+npend as the current return value is unused anyway.
+
+Vasanth
