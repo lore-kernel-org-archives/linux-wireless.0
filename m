@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29965 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755359Ab1CKC40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:26 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:56:04 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 11/20] ath6kl: remove-typedef AR6K_GMBOX_INFO
-Date: Thu, 10 Mar 2011 18:55:38 -0800
-Message-ID: <1299812147-12069-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:49046 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272Ab1CJXDo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 18:03:44 -0500
+Received: by yia27 with SMTP id 27so888632yia.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 15:03:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+Date: Fri, 11 Mar 2011 00:03:43 +0100
+Message-ID: <AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
+Subject: Re: Status of Broadcom 4353?
+From: "Chen, Xianwen" <xianwen.chen@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s AR6K_GMBOX_INFO \
-	"struct ar6k_gmbox_info" drivers/staging/ath6kl/
+Thanks a lot guys!
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I tried both latest stable kernel (linux-2.6.37) and latest mainline
+kernel (linux-2.6.38-rc8) with
+  CONFIG_BRCM80211=y
+  CONFIG_BRCM80211_PCI=y
+. No wlan0 turns up yet.
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index e8b638c..0bee46a 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -96,14 +96,14 @@ struct ar6k_async_reg_io_buffer {
-     u8 _Pad2[A_CACHE_LINE_PAD];
- };
- 
--typedef struct _AR6K_GMBOX_INFO { 
-+struct ar6k_gmbox_info { 
-     void        *pProtocolContext;
-     int    (*pMessagePendingCallBack)(void *pContext, u8 LookAheadBytes[], int ValidBytes);
-     int    (*pCreditsPendingCallback)(void *pContext, int NumCredits,  bool CreditIRQEnabled);
-     void        (*pTargetFailureCallback)(void *pContext, int Status);
-     void        (*pStateDumpCallback)(void *pContext);
-     bool      CreditCountIRQEnabled;
--} AR6K_GMBOX_INFO; 
-+}; 
- 
- struct ar6k_device {
-     A_MUTEX_T                   Lock;
-@@ -137,7 +137,7 @@ struct ar6k_device {
-     bool                          ScatterIsVirtual;
-     int                             MaxRecvBundleSize;
-     int                             MaxSendBundleSize;
--    AR6K_GMBOX_INFO                 GMboxInfo;
-+    struct ar6k_gmbox_info                 GMboxInfo;
-     bool                          GMboxEnabled;
-     struct ar6k_gmbox_ctrl_registers       GMboxControlRegisters;
-     int                             RecheckIRQStatusCnt;
--- 
-1.7.4.15.g7811d
+Any more hint please?
 
+Xianwen
+
+
+On Thu, Mar 10, 2011 at 8:14 PM, Brett Rudley <brudley@broadcom.com> wrote:
+> Its not intuitive, but 0x4353 is the PCI device ID of the 43224 dual band card which does run under brcm80211.
+>
+> Regards
+> Brett
+
+
+On Thu, Mar 10, 2011 at 7:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> There are two ways that Broadcom chips are connected to a PCIe interface -
+> one uses the SSB interconnect, and the other does not. In b43, only chips
+> with SSB are supported. As the 4353 device does not use SSB, b43 does not
+> work with it. Whether it ever will is being discussed.
+>
+> You should use either the brcm80211 driver from compat-wireless or kernels
+> 2.6.37, or later. You may also use the wl driver from Broadcom if you are
+> willing to run closed-source software. That driver does not use mac80211.
+>
+> Larry
