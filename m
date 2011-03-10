@@ -1,41 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:43958 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753209Ab1CUOZK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 10:25:10 -0400
-Received: by mail-wy0-f172.google.com with SMTP id 42so7891822wyb.17
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 07:25:07 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: set the actual tid instead of the ac
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1300309434-15491-1-git-send-email-eliad@wizery.com>
-References: <1300309434-15491-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 16:24:27 +0200
-Message-ID: <1300717467.2593.213.camel@cumari>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:50139 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751713Ab1CJNDh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 08:03:37 -0500
+Message-ID: <4D78CC26.4050402@openwrt.org>
+Date: Thu, 10 Mar 2011 14:03:34 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 3/4] ath9k: fix the .flush driver op implementation
+References: <1299717303-42430-1-git-send-email-nbd@openwrt.org> <1299717303-42430-2-git-send-email-nbd@openwrt.org> <1299717303-42430-3-git-send-email-nbd@openwrt.org> <20110310092559.GC28100@vasanth-laptop>
+In-Reply-To: <20110310092559.GC28100@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-16 at 23:03 +0200, Eliad Peller wrote:
-> When passing a tx frame, the driver incorrectly set desc->tid
-> with the ac instead of the actual tid.
+On 2011-03-10 10:25 AM, Vasanthakumar Thiagarajan wrote:
+> On Thu, Mar 10, 2011 at 06:05:02AM +0530, Felix Fietkau wrote:
+>> ath9k has a timeout of 60ms for the flush, but instead waiting 60 ms for
+>> all tx activity to finish, it resets it for every single queue.
 > 
-> It has some serious implications when using 802.11n + QoS,
-> as the fw starts a BlockAck with the wrong tid (which finally
-> cause beacon loss and disconnection / some fw crash)
+> No, it does not do reset for every queue.
+You're right, I got confused by the diff and my recollection of an old
+version of the flush op ;)
+
+>> +	for (j = 0; j < timeout; j++) {
+>> +		int npend = 0;
+>> +		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+>> +			if (!ATH_TXQ_SETUP(sc, i))
+>> +				continue;
+>>  
+>> -		if (drop || ath9k_has_pending_frames(sc, txq)) {
+>> -			ath_dbg(common, ATH_DBG_QUEUE, "Drop frames from hw queue:%d\n",
+>> -				txq->axq_qnum);
+>> -			spin_lock_bh(&txq->axq_lock);
+>> -			txq->txq_flush_inprogress = true;
+>> -			spin_unlock_bh(&txq->axq_lock);
+>> -
+>> -			ath9k_ps_wakeup(sc);
+>> -			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+>> -			npend = ath9k_hw_numtxpending(ah, txq->axq_qnum);
+>> -			ath9k_ps_restore(sc);
+>> -			if (npend)
+>> -				break;
+>> -
+>> -			ath_draintxq(sc, txq, false);
+>> -			txq->txq_flush_inprogress = false;
+>> +			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
+>>  		}
+>> -	}
+>>  
+>> -	if (npend) {
+>> -		ath_reset(sc, false);
+>> -		txq->txq_flush_inprogress = false;
+>> +		if (!npend)
+>> +		    goto out;
+>> +
+>> +		usleep_range(1000, 2000);
 > 
-> Fix it by using the actual tid stored in skb->priority.
-> 
-> Reported-by: Shahar Levi <shahar_levi@ti.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> Existing flush gives about 60ms for every q, that is reasonable
+> time, but this 60ms for all the queues is too small. This flush
+> is also called before sending null func in PS, so reset after
+> hw queue stuck is necessary to find the hang early on.
+So maybe we should set it to something like 200ms for all? Anything more
+than that seems a bit excessive.
+I intend to add some more restrictions for the queue lengths soon, then
+we can reduce this timeout even further.
 
-Applied, thank you! And thanks Juuso for the review!
+> The usage of txq_flush_inprogress needs to be removed in other
+> places in xmit.
+OK
 
--- 
-Cheers,
-Luca.
-
+- Felix
