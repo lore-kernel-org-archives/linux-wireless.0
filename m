@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:33065 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754615Ab1CVHqe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 03:46:34 -0400
-Received: by wyf23 with SMTP id 23so6434109wyf.26
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 00:46:32 -0700 (PDT)
-Subject: Re: [PATCH] wl12xx: use a bitmask instead of list of booleans in
- scanned_ch
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimLvjiHMFJ7dxhLnKVcAU2co2d5uoEE6R0mi4-G@mail.gmail.com>
-References: <1300742385-15813-1-git-send-email-coelho@ti.com>
-	 <AANLkTimLvjiHMFJ7dxhLnKVcAU2co2d5uoEE6R0mi4-G@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Mar 2011 09:45:42 +0200
-Message-ID: <1300779942.2593.398.camel@cumari>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:58289 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751223Ab1CJNUb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 08:20:31 -0500
+Message-ID: <4D78D01C.3020406@openwrt.org>
+Date: Thu, 10 Mar 2011 14:20:28 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mark Mentovai <mark@moxienet.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 2/4] ath9k: fix stopping tx dma on reset
+References: <5AF19632-CBB6-497C-8B47-1522BA6EA9F9@moxienet.com>
+In-Reply-To: <5AF19632-CBB6-497C-8B47-1522BA6EA9F9@moxienet.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-22 at 09:40 +0200, Eliad Peller wrote:
-> On Mon, Mar 21, 2011 at 11:19 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > We were using an array of booleans to mark the channels we had already scanned.  This was causing a sparse error, because bool is not a type with defined size.  To fix this, use bitmasks instead, which is much cleaner anyway.
-> >
-> > Thanks Johannes Berg for the idea.
-> >
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> > ---
+On 2011-03-10 5:21 AM, Mark Mentovai wrote:
+>> --- a/drivers/net/wireless/ath/ath9k/mac.c
 > [...]
-> > +       /* make sure all our channels fit in the scanned_ch bitmask */
-> > +       BUG_ON(ARRAY_SIZE(wl1271_channels) + ARRAY_SIZE(wl1271_channels_5ghz) >
-> > +              WL1271_MAX_CHANNELS);
+>> +bool ath9k_hw_abort_tx_dma(struct ath_hw *ah)
+> [...]
+>> +	for (q = 0; q < AR_NUM_QCU; q++) {
+>> +		for (i = 1000; i > 0; i--) {
+>> +			if (!ath9k_hw_numtxpending(ah, q))
+>> +				break;
+>> +
+>> +			udelay(5);
+>> +		}
+>> +	}
+>> +	if (!i)
+>> +		return false;
 > 
-> maybe use BUILD_BUG_ON here?
+> Awesome-looking patch set.
+> 
+> What’s the return value of this function supposed to mean? As
+> written, it only returns false there’s anything left pending on the
+> final queue. Notably, if the inner loop ran for all 999 iterations
+> and ath9k_hw_numtxpending never returned false, the code above would
+> effectively ignore that condition.
+Makes sense
 
-Yeah, I had actually done that at first.  But then the compilation error
-was so cryptic that I decided to add a BUG_ON instead.  But now I
-realize that the BUG_ON is just as cryptic, so I can change it back to
-BUILD_BUG_ON.  In either case, the developer will know soon enough that
-there is a bug. :)
+> I’m less concerned about the return value (because it actually seems
+> that the function could be declared void, you don’t use the return
+> value anywhere) than I am about the REG_CLR_BIT and REG_WRITE
+> operations that follow. It seems that you might be either missing
+> those in cases where they should happen, or performing them in cases
+> where they shouldn’t. Did you mean to leave AR_Q_TXD set when
+> something is left pending on the final hardware queue?
+I'll drop the return code and make the clearing of AR_Q_TXD and the
+other bits unconditional.
 
-I'll change it to BUILD_BUG_ON before applying.
-
-Thanks!
-
--- 
-Cheers,
-Luca.
-
+- Felix
