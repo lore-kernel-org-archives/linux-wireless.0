@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:43398 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754394Ab1CUUmZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 16:42:25 -0400
-Date: Mon, 21 Mar 2011 13:42:23 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>, george@znau.edu.ua,
-	zajec5@gmail.com, mb@bu3sch.de, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] drivers: brcmaxi: provide amba axi functionality in
- separate module
-Message-Id: <20110321134223.43791d78.rdunlap@xenotime.net>
-In-Reply-To: <1300739892.13397.4.camel@jlt3.sipsolutions.net>
-References: <1300738586-7157-1-git-send-email-arend@broadcom.com>
-	<1300738586-7157-2-git-send-email-arend@broadcom.com>
-	<20110321132848.e4e846a5.rdunlap@xenotime.net>
-	<1300739892.13397.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mms2.broadcom.com ([216.31.210.18]:2367 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752403Ab1CJTPE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 14:15:04 -0500
+From: "Brett Rudley" <brudley@broadcom.com>
+To: "Chen, Xianwen" <xianwen.chen@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 10 Mar 2011 11:14:52 -0800
+Subject: RE: Status of Broadcom 4353?
+Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+In-Reply-To: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 21 Mar 2011 21:38:12 +0100 Johannes Berg wrote:
+SXRzIG5vdCBpbnR1aXRpdmUsIGJ1dCAweDQzNTMgaXMgdGhlIFBDSSBkZXZpY2UgSUQgb2YgdGhl
+IDQzMjI0IGR1YWwgYmFuZCBjYXJkIHdoaWNoIGRvZXMgcnVuIHVuZGVyIGJyY204MDIxMS4gDQoN
+ClJlZ2FyZHMNCkJyZXR0DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
+bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxl
+c3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIENoZW4sIFhpYW53ZW4N
+Cj4gU2VudDogVGh1cnNkYXksIE1hcmNoIDEwLCAyMDExIDEwOjM4IEFNDQo+IFRvOiBsaW51eC13
+aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogU3RhdHVzIG9mIEJyb2FkY29tIDQz
+NTM/DQo+IA0KPiBIaSB0aGVyZSwNCj4gDQo+IFRoYW5rcyBmb3Iga2VlcGluZyB1cCBnb29kIHdv
+cmsgb24gd2lyZWxlc3Mgc3VwcG9ydCBpbiBMaW51eCBhbGwgdGhlc2UNCj4geWVhcnMuIEkgY2Fu
+IHN0aWxsIHJlY2FsbCB0aGUgam95IHdoZW4gUmVhbHRlayA4MTg3IGJlY2FtZSBwYXJ0IG9mDQo+
+IGtlcm5lbCBzdXBwb3J0ZWQgZHJpdmVyIGEgZmV3IHllYXJzIGFnbyAtLSBpdCBhY3R1YWxseSB3
+YXMgdGhlIG1haW4NCj4gcmVhc29uIEkgc3dpdGNoZWQgZnJvbSBOZXRCU0QgdG8gTGludXguDQo+
+IA0KPiBJIG5vdyBoYXZlIGEgbGFwdG9wIGZyb20gbXkgZW1wbG95ZXIsIG9uIHdoaWNoIEkgc25l
+YWtlZCBMaW51eCBpbi4gVGhlDQo+IGlzc3VlIGlzIHRoYXQgdGhlIHdpcmVsZXNzIGFkYXB0ZXIg
+c2VlbXMgbm90IHRvIGJlIHJlY29nbml6ZWQ6DQo+IA0KPiBsc3BjaSAtdm5uIHwgZ3JlcCAxNGU0
+DQo+ID4+IDAyOjAwLjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogQnJvYWRjb20gQ29ycG9y
+YXRpb24gRGV2aWNlDQo+IFsxNGU0OjQzNTNdIChyZXYgMDEpDQo+IA0KPiBUaG91Z2ggdGhlIG5l
+dyBCcm9hZGNvbSBkcml2ZXIgc2VlbXMgdG8gYmUgbW9yZSBhcHByb3ByaWF0ZSwgSQ0KPiBhY3R1
+YWxseSBjb21waWxlZCBib3RoIHRoZSBvbGQgYW5kIHRoZSBuZXcgZHJpdmVycy4gRnVydGhlciBy
+ZWFkaW5nIG9uDQo+ICAgaHR0cDovL2xpbnV4d2lyZWxlc3Mub3JnL2VuL3VzZXJzL0RyaXZlcnMv
+YnJjbTgwMjENCj4gYW5kDQo+ICAgaHR0cDovL3dpcmVsZXNzLmtlcm5lbC5vcmcvZW4vdXNlcnMv
+RHJpdmVycy9iNDMNCj4gc3VnZ2VzdHMgdGhhdCA0MzUzIGlzIG5vdCBjdXJyZW50bHkgc3VwcG9y
+dGVkISA6LSgNCj4gDQo+IFdoYXQgaXMgdGhlIGN1cnJlbnQgc3RhdHVzIG9mIEJyb2FkY29tIDQz
+NTM/IEknbSBjdXJpb3VzIGFuZCBhY3R1YWxseQ0KPiBlYWdlciB0byBrbm93LiBBbnkgaW5mb3Jt
+YXRpb24gd2lsbCBiZSBhcHByZWNpYXRlZCENCj4gDQo+IEhhdmUgYSBnb29kIGRheSBmZWxsYXMh
+DQo+IA0KPiBYaWFud2VuDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBz
+ZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC13aXJlbGVzcyINCj4gaW4NCj4gdGhlIGJv
+ZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpv
+cmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
+DQoNCg==
 
-> On Mon, 2011-03-21 at 13:28 -0700, Randy Dunlap wrote:
-> 
-> > > +/**
-> > > + * DOC: Core Utility Functions
-> 
-> > This is not kernel-doc notation.  Change /** to /*.
-> 
-> Actually, it is, if you prefix with DOC: you can embed that into the
-> generated DocBook with 
-> !P<file> <heading name>
-> and include the text. I did that in b112e0f7 :-)
-
-Yes, I'm familiar with that notation.
-
-
-bah.  You omitted a few lines of comments:
-
-> +/**
-
-This is not kernel-doc notation.  Change /** to /*.
-
-> + * Manufacturer Ids
-> + */
-
-
-
-> > > +/**
-> > 
-> > ditto
-> > 
-> > > + * Component Classes
-> 
-> You're right for most of the other ones of course.
-
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
