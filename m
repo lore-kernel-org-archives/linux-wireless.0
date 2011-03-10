@@ -1,56 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37513 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755776Ab1CQVvK convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:54196 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab1CJC4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 17:51:10 -0400
-Received: by mail-qw0-f46.google.com with SMTP id 3so2421036qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 14:51:10 -0700 (PDT)
+	Wed, 9 Mar 2011 21:56:01 -0500
+Received: by iyb26 with SMTP id 26so1111757iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 18:56:00 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1300284739-7797-5-git-send-email-lemenkov@gmail.com>
-References: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
-	<1300284739-7797-5-git-send-email-lemenkov@gmail.com>
-Date: Thu, 17 Mar 2011 22:51:09 +0100
-Message-ID: <AANLkTimdysgs_tcz038UF=x92HaDs_KHgSPuiDdLt+9r@mail.gmail.com>
-Subject: Re: [rt2x00-users] [PATCH 4/4] rt2x00: Add unknown Toshiba device,
- mentioned in rt3572sta sources, under CONFIG_RT2800USB_UNKNOWN
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Peter Lemenkov <lemenkov@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@redhat.com>,
-	rt2x00-dev <users@rt2x00.serialmonkey.com>
+Date: Wed, 9 Mar 2011 18:56:00 -0800
+Message-ID: <AANLkTimm0umg3rZDwYU4KGLbaCQgAA_QKCpoY9NiscLT@mail.gmail.com>
+Subject: [PATCH] mac80211: do not enable ps if 802.1x controlled port is unblocked
+From: Jason Young <a.young.jason@gmail.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 16, 2011 at 3:12 PM, Peter Lemenkov <lemenkov@gmail.com> wrote:
-> Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+If dynamic_ps is disabled, enabling power save before the 4-way
+handshake completes may delay the station from being authorized to
+send/receive traffic, i.e. increase roaming times. It may also result in
+a failed 4-way handshake depending on the AP's timing requirements and
+beacon interval, and the station's listen interval.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+To fix this, prevent power save from being enabled while the station
+isn't authorized and recalculate power save whenever the station's
+authorized state changes.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 3aa32fd..438e64f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -975,6 +975,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
->        /* Sweex */
->        { USB_DEVICE(0x177f, 0x0153), USB_DEVICE_DATA(&rt2800usb_ops) },
->        { USB_DEVICE(0x177f, 0x0313), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +       /* Toshiba */
-> +       { USB_DEVICE(0x0930, 0x0a07), USB_DEVICE_DATA(&rt2800usb_ops) },
->        /* Zyxel */
->        { USB_DEVICE(0x0586, 0x341a), USB_DEVICE_DATA(&rt2800usb_ops) },
->  #endif
-> --
-> 1.7.4
->
->
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
->
+Signed-off-by: Jason Young <a.young.jason@gmail.com>
+---
+ net/mac80211/cfg.c  |    3 +++
+ net/mac80211/mlme.c |   37 ++++++++++++++++++++++++++++++++-----
+ 2 files changed, 35 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7b701dc..6a7bdeb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -834,6 +834,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+
+ 	rcu_read_unlock();
+
++	if (params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
++		ieee80211_recalc_ps(local, -1);
++
+ 	return 0;
+ }
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cc984bd..64d92d5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -613,6 +613,37 @@ static void ieee80211_change_ps(struct
+ieee80211_local *local)
+ 	}
+ }
+
++static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *mgd = &sdata->u.mgd;
++	struct sta_info *sta = NULL;
++	u32 sta_flags = 0;
++
++	if (!mgd->powersave)
++		return false;
++
++	if (!mgd->associated)
++		return false;
++
++	if (!mgd->associated->beacon_ies)
++		return false;
++
++	if (mgd->flags & (IEEE80211_STA_BEACON_POLL |
++			  IEEE80211_STA_CONNECTION_POLL))
++		return false;
++
++	rcu_read_lock();
++	sta = sta_info_get(sdata, mgd->bssid);
++	if (sta)
++		sta_flags = get_sta_flags(sta);
++	rcu_read_unlock();
++
++	if (!(sta_flags & WLAN_STA_AUTHORIZED))
++		return false;
++
++	return true;
++}
++
+ /* need to hold RTNL or interface lock */
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ {
+@@ -647,11 +678,7 @@ void ieee80211_recalc_ps(struct ieee80211_local
+*local, s32 latency)
+ 		count++;
+ 	}
+
+-	if (count == 1 && found->u.mgd.powersave &&
+-	    found->u.mgd.associated &&
+-	    found->u.mgd.associated->beacon_ies &&
+-	    !(found->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
+-				    IEEE80211_STA_CONNECTION_POLL))) {
++	if (count == 1 && ieee80211_powersave_allowed(found)) {
+ 		struct ieee80211_conf *conf = &local->hw.conf;
+ 		s32 beaconint_us;
+
+-- 
+1.7.2.2
+
+-- 
+Jason Young
