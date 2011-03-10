@@ -1,109 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nexicom.net ([216.168.96.13]:41230 "EHLO smtp.nexicom.net"
+Received: from nbd.name ([46.4.11.11]:53865 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750907Ab1CYDyI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 23:54:08 -0400
-Received: from mail.lockie.ca (dyn-dsl-lh-98-124-36-5.nexicom.net [98.124.36.5])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p2P3s6U1027747
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 23:54:07 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 55B2D1E03D8
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 23:54:05 -0400 (EDT)
-Message-ID: <4D8C11DD.7000003@lockie.ca>
-Date: Thu, 24 Mar 2011 23:54:05 -0400
-From: James <bjlockie@lockie.ca>
-MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: kernel-2.6.36.2 works, later doesn't
-References: <4D866BD1.9060904@lockie.ca>	<4D86B222.4070708@lockie.ca> <AANLkTik+AjhMBwRy9ESaidnuW+1YCSZiEzeWdFnmZnqS@mail.gmail.com>
-In-Reply-To: <AANLkTik+AjhMBwRy9ESaidnuW+1YCSZiEzeWdFnmZnqS@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	id S1751927Ab1CJNlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 08:41:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, mark@moxienet.com
+Subject: [PATCH v2 3/4] ath9k: fix the .flush driver op implementation
+Date: Thu, 10 Mar 2011 14:41:38 +0100
+Message-Id: <1299764499-76251-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299764499-76251-2-git-send-email-nbd@openwrt.org>
+References: <1299764499-76251-1-git-send-email-nbd@openwrt.org>
+ <1299764499-76251-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/11 12:51, Sedat Dilek wrote:
-> On Mon, Mar 21, 2011 at 3:04 AM, James <bjlockie@lockie.ca> wrote:
->> On 03/20/11 17:04, James wrote:
->>> $ dmesg | grep phy
->>> BIOS-provided physical RAM map:
->>> modified physical RAM map:
->>> phy0: Selected rate control algorithm 'ath9k_rate_control'
->>> Registered led device: ath9k-phy0::radio
->>> Registered led device: ath9k-phy0::assoc
->>> Registered led device: ath9k-phy0::tx
->>> Registered led device: ath9k-phy0::rx
->>> phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
->>> mem=0xffffc90001900000, irq=17
->>>
->>> This is kernel-2.6.36.2.
->>> The wireless doesn't work on any later kernel that I have tried.
->>> It is very interesting the IRQ is 17 on this kernel but 18 on 2.6.37.3.
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->> I tried
->> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/compat-wireless-2.6.36-4.tar.bz2
->> but it doesn't work in the 2.6.36.2 kernel or the 2.6.38 kernel.
->>
->> Where can I get the compat-wireless that is the exact code that is in
->> the 2.6.36.2 kernel and then I can try it in the 2.6.38 kernel?
->>
-> The idea of compat-wireless is to make new wifi drivers & features
-> accessible for older host-kernel, not the other way around.
-> It also makes no sense to have same versions of host kernel and c-w
-> version (both 2.6.36 for example, it is the same codebase).
-If the old c-w works on the new kernel then I know it is a kernel problem.
-> Did you try one of the bleeding-edge compat-wireless [1] tarball (it
-> is updated daily, but can be broken)?
-> Furthermore, [2] has informations about stable releases and detailed
-> build instructions.
-I last tried 2011-03-19
-> Please provide full dmesg and lspci/lsusb output - not truncated one.
-> Which user-space do you use? Network-Manager, wpasupplicant, etc.?
-No user space utilities are automatically started but I use wicd
-manually to get an IP from my wired connection.
-The AP is open so I don't use wpasupplicant.
+This patch simplifies the flush op and reuses ath_drain_all_txq for
+flushing out pending frames if necessary. It also uses a global timeout
+of 200ms instead of the per-queue 60ms timeout.
 
-$ dmesg
-http://lockie.ca/test/dmesg.txt.bz2
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |   54 +++++++++++--------------------
+ drivers/net/wireless/ath/ath9k/xmit.c  |   28 ++++++++---------
+ 3 files changed, 32 insertions(+), 51 deletions(-)
 
-$ sudo lspci
-00:00.0 RAM memory: nVidia Corporation MCP65 Memory Controller (rev a1)
-00:01.0 ISA bridge: nVidia Corporation MCP65 LPC Bridge (rev a2)
-00:01.1 SMBus: nVidia Corporation MCP65 SMBus (rev a1)
-00:01.2 RAM memory: nVidia Corporation MCP65 Memory Controller (rev a1)
-00:02.0 USB Controller: nVidia Corporation MCP65 USB Controller (rev a1)
-00:02.1 USB Controller: nVidia Corporation MCP65 USB Controller (rev a1)
-00:07.0 Audio device: nVidia Corporation MCP65 High Definition Audio
-(rev a1)
-00:08.0 PCI bridge: nVidia Corporation MCP65 PCI bridge (rev a1)
-00:09.0 IDE interface: nVidia Corporation MCP65 IDE (rev a1)
-00:0a.0 IDE interface: nVidia Corporation MCP65 SATA Controller (rev a1)
-00:0b.0 PCI bridge: nVidia Corporation Device 045b (rev a1)
-00:0c.0 PCI bridge: nVidia Corporation MCP65 PCI Express bridge (rev a1)
-00:0d.0 PCI bridge: nVidia Corporation MCP65 PCI Express bridge (rev a1)
-00:0e.0 PCI bridge: nVidia Corporation MCP65 PCI Express bridge (rev a1)
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-HyperTransport Technology Configuration
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-Address Map
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-DRAM Controller
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-Miscellaneous Control
-01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 01)
-02:07.0 FireWire (IEEE 1394): Texas Instruments TSB43AB22/A
-IEEE-1394a-2000 Controller (PHY/Link)
-02:08.0 Multimedia video controller: Brooktree Corporation Bt878 Video
-Capture (rev 11)
-02:08.1 Multimedia controller: Brooktree Corporation Bt878 Audio Capture
-(rev 11)
-02:09.0 Network controller: Atheros Communications Inc. AR5008 Wireless
-Network Adapter (rev 01)
-04:00.0 VGA compatible controller: nVidia Corporation G92 [GeForce 8800
-GT] (rev a2)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c718ab5..099bd41 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -189,7 +189,6 @@ struct ath_txq {
+ 	u32 axq_ampdu_depth;
+ 	bool stopped;
+ 	bool axq_tx_inprogress;
+-	bool txq_flush_inprogress;
+ 	struct list_head axq_acq;
+ 	struct list_head txq_fifo[ATH_TXFIFO_DEPTH];
+ 	struct list_head txq_fifo_pending;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2e228aa..903f2a4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2128,56 +2128,40 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 
+ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ {
+-#define ATH_FLUSH_TIMEOUT	60 /* ms */
+ 	struct ath_softc *sc = hw->priv;
+-	struct ath_txq *txq = NULL;
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int i, j, npend = 0;
++	int timeout = 200; /* ms */
++	int i, j;
+ 
++	ath9k_ps_wakeup(sc);
+ 	mutex_lock(&sc->mutex);
+ 
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (!ATH_TXQ_SETUP(sc, i))
+-			continue;
+-		txq = &sc->tx.txq[i];
++	if (drop)
++		timeout = 1;
+ 
+-		if (!drop) {
+-			for (j = 0; j < ATH_FLUSH_TIMEOUT; j++) {
+-				if (!ath9k_has_pending_frames(sc, txq))
+-					break;
+-				usleep_range(1000, 2000);
+-			}
+-		}
++	for (j = 0; j < timeout; j++) {
++		int npend = 0;
++		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
++			if (!ATH_TXQ_SETUP(sc, i))
++				continue;
+ 
+-		if (drop || ath9k_has_pending_frames(sc, txq)) {
+-			ath_dbg(common, ATH_DBG_QUEUE, "Drop frames from hw queue:%d\n",
+-				txq->axq_qnum);
+-			spin_lock_bh(&txq->axq_lock);
+-			txq->txq_flush_inprogress = true;
+-			spin_unlock_bh(&txq->axq_lock);
+-
+-			ath9k_ps_wakeup(sc);
+-			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+-			npend = ath9k_hw_numtxpending(ah, txq->axq_qnum);
+-			ath9k_ps_restore(sc);
+-			if (npend)
+-				break;
+-
+-			ath_draintxq(sc, txq, false);
+-			txq->txq_flush_inprogress = false;
++			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
+ 		}
++
++		if (!npend)
++		    goto out;
++
++		usleep_range(1000, 2000);
+ 	}
+ 
+-	if (npend) {
++	if (!ath_drain_all_txq(sc, false))
+ 		ath_reset(sc, false);
+-		txq->txq_flush_inprogress = false;
+-	}
+ 
++out:
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+ 	mutex_unlock(&sc->mutex);
++	ath9k_ps_restore(sc);
+ }
+ 
+ struct ieee80211_ops ath9k_ops = {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index bb1d29e..f977f80 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2012,8 +2012,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 		spin_lock_bh(&txq->axq_lock);
+ 		if (list_empty(&txq->axq_q)) {
+ 			txq->axq_link = NULL;
+-			if (sc->sc_flags & SC_OP_TXAGGR &&
+-			    !txq->txq_flush_inprogress)
++			if (sc->sc_flags & SC_OP_TXAGGR)
+ 				ath_txq_schedule(sc, txq);
+ 			spin_unlock_bh(&txq->axq_lock);
+ 			break;
+@@ -2094,7 +2093,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 		spin_lock_bh(&txq->axq_lock);
+ 
+-		if (sc->sc_flags & SC_OP_TXAGGR && !txq->txq_flush_inprogress)
++		if (sc->sc_flags & SC_OP_TXAGGR)
+ 			ath_txq_schedule(sc, txq);
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
+@@ -2265,18 +2264,17 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 
+ 		spin_lock_bh(&txq->axq_lock);
+ 
+-		if (!txq->txq_flush_inprogress) {
+-			if (!list_empty(&txq->txq_fifo_pending)) {
+-				INIT_LIST_HEAD(&bf_head);
+-				bf = list_first_entry(&txq->txq_fifo_pending,
+-						      struct ath_buf, list);
+-				list_cut_position(&bf_head,
+-						  &txq->txq_fifo_pending,
+-						  &bf->bf_lastbf->list);
+-				ath_tx_txqaddbuf(sc, txq, &bf_head);
+-			} else if (sc->sc_flags & SC_OP_TXAGGR)
+-				ath_txq_schedule(sc, txq);
+-		}
++		if (!list_empty(&txq->txq_fifo_pending)) {
++			INIT_LIST_HEAD(&bf_head);
++			bf = list_first_entry(&txq->txq_fifo_pending,
++					      struct ath_buf, list);
++			list_cut_position(&bf_head,
++					  &txq->txq_fifo_pending,
++					  &bf->bf_lastbf->list);
++			ath_tx_txqaddbuf(sc, txq, &bf_head);
++		} else if (sc->sc_flags & SC_OP_TXAGGR)
++			ath_txq_schedule(sc, txq);
++
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
+ }
+-- 
+1.7.3.2
 
