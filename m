@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:38826 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467Ab1CPCmw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 22:42:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
+Received: from purkki.adurom.net ([80.68.90.206]:33560 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752181Ab1CJPOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 10:14:03 -0500
+To: Grazvydas Ignotas <notasas@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/6] remove configuration APIs from debugfs (part 1)
-Date: Tue, 15 Mar 2011 19:46:04 -0700
-Message-Id: <1300243570-6798-1-git-send-email-bzhao@marvell.com>
+	linux-wireless@vger.kernel.org,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 1/2] wl1251: remove wl1251_ps_set_elp function
+References: <1299432217-32139-1-git-send-email-notasas@gmail.com>
+	<1299432217-32139-2-git-send-email-notasas@gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 10 Mar 2011 17:13:55 +0200
+In-Reply-To: <1299432217-32139-2-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Sun\,  6 Mar 2011 19\:23\:36 +0200")
+Message-ID: <87zkp3ypn0.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series removes some of the configuration APIs.
+Grazvydas Ignotas <notasas@gmail.com> writes:
 
-Bing Zhao (2):
-  mwifiex: remove atimwindow command from debugfs
-  mwifiex: remove deepsleep command from debugfs
+> wl1251_ps_set_elp() only does acx_sleep_auth call and takes the chip
+> from/to ELP, however all callers of wl1251_ps_set_mode() have already
+> taken the chip out of ELP and puts it back to ELP when they finish.
+> This makes ELP calls (and register writes they result in) superfluous.
+>
+> So remove wl1251_ps_set_elp function and call acx_sleep_auth directly.
 
-Kiran Divekar (3):
-  mwifiex: remove addbapara configuration from debugfs
-  mwifiex: remove addbareject configuration from debugfs
-  mwifiex: remove txaggrprio command from debugfs
+Thanks, makes sense to me.
 
-Marc Yang (1):
-  mwifiex: remove htcapinfo command from debugfs
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 
- drivers/net/wireless/mwifiex/11n.c           |  169 ---------
- drivers/net/wireless/mwifiex/11n.h           |    9 -
- drivers/net/wireless/mwifiex/11n_rxreorder.c |    6 +-
- drivers/net/wireless/mwifiex/11n_rxreorder.h |    1 -
- drivers/net/wireless/mwifiex/README          |  161 --------
- drivers/net/wireless/mwifiex/debugfs.c       |  521 --------------------------
- drivers/net/wireless/mwifiex/fw.h            |    2 -
- drivers/net/wireless/mwifiex/init.c          |    3 -
- drivers/net/wireless/mwifiex/ioctl.h         |   11 -
- drivers/net/wireless/mwifiex/join.c          |    1 -
- drivers/net/wireless/mwifiex/main.h          |   24 --
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |    4 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c     |  288 --------------
- 13 files changed, 2 insertions(+), 1198 deletions(-)
+Acked-by: Kalle Valo <kvalo@adurom.com>
 
+-- 
+Kalle Valo
