@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37564 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755Ab1C3SZU (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:59759 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab1CJRkp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 14:25:20 -0400
-Received: by vws1 with SMTP id 1so1250513vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2011 11:25:19 -0700 (PDT)
-Message-ID: <4D93758B.1020104@lwfinger.net>
-Date: Wed, 30 Mar 2011 13:25:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 10 Mar 2011 12:40:45 -0500
+Received: by qyg14 with SMTP id 14so1673545qyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 09:40:45 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.39-rc1] b43: allocate receive buffers big enough for
- max frame len + offset
-References: <1301508166-7692-1-git-send-email-linville@tuxdriver.com> <AANLkTikv+Mpb_P0mDqL1QGWJSynp5U5K+quGxUbuFwRk@mail.gmail.com>
-In-Reply-To: <AANLkTikv+Mpb_P0mDqL1QGWJSynp5U5K+quGxUbuFwRk@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4D77AD18.60804@lwfinger.net>
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+	<4D77A06E.3050902@lwfinger.net>
+	<AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
+	<4D77AD18.60804@lwfinger.net>
+Date: Thu, 10 Mar 2011 18:40:44 +0100
+Message-ID: <AANLkTikb8z-NqGdgWz9Ua+8pWm3Vts2uT9sh7ez6OYVB@mail.gmail.com>
+Subject: Re: Problem with BCM943224
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2011 01:12 PM, Rafał Miłecki wrote:
-> 2011/3/30 John W. Linville<linville@tuxdriver.com>:
->> Otherwise, skb_put inside of dma_rx can fail...
+W dniu 9 marca 2011 17:38 użytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisał:
+> On 03/09/2011 10:26 AM, Rafał Miłecki wrote:
+>>
+>> BCM4322 is not a problem for me as well. I can use BCM4312, BCM4321,
+>> BCM4322 with my adapter without problem.
+>>
+>> It's BCM943224 that I hit this problem with.
+>>
+>> AFAIR you have some AI based card. Could you test this with your
+>> extender for me?
 >
-> What would happen then? Of course we wouldn't receive packet, but
-> would we get some warning? Could this be reason of memory leak with
-> some firmware versions?
+> Sorry, I have no AI-based card. I checked for a BCM4313 on Ebay a couple of
+> weeks ago and couldn't find one. I know that Dell ships that card in some
+> laptops, but I couldn't find the part on their web site. Does anyone know
+> the Dell part number?
 
-You get an skb_over_panic. See 
-https://bugzilla.kernel.org/show_bug.cgi?id=32042. I do not think a memory leak 
-is likely.
+I guess you do not need that anymore, but I said to check, so... That
+notebook that was shipped with BCM4313 is HP G62-A10sw.
 
-John: The commit message should mention this as a fix for Bug #32042. In 
-addition, it should Cc: stable.
+I've taken BCM4313 from that notebook and put it in my cheap adapter.
+It didn't work (again, all reads 1). It seems that my adapter does not
+like any AI based card. It accepts SSB based cards only. At least now
+I know it is not my BCM943223 that is faulty, but adapter. I'm sure
+BCM4313 is fine, because it works OK in that HP notebook.
 
-Larry
+Bad news: that dumb, dumb, dumb HP has 14e4:4727 (BCM4313)
+whitelisted, but 14e4:4353 (BCM43224) is blacklisted. Who the hell
+designed that :|
+
+-- 
+Rafał
