@@ -1,99 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36082 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753729Ab1B1XdP convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:51212 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251Ab1CKAst (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Feb 2011 18:33:15 -0500
-Received: by iyb26 with SMTP id 26so3376719iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Feb 2011 15:33:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=ua+OpGC34E73smOsyF4Mt8HTesgEn_jDmdNZ8@mail.gmail.com>
-References: <AANLkTi=ua+OpGC34E73smOsyF4Mt8HTesgEn_jDmdNZ8@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 28 Feb 2011 15:32:55 -0800
-Message-ID: <AANLkTin4Yi0tXtLqX4BuG1FbD4WyM0Xr4vGBEZAfWQ_O@mail.gmail.com>
-Subject: Re: ath6kl: cleanup Two series pending in queue and one regression found
-To: devel@driverdev.osuosl.org, Naveen Singh <nsingh@atheros.com>,
-	devel@linuxdriverproject.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 10 Mar 2011 19:48:49 -0500
+Received: by pwi15 with SMTP id 15so431291pwi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 16:48:49 -0800 (PST)
+From: Jason Young <a.young.jason@gmail.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Jason Young <a.young.jason@gmail.com>
+Subject: [PATCH v2] mac80211: do not enable ps if 802.1x controlled port is unblocked
+Date: Thu, 10 Mar 2011 16:43:19 -0800
+Message-Id: <1299804200-2536-1-git-send-email-a.young.jason@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seems I was using the old list
+If dynamic_ps is disabled, enabling power save before the 4-way
+handshake completes may delay the station from being authorized to
+send/receive traffic, i.e. increase roaming times. It also may result in
+a failed 4-way handshake depending on the AP's timing requirements and
+beacon interval, and the station's listen interval.
 
-  Luis
+To fix this, prevent power save from being enabled while the station
+isn't authorized and recalculate power save whenever the station's
+authorized state changes.
 
-On Mon, Feb 28, 2011 at 3:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> Just FYI - here is my pending cleanup work on ath6kl, these will be
-> split up into two series. Naveen is testing the first series right now
-> but ran into a *regression* on ath6kl so ... that regression will be
-> bisected next by Naveen and once that is all ironed out we will have
-> to send the fix and then my first series...
->
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath6kl/2011/02/28/all-2011-02-28-not-tested-v1.patch
->
-> Javier Martinez Canillas (1):
->      staging: ath6kl: Cast variable to size_t to avoid compile warning
->
-> Luis R. Rodriguez (57):
->      ath6kl: s|A_MEMCPY|memcpy|g
->      ath6kl: s|A_MEMCMP|memcmp|g
->      ath6kl: remove-typedef: A_UCHAR
->      ath6kl: remove-typedef AGGR_INFO
->      ath6kl: remove-typedef AR3K_CONFIG_INFO
->      ath6kl: remove-typedef AR6000_USER_SETKEYS_INFO
->      ath6kl: remove-typedef AR6K_ASYNC_REG_IO_BUFFER
->      ath6kl: remove-typedef AR6K_DEVICE
->      ath6kl: remove-typedef AR6K_GMBOX_CTRL_REGISTERS
->      ath6kl: remove-typedef AR6K_GMBOX_INFO
->      ath6kl: remove-typedef AR6K_HCI_BRIDGE_INFO
->      ath6kl: remove-typedef AR6K_IRQ_ENABLE_REGISTERS
->      ath6kl: remove-typedef AR6K_IRQ_PROC_REGISTERS
->      ath6kl: remove-typedef AR_VIRTUAL_INTERFACE_T
->      ath6kl: remove-typedef ATHBT_FILTER_INSTANCE
->      ath6kl: remove-typedef ATH_DEBUG_MASK_DESCRIPTION
->      ath6kl: remove-typedef BUFFER_PROC_LIST
->      ath6kl: remove-typedef COMMON_CREDIT_STATE_INFO
->      ath6kl: remove-typedef DEV_SCATTER_DMA_VIRTUAL_INFO
->      ath6kl: remove-tyepdef DL_LIST and PDL_LIST pointer
->      ath6kl: remove-typedef GMBOX_PROTO_HCI_UART
->      ath6kl: remove-typedef HCI_TRANSPORT_CALLBACKS
->      ath6kl: remove-typedef HCI_TRANSPORT_CONFIG_INFO
->      ath6kl: remove-typedef HCI_TRANSPORT_MISC_HANDLES
->      ath6kl: remove-typedef HCI_TRANSPORT_PROPERTIES
->      ath6kl: remove-typedef HIF_DEVICE_IRQ_YIELD_PARAMS
->      ath6kl: remove-typedef HIF_DEVICE_MBOX_INFO
->      ath6kl: remove-typedef HIF_DEVICE_OS_DEVICE_INFO
->      ath6kl: remove-typedef HIF_DEVICE_SCATTER_SUPPORT_INFO
->      ath6kl: remove-typedef HIF_MBOX_PROPERTIES
->      ath6kl: remove-typedef HIF_PENDING_EVENTS_INFO
->      ath6kl: remove-typedef HIF_SCATTER_ITEM
->      ath6kl: remove-typedef HIF_SCATTER_REQ_PRIV
->      ath6kl: remove-typedef HIF_SCATTER_REQ
->      ath6kl: remove-typedef HTC_CONTROL_BUFFER
->      ath6kl: remove-typedef HTC_ENDPOINT
->      ath6kl: remove-typedef HTC_ENDPOINT_CREDIT_DIST
->      ath6kl: remove-typedef HTC_ENDPOINT_STATS
->      ath6kl: remove-typedef HTC_EP_CALLBACKS
->      ath6kl: remove-typedef HTC_FRAME_HDR
->      ath6kl: remove-typedef HTC_INIT_INFO
->      ath6kl: remove-typedef HTC_PACKET
->      ath6kl: remove-typedef HTC_PACKET_QUEUE
->      ath6kl: remove-typedef HTC_RX_PACKET_INFO
->      ath6kl: remove-typedef HTC_SERVICE_CONNECT_REQ
->      ath6kl: remove-typedef HTC_SERVICE_CONNECT_RESP
->      ath6kl: remove-typedef HTC_TARGET
->      ath6kl: remove-typedef HTC_TX_PACKET_INFO
->      ath6kl: remove-typedef OSBUF_HOLD_Q
->      ath6kl: remove-typedef PSCmdPacket
->      ath6kl: remove-typedef RXTID
->      ath6kl: remove-typedef RXTID_STATS
->      ath6kl: remove-typedef ST_PS_DATA_FORMAT
->      ath6kl: remove-typedef ST_READ_STATUS
->      ath6kl: remove-typedef WINDOW_SNAPSHOT
->      ath6kl: remove-typedef AR_SOFTC_T
->      ath6kl: remove-typedef HIF_DEVICE
->
->  Luis
->
+Signed-off-by: Jason Young <a.young.jason@gmail.com>
+---
+
+v2: restrict ieee80211_recalc_ps to station interfaces only
+
+ net/mac80211/cfg.c  |    4 ++++
+ net/mac80211/mlme.c |   37 ++++++++++++++++++++++++++++++++-----
+ 2 files changed, 36 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7b701dc..11866b4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -834,6 +834,10 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 
+ 	rcu_read_unlock();
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
++		ieee80211_recalc_ps(local, -1);
++
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cc984bd..64d92d5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -613,6 +613,37 @@ static void ieee80211_change_ps(struct ieee80211_local *local)
+ 	}
+ }
+ 
++static bool ieee80211_powersave_allowed(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *mgd = &sdata->u.mgd;
++	struct sta_info *sta = NULL;
++	u32 sta_flags = 0;
++
++	if (!mgd->powersave)
++		return false;
++
++	if (!mgd->associated)
++		return false;
++
++	if (!mgd->associated->beacon_ies)
++		return false;
++
++	if (mgd->flags & (IEEE80211_STA_BEACON_POLL |
++			  IEEE80211_STA_CONNECTION_POLL))
++		return false;
++
++	rcu_read_lock();
++	sta = sta_info_get(sdata, mgd->bssid);
++	if (sta)
++		sta_flags = get_sta_flags(sta);
++	rcu_read_unlock();
++
++	if (!(sta_flags & WLAN_STA_AUTHORIZED))
++		return false;
++
++	return true;
++}
++
+ /* need to hold RTNL or interface lock */
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ {
+@@ -647,11 +678,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 		count++;
+ 	}
+ 
+-	if (count == 1 && found->u.mgd.powersave &&
+-	    found->u.mgd.associated &&
+-	    found->u.mgd.associated->beacon_ies &&
+-	    !(found->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
+-				    IEEE80211_STA_CONNECTION_POLL))) {
++	if (count == 1 && ieee80211_powersave_allowed(found)) {
+ 		struct ieee80211_conf *conf = &local->hw.conf;
+ 		s32 beaconint_us;
+ 
+-- 
+1.7.2.2
+
