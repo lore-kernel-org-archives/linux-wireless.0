@@ -1,35 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7204 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2421 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751630Ab1C2NW6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 09:22:58 -0400
-Date: Tue, 29 Mar 2011 15:22:33 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlegacy: fix bugs in change_interface
-Message-ID: <20110329132231.GA6919@redhat.com>
-References: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
+	id S1751827Ab1CKRfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 12:35:25 -0500
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "'zajec5@gmail.com'" <zajec5@gmail.com>,
+	"'CLin@3eti.com'" <CLin@3eti.com>
+cc: "'xianwen.chen@gmail.com'" <xianwen.chen@gmail.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
+	"'Larry.Finger@lwfinger.net'" <Larry.Finger@lwfinger.net>,
+	"Brett Rudley" <brudley@broadcom.com>
+Date: Fri, 11 Mar 2011 09:35:16 -0800
+Subject: Re: Status of Broadcom 4353?
+Message-ID: <AD827A950317B54A8AF07D45ED639A0FD2DF21C5D5@SJEXCHCCR02.corp.ad.broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2011 at 02:05:59PM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If change_interface gets invoked during a firmware
-> restart, it may crash; prevent that from happening
-> by checking if ctx->vif is assigned.
-> 
-> Additionally, in my initial commit I forgot to set
-> the vif->p2p variable correctly, so fix that too,
-> even if it doesn't matter since P2P isn't supported.
+Pj4gV2VsbCwganVzdCB0aHJvdyBzb21lIGlkZWFzLiBOb3QgbWVhbiB0byBtZXNzLg0KPj4gT2xk
+ZXIgQnJvYWRjb20gZHJpdmVyIGRpZCBwdXQgZmlybXdhcmUgaW4gL2xpYi8+PmZpcm13YXJlLyBl
+LmcuIEJDTTIwMzMtRlcuYmluDQo+DQo+SSBoYWQgbm8gaWRlYSBhYm91dCB0aGF0LCBzb3JyeS4g
+TmV3ZXN0IGRyaXZlciBsb29rcyA+aW4gYnJjbSBzdWJkaXIsDQo+SSdtIHN1cmUgb2YgdGhhdC4N
+Cg0KWWVzLCB0aGUgd2xhbiBkcml2ZXJzIChicmNtc21hYywgYnJjbWZtYWMpIGxvb2sgaW4gdGhl
+IGJyY20gc3ViZGlyLg0KDQotIEhlbnJ5DQoNCkhlbnJ5IFB0YXNpbnNraQ0KaGVucnlwQGJyb2Fk
+Y29tLmNvbQ==
 
-ACK
-
-Does we also need iwl_{legacy,}is_ready_rf check?
-
-Stanislaw
