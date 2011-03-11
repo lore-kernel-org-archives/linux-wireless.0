@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:59886 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294Ab1CVOP2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 10:15:28 -0400
-Received: from wpaz29.hot.corp.google.com (wpaz29.hot.corp.google.com [172.24.198.93])
-	by smtp-out.google.com with ESMTP id p2MEFRVZ021548
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 07:15:27 -0700
-Received: from iwn3 (iwn3.prod.google.com [10.241.68.67])
-	by wpaz29.hot.corp.google.com with ESMTP id p2MEDloq031394
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 07:15:26 -0700
-Received: by iwn3 with SMTP id 3so14190363iwn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2011 07:15:26 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1617 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751592Ab1CKRKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 12:10:17 -0500
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "'xianwen.chen@gmail.com'" <xianwen.chen@gmail.com>,
+	"'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
+cc: "'Larry.Finger@lwfinger.net'" <Larry.Finger@lwfinger.net>,
+	"'CLin@3eti.com'" <CLin@3eti.com>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"'zajec5@gmail.com'" <zajec5@gmail.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Date: Fri, 11 Mar 2011 09:10:05 -0800
+Subject: Re: Status of Broadcom 4353?
+Message-ID: <AD827A950317B54A8AF07D45ED639A0FD2DF21C5D4@SJEXCHCCR02.corp.ad.broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1300801030.3746.6.camel@jlt3.sipsolutions.net>
-References: <20110321213812.76CD420891@glenhelen.mtv.corp.google.com>
-	<1300801030.3746.6.camel@jlt3.sipsolutions.net>
-Date: Tue, 22 Mar 2011 07:15:26 -0700
-Message-ID: <AANLkTiktw2FPX8UYOmuf4AXjLrWEM=xsqgnTYjGkytMK@mail.gmail.com>
-Subject: Re: [PATCH 0/4] Add station BSS parameters to station
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 22, 2011 at 6:37 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-03-21 at 14:32 -0700, Paul Stewart wrote:
->
->> Paul Stewart (4):
->>   nl80211: Add station info flags and intervals
->>   cfg80211: Add station info to station struct
->>   nl80211: Add bss info to station message
->>   mac80211: Add bss info to that exported to station
->
-> Also, FWIW, I wouldn't mind if the first three patches were rolled up
-> into one, or even all of them for such a fairly simple thing. Not saying
-> you need to change it either though.
+VHJ5Og0KDQpsbiAtcyBiY200M3h4LTAtNjEwLTgwOS0wLmZ3IGJjbTQzeHgtLTAuZncNCmxuIC1z
+IGJjbTQzeHhfaGRyLTAtNjEwLTgwOS0wLmZ3IGJjbTQzeHhfaGRyLTAuZncNCg0KKE9yIGp1c3Qg
+cmVuYW1lIHRoZSBmaWxlcykuDQoNCldlIGRyb3BwZWQgdGhlIHJlbGVhc2UgbnVtYmVycyBmcm9t
+IHRoZSBmaWxlbmFtZXMgYSB3aGlsZSBhZ28uIEkgc2VudCBhIHBhdGNoIHRvIHJlbmFtZSB0aGUg
+ZmlsZXMgaW4gdGhlIHJlcG8sIGJ1dCBJIGRvbid0IHRoaW5rIGl0IGV2ZXIgZ290IGFwcGxpZWQu
+DQoNCi0gSGVucnkNCg0KSGVucnkgUHRhc2luc2tpDQpoZW5yeXBAYnJvYWRjb20uY29tDQoNCi0t
+LS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0NCkZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyA8bGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnPg0KVG86
+IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyA8bGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnPg0KQ2M6IExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD47IFJh
+ZmHFgiBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT47IENoYW94aW5nIExpbiA8Q0xpbkAzZXRp
+LmNvbT47IEJyZXR0IFJ1ZGxleQ0KU2VudDogRnJpIE1hciAxMSAwODo0MzoyNCAyMDExClN1Ympl
+Y3Q6IFJlOiBTdGF0dXMgb2YgQnJvYWRjb20gNDM1Mz8NCg0KVGhhbmtzIGEgbG90IENoYW94aW5n
+LCBMYXJyeSBhbmQgUmFmYWwsDQoNCkkgaW5zdGFsbGVkIHRoZSBMaW51eCBmaXJtd2FyZSAoMjAx
+MTAxMjgpLCBhcyB5b3UgY2FuIHNlZSBieSAnbHMNCi9saWIvZmlybXdhcmUvYnJjbS8gLWwnDQoN
+CiAgdG90YWwgMzY4DQogIC1ydy1yLS1yLS0gMSByb290IHJvb3QgMjY5NTk1IE1hciAxMSAxNjo1
+NyBiY200MzI5LWZ1bGxtYWMtNC0yMTgtMjQ4LTUuYmluDQogIC1ydy1yLS1yLS0gMSByb290IHJv
+b3QgICAxNjA0IE1hciAxMSAxNjo1NyBiY200MzI5LWZ1bGxtYWMtNC0yMTgtMjQ4LTUudHh0DQog
+IC1ydy1yLS1yLS0gMSByb290IHJvb3QgIDk3Mzc2IE1hciAxMSAxNjo1NyBiY200M3h4LTAtNjEw
+LTgwOS0wLmZ3DQogIC1ydy1yLS1yLS0gMSByb290IHJvb3QgICAgMTgwIE1hciAxMSAxNjo1NyBi
+Y200M3h4X2hkci0wLTYxMC04MDktMC5mdw0KDQpIb3dldmVyLCBhZnRlciByZWJvb3RpbmcgYW5k
+IGV2ZW4gYWZ0ZXIgcmVjb21waWxpbmcgYW5kIHJlYm9vdGluZyB0aGUNCmtlcm5lbCwgdGhlIHdp
+cmVsZXNzIGFkYXB0ZXIgZG9lc24ndCB5ZXQgc2hvdyB1cC4NCg0KSGVuY2UsIEkgZGVjaWRlIHRv
+IGdpdmUgbW9yZSBkZXRhaWxzIG9uIHRoZSBwcm9ibGVtLCB0byBzZWUgaWYNCnNvbWV0aGluZyBp
+cyBtaXNzaW5nOg0KDQooMSkgVGhlIERlbGwgTGF0aXR1ZGUgRTU0MTAgaXMgcnVubmluZyBHZW50
+b28gQU1ENjQgd2l0aCBhbGwgcGFja2FnZXMNCnVwIHRvIGRhdGUuDQoNCigyKSBUaGUgbGF0ZXN0
+IDIuNi4zOC1yYzgga2VybmVsIGlzIHVzZWQuDQoNCigzKSBUaGUga2VybmVsIGNvbmZpZyBjYW4g
+YmUgc2VlbiBhdCBodHRwOi8vcGFzdGViaW4uY29tL0V4QXpMSHI4Lg0KDQooNCkgVGhlIGRtZXNn
+IGlzIHVwbG9hZGVkIHRvIGh0dHA6Ly9wYXN0ZWJpbi5jb20vd1YzV3A1NHIuDQoNCig1KSBUaGUg
+b3V0cHV0IGZyb20gbHNwY2kgaXMgYXQgaHR0cDovL3Bhc3RlYmluLmNvbS9HaXFzN2trQS4NCg0K
+QW55IHRob3VnaHRzLCBwbGVhc2U/DQoNClhpYW53ZW4NCg0KDQoyMDExLzMvMTEgUmFmYcWCIE1p
+xYJlY2tpIDx6YWplYzVAZ21haWwuY29tPjoNCj4gMjAxMS8zLzExIExhcnJ5IEZpbmdlciA8TGFy
+cnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD46DQo+PiBPbiAwMy8xMS8yMDExIDA5OjA1IEFNLCBDaGVu
+LCBYaWFud2VuIHdyb3RlOg0KPj4+DQo+Pj4gVGhhbmtzIGEgbG90IGd1eXMhDQo+Pj4NCj4+PiBJ
+IHJldmlzaXRlZCBodHRwOi8vbGludXh3aXJlbGVzcy5vcmcvZW4vdXNlcnMvRHJpdmVycy9icmNt
+ODAyMTEsIGJ1dA0KPj4+IGRpZCBub3QgZmluZCB0aGUgZmlybXdhcmUuIEFtIEkgbWlzc2luZyBz
+b21ldGhpbmc/DQo+Pg0KPj4gVGhlIGZpcm13YXJlIGlzIGluIHRoZSBsaW51eC1maXJtd2FyZSB0
+cmVlLiBZb3UgcHJvYmFibHkgbmVlZCB0byBpbnN0YWxsIHRoZQ0KPj4gbGF0ZXN0IHBhY2thZ2Ug
+Zm9yIHlvdXIgZGlzdHJvIGNhbGxlZCAibGludXggZmlybXdhcmUiIG9yICJrZXJuZWwgZmlybXdh
+cmUiLg0KPj4gT3RoZXJ3aXNlDQo+Pg0KPj4gZ2l0IGNsb25lDQo+PiBnaXQ6Ly9naXQua2VybmVs
+Lm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvZHdtdzIvbGludXgtZmlybXdhcmUuZ2l0DQo+
+Pg0KPj4gVGhlIGZpbGVzIHlvdSBuZWVkIHdpbGwgYmUgaW4gbGludXgtZmlybXdhcmUvYnJjbS4g
+Q29weSB0aGVtIHRvDQo+PiAvbGliL2Zpcm13YXJlL2JyY20uDQo+DQo+IE9yIGp1c3QgdXNlIHdl
+YiBndWkgOikNCj4NCj4gaHR0cDovL2dpdC5rZXJuZWwub3JnLz9wPWxpbnV4L2tlcm5lbC9naXQv
+ZHdtdzIvbGludXgtZmlybXdhcmUuZ2l0O2E9dHJlZTtmPWJyY207aD04ODNlNTczMmRhYTA0MGMz
+YzdkMzliMTc5YzRiNGI3NTBkYjM1NGNkO2hiPUhFQUQNCj4NCj4gLS0NCj4gUmFmYcWCDQo+DQot
+LQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2Ny
+aWJlIGxpbnV4LXdpcmVsZXNzIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9t
+b0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtl
+cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
 
-Thanks for all the good input.  In the future I'll adjust my threshold
-for patch breakup accordingly. :-)
-
---
-Paul
