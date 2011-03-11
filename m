@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37156 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571Ab1CRSEJ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44460 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753936Ab1CKU33 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 14:04:09 -0400
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RTF] iwmc3200wifi: fix device registration ordering for cfg80211
+	Fri, 11 Mar 2011 15:29:29 -0500
+Message-ID: <4D7A85FC.4090708@candelatech.com>
+Date: Fri, 11 Mar 2011 12:28:44 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Fri, 18 Mar 2011 20:03:59 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>, <gregkh@suse.de>,
-	<linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	<devel@linuxdriverproject.org>, <naveen.singh@atheros.com>,
-	<stable@kernel.org>
-In-Reply-To: <AANLkTimHyHuTnHfTddsbtiBL1CdxjJDtoJ7gnuVhxbNQ@mail.gmail.com>
-References: <1300417820-19029-1-git-send-email-lrodriguez@atheros.com>
- <AANLkTi=58JJNoYG7232ykiOnAK2TX18ROxrfYQir3Wwe@mail.gmail.com>
- <20110318135058.GE5103@tuxdriver.com>
- <AANLkTi=jnL3EO3CDw8KEePnA7+xQZ9JBBDHcPCGsDKD9@mail.gmail.com>
- <AANLkTimHyHuTnHfTddsbtiBL1CdxjJDtoJ7gnuVhxbNQ@mail.gmail.com>
-Message-ID: <a86de09887dbbf9a5e6d1d1018521a5d@secure.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211: fix channel type recalculation with HT and
+ non-HT interfaces
+References: <1299873939-1171-1-git-send-email-nbd@openwrt.org>	 <4D7A8350.9000406@candelatech.com> <1299875041.4320.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1299875041.4320.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- On Fri, 18 Mar 2011 10:41:53 -0700, Luis R. Rodriguez wrote:
->> On Fri, Mar 18, 2011 at 6:50 AM, John W. Linville
->>> Does anyone even have this hardware?
+On 03/11/2011 12:24 PM, Johannes Berg wrote:
+> On Fri, 2011-03-11 at 12:17 -0800, Ben Greear wrote:
+>> On 03/11/2011 12:05 PM, Felix Fietkau wrote:
+>>> When running an AP interface along with the cooked monitor interface created
+>>> by hostapd, adding an interface and deleting it again triggers a channel type
+>>> recalculation during which the (non-HT) monitor interface takes precedence
+>>> over the HT AP interface, thus causing the channel type to be set to non-HT.
+>>> Fix this by not overriding HT interfaces with a non-HT channel type.
+>
+> The fix seems right.
+>
+>> After staring at that code a bit more, should that list-for-each-entry
+>> loop be entirely different such that it better calculates a proper
+>> super-channel for mixed interface types?
+>>
+>> If seems like a bad case of last-one-wins as currently written.
+>>
+>> The code probably (mostly?) works right because we limit the
+>> bss_conf.channel_type based on existing super-chan when
+>> adding new interfaces, but it still seems like brittle code to me.
+>
+> But I'm not sure what you mean?
+>
+> With the fix, we go through and use the widest possible channel of all
+> interfaces. The only conflict can happen with HT40- and HT40+, but we
+> should never get into that situation since we can't have one interface
+> with HT40- and another with HT40+ at the same time to start with. Am I
+> missing something?
 
- I don't think it even exists any more.
+Maybe I'm missing something, but from what I can tell:
 
-> So similarly here we can likely hit a case where we hit the double
-> wiphy_unregister() twice and I think we'd oops. My preference is to
-> make wiphy_unregister() re-entrant and let us detect when the device
-> already was unregistered. Johannes?
+If we have two interfaces:
 
- I don't like that, it encourages sloppy driver writing. Seriously,
- why is it so hard to properly write the code?
+first interface is HT40, second is HT20:
+   -> superchan == HT20
 
- You can fail during init, or you can properly deregister, and that's
- about it, no?
+first interface is HT20, second is HT40:
+   -> superchan == HT40
 
- johannes
+It seems wrong that the ordering would influence superchan before we go into
+the "switch (superchan)" logic.
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
