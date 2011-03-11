@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55605
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757906Ab1COU4s (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:42636 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866Ab1CKQQr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 16:56:48 -0400
-Date: Tue, 15 Mar 2011 13:57:26 -0700 (PDT)
-Message-Id: <20110315.135726.226774645.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-03-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110315193122.GD2542@tuxdriver.com>
-References: <20110315193122.GD2542@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 11 Mar 2011 11:16:47 -0500
+Received: by qyk7 with SMTP id 7so6006988qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 08:16:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4D7A3EAD.10306@lwfinger.net>
+References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+	<AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
+	<4D798863.2060303@lwfinger.net>
+	<AANLkTim3c200SL3icCMV7VGcyEaBQ3d6b19vSOerThib@mail.gmail.com>
+	<4D7A3EAD.10306@lwfinger.net>
+Date: Fri, 11 Mar 2011 17:16:44 +0100
+Message-ID: <AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
+Subject: Re: Status of Broadcom 4353?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "Chen, Xianwen" <xianwen.chen@gmail.com>,
+	linux-wireless@vger.kernel.org, Chaoxing Lin <CLin@3eti.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 15 Mar 2011 15:31:22 -0400
+2011/3/11 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 03/11/2011 09:05 AM, Chen, Xianwen wrote:
+>>
+>> Thanks a lot guys!
+>>
+>> I revisited http://linuxwireless.org/en/users/Drivers/brcm80211, but
+>> did not find the firmware. Am I missing something?
+>
+> The firmware is in the linux-firmware tree. You probably need to install the
+> latest package for your distro called "linux firmware" or "kernel firmware".
+> Otherwise
+>
+> git clone
+> git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
+>
+> The files you need will be in linux-firmware/brcm. Copy them to
+> /lib/firmware/brcm.
 
-> One last non-fix pull for 2.6.39 -- hooray!
-> 
-> Not a lot here, since we just had a pull towards the end of last week.
-> There are a handfule of ath9k bits, a couple of wl1251 patches,
-> a couple of mac80211 bits, etc.  Nothing too troublesome. :-)
-> 
-> Please let me know if there are problems!
+Or just use web gui :)
 
-Pulled, thanks a lot John.
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=tree;f=brcm;h=883e5732daa040c3c7d39b179c4b4b750db354cd;hb=HEAD
+
+-- 
+Rafał
