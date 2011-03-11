@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:34281 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160Ab1C1VOt (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:62513 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778Ab1CKKJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 17:14:49 -0400
-Received: by qwk3 with SMTP id 3so2229071qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 14:14:48 -0700 (PDT)
+	Fri, 11 Mar 2011 05:09:28 -0500
+Received: by vxi39 with SMTP id 39so2394418vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 02:09:27 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20110328210221.GA18696@kroah.com>
-References: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com> <20110328210221.GA18696@kroah.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 28 Mar 2011 14:14:26 -0700
-Message-ID: <AANLkTimfsheD9wJuaniA60HUASe11T4pYkKMzQqnGxN_@mail.gmail.com>
-Subject: Re: [PATCH 0/9] ath9k/ath9k_htc: pending stable patches for 2.6.37.y
-To: Greg KH <greg@kroah.com>
+In-Reply-To: <20110311105426.3828bd5d@studio>
+References: <20110311105426.3828bd5d@studio>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 11 Mar 2011 21:09:06 +1100
+Message-ID: <AANLkTik3ZC5HpwMVm=9vaGJ_dupAsYiNFaAhZgq0gNaP@mail.gmail.com>
+Subject: Re: linux-backports-modules-compat-wireless-2.6.36-maverick-generic-pae
+To: Richard <richard.bosek@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 28, 2011 at 2:02 PM, Greg KH <greg@kroah.com> wrote:
-> On Mon, Mar 28, 2011 at 01:57:06PM -0700, Luis R. Rodriguez wrote:
->> Greg,
->>
->> here are a few stable patches were required backport and also
->> a few which are marked as stable but which have not yet been
->> propagated to the older stable trees. I've been carrying these
->> on the compat-wireless-2.6.37 release for a while now so they
->> have gotten some consumption and only now just got a chance to
->> send them over to you.
+On Fri, Mar 11, 2011 at 20:54, Richard <richard.bosek@gmail.com> wrote:
 >
-> I'm sorry, but I released the last 2.6.37 kernel yesterday, that tree is
-> now end-of-life, so there's nothing I can do with these patches :(
+> Dear List,
+>
+> linux-backports-modules-compat-wireless-2.6.36-maverick-generic-pae has no
+> instalation candidate.
+>
+> Could you please update ?
 
-Ah no problem. Die 2.6.37.
+This is not the correct list for asking questions about that package.
 
-  Luis
+You need to ask the maintainers of the package. We're only responsible
+for the upstream code.
+
+See: https://launchpad.net/ubuntu/maverick/+package/linux-backports-modules-compat-wireless-2.6.36-maverick-generic-pae
+
+Whilst we recommend that this is installed under Ubuntu, we are not
+responsible for it's maintenance.
+
+I guess that you need to report a bug against the linux-meta source
+package. They should be able to help you with this.
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
