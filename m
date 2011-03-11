@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10700 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:29956 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753707Ab1CYObj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 10:31:39 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/12] iwlagn: remove 3945 only station code
-Date: Fri, 25 Mar 2011 07:14:14 -0700
-Message-Id: <1301062456-17249-11-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755359Ab1CKC4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 21:56:15 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:55:52 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 07/20] ath6kl: remove-typedef AR6000_USER_SETKEYS_INFO
+Date: Thu, 10 Mar 2011 18:55:34 -0800
+Message-ID: <1299812147-12069-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After driver split, no more 3945 only station support needed.
+remove-typedef -s AR6000_USER_SETKEYS_INFO \
+	"struct ar6000_user_setkeys_info" drivers/staging/ath6kl/
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Naveen Singh <naveen.singh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-sta.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+ .../staging/ath6kl/os/linux/include/athdrv_linux.h |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index bc90a12..b0dcca0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -306,12 +306,6 @@ u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 	 */
- 	iwl_set_ht_add_station(priv, sta_id, sta, ctx);
+diff --git a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
+index 5a6c27e..66817c2 100644
+--- a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
++++ b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
+@@ -625,7 +625,7 @@ typedef enum {
+  * arguments:
+  * UINT32 cmd (AR6000_XIOCTL_USER_SETKEYS)
+  * UINT32 keyOpCtrl
+- * uses AR6000_USER_SETKEYS_INFO
++ * uses struct ar6000_user_setkeys_info
+  */
+ #define AR6000_XIOCTL_USER_SETKEYS                      58
+ #endif /* USER_KEYS */
+@@ -1098,10 +1098,9 @@ typedef struct targetStats_cmd_t {
+ #define AR6000_XIOCTL_USER_SETKEYS_RSC_CTRL    1
+ #define AR6000_USER_SETKEYS_RSC_UNCHANGED     0x00000002
  
--	/* 3945 only */
--	rate = (priv->band == IEEE80211_BAND_5GHZ) ?
--		IWL_RATE_6M_PLCP : IWL_RATE_1M_PLCP;
--	/* Turn on both antennas for the station... */
--	station->sta.rate_n_flags = cpu_to_le16(rate | RATE_MCS_ANT_AB_MSK);
+-typedef struct {
++struct ar6000_user_setkeys_info {
+     u32 keyOpCtrl;  /* Bit Map of Key Mgmt Ctrl Flags */
+-} AR6000_USER_SETKEYS_INFO;
 -
- 	return sta_id;
++}; /* XXX: unused !? */
  
- }
+ /* used by AR6000_XIOCTL_GPIO_OUTPUT_SET */
+ struct ar6000_gpio_output_set_cmd_s {
 -- 
-1.7.0.4
+1.7.4.15.g7811d
 
