@@ -1,258 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:36390 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755106Ab1CHNhg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 08:37:36 -0500
-Received: by mail-ew0-f50.google.com with SMTP id 26so2271038ewy.23
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 05:37:35 -0800 (PST)
-From: Luciano Coelho <coelho@ti.com>
-To: shahar_levi@ti.com
-Cc: linux-wireless@vger.kernel.org, coelho@ti.com
-Subject: [PATCH] wl12xx: fixes for 1281/1283 support - New boot sequence
-Date: Tue,  8 Mar 2011 15:37:29 +0200
-Message-Id: <1299591449-14741-1-git-send-email-coelho@ti.com>
-In-Reply-To: <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-7-git-send-email-shahar_levi@ti.com>
+Received: from nbd.name ([46.4.11.11]:40389 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754051Ab1CKUiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 15:38:23 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, mark@moxienet.com
+Subject: [PATCH v4 3/4] ath9k: fix the .flush driver op implementation
+Date: Fri, 11 Mar 2011 21:38:19 +0100
+Message-Id: <1299875900-3180-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299875900-3180-2-git-send-email-nbd@openwrt.org>
+References: <1299875900-3180-1-git-send-email-nbd@openwrt.org>
+ <1299875900-3180-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes up some issues with patch 06/15 in the wl128x support
-series:
+This patch simplifies the flush op and reuses ath_drain_all_txq for
+flushing out pending frames if necessary. It also uses a global timeout
+of 200ms instead of the per-queue 60ms timeout.
 
-* Remove unnecessary else block in wl128x_switch_fref;
-* Remove unnecessary change in main.c;
-* Remove some unnecessary debug prints and comments;
-* Fix potential use of uninitialized value (pll_config)
-* Add more all the defines for HCI_IO_DS_* instead of having them in a comment
-
-This has been compile-tested only.  I will test this changes after I
-go through the whole series and, if everything is still ok, I'll merge
-this patch into 06/15.
-
-Cc: Shahar Levi <shahar_levi@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/boot.c |  106 +++++++++++++++---------------------
- drivers/net/wireless/wl12xx/boot.h |    5 ++
- 2 files changed, 48 insertions(+), 63 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |   56 ++++++++++++--------------------
+ drivers/net/wireless/ath/ath9k/xmit.c  |   28 +++++++--------
+ 3 files changed, 34 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index e0d60ab..ffdcb7e 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -533,46 +533,42 @@ static int wl128x_switch_fref(struct wl1271 *wl, bool *is_ref_clk)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c718ab5..099bd41 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -189,7 +189,6 @@ struct ath_txq {
+ 	u32 axq_ampdu_depth;
+ 	bool stopped;
+ 	bool axq_tx_inprogress;
+-	bool txq_flush_inprogress;
+ 	struct list_head axq_acq;
+ 	struct list_head txq_fifo[ATH_TXFIFO_DEPTH];
+ 	struct list_head txq_fifo_pending;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2e228aa..115f162 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2128,56 +2128,42 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
  
- 	/* if working on XTAL-only mode go directly to TCXO TO FREF SWITCH */
- 	if ((wl->ref_clock == CONF_REF_CLK_38_4_M_XTAL) ||
--	    (wl->ref_clock == CONF_REF_CLK_26_M_XTAL)) {
--		wl1271_debug(DEBUG_BOOT, "XTAL-only mode go directly to"
--					 " TCXO TO FREF SWITCH");
--
-+	    (wl->ref_clock == CONF_REF_CLK_26_M_XTAL))
- 		return true;
--	} else {
--		/* Read clock source FREF or TCXO */
--		sys_clk_cfg_val = wl1271_top_reg_read(wl, SYS_CLK_CFG_REG);
- 
--		if (sys_clk_cfg_val & PRCM_CM_EN_MUX_WLAN_FREF) {
--			/* if bit 3 is set - working with FREF clock */
--			wl1271_debug(DEBUG_BOOT, "working with FREF clock, skip"
--						 " to FREF");
-+	/* Read clock source FREF or TCXO */
-+	sys_clk_cfg_val = wl1271_top_reg_read(wl, SYS_CLK_CFG_REG);
-+
-+	if (sys_clk_cfg_val & PRCM_CM_EN_MUX_WLAN_FREF) {
-+		/* if bit 3 is set - working with FREF clock */
-+		wl1271_debug(DEBUG_BOOT, "working with FREF clock, skip"
-+			     " to FREF");
- 
- 		*is_ref_clk = true;
--		} else {
--			/* if bit 3 is clear - working with TCXO clock */
--			wl1271_debug(DEBUG_BOOT, "working with TCXO clock");
-+	} else {
-+		/* if bit 3 is clear - working with TCXO clock */
-+		wl1271_debug(DEBUG_BOOT, "working with TCXO clock");
- 
--			/* TCXO to FREF switch, check TXCO clock config */
--			if ((wl->tcxo_clock != CLOCK_TCXO_16_368_M) &&
--			    (wl->tcxo_clock != CLOCK_TCXO_32_736_M)) {
--				/*
-+		/* TCXO to FREF switch, check TXCO clock config */
-+		if ((wl->tcxo_clock != CLOCK_TCXO_16_368_M) &&
-+		    (wl->tcxo_clock != CLOCK_TCXO_32_736_M)) {
-+			/*
- 			 * not 16.368Mhz and not 32.736Mhz - skip to
--				 * configure ELP stage
--				 */
--				wl1271_debug(DEBUG_BOOT, "NEW PLL ALGO:"
--					" TcxoRefClk=%d - not 16.368Mhz and not"
--					" 32.736Mhz - skip to configure ELP"
--					" stage", wl->tcxo_clock);
--
--				*is_ref_clk = false;
--			} else {
--				wl1271_debug(DEBUG_BOOT, "NEW PLL ALGO:"
--					"TcxoRefClk=%d - 16.368Mhz or 32.736Mhz"
--					" - TCXO to FREF switch",
--					wl->tcxo_clock);
--
--				return true;
--			}
-+			 * configure ELP stage
-+			 */
-+			wl1271_debug(DEBUG_BOOT, "NEW PLL ALGO:"
-+				     " TcxoRefClk=%d - not 16.368Mhz and not"
-+				     " 32.736Mhz - skip to configure ELP"
-+				     " stage", wl->tcxo_clock);
-+
-+			*is_ref_clk = false;
-+		} else {
-+			wl1271_debug(DEBUG_BOOT, "NEW PLL ALGO:"
-+				     "TcxoRefClk=%d - 16.368Mhz or 32.736Mhz"
-+				     " - TCXO to FREF switch",
-+				     wl->tcxo_clock);
-+
-+			return true;
- 		}
- 	}
- 
-@@ -581,8 +577,9 @@ static int wl128x_switch_fref(struct wl1271 *wl, bool *is_ref_clk)
- 
- static int wl128x_boot_clk(struct wl1271 *wl, bool *is_ref_clk)
+ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
  {
--
- 	if (wl128x_switch_fref(wl, is_ref_clk)) {
-+		wl1271_debug(DEBUG_BOOT, "XTAL-only mode go directly to"
-+					 " TCXO TO FREF SWITCH");
- 		/* TCXO to FREF switch - for PG2.0 */
- 		wl1271_top_reg_write(wl, WL_SPARE_REG,
- 				     WL_SPARE_MASK_8526);
-@@ -590,31 +587,22 @@ static int wl128x_boot_clk(struct wl1271 *wl, bool *is_ref_clk)
- 		wl1271_top_reg_write(wl, SYS_CLK_CFG_REG,
- 			WL_CLK_REQ_TYPE_PG2 | MCS_PLL_CLK_SEL_FREF);
+-#define ATH_FLUSH_TIMEOUT	60 /* ms */
+ 	struct ath_softc *sc = hw->priv;
+-	struct ath_txq *txq = NULL;
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int i, j, npend = 0;
++	int timeout = 200; /* ms */
++	int i, j;
  
--		wl1271_debug(DEBUG_BOOT, "Wait settling time, "
--					 "Read FREF_CLK_DETECT_REG");
--
- 		*is_ref_clk = true;
--		/* wait 15ms */
- 		mdelay(15);
- 	}
++	ath9k_ps_wakeup(sc);
+ 	mutex_lock(&sc->mutex);
  
--	wl1271_debug(DEBUG_BOOT, "Setting bit 2 in spare register to avoid "
--				 "illegal access");
-+	/* Set bit 2 in spare register to avoid illegal access */
- 	wl1271_top_reg_write(wl, WL_SPARE_REG, WL_SPARE_VAL);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
  
- 	/* working with TCXO clock */
- 	if ((*is_ref_clk == false) &&
- 	    ((wl->tcxo_clock == CLOCK_TCXO_16_8_M) ||
- 	     (wl->tcxo_clock == CLOCK_TCXO_33_6_M))) {
-+		wl1271_debug(DEBUG_BOOT, "16_8_M or 33_6_M TCXO detected");
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (!ATH_TXQ_SETUP(sc, i))
+-			continue;
+-		txq = &sc->tx.txq[i];
++	if (drop)
++		timeout = 1;
  
- 		/* Manually Configure MCS PLL settings PG2.0 Only */
--		wl1271_debug(DEBUG_BOOT, "16_8_M or 33_6_M TCXO detected so "
--			"configure the MCS PLL settings manually!!!!");
--
- 		wl1271_top_reg_write(wl, MCS_PLL_M_REG, MCS_PLL_M_REG_VAL);
--
- 		wl1271_top_reg_write(wl, MCS_PLL_N_REG, MCS_PLL_N_REG_VAL);
--
- 		wl1271_top_reg_write(wl, MCS_PLL_CONFIG_REG,
- 				     MCS_PLL_CONFIG_REG_VAL);
- 	} else {
-@@ -631,7 +619,6 @@ static int wl128x_boot_clk(struct wl1271 *wl, bool *is_ref_clk)
+-		if (!drop) {
+-			for (j = 0; j < ATH_FLUSH_TIMEOUT; j++) {
+-				if (!ath9k_has_pending_frames(sc, txq))
+-					break;
+-				usleep_range(1000, 2000);
+-			}
+-		}
++	for (j = 0; j < timeout; j++) {
++		int npend = 0;
++
++		if (j)
++			usleep_range(1000, 2000);
  
- 		mcs_pll_config_val = wl1271_top_reg_read(wl,
- 						 MCS_PLL_CONFIG_REG);
+-		if (drop || ath9k_has_pending_frames(sc, txq)) {
+-			ath_dbg(common, ATH_DBG_QUEUE, "Drop frames from hw queue:%d\n",
+-				txq->axq_qnum);
+-			spin_lock_bh(&txq->axq_lock);
+-			txq->txq_flush_inprogress = true;
+-			spin_unlock_bh(&txq->axq_lock);
 -
- 		/*
- 		 * Set the MCS PLL input frequency value according to the
- 		 * reference clock value detected/read
-@@ -644,6 +631,8 @@ static int wl128x_boot_clk(struct wl1271 *wl, bool *is_ref_clk)
- 				 ||
- 				 (wl->tcxo_clock == CLOCK_TCXO_52_M))
- 				pll_config = 2;
-+			else
-+				return -EINVAL;
- 		} else {
- 			if ((wl->ref_clock == CONF_REF_CLK_19_2_E) ||
- 			    (wl->ref_clock == CONF_REF_CLK_38_4_E))
-@@ -651,12 +640,12 @@ static int wl128x_boot_clk(struct wl1271 *wl, bool *is_ref_clk)
- 			else if ((wl->ref_clock == CONF_REF_CLK_26_E) ||
- 				 (wl->ref_clock == CONF_REF_CLK_52_E))
- 				pll_config = 2;
-+			else
-+				return -EINVAL;
+-			ath9k_ps_wakeup(sc);
+-			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+-			npend = ath9k_hw_numtxpending(ah, txq->axq_qnum);
+-			ath9k_ps_restore(sc);
+-			if (npend)
+-				break;
+-
+-			ath_draintxq(sc, txq, false);
+-			txq->txq_flush_inprogress = false;
++		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
++			if (!ATH_TXQ_SETUP(sc, i))
++				continue;
++
++			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
  		}
- 
--		/* Setting Bits[6:4]  */
- 		mcs_pll_config_val |= (pll_config << (MCS_SEL_IN_FREQ_SHIFT)) &
- 				      (MCS_SEL_IN_FREQ_MASK);
--
- 		wl1271_top_reg_write(wl, MCS_PLL_CONFIG_REG,
- 				     mcs_pll_config_val);
++
++		if (!npend)
++		    goto out;
  	}
-@@ -683,7 +672,7 @@ static int wl127x_boot_clk(struct wl1271 *wl)
- 	else
- 		return -EINVAL;
  
--	if (wl->ref_clock != 0) {
-+	if (wl->ref_clock != CONF_REF_CLK_19_2_E) {
- 		u16 val;
- 		/* Set clock type (open drain) */
- 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
-@@ -753,8 +742,9 @@ int wl1271_load_firmware(struct wl1271 *wl)
- 			clk |= ((wl->tcxo_clock & 0x3) << 1) << 4;
- 		else
- 			clk |= ((wl->ref_clock & 0x3) << 1) << 4;
--	} else
--		clk |= ((wl->ref_clock & 0x3) << 1) << 4;
-+	} else {
-+		clk |= (wl->ref_clock << 1) << 4;
-+	}
- 
- 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
- 
-@@ -788,18 +778,8 @@ int wl1271_load_firmware(struct wl1271 *wl)
- 	/* WL1271: The reference driver skips steps 7 to 10 (jumps directly
- 	 * to upload_fw) */
- 
--	if (wl->chip.id == CHIP_ID_1283_PG20) {
--		/*
--		 * Configure SDIO/wSPI DS according to the following table:
--		 * 00   8mA.
--		 * 01   4mA (default).
--		 * 10   6mA.
--		 * 11   2mA.
--		 * Write bits [1:0] of Register 0xd14
--		 * data is in pWlanParams->PlatformConfiguration bits [2:1]
--		 */
-+	if (wl->chip.id == CHIP_ID_1283_PG20)
- 		wl1271_top_reg_write(wl, SDIO_IO_DS, HCI_IO_DS_6MA);
+-	if (npend) {
++	if (!ath_drain_all_txq(sc, false))
+ 		ath_reset(sc, false);
+-		txq->txq_flush_inprogress = false;
 -	}
  
- 	ret = wl1271_boot_upload_firmware(wl);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/wl12xx/boot.h b/drivers/net/wireless/wl12xx/boot.h
-index daaf0e7..429c926 100644
---- a/drivers/net/wireless/wl12xx/boot.h
-+++ b/drivers/net/wireless/wl12xx/boot.h
-@@ -125,7 +125,12 @@ struct wl1271_static_data {
- #define MCS_PLL_N_REG_VAL            0x07
++out:
+ 	ieee80211_queue_delayed_work(hw, &sc->tx_complete_work, 0);
+ 	mutex_unlock(&sc->mutex);
++	ath9k_ps_restore(sc);
+ }
  
- #define SDIO_IO_DS                   0xd14
+ struct ieee80211_ops ath9k_ops = {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index bb1d29e..f977f80 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2012,8 +2012,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 		spin_lock_bh(&txq->axq_lock);
+ 		if (list_empty(&txq->axq_q)) {
+ 			txq->axq_link = NULL;
+-			if (sc->sc_flags & SC_OP_TXAGGR &&
+-			    !txq->txq_flush_inprogress)
++			if (sc->sc_flags & SC_OP_TXAGGR)
+ 				ath_txq_schedule(sc, txq);
+ 			spin_unlock_bh(&txq->axq_lock);
+ 			break;
+@@ -2094,7 +2093,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 		spin_lock_bh(&txq->axq_lock);
+ 
+-		if (sc->sc_flags & SC_OP_TXAGGR && !txq->txq_flush_inprogress)
++		if (sc->sc_flags & SC_OP_TXAGGR)
+ 			ath_txq_schedule(sc, txq);
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
+@@ -2265,18 +2264,17 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 
+ 		spin_lock_bh(&txq->axq_lock);
+ 
+-		if (!txq->txq_flush_inprogress) {
+-			if (!list_empty(&txq->txq_fifo_pending)) {
+-				INIT_LIST_HEAD(&bf_head);
+-				bf = list_first_entry(&txq->txq_fifo_pending,
+-						      struct ath_buf, list);
+-				list_cut_position(&bf_head,
+-						  &txq->txq_fifo_pending,
+-						  &bf->bf_lastbf->list);
+-				ath_tx_txqaddbuf(sc, txq, &bf_head);
+-			} else if (sc->sc_flags & SC_OP_TXAGGR)
+-				ath_txq_schedule(sc, txq);
+-		}
++		if (!list_empty(&txq->txq_fifo_pending)) {
++			INIT_LIST_HEAD(&bf_head);
++			bf = list_first_entry(&txq->txq_fifo_pending,
++					      struct ath_buf, list);
++			list_cut_position(&bf_head,
++					  &txq->txq_fifo_pending,
++					  &bf->bf_lastbf->list);
++			ath_tx_txqaddbuf(sc, txq, &bf_head);
++		} else if (sc->sc_flags & SC_OP_TXAGGR)
++			ath_txq_schedule(sc, txq);
 +
-+/* SDIO/wSPI DS configuration values */
-+#define HCI_IO_DS_8MA                0
-+#define HCI_IO_DS_4MA                1 /* default */
- #define HCI_IO_DS_6MA                2
-+#define HCI_IO_DS_2MA                4
- 
- #define HW_CONFIG_19_2_M             1
- #define HW_CONFIG_26_M               2
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
+ }
 -- 
-1.7.1
+1.7.3.2
 
