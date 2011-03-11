@@ -1,101 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43605 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756492Ab1CHUAI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 15:00:08 -0500
-Message-ID: <4D768A9A.7090201@candelatech.com>
-Date: Tue, 08 Mar 2011 11:59:22 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:33170 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754027Ab1CKU3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 15:29:35 -0500
+Message-ID: <4D7A8628.2030902@openwrt.org>
+Date: Fri, 11 Mar 2011 21:29:28 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Brian Prodoehl <bprodoehl@gmail.com>
-CC: "Justin P. Mattock" <justinmattock@gmail.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ath9k-devel@atheros.com
-Subject: Re: WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536 ath_stoprecv+0xc8/0xda
- [ath9k]()
-References: <AANLkTik9To0Rkq2FRqQFB2wNu0kyJ7CzyBek2jBp36Cb@mail.gmail.com>	<20110303135942.GA8969@tuxdriver.com>	<AANLkTi=mtaf==aLfOFK06EgmbdZ4aVk3GEthw7PwuSTS@mail.gmail.com>	<20110307151201.GC2664@tuxdriver.com>	<AANLkTi=7RSdKhzGazQFUnBZqzMQskOSHq=7E08uan2vu@mail.gmail.com>	<4D767A4B.1060203@gmail.com>	<4D76833E.9010603@candelatech.com> <AANLkTikPQt+njjFPB6sJ-mEcsx6f-R6TAOhEd8egkqhH@mail.gmail.com>
-In-Reply-To: <AANLkTikPQt+njjFPB6sJ-mEcsx6f-R6TAOhEd8egkqhH@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, mark@moxienet.com
+Subject: Re: [PATCH v3 4/4] ath9k: improve reliability of beacon transmission
+ and stuck beacon handling
+References: <1299873695-1062-1-git-send-email-nbd@openwrt.org> <1299873695-1062-2-git-send-email-nbd@openwrt.org> <1299873695-1062-3-git-send-email-nbd@openwrt.org> <1299873695-1062-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299873695-1062-4-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2011 11:45 AM, Brian Prodoehl wrote:
-> On Tue, Mar 8, 2011 at 2:27 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 03/08/2011 10:49 AM, Justin P. Mattock wrote:
->>>
->>> On 03/07/2011 07:22 AM, Mohammed Shafi wrote:
->>>>
->>>> On Mon, Mar 7, 2011 at 8:42 PM, John W.
->>>> Linville<linville@tuxdriver.com>  wrote:
->>>>>
->>>>> On Sun, Mar 06, 2011 at 12:47:05AM -0800, Justin Mattock wrote:
->>>>>
->>>>>> full dmesg here:
->>>>>> http://fpaste.org/5JQp/
->>>>>> let me know if I need to supply any info(also I can try a bisect, but
->>>>>> am in the middle of changing residencies, so it might not be right
->>>>>> away)
->>>>>
->>>>> One of the Atheros guys suggested that you change a DMA timeout value.
->>>>> Did you try that?
->>>>
->>>> John it looks like increasing the timeout also does not seems to help.
->>>> A user reported this issue in ath9k developer list and he told that
->>>> increasing the timeout did not fix this issue.
->>>>
->>>>>
->>>>> John
->>>>> --
->>>>> John W. Linville Someday the world will need a hero, and you
->>>>> linville@tuxdriver.com might be all we have. Be ready.
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>> linux-wireless" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>>>>
->>>>
->>>
->>> at barnes and noble, and I see this has fired off again. will see if I
->>> can reproduce and bisect.
->>
->> This problem goes way back, and the driver has had lots of fixes in the
->> last few months, so I'm not sure if bisecting is going to
->> do you any good.
->>
->> Thanks,
->> Ben
->
-> The warnings have been around since you added the check for the
-> problem, right?  I remember initially it was a WARN_ON, and I'd get a
-> steady flood of backtraces, and then it was switched to a
-> WARN_ON_ONCE.  I see these on every platform I have (x86_64, IXP425
-> and AR71xx) with AR9002 and AR9003.
+On 2011-03-11 9:01 PM, Felix Fietkau wrote:
+> ath9k calls ath9k_hw_stoptxdma every time it sends a beacon, however there
+> is not much point in doing that if the previous beacon and mcast traffic
+> went out properly. On AR9380, calling that function too often can result
+> in an increase of stuck beacons due to differences in the handling of the
+> queue enable/disable functionality.
+> 
+> With this patch, the queue will only be explicitly stopped if the previous
+> data frames were not sent successfully. With the beacon code being the
+> only remaining user of ath9k_hw_stoptxdma, this function can be simplified
+> in order to remove the now pointless attempts at waiting for transmission
+> completion, which would never happen at this point due to the different
+> method of tx scheduling of the beacon queue.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/beacon.c |   13 +-----
+>  drivers/net/wireless/ath/ath9k/mac.c    |   68 +++---------------------------
+>  drivers/net/wireless/ath/ath9k/mac.h    |    2 +-
+>  3 files changed, 10 insertions(+), 73 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> index a4bdfdb..6d2a545f 100644
+> --- a/drivers/net/wireless/ath/ath9k/beacon.c
+> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+> @@ -373,6 +373,7 @@ void ath_beacon_tasklet(unsigned long data)
+>  			ath_dbg(common, ATH_DBG_BSTUCK,
+>  				"missed %u consecutive beacons\n",
+>  				sc->beacon.bmisscnt);
+> +			ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
+>  			ath9k_hw_bstuck_nfcal(ah);
+>  		} else if (sc->beacon.bmisscnt >= BSTUCK_THRESH) {
+>  			ath_dbg(common, ATH_DBG_BSTUCK,
+> @@ -450,16 +451,6 @@ void ath_beacon_tasklet(unsigned long data)
+>  		sc->beacon.updateslot = OK;
+>  	}
+>  	if (bfaddr != 0) {
+> -		/*
+> -		 * Stop any current dma and put the new frame(s) on the queue.
+> -		 * This should never fail since we check above that no frames
+> -		 * are still pending on the queue.
+> -		 */
+> -		if (!ath9k_hw_stoptxdma(ah, sc->beacon.beaconq)) {
+> -			ath_err(common, "beacon queue %u did not stop?\n",
+> -				sc->beacon.beaconq);
+> -		}
+> -
+>  		/* NB: cabq traffic should already be queued and primed */
+>  		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bfaddr);
+>  		ath9k_hw_txstart(ah, sc->beacon.beaconq);
+> @@ -780,7 +771,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status)
+>  		ah->imask &= ~ATH9K_INT_SWBA;
+>  		ath9k_hw_set_interrupts(ah, ah->imask);
+>  		tasklet_kill(&sc->bcon_tasklet);
+> -		ath9k_hw_stoptxdma(ah, sc->beacon.beaconq);
+> +		ath9k_hw_stop_dma_queue(ah, sc->beacon.beaconq);
+>  	}
+>  	ath9k_ps_restore(sc);
+>  }
+> diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+> index b4e9ed9..ff1f860 100644
+> --- a/drivers/net/wireless/ath/ath9k/mac.c
+> +++ b/drivers/net/wireless/ath/ath9k/mac.c
+> @@ -171,84 +171,30 @@ void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
+>  }
+>  EXPORT_SYMBOL(ath9k_hw_abort_tx_dma);
+>  
+> -bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
+> +bool ath9k_hw_stop_dma_queue(struct ath_hw *ah, u32 q)
+>  {
+> -#define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
+> +#define ATH9K_TX_STOP_DMA_TIMEOUT	1000    /* usec */
+>  #define ATH9K_TIME_QUANTUM		100     /* usec */
+> -	struct ath_common *common = ath9k_hw_common(ah);
+> -	struct ath9k_hw_capabilities *pCap = &ah->caps;
+> -	struct ath9k_tx_queue_info *qi;
+> -	u32 tsfLow, j, wait;
+> -	u32 wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
+> -
+> -	if (q >= pCap->total_queues) {
+> -		ath_dbg(common, ATH_DBG_QUEUE,
+> -			"Stopping TX DMA, invalid queue: %u\n", q);
+> -		return false;
+> -	}
+> -
+> -	qi = &ah->txq[q];
+> -	if (qi->tqi_type == ATH9K_TX_QUEUE_INACTIVE) {
+> -		ath_dbg(common, ATH_DBG_QUEUE,
+> -			"Stopping TX DMA, inactive queue: %u\n", q);
+> -		return false;
+> -	}
+> +	int wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
+> +	int wait;
+>  
+>  	REG_WRITE(ah, AR_Q_TXD, 1 << q);
+>  
+>  	for (wait = wait_time; wait != 0; wait--) {
+>  		if (ath9k_hw_numtxpending(ah, q) == 0)
+>  			break;
+> -		udelay(ATH9K_TIME_QUANTUM);
+> -	}
+Forgot to fix the delay here - will send a v4 :)
 
-I don't think I added the original check, but either way, it's
-an old problem and bisecting it is unlikely to help.
-
-I can't believe that the Atheros guys really are unable reproduce
-this, but I can believe that it might be very difficult to
-actually understand and fix.
-
-At least in my testing, I see it quite often, but it doesn't
-seem to cause any serious harm.  We do occasionally see crashes,
-especially on module unload for a heavily utilized system, or
-one that is constantly trying and failing to associate,
-so it could be related to this.
-
-Also, my patches to decrease scan and work_work related channel changes
-made this harder to hit for our test cases.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+- Felix
