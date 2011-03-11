@@ -1,76 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36621 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756512Ab1CIBPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 20:15:43 -0500
-Message-ID: <4D76D4BD.7070509@openwrt.org>
-Date: Wed, 09 Mar 2011 02:15:41 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:38925 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816Ab1CKQnZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 11:43:25 -0500
+Received: by gwaa18 with SMTP id a18so1020729gwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 08:43:24 -0800 (PST)
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, Kyungwan.Nam@atheros.com
-Subject: Re: [PATCH 2.6.38] ath9k: remove support for the FIF_PROMISC_IN_BSS
- filter flag
-References: <1299631692-69094-1-git-send-email-nbd@openwrt.org> <4D76D2C3.2000909@candelatech.com>
-In-Reply-To: <4D76D2C3.2000909@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
+References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+	<AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
+	<4D798863.2060303@lwfinger.net>
+	<AANLkTim3c200SL3icCMV7VGcyEaBQ3d6b19vSOerThib@mail.gmail.com>
+	<4D7A3EAD.10306@lwfinger.net>
+	<AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
+Date: Fri, 11 Mar 2011 17:43:24 +0100
+Message-ID: <AANLkTi=wGhWvzqRxEj2eeXm0X0ZfefN-ifNe_cpm6tA+@mail.gmail.com>
+Subject: Re: Status of Broadcom 4353?
+From: "Chen, Xianwen" <xianwen.chen@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Chaoxing Lin <CLin@3eti.com>,
+	Brett Rudley <brudley@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-03-09 2:07 AM, Ben Greear wrote:
-> On 03/08/2011 04:48 PM, Felix Fietkau wrote:
->> The hardware rx filter flag triggered by FIF_PROMISC_IN_BSS is overly broad
->> and covers even frames with PHY errors. When this flag is enabled, this message
->> shows up frequently during scanning or hardware resets:
->>
->> ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
->>
->> Since promiscuous mode is usually not particularly useful, yet enabled by
->> default by bridging (either used normally in 4-addr mode, or with hacks
->> for various virtualization software), we should sacrifice it for better
->> reliability during normal operation.
->>
->> This patch leaves it enabled if there are active monitor mode interfaces, since
->> it's very useful for debugging.
->>
->> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->> Cc: stable@kernel.org
->> ---
->>   drivers/net/wireless/ath/ath9k/recv.c |    4 +---
->>   1 files changed, 1 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index cb559e3..a9c3f46 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -413,9 +413,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
->>   	 * mode interface or when in monitor mode. AP mode does not need this
->>   	 * since it receives all in-BSS frames anyway.
->>   	 */
->> -	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP)&&
->> -	     (sc->rx.rxfilter&  FIF_PROMISC_IN_BSS)) ||
->> -	    (sc->sc_ah->is_monitoring))
->> +	if (sc->sc_ah->is_monitoring)
->>   		rfilt |= ATH9K_RX_FILTER_PROM;
->>
->>   	if (sc->rx.rxfilter&  FIF_CONTROL)
-> 
-> Should we enable this flag if we have multiple STA
-> interfaces?  I had to add something to ath5k recently
-> to put it into promisc to properly handle multiple STAs
-> associated with different APs, for instance.
-No, multiple interfaces is handled by the BSSID mask.
+Thanks a lot Chaoxing, Larry and Rafal,
 
-> Do you have any idea *why* enabling this flag causes the DMA error
-> messages?
-I don't know why exactly it happens, but it probably cannot be explained
-without going to the details of the inner workings of the MAC/baseband
-interaction. But as I mentioned in the description, this flag is overly
-broad and doesn't just bypass the address match, but lets all kinds of
-other crap through as well - in many situations where even 'normal'
-promiscuous behavior would be completely useless.
-I think because of that, disabling it for non-monitor operation is the
-right thing to do.
+I installed the Linux firmware (20110128), as you can see by 'ls
+/lib/firmware/brcm/ -l'
 
-- Felix
+  total 368
+  -rw-r--r-- 1 root root 269595 Mar 11 16:57 bcm4329-fullmac-4-218-248-5.bin
+  -rw-r--r-- 1 root root   1604 Mar 11 16:57 bcm4329-fullmac-4-218-248-5.txt
+  -rw-r--r-- 1 root root  97376 Mar 11 16:57 bcm43xx-0-610-809-0.fw
+  -rw-r--r-- 1 root root    180 Mar 11 16:57 bcm43xx_hdr-0-610-809-0.fw
+
+However, after rebooting and even after recompiling and rebooting the
+kernel, the wireless adapter doesn't yet show up.
+
+Hence, I decide to give more details on the problem, to see if
+something is missing:
+
+(1) The Dell Latitude E5410 is running Gentoo AMD64 with all packages
+up to date.
+
+(2) The latest 2.6.38-rc8 kernel is used.
+
+(3) The kernel config can be seen at http://pastebin.com/ExAzLHr8.
+
+(4) The dmesg is uploaded to http://pastebin.com/wV3Wp54r.
+
+(5) The output from lspci is at http://pastebin.com/Giqs7kkA.
+
+Any thoughts, please?
+
+Xianwen
+
+
+2011/3/11 Rafał Miłecki <zajec5@gmail.com>:
+> 2011/3/11 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 03/11/2011 09:05 AM, Chen, Xianwen wrote:
+>>>
+>>> Thanks a lot guys!
+>>>
+>>> I revisited http://linuxwireless.org/en/users/Drivers/brcm80211, but
+>>> did not find the firmware. Am I missing something?
+>>
+>> The firmware is in the linux-firmware tree. You probably need to install the
+>> latest package for your distro called "linux firmware" or "kernel firmware".
+>> Otherwise
+>>
+>> git clone
+>> git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
+>>
+>> The files you need will be in linux-firmware/brcm. Copy them to
+>> /lib/firmware/brcm.
+>
+> Or just use web gui :)
+>
+> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=tree;f=brcm;h=883e5732daa040c3c7d39b179c4b4b750db354cd;hb=HEAD
+>
+> --
+> Rafał
+>
