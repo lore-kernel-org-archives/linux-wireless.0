@@ -1,45 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:57628 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759729Ab1CDTHC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 14:07:02 -0500
-Received: by vxi39 with SMTP id 39so2286085vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 11:07:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1299238635.4348.6.camel@jlt3.sipsolutions.net>
-References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
- <1299208307-9428-7-git-send-email-thomas@cozybit.com> <1299238635.4348.6.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 4 Mar 2011 11:06:41 -0800
-Message-ID: <AANLkTim-cdTV6dsZg9MmMFMejkN8SpNYr=RBY-s8kiF=@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mac80211: Parse RSN information element to determine
- if a peer needs authentication
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:40390 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754234Ab1CKUiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 15:38:23 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	vasanth@atheros.com, mark@moxienet.com
+Subject: [PATCH v4 2/4] ath9k: fix stopping tx dma on reset
+Date: Fri, 11 Mar 2011 21:38:18 +0100
+Message-Id: <1299875900-3180-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299875900-3180-1-git-send-email-nbd@openwrt.org>
+References: <1299875900-3180-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 4, 2011 at 3:37 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
->> From: Javier Cardona <javier@cozybit.com>
->
-> [...]
->
-> If you manage stations in userspace, then this code is unnecessary.
-> That'd be a big win in my eyes. The only thing the kernel would need to
-> know is not to create station entries, right?
+In some situations, stopping Tx DMA frequently fails, leading to messages
+like this:
 
-If userspace manages only rsn mesh stations then we do still need
-this.  That would be my preference:  only require an authentication
-daemon if you intend to join a secure mesh.  In the same way that you
-can connect to an open AP without a daemon.
-Would you object to this approach?
+ath: Failed to stop TX DMA in 100 msec after killing last frame
+ath: Failed to stop TX DMA!
 
+This patch uses a few MAC features to abort DMA globally instead of iterating
+over all hardware queues and attempting to stop them individually.
+Not only is that faster and works with a shorter timeout, it also makes the
+process much more reliable.
 
+With this change, I can no longer trigger these messages on AR9380,
+and on AR9280 they become much more rare.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/mac.c  |   28 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mac.h  |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c |   14 ++++++--------
+ 3 files changed, 35 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 5efc869..b4e9ed9 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -143,6 +143,34 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
+ }
+ EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
+ 
++void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
++{
++	int i, q;
++
++	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
++
++	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
++	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
++	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
++
++	for (q = 0; q < AR_NUM_QCU; q++) {
++		for (i = 0; i < 1000; i++) {
++			if (i)
++				udelay(5);
++
++			if (!ath9k_hw_numtxpending(ah, q))
++				break;
++		}
++	}
++
++	REG_CLR_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
++	REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
++	REG_CLR_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
++
++	REG_WRITE(ah, AR_Q_TXD, 0);
++}
++EXPORT_SYMBOL(ath9k_hw_abort_tx_dma);
++
+ bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
+ {
+ #define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 04d58ae..d37c6d4 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -677,6 +677,7 @@ void ath9k_hw_cleartxdesc(struct ath_hw *ah, void *ds);
+ u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q);
+ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
+ bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
++void ath9k_hw_abort_tx_dma(struct ath_hw *ah);
+ void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs);
+ bool ath9k_hw_set_txq_props(struct ath_hw *ah, int q,
+ 			    const struct ath9k_tx_queue_info *qinfo);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index e16136d..bb1d29e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1194,16 +1194,14 @@ bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 	if (sc->sc_flags & SC_OP_INVALID)
+ 		return true;
+ 
+-	/* Stop beacon queue */
+-	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++	ath9k_hw_abort_tx_dma(ah);
+ 
+-	/* Stop data queues */
++	/* Check if any queue remains active */
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (ATH_TXQ_SETUP(sc, i)) {
+-			txq = &sc->tx.txq[i];
+-			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
+-			npend += ath9k_hw_numtxpending(ah, txq->axq_qnum);
+-		}
++		if (!ATH_TXQ_SETUP(sc, i))
++			continue;
++
++		npend += ath9k_hw_numtxpending(ah, sc->tx.txq[i].axq_qnum);
+ 	}
+ 
+ 	if (npend)
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.3.2
+
