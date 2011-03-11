@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:53192 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757015Ab1CDRLp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476Ab1CKUeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 12:11:45 -0500
-Received: by mail-wy0-f177.google.com with SMTP id 23so2419108wyf.36
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 09:11:42 -0800 (PST)
-Subject: Re: Powersave broken on p54
-From: Luciano Coelho <coelho@ti.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1299222198.7039.111.camel@cumari>
-References: <1299003142.6461.12.camel@maggie>
-	 <201103021813.52719.chunkeey@googlemail.com>
-	 (sfid-20110302_181438_600050_FFFFFFFF80E6967A)  <1299086257.13604.17.camel@marge>
-	 <1299222198.7039.111.camel@cumari>
+	Fri, 11 Mar 2011 15:34:13 -0500
+Subject: Re: [PATCH] mac80211: fix channel type recalculation with HT and
+ non-HT interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <4D7A85FC.4090708@candelatech.com>
+References: <1299873939-1171-1-git-send-email-nbd@openwrt.org>
+	 <4D7A8350.9000406@candelatech.com>
+	 <1299875041.4320.6.camel@jlt3.sipsolutions.net>
+	 <4D7A85FC.4090708@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Mar 2011 19:11:41 +0200
-Message-ID: <1299258701.1824.4.camel@cumari>
+Date: Fri, 11 Mar 2011 21:34:06 +0100
+Message-ID: <1299875646.4320.8.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-03-04 at 09:03 +0200, Luciano Coelho wrote:
-> On Wed, 2011-03-02 at 18:17 +0100, Michael Buesch wrote:
-> > On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
-> > > sure there was the rssi->dbm update (I hope you've already updated
-> > > your eeprom image.)
-> > 
-> > What change to the eeprom is needed? My eeprom doesn't
-> > contain any rssi info (see recent NULL ptr fix).
-> > 
-> > > No idea, it looks like the ps-poll is broken, because
-> > > "iwconfig wlanX power timeout 10" fixes the long delays
-> > > almost immediately. [let's see if there's more]
-> > 
-> > So maybe it's a generic mac80211 bug? Are there other
-> > devices with PS issues?
+On Fri, 2011-03-11 at 12:28 -0800, Ben Greear wrote:
+
+> > But I'm not sure what you mean?
+> >
+> > With the fix, we go through and use the widest possible channel of all
+> > interfaces. The only conflict can happen with HT40- and HT40+, but we
+> > should never get into that situation since we can't have one interface
+> > with HT40- and another with HT40+ at the same time to start with. Am I
+> > missing something?
 > 
-> We have been having some problems with PSM on the wl12xx driver too.  It
-> seems that it broke in the past couple of weeks as well.  So this is
-> most likely a problem in mac80211.  I'll try to investigate this a bit
-> more too.
+> Maybe I'm missing something, but from what I can tell:
+> 
+> If we have two interfaces:
+> 
+> first interface is HT40, second is HT20:
+>    -> superchan == HT20
+> 
+> first interface is HT20, second is HT40:
+>    -> superchan == HT40
+> 
+> It seems wrong that the ordering would influence superchan before we go into
+> the "switch (superchan)" logic.
 
-I've been investigating this problem a bit more and it seems that the
-symptom, at least, is that when we receive data with the
-more-data-buffered flag set, we immediately send a PS-poll which enables
-PS mode again.  My guess is that it shouldn't send PS-poll but a
-null-frame with PS mode off.
+Ah, you're right -- the real fix isn't this patch, but probably
+something like this:
 
-I still need to refresh my PSM knowledge a bit more before I can
-continue studying this. ;)
+...
+case NL..._NO_HT:
+case NL_...HT20:
+	if (channel_type < super_chan)
+		break;
+	superchan = channel_type;
+	break;
+...
 
-
--- 
-Cheers,
-Luca.
+johannes
 
