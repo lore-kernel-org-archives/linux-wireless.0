@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:37744 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752935Ab1CUQAI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298Ab1CKJDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 12:00:08 -0400
-Received: by eyg5 with SMTP id 5so1350121eyg.38
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 09:00:03 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: fix SG BT load value to reflect its new meaning
-Date: Mon, 21 Mar 2011 17:59:16 +0200
-Message-Id: <1300723156-20978-1-git-send-email-coelho@ti.com>
+	Fri, 11 Mar 2011 04:03:08 -0500
+Subject: Re: [PATCH 0/2] update for 2.6.39
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1299816807-26813-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1299816807-26813-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Mar 2011 10:02:27 +0100
+Message-ID: <1299834147.3755.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Soft Gemini BT load ratio value has changed its meaning with FW
-version 6.1.0.0.310.  It now means the passive scan compensation
-percentage during A2DP EDR.  Instead of 50, we need to use 200.
+On Thu, 2011-03-10 at 20:13 -0800, Wey-Yi Guy wrote:
+> We add off-channel tx support for P2P
+> 
+> Johannes Berg (2):
+>   iwlagn: support off-channel TX
+>   iwlagn: fix offchannel TX bug
 
-Fix the SG configuration accordingly.
+Can't we just squash these into one patch? :)
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 59e0f79..916ebd1 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -54,7 +54,7 @@ static struct conf_drv_settings default_conf = {
- 			[CONF_SG_BT_PER_THRESHOLD]                  = 7500,
- 			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
- 			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
--			[CONF_SG_BT_LOAD_RATIO]                     = 50,
-+			[CONF_SG_BT_LOAD_RATIO]                     = 200,
- 			[CONF_SG_AUTO_PS_MODE]                      = 1,
- 			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
- 			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
--- 
-1.7.1
+johannes
 
