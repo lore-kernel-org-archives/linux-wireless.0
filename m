@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38413 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757269Ab1CPAP7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 20:15:59 -0400
-Date: Tue, 15 Mar 2011 20:13:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, eric.dumazet@vger.kernel.org,
-	jpirko@redhat.com, kaber@trash.net
-Subject: Re: net-next-2.6 status...
-Message-ID: <20110316001319.GB28663@tuxdriver.com>
-References: <20110315.160124.104058374.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110315.160124.104058374.davem@davemloft.net>
+Received: from mga09.intel.com ([134.134.136.24]:45130 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751272Ab1CKE3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 23:29:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/2] update for 2.6.39
+Date: Thu, 10 Mar 2011 20:13:25 -0800
+Message-Id: <1299816807-26813-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 15, 2011 at 04:01:24PM -0700, David Miller wrote:
+We add off-channel tx support for P2P
 
-> John and Patrick, I assume that after today's pulls I am completely
-> up to date with everything, feature wise, that will go into the merge
-> window for wireless and netfilter.
+Johannes Berg (2):
+  iwlagn: support off-channel TX
+  iwlagn: fix offchannel TX bug
 
-Just sent a pull request for wireless-2.6 to cover a one-liner to
-enable some new firmware for iwlagn -- I nearly forgot!
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-Thanks,
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |  135 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   87 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    8 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    6 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   12 ++-
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   41 +++++----
+ 6 files changed, 238 insertions(+), 51 deletions(-)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
