@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44486 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757845Ab1CaOJg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 10:09:36 -0400
-Message-ID: <4D948B1C.7080806@suse.cz>
-Date: Thu, 31 Mar 2011 16:09:32 +0200
-From: Jiri Slaby <jslaby@suse.cz>
+Received: from nbd.name ([46.4.11.11]:42814 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754108Ab1CKVYs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 16:24:48 -0500
+Message-ID: <4D7A931E.4080808@openwrt.org>
+Date: Fri, 11 Mar 2011 22:24:46 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Russell King <rmk@arm.linux.org.uk>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	devel@linuxdriverproject.org, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality
- in separate module
-References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <1301391619-4499-2-git-send-email-arend@broadcom.com> <4D91B856.8040302@suse.cz> <201103301453.48607.arnd@arndb.de> <4D948624.3040605@suse.cz> <20110331135126.GC19540@flint.arm.linux.org.uk>
-In-Reply-To: <20110331135126.GC19540@flint.arm.linux.org.uk>
+To: =?ISO-8859-1?Q?Chris_Dos=E9?= <chris.dose@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Unusual saw-wave like ping times from linux wireless AP to MacBook
+ Pro, iPhone
+References: <AANLkTi=de0vzqA-+CpmK1V88Ypj6TN4C+a4j4=KiyTJX@mail.gmail.com>
+In-Reply-To: <AANLkTi=de0vzqA-+CpmK1V88Ypj6TN4C+a4j4=KiyTJX@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/2011 03:51 PM, Russell King wrote:
-> On Thu, Mar 31, 2011 at 03:48:20PM +0200, Jiri Slaby wrote:
->> How it can? Packed only tells the compiler to have one byte alignment
->> steps. And it should not matter here as all the members are 32-bit long.
+On 2011-03-11 10:17 PM, Chris Dosé wrote:
+> I have a ubuntu 10.04 based wireless router running hostapd 0.7.3, the
+> latest compat-wireless ath9k.  The same experiments were tried using
+> hostapd 0.6.9 and ath9k from 2.6.32 and 2.6.35 as well.  also, hostapd
+> was tried in g mode and n mode, with wpa/wpa2 on and off, and with
+> high throughput on and off. I always get the same (or similar)
+> results.
 > 
-> It also tells the compiler that it may be misaligned, so to avoid
-> alignment faults it will use byte loads/stores.
+> The symptoms are like this: pinging a macbook pro, or an iphone, from
+> the AP results in an almost perfectly regular saw-wave like pattern.
+> The ping time starts at 50ms, steadily rises every subsequent ping
+> until it reaches somewhere over 200ms, then abruptly resets back to
+> 50ms, and rises again.  Graphing it in excel shows it is strangely
+> very precise.  Between all the different version I've tried, I've seen
+> slight variations on this, running the latest versions of everything
+> now it seems like it starts closer to 1ms and rises to 200ms then
+> starts over.
+> 
+> Pinging another wireless device on my network (an HP wireless printer)
+> results in very fast, steady 5ms ping times.  So it's not ALL wireless
+> clients, just some.  In this case it seems apple products, but I have
+> nothing else currently to test with.
+That's perfectly normal. These devices are going in powersave mode and
+only wake up when they're notified to do so via beacons. Until they wake
+up, frames are buffered on the AP.
 
-No, it should not (if offsetof % sizeof == 0). Otherwise it's a bug in
-the compiler.
-
-Am I missing something?
-
-thanks,
--- 
-js
-suse labs
+- Felix
