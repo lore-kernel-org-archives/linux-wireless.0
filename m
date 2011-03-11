@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53777 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756376Ab1CHVpt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 16:45:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: me@bobcopeland.com, mickflemm@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k: restrict AR5K_TX_QUEUE_ID_DATA_MAX to reflect the [0,3] range
-Date: Tue,  8 Mar 2011 16:36:00 -0500
-Message-Id: <1299620160-27837-1-git-send-email-linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:45130 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751329Ab1CKE3h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 23:29:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/2] iwlagn: fix offchannel TX bug
+Date: Thu, 10 Mar 2011 20:13:27 -0800
+Message-Id: <1299816807-26813-3-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1299816807-26813-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1299816807-26813-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This just matches reality...
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+In the case where remain-on-channel rather than
+offchannel TX should be used, my offchannel TX
+patch introduced a bug because mac80211 will
+use the now-freed SKB.
+
+iwlagn shouldn't free the SKB when it returns 1
+here since then the SKB will still be used.
+
+Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-...or am I missing something?
-
- drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 0ee54eb..8a06dbd 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -513,7 +513,7 @@ enum ath5k_tx_queue_id {
- 	AR5K_TX_QUEUE_ID_NOQCU_DATA	= 0,
- 	AR5K_TX_QUEUE_ID_NOQCU_BEACON	= 1,
- 	AR5K_TX_QUEUE_ID_DATA_MIN	= 0, /*IEEE80211_TX_QUEUE_DATA0*/
--	AR5K_TX_QUEUE_ID_DATA_MAX	= 4, /*IEEE80211_TX_QUEUE_DATA4*/
-+	AR5K_TX_QUEUE_ID_DATA_MAX	= 3, /*IEEE80211_TX_QUEUE_DATA3*/
- 	AR5K_TX_QUEUE_ID_DATA_SVP	= 5, /*IEEE80211_TX_QUEUE_SVP - Spectralink Voice Protocol*/
- 	AR5K_TX_QUEUE_ID_CAB		= 6, /*IEEE80211_TX_QUEUE_AFTER_BEACON*/
- 	AR5K_TX_QUEUE_ID_BEACON		= 7, /*IEEE80211_TX_QUEUE_BEACON*/
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5f4e481..b57fbbf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2996,7 +2996,7 @@ static int iwl_mac_offchannel_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+  out:
+ 	mutex_unlock(&priv->mutex);
+  free:
+-	if (ret)
++	if (ret < 0)
+ 		kfree_skb(skb);
+ 
+ 	return ret;
 -- 
-1.7.4
+1.7.0.4
 
