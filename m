@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:36421 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952Ab1CaOPT (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:39388 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019Ab1CKRz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 10:15:19 -0400
-Date: Thu, 31 Mar 2011 15:14:24 +0100
-From: Russell King <rmk@arm.linux.org.uk>
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	devel@linuxdriverproject.org, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] drivers: brcmaxi: provide amba axi functionality
-	in separate module
-Message-ID: <20110331141424.GD19540@flint.arm.linux.org.uk>
-References: <1301391619-4499-1-git-send-email-arend@broadcom.com> <1301391619-4499-2-git-send-email-arend@broadcom.com> <4D91B856.8040302@suse.cz> <201103301453.48607.arnd@arndb.de> <4D948624.3040605@suse.cz> <20110331135126.GC19540@flint.arm.linux.org.uk> <4D948B1C.7080806@suse.cz>
+	Fri, 11 Mar 2011 12:55:59 -0500
+Received: by ywj3 with SMTP id 3so1282027ywj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 09:55:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D948B1C.7080806@suse.cz>
+In-Reply-To: <AD827A950317B54A8AF07D45ED639A0FD2DF21C5D4@SJEXCHCCR02.corp.ad.broadcom.com>
+References: <AD827A950317B54A8AF07D45ED639A0FD2DF21C5D4@SJEXCHCCR02.corp.ad.broadcom.com>
+Date: Fri, 11 Mar 2011 18:55:59 +0100
+Message-ID: <AANLkTi=HRSobQBftDExXyTSUgtQr=AwvCNRzbfP2jYrA@mail.gmail.com>
+Subject: Re: Status of Broadcom 4353?
+From: "Chen, Xianwen" <xianwen.chen@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"CLin@3eti.com" <CLin@3eti.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"zajec5@gmail.com" <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 31, 2011 at 04:09:32PM +0200, Jiri Slaby wrote:
-> On 03/31/2011 03:51 PM, Russell King wrote:
-> > On Thu, Mar 31, 2011 at 03:48:20PM +0200, Jiri Slaby wrote:
-> >> How it can? Packed only tells the compiler to have one byte alignment
-> >> steps. And it should not matter here as all the members are 32-bit long.
-> > 
-> > It also tells the compiler that it may be misaligned, so to avoid
-> > alignment faults it will use byte loads/stores.
-> 
-> No, it should not (if offsetof % sizeof == 0). Otherwise it's a bug in
-> the compiler.
-> 
-> Am I missing something?
+Hi guys,
 
-$ cat t1.c
-struct foo {
-        unsigned long bar;
-} __attribute__((packed));
+Thanks a lot to all of you! wlan1 showed up after renaming the two files. :D
 
-unsigned long baz(struct foo *f)
-{
-        return f->bar;
-}
-$ arm-linux-gcc -O2 -S -o - t1.c
-...
-        .global baz
-        .type   baz, %function
-baz:
-        @ args = 0, pretend = 0, frame = 0
-        @ frame_needed = 0, uses_anonymous_args = 0
-        @ link register save eliminated.
-        ldrb    r3, [r0, #0]    @ zero_extendqisi2
-        ldrb    r2, [r0, #1]    @ zero_extendqisi2
-        ldrb    r1, [r0, #2]    @ zero_extendqisi2
-        orr     r3, r3, r2, asl #8
-        ldrb    r0, [r0, #3]    @ zero_extendqisi2
-        orr     r3, r3, r1, asl #16
-        orr     r0, r3, r0, asl #24
-        mov     pc, lr
-        .size   baz, .-baz
-        .ident  "GCC: (GNU) 4.3.5"
-        .section        .note.GNU-stack,"",%progbits
+Henry, there is a typo that it needs to "be bcm43xx-0.fw", not
+"bcm43xx--0.fw". Thanks!
 
-It does this because with the packed attribute, it can't make assumptions
-about the alignment of 'f'.
+Rafal, "dmesg | grep "brcm80211"" really helped locating the issue!
+BTW, rebooting is not required after updating PCI information
+database. Thanks!
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Chaoxing, thanks for the efforts! I really appreciate them too!
+
+Have a nice weekend fellas! ;p
+
+Xianwen
+
+On Fri, Mar 11, 2011 at 6:10 PM, Henry Ptasinski <henryp@broadcom.com> wrote:
+> Try:
+>
+> ln -s bcm43xx-0-610-809-0.fw bcm43xx--0.fw
+> ln -s bcm43xx_hdr-0-610-809-0.fw bcm43xx_hdr-0.fw
+>
+> (Or just rename the files).
+>
+> We dropped the release numbers from the filenames a while ago. I sent a patch to rename the files in the repo, but I don't think it ever got applied.
+>
+> - Henry
+>
+> Henry Ptasinski
+> henryp@broadcom.com
+>
