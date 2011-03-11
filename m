@@ -1,263 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f51.google.com ([74.125.83.51]:36401 "EHLO
-	mail-gw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753649Ab1CEURg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 15:17:36 -0500
-Received: by gwb15 with SMTP id 15so1779045gwb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Mar 2011 12:17:35 -0800 (PST)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4 v3] mac80211: Enable mesh security from userspace
-Date: Sat,  5 Mar 2011 12:17:25 -0800
-Message-Id: <1299356245-13926-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
-References: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:29994 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755390Ab1CKC4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 21:56:53 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:56:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 20/20] ath6kl: remove-typedef DEV_SCATTER_DMA_VIRTUAL_INFO
+Date: Thu, 10 Mar 2011 18:55:47 -0800
+Message-ID: <1299812147-12069-21-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Userspace can enable mesh security by providing an RSN IE and setting
-the MESH_SETUP_ENABLE_SECURITY flag.
+remove-typedef -s DEV_SCATTER_DMA_VIRTUAL_INFO \
+	"struct dev_scatter_dma_virtual_info" drivers/staging/ath6kl/
 
-Also, rename vendor_ie to just ie to reflect that the same attribute may
-be used to pass other IEs, like for instance RSN.
-
-Changes from v2: (from Johannes)
- - Fix API backward compatibilty of NL80211_MESH_SETUP_IE
- - Remove check for presence of RSN IE
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Cc: Naveen Singh <naveen.singh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- include/linux/nl80211.h    |   13 +++++++++----
- include/net/cfg80211.h     |   10 ++++++----
- net/mac80211/cfg.c         |   16 ++++++++--------
- net/mac80211/ieee80211_i.h |    5 +++--
- net/mac80211/mesh.c        |    6 +++---
- net/mac80211/mesh_plink.c  |    2 +-
- net/mac80211/tx.c          |    2 +-
- net/wireless/mesh.c        |    5 +++--
- net/wireless/nl80211.c     |   39 ++++++++++++++++++++++++++++++++++-----
- 9 files changed, 68 insertions(+), 30 deletions(-)
+ drivers/staging/ath6kl/htc2/AR6000/ar6k.c |   10 +++++-----
+ drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    4 ++--
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3002218..14a2a31 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -545,6 +545,7 @@ enum nl80211_commands {
- /* source-level API compatibility */
- #define NL80211_CMD_GET_MESH_PARAMS NL80211_CMD_GET_MESH_CONFIG
- #define NL80211_CMD_SET_MESH_PARAMS NL80211_CMD_SET_MESH_CONFIG
-+#define NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE NL80211_MESH_SETUP_IE
- 
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -1686,9 +1687,12 @@ enum nl80211_meshconf_params {
-  * vendor specific path metric or disable it to use the default Airtime
-  * metric.
-  *
-- * @NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE: A vendor specific information
-- * element that vendors will use to identify the path selection methods and
-- * metrics in use.
-+ * @NL80211_MESH_SETUP_IE: Information elements for this mesh, for instance, a
-+ * robust security network ie, or a vendor specific information element that
-+ * vendors will use to identify the path selection methods and metrics in use.
-+ *
-+ * @NL80211_MESH_SETUP_ENABLE_SECURITY: Enable this option if an authentication
-+ * daemon will be authenticating mesh candidates.
-  *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-@@ -1697,7 +1701,8 @@ enum nl80211_mesh_setup_params {
- 	__NL80211_MESH_SETUP_INVALID,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
--	NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE,
-+	NL80211_MESH_SETUP_IE,
-+	NL80211_MESH_SETUP_ENABLE_SECURITY,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1ac5786..9610123 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -654,8 +654,9 @@ struct mesh_config {
-  * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
-  * @path_sel_proto: which path selection protocol to use
-  * @path_metric: which metric to use
-- * @vendor_ie: vendor information elements (optional)
-- * @vendor_ie_len: length of vendor information elements
-+ * @ie: vendor information elements (optional)
-+ * @ie_len: length of vendor information elements
-+ * @is_secure: or not
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -664,8 +665,9 @@ struct mesh_setup {
- 	u8 mesh_id_len;
- 	u8  path_sel_proto;
- 	u8  path_metric;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
-+	bool is_secure;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7b701dc..9270c03 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1019,26 +1019,26 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	u8 *new_ie;
- 	const u8 *old_ie;
- 
--	/* first allocate the new vendor information element */
-+	/* allocate information elements */
- 	new_ie = NULL;
--	old_ie = ifmsh->vendor_ie;
-+	old_ie = ifmsh->ie;
- 
--	ifmsh->vendor_ie_len = setup->vendor_ie_len;
--	if (setup->vendor_ie_len) {
--		new_ie = kmemdup(setup->vendor_ie, setup->vendor_ie_len,
-+	ifmsh->ie_len = setup->ie_len;
-+	if (setup->ie_len) {
-+		new_ie = kmemdup(setup->ie, setup->ie_len,
- 				GFP_KERNEL);
- 		if (!new_ie)
- 			return -ENOMEM;
- 	}
-+	ifmsh->ie = new_ie;
-+	kfree(old_ie);
- 
- 	/* now copy the rest of the setup parameters */
- 	ifmsh->mesh_id_len = setup->mesh_id_len;
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
--	ifmsh->vendor_ie = new_ie;
--
--	kfree(old_ie);
-+	ifmsh->is_secure = setup->is_secure;
- 
- 	return 0;
+diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
+index 2797b55..a41ed12 100644
+--- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
++++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
+@@ -585,7 +585,7 @@ void DevDumpRegisters(struct ar6k_device               *pDev,
  }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a404017..7d1cb36 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -488,8 +488,9 @@ struct ieee80211_if_mesh {
- 	struct mesh_config mshcfg;
- 	u32 mesh_seqnum;
- 	bool accepting_plinks;
--	const u8 *vendor_ie;
--	u8 vendor_ie_len;
-+	const u8 *ie;
-+	u8 ie_len;
-+	bool is_secure;
- };
  
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 2a57cc0..1c244c0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -279,9 +279,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
  
--	if (sdata->u.mesh.vendor_ie) {
--		int len = sdata->u.mesh.vendor_ie_len;
--		const u8 *data = sdata->u.mesh.vendor_ie;
-+	if (sdata->u.mesh.ie) {
-+		int len = sdata->u.mesh.ie_len;
-+		const u8 *data = sdata->u.mesh.ie;
- 		if (skb_tailroom(skb) > len)
- 			memcpy(skb_put(skb, len), data, len);
- 	}
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 44b5393..c705b20 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -161,7 +161,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		__le16 reason) {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
--			sdata->u.mesh.vendor_ie_len);
-+			sdata->u.mesh.ie_len);
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
- 	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 081dcaf..38f6c2d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2262,7 +2262,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+-#define DEV_GET_VIRT_DMA_INFO(p)  ((DEV_SCATTER_DMA_VIRTUAL_INFO *)((p)->HIFPrivate[0]))
++#define DEV_GET_VIRT_DMA_INFO(p)  ((struct dev_scatter_dma_virtual_info *)((p)->HIFPrivate[0]))
  
- 		/* headroom, head length, tail length and maximum TIM length */
- 		skb = dev_alloc_skb(local->tx_headroom + 400 +
--				sdata->u.mesh.vendor_ie_len);
-+				sdata->u.mesh.ie_len);
- 		if (!skb)
- 			goto out;
+ static HIF_SCATTER_REQ *DevAllocScatterReq(HIF_DEVICE *Context)
+ {
+@@ -754,10 +754,10 @@ static int DevSetupVirtualScatterSupport(struct ar6k_device *pDev)
+     int                     status = 0;
+     int                          bufferSize, sgreqSize;
+     int                          i;
+-    DEV_SCATTER_DMA_VIRTUAL_INFO *pVirtualInfo;
++    struct dev_scatter_dma_virtual_info *pVirtualInfo;
+     HIF_SCATTER_REQ              *pReq;
  
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 73e39c1..c51e3c5 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -53,8 +53,9 @@ const struct mesh_config default_mesh_config = {
- const struct mesh_setup default_mesh_setup = {
- 	.path_sel_proto = IEEE80211_PATH_PROTOCOL_HWMP,
- 	.path_metric = IEEE80211_PATH_METRIC_AIRTIME,
--	.vendor_ie = NULL,
--	.vendor_ie_len = 0,
-+	.ie = NULL,
-+	.ie_len = 0,
-+	.is_secure = false,
- };
+-    bufferSize = sizeof(DEV_SCATTER_DMA_VIRTUAL_INFO) +
++    bufferSize = sizeof(struct dev_scatter_dma_virtual_info) +
+                 2 * (A_GET_CACHE_LINE_BYTES()) + AR6K_MAX_TRANSFER_SIZE_PER_SCATTER;
  
- int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4ebce42..cc1ee41 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2804,7 +2828,8 @@ static const struct nla_policy
- 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
--	[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE] = { .type = NLA_BINARY,
-+	[NL80211_MESH_SETUP_ENABLE_SECURITY] = { .type = NLA_FLAG },
-+	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
- };
+     sgreqSize = sizeof(HIF_SCATTER_REQ) +
+@@ -775,8 +775,8 @@ static int DevSetupVirtualScatterSupport(struct ar6k_device *pDev)
+         A_MEMZERO(pReq, sgreqSize);
  
-@@ -2906,13 +2931,15 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		 IEEE80211_PATH_METRIC_VENDOR :
- 		 IEEE80211_PATH_METRIC_AIRTIME;
+             /* the virtual DMA starts after the scatter request struct */
+-        pVirtualInfo = (DEV_SCATTER_DMA_VIRTUAL_INFO *)((u8 *)pReq + sgreqSize);
+-        A_MEMZERO(pVirtualInfo, sizeof(DEV_SCATTER_DMA_VIRTUAL_INFO));
++        pVirtualInfo = (struct dev_scatter_dma_virtual_info *)((u8 *)pReq + sgreqSize);
++        A_MEMZERO(pVirtualInfo, sizeof(struct dev_scatter_dma_virtual_info));
  
--	if (tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE]) {
-+
-+	if (tb[NL80211_MESH_SETUP_IE]) {
- 		struct nlattr *ieattr =
--			tb[NL80211_MESH_SETUP_VENDOR_PATH_SEL_IE];
-+			tb[NL80211_MESH_SETUP_IE];
- 		if (!is_valid_ie_attr(ieattr))
- 			return -EINVAL;
--		setup->vendor_ie = nla_data(ieattr);
--		setup->vendor_ie_len = nla_len(ieattr);
-+		setup->ie = nla_data(ieattr);
-+		setup->ie_len = nla_len(ieattr);
- 	}
-+	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_ENABLE_SECURITY]);
+         pVirtualInfo->pVirtDmaBuffer = &pVirtualInfo->DataArea[0];
+             /* align buffer to cache line in case host controller can actually DMA this */
+diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
+index 247cf56..3e4ece8 100644
+--- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
++++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
+@@ -322,10 +322,10 @@ int DoMboxHWTest(struct ar6k_device *pDev);
+ #endif
  
- 	return 0;
+     /* completely virtual */
+-typedef struct _DEV_SCATTER_DMA_VIRTUAL_INFO {
++struct dev_scatter_dma_virtual_info {
+     u8 *pVirtDmaBuffer;      /* dma-able buffer - CPU accessible address */
+     u8 DataArea[1];      /* start of data area */
+-} DEV_SCATTER_DMA_VIRTUAL_INFO;
++};
+ 
+ 
+ 
 -- 
-1.7.1
+1.7.4.15.g7811d
 
