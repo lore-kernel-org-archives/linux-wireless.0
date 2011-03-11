@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38374 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757146Ab1CaIHS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 04:07:18 -0400
-Received: by fxm17 with SMTP id 17so1636292fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 01:07:17 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 0/5] wl12xx: Cleanups & fixes
-Date: Thu, 31 Mar 2011 10:06:56 +0200
-Message-Id: <1301558821-17787-1-git-send-email-ido@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:29936 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752149Ab1CKCzz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 21:55:55 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:55:33 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	Javier Martinez Canillas <martinez.javier@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 01/20] staging: ath6kl: Cast variable to size_t to avoid compile warning
+Date: Thu, 10 Mar 2011 18:55:28 -0800
+Message-ID: <1299812147-12069-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patches mostly clean up code, but also fix a few minor bugs.
+From: Javier Martinez Canillas <martinez.javier@gmail.com>
 
-The first four patches fix a few issues in the recently added 128x support.
-The last patch fixes a regression in the driver, preventing it from working
-properly on platforms which do not support level triggered interrupts.
+The min() macro does strict type-checking so use min_t() instead
+to silence a compile warning.
 
-Ido Yariv (5):
-  wl12xx: Clean up and fix the 128x boot sequence
-  wl12xx: Clean up the block size alignment code
-  wl12xx: Clean up the dummy packet mechanism
-  wl12xx: Simplify TX blocks accounting
-  wl12xx: Handle platforms without level trigger interrupts
+Cc: Naveen Singh <naveen.singh@atheros.com>
+Signed-off-by: Javier Martinez Canillas <martinez.javier@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ .../staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.c   |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/wl12xx/acx.c    |    2 -
- drivers/net/wireless/wl12xx/boot.c   |  235 +++++++++++++++++-----------------
- drivers/net/wireless/wl12xx/boot.h   |    1 +
- drivers/net/wireless/wl12xx/init.c   |    2 +-
- drivers/net/wireless/wl12xx/io.c     |    3 +-
- drivers/net/wireless/wl12xx/main.c   |  140 +++++++++++++--------
- drivers/net/wireless/wl12xx/sdio.c   |   21 ++--
- drivers/net/wireless/wl12xx/spi.c    |    9 +-
- drivers/net/wireless/wl12xx/tx.c     |   70 +++++++----
- drivers/net/wireless/wl12xx/tx.h     |   11 ++-
- drivers/net/wireless/wl12xx/wl12xx.h |   23 ++-
- include/linux/wl12xx.h               |   14 ++-
- 12 files changed, 305 insertions(+), 226 deletions(-)
+diff --git a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.c b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.c
+index 67e6d5e..55b0633 100644
+--- a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.c
++++ b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.c
+@@ -360,7 +360,7 @@ int PSSendOps(void *arg)
+         	status = 1;
+         	goto complete;
+     	}
+-	len = min(firmware->size, MAX_BDADDR_FORMAT_LENGTH - 1);
++	len = min_t(size_t, firmware->size, MAX_BDADDR_FORMAT_LENGTH - 1);
+ 	memcpy(config_bdaddr, firmware->data, len);
+ 	config_bdaddr[len] = '\0';
+ 	write_bdaddr(hdev,config_bdaddr,BDADDR_TYPE_STRING);
+-- 
+1.7.4.15.g7811d
 
