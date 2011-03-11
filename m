@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:47376 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757148Ab1CAUgn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 15:36:43 -0500
-Received: by wwe15 with SMTP id 15so4909349wwe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 12:36:42 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC 0/9] add WoW support
-Date: Tue,  1 Mar 2011 22:36:35 +0200
-Message-Id: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:29957 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755359Ab1CKC4T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 21:56:19 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:55:56 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 08/20] ath6kl: remove-typedef AR6K_ASYNC_REG_IO_BUFFER
+Date: Thu, 10 Mar 2011 18:55:35 -0800
+Message-ID: <1299812147-12069-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds Wake-On-Wireless support for cfg80211/mac80211,
-and some basic usage of it by wl12xx (i'll later split it to 2 patchsets).
+remove-typedef -s AR6K_ASYNC_REG_IO_BUFFER \
+	"struct ar6k_async_reg_io_buffer" drivers/staging/ath6kl/
 
-It is mostly based on a previous patchset by 
-Luis R. Rodriguez <lrodriguez@atheros.com> which can be found here:
-http://marc.info/?l=linux-wireless&m=124761732817865
+Cc: Naveen Singh <naveen.singh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-The usual way to trigger a wakeup, is by some kind of magic packet.
-However, since the development was done with wl12xx, which doesn't
-support a real WoW trigger, we use a psuedo-trigger - 
-NL80211_WOW_TRIGGER_ANYTHING, which basically means that we will
-wake up on ANY irq the fw issues.
-This way, there is no need for any special WoW support from the
-device, rather than staying up while the system is being suspended.
-
-This is still a work in progress, so i'd be happy for your comments.
-
-Eliad Peller (8):
-  mac80211: add WoW param to suspend/resume functions
-  mac80211: add WoW param to .start/.stop callbacks
-  mac80211: don't remove/add interfaces when WoW is enabled
-  wl12xx_sdio: set interrupt as wake_up interrupt
-  wl12xx_sdio: set MMC_PM_KEEP_POWER flag on suspend
-  wl12xx: save wl->wow_enabled on suspend
-  wl12xx: prevent scheduling while suspending (WoW enabled)
-  wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
-
-Luis R. Rodriguez (1):
-  cfg80211: add WoW support
-
- drivers/net/wireless/wl12xx/main.c   |   45 ++++++++++++++++++--
- drivers/net/wireless/wl12xx/sdio.c   |   72 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/wl12xx/wl12xx.h |    7 +++-
- include/linux/nl80211.h              |   42 ++++++++++++++++++
- include/net/cfg80211.h               |   31 ++++++++++++-
- include/net/mac80211.h               |   19 ++++++---
- net/mac80211/cfg.c                   |    8 ++--
- net/mac80211/debugfs.c               |    4 +-
- net/mac80211/driver-ops.h            |   14 ++++---
- net/mac80211/driver-trace.h          |   47 ++++++++++++++++++---
- net/mac80211/ieee80211_i.h           |   20 ++++++---
- net/mac80211/iface.c                 |    8 ++--
- net/mac80211/main.c                  |    2 +-
- net/mac80211/pm.c                    |   64 ++++++++++++++++------------
- net/mac80211/util.c                  |   70 +++++++++++++++++++------------
- net/wireless/core.h                  |    3 +
- net/wireless/nl80211.c               |   78 ++++++++++++++++++++++++++++++++++
- net/wireless/sysfs.c                 |    4 +-
- 18 files changed, 435 insertions(+), 103 deletions(-)
+diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
+index 19d8e70..e0c3926 100644
+--- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
++++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
+@@ -89,12 +89,12 @@ typedef PREPACK struct _AR6K_GMBOX_CTRL_REGISTERS {
+ #define AR6K_MIN_TRANSFER_SIZE_PER_SCATTER      4*1024
+ 
+ /* buffers for ASYNC I/O */
+-typedef struct AR6K_ASYNC_REG_IO_BUFFER {
++struct ar6k_async_reg_io_buffer {
+     HTC_PACKET    HtcPacket;   /* we use an HTC packet as a wrapper for our async register-based I/O */
+     u8 _Pad1[A_CACHE_LINE_PAD];
+     u8 Buffer[AR6K_REG_IO_BUFFER_SIZE];  /* cache-line safe with pads around */
+     u8 _Pad2[A_CACHE_LINE_PAD];
+-} AR6K_ASYNC_REG_IO_BUFFER;
++};
+ 
+ typedef struct _AR6K_GMBOX_INFO { 
+     void        *pProtocolContext;
+@@ -119,7 +119,7 @@ typedef struct _AR6K_DEVICE {
+     HIF_PENDING_EVENTS_FUNC     GetPendingEventsFunc;
+     void                        *HTCContext;
+     HTC_PACKET_QUEUE            RegisterIOList;
+-    AR6K_ASYNC_REG_IO_BUFFER    RegIOBuffers[AR6K_MAX_REG_IO_BUFFERS];
++    struct ar6k_async_reg_io_buffer    RegIOBuffers[AR6K_MAX_REG_IO_BUFFERS];
+     void                        (*TargetFailureCallback)(void *Context);
+     int                    (*MessagePendingCallback)(void *Context,
+                                                           u32 LookAheads[],
+-- 
+1.7.4.15.g7811d
 
