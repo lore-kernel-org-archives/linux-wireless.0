@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41152 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590Ab1CGTD5 (ORCPT
+Received: from columbi.unine.ch ([130.125.1.54]:39518 "EHLO unine.ch"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751530Ab1CKOBI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 14:03:57 -0500
-Subject: Re: [PATCH 1/4 v3] mac80211: Enable mesh security from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinFXU+bh=A-qPgQ8oh2GZs7XhPbJe4s3WZMy-0D@mail.gmail.com>
-References: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
-	 <1299356245-13926-1-git-send-email-javier@cozybit.com>
-	 <1299356769.29845.12.camel@jlt3.sipsolutions.net>
-	 <AANLkTinFXU+bh=A-qPgQ8oh2GZs7XhPbJe4s3WZMy-0D@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Mar 2011 20:03:54 +0100
-Message-ID: <1299524634.6739.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 11 Mar 2011 09:01:08 -0500
+Received: from mail-10.unine.ch ([130.125.5.93])
+	by unine.ch stage1 with esmtps
+	(Exim MailCleaner)
+	id 1Py2oN-00040O-JQ
+	for <linux-wireless@vger.kernel.org>
+	from <alexey.monakhov@unine.ch>; Fri, 11 Mar 2011 14:55:23 +0100
+From: MONAKHOV Alexey <alexey.monakhov@unine.ch>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 11 Mar 2011 14:54:13 +0100
+Subject: question about setting up mesh network
+Message-ID: <96025834431BF6428294777AA66CB92B027A0A66420D@MAIL-2.UNINE.CH>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-07 at 10:47 -0800, Javier Cardona wrote:
+Hi guys,
 
-> >> + * @is_secure: or not
-> >
-> > Given what we just discussed over in the other thread, should we rename
-> > this to "userspace_station_mgmt" or something like that?
-> 
-> Are you suggesting to change the name of the flag both in nl80211 and cfg80211?
+I have several questions about 802.11s, 802.11n and mesh networks in Linux (2.6.37.1 kernel)
+with these devices
+alix3d2 device (http://pcengines.ch/alix3d2.htm) with this card (http://pcengines.ch/dnma92.htm  Atheros AR9220  chipset).
+and I am trying to configure mesh netwroks with these commands
 
-Yeah, I was.
+ iw dev wlan0 interface add mesh_iface type mp mesh_id mesh_id
+ iwconfig mesh_iface essid monaale_mesh
+ ifconfig mesh_iface 192.168.3.80
+ ifconfig mesh_iface up
 
-> Currently ENABLE_SECURITY means "let userspace manage stations", but
-> also "ok to accept mesh management frames from secure mesh peers".
-> And when the Authenticated Mesh Peering Exchange is implemented, it
-> will probably mean "verify mesh peering frames in userspace" and
-> "protect mesh peering frames".  You either do all these tasks or none,
-> so for nl80211 I would prefer a single flag.
+1.
+I am using node with 2 wi-fi interfaces - my question is how to make a bridge with these 2 interfaces? Now I set 1 channel for one interface and 2 channel for the other one and traffic goes from one interface to other without any bridge - why?
 
-Indeed. I forgot about the RSN checking part etc. I suppose we should
-just leave it as is then.
+2.
+I can see that olsrd daemon is running, my question is how can I enable 802.11s routing ? (kernel was compiled with CONFIG_MAC80211_MESH=y option)
 
-> > Also, does it make sense to advertise support for this somehow?
-> > Otherwise the new tools will have strange failure cases on older
-> > kernels;
-> 
-> Ah, I see.  Older kernels would not return an error to userspace if an
-> attempt to set a non existing flag was made, right?
+3.
+how to be sure that mesh is operationg in 802.11n mode? now the speed is 54 Mb\sec but accoring to iwconfig command I can see wlan1 IEEE 802.11abgn interface enabled.
 
-Right.
+4.
+how can I determine my neighbors IP addresses. i.e. I  get a list of nearest nodes with
+iw dev mesh station dump command, abd how determine IP of MAC? ( without arp cache because it is empty).
+also do you know if it is possible to determine MAC (or IP) address of the neighbor from which IP package came to my node (not the source IP by my 1-hop neighbor who forwarded package to me). As I understand there is no such information in the IP or layer2 header.
 
-> Are you suggesting to define something like an
-> NL80211_MESHCONF_CAPABILITIES mask?
-
-I haven't thought about how I'd do it really -- yes something like that
-might make sense.
-
-> > and I can also imagine situations where the mesh APIs are in
-> > firmware or so that can't cope with userspace station mgmt.
-> 
-> Ah mesh in firmware... who would want to do that? :)
-
-:-)
-
-johannes
-
+thanks in advance,
+Alexey.
