@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:53864 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756651Ab1CROUF (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:39692 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab1CKR1k convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 10:20:05 -0400
-Received: by wyj26 with SMTP id 26so4744881wyj.39
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 07:20:02 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: shahar_levi@ti.com, ruthyz@ti.com
-Subject: [PATCH v2 02/14] wl12xx: 1281/1283 support - move IRQ polarity
-Date: Fri, 18 Mar 2011 16:19:17 +0200
-Message-Id: <1300457969-19601-3-git-send-email-coelho@ti.com>
-In-Reply-To: <1300457969-19601-1-git-send-email-coelho@ti.com>
-References: <1300457969-19601-1-git-send-email-coelho@ti.com>
+	Fri, 11 Mar 2011 12:27:40 -0500
+Received: by qyk7 with SMTP id 7so6086758qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 09:27:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D0572276D@RockMX01.rock.corp>
+References: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
+	<7A94256FD72B884D9E7C55586C3CBCEE15B0286A4E@SJEXCHCCR01.corp.ad.broadcom.com>
+	<AANLkTimViaDbvpTEmRR=Te=TGUMjc76-g5Nu-E7dYEff@mail.gmail.com>
+	<4D798863.2060303@lwfinger.net>
+	<AANLkTim3c200SL3icCMV7VGcyEaBQ3d6b19vSOerThib@mail.gmail.com>
+	<4D7A3EAD.10306@lwfinger.net>
+	<AANLkTi=X6W1E40FmjtcLBvnOQ_B98ENd-zvQH=PxmTV5@mail.gmail.com>
+	<AANLkTi=wGhWvzqRxEj2eeXm0X0ZfefN-ifNe_cpm6tA+@mail.gmail.com>
+	<BD54DDEB2546894FAB0731EA7B0EDF8D05722753@RockMX01.rock.corp>
+	<AANLkTimoOd-A8_sy97hGDLyb4C6MUp1Lo24UdhwAiC0L@mail.gmail.com>
+	<BD54DDEB2546894FAB0731EA7B0EDF8D0572276D@RockMX01.rock.corp>
+Date: Fri, 11 Mar 2011 18:27:38 +0100
+Message-ID: <AANLkTik+bJ=bAygSZyqSmqXbFTx5F9SfqcMVKRp+xEPY@mail.gmail.com>
+Subject: Re: Status of Broadcom 4353?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Chaoxing Lin <CLin@3eti.com>
+Cc: "Chen, Xianwen" <xianwen.chen@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Brett Rudley <brudley@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shahar Levi <shahar_levi@ti.com>
+W dniu 11 marca 2011 18:21 użytkownik Chaoxing Lin <CLin@3eti.com> napisał:
+> Well, just throw some ideas. Not mean to mess.
+> Older Broadcom driver did put firmware in /lib/firmware/ e.g. BCM2033-FW.bin
 
-In order to prevent overran of IRQ polarity via FW the polarity setting move after
-FW download and before IRQ enable.
+I had no idea about that, sorry. Newest driver looks in brcm subdir,
+I'm sure of that.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-Reviewed-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/boot.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 6934dff..69fe870 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -585,13 +585,6 @@ int wl1271_load_firmware(struct wl1271 *wl)
- 	/* 6. read the EEPROM parameters */
- 	tmp = wl1271_read32(wl, SCR_PAD2);
- 
--	ret = wl1271_boot_write_irq_polarity(wl);
--	if (ret < 0)
--		goto out;
--
--	wl1271_write32(wl, ACX_REG_INTERRUPT_MASK,
--		       WL1271_ACX_ALL_EVENTS_VECTOR);
--
- 	/* WL1271: The reference driver skips steps 7 to 10 (jumps directly
- 	 * to upload_fw) */
- 
-@@ -618,6 +611,13 @@ int wl1271_boot(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out;
- 
-+	ret = wl1271_boot_write_irq_polarity(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl1271_write32(wl, ACX_REG_INTERRUPT_MASK,
-+		       WL1271_ACX_ALL_EVENTS_VECTOR);
-+
- 	/* Enable firmware interrupts now */
- 	wl1271_boot_enable_interrupts(wl);
- 
 -- 
-1.7.1
-
+Rafał
