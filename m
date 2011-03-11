@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8352 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754650Ab1CYRAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 13:00:19 -0400
-Date: Fri, 25 Mar 2011 17:59:39 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: [PATCH 01/12 v2] iwlegacy: MAINTAINERS
-Message-ID: <20110325165939.GD2165@redhat.com>
-References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
- <1301062456-17249-2-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59993 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752465Ab1CKUIz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 15:08:55 -0500
+Received: by vws1 with SMTP id 1so961969vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 12:08:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1301062456-17249-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <AANLkTi=Bz5aegRoTL7AJvimOm4HTY7xpkHoowWPxZW4+@mail.gmail.com>
+References: <AANLkTi=Bz5aegRoTL7AJvimOm4HTY7xpkHoowWPxZW4+@mail.gmail.com>
+From: Luis Correia <luis.f.correia@gmail.com>
+Date: Fri, 11 Mar 2011 20:08:15 +0000
+Message-ID: <AANLkTimfy87qCY7m-5YzBpqLTQKakf1zLMxCGNvotjO3@mail.gmail.com>
+Subject: Re: rt2800usb (rt2x00) in ad-hoc mode stalls when transferring large
+ amount of data
+To: Juan Carlos Garza <juancarlosgarza@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add iwlegacy driver to MAINTAINERS.
+Hi
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- MAINTAINERS |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+On Fri, Mar 11, 2011 at 20:04, Juan Carlos Garza
+<juancarlosgarza@gmail.com> wrote:
+> Hello
+>
+> I have a Ralink 3071 usb device (Bus 002 Device 003: ID 07b8:3071
+> D-Link Corp. 802.11n/b/g Mini Wireless LAN USB2.0 Adapter).
+> I am using the mac80211 driver by compiling the compat-wireless
+> tarball from yesterday (10 March). I cross compile it with the 2.6.24
+> kernel in a Montavista distribution (and also with 2.6.27 in Fedora)
+>
+> It works pretty good in AP mode using HostAPD and DCHP and I get
+> relative good transfer rates (up to 3.5 MBytes per second).
+>
+> My problems are with Ad-Hoc connections. I can configure the Ad-Hoc
+> connection, for example:
+>
+> iwconfig wlan0 mode ad-hoc
+> iwconfig wlan0 essid my_ad_hoc_nt
+> iwconfig wlan0 key 1122334455
+> ifconfig wlan0 192.168.111.44 up
+>
+> It works and I connect to it on the other end (a windows machine with
+> a compatible static ip address), however, it only works for doing
+> small data transfer rate things like browsing through the directories
+> of a shared folder or retrieving web pages from a web server. When I
+> try to do something like transferring a 500 MByte file, it starts
+> transferring, reaches a peak and then it drops to 0 again. After that,
+> the file is no longer transferred and I cannot do anything else (can't
+> ping).
+>
+> Is this a known issue? Any ideas?
+>
+> Juan Carlos
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 749f9cd..547cf39 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3381,6 +3381,12 @@ F:	Documentation/wimax/README.i2400m
- F:	drivers/net/wimax/i2400m/
- F:	include/linux/wimax/i2400m.h
- 
-+INTEL WIRELESS 3945ABG/BG, 4965AGN (iwlegacy)
-+M:	Stanislaw Gruszka <sgruszka@redhat.com>
-+L:	linux-wireless@vger.kernel.org
-+S:	Supported
-+F:	drivers/net/wireless/iwlegacy/
-+
- INTEL WIRELESS WIFI LINK (iwlwifi)
- M:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
- M:	Intel Linux Wireless <ilw@linux.intel.com>
--- 
-1.7.1
+keep in mind that current (and by design) ad-hoc connections max out at 11Mb.
 
+there may be some buffer bottleneck involved.
+
+but I'm not a very good expert on this subject.
+
+
+Luis Correia
