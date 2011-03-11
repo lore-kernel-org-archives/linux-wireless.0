@@ -1,102 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52443 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751465Ab1CSMzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2011 08:55:49 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 4/7] ath9k: add support for overriding LED pin and GPIO settings from platform data
-Date: Sat, 19 Mar 2011 13:55:40 +0100
-Message-Id: <1300539343-75509-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1300539343-75509-3-git-send-email-nbd@openwrt.org>
-References: <1300539343-75509-1-git-send-email-nbd@openwrt.org>
- <1300539343-75509-2-git-send-email-nbd@openwrt.org>
- <1300539343-75509-3-git-send-email-nbd@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:39567 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405Ab1CKUSU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 15:18:20 -0500
+Message-ID: <4D7A8350.9000406@candelatech.com>
+Date: Fri, 11 Mar 2011 12:17:20 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH] mac80211: fix channel type recalculation with HT and
+ non-HT interfaces
+References: <1299873939-1171-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1299873939-1171-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/gpio.c |   14 ++++++++------
- drivers/net/wireless/ath/ath9k/hw.h   |    2 +-
- drivers/net/wireless/ath/ath9k/init.c |    8 +++++++-
- include/linux/ath9k_platform.h        |    4 ++++
- 4 files changed, 20 insertions(+), 8 deletions(-)
+On 03/11/2011 12:05 PM, Felix Fietkau wrote:
+> When running an AP interface along with the cooked monitor interface created
+> by hostapd, adding an interface and deleting it again triggers a channel type
+> recalculation during which the (non-HT) monitor interface takes precedence
+> over the HT AP interface, thus causing the channel type to be set to non-HT.
+> Fix this by not overriding HT interfaces with a non-HT channel type.
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 0fb8f8a..44a0a88 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -41,12 +41,14 @@ void ath_init_leds(struct ath_softc *sc)
- {
- 	int ret;
- 
--	if (AR_SREV_9287(sc->sc_ah))
--		sc->sc_ah->led_pin = ATH_LED_PIN_9287;
--	else if (AR_SREV_9485(sc->sc_ah))
--		sc->sc_ah->led_pin = ATH_LED_PIN_9485;
--	else
--		sc->sc_ah->led_pin = ATH_LED_PIN_DEF;
-+	if (sc->sc_ah->led_pin < 0) {
-+		if (AR_SREV_9287(sc->sc_ah))
-+			sc->sc_ah->led_pin = ATH_LED_PIN_9287;
-+		else if (AR_SREV_9485(sc->sc_ah))
-+			sc->sc_ah->led_pin = ATH_LED_PIN_9485;
-+		else
-+			sc->sc_ah->led_pin = ATH_LED_PIN_DEF;
-+	}
- 
- 	/* Configure gpio 1 for output */
- 	ath9k_hw_cfg_output(sc->sc_ah, sc->sc_ah->led_pin,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 91010e3..cd314d6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -794,7 +794,7 @@ struct ath_hw {
- 	u32 originalGain[22];
- 	int initPDADC;
- 	int PDADCdelta;
--	u8 led_pin;
-+	int led_pin;
- 	u32 gpio_mask;
- 	u32 gpio_val;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e22e821..cdb0f1c 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -553,8 +553,14 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	ah->hw_version.subsysid = subsysid;
- 	sc->sc_ah = ah;
- 
--	if (!pdata)
-+	if (!pdata) {
- 		ah->ah_flags |= AH_USE_EEPROM;
-+		sc->sc_ah->led_pin = -1;
-+	} else {
-+		sc->sc_ah->gpio_mask = pdata->gpio_mask;
-+		sc->sc_ah->gpio_val = pdata->gpio_val;
-+		sc->sc_ah->led_pin = pdata->led_pin;
-+	}
- 
- 	common = ath9k_hw_common(ah);
- 	common->ops = &ath9k_common_ops;
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index b5f0658..020387a 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -24,6 +24,10 @@
- struct ath9k_platform_data {
- 	u16 eeprom_data[ATH9K_PLAT_EEP_MAX_WORDS];
- 	u8 *macaddr;
-+
-+	int led_pin;
-+	u32 gpio_mask;
-+	u32 gpio_val;
- };
- 
- #endif /* _LINUX_ATH9K_PLATFORM_H */
+After staring at that code a bit more, should that list-for-each-entry
+loop be entirely different such that it better calculates a proper
+super-channel for mixed interface types?
+
+If seems like a bad case of last-one-wins as currently written.
+
+The code probably (mostly?) works right because we limit the
+bss_conf.channel_type based on existing super-chan when
+adding new interfaces, but it still seems like brittle code to me.
+
+Thanks,
+Ben
+
+
+>
+> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+> ---
+>   net/mac80211/chan.c |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+> index 5b24740..8511e60 100644
+> --- a/net/mac80211/chan.c
+> +++ b/net/mac80211/chan.c
+> @@ -76,6 +76,7 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+>
+>   		switch (tmp->vif.bss_conf.channel_type) {
+>   		case NL80211_CHAN_NO_HT:
+> +			break;
+>   		case NL80211_CHAN_HT20:
+>   			superchan = tmp->vif.bss_conf.channel_type;
+>   			break;
+
+
 -- 
-1.7.3.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
