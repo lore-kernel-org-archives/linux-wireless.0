@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail81.extendcp.co.uk ([79.170.40.81]:34481 "EHLO
-	mail81.extendcp.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753297Ab1COPYO (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:59091 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628Ab1CKUES (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 11:24:14 -0400
-Date: Tue, 15 Mar 2011 15:24:22 +0000
-From: Tony Houghton <h@realh.co.uk>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Could ath9k and rt2800pci bugs be related?
-Message-ID: <20110315152422.610b8434@toddler>
-In-Reply-To: <AANLkTi=Gub1JAO21qtRjxVWrtc6Masp1siF3NHntgcvp@mail.gmail.com>
-References: <20110224182022.57e32862@toddler>
-	<20110224200203.GB17412@elie>
-	<20110314164812.4c0cfc29@toddler>
-	<AANLkTimSZrGCzBaB9K=WVO7faGNM-+qeKEE2qzjkPnSD@mail.gmail.com>
-	<20110315131907.6f06a221@toddler>
-	<AANLkTi=Gub1JAO21qtRjxVWrtc6Masp1siF3NHntgcvp@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 11 Mar 2011 15:04:18 -0500
+Received: by vxi39 with SMTP id 39so2906289vxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 12:04:17 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 11 Mar 2011 21:04:17 +0100
+Message-ID: <AANLkTi=Bz5aegRoTL7AJvimOm4HTY7xpkHoowWPxZW4+@mail.gmail.com>
+Subject: rt2800usb (rt2x00) in ad-hoc mode stalls when transferring large
+ amount of data
+From: Juan Carlos Garza <juancarlosgarza@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 15 Mar 2011 19:05:27 +0530
-Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+Hello
 
-> No its nothing to do with kernel hacking, its just a wireless package.
-> instead of compiling the whole kernel or wireless testing, we can
-> install a wireless package within our linux distribution in few
-> minutes. This package is called compat-wireless which includes latest
-> fixes in wireless testing.
-> more information in:
-> http://wireless.kernel.org/en/users/Download
+I have a Ralink 3071 usb device (Bus 002 Device 003: ID 07b8:3071
+D-Link Corp. 802.11n/b/g Mini Wireless LAN USB2.0 Adapter).
+I am using the mac80211 driver by compiling the compat-wireless
+tarball from yesterday (10 March). I cross compile it with the 2.6.24
+kernel in a Montavista distribution (and also with 2.6.27 in Fedora)
 
-I tried that and I can confirm that it still crashes. I used the
-compat-wireless-2011-03-14 snapshot with a Debian stock 2.6.37-2 kernel.
+It works pretty good in AP mode using HostAPD and DCHP and I get
+relative good transfer rates (up to 3.5 MBytes per second).
 
-BTW one of the files had an error with TASK_INTERRUPTIBLE undefined. I
-can't remember which file because I forgot to make a note of it before
-make wlunload caused the expected crash. The apparent cause was that
-/usr/include/linux/sched.h contains far less than sched.h in the kernel
-source. I worked around it by defining the macro as 1 at the top of the
-affected file.
+My problems are with Ad-Hoc connections. I can configure the Ad-Hoc
+connection, for example:
 
+iwconfig wlan0 mode ad-hoc
+iwconfig wlan0 essid my_ad_hoc_nt
+iwconfig wlan0 key 1122334455
+ifconfig wlan0 192.168.111.44 up
+
+It works and I connect to it on the other end (a windows machine with
+a compatible static ip address), however, it only works for doing
+small data transfer rate things like browsing through the directories
+of a shared folder or retrieving web pages from a web server. When I
+try to do something like transferring a 500 MByte file, it starts
+transferring, reaches a peak and then it drops to 0 again. After that,
+the file is no longer transferred and I cannot do anything else (can't
+ping).
+
+Is this a known issue? Any ideas?
+
+Juan Carlos
