@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:48493 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751203Ab1COWNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 18:13:15 -0400
-Date: Tue, 15 Mar 2011 15:13:12 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Christoph Lameter <cl@linux.com>,
-	David Rientjes <rientjes@google.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Nick Piggin <npiggin@kernel.dk>,
-	Dave Chinner <dchinner@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: <IRQ> [<ffffffff810c9204>] ? __alloc_pages_nodemask+0x622/0x696
-Message-ID: <20110315221312.GR11878@tux>
-References: <AANLkTikaLb_xan2ePfo9JCZ1w7RZ76wF8NUT2tYr0ZD=@mail.gmail.com>
- <alpine.DEB.2.00.1103051847100.8779@chino.kir.corp.google.com>
- <4D770178.9070908@gmail.com>
- <alpine.DEB.2.00.1103091254540.13353@chino.kir.corp.google.com>
- <4D77EEB4.9090404@gmail.com>
- <alpine.DEB.2.00.1103091549020.16989@router.home>
- <20110310000502.GA13763@hash.localnet>
- <20110315205946.GL11878@tux>
- <4D7FDA14.7000904@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D7FDA14.7000904@gmail.com>
+Received: from dakia2.marvell.com ([65.219.4.35]:58086 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754445Ab1CKAWp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2011 19:22:45 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/4] mwifiex: remove unused macros
+Date: Thu, 10 Mar 2011 16:25:49 -0800
+Message-Id: <1299803149-25996-4-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1299803149-25996-1-git-send-email-bzhao@marvell.com>
+References: <1299803149-25996-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 15, 2011 at 02:28:52PM -0700, Justin P. Mattock wrote:
-> On 03/15/2011 01:59 PM, Luis R. Rodriguez wrote:
-> > On Wed, Mar 09, 2011 at 04:05:02PM -0800, Bob Copeland wrote:
-> >> On Wed, Mar 09, 2011 at 03:54:24PM -0600, Christoph Lameter wrote:
-> >>> [ 7419.322770] wlan0: associated
-> >>> [ 7427.161366] ath: Failed to stop TX DMA in 100 msec after killing last frame
-> >>> [ 7427.161432] ath: Failed to stop TX DMA!
-> >>> [ 7434.492398] ath: Failed to stop TX DMA in 100 msec after killing last frame
-> >>> [ 7434.492462] ath: Failed to stop TX DMA!
-> >>> [ 7603.339047]
-> >>> =============================================================================
-> >>> [ 7603.339053] BUG radix_tree_node: Padding overwritten. 0xffff88000008fe00-0xffff88000008fe32
-> >>
-> >>> Could the ath driver corrupt memory if the TX DMA cannot be stopped?
-> >
-> > Yes, this is why we have had a series of patches to address this upstream,
-> > the latest one was for RX DMA failing to stop but Felix found a fix for that.
-> > Apart from that I am not aware of more issues. Can you please try with
-> > wireless-testing.git ?
-> >
-> >    Luis
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
-> sure..
-> 
-> as for seeing this issue. nothing really now on the current. only 
-> message I see is:
-> 
-> [   69.551295] ath: Failed to stop TX DMA in 100 msec after killing last 
-> frame
-> [   69.551336] ath: Failed to stop TX DMA!
+MWIFIEX_MIN_SSID_LENGTH is never used.
+MWIFIEX_MAX_SSID_LENGTH can be replaced by
+IEEE80211_MAX_SSID_LEN
 
-Can you easily reproduce?
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/debugfs.c |    2 +-
+ drivers/net/wireless/mwifiex/main.h    |    4 ----
+ 2 files changed, 1 insertions(+), 5 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 6207f6b..eec43b3 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -1949,7 +1949,7 @@ mwifiex_passphrase_write(struct file *file,
+ 			ret = -EINVAL;
+ 			break;
+ 		} else if (!strnicmp(opt, "ssid", strlen(opt))) {
+-			if (strlen(end) > MWIFIEX_MAX_SSID_LENGTH) {
++			if (strlen(end) > IEEE80211_MAX_SSID_LEN) {
+ 				dev_err(priv->adapter->dev, "SSID length "
+ 						"exceeds max length\n");
+ 				ret = -EFAULT;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f85f2ea..79cf048 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -132,10 +132,6 @@ struct mwifiex_drv_mode {
+ 
+ #define MAX_BITMAP_RATES_SIZE			10
+ 
+-#define MWIFIEX_MAX_SSID_LENGTH					32
+-
+-#define MWIFIEX_MIN_SSID_LENGTH					1
+-
+ #define MAX_CHANNEL_BAND_BG     14
+ 
+ #define MAX_FREQUENCY_BAND_BG   2484
+-- 
+1.7.0.2
+
