@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:45080 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759928Ab1CDUGd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59963 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751838Ab1CKIq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 15:06:33 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 9BE0E540175
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Mar 2011 15:09:57 -0500 (EST)
-Subject: Compat-wireless release for 2011-03-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110304200631.D22A345796@repository3.orbit-lab.org>
-Date: Fri,  4 Mar 2011 15:06:31 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 11 Mar 2011 03:46:26 -0500
+Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>, Greg KH <greg@kroah.com>,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307F51C401C@SC-VEXCH1.marvell.com>
+References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+	 <1291380780.3499.119.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307F51C401C@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Mar 2011 09:45:15 +0100
+Message-ID: <1299833115.3755.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   b8988ca..557ca24  linux-2.6.38.y -> origin/linux-2.6.38.y
- * [new tag]         compat-wireless-v2.6.38-rc7-1 -> compat-wireless-v2.6.38-rc7-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   f3ef28f..0dee4ea  linux-2.6.38.y -> origin/linux-2.6.38.y
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 880ce2e...e30f50b akpm-end   -> origin/akpm-end  (forced update)
-   dd9c154..cbdbb4c  akpm-start -> origin/akpm-start
-   b7498f3..d08c1d9  history    -> origin/history
- + 2afa434...502d294 master     -> origin/master  (forced update)
-   dd9c154..cbdbb4c  stable     -> origin/stable
- * [new tag]         next-20110304 -> next-20110304
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+Hi,
 
-compat-wireless code metrics
+> During the past 3 months, we have made 56 mwifiex patches (listed
+> below) since the initial mwifiex driver submission. Most of these
+> patches address the above issues; and the ioctl multiple abstraction
+> layers and the static forward declarations as you commented in another
+> e-mail. Some other patches are for code cleanups, mainly coding style.
 
-    831498 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1566 - % of code consists of backport work
+I've only loosely followed these patches, but I'm sure the driver is in
+*much* better shape now. If you think you're done, it'd be worthwhile to
+just resubmit the entire driver in its new version.
+
+johannes
+
