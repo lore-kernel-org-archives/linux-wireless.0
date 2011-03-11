@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64063 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757074Ab1CRRY6 convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:47442 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920Ab1CKVRZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 13:24:58 -0400
-Received: by vxi39 with SMTP id 39so3744026vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 10:24:57 -0700 (PDT)
+	Fri, 11 Mar 2011 16:17:25 -0500
+Received: by wya21 with SMTP id 21so2821465wya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2011 13:17:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20110318165626.GA12889@sig21.net>
-References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com>
-	<201103172107.25316.helmut.schaa@googlemail.com>
-	<AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com>
-	<201103181642.28386.helmut.schaa@googlemail.com>
-	<AANLkTi=oAQ1M=XmFpyjh+2zkHidN_AdG7880A=TGsM-h@mail.gmail.com>
-	<20110318165626.GA12889@sig21.net>
-Date: Fri, 18 Mar 2011 18:24:56 +0100
-Message-ID: <AANLkTim7QdUByYTDC=ZjjY5ZrAuwhvEUZOKUeGYctXN2@mail.gmail.com>
-Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers in
- AP and IBSS
-From: Juan Carlos Garza <juancarlosgarza@gmail.com>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Date: Fri, 11 Mar 2011 15:17:23 -0600
+Message-ID: <AANLkTi=de0vzqA-+CpmK1V88Ypj6TN4C+a4j4=KiyTJX@mail.gmail.com>
+Subject: Unusual saw-wave like ping times from linux wireless AP to MacBook
+ Pro, iPhone
+From: =?ISO-8859-1?Q?Chris_Dos=E9?= <chris.dose@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2011 at 5:56 PM, Johannes Stezenbach <js@sig21.net> wrote:
-> Hi Ivo,
->
-> On Fri, Mar 18, 2011 at 05:15:04PM +0100, Ivo Van Doorn wrote:
->> On Fri, Mar 18, 2011 at 4:42 PM, Helmut Schaa
->> <helmut.schaa@googlemail.com> wrote:
->> > Thanks for testing Juan.
->> >
->> > Am Freitag, 18. März 2011 schrieb Juan Carlos Garza:
->> >> I applied the patches (manually), and tested the stick.
->> >>
->> >> The transfer of big loads now is successful.
->> >
->> > Ivo, Johannes, are there any issues left with the async tx status
->> > patches for rt2800usb (in the experimental branch) as they seem to
->> > lower the chance for missed tx status reports.
->>
->> I have to do a performance test to see if there are any issues remaining,
->> but so far all those patches resulted in poorer performance (reduced
->> association successes).
->
-> IIRC you did no report any newer test results after
-> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/003070.html
+I have a ubuntu 10.04 based wireless router running hostapd 0.7.3, the
+latest compat-wireless ath9k.  The same experiments were tried using
+hostapd 0.6.9 and ath9k from 2.6.32 and 2.6.35 as well.  also, hostapd
+was tried in g mode and n mode, with wpa/wpa2 on and off, and with
+high throughput on and off. I always get the same (or similar)
+results.
 
-I did get once or twice a warning saying:
-Queue 14 failed to flush, and I think it did not work afterwards...
+The symptoms are like this: pinging a macbook pro, or an iphone, from
+the AP results in an almost perfectly regular saw-wave like pattern.
+The ping time starts at 50ms, steadily rises every subsequent ping
+until it reaches somewhere over 200ms, then abruptly resets back to
+50ms, and rises again.  Graphing it in excel shows it is strangely
+very precise.  Between all the different version I've tried, I've seen
+slight variations on this, running the latest versions of everything
+now it seems like it starts closer to 1ms and rises to 200ms then
+starts over.
 
-I do not need to associate, as I use the Access Point rather than a
-Station. Clients could associate with the access point without
-problems. But this patch might bring more stability... can someone
-give me the path to the experimental branch git repository?
+Pinging another wireless device on my network (an HP wireless printer)
+results in very fast, steady 5ms ping times.  So it's not ALL wireless
+clients, just some.  In this case it seems apple products, but I have
+nothing else currently to test with.
 
-> (I think this change was merged into one of the other patches in rt2x00/experimental)
->
-> For me association works fast and reliable with these patches, but I
-> did not have time to test with the wpa_supplicant from
-> your ros.org code base.
->
-> Without the fix above it is clear why association would be unreliable.
->
->
-> Johannes
->
+Pings look like this:
+http://tinypaste.com/9dc704
 
-Regards
--- 
-Juan Carlos
+Two graphs I made:
+http://imagebin.org/142438
+http://imagebin.org/142439
+
+daemon.log: http://tinypaste.com/7a452e
+dmesg: http://tinypaste.com/1cbe32
+kern.log: http://tinypaste.com/cd1a1
+
+lspci for my wireless card:
+00:0e.0 Network controller: Atheros Communications Inc. AR922X
+Wireless Network Adapter (rev 01)
+
+If I can supply any more information, please let me know what.
