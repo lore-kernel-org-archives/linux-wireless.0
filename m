@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:35784 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753555Ab1CGCgD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:36:03 -0500
-Received: by vws12 with SMTP id 12so3355682vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:36:02 -0800 (PST)
-Message-ID: <4D74448E.2070504@lwfinger.net>
-Date: Sun, 06 Mar 2011 20:35:58 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT 11/11] rtlwifi: rtl8192se: Modify rtlwifi routines to
- handle rtl8192se and add Makefile and Kconfig
-References: <4d732b88.lM+a0Gg928N+S/xO%Larry.Finger@lwfinger.net> <4D73EB12.3040102@tvcablenet.be> <4D73F209.8050406@lwfinger.net> <4D73F506.50609@tvcablenet.be>
-In-Reply-To: <4D73F506.50609@tvcablenet.be>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:54400 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752047Ab1CLALd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2011 19:11:33 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH] ath9k: fix aggregation related interoperability issues
+Date: Sat, 12 Mar 2011 01:11:28 +0100
+Message-Id: <1299888688-25201-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2011 02:56 PM, François Valenduc wrote:
+Some clients seems to keep track of their reorder window even after an
+aggregation session has been disabled. This causes issues if there are
+still retried but not completed frames pending for the TID.
+To ensure that rx does not stall in such situations, set sendbar to 1
+for any frame purged from the TID queue on teardown.
 
-> Sorry to annoy you again but either I am doing something wrong or this
-> new patch doesn't apply on top of the 10 first patches. There seems to
-> be problems in fuse.c, pci.c and core.c (all in
-> drivers/net/wireless/rtlwifi).
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Did the driver build for you after those other two patches were added?
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index f977f80..ef22096 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -166,7 +166,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		fi = get_frame_info(bf->bf_mpdu);
+ 		if (fi->retries) {
+ 			ath_tx_update_baw(sc, tid, fi->seqno);
+-			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 1);
+ 		} else {
+ 			ath_tx_send_normal(sc, txq, NULL, &bf_head);
+ 		}
+-- 
+1.7.3.2
 
-What are the PCI IDs for your device? I have 3 of them, and one does not yet 
-work - a problem that I'm now chasing.
-
-Larry
