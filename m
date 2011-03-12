@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:40713 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759227Ab1CaT3D convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 15:29:03 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"lrodriguez@atheros.com" <lrodriguez@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>
-Date: Thu, 31 Mar 2011 12:28:55 -0700
-Subject: RE: [PATCH 1/5] compat-wireless: add support for mwifiex
-Message-ID: <477F20668A386D41ADCC57781B1F704307FA844A04@SC-VEXCH1.marvell.com>
-References: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1301588527-16615-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset=US-ASCII
+Received: from kroah.org ([198.145.64.141]:55420 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754570Ab1CLSuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Mar 2011 13:50:12 -0500
+Date: Sat, 12 Mar 2011 10:42:26 -0800
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Driver Backport <lf_driver_backport@lists.linux-foundation.org>
+Subject: Re: Google Summer of Code 2011 - REMINDER: Please post your projects
+Message-ID: <20110312184226.GA1064@kroah.com>
+References: <4D7BB5A4.8000001@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D7BB5A4.8000001@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
-
-> -----Original Message-----
-> From: Hauke Mehrtens [mailto:hauke@hauke-m.de]
-> Sent: Thursday, March 31, 2011 9:22 AM
-> To: mcgrof@gmail.com; lrodriguez@atheros.com
-> Cc: linux-wireless@vger.kernel.org; Hauke Mehrtens; Bing Zhao
-> Subject: [PATCH 1/5] compat-wireless: add support for mwifiex
+On Sat, Mar 12, 2011 at 07:04:20PM +0100, Till Kamppeter wrote:
+> Hi,
 > 
-> This adds support for mwifiex into compat-wireless.
+> I have sent out the mentoring organization application for the Linux
+> Foundation yesterday. To get the best chances to get accepted one
+> should have many project ideas posted.
 > 
-> This is only compile tested as I do not have such a device.
+> Unfortunately, I did not see any ideas posted for the kernel, for
+> wireless, or for driver backport.
 
-I will test it.
+As explained many years ago, the kernel doesn't really lend itself to
+GSoC projects, so there really isn't anything direct to list, sorry.
 
-Thanks,
+But as always, if students show up with valid proposals, I will be glad
+to review them and possibly mentor them if needed.
 
-Bing
+thanks,
 
-> 
-> CC: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  config.mk                                 |    4 +
->  patches/01-netdev.patch                   |   11 ++++
->  patches/25-multicast-list_head.patch      |   42 ++++++++++++--
->  patches/26-sdio-quirks.patch              |   12 ++++
->  patches/29-libertas_sdio_no_suspend.patch |   34 -----------
->  patches/29-sdio_no_suspend.patch          |   86 +++++++++++++++++++++++++++++
->  scripts/admin-update.sh                   |    1 +
->  7 files changed, 151 insertions(+), 39 deletions(-)
->  delete mode 100644 patches/29-libertas_sdio_no_suspend.patch
->  create mode 100644 patches/29-sdio_no_suspend.patch
-
+greg k-h
