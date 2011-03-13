@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33457 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753068Ab1CAV4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 16:56:09 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 13:55:47 -0800
-Date: Tue, 1 Mar 2011 13:56:04 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"nbd@openwrt.org" <nbd@openwrt.org>,
-	"dubowoj@neratec.com" <dubowoj@neratec.com>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"simon.wunderlich@saxnet.de" <simon.wunderlich@saxnet.de>
-Subject: Re: [PATCH 3/9] [mac80211] enable radar detection
-Message-ID: <20110301215604.GE6835@tux>
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
- <201102281747.44842.bernhard.schmidt@saxnet.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201102281747.44842.bernhard.schmidt@saxnet.de>
+Received: from external1.orbit-lab.org ([128.6.192.131]:52131 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752849Ab1CMTCw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Mar 2011 15:02:52 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 07EA3540154
+	for <linux-wireless@vger.kernel.org>; Sun, 13 Mar 2011 15:06:34 -0400 (EDT)
+Subject: Compat-wireless release for 2011-03-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110313190250.47FA840E98@repository3.orbit-lab.org>
+Date: Sun, 13 Mar 2011 15:02:50 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 08:47:44AM -0800, Bernhard Schmidt wrote:
-> +	if (sdata && (sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-> +		      sdata->vif.type == NL80211_IFTYPE_AP ||
-> +		      sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-> +		      sdata->vif.type == NL80211_IFTYPE_MESH_POINT ||
-> +		      sdata->vif.type == NL80211_IFTYPE_P2P_GO) &&
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-How about adding a helper as a separate patch that checks this
-for us and then sprinkling in other areas of code we have that uses
-the same check?
+compat-wireless code metrics
 
-Some thing like ieee80211_sdata_can_beacon(sdata) or whatever.
-
-  Luis
+    831956 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1560 - % of code consists of backport work
