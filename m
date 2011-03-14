@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46246 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759900Ab1CDSwJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 13:52:09 -0500
-Received: by vxi39 with SMTP id 39so2273700vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2011 10:52:08 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:22116 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476Ab1CNSLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Mar 2011 14:11:10 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 11:10:47 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 36/38] ath6kl: remove-typedef WINDOW_SNAPSHOT
+Date: Mon, 14 Mar 2011 10:59:10 -0700
+Message-ID: <1300125552-24422-37-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1299238332.4348.3.camel@jlt3.sipsolutions.net>
-References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
- <1299208307-9428-3-git-send-email-thomas@cozybit.com> <1299238332.4348.3.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 4 Mar 2011 10:51:47 -0800
-Message-ID: <AANLkTinZvEprR31SK3Gy1r3Rb3MW1XEWQK+Dv27g8+m=@mail.gmail.com>
-Subject: Re: [PATCH 2/7] mac80211: New constant definitions for SAE
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 4, 2011 at 3:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
->
->> +++ b/include/linux/nl80211.h
->> @@ -1817,6 +1817,7 @@ enum nl80211_bss_status {
->>   * @NL80211_AUTHTYPE_SHARED_KEY: Shared Key authentication (WEP only)
->>   * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
->>   * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
->> + * @NL80211_AUTHTYPE_SAE: Simultaneous Authentication of Equals
->>   * @__NL80211_AUTHTYPE_NUM: internal
->>   * @NL80211_AUTHTYPE_MAX: maximum valid auth algorithm
->>   * @NL80211_AUTHTYPE_AUTOMATIC: determine automatically (if necessary by
->
-> I think some of the auth code in nl80211 or so needs to catch this.
-> Maybe nl80211_valid_auth_type() wouldn't be the right place, but for now
-> it doesn't look like we'd be able to support this in managed mode, yet
-> it wouldn't get errors and at least in the cfg80211 SME fall back to
-> using OPEN, which is no fun.
+remove-typedef -s WINDOW_SNAPSHOT \
+	"struct window_snapshot" drivers/staging/ath6kl/
 
-We'll withdraw this then, given that we are not using it for mesh either.
+Tested-by: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/reorder/aggr_rx_internal.h |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/ath6kl/reorder/aggr_rx_internal.h b/drivers/staging/ath6kl/reorder/aggr_rx_internal.h
+index becbab9..1112596 100644
+--- a/drivers/staging/ath6kl/reorder/aggr_rx_internal.h
++++ b/drivers/staging/ath6kl/reorder/aggr_rx_internal.h
+@@ -67,10 +67,11 @@ struct osbuf_hold_q {
+ 
+ 
+ #if 0
+-typedef struct {
++/* XXX: unused ? */
++struct window_snapshot {
+     u16 seqno_st;
+     u16 seqno_end;
+-}WINDOW_SNAPSHOT;
++};
+ #endif
+ 
+ struct rxtid {
+@@ -82,7 +83,7 @@ struct rxtid {
+     u32 hold_q_sz;  /* Num of frames that can be held in hold q */
+     struct osbuf_hold_q        *hold_q;    /* Hold q for re-order */
+ #if 0    
+-    WINDOW_SNAPSHOT     old_win;    /* Sliding window snapshot - for timeout */
++    struct window_snapshot     old_win;    /* Sliding window snapshot - for timeout */
+ #endif    
+     A_NETBUF_QUEUE_T    q;          /* q head for enqueuing frames for dispatch */
+     A_MUTEX_T           lock;
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.4.15.g7811d
+
