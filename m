@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56127 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36456 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064Ab1CFXsQ convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751242Ab1CNQ4c convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 18:48:16 -0500
-Received: by iyb26 with SMTP id 26so3472262iyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 15:48:16 -0800 (PST)
+	Mon, 14 Mar 2011 12:56:32 -0400
+Received: by iyb26 with SMTP id 26so5125807iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 09:56:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1299447258.5082.164.camel@wwguy-huron>
-References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com> <1299447258.5082.164.camel@wwguy-huron>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sun, 6 Mar 2011 15:47:55 -0800
-Message-ID: <AANLkTimNjxguAFcRr-mJr-pPMkf6zTxzm4k7oV+6zngG@mail.gmail.com>
-Subject: Re: [PATCH 1/3] iwlwifi: move rx handlers code to iwl-rx.c
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1300121590-27998-1-git-send-email-ohad@wizery.com>
+References: <1300121590-27998-1-git-send-email-ohad@wizery.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Mon, 14 Mar 2011 18:56:10 +0200
+Message-ID: <AANLkTi=3UsQAsY40LAG-yCNz3sTsgF6Wbgb--Yw8DNwg@mail.gmail.com>
+Subject: Re: [PATCH] wl12xx: update bet_max_consecutive
+To: linux-wireless@vger.kernel.org
+Cc: "Coelho, Luciano" <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the error for me.
-Dan
+On Mon, Mar 14, 2011 at 6:53 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+> Allow early termination of 50 consecutive beacons.
+>
+> This value is the recommended one by the 12xx's system/RF team,
+> and tests show that power consumption is improved as expected.
+>
+> Reported-by: Ruthy Zaphir <ruthyz@ti.com>
+> Tested-by: Danil Shalumov <danils@ti.com>
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
 
-index 7dc2d39..e3ba4d5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -30,6 +30,7 @@
- #include <linux/etherdevice.h>
- #include <linux/slab.h>
- #include <net/mac80211.h>
-+#include <linux/sched.h>
- #include <asm/unaligned.h>
- #include "iwl-eeprom.h"
- #include "iwl-dev.h"
--- 
-1.7.0.4
+- Luciano Coelho <luciano.coelho@nokia.com>
++ Luciano Coelho <coelho@ti.com>
 
+Sorry, my scripts are outdated.
 
 
-On Sun, Mar 6, 2011 at 1:34 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi Stanislaw,
+>  drivers/net/wireless/wl12xx/main.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >
-> On Fri, 2011-03-04 at 08:51 -0800, Stanislaw Gruszka wrote:
->> Put generic rx_handlers (except iwlagn_rx_reply_compressed_ba) to
->> iwl-rx.c . Make functions static and change prefix from iwlagn_ to
->> iwl_ . Beautify iwl_setup_rx_handlers and do some other minor coding
->> style changes.
->>
->> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> ---
-> this patch break the compiling
->
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778:17: error: undefined
-> identifier 'TASK_INTERRUPTIBLE'
->  CC [M]  drivers/net/wireless/iwlwifi/iwl-rx.o
-> drivers/net/wireless/iwlwifi/iwl-rx.c: In function
-> ‘iwl_rx_card_state_notif’:
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
-> undeclared (first use in this function)
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
-> identifier is reported only once
-> drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
-> appears in.)
-> make[1]: *** [drivers/net/wireless/iwlwifi/iwl-rx.o] Error 1
-> make: *** [_module_drivers/net/wireless/iwlwifi] Error 2
->
->
-> Thanks
-> Wey
->
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 8b3c8d1..4e6660d 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -254,7 +254,7 @@ static struct conf_drv_settings default_conf = {
+>                .ps_poll_threshold           = 10,
+>                .ps_poll_recovery_period     = 700,
+>                .bet_enable                  = CONF_BET_MODE_ENABLE,
+> -               .bet_max_consecutive         = 10,
+> +               .bet_max_consecutive         = 50,
+>                .psm_entry_retries           = 5,
+>                .psm_exit_retries            = 255,
+>                .psm_entry_nullfunc_retries  = 3,
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.1
+>
 >
