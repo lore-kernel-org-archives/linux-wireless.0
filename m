@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:38953 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758552Ab1CaQDK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:03:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <4D8E8B1E.3030709@users.sourceforge.net>
-References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
-	<4D8E5BA3.1090909@users.sourceforge.net>
-	<AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com>
-	<4D8E8B1E.3030709@users.sourceforge.net>
-Date: Fri, 1 Apr 2011 00:03:09 +0800
-Message-ID: <AANLkTin48KZ0wc6SiB+E3VOkVAZ5-Xj9WdhstsgEO14z@mail.gmail.com>
-Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
-From: wu zhangjin <wuzhangjin@gmail.com>
-To: Hin-Tak Leung <htl10@users.sourceforge.net>
-Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Roman Mamedov <rm@romanrm.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:60149 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750867Ab1CNGQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Mar 2011 02:16:56 -0400
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p2E6Gr3X015369
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 02:16:53 -0400
+Received: from [10.3.228.64] (vpn-228-64.phx2.redhat.com [10.3.228.64])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id p2E6GqHM008453
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 02:16:53 -0400
+Subject: iwl3945: microcode SW error log decode?
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 14 Mar 2011 01:18:13 -0500
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1300083494.6654.1.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 27, 2011 at 8:55 AM, Hin-Tak Leung
-<htl10@users.sourceforge.net> wrote:
-[...]
->
-> Hmm, I seem to have the impression that there is code somewhere for
-> switching a singular LED's behavior of the driver between one or the other,
-> by echo'ing into sysfs or some other trickery? Or would that be a desired
-> approach if that's not done at the moment?
+Hi,
 
-Do you mean the interface: /sys/class/rfkill/rfkill0/state? or
-something like /sys/class/leds/...::/brightness?
+Got a bug report:
 
-Seems the LED behavior can be triggered automatically by the rfkill
-input event with the kernel config option(MAC80211_LEDS, RFKILL_LEDS),
-so, echo'ing to such interface may be not a good idea ;-)
+https://bugzilla.gnome.org/show_bug.cgi?id=644551
 
-Best Regards,
-Wu Zhangjin
+that has this error log in it.  Is that enough to figure out where
+things have gone wrong in the firmware?
+
+[ 1286.750258] iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+[ 1286.750268] iwl3945 0000:03:00.0: Loaded firmware version: 15.32.2.9
+[ 1286.750304] iwl3945 0000:03:00.0: Start IWL Error Log Dump:
+[ 1286.750309] iwl3945 0000:03:00.0: Status: 0x0002A2E4, count: 1
+[ 1286.750314] iwl3945 0000:03:00.0: Desc       Time       asrtPC  blink2 ilink1  nmiPC   Line
+[ 1286.750543] iwl3945 0000:03:00.0: SYSASSERT     (0x5) 0001680217 0x008B6 0x13756 0x00320 0x00000 764
+[ 1286.750547] 
+[ 1286.750677] iwl3945 0000:03:00.0: Start IWL Event Log Dump: display last 20 count
+[ 1286.750720] iwl3945 0000:03:00.0: 0001679867 0x00000001      1106
+[ 1286.750746] iwl3945 0000:03:00.0: 0001679867 0x0000000f      1106
+[ 1286.750771] iwl3945 0000:03:00.0: 0001679869 0x00000428      1105
+[ 1286.750796] iwl3945 0000:03:00.0: 0001679873 0x00000483      1115
+[ 1286.750821] iwl3945 0000:03:00.0: 0001679876 0x00000006      0463
+[ 1286.750846] iwl3945 0000:03:00.0: 0001679877 0x00000006      0462
+[ 1286.750871] iwl3945 0000:03:00.0: 0001680003 0x04130097      0401
+[ 1286.750896] iwl3945 0000:03:00.0: 0001680005 0x00000006      0451
+[ 1286.750921] iwl3945 0000:03:00.0: 0001680025 0x00000000      0451
+[ 1286.750947] iwl3945 0000:03:00.0: 0001680157 0x44140080      0401
+[ 1286.750972] iwl3945 0000:03:00.0: 0001680172 0x00000017      0452
+[ 1286.750997] iwl3945 0000:03:00.0: 0001680177 0x00113b6e      0450
+[ 1286.751023] iwl3945 0000:03:00.0: 0001680182 0x00113b6e      0450
+[ 1286.751048] iwl3945 0000:03:00.0: 0001680187 0x00113b6e      0450
+[ 1286.751073] iwl3945 0000:03:00.0: 0001680192 0x00113b6e      0450
+[ 1286.751098] iwl3945 0000:03:00.0: 0001680197 0x00113b6e      0450
+[ 1286.751123] iwl3945 0000:03:00.0: 0001680202 0x00123b6e      0450
+[ 1286.751148] iwl3945 0000:03:00.0: 0001680207 0x00123b6e      0450
+[ 1286.751173] iwl3945 0000:03:00.0: 0001680213 0x00123b6e      0450
+[ 1286.751198] iwl3945 0000:03:00.0: 0001680218 0x00000100      0125
+[ 1286.751212] iwl3945 0000:03:00.0: Error Reply type 0x000002FC cmd REPLY_SCAN_CMD (0x80) seq 0x4414 ser 0x00340000
+[ 1286.755637] iwl3945 0000:03:00.0: Can't stop Rx DMA.
+
+It appears like the configuration that gets sent to wpa_supplicant is
+TKIP + WPA2 which seems kinda wrong, doesn't WPA2/RSN require CCMP?
+
+Dan
+
+
