@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:56279 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756929Ab1CRQEh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 12:04:37 -0400
-Received: by qyg14 with SMTP id 14so3514200qyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 09:04:36 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:20506 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757053Ab1CNR7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Mar 2011 13:59:41 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 20/38] ath6kl: remove-typedef HTC_EP_CALLBACKS
+Date: Mon, 14 Mar 2011 10:58:54 -0700
+Message-ID: <1300125552-24422-21-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1300463925.13499.118.camel@dev.znau.edu.ua>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	<1300453433.13499.18.camel@dev.znau.edu.ua>
-	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	<1300460342.13499.60.camel@dev.znau.edu.ua>
-	<AANLkTi=2qBhKfJZ8a2GEgx_4aJL_85FKODUX31BddmN1@mail.gmail.com>
-	<1300463925.13499.118.camel@dev.znau.edu.ua>
-Date: Fri, 18 Mar 2011 17:04:36 +0100
-Message-ID: <AANLkTikGpQG1PS+VoX-8pZwePci08NO4RHjjLn+Lshg5@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/18 George Kashperko <george@znau.edu.ua>:
-> My english is awful therefore seems we missunderstood each other. I'm
-> sure I got your point right - you plan to start up the new (bcmb)
-> project for both sb and ai support.
+remove-typedef -s HTC_EP_CALLBACKS \
+	"struct htc_ep_callbacks" drivers/staging/ath6kl/
 
-No, no, no. My bcmb is not expected to be project for both buses. It
-is expected to provide helper functions for *two separated* drivers:
-ai and ssb.
+Tested-by: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/htc2/htc_internal.h |    2 +-
+ drivers/staging/ath6kl/include/htc_api.h   |    6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-I don't want to duplicate ssb_core_name (already implemented in ssb)
-in my ai. That way I put it in bcmb_scan.c. I can now use
-ssb_core_name in both: ssb and ai without double, duplicated
-implementation.
-
-I'm still reading your earlier e-mail...
-
+diff --git a/drivers/staging/ath6kl/htc2/htc_internal.h b/drivers/staging/ath6kl/htc2/htc_internal.h
+index 0e363a8..d574015 100644
+--- a/drivers/staging/ath6kl/htc2/htc_internal.h
++++ b/drivers/staging/ath6kl/htc2/htc_internal.h
+@@ -72,7 +72,7 @@ struct htc_endpoint {
+     HTC_PACKET_QUEUE            TxQueue;        /* HTC frame buffer TX queue */
+     HTC_PACKET_QUEUE            RxBuffers;      /* HTC frame buffer RX list */
+     struct htc_endpoint_credit_dist    CreditDist;     /* credit distribution structure (exposed to driver layer) */
+-    HTC_EP_CALLBACKS            EpCallBacks;    /* callbacks associated with this endpoint */
++    struct htc_ep_callbacks            EpCallBacks;    /* callbacks associated with this endpoint */
+     int                         MaxTxQueueDepth;   /* max depth of the TX queue before we need to
+                                                       call driver's full handler */
+     int                         MaxMsgLength;        /* max length of endpoint message */
+diff --git a/drivers/staging/ath6kl/include/htc_api.h b/drivers/staging/ath6kl/include/htc_api.h
+index db3cbcf9..ad25d3e 100644
+--- a/drivers/staging/ath6kl/include/htc_api.h
++++ b/drivers/staging/ath6kl/include/htc_api.h
+@@ -116,7 +116,7 @@ typedef enum _HTC_SEND_FULL_ACTION {
+  * must ONLY inspect the packet, it may not free or reclaim the packet. */
+ typedef HTC_SEND_FULL_ACTION (*HTC_EP_SEND_QUEUE_FULL)(void *, HTC_PACKET *pPacket);
+ 
+-typedef struct _HTC_EP_CALLBACKS {
++struct htc_ep_callbacks {
+     void                     *pContext;     /* context for each callback */
+     HTC_EP_SEND_PKT_COMPLETE EpTxComplete;  /* tx completion callback for connected endpoint */
+     HTC_EP_RECV_PKT          EpRecv;        /* receive callback for connected endpoint */
+@@ -136,7 +136,7 @@ typedef struct _HTC_EP_CALLBACKS {
+                                                        when the recv queue drops below this value 
+                                                        if set to 0, the refill is only called when packets 
+                                                        are empty */
+-} HTC_EP_CALLBACKS;
++};
+ 
+ /* service connection information */
+ typedef struct _HTC_SERVICE_CONNECT_REQ {
+@@ -144,7 +144,7 @@ typedef struct _HTC_SERVICE_CONNECT_REQ {
+     u16 ConnectionFlags;           /* connection flags, see htc protocol definition */
+     u8 *pMetaData;                 /* ptr to optional service-specific meta-data */
+     u8 MetaDataLength;            /* optional meta data length */
+-    HTC_EP_CALLBACKS EpCallbacks;               /* endpoint callbacks */
++    struct htc_ep_callbacks EpCallbacks;               /* endpoint callbacks */
+     int              MaxSendQueueDepth;         /* maximum depth of any send queue */
+     u32 LocalConnectionFlags;      /* HTC flags for the host-side (local) connection */
+     unsigned int     MaxSendMsgSize;            /* override max message size in send direction */
 -- 
-Rafał
+1.7.4.15.g7811d
+
