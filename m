@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36990 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769Ab1CANPN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 08:15:13 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 22so4420741wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 05:15:12 -0800 (PST)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH v2 3/7] wl12xx: Change claiming of the SDIO bus
-Date: Tue,  1 Mar 2011 15:14:40 +0200
-Message-Id: <1298985284-6048-4-git-send-email-ido@wizery.com>
-In-Reply-To: <1298985284-6048-1-git-send-email-ido@wizery.com>
-References: <1298985284-6048-1-git-send-email-ido@wizery.com>
+Received: from mga14.intel.com ([143.182.124.37]:46559 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755894Ab1CNAtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Mar 2011 20:49:45 -0400
+Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: "ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
+References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
+	 <1299831238.5082.185.camel@wwguy-huron>
+	 <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 13 Mar 2011 17:47:27 -0700
+Message-ID: <1300063647.24333.7.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SDIO bus is claimed and released for each SDIO transaction. In
-addition to the few CPU cycles it takes to claim and release the bus, it
-may also cause undesired side effects such as the MMC host stopping its
-internal clocks.
+On Sun, 2011-03-13 at 12:59 -0700, Daniel Halperin wrote:
+> On Fri, Mar 11, 2011 at 12:13 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> >> (1) Why does iwlwifi default to an aggregation frame limit of 31? I
+> >> didn't see any negative effects from 63 frame limit and performance
+> >> improved dramatically
+> > if I remember correctly, we change from 63 to 31 while we have some 11n
+> > performance issue. even later we found out frame limit is not the main
+> > reason of low tpt, but we did not change it back since at the time we
+> > did not see any performance different, I believe we can use different
+> > frame limit, but I will prefer make it more flexible, maybe something
+> > could be change by either module parameter or debugfs. Also I am not
+> > sure are there any behavior differences between different devices and
+> > different versions of ucode.
+> 
+> 63 hasn't hurt me yet, though the scheduler still does occasionally
+> send a 64th frame that shifts the reorder buffer's window.  Is there a
+> chance that 64 will work as a max?  63 seems an odd choice.
 
-Since only the wl12xx_sdio driver drives this SDIO card, it is safe to
-claim the SDIO host once (on power on), and release it only when turning
-the power off.
+it is limited by uCode, did not have chance to look at what the reason
+is yet. my initial guess without look at the code, 63 = 0x3F which use 6
+bits and 64=0x40 is 7 bits, but I am not sure, I will check
 
-This patch was inspired by Juuso Oikarinen's (juuso.oikarinen@nokia.com)
-patch "wl12xx: Change claiming of the (SDIO) bus".
+Thanks
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/sdio.c |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
+> 
+> >> (3) mac80211's reorder buffer code could probably also be relaxed.  It
+> >> probably wouldn't hurt to have the buffer be twice the transmitter's
+> >> advertised buffer, and might compensate for devices that don't
+> >> properly honor frame limits.  Also, mac80211 only flushes the reorder
+> >> buffer every 100 ms.  That seems like a LONG time given that batches
+> >> are limited to 4ms -- 100ms is room for at least 10, maybe 20
+> >> retransmissions to attempt to fill in the holes(!).
+> 
+> Removing the check here
+> <https://github.com/mirrors/linux-2.6/blob/master/net/mac80211/agg-rx.c#L231>
+> essentially forces the receive buffer to be 64 frames long.  This
+> works just fine for me (iwl5300 TXer and RXer) and would seem to be
+> appropriate for any transmitter window. If the transmitter uses a
+> window of, say, 31 frames and also honors its limit, then I think the
+> only wasted space would be 33 pointers to skb's at the transmitter
+> side. I didn't see any degradation using an ath9k+minstrel_ht
+> transmitter with this change.
+> 
+> Dan
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index d5e8748..b9c3747 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -106,8 +106,6 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
- 	int ret;
- 	struct sdio_func *func = wl_to_func(wl);
- 
--	sdio_claim_host(func);
--
- 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
- 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
- 		wl1271_debug(DEBUG_SDIO, "sdio read 52 addr 0x%x, byte 0x%02x",
-@@ -123,8 +121,6 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
- 	}
- 
--	sdio_release_host(func);
--
- 	if (ret)
- 		wl1271_error("sdio read failed (%d)", ret);
- }
-@@ -135,8 +131,6 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 	int ret;
- 	struct sdio_func *func = wl_to_func(wl);
- 
--	sdio_claim_host(func);
--
- 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
- 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
- 		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
-@@ -152,8 +146,6 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 			ret = sdio_memcpy_toio(func, addr, buf, len);
- 	}
- 
--	sdio_release_host(func);
--
- 	if (ret)
- 		wl1271_error("sdio write failed (%d)", ret);
- }
-@@ -170,7 +162,6 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
- 
- 	sdio_claim_host(func);
- 	sdio_enable_func(func);
--	sdio_release_host(func);
- 
- out:
- 	return ret;
-@@ -180,7 +171,6 @@ static int wl1271_sdio_power_off(struct wl1271 *wl)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
--	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
- 
--- 
-1.7.1
 
