@@ -1,70 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:35001 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751717Ab1CXQvz convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:59288 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754162Ab1CNTGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2011 12:51:55 -0400
-Received: by qyk7 with SMTP id 7so5443489qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2011 09:51:54 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <4D86B222.4070708@lockie.ca>
-References: <4D866BD1.9060904@lockie.ca>
-	<4D86B222.4070708@lockie.ca>
-Date: Thu, 24 Mar 2011 17:51:54 +0100
-Message-ID: <AANLkTik+AjhMBwRy9ESaidnuW+1YCSZiEzeWdFnmZnqS@mail.gmail.com>
-Subject: Re: kernel-2.6.36.2 works, later doesn't
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: James <bjlockie@lockie.ca>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Mar 2011 15:06:36 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 369F9540154
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 15:10:20 -0400 (EDT)
+Subject: Compat-wireless release for 2011-03-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110314190634.71B8140EA0@repository3.orbit-lab.org>
+Date: Mon, 14 Mar 2011 15:06:34 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 21, 2011 at 3:04 AM, James <bjlockie@lockie.ca> wrote:
-> On 03/20/11 17:04, James wrote:
->> $ dmesg | grep phy
->> BIOS-provided physical RAM map:
->> modified physical RAM map:
->> phy0: Selected rate control algorithm 'ath9k_rate_control'
->> Registered led device: ath9k-phy0::radio
->> Registered led device: ath9k-phy0::assoc
->> Registered led device: ath9k-phy0::tx
->> Registered led device: ath9k-phy0::rx
->> phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81
->> mem=0xffffc90001900000, irq=17
->>
->> This is kernel-2.6.36.2.
->> The wireless doesn't work on any later kernel that I have tried.
->> It is very interesting the IRQ is 17 on this kernel but 18 on 2.6.37.3.
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> I tried
-> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/compat-wireless-2.6.36-4.tar.bz2
-> but it doesn't work in the 2.6.36.2 kernel or the 2.6.38 kernel.
->
-> Where can I get the compat-wireless that is the exact code that is in
-> the 2.6.36.2 kernel and then I can try it in the 2.6.38 kernel?
->
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 96bdd35...1a28402 akpm-end   -> origin/akpm-end  (forced update)
+   9179746..c44ed96  akpm-start -> origin/akpm-start
+   28e001e..93bb8a9  history    -> origin/history
+ + 23b5ab8...c0ebee1 master     -> origin/master  (forced update)
+   9179746..c44ed96  stable     -> origin/stable
+ * [new tag]         next-20110314 -> next-20110314
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-The idea of compat-wireless is to make new wifi drivers & features
-accessible for older host-kernel, not the other way around.
-It also makes no sense to have same versions of host kernel and c-w
-version (both 2.6.36 for example, it is the same codebase).
+compat-wireless code metrics
 
-Did you try one of the bleeding-edge compat-wireless [1] tarball (it
-is updated daily, but can be broken)?
-Furthermore, [2] has informations about stable releases and detailed
-build instructions.
-
-Please provide full dmesg and lspci/lsusb output - not truncated one.
-Which user-space do you use? Network-Manager, wpasupplicant, etc.?
-
-- Sedat -
-
-[1] http://wireless.kernel.org/en/users/Download/#Where_to_download_bleeding_edge
-[2] http://wireless.kernel.org/en/users/Download/stable/
+    832319 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1554 - % of code consists of backport work
