@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52080 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756Ab1C1MO2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 08:14:28 -0400
-Subject: Re: [PATCHv2] cfg80211: fix BSS double-unlinking (continued)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: juuso.oikarinen@nokia.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1301311952-27659-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1301311952-27659-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Mar 2011 14:14:23 +0200
-Message-ID: <1301314463.8524.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:20486 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757035Ab1CNR7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Mar 2011 13:59:35 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:12 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <gregkh@suse.de>
+CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
+	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 16/38] ath6kl: remove-typedef HTC_CONTROL_BUFFER
+Date: Mon, 14 Mar 2011 10:58:50 -0700
+Message-ID: <1300125552-24422-17-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-28 at 14:32 +0300, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> This patch adds to the fix "fix BSS double-unlinking"
-> (commit 3207390a8b58bfc1335750f91cf6783c48ca19ca) by Johannes Berg.
-> 
-> It turns out, that the double-unlinking scenario can also occur if expired
-> BSS elements are removed whilst an interface is performing association.
-> 
-> To work around that, replace list_del with list_del_init also in the
-> "cfg80211_bss_expire" function, so that the check for whether the BSS still is
-> in the list works correctly in cfg80211_unlink_bss.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+remove-typedef -s HTC_CONTROL_BUFFER \
+	"struct htc_control_buffer" drivers/staging/ath6kl/
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Tested-by: Naveen Singh <nsingh@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/staging/ath6kl/htc2/htc_internal.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks.
-
-johannes
-
+diff --git a/drivers/staging/ath6kl/htc2/htc_internal.h b/drivers/staging/ath6kl/htc2/htc_internal.h
+index 8bc3162..e3857cf 100644
+--- a/drivers/staging/ath6kl/htc2/htc_internal.h
++++ b/drivers/staging/ath6kl/htc2/htc_internal.h
+@@ -99,10 +99,10 @@ typedef struct _HTC_ENDPOINT {
+ #define NUM_CONTROL_TX_BUFFERS  2
+ #define NUM_CONTROL_RX_BUFFERS  (NUM_CONTROL_BUFFERS - NUM_CONTROL_TX_BUFFERS)
+ 
+-typedef struct HTC_CONTROL_BUFFER {
++struct htc_control_buffer {
+     HTC_PACKET    HtcPacket;
+     u8 *Buffer;
+-} HTC_CONTROL_BUFFER;
++};
+ 
+ #define HTC_RECV_WAIT_BUFFERS        (1 << 0)
+ #define HTC_OP_STATE_STOPPING        (1 << 0)
+@@ -110,7 +110,7 @@ typedef struct HTC_CONTROL_BUFFER {
+ /* our HTC target state */
+ typedef struct _HTC_TARGET {
+     HTC_ENDPOINT                EndPoint[ENDPOINT_MAX];
+-    HTC_CONTROL_BUFFER          HTCControlBuffers[NUM_CONTROL_BUFFERS];
++    struct htc_control_buffer          HTCControlBuffers[NUM_CONTROL_BUFFERS];
+     HTC_ENDPOINT_CREDIT_DIST   *EpCreditDistributionListHead;
+     HTC_PACKET_QUEUE            ControlBufferTXFreeList;
+     HTC_PACKET_QUEUE            ControlBufferRXFreeList;
+-- 
+1.7.4.15.g7811d
 
