@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39077 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929Ab1C2MGG (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:49532 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196Ab1CNSGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 08:06:06 -0400
-Subject: [PATCH] iwlegacy: fix bugs in change_interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Mar 2011 14:05:59 +0200
-Message-ID: <1301400359.3834.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 14 Mar 2011 14:06:20 -0400
+Received: by iyb26 with SMTP id 26so5190726iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 11:06:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 14 Mar 2011 11:06:00 -0700
+Message-ID: <AANLkTin+pC127zgLcy7hx-KXOkKwu8hLg92h7+mdFfix@mail.gmail.com>
+Subject: Re: [PATCH 00/38] ath6kl: remove typedefs part II
+To: gregkh@suse.de
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	vmehta@atheros.com, naveen.singh@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Mar 14, 2011 at 10:58 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> Greg, here is my second cleanup series for ath6kl. This series addresses
+> more typedef removals. Given that I have so many and they all do the
+> same, and are tested I'm submitting them all in one series. I can really
+> split it but you can just do that yourself if you believe this is really
+> necessary. Either way they all go tested.
+>
+> We still have some more typedefs left after this so that'll go in some
+> other series. This applies on top of Ilia Mirkin's submitted but not
+> yet merged patch titled, "staging: ath6kl: Remove NULL check before kfree"
 
-If change_interface gets invoked during a firmware
-restart, it may crash; prevent that from happening
-by checking if ctx->vif is assigned.
+FYI - the linux-wireless mailing list rejected a few patches so I had
+to resend them, but they go unchanged. If you see a patch twice just
+ignore the duplicate.
 
-Additionally, in my initial commit I forgot to set
-the vif->p2p variable correctly, so fix that too,
-even if it doesn't matter since P2P isn't supported.
-
-Cc: stable@kernel.org [2.6.38+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlegacy/iwl-core.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- a/drivers/net/wireless/iwlegacy/iwl-core.c	2011-03-29 14:04:06.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c	2011-03-29 14:04:42.000000000 +0200
-@@ -1805,6 +1805,15 @@ iwl_legacy_mac_change_interface(struct i
- 
- 	mutex_lock(&priv->mutex);
- 
-+	if (!ctx->vif) {
-+		/*
-+		 * Huh? But wait ... this can maybe happen when
-+		 * we're in the middle of a firmware restart!
-+		 */
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
- 
- 	if (!(interface_modes & BIT(newtype))) {
-@@ -1832,6 +1841,7 @@ iwl_legacy_mac_change_interface(struct i
- 	/* success */
- 	iwl_legacy_teardown_interface(priv, vif, true);
- 	vif->type = newtype;
-+	vif->p2p = newp2p;
- 	err = iwl_legacy_setup_interface(priv, ctx);
- 	WARN_ON(err);
- 	/*
-
-
+  Luis
