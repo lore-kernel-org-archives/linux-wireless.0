@@ -1,62 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp101.prem.mail.ac4.yahoo.com ([76.13.13.40]:44332 "HELO
-	smtp101.prem.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751649Ab1CIVy3 (ORCPT
+Received: from web57403.mail.re1.yahoo.com ([66.196.100.54]:37904 "HELO
+	web57403.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750843Ab1COPxI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 16:54:29 -0500
-Date: Wed, 9 Mar 2011 15:54:24 -0600 (CST)
-From: Christoph Lameter <cl@linux.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-cc: David Rientjes <rientjes@google.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Nick Piggin <npiggin@kernel.dk>,
-	Dave Chinner <dchinner@redhat.com>,
-	linux-kernel@vger.kernel.org,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: <IRQ> [<ffffffff810c9204>] ?
- __alloc_pages_nodemask+0x622/0x696
-In-Reply-To: <4D77EEB4.9090404@gmail.com>
-Message-ID: <alpine.DEB.2.00.1103091549020.16989@router.home>
-References: <AANLkTikaLb_xan2ePfo9JCZ1w7RZ76wF8NUT2tYr0ZD=@mail.gmail.com> <alpine.DEB.2.00.1103051847100.8779@chino.kir.corp.google.com> <4D770178.9070908@gmail.com> <alpine.DEB.2.00.1103091254540.13353@chino.kir.corp.google.com>
- <4D77EEB4.9090404@gmail.com>
+	Tue, 15 Mar 2011 11:53:08 -0400
+Message-ID: <297417.86150.qm@web57403.mail.re1.yahoo.com>
+Date: Tue, 15 Mar 2011 08:53:05 -0700 (PDT)
+From: Joe Gunn <armadefuego@yahoo.com>
+Subject: [PATCH 2.6.38-rc8-wl 1/1] orinoco:  Reduce lock contention by reporting static errors before locking
+To: orinoco-devel@lists.sourceforge.net
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some more things from the syslog that may be of relevance. System went
-through multiple suspend and resume cycles.
+Check for static error issues before obtaining lock to reduce lock contention
+Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
+---
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index e793679..c1fe0b5 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -161,36 +161,17 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
+ 	static const u8 off_addr[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+ 	static const u8 any_addr[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+ 
+-	if (orinoco_lock(priv, &flags) != 0)
+-		return -EBUSY;
+-
+-	/* Enable automatic roaming - no sanity checks are needed */
+-	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
+-	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
+-		priv->bssid_fixed = 0;
+-		memset(priv->desired_bssid, 0, ETH_ALEN);
+-
+-		/* "off" means keep existing connection */
+-		if (ap_addr->sa_data[0] == 0) {
+-			__orinoco_hw_set_wap(priv);
+-			err = 0;
+-		}
+-		goto out;
+-	}
+-
+ 	if (priv->firmware_type == FIRMWARE_TYPE_AGERE) {
+ 		printk(KERN_WARNING "%s: Lucent/Agere firmware doesn't "
+ 		       "support manual roaming\n",
+ 		       dev->name);
+-		err = -EOPNOTSUPP;
+-		goto out;
++		return(-EOPNOTSUPP);
+ 	}
+ 
+ 	if (priv->iw_mode != NL80211_IFTYPE_STATION) {
+ 		printk(KERN_WARNING "%s: Manual roaming supported only in "
+ 		       "managed mode\n", dev->name);
+-		err = -EOPNOTSUPP;
+-		goto out;
++		return(-EOPNOTSUPP);
+ 	}
+ 
+ 	/* Intersil firmware hangs without Desired ESSID */
+@@ -198,10 +179,27 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
+ 	    strlen(priv->desired_essid) == 0) {
+ 		printk(KERN_WARNING "%s: Desired ESSID must be set for "
+ 		       "manual roaming\n", dev->name);
+-		err = -EOPNOTSUPP;
++		return(-EOPNOTSUPP);
++	}
++
++	if (orinoco_lock(priv, &flags) != 0)
++		return -EBUSY;
++
++	/* Enable automatic roaming - no sanity checks are needed */
++	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
++	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
++		priv->bssid_fixed = 0;
++		memset(priv->desired_bssid, 0, ETH_ALEN);
++
++		/* "off" means keep existing connection */
++		if (ap_addr->sa_data[0] == 0) {
++			__orinoco_hw_set_wap(priv);
++			err = 0;
++		}
+ 		goto out;
+ 	}
+ 
++
+ 	/* Finally, enable manual roaming */
+ 	priv->bssid_fixed = 1;
+ 	memcpy(priv->desired_bssid, &ap_addr->sa_data, ETH_ALEN);
 
-Before the failure we have a wlan authentication and the ATH driver throws a fit.
-
-[ 7339.673270] ll header: ff:ff:ff:ff:ff:ff:00:90:fb:1c:4f:5c:08:00
-[ 7340.076865] FIREWALL:INPUT IN=wlan0 OUT= MAC=00:19:e3:06:2c:16:00:90:fb:1c:4f:5c:08:00 SRC=192.168.5.1
-DST=192.168.5.11 LEN=48 TOS=0x00 PREC=0x00 TTL=64 ID=0 DF PROTO=ICMP TYPE=8 CODE=0 ID=251 SEQ=0
-[ 7416.743752] cfg80211: Calling CRDA to update world regulatory domain
-[ 7419.292521] wlan0: authenticate with 00:21:55:b4:20:20 (try 1)
-[ 7419.312690] wlan0: authenticated
-[ 7419.318325] wlan0: associate with 00:21:55:b4:20:20 (try 1)
-[ 7419.322764] wlan0: RX AssocResp from 00:21:55:b4:20:20 (capab=0x401 status=0 aid=218)
-[ 7419.322770] wlan0: associated
-[ 7427.161366] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[ 7427.161432] ath: Failed to stop TX DMA!
-[ 7434.492398] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[ 7434.492462] ath: Failed to stop TX DMA!
-[ 7603.339047]
-=============================================================================
-[ 7603.339053] BUG radix_tree_node: Padding overwritten. 0xffff88000008fe00-0xffff88000008fe32
-[ 7603.339055]
------------------------------------------------------------------------------
-[ 7603.339056]
 
 
-Could the ath driver corrupt memory if the TX DMA cannot be stopped?
-
-Maybe fix the driver first?
-
-
+      
