@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755210Ab1CVVjj (ORCPT
+Received: from web57402.mail.re1.yahoo.com ([66.196.100.53]:42889 "HELO
+	web57402.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758073Ab1COPlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 17:39:39 -0400
-Subject: Re: [PATCH 1/5 v4] mac80211: Enable mesh security from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1300479732-25920-2-git-send-email-javier@cozybit.com>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
-	 <1300479732-25920-2-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Mar 2011 22:39:28 +0100
-Message-ID: <1300829968.3746.48.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Mar 2011 11:41:21 -0400
+Message-ID: <183581.36039.qm@web57402.mail.re1.yahoo.com>
+Date: Tue, 15 Mar 2011 08:41:19 -0700 (PDT)
+From: Joe Gunn <armadefuego@yahoo.com>
+Subject: [PATCH 2.6.38-rc8-wl 1/1] orinoco: Maintain lock until entry removed from list
+To: orinoco-devel@lists.sourceforge.net
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-03-18 at 13:22 -0700, Javier Cardona wrote:
-> Userspace can enable mesh security by providing an RSN IE and setting
-> the MESH_SETUP_ENABLE_SECURITY flag.
-> 
-> Also, rename vendor_ie to just ie to reflect that the same attribute may
-> be used to pass other IEs, like for instance RSN.
+Removing an entry from the scan_list should be performed while holding the lock.
+Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
+---
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index f3d396e..62c6b2b 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -1376,13 +1376,13 @@ static void orinoco_process_scan_results(struct work_struct *work)
+ 
+ 	spin_lock_irqsave(&priv->scan_lock, flags);
+ 	list_for_each_entry_safe(sd, temp, &priv->scan_list, list) {
+-		spin_unlock_irqrestore(&priv->scan_lock, flags);
+ 
+ 		buf = sd->buf;
+ 		len = sd->len;
+ 		type = sd->type;
+ 
+ 		list_del(&sd->list);
++		spin_unlock_irqrestore(&priv->scan_lock, flags);
+ 		kfree(sd);
+ 
+ 		if (len > 0) {
 
-I still think there should be some sort of advertising about whether or
-not secure mesh is support so userspace can actually tell the
-difference.
 
-Also, can you do the IE rename thing in a separate patch please?
 
-johannes
-
+      
