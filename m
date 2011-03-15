@@ -1,80 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58826 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756284Ab1CRQBG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757200Ab1COMFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 12:01:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <larry.finger@lwfinger.net>,
-	Al Viro <viro@ZenIV.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: [PATCH] rtlwifi: use correct argument order for memset in efuse.c
-Date: Fri, 18 Mar 2011 11:52:46 -0400
-Message-Id: <1300463566-16689-1-git-send-email-linville@tuxdriver.com>
+	Tue, 15 Mar 2011 08:05:08 -0400
+Subject: RE: [PATCH v2] wireless: mwifiex: initial commit for Marvell
+ mwifiex driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Ramesh Radhakrishnan <rramesh@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307FA4C2D82@SC-VEXCH1.marvell.com>
+References: <1299873746-29484-1-git-send-email-bzhao@marvell.com>
+	 <1299874885.4320.5.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307FA4C2D82@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Mar 2011 13:04:58 +0100
+Message-ID: <1300190698.5596.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Al Viro <viro@ZenIV.linux.org.uk>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Cc: stable@kernel.org
----
- drivers/net/wireless/rtlwifi/efuse.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
-index 4f92cba..ef91905 100644
---- a/drivers/net/wireless/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/rtlwifi/efuse.c
-@@ -479,8 +479,8 @@ void rtl_efuse_shadow_map_update(struct ieee80211_hw *hw)
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 
- 	if (rtlefuse->autoload_failflag == true) {
--		memset((void *)(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0]), 128,
--		       0xFF);
-+		memset((void *)(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0]), 0xFF,
-+		       128);
- 	} else
- 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
- 
-@@ -694,8 +694,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
- 	if (offset > 15)
- 		return false;
- 
--	memset((void *)data, PGPKT_DATA_SIZE * sizeof(u8), 0xff);
--	memset((void *)tmpdata, PGPKT_DATA_SIZE * sizeof(u8), 0xff);
-+	memset((void *)data, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
-+	memset((void *)tmpdata, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
- 
- 	while (bcontinual && (efuse_addr < EFUSE_MAX_SIZE)) {
- 		if (readstate & PG_STATE_HEADER) {
-@@ -862,7 +862,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
- 
- 		tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
- 
--		memset((void *)originaldata, 8 * sizeof(u8), 0xff);
-+		memset((void *)originaldata, 0xff, 8 * sizeof(u8));
- 
- 		if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
- 			badworden = efuse_word_enable_data_write(hw,
-@@ -917,7 +917,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
- 	target_pkt.offset = offset;
- 	target_pkt.word_en = word_en;
- 
--	memset((void *)target_pkt.data, 8 * sizeof(u8), 0xFF);
-+	memset((void *)target_pkt.data, 0xFF, 8 * sizeof(u8));
- 
- 	efuse_word_enable_data_read(word_en, data, target_pkt.data);
- 	target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
-@@ -1022,7 +1022,7 @@ static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
- 	u8 badworden = 0x0F;
- 	u8 tmpdata[8];
- 
--	memset((void *)tmpdata, PGPKT_DATA_SIZE, 0xff);
-+	memset((void *)tmpdata, 0xff, PGPKT_DATA_SIZE);
- 	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
- 		 ("word_en = %x efuse_addr=%x\n", word_en, efuse_addr));
- 
--- 
-1.7.4
+> I have a question regarding the 11n 20MHz/40MHz channel width
+> configuration:
+> 
+> Since the 802.11n Draft 2.0 System Interoperability Test Plan v1.1
+> requires the default configuration being set to 20MHz, is there any
+> way to set the channel width to 40MHz at run-time?
+
+In mac80211 have a module parameter "ieee80211_disable_40mhz_24ghz"
+which, for backward compatibility reasons, actually defaults to false,
+so you need to set it to true to get a compliant system. When a system
+is integrated, this parameter can be set as default.
+
+I don't think it really is necessary to set this at runtime.
+
+I guess I see two options:
+ 1) move the module parameter to cfg80211, and check the sdata HT config
+    in the driver again when this is needed
+ 2) have your own module parameter like it
+
+The first would be slightly more generic, but an OEM integrating a
+device into their system and doing WFA testing will do device-specific
+things anyway ...
+
+johannes
+
 
