@@ -1,49 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53352 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692Ab1CPIr1 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58788 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757831Ab1CONf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2011 04:47:27 -0400
-Subject: Re: [PATCH] mac80211: fix aggregation frame release during timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
+	Tue, 15 Mar 2011 09:35:28 -0400
+Received: by wwa36 with SMTP id 36so728790wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 06:35:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110315131907.6f06a221@toddler>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<20110314164812.4c0cfc29@toddler>
+	<AANLkTimSZrGCzBaB9K=WVO7faGNM-+qeKEE2qzjkPnSD@mail.gmail.com>
+	<20110315131907.6f06a221@toddler>
+Date: Tue, 15 Mar 2011 19:05:27 +0530
+Message-ID: <AANLkTi=Gub1JAO21qtRjxVWrtc6Masp1siF3NHntgcvp@mail.gmail.com>
+Subject: Re: Could ath9k and rt2800pci bugs be related?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tony Houghton <h@realh.co.uk>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTikir41uU_fG91w68D4JyFMPcFYKW4QFg-Ag_EUK@mail.gmail.com>
-References: <507B31BE-2066-4434-870D-108F7DF912A6@cs.washington.edu>
-	 <1300263716.3761.1.camel@jlt3.sipsolutions.net>
-	 <AANLkTikir41uU_fG91w68D4JyFMPcFYKW4QFg-Ag_EUK@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 16 Mar 2011 09:49:08 +0100
-Message-ID: <1300265348.3761.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-16 at 01:44 -0700, Daniel Halperin wrote:
-> On Wed, Mar 16, 2011 at 1:21 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2011-03-15 at 16:49 -0700, Daniel Halperin wrote:
-> >
-> >> x-T-R1-y-R2,
-> >
-> >>                       if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
-> >> -                                     HT_RX_REORDER_BUF_TIMEOUT))
-> >> +                                     HT_RX_REORDER_BUF_TIMEOUT) && skipped)
-> >
-> > Wait, your previous example of xT---R worked fine, but if you say x-T-
-> > this patch won't work I think? Basically you're saying if we received
-> > frames 2 and 4 after 3, and 3 times out, we can release 2 through 4. I
-> > agree, but your code won't do that since skipped starts out at 1 due to
-> > the first x. Or am I misreading this?
-> >
-> 
-> The syntax I used in our private mail was confusing and I tried to
-> simplify. Here, hyphens are just separators between frames (since R1,
-> R2 have two-letter identifiers). Does that clear it up?
+On Tue, Mar 15, 2011 at 6:49 PM, Tony Houghton <h@realh.co.uk> wrote:
+> On Tue, 15 Mar 2011 13:17:40 +0530
+> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+>
+>> On Mon, Mar 14, 2011 at 10:18 PM, Tony Houghton <h@realh.co.uk> wrote:
+>> >
+>> > I've just bought an Acer Aspire Revo 3700 and this had very similar
+>> > symptoms with a different adapter. Luckily another customer had
+>> > posted about it on the vendor's website and his fix works for me.
+>> > The fix is to blacklist the rt2800pci module and the rt2860sta
+>> > driver seems to work quite happily without it.
+>>
+>> can you please check by disabling the supicious rt modules and see
+>> whether this problems happens.
+>
+> Yes, I did blacklist rt2800pci and the system works correctly without
+> the module loaded. Even the wireless connection still works.
 
-Oh. Right. Still though, what if it is x-R1-T-R2-y-...? This fixes
-x-T-R1-...-y-..., but shouldn't some release be possible in the other
-case as well?
+Ok still there is also one or two guys reporting this locking issue,
+so we need to be very sure.
 
-johannes
+>
+>> for quick check please try with the latest compat wireless.
+>
+> How do I do that?
+>
+> I would also be willing to add extra debugging messages to ath9k to help
+> track down the AR9285 problem. I'm a C programmer, but not a kernel
+> hacker so I think I would need some advice about which functions to
+> examine.
+>
 
+No its nothing to do with kernel hacking, its just a wireless package.
+instead of compiling the whole kernel or wireless testing, we can
+install a wireless package within our linux distribution in few
+minutes. This package is called compat-wireless which includes latest
+fixes in wireless testing.
+more information in:
+http://wireless.kernel.org/en/users/Download
+
+1.now download the compat wireless package in
+http://linuxwireless.org/download/compat-wireless-2.6/
+2. cd compat-wireless-...
+3. As you are suspicious about rt modules remove them in config.mk
+4.now do ./scripts/driver-select ath9k
+5.make
+6.make install
+7.make unload
+8.sudo modprobe ath9k
+
+thanks,
+shafi
