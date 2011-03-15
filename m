@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5685 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016Ab1CFVuD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 16:50:03 -0500
-Subject: Re: [PATCH 1/3] iwlwifi: move rx handlers code to iwl-rx.c
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
-References: <1299257511-5241-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 06 Mar 2011 13:34:18 -0800
-Message-ID: <1299447258.5082.164.camel@wwguy-huron>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41176
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758560Ab1COVCo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 17:02:44 -0400
+Date: Tue, 15 Mar 2011 14:03:21 -0700 (PDT)
+Message-Id: <20110315.140321.189689408.davem@davemloft.net>
+To: laijs@cn.fujitsu.com
+Cc: mingo@elte.hu, paulmck@linux.vnet.ibm.com, axboe@kernel.dk,
+	Trond.Myklebust@netapp.com, vladislav.yasevich@hp.com,
+	sri@us.ibm.com, viro@zeniv.linux.org.uk, eparis@redhat.com,
+	menage@google.com, kuznet@ms2.inr.ac.ru, pekkas@netcore.fi,
+	jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net,
+	johannes@sipsolutions.net, linville@tuxdriver.com, hadi@cyberus.ca,
+	jpirko@redhat.com, eric.dumazet@gmail.com, hagen@jauu.net,
+	randy.dunlap@oracle.com, jkosina@suse.cz, joe@perches.com,
+	u.kleine-koenig@pengutronix.de, ebiederm@xmission.com,
+	gregkh@suse.de, xemul@openvz.org, linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-sctp@vger.kernel.org,
+	netdev@vger.kernel.org, containers@lists.linux-foundation.org,
+	linux-decnet-user@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	linux-security-module@vger.kernel.org
+Subject: Re: [PATCH 06/17] net,rcu: convert
+ call_rcu(in6_dev_finish_destroy_rcu) to kfree_rcu()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4D7F3872.6090305@cn.fujitsu.com>
+References: <4D7F3610.6000809@cn.fujitsu.com>
+	<4D7F3872.6090305@cn.fujitsu.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: Lai Jiangshan <laijs@cn.fujitsu.com>
+Date: Tue, 15 Mar 2011 17:59:14 +0800
 
-On Fri, 2011-03-04 at 08:51 -0800, Stanislaw Gruszka wrote:
-> Put generic rx_handlers (except iwlagn_rx_reply_compressed_ba) to
-> iwl-rx.c . Make functions static and change prefix from iwlagn_ to
-> iwl_ . Beautify iwl_setup_rx_handlers and do some other minor coding
-> style changes.
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-this patch break the compiling
+> 
+> The rcu callback in6_dev_finish_destroy_rcu() just calls a kfree(),
+> so we use kfree_rcu() instead of the call_rcu(in6_dev_finish_destroy_rcu).
+> 
+> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
 
-drivers/net/wireless/iwlwifi/iwl-rx.c:778:17: error: undefined
-identifier 'TASK_INTERRUPTIBLE'
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-rx.o
-drivers/net/wireless/iwlwifi/iwl-rx.c: In function
-‘iwl_rx_card_state_notif’:
-drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: ‘TASK_INTERRUPTIBLE’
-undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: (Each undeclared
-identifier is reported only once
-drivers/net/wireless/iwlwifi/iwl-rx.c:778: error: for each function it
-appears in.)
-make[1]: *** [drivers/net/wireless/iwlwifi/iwl-rx.o] Error 1
-make: *** [_module_drivers/net/wireless/iwlwifi] Error 2
-
-
-Thanks
-Wey
-
+Acked-by: David S. Miller <davem@davemloft.net>
