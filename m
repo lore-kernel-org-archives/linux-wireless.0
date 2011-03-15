@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57973 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752967Ab1CaQgR convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41142
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758636Ab1COVCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 12:36:17 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 31 Mar 2011 09:36:15 -0700
-Subject: RE: [PATCH 1/3] iwlwifi: fix enqueue hcmd race conditions
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501428BA47D@orsmsx506.amr.corp.intel.com>
-References: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1301585788-7331-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 15 Mar 2011 17:02:22 -0400
+Date: Tue, 15 Mar 2011 14:02:59 -0700 (PDT)
+Message-Id: <20110315.140259.104074771.davem@davemloft.net>
+To: laijs@cn.fujitsu.com
+Cc: mingo@elte.hu, paulmck@linux.vnet.ibm.com, axboe@kernel.dk,
+	Trond.Myklebust@netapp.com, vladislav.yasevich@hp.com,
+	sri@us.ibm.com, viro@zeniv.linux.org.uk, eparis@redhat.com,
+	menage@google.com, kuznet@ms2.inr.ac.ru, pekkas@netcore.fi,
+	jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net,
+	johannes@sipsolutions.net, linville@tuxdriver.com, hadi@cyberus.ca,
+	jpirko@redhat.com, eric.dumazet@gmail.com, hagen@jauu.net,
+	randy.dunlap@oracle.com, jkosina@suse.cz, joe@perches.com,
+	u.kleine-koenig@pengutronix.de, ebiederm@xmission.com,
+	gregkh@suse.de, xemul@openvz.org, linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-sctp@vger.kernel.org,
+	netdev@vger.kernel.org, containers@lists.linux-foundation.org,
+	linux-decnet-user@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	linux-security-module@vger.kernel.org
+Subject: Re: [PATCH 05/17] net,rcu: convert call_rcu(tcf_police_free_rcu)
+ to kfree_rcu()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4D7F3828.4040403@cn.fujitsu.com>
+References: <4D7F3610.6000809@cn.fujitsu.com>
+	<4D7F3828.4040403@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw,
+From: Lai Jiangshan <laijs@cn.fujitsu.com>
+Date: Tue, 15 Mar 2011 17:58:00 +0800
 
------Original Message-----
-From: Stanislaw Gruszka [mailto:sgruszka@redhat.com] 
-Sent: Thursday, March 31, 2011 8:36 AM
-To: Guy, Wey-Yi W
-Cc: Intel Linux Wireless; linux-wireless@vger.kernel.org; Stanislaw Gruszka
-Subject: [PATCH 1/3] iwlwifi: fix enqueue hcmd race conditions
+> [PATCH 05/17] net,rcu: convert call_rcu(tcf_police_free_rcu) to kfree_rcu()
+> 
+> The rcu callback tcf_police_free_rcu() just calls a kfree(),
+> so we use kfree_rcu() instead of the call_rcu(tcf_police_free_rcu).
+> 
+> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
 
-We mark command as huge by using meta->flags from other (non huge) command,
-but flags can be possibly overridden, when non huge command is enqueued,
-what can lead to:
-
-WARNING: at lib/dma-debug.c:696 dma_debug_device_change+0x1a3/0x1f0()
-DMA-API: device driver has pending DMA allocations while released from device [count=1]
-
-To fix introduce additional CMD_MAPPED to mark command as mapped and
-serialize iwl_enqueue_hcmd() with iwl_tx_cmd_complete() using
-hcmd_lock. Serialization will also fix possible race conditions,
-because q->read_ptr, q->write_ptr are modified/used in parallel.
-
-On the way fix whitespace.
-
-Do you have a bug# against this?
-
-Thanks
-Wey
-
-
+Acked-by: David S. Miller <davem@davemloft.net>
