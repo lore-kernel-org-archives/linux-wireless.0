@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29956 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755359Ab1CKC4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:15 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:55:52 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 07/20] ath6kl: remove-typedef AR6000_USER_SETKEYS_INFO
-Date: Thu, 10 Mar 2011 18:55:34 -0800
-Message-ID: <1299812147-12069-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:38272 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753404Ab1COXuA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 19:50:00 -0400
+Received: by pvg12 with SMTP id 12so183969pvg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 16:50:00 -0700 (PDT)
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] mac80211: fix aggregation frame release during timeout
+Date: Tue, 15 Mar 2011 16:49:56 -0700
+Message-Id: <507B31BE-2066-4434-870D-108F7DF912A6@cs.washington.edu>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Mime-Version: 1.0 (Apple Message framework v1082)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s AR6000_USER_SETKEYS_INFO \
-	"struct ar6000_user_setkeys_info" drivers/staging/ath6kl/
+Suppose the aggregation reorder buffer looks like this:
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+x-T-R1-y-R2,
+
+where x and y are frames that have not been received, T is a received
+frame that has timed out, and R1,R2 are received frames that have not
+yet timed out. The proper behavior in this scenario is to move the
+window past x (skipping it), release T and R1, and leave the window at y
+until y is received or R2 times out.
+
+As written, this code will instead leave the window at R1, because it
+has not yet timed out. Fix this by exiting the reorder loop only when
+the frame that has not timed out AND there are skipped frames earlier in
+the current valid window.
+
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
 ---
- .../staging/ath6kl/os/linux/include/athdrv_linux.h |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ net/mac80211/rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
-index 5a6c27e..66817c2 100644
---- a/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
-+++ b/drivers/staging/ath6kl/os/linux/include/athdrv_linux.h
-@@ -625,7 +625,7 @@ typedef enum {
-  * arguments:
-  * UINT32 cmd (AR6000_XIOCTL_USER_SETKEYS)
-  * UINT32 keyOpCtrl
-- * uses AR6000_USER_SETKEYS_INFO
-+ * uses struct ar6000_user_setkeys_info
-  */
- #define AR6000_XIOCTL_USER_SETKEYS                      58
- #endif /* USER_KEYS */
-@@ -1098,10 +1098,9 @@ typedef struct targetStats_cmd_t {
- #define AR6000_XIOCTL_USER_SETKEYS_RSC_CTRL    1
- #define AR6000_USER_SETKEYS_RSC_UNCHANGED     0x00000002
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a6701ed..d466bee 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -605,7 +605,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+ 				continue;
+ 			}
+ 			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
+-					HT_RX_REORDER_BUF_TIMEOUT))
++					HT_RX_REORDER_BUF_TIMEOUT) && skipped)
+ 				goto set_release_timer;
  
--typedef struct {
-+struct ar6000_user_setkeys_info {
-     u32 keyOpCtrl;  /* Bit Map of Key Mgmt Ctrl Flags */
--} AR6000_USER_SETKEYS_INFO;
--
-+}; /* XXX: unused !? */
- 
- /* used by AR6000_XIOCTL_GPIO_OUTPUT_SET */
- struct ar6000_gpio_output_set_cmd_s {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
 -- 
-1.7.4.15.g7811d
+1.7.0.4
+
 
