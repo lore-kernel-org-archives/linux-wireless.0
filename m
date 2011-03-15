@@ -1,65 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:33105 "EHLO mgw-da02.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:47528 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757Ab1CUIt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 04:49:59 -0400
-Subject: Re: [PATCH] wl12xx: set the actual tid instead of the ac
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1300694381.22224.28.camel@wimaxnb.nmp.nokia.com>
-References: <1300309434-15491-1-git-send-email-eliad@wizery.com>
-	 <1300340306.11073.5784.camel@wimaxnb.nmp.nokia.com>
-	 <AANLkTik8DYUn7SuM_L2ciNnuBCK5TobOEcRBPm+gRnyw@mail.gmail.com>
-	 <1300694381.22224.28.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Mar 2011 10:49:50 +0200
-Message-ID: <1300697390.22224.32.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	id S1755263Ab1COOZf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 10:25:35 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 07:25:12 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH 3/4] ath9k_hw: Speedup register ops for HTC driver
+Date: Tue, 15 Mar 2011 19:55:37 +0530
+Message-ID: <1300199138-11851-3-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1300199138-11851-1-git-send-email-rmanoharan@atheros.com>
+References: <1300199138-11851-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-03-21 at 09:59 +0200, ext Juuso Oikarinen wrote:
-> On Mon, 2011-03-21 at 09:54 +0200, ext Eliad Peller wrote:
-> > On Thu, Mar 17, 2011 at 7:38 AM, Juuso Oikarinen
-> > <juuso.oikarinen@nokia.com> wrote:
-> > > On Wed, 2011-03-16 at 23:03 +0200, ext Eliad Peller wrote:
-> > >> When passing a tx frame, the driver incorrectly set desc->tid
-> > >> with the ac instead of the actual tid.
-> > >>
-> > >> It has some serious implications when using 802.11n + QoS,
-> > >> as the fw starts a BlockAck with the wrong tid (which finally
-> > >> cause beacon loss and disconnection / some fw crash)
-> > >>
-> > >> Fix it by using the actual tid stored in skb->priority.
-> > >
-> > > How will the firmware handle the TIDs larger than 3, as currently to the
-> > > firmware it appears only TID's 0-3 are configured, and the rest are
-> > > whatever values happen to be there default?
-> > >
-> > that's a good question.
-> > according to the fw guys, the fw auto-maps the tid to the correct ac.
-> > the confusing thing is that ACX_TID_CFG actually gets AC as its input
-> > (in the queue_id param) rather than TID.
-> > thus, only 0-3 (ACs, not TIDs) are configured.
-> > 
-> 
-> Yes, so the TID's are most likely not configured in a way that the
-> firmware will be able to "auto-map". I think the at minimum the
-> ACX_TID_CFG must be revisited before this change can work.
-> 
+Fine-tuning register write operation and avoid unnecessay
+delays for ath9k_htc driver, saves hw reset time which
+improves scanning time and also solves one of the following
+scenario.
 
-As discussed on IRC. So there is no dependency between the index of the
-ACX_TID_CFG configurations and the tid passed to the TX descriptor.
-Instead the FW independently maps the tids to corresponding AC's,
-regardless of the tsid's configured in ACX_TID_CFG.
+Sometimes the ACK is sent by STA for assoc response is not
+seen at AP side. So the AP continues to send retry assoc
+responses. At the STA side, since the assoc response was
+already forwarded to mac80211, it proceeded to channel change
+which in turns does chip reset.
 
-My confusion here was that I assumed the indexes given to ACX_TID_CFG
-must match the actual priority values.
+In most of the cases the chip reset was completed before
+max retries are reached at AP side. Hence STA can able to ACK
+the retried frames again. But in clear environment these retries
+are completed within shortspan of time.
 
-Based on this and the IRC chat (which was enlightening):
+Since ath9k_htc consumes more time for hw reset, this latency
+is causing dissociation by AP due to max reties are reached.
+This issue was originally reported with Cisco Aironet 1250 AP
+in HT40 mode in noise free environment.
 
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |    7 +++++--
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |    7 +++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |   10 +++++++---
+ drivers/net/wireless/ath/ath9k/phy.h        |    2 ++
+ 4 files changed, 21 insertions(+), 5 deletions(-)
 
--Juuso
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index ffcf44a..94acce5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -729,6 +729,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 				 struct ath9k_channel *chan)
+ {
+ 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	int i, regWrites = 0;
+ 	struct ieee80211_channel *channel = chan->chan;
+ 	u32 modesIndex, freqIndex;
+@@ -805,7 +806,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE(ah, reg, val);
+ 
+ 		if (reg >= 0x7800 && reg < 0x78a0
+-		    && ah->config.analog_shiftreg) {
++		    && ah->config.analog_shiftreg
++		    && (common->bus_ops->ath_bus_type != ATH_USB)) {
+ 			udelay(100);
+ 		}
+ 
+@@ -835,7 +837,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE(ah, reg, val);
+ 
+ 		if (reg >= 0x7800 && reg < 0x78a0
+-		    && ah->config.analog_shiftreg) {
++		    && ah->config.analog_shiftreg
++		    && (common->bus_ops->ath_bus_type != ATH_USB)) {
+ 			udelay(100);
+ 		}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index fccd87d..995949d 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -799,6 +799,8 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 							   pwr_table_offset,
+ 							   &diff);
+ 
++			ENABLE_REGWRITE_BUFFER(ah);
++
+ 			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 				if (OLC_FOR_AR9280_20_LATER) {
+ 					REG_WRITE(ah,
+@@ -847,6 +849,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 
+ 				regOffset += 4;
+ 			}
++			REGWRITE_BUFFER_FLUSH(ah);
+ 		}
+ 	}
+ 
+@@ -1205,6 +1208,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 		}
+ 	}
+ 
++	ENABLE_REGWRITE_BUFFER(ah);
++
+ 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE1,
+ 		  ATH9K_POW_SM(ratesArray[rate18mb], 24)
+ 		  | ATH9K_POW_SM(ratesArray[rate12mb], 16)
+@@ -1291,6 +1296,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_POWER_TX_SUB,
+ 		  ATH9K_POW_SM(pModal->pwrDecreaseFor3Chain, 6)
+ 		  | ATH9K_POW_SM(pModal->pwrDecreaseFor2Chain, 0));
++
++	REGWRITE_BUFFER_FLUSH(ah);
+ }
+ 
+ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 072406c..c663216 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -105,18 +105,22 @@
+ #define REG_CLR_BIT(_a, _r, _f) \
+ 	REG_WRITE(_a, _r, REG_READ(_a, _r) & ~(_f))
+ 
+-#define DO_DELAY(x) do {			\
+-		if ((++(x) % 64) == 0)          \
+-			udelay(1);		\
++#define DO_DELAY(x) do {					\
++		if (((++(x) % 64) == 0) &&			\
++		    (ath9k_hw_common(ah)->bus_ops->ath_bus_type	\
++			!= ATH_USB))				\
++			udelay(1);				\
+ 	} while (0)
+ 
+ #define REG_WRITE_ARRAY(iniarray, column, regWr) do {                   \
+ 		int r;							\
++		ENABLE_REGWRITE_BUFFER(ah);				\
+ 		for (r = 0; r < ((iniarray)->ia_rows); r++) {		\
+ 			REG_WRITE(ah, INI_RA((iniarray), (r), 0),	\
+ 				  INI_RA((iniarray), r, (column)));	\
+ 			DO_DELAY(regWr);				\
+ 		}							\
++		REGWRITE_BUFFER_FLUSH(ah);				\
+ 	} while (0)
+ 
+ #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index 5e3d749..e402932 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -40,10 +40,12 @@
+ 
+ #define REG_WRITE_RF_ARRAY(iniarray, regData, regWr) do {               \
+ 		int r;							\
++		ENABLE_REGWRITE_BUFFER(ah);				\
+ 		for (r = 0; r < ((iniarray)->ia_rows); r++) {		\
+ 			REG_WRITE(ah, INI_RA((iniarray), r, 0), (regData)[r]); \
+ 			DO_DELAY(regWr);				\
+ 		}							\
++		REGWRITE_BUFFER_FLUSH(ah);				\
+ 	} while (0)
+ 
+ #define ANTSWAP_AB 0x0001
+-- 
+1.7.4.1
 
