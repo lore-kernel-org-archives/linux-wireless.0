@@ -1,150 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29970 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755310Ab1CKC4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:32 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:56:09 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 13/20] ath6kl: remove-typedef AR6K_IRQ_ENABLE_REGISTERS
-Date: Thu, 10 Mar 2011 18:55:40 -0800
-Message-ID: <1299812147-12069-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55919 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758288Ab1COSrw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 14:47:52 -0400
+Received: by iwn34 with SMTP id 34so857586iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 11:47:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1300214486.4139.6.camel@jlt3.sipsolutions.net>
+References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
+ <1299831238.5082.185.camel@wwguy-huron> <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
+ <1300063647.24333.7.camel@wwguy-ubuntu> <AANLkTin_=k=7Y0XmEtZc952pm=wuCawJAXgq6fKFWZM+@mail.gmail.com>
+ <1300189917.5596.10.camel@jlt3.sipsolutions.net> <1300193550.5596.16.camel@jlt3.sipsolutions.net>
+ <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com> <1300214486.4139.6.camel@jlt3.sipsolutions.net>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Tue, 15 Mar 2011 11:47:32 -0700
+Message-ID: <AANLkTikieuk6CoRPzQGSMMggMc=wPEXHY5B5H2N_CB5a@mail.gmail.com>
+Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s AR6K_IRQ_ENABLE_REGISTERS \
-	"struct ar6k_irq_enable_registers" drivers/staging/ath6kl/
+On Tue, Mar 15, 2011 at 11:41 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2011-03-15 at 11:16 -0700, Daniel Halperin wrote:
+>
+>> There's still something off about the window size: unlike with ath9k,
+>> the receiver does continually print out warnings about advancing its
+>> window. There's something very fishy here: for any given aggregation
+>> session, the part of the sequence number space this happens is always
+>> the same! Really weird. Here's a log from 3 agg sessions in a row,
+>> just running simple TCP iperf:
+>>
+>> [341221.679710] New seq exceeds buffering window: 283, 250
+>
+> Ok thanks for the patch, I'll still reply here though.
+>
+>
+>> [341398.950019] iwlagn 0000:03:00.0: iwlagn_tx_agg_start on ra =
+>> 00:16:ea:c3:b3:8e tid = 0
+>> [341401.790964] New seq exceeds buffering window: 2335, 2304
+>
+> So the delta is always 31, it seems? Is iwlwifi consistently sending
+> batches of 32 instead of the advertised 31?
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.c        |    8 ++++----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h        |   10 +++++-----
- drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c |    2 +-
- drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox.c  |    2 +-
- 4 files changed, 11 insertions(+), 11 deletions(-)
+I don't think that's the case, in fact I've never seen the hardware
+send a larger batch than frame limit.  I think it's from a missed
+frame early in one batch being pushed out by a late frame in the next
+batch. I know how to get the logs to find out. I have a bunch of
+meetings soon, but I'll dig into this more later.
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-index 85d45a7..77fa618 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.c
-@@ -219,7 +219,7 @@ int DevSetup(struct ar6k_device *pDev)
- int DevEnableInterrupts(struct ar6k_device *pDev)
- {
-     int                  status;
--    AR6K_IRQ_ENABLE_REGISTERS regs;
-+    struct ar6k_irq_enable_registers regs;
- 
-     LOCK_AR6K(pDev);
- 
-@@ -278,7 +278,7 @@ int DevEnableInterrupts(struct ar6k_device *pDev)
- 
- int DevDisableInterrupts(struct ar6k_device *pDev)
- {
--    AR6K_IRQ_ENABLE_REGISTERS regs;
-+    struct ar6k_irq_enable_registers regs;
- 
-     LOCK_AR6K(pDev);
-         /* Disable all interrupts */
-@@ -407,7 +407,7 @@ static int DevDoEnableDisableRecvNormal(struct ar6k_device *pDev, bool EnableRec
- {
-     int                  status = 0;
-     HTC_PACKET                *pIOPacket = NULL;
--    AR6K_IRQ_ENABLE_REGISTERS regs;
-+    struct ar6k_irq_enable_registers regs;
- 
-         /* take the lock to protect interrupt enable shadows */
-     LOCK_AR6K(pDev);
-@@ -538,7 +538,7 @@ int DevWaitForPendingRecv(struct ar6k_device *pDev,u32 TimeoutInMs,bool *pbIsRec
- 
- void DevDumpRegisters(struct ar6k_device               *pDev,
-                       AR6K_IRQ_PROC_REGISTERS   *pIrqProcRegs,
--                      AR6K_IRQ_ENABLE_REGISTERS *pIrqEnableRegs)
-+                      struct ar6k_irq_enable_registers *pIrqEnableRegs)
- {
- 
-     AR_DEBUG_PRINTF(ATH_DEBUG_ANY, ("\n<------- Register Table -------->\n"));
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index 0bee46a..fc781d1 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -58,12 +58,12 @@ typedef PREPACK struct _AR6K_IRQ_PROC_REGISTERS {
- 
- #define AR6K_IRQ_PROC_REGS_SIZE sizeof(AR6K_IRQ_PROC_REGISTERS)
- 
--typedef PREPACK struct _AR6K_IRQ_ENABLE_REGISTERS {
-+PREPACK struct ar6k_irq_enable_registers {
-     u8 int_status_enable;
-     u8 cpu_int_status_enable;
-     u8 error_status_enable;
-     u8 counter_int_status_enable;
--} POSTPACK AR6K_IRQ_ENABLE_REGISTERS;
-+} POSTPACK;
- 
- PREPACK struct ar6k_gmbox_ctrl_registers {
-     u8 int_status_enable;
-@@ -71,7 +71,7 @@ PREPACK struct ar6k_gmbox_ctrl_registers {
- 
- #include "athendpack.h"
- 
--#define AR6K_IRQ_ENABLE_REGS_SIZE sizeof(AR6K_IRQ_ENABLE_REGISTERS)
-+#define AR6K_IRQ_ENABLE_REGS_SIZE sizeof(struct ar6k_irq_enable_registers)
- 
- #define AR6K_REG_IO_BUFFER_SIZE     32
- #define AR6K_MAX_REG_IO_BUFFERS     8
-@@ -110,7 +110,7 @@ struct ar6k_device {
-     u8 _Pad1[A_CACHE_LINE_PAD];
-     AR6K_IRQ_PROC_REGISTERS     IrqProcRegisters;   /* cache-line safe with pads around */
-     u8 _Pad2[A_CACHE_LINE_PAD];
--    AR6K_IRQ_ENABLE_REGISTERS   IrqEnableRegisters; /* cache-line safe with pads around */
-+    struct ar6k_irq_enable_registers   IrqEnableRegisters; /* cache-line safe with pads around */
-     u8 _Pad3[A_CACHE_LINE_PAD];
-     void                        *HIFDevice;
-     u32 BlockSize;
-@@ -160,7 +160,7 @@ int DevCheckPendingRecvMsgsAsync(void *context);
- void     DevAsyncIrqProcessComplete(struct ar6k_device *pDev);
- void     DevDumpRegisters(struct ar6k_device               *pDev,
-                           AR6K_IRQ_PROC_REGISTERS   *pIrqProcRegs,
--                          AR6K_IRQ_ENABLE_REGISTERS *pIrqEnableRegs);
-+                          struct ar6k_irq_enable_registers *pIrqEnableRegs);
- 
- #define DEV_STOP_RECV_ASYNC true
- #define DEV_STOP_RECV_SYNC  false
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c
-index aa45590..3aafbea 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k_events.c
-@@ -747,7 +747,7 @@ int DevDsrHandler(void *context)
- void DumpAR6KDevState(struct ar6k_device *pDev)
- {
-     int                    status;
--    AR6K_IRQ_ENABLE_REGISTERS   regs;
-+    struct ar6k_irq_enable_registers   regs;
-     AR6K_IRQ_PROC_REGISTERS     procRegs;
- 
-     LOCK_AR6K(pDev);
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox.c b/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox.c
-index cbfbdea..1b44d07 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox.c
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k_gmbox.c
-@@ -77,7 +77,7 @@ static void DevGMboxIRQActionAsyncHandler(void *Context, HTC_PACKET *pPacket)
- static int DevGMboxCounterEnableDisable(struct ar6k_device *pDev, GMBOX_IRQ_ACTION_TYPE IrqAction, bool AsyncMode)
- {
-     int                  status = 0;
--    AR6K_IRQ_ENABLE_REGISTERS regs;
-+    struct ar6k_irq_enable_registers regs;
-     HTC_PACKET                *pIOPacket = NULL;  
-     
-     LOCK_AR6K(pDev);
--- 
-1.7.4.15.g7811d
+> Also -- don't get confused, the tx_agg_start is on its own TX agg
+> session, but the new seq stuff is on its RX agg session.
 
+You're absolutely true; but both sides pretty much start and stop
+aggregation in sync, they both have the same timeouts and I'm only
+using tcp traffic which is bidirectional.  They're running the same
+software on the same hardware, modulo one being an AP and one a
+client.
+
+[Yes, I know that AP mode is broken on the iwl5300 but I disable power
+save, etc., and it seems to work well enough ...  Actually, does AP
+(not P2P) mode work properly on the P2P-supporting 6300?  I could
+switch to using those.]
+
+Dan
