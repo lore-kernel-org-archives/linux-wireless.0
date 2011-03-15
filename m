@@ -1,215 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45319 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757482Ab1CAUgw (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:46851 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756982Ab1COV3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 15:36:52 -0500
-Received: by wwb22 with SMTP id 22so4952627wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 12:36:50 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC 4/9] mac80211: don't remove/add interfaces when WoW is enabled
-Date: Tue,  1 Mar 2011 22:36:39 +0200
-Message-Id: <1299011804-13899-5-git-send-email-eliad@wizery.com>
-In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+	Tue, 15 Mar 2011 17:29:00 -0400
+Message-ID: <4D7FDA14.7000904@gmail.com>
+Date: Tue, 15 Mar 2011 14:28:52 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	Christoph Lameter <cl@linux.com>,
+	David Rientjes <rientjes@google.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Nick Piggin <npiggin@kernel.dk>,
+	Dave Chinner <dchinner@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: <IRQ> [<ffffffff810c9204>] ? __alloc_pages_nodemask+0x622/0x696
+References: <AANLkTikaLb_xan2ePfo9JCZ1w7RZ76wF8NUT2tYr0ZD=@mail.gmail.com> <alpine.DEB.2.00.1103051847100.8779@chino.kir.corp.google.com> <4D770178.9070908@gmail.com> <alpine.DEB.2.00.1103091254540.13353@chino.kir.corp.google.com> <4D77EEB4.9090404@gmail.com> <alpine.DEB.2.00.1103091549020.16989@router.home> <20110310000502.GA13763@hash.localnet> <20110315205946.GL11878@tux>
+In-Reply-To: <20110315205946.GL11878@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When WoW triggers are enabled, we shouldn't remove the interfaces
-on suspend, as we need them in order to get the triggers.
-Consequently, we shouldn't add them back when resuming.
+On 03/15/2011 01:59 PM, Luis R. Rodriguez wrote:
+> On Wed, Mar 09, 2011 at 04:05:02PM -0800, Bob Copeland wrote:
+>> On Wed, Mar 09, 2011 at 03:54:24PM -0600, Christoph Lameter wrote:
+>>> [ 7419.322770] wlan0: associated
+>>> [ 7427.161366] ath: Failed to stop TX DMA in 100 msec after killing last frame
+>>> [ 7427.161432] ath: Failed to stop TX DMA!
+>>> [ 7434.492398] ath: Failed to stop TX DMA in 100 msec after killing last frame
+>>> [ 7434.492462] ath: Failed to stop TX DMA!
+>>> [ 7603.339047]
+>>> =============================================================================
+>>> [ 7603.339053] BUG radix_tree_node: Padding overwritten. 0xffff88000008fe00-0xffff88000008fe32
+>>
+>>> Could the ath driver corrupt memory if the TX DMA cannot be stopped?
+>
+> Yes, this is why we have had a series of patches to address this upstream,
+> the latest one was for RX DMA failing to stop but Felix found a fix for that.
+> Apart from that I am not aware of more issues. Can you please try with
+> wireless-testing.git ?
+>
+>    Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+sure..
 
-TODO:
-what settings should we configure when going to WoW (ps,
-rx_filtering, etc.)?
-whose responsibility is it - the mac80211 or the lower driver?
-(the lower driver may implement some features that are not known
-to the mac80211)
-should they be configurable by the user?
+as for seeing this issue. nothing really now on the current. only 
+message I see is:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/pm.c   |   63 +++++++++++++++++++++++++++---------------------
- net/mac80211/util.c |   66 +++++++++++++++++++++++++++++++--------------------
- 2 files changed, 76 insertions(+), 53 deletions(-)
+[   69.551295] ath: Failed to stop TX DMA in 100 msec after killing last 
+frame
+[   69.551336] ath: Failed to stop TX DMA!
 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 6d135ea..f687606 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -6,36 +6,11 @@
- #include "driver-ops.h"
- #include "led.h"
- 
--int __ieee80211_suspend(struct ieee80211_hw *hw,
--			struct cfg80211_wow *wow)
-+static void ieee80211_clear_interfaces(struct ieee80211_local *local)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
--
--	ieee80211_scan_cancel(local);
--
--	ieee80211_stop_queues_by_reason(hw,
--			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
--
--	/* flush out all packets */
--	synchronize_net();
--
--	local->quiescing = true;
--	/* make quiescing visible to timers everywhere */
--	mb();
--
--	flush_workqueue(local->workqueue);
--
--	/* Don't try to run timers while suspended. */
--	del_timer_sync(&local->sta_cleanup);
--
--	 /*
--	 * Note that this particular timer doesn't need to be
--	 * restarted at resume.
--	 */
--	cancel_work_sync(&local->dynamic_ps_enable_work);
--	del_timer_sync(&local->dynamic_ps_timer);
-+	struct ieee80211_hw *hw = &local->hw;
- 
- 	/* disable keys */
- 	list_for_each_entry(sdata, &local->interfaces, list)
-@@ -94,6 +69,40 @@ int __ieee80211_suspend(struct ieee80211_hw *hw,
- 
- 		drv_remove_interface(local, &sdata->vif);
- 	}
-+}
-+int __ieee80211_suspend(struct ieee80211_hw *hw,
-+			struct cfg80211_wow *wow)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	bool wow_enabled = wow && wow->enabled_triggers;
-+
-+	ieee80211_scan_cancel(local);
-+
-+	ieee80211_stop_queues_by_reason(hw,
-+			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
-+
-+	/* flush out all packets */
-+	synchronize_net();
-+
-+	local->quiescing = true;
-+	/* make quiescing visible to timers everywhere */
-+	mb();
-+
-+	flush_workqueue(local->workqueue);
-+
-+	/* Don't try to run timers while suspended. */
-+	del_timer_sync(&local->sta_cleanup);
-+
-+	 /*
-+	 * Note that this particular timer doesn't need to be
-+	 * restarted at resume.
-+	 */
-+	cancel_work_sync(&local->dynamic_ps_enable_work);
-+	del_timer_sync(&local->dynamic_ps_timer);
-+
-+	/* in case of wow, we want to leave the interfaces up */
-+	if (!wow_enabled)
-+		ieee80211_clear_interfaces(local);
- 
- 	/* stop hardware - this must stop RX */
- 	if (local->open_count)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 627175a..d640ffd 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1119,38 +1119,13 @@ void ieee80211_stop_device(struct ieee80211_local *local,
- 	drv_stop(local, wow);
- }
- 
--int ieee80211_reconfig(struct ieee80211_local *local,
--		       struct cfg80211_wow *wow)
-+static void ieee80211_reconfig_interface(struct ieee80211_local *local)
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
- 	int res;
- 
--	if (local->suspended)
--		local->resuming = true;
--
--	/* restart hardware */
--	if (local->open_count) {
--		/*
--		 * Upon resume hardware can sometimes be goofy due to
--		 * various platform / driver / bus issues, so restarting
--		 * the device may at times not work immediately. Propagate
--		 * the error.
--		 */
--		res = drv_start(local, wow);
--		if (res) {
--			WARN(local->suspended, "Hardware became unavailable "
--			     "upon resume. This could be a software issue "
--			     "prior to suspend or a hardware issue.\n");
--			return res;
--		}
--
--		ieee80211_led_radio(local, true);
--		ieee80211_mod_tpt_led_trig(local,
--					   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
--	}
--
- 	/* add interfaces */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
-@@ -1259,7 +1234,46 @@ int ieee80211_reconfig(struct ieee80211_local *local,
- 	list_for_each_entry(sdata, &local->interfaces, list)
- 		if (ieee80211_sdata_running(sdata))
- 			ieee80211_enable_keys(sdata);
-+}
-+
-+int ieee80211_reconfig(struct ieee80211_local *local,
-+		       struct cfg80211_wow *wow)
-+{
-+	struct ieee80211_hw *hw = &local->hw;
-+	struct ieee80211_sub_if_data *sdata;
-+	struct sta_info *sta;
-+	bool wow_enabled = wow && wow->enabled_triggers;
-+	int res;
-+
-+	if (local->suspended)
-+		local->resuming = true;
-+
-+	/* restart hardware */
-+	if (local->open_count) {
-+		/*
-+		 * Upon resume hardware can sometimes be goofy due to
-+		 * various platform / driver / bus issues, so restarting
-+		 * the device may at times not work immediately. Propagate
-+		 * the error.
-+		 */
-+		res = drv_start(local, wow);
-+		if (res) {
-+			WARN(local->suspended, "Hardware became unavailable "
-+			     "upon resume. This could be a software issue "
-+			     "prior to suspend or a hardware issue.\n");
-+			return res;
-+		}
-+
-+		ieee80211_led_radio(local, true);
-+		ieee80211_mod_tpt_led_trig(local,
-+					   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
-+	}
-+
-+	/* reconfig interface only if they were removed */
-+	if (!wow_enabled)
-+		ieee80211_reconfig_interface(local);
- 
-+	/* should we do it anyway? */
- 	ieee80211_wake_queues_by_reason(hw,
- 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
- 
--- 
-1.7.0.4
+which I saw earlier today.. keep in mind I am at the book store so the 
+internet is constantly connecting/disconnecting
 
+Justin P. Mattock
