@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42483 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759440Ab1CDLhS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35090 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932212Ab1COTa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 06:37:18 -0500
-Subject: Re: [PATCH 6/7] mac80211: Parse RSN information element to
- determine if a peer needs authentication
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1299208307-9428-7-git-send-email-thomas@cozybit.com>
-References: <1299208307-9428-1-git-send-email-thomas@cozybit.com>
-	 <1299208307-9428-7-git-send-email-thomas@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Mar 2011 12:37:15 +0100
-Message-ID: <1299238635.4348.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Mar 2011 15:30:57 -0400
+Date: Tue, 15 Mar 2011 15:23:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
+	=?iso-8859-1?Q?Fran=E7ois?= Valenduc
+	<francois.valenduc@tvcablenet.be>
+Subject: Re: [RFC/RFT 0/11] rtlwifi: rtl8192se: Merge new driver
+Message-ID: <20110315192337.GC2542@tuxdriver.com>
+References: <4d732b50.jiYdcLhAW6PZf7C3%Larry.Finger@lwfinger.net>
+ <20110314200214.GC2525@tuxdriver.com>
+ <4D7FBA20.1050609@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4D7FBA20.1050609@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-03 at 19:11 -0800, Thomas Pedersen wrote:
-> From: Javier Cardona <javier@cozybit.com>
+On Tue, Mar 15, 2011 at 02:12:32PM -0500, Larry Finger wrote:
+> On 03/14/2011 03:02 PM, John W. Linville wrote:
 
-[...]
+> >This driver looks acceptable (certainly better than no driver),
+> >but patch 11 (v2) doesn't seem to apply.  Did you get a
+> >resolution to the problems reported by François Valenduc
+> ><francois.valenduc@tvcablenet.be>?
+> 
+> Yes, those problems are resolved.
+> 
+> I will be submitting it soon as it is better than no driver.
+> Chaoming just sent me some new revisions that I would like to
+> integrate first.
+> 
+> It will be sent soon so as to get it into 2.6.40 - .39 was too much of a push.
 
-If you manage stations in userspace, then this code is unnecessary.
-That'd be a big win in my eyes. The only thing the kernel would need to
-know is not to create station entries, right?
+Cool -- that sounds great.
 
-johannes
+Thanks, Larry!
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
