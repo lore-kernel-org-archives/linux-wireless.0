@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33127 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755048Ab1CHRSD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 12:18:03 -0500
-Subject: Re: 2.6.38-rc7, iwlagn warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	 <20110304134648.GB9866@tuxdriver.com>
-	 <1299251879.24333.3.camel@wwguy-ubuntu>
-	 <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-	 <AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-	 <AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-	 <1299334144.3826.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
-	 <1299597447.4676.25.camel@jlt3.sipsolutions.net>
-	 <AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
-	 <1299602750.3734.2.camel@jlt3.sipsolutions.net>
-	 <AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 18:18:00 +0100
-Message-ID: <1299604680.3734.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:37184 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758289Ab1COU7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 16:59:49 -0400
+Date: Tue, 15 Mar 2011 13:59:46 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: Christoph Lameter <cl@linux.com>,
+	"Justin P. Mattock" <justinmattock@gmail.com>,
+	David Rientjes <rientjes@google.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Nick Piggin <npiggin@kernel.dk>,
+	"Dave Chinner" <dchinner@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"Jiri Slaby" <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: <IRQ> [<ffffffff810c9204>] ? __alloc_pages_nodemask+0x622/0x696
+Message-ID: <20110315205946.GL11878@tux>
+References: <AANLkTikaLb_xan2ePfo9JCZ1w7RZ76wF8NUT2tYr0ZD=@mail.gmail.com>
+ <alpine.DEB.2.00.1103051847100.8779@chino.kir.corp.google.com>
+ <4D770178.9070908@gmail.com>
+ <alpine.DEB.2.00.1103091254540.13353@chino.kir.corp.google.com>
+ <4D77EEB4.9090404@gmail.com>
+ <alpine.DEB.2.00.1103091549020.16989@router.home>
+ <20110310000502.GA13763@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110310000502.GA13763@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-08 at 17:13 +0000, Mathias Burén wrote:
-
-> 1299604089.756872: WPS: UUID based on MAC address - hexdump(len=16):
-> cc fa a1 31 39 a7 5c 33 96 d8 eb 09 dd fe 7f 0f
-> 1299604089.768927: ssid - hexdump_ascii(len=11):
->      55 62 75 6e 74 75 41 64 68 6f 63                  UbuntuAdhoc
-> 1299604094.005785: ssid - hexdump_ascii(len=11):
->      55 62 75 6e 74 75 41 64 68 6f 63                  UbuntuAdhoc
+On Wed, Mar 09, 2011 at 04:05:02PM -0800, Bob Copeland wrote:
+> On Wed, Mar 09, 2011 at 03:54:24PM -0600, Christoph Lameter wrote:
+> > [ 7419.322770] wlan0: associated
+> > [ 7427.161366] ath: Failed to stop TX DMA in 100 msec after killing last frame
+> > [ 7427.161432] ath: Failed to stop TX DMA!
+> > [ 7434.492398] ath: Failed to stop TX DMA in 100 msec after killing last frame
+> > [ 7434.492462] ath: Failed to stop TX DMA!
+> > [ 7603.339047]
+> > =============================================================================
+> > [ 7603.339053] BUG radix_tree_node: Padding overwritten. 0xffff88000008fe00-0xffff88000008fe32
 > 
-> Anything else I can try/provide?
+> > Could the ath driver corrupt memory if the TX DMA cannot be stopped?
 
-Could you do the -dddt thing as explained on the link I had before?
+Yes, this is why we have had a series of patches to address this upstream,
+the latest one was for RX DMA failing to stop but Felix found a fix for that.
+Apart from that I am not aware of more issues. Can you please try with
+wireless-testing.git ?
 
-Obviously, we're now looking for the cause -- while the warning still
-shouldn't happen *even if userspace is misbehaving*. The trace will
-hopefully help me figure out why we get the warning, I'll look at it
-later.
-
-johannes
-
+  Luis
