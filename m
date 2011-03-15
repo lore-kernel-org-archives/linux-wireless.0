@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4097 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759138Ab1CDAf7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 19:35:59 -0500
-Subject: RE: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
-From: Joe Perches <joe@perches.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307F5150CCD@SC-VEXCH1.marvell.com>
-References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
-	 <1299139646.4338.69.camel@Joe-Laptop>
-	 <477F20668A386D41ADCC57781B1F704307F5150CCD@SC-VEXCH1.marvell.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50357 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757930Ab1COSlf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 14:41:35 -0400
+Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com>
+References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
+	 <1299831238.5082.185.camel@wwguy-huron>
+	 <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
+	 <1300063647.24333.7.camel@wwguy-ubuntu>
+	 <AANLkTin_=k=7Y0XmEtZc952pm=wuCawJAXgq6fKFWZM+@mail.gmail.com>
+	 <1300189917.5596.10.camel@jlt3.sipsolutions.net>
+	 <1300193550.5596.16.camel@jlt3.sipsolutions.net>
+	 <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Mar 2011 16:35:58 -0800
-Message-ID: <1299198958.4338.201.camel@Joe-Laptop>
+Date: Tue, 15 Mar 2011 19:41:26 +0100
+Message-ID: <1300214486.4139.6.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-03 at 11:24 -0800, Bing Zhao wrote:
-> For example, I can do "format 'mwifiex cmd' +p" and
-> "format 'mwifiex event' +p" to enable debugging for "cmd" and "event" only.
+On Tue, 2011-03-15 at 11:16 -0700, Daniel Halperin wrote:
 
-On Thu, 2011-03-03 at 14:04 -0800, Bing Zhao wrote:
-> Do you think we should use pr_fmt(fmt) to construct _ddebug descriptor?
->         { KBUILD_MODNAME, __func__, __FILE__, pr_fmt(fmt), __LINE__,            \
-> Otherwise, I still have to add "mwifiex: " prefix for every pr_debug() call.
+> There's still something off about the window size: unlike with ath9k,
+> the receiver does continually print out warnings about advancing its
+> window. There's something very fishy here: for any given aggregation
+> session, the part of the sequence number space this happens is always
+> the same! Really weird. Here's a log from 3 agg sessions in a row,
+> just running simple TCP iperf:
+> 
+> [341221.679710] New seq exceeds buffering window: 283, 250
 
-Maybe I misunderstand.  Doesn't this work?
-	"module mwifiex format 'event' +p"
+Ok thanks for the patch, I'll still reply here though.
 
+
+> [341398.950019] iwlagn 0000:03:00.0: iwlagn_tx_agg_start on ra =
+> 00:16:ea:c3:b3:8e tid = 0
+> [341401.790964] New seq exceeds buffering window: 2335, 2304
+
+So the delta is always 31, it seems? Is iwlwifi consistently sending
+batches of 32 instead of the advertised 31?
+
+Also -- don't get confused, the tx_agg_start is on its own TX agg
+session, but the new seq stuff is on its RX agg session.
+
+johannes
 
