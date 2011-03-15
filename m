@@ -1,207 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57937 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749Ab1CaNEM (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:38225 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750920Ab1COEqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2011 09:04:12 -0400
-Received: by fxm17 with SMTP id 17so1817769fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2011 06:04:11 -0700 (PDT)
-From: Jarkko Nikula <jhnikula@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Jarkko Nikula <jhnikula@gmail.com>
-Subject: [PATCH 1/2] wl1251: Prepare for idle mode support
-Date: Thu, 31 Mar 2011 16:04:02 +0300
-Message-Id: <1301576643-29224-1-git-send-email-jhnikula@gmail.com>
+	Tue, 15 Mar 2011 00:46:13 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Ramesh Radhakrishnan <rramesh@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 14 Mar 2011 21:46:04 -0700
+Subject: RE: [PATCH v2] wireless: mwifiex: initial commit for Marvell
+ mwifiex driver
+Message-ID: <477F20668A386D41ADCC57781B1F704307FA4C2D82@SC-VEXCH1.marvell.com>
+References: <1299873746-29484-1-git-send-email-bzhao@marvell.com>
+ <1299874885.4320.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1299874885.4320.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RFC for WL1251 idle mode support brought a few issues that are worth to
-update before adding the idle mode support.
-
-Since the idle mode can reuse the code that is now used in Power Save Mode
-(PSM), the flag psm in struct wl1251 is changed to variable station_mode
-to be able to distinguish between PSM and idle modes.
-Confusing comment about psm and elp relation is removed since the PSM is
-actually activated by putting the chip into Entreme Low Power (ELP) mode.
-
-Then enum wl1251_cmd_ps_mod in cmd.h is renamed and moved to wl1251.h as it
-is a state rather than chip level command.
-
-Signed-off-by: Jarkko Nikula <jhnikula@gmail.com>
----
-RFC for WL1251 idle mode:
-http://marc.info/?l=linux-wireless&m=130140818011186&w=2
----
- drivers/net/wireless/wl1251/cmd.h    |    5 -----
- drivers/net/wireless/wl1251/event.c  |    6 ++++--
- drivers/net/wireless/wl1251/main.c   |    6 +++---
- drivers/net/wireless/wl1251/ps.c     |   10 ++++------
- drivers/net/wireless/wl1251/ps.h     |    2 +-
- drivers/net/wireless/wl1251/wl1251.h |    8 ++++++--
- 6 files changed, 18 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/wl1251/cmd.h b/drivers/net/wireless/wl1251/cmd.h
-index e5c74c6..669d5bc 100644
---- a/drivers/net/wireless/wl1251/cmd.h
-+++ b/drivers/net/wireless/wl1251/cmd.h
-@@ -312,11 +312,6 @@ struct wl1251_cmd_vbm_update {
- 	struct wl1251_tim tim;
- } __packed;
- 
--enum wl1251_cmd_ps_mode {
--	STATION_ACTIVE_MODE,
--	STATION_POWER_SAVE_MODE
--};
--
- struct wl1251_cmd_ps_params {
- 	struct wl1251_cmd_header header;
- 
-diff --git a/drivers/net/wireless/wl1251/event.c b/drivers/net/wireless/wl1251/event.c
-index dfc4579..9f15cca 100644
---- a/drivers/net/wireless/wl1251/event.c
-+++ b/drivers/net/wireless/wl1251/event.c
-@@ -68,14 +68,16 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 	if (vector & BSS_LOSE_EVENT_ID) {
- 		wl1251_debug(DEBUG_EVENT, "BSS_LOSE_EVENT");
- 
--		if (wl->psm_requested && wl->psm) {
-+		if (wl->psm_requested &&
-+		    wl->station_mode != STATION_ACTIVE_MODE) {
- 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
- 			if (ret < 0)
- 				return ret;
- 		}
- 	}
- 
--	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID && wl->psm) {
-+	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID &&
-+	    wl->station_mode != STATION_ACTIVE_MODE) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
- 
- 		/* indicate to the stack, that beacons have been lost */
-diff --git a/drivers/net/wireless/wl1251/main.c b/drivers/net/wireless/wl1251/main.c
-index 12c9e63..04a0549 100644
---- a/drivers/net/wireless/wl1251/main.c
-+++ b/drivers/net/wireless/wl1251/main.c
-@@ -497,7 +497,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->rx_last_id = 0;
- 	wl->next_tx_complete = 0;
- 	wl->elp = false;
--	wl->psm = 0;
-+	wl->station_mode = STATION_ACTIVE_MODE;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
- 	wl->rssi_thold = 0;
-@@ -632,7 +632,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- 		wl->psm_requested = false;
- 
--		if (wl->psm) {
-+		if (wl->station_mode != STATION_ACTIVE_MODE) {
- 			ret = wl1251_ps_set_mode(wl, STATION_ACTIVE_MODE);
- 			if (ret < 0)
- 				goto out_sleep;
-@@ -1384,7 +1384,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	wl->rx_config = WL1251_DEFAULT_RX_CONFIG;
- 	wl->rx_filter = WL1251_DEFAULT_RX_FILTER;
- 	wl->elp = false;
--	wl->psm = 0;
-+	wl->station_mode = STATION_ACTIVE_MODE;
- 	wl->psm_requested = false;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
-diff --git a/drivers/net/wireless/wl1251/ps.c b/drivers/net/wireless/wl1251/ps.c
-index 9cc5147..5485f03 100644
---- a/drivers/net/wireless/wl1251/ps.c
-+++ b/drivers/net/wireless/wl1251/ps.c
-@@ -39,7 +39,7 @@ void wl1251_elp_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (wl->elp || !wl->psm)
-+	if (wl->elp || wl->station_mode == STATION_ACTIVE_MODE)
- 		goto out;
- 
- 	wl1251_debug(DEBUG_PSM, "chip to elp");
-@@ -57,7 +57,7 @@ void wl1251_ps_elp_sleep(struct wl1251 *wl)
- {
- 	unsigned long delay;
- 
--	if (wl->psm) {
-+	if (wl->station_mode != STATION_ACTIVE_MODE) {
- 		delay = msecs_to_jiffies(ELP_ENTRY_DELAY);
- 		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work, delay);
- 	}
-@@ -104,7 +104,7 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
- 	return 0;
- }
- 
--int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
-+int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_station_mode mode)
- {
- 	int ret;
- 
-@@ -135,8 +135,6 @@ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
- 		ret = wl1251_acx_sleep_auth(wl, WL1251_PSM_ELP);
- 		if (ret < 0)
- 			return ret;
--
--		wl->psm = 1;
- 		break;
- 	case STATION_ACTIVE_MODE:
- 	default:
-@@ -167,9 +165,9 @@ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode)
- 		if (ret < 0)
- 			return ret;
- 
--		wl->psm = 0;
- 		break;
- 	}
-+	wl->station_mode = mode;
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/wl1251/ps.h b/drivers/net/wireless/wl1251/ps.h
-index 55c3dda..75efad2 100644
---- a/drivers/net/wireless/wl1251/ps.h
-+++ b/drivers/net/wireless/wl1251/ps.h
-@@ -26,7 +26,7 @@
- #include "wl1251.h"
- #include "acx.h"
- 
--int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode);
-+int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_station_mode mode);
- void wl1251_ps_elp_sleep(struct wl1251 *wl);
- int wl1251_ps_elp_wakeup(struct wl1251 *wl);
- void wl1251_elp_work(struct work_struct *work);
-diff --git a/drivers/net/wireless/wl1251/wl1251.h b/drivers/net/wireless/wl1251/wl1251.h
-index bb23cd5..bf245a8 100644
---- a/drivers/net/wireless/wl1251/wl1251.h
-+++ b/drivers/net/wireless/wl1251/wl1251.h
-@@ -129,6 +129,11 @@ enum wl1251_partition_type {
- 	PART_TABLE_LEN
- };
- 
-+enum wl1251_station_mode {
-+	STATION_ACTIVE_MODE,
-+	STATION_POWER_SAVE_MODE,
-+};
-+
- struct wl1251_partition {
- 	u32 size;
- 	u32 start;
-@@ -358,8 +363,7 @@ struct wl1251 {
- 
- 	struct delayed_work elp_work;
- 
--	/* we can be in psm, but not in elp, we have to differentiate */
--	bool psm;
-+	enum wl1251_station_mode station_mode;
- 
- 	/* PSM mode requested */
- 	bool psm_requested;
--- 
-1.7.0.4
-
+SGkgSm9oYW5uZXMsDQoNCj4gQWxzbywgeW91IGhhdmUgYSB0b24gb2YgZGVidWdmcyBmaWxlIEFQ
+SS4gQXJlIHlvdSBzdXJlIHRoYXQncyBhIGdvb2QNCj4gdGhpbmc/IElzIGl0IGFsbCByZWFsbHkg
+Zm9yIGRlYnVnZ2luZyBvbmx5PyBBbHNvIHRoaW5ncyBsaWtlDQo+ICJwYXNzcGhyYXNlIiB0aGVy
+ZSBtYWtlIG1lIHZlcnkgc3VzcGljaW91cyBhYm91dCB3aGF0IHRoZSBkcml2ZXIgaXMNCj4gZG9p
+bmcgdGhlcmUuIFRoZXJlIGRvZXNuJ3Qgc2VlbSB0byBiZSBhbnkgcmVhc29uIGF0IGFsbCB0byBw
+cm92aWRlIGFuDQo+IGludGVyZmFjZSBmb3IgYSBwYXNzcGhyYXNlPw0KDQpUaGUgZm9sbG93aW5n
+IDUgQVBJcyBhcmUgZm9yIGRlYnVnZ2luZyBwdXJwb3NlLg0KDQonaW5mbycsICdkZWJ1ZycsICdn
+ZXRsb2cnLCAncmVncmR3cicsICdyZGVlcHJvbScNCg0KQWxsIG90aGVyIEFQSXMgKGxpc3RlZCBi
+ZWxvdykgYXJlIGZvciBkcml2ZXIgY29uZmlndXJhdGlvbnMuDQoNCm1wYWN0bCwgYW50Y2ZnLCBw
+YXNzcGhyYXNlLCBlc3VwcG1vZGUNCmFkZGJhcGFyYSwgdHhhZ2dycHJpbywgYWRkYmFyZWplY3Qs
+IHR4YnVmY2ZnLCBhbXNkdWFnZ3JjdHJsLCANCnR4cmF0ZWNmZywgaHR0eGNmZywgaHRjYXBpbmZv
+LCANCmF0aW13aW5kb3csIGRlZXBzbGVlcCwgaHNjZmcsIHFvc2NmZywgc2xlZXBwZA0KDQpXZSB3
+aWxsIHJlbW92ZSB0aG9zZSBBUElzLCBpbmNsdWRpbmcgdGhlIEFQSXMgdG8gYWNoaWV2ZSB0aGUg
+aGlnaGVzdCB0aHJvdWdocHV0IChlLmcuLCB0aGUgb25lIHRoYXQgc2V0cyA0ME1IeiBjaGFubmVs
+IHdpZHRoKS4gQWxsIGRlZmF1bHQgc2V0dGluZ3Mgd2lsbCBiZSB1c2VkIGludGVybmFsbHkuDQoN
+Cg0KSSBoYXZlIGEgcXVlc3Rpb24gcmVnYXJkaW5nIHRoZSAxMW4gMjBNSHovNDBNSHogY2hhbm5l
+bCB3aWR0aCBjb25maWd1cmF0aW9uOg0KDQpTaW5jZSB0aGUgODAyLjExbiBEcmFmdCAyLjAgU3lz
+dGVtIEludGVyb3BlcmFiaWxpdHkgVGVzdCBQbGFuIHYxLjEgcmVxdWlyZXMgdGhlIGRlZmF1bHQg
+Y29uZmlndXJhdGlvbiBiZWluZyBzZXQgdG8gMjBNSHosIGlzIHRoZXJlIGFueSB3YXkgdG8gc2V0
+IHRoZSBjaGFubmVsIHdpZHRoIHRvIDQwTUh6IGF0IHJ1bi10aW1lPw0KDQpUaGFua3MgZm9yIHlv
+dXIgaGVscCwNCg0KQmluZw0KDQo=
