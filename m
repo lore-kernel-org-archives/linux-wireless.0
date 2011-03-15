@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:34262 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063Ab1CWWFs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43756 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863Ab1COWRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 18:05:48 -0400
-Received: from wpaz29.hot.corp.google.com (wpaz29.hot.corp.google.com [172.24.198.93])
-	by smtp-out.google.com with ESMTP id p2NM5l1X026860
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 15:05:47 -0700
-Received: from wwa36 (wwa36.prod.google.com [10.241.241.36])
-	by wpaz29.hot.corp.google.com with ESMTP id p2NM5jaa004170
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 15:05:45 -0700
-Received: by wwa36 with SMTP id 36so9763576wwa.25
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 15:05:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300910253-28189-5-git-send-email-nbd@openwrt.org>
-References: <1300910253-28189-1-git-send-email-nbd@openwrt.org>
-	<1300910253-28189-2-git-send-email-nbd@openwrt.org>
-	<1300910253-28189-3-git-send-email-nbd@openwrt.org>
-	<1300910253-28189-4-git-send-email-nbd@openwrt.org>
-	<1300910253-28189-5-git-send-email-nbd@openwrt.org>
-Date: Wed, 23 Mar 2011 15:05:44 -0700
-Message-ID: <AANLkTinhxdQqjhBXFh6akhkegzrqSpYSgC5=gPhYsp2-@mail.gmail.com>
-Subject: Re: [PATCH 05/10] ath9k_hw: remove pCap->total_queues
-From: Sam Leffler <sleffler@google.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 15 Mar 2011 18:17:11 -0400
+Subject: [PATCH] mac80211: add comment about reordering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Mar 2011 23:17:01 +0100
+Message-ID: <1300227421.12606.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 23, 2011 at 12:57 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> The EEPROM contains a field that can restrict the number of hardware queues,
-> however this is not only useless (all the known chips contain the same
-> number of hardware queues), but also potentially dangerous in case of a
-> misprogrammed EEPROM (could trigger driver crashes), so let's just ignore
-> it completely.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I can't say if there will ever be h/w w/ different #'s of tx q's but I
-think you're better off just capping any value read from eeprom to
-guard against the very unlikely scenario of misprogramming.
+Took me a minute to figure this out, maybe
+it's better documented...
 
--Sam
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/net/mac80211/rx.c	2011-03-15 23:14:55.000000000 +0100
++++ b/net/mac80211/rx.c	2011-03-15 23:15:25.000000000 +0100
+@@ -706,6 +706,8 @@ static bool ieee80211_sta_manage_reorder
+ 	/*
+ 	 * If the current MPDU is in the right order and nothing else
+ 	 * is stored we can process it directly, no need to buffer it.
++	 * If it is first but there's something stored, we may be able
++	 * to release frames after this one.
+ 	 */
+ 	if (mpdu_seq_num == tid_agg_rx->head_seq_num &&
+ 	    tid_agg_rx->stored_mpdu_num == 0) {
+
+
