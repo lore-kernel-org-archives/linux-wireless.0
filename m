@@ -1,166 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59404 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933299Ab1CWVEh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 17:04:37 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] wifi:  Add hwflags to debugfs.
-Date: Wed, 23 Mar 2011 14:04:31 -0700
-Message-Id: <1300914271-15305-1-git-send-email-greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:63768 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757762Ab1CORlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 13:41:19 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 10:40:56 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH v2] ath9k_hw: Speedup register ops for HTC driver
+Date: Tue, 15 Mar 2011 23:11:35 +0530
+Message-ID: <1300210895-13182-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Fine-tuning register write operation and avoid unnecessay
+delays for ath9k_htc driver, saves hw reset time which
+improves scanning time and also solves one of the following
+scenario.
 
-Aids debugging wifi behaviour.
+Sometimes the ACK is sent by STA for assoc response is not
+seen at AP side. So the AP continues to send retry assoc
+responses. At the STA side, since the assoc response was
+already forwarded to mac80211, it proceeded to channel change
+which in turns does chip reset.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+In most of the cases the chip reset was completed before
+max retries are reached at AP side. Hence STA can able to ACK
+the retried frames again. But in clear environment these retries
+are completed within shortspan of time.
+
+Since ath9k_htc consumes more time for hw reset, this latency
+is causing dissociation by AP due to max reties are reached.
+This issue was originally reported with Cisco Aironet 1250 AP
+in HT40 mode in noise free environment.
+
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
+v2 - added buffer write support for eeprom_9287
 
-v2:  Use macro to generate ops structure, use newlines
-for flag separators.
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c  |    7 +++++--
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c |    6 ++++++
+ drivers/net/wireless/ath/ath9k/eeprom_def.c  |    7 +++++++
+ drivers/net/wireless/ath/ath9k/hw.h          |   10 +++++++---
+ drivers/net/wireless/ath/ath9k/phy.h         |    2 ++
+ 5 files changed, 27 insertions(+), 5 deletions(-)
 
-:100644 100644 51f0d78... 0a602db... M	net/mac80211/debugfs.c
- net/mac80211/debugfs.c |   89 +++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 76 insertions(+), 13 deletions(-)
-
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 51f0d78..0a602db 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -37,7 +37,7 @@ int mac80211_format_buffer(char __user *userbuf, size_t count,
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index ffcf44a..94acce5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -729,6 +729,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 				 struct ath9k_channel *chan)
+ {
+ 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	int i, regWrites = 0;
+ 	struct ieee80211_channel *channel = chan->chan;
+ 	u32 modesIndex, freqIndex;
+@@ -805,7 +806,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE(ah, reg, val);
+ 
+ 		if (reg >= 0x7800 && reg < 0x78a0
+-		    && ah->config.analog_shiftreg) {
++		    && ah->config.analog_shiftreg
++		    && (common->bus_ops->ath_bus_type != ATH_USB)) {
+ 			udelay(100);
+ 		}
+ 
+@@ -835,7 +837,8 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE(ah, reg, val);
+ 
+ 		if (reg >= 0x7800 && reg < 0x78a0
+-		    && ah->config.analog_shiftreg) {
++		    && ah->config.analog_shiftreg
++		    && (common->bus_ops->ath_bus_type != ATH_USB)) {
+ 			udelay(100);
+ 		}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 8cd8333..2f0712e 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -392,6 +392,8 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
+ 							   numXpdGain);
+ 			}
+ 
++			ENABLE_REGWRITE_BUFFER(ah);
++
+ 			if (i == 0) {
+ 				if (!ath9k_hw_ar9287_get_eeprom(ah,
+ 							EEP_OL_PWRCTRL)) {
+@@ -442,6 +444,7 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
+ 					regOffset += 4;
+ 				}
+ 			}
++			REGWRITE_BUFFER_FLUSH(ah);
+ 		}
+ 	}
+ 
+@@ -757,6 +760,8 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
+ 			ratesArray[i] -= AR9287_PWR_TABLE_OFFSET_DB * 2;
+ 	}
+ 
++	ENABLE_REGWRITE_BUFFER(ah);
++
+ 	/* OFDM power per rate */
+ 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE1,
+ 		  ATH9K_POW_SM(ratesArray[rate18mb], 24)
+@@ -840,6 +845,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
+ 			  | ATH9K_POW_SM(ratesArray[rateDupOfdm], 8)
+ 			  | ATH9K_POW_SM(ratesArray[rateDupCck], 0));
+ 	}
++	REGWRITE_BUFFER_FLUSH(ah);
  }
  
--#define DEBUGFS_READONLY_FILE(name, fmt, value...)			\
-+#define DEBUGFS_READONLY_FILE_FN(name, fmt, value...)			\
- static ssize_t name## _read(struct file *file, char __user *userbuf,	\
- 			    size_t count, loff_t *ppos)			\
- {									\
-@@ -45,14 +45,19 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
- 									\
- 	return mac80211_format_buffer(userbuf, count, ppos, 		\
- 				      fmt "\n", ##value);		\
--}									\
--									\
-+}
-+
-+#define DEBUGFS_READONLY_FILE_OPS(name)			\
- static const struct file_operations name## _ops = {			\
- 	.read = name## _read,						\
- 	.open = mac80211_open_file_generic,				\
- 	.llseek = generic_file_llseek,					\
- };
+ static void ath9k_hw_ar9287_set_addac(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index fccd87d..995949d 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -799,6 +799,8 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 							   pwr_table_offset,
+ 							   &diff);
  
-+#define DEBUGFS_READONLY_FILE(name, fmt, value...)		\
-+	DEBUGFS_READONLY_FILE_FN(name, fmt, value)		\
-+	DEBUGFS_READONLY_FILE_OPS(name)
++			ENABLE_REGWRITE_BUFFER(ah);
 +
- #define DEBUGFS_ADD(name)						\
- 	debugfs_create_file(#name, 0400, phyd, local, &name## _ops);
+ 			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 				if (OLC_FOR_AR9280_20_LATER) {
+ 					REG_WRITE(ah,
+@@ -847,6 +849,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
  
-@@ -291,11 +296,70 @@ static ssize_t channel_type_read(struct file *file, char __user *user_buf,
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
+ 				regOffset += 4;
+ 			}
++			REGWRITE_BUFFER_FLUSH(ah);
+ 		}
+ 	}
+ 
+@@ -1205,6 +1208,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 		}
+ 	}
+ 
++	ENABLE_REGWRITE_BUFFER(ah);
++
+ 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE1,
+ 		  ATH9K_POW_SM(ratesArray[rate18mb], 24)
+ 		  | ATH9K_POW_SM(ratesArray[rate12mb], 16)
+@@ -1291,6 +1296,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_POWER_TX_SUB,
+ 		  ATH9K_POW_SM(pModal->pwrDecreaseFor3Chain, 6)
+ 		  | ATH9K_POW_SM(pModal->pwrDecreaseFor2Chain, 0));
++
++	REGWRITE_BUFFER_FLUSH(ah);
  }
  
--static const struct file_operations channel_type_ops = {
--	.read = channel_type_read,
--	.open = mac80211_open_file_generic,
--	.llseek = default_llseek,
--};
-+static ssize_t hwflags_read(struct file *file, char __user *user_buf,
-+			    size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_local *local = file->private_data;
-+	int mxln = 500;
-+	ssize_t rv;
-+	char *buf = kzalloc(mxln, GFP_KERNEL);
-+	int sf = 0; /* how many written so far */
-+
-+	sf += snprintf(buf, mxln - sf, "0x%x\n", local->hw.flags);
-+	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
-+		sf += snprintf(buf + sf, mxln - sf, "HAS_RATE_CONTROL\n");
-+	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
-+		sf += snprintf(buf + sf, mxln - sf, "RX_INCLUDES_FCS\n");
-+	if (local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING)
-+		sf += snprintf(buf + sf, mxln - sf,
-+			       "HOST_BCAST_PS_BUFFERING\n");
-+	if (local->hw.flags & IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE)
-+		sf += snprintf(buf + sf, mxln - sf,
-+			       "2GHZ_SHORT_SLOT_INCAPABLE\n");
-+	if (local->hw.flags & IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE)
-+		sf += snprintf(buf + sf, mxln - sf,
-+			       "2GHZ_SHORT_PREAMBLE_INCAPABLE\n");
-+	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
-+		sf += snprintf(buf + sf, mxln - sf, "SIGNAL_UNSPEC\n");
-+	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-+		sf += snprintf(buf + sf, mxln - sf, "SIGNAL_DBM\n");
-+	if (local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD)
-+		sf += snprintf(buf + sf, mxln - sf, "NEED_DTIM_PERIOD\n");
-+	if (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT)
-+		sf += snprintf(buf + sf, mxln - sf, "SPECTRUM_MGMT\n");
-+	if (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)
-+		sf += snprintf(buf + sf, mxln - sf, "AMPDU_AGGREGATION\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PS)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_PS\n");
-+	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
-+		sf += snprintf(buf + sf, mxln - sf, "PS_NULLFUNC_STACK\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_DYNAMIC_PS\n");
-+	if (local->hw.flags & IEEE80211_HW_MFP_CAPABLE)
-+		sf += snprintf(buf + sf, mxln - sf, "MFP_CAPABLE\n");
-+	if (local->hw.flags & IEEE80211_HW_BEACON_FILTER)
-+		sf += snprintf(buf + sf, mxln - sf, "BEACON_FILTER\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_STATIC_SMPS)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_STATIC_SMPS\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_DYNAMIC_SMPS\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_UAPSD\n");
-+	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-+		sf += snprintf(buf + sf, mxln - sf, "REPORTS_TX_ACK_STATUS\n");
-+	if (local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-+		sf += snprintf(buf + sf, mxln - sf, "CONNECTION_MONITOR\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_CQM_RSSI\n");
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PER_STA_GTK)
-+		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_PER_STA_GTK\n");
-+	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
-+		sf += snprintf(buf + sf, mxln - sf, "AP_LINK_PS\n");
-+
-+	rv = simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
-+	kfree(buf);
-+	return rv;
-+}
+ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 072406c..c663216 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -105,18 +105,22 @@
+ #define REG_CLR_BIT(_a, _r, _f) \
+ 	REG_WRITE(_a, _r, REG_READ(_a, _r) & ~(_f))
  
- static ssize_t queues_read(struct file *file, char __user *user_buf,
- 			   size_t count, loff_t *ppos)
-@@ -315,11 +379,9 @@ static ssize_t queues_read(struct file *file, char __user *user_buf,
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
- }
+-#define DO_DELAY(x) do {			\
+-		if ((++(x) % 64) == 0)          \
+-			udelay(1);		\
++#define DO_DELAY(x) do {					\
++		if (((++(x) % 64) == 0) &&			\
++		    (ath9k_hw_common(ah)->bus_ops->ath_bus_type	\
++			!= ATH_USB))				\
++			udelay(1);				\
+ 	} while (0)
  
--static const struct file_operations queues_ops = {
--	.read = queues_read,
--	.open = mac80211_open_file_generic,
--	.llseek = default_llseek,
--};
-+DEBUGFS_READONLY_FILE_OPS(hwflags);
-+DEBUGFS_READONLY_FILE_OPS(channel_type);
-+DEBUGFS_READONLY_FILE_OPS(queues);
+ #define REG_WRITE_ARRAY(iniarray, column, regWr) do {                   \
+ 		int r;							\
++		ENABLE_REGWRITE_BUFFER(ah);				\
+ 		for (r = 0; r < ((iniarray)->ia_rows); r++) {		\
+ 			REG_WRITE(ah, INI_RA((iniarray), (r), 0),	\
+ 				  INI_RA((iniarray), r, (column)));	\
+ 			DO_DELAY(regWr);				\
+ 		}							\
++		REGWRITE_BUFFER_FLUSH(ah);				\
+ 	} while (0)
  
- /* statistics stuff */
+ #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index 5e3d749..e402932 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -40,10 +40,12 @@
  
-@@ -395,6 +457,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(uapsd_queues);
- 	DEBUGFS_ADD(uapsd_max_sp_len);
- 	DEBUGFS_ADD(channel_type);
-+	DEBUGFS_ADD(hwflags);
- 	DEBUGFS_ADD(user_power);
- 	DEBUGFS_ADD(power);
+ #define REG_WRITE_RF_ARRAY(iniarray, regData, regWr) do {               \
+ 		int r;							\
++		ENABLE_REGWRITE_BUFFER(ah);				\
+ 		for (r = 0; r < ((iniarray)->ia_rows); r++) {		\
+ 			REG_WRITE(ah, INI_RA((iniarray), r, 0), (regData)[r]); \
+ 			DO_DELAY(regWr);				\
+ 		}							\
++		REGWRITE_BUFFER_FLUSH(ah);				\
+ 	} while (0)
  
+ #define ANTSWAP_AB 0x0001
 -- 
-1.7.3.4
+1.7.4.1
 
