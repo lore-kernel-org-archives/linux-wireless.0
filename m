@@ -1,64 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33326 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753215Ab1CAVyW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 16:54:22 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 13:54:01 -0800
-Date: Tue, 1 Mar 2011 13:54:12 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"nbd@openwrt.org" <nbd@openwrt.org>,
-	"dubowoj@neratec.com" <dubowoj@neratec.com>,
-	"zefir.kurtisi@neratec.com" <zefir.kurtisi@neratec.com>,
-	"simon.wunderlich@saxnet.de" <simon.wunderlich@saxnet.de>
-Subject: Re: [PATCH 2/9] [{mac|nl}80211] Add 2 new radar channel flags
-Message-ID: <20110301215412.GD6835@tux>
-References: <201102281740.37036.bernhard.schmidt@saxnet.de>
- <201102281747.06564.bernhard.schmidt@saxnet.de>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41708 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753210Ab1COSdb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 14:33:31 -0400
+Received: by iyb26 with SMTP id 26so849575iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 11:33:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201102281747.06564.bernhard.schmidt@saxnet.de>
+In-Reply-To: <AANLkTinZHRbhFS9xjdpRwanPWZ13y27x8mja=T=4E86i@mail.gmail.com>
+References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com>
+ <1299831238.5082.185.camel@wwguy-huron> <AANLkTikYJQcpOnE+Q3=VFioEfpdB+8j+x7+-K_eSU7kd@mail.gmail.com>
+ <1300063647.24333.7.camel@wwguy-ubuntu> <AANLkTin_=k=7Y0XmEtZc952pm=wuCawJAXgq6fKFWZM+@mail.gmail.com>
+ <1300189917.5596.10.camel@jlt3.sipsolutions.net> <1300193550.5596.16.camel@jlt3.sipsolutions.net>
+ <AANLkTinfEU2HNAg7aTmMgSrR6vVyVwLbFmpcP9TL4GyK@mail.gmail.com>
+ <1300213768.4139.3.camel@jlt3.sipsolutions.net> <AANLkTinZHRbhFS9xjdpRwanPWZ13y27x8mja=T=4E86i@mail.gmail.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Tue, 15 Mar 2011 11:33:09 -0700
+Message-ID: <AANLkTi=Y2r-m71EgZapSAhXY6979PuQzMKwo+DJ8vj5M@mail.gmail.com>
+Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 28, 2011 at 08:47:06AM -0800, Bernhard Schmidt wrote:
-> DFS introduces 2 new flags a channel requiring radar detection
-> might take. The interference flag indicates that interference was
-> detected either during CAC or in-service monitoring and the
-> channel is not to be used for the NOP period. The clear flag
-> indicates that during a full CAC no interference was detected and
-> it is allowed to open a BSS on that channel. The case were both
-> flags are set is used to indicate that interference has been
-> detected and we are in progress of closing on that channel.
+Sorry, terminal cut off.
 
-What does closing mean?
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a6701ed..0467ec8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -605,13 +605,14 @@ static void ieee80211_sta_reorder_release(struct
+ieee80211_hw *hw,
+                                continue;
+                        }
+                        if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
+-                                       HT_RX_REORDER_BUF_TIMEOUT))
++                                       HT_RX_REORDER_BUF_TIMEOUT) && skipped)
+                                goto set_release_timer;
 
-> Signed-off-by: Bernhard Schmidt <bernhard.schmidt@saxnet.de>
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-                       if (net_ratelimit())
++#if 1
++//#ifdef CONFIG_MAC80211_HT_DEBUG
++//                     if (net_ratelimit())
+                                wiphy_debug(hw->wiphy,
+-                                           "release an RX reorder
+frame due to timeout on earlier frames\n");
++                                           "release an RX reorder
+frame due to timeout on earlier frames (skipped=%d)\n", skipped);
+ #endif
+                        ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
 
-> ---
->  include/linux/nl80211.h |    6 ++++++
->  include/net/cfg80211.h  |   18 ++++++++++++------
->  net/mac80211/cfg.c      |    6 ++++++
->  net/mac80211/tx.c       |    6 ++++--
->  net/wireless/nl80211.c  |    4 ++++
->  5 files changed, 32 insertions(+), 8 deletions(-)
-> 
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index e3c9ec7..2282f56 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -1371,6 +1371,10 @@ enum nl80211_band_attr {
->   *	(100 * dBm).
->   * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
->   *	currently defined
-> + * @NL80211_FREQUENCY_ATTR_RADAR_CLEAR: during a full CAC no interference has
-> + *	been detected.
+@@ -680,6 +681,7 @@ static bool
+ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+         * size release some previous frames to make room for this one.
+         */
+        if (!seq_less(mpdu_seq_num, head_seq_num + buf_size)) {
++               printk("New seq exceeds buffering window: %d, %d\n",
+mpdu_seq_num, head_seq_num);
+                head_seq_num = seq_inc(seq_sub(mpdu_seq_num, buf_size));
+                /* release stored frames up to new head to stack */
+                ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num);
 
-Why do you need a flag for clear, can you simply count on the
-lack of the flag as the "clear" state?
 
-  Luis
+On Tue, Mar 15, 2011 at 11:31 AM, Daniel Halperin
+<dhalperi@cs.washington.edu> wrote:
+> At the receiver (AP in this case) side, hacked from mac80211. The
+> following diff includes one more mac80211 fix I haven't yet sent to
+> the list.
+>
+> Dan
+>
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index a6701ed..0467ec8 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -605,13 +605,14 @@ static void ieee80211_sta_reorder_release(struct
+> ieee80211                                continue;
+>                        }
+>                        if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
+> -                                       HT_RX_REORDER_BUF_TIMEOUT))
+> +                                       HT_RX_REORDER_BUF_TIMEOUT) && skipped)
+>                                goto set_release_timer;
+>
+> -#ifdef CONFIG_MAC80211_HT_DEBUG
+> -                       if (net_ratelimit())
+> +#if 1
+> +//#ifdef CONFIG_MAC80211_HT_DEBUG
+> +//                     if (net_ratelimit())
+>                                wiphy_debug(hw->wiphy,
+> -                                           "release an RX reorder
+> frame due to +                                           "release an
+> RX reorder frame due to  #endif
+>                        ieee80211_release_reorder_frame(hw, tid_agg_rx, j);
+>
+> @@ -680,6 +681,7 @@ static bool
+> ieee80211_sta_manage_reorder_buf(struct ieee8021         * size
+> release some previous frames to make room for this one.
+>         */
+>        if (!seq_less(mpdu_seq_num, head_seq_num + buf_size)) {
+> +               printk("New seq exceeds buffering window: %d, %d\n",
+> mpdu_seq_nu                head_seq_num =
+> seq_inc(seq_sub(mpdu_seq_num, buf_size));
+>                /* release stored frames up to new head to stack */
+>                ieee80211_release_reorder_frames(hw, tid_agg_rx, head_seq_num);
+>
+>
+> On Tue, Mar 15, 2011 at 11:29 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2011-03-15 at 11:16 -0700, Daniel Halperin wrote:
+>>
+>>> [341349.271337] New seq exceeds buffering window: 2797, 2766
+>>
+>> quick q (on the phone right now) - where's that message from?
+>>
+>> johannes
+>>
+>>
+>>
+>
