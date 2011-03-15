@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:50954 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417Ab1CYQTI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 12:19:08 -0400
+Received: from mail.atheros.com ([12.19.149.2]:36094 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753510Ab1COUvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 16:51:23 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 13:51:00 -0700
+Date: Tue, 15 Mar 2011 13:51:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Kyungwan Nam <Kyungwan.Nam@Atheros.com>
+Subject: Re: [PATCH 2.6.38] ath9k: remove support for the
+ FIF_PROMISC_IN_BSS filter flag
+Message-ID: <20110315205122.GI11878@tux>
+References: <1299631692-69094-1-git-send-email-nbd@openwrt.org>
+ <4D76D2C3.2000909@candelatech.com>
+ <4D76D4BD.7070509@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=CSK8nRF7CTzsq06Bk8Cr74ZcwJBf53_wWbpnv@mail.gmail.com>
-References: <AANLkTi=CSK8nRF7CTzsq06Bk8Cr74ZcwJBf53_wWbpnv@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Fri, 25 Mar 2011 18:18:48 +0200
-Message-ID: <AANLkTinhbwsm_wOBDW5-WBrP0tfLUZMmuY18eGTkr4e4@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] sdio: add power_restore support with
- MMC_PM_KEEP_POWER mode
-To: Wilson Loi <wlsloi@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4D76D4BD.7070509@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Wilson,
+On Tue, Mar 08, 2011 at 05:15:41PM -0800, Felix Fietkau wrote:
+> On 2011-03-09 2:07 AM, Ben Greear wrote:
+> > On 03/08/2011 04:48 PM, Felix Fietkau wrote:
+> >> The hardware rx filter flag triggered by FIF_PROMISC_IN_BSS is overly broad
+> >> and covers even frames with PHY errors. When this flag is enabled, this message
+> >> shows up frequently during scanning or hardware resets:
+> >>
+> >> ath: Could not stop RX, we could be confusing the DMA engine when we start RX up
+> >>
+> >> Since promiscuous mode is usually not particularly useful, yet enabled by
+> >> default by bridging (either used normally in 4-addr mode, or with hacks
+> >> for various virtualization software), we should sacrifice it for better
+> >> reliability during normal operation.
+> >>
+> >> This patch leaves it enabled if there are active monitor mode interfaces, since
+> >> it's very useful for debugging.
+> >>
+> >> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+> >> Cc: stable@kernel.org
+> >> ---
+> >>   drivers/net/wireless/ath/ath9k/recv.c |    4 +---
+> >>   1 files changed, 1 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> >> index cb559e3..a9c3f46 100644
+> >> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> >> @@ -413,9 +413,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+> >>   	 * mode interface or when in monitor mode. AP mode does not need this
+> >>   	 * since it receives all in-BSS frames anyway.
+> >>   	 */
+> >> -	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP)&&
+> >> -	     (sc->rx.rxfilter&  FIF_PROMISC_IN_BSS)) ||
+> >> -	    (sc->sc_ah->is_monitoring))
+> >> +	if (sc->sc_ah->is_monitoring)
+> >>   		rfilt |= ATH9K_RX_FILTER_PROM;
+> >>
+> >>   	if (sc->rx.rxfilter&  FIF_CONTROL)
+> > 
+> > Should we enable this flag if we have multiple STA
+> > interfaces?  I had to add something to ath5k recently
+> > to put it into promisc to properly handle multiple STAs
+> > associated with different APs, for instance.
+> No, multiple interfaces is handled by the BSSID mask.
+> 
+> > Do you have any idea *why* enabling this flag causes the DMA error
+> > messages?
+> I don't know why exactly it happens, but it probably cannot be explained
+> without going to the details of the inner workings of the MAC/baseband
+> interaction. But as I mentioned in the description, this flag is overly
+> broad and doesn't just bypass the address match, but lets all kinds of
+> other crap through as well - in many situations where even 'normal'
+> promiscuous behavior would be completely useless.
+> I think because of that, disabling it for non-monitor operation is the
+> right thing to do.
 
-On Fri, Mar 25, 2011 at 5:58 AM, Wilson Loi <wlsloi@gmail.com> wrote:
-> The current power_restore handler only support cut off mode.
-> It is better to support keep power mode too.
+Nice find, thanks for looking at this. Are we cured now from all of
+these rants? Or has anyone seem more?
 
-This doesn't make much sense really;
-
-mmc_power_save_host() and mmc_power_restore_host() are invoked by
-runtime PM when it is time to power off/on the card.
-
-If your driver doesn't want the power to go, it should just maintain a
-positive runtime PM usage_count (e.g. in case it's an SDIO driver,
-don't call pm_runtime_put{_sync} after being probed).
-
->  static const struct mmc_bus_ops mmc_sdio_ops = {
->      .remove = mmc_sdio_remove,
->      .detect = mmc_sdio_detect,
->      .suspend = mmc_sdio_suspend,
->      .resume = mmc_sdio_resume,
-> -    .power_restore = mmc_sdio_power_restore,
-> +    .power_save = mmc_sdio_suspend,
-> +    .power_restore = mmc_sdio_resume,
-
-This can break SDIO runtime PM.
-
-While -ENOSYS is a valid return value for mmc_sdio_suspend (it tells
-mmc_suspend_host to remove the entire MMC card on system suspend), it
-will be treated as an error by runtime PM.
-
-In addition, this can really yield unexpected results, since drivers
-do not expect their suspend/resume handlers to be called during
-runtime PM transitions.
+  Luis
