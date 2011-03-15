@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:50082 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750786Ab1CUP3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 11:29:47 -0400
-Date: Mon, 21 Mar 2011 08:16:43 -0700
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	John Linville <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	linux-wireless@vger.kernel.org
-Subject: Re: new utility kernel module for detecting cores in newer chipsets
-Message-ID: <20110321151643.GA29871@kroah.com>
-References: <20110320145421.GA13962@kroah.com>
- <op.vsnd1a1i3ri7v4@arend-laptop>
- <20110320162200.GA17030@kroah.com>
- <op.vsng7q1j3ri7v4@arend-laptop>
- <20110320185216.GD19375@kroah.com>
- <AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
- <20110321140505.GA7321@kroah.com>
- <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
- <20110321144603.GA7645@kroah.com>
- <AANLkTi=f_Gn7+4ahnZFwOw9qWUV05+WpjaRkajaYGxky@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTi=f_Gn7+4ahnZFwOw9qWUV05+WpjaRkajaYGxky@mail.gmail.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41117
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758649Ab1COVC4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 17:02:56 -0400
+Date: Tue, 15 Mar 2011 14:03:33 -0700 (PDT)
+Message-Id: <20110315.140333.112590317.davem@davemloft.net>
+To: laijs@cn.fujitsu.com
+Cc: mingo@elte.hu, paulmck@linux.vnet.ibm.com, axboe@kernel.dk,
+	Trond.Myklebust@netapp.com, vladislav.yasevich@hp.com,
+	sri@us.ibm.com, viro@zeniv.linux.org.uk, eparis@redhat.com,
+	menage@google.com, kuznet@ms2.inr.ac.ru, pekkas@netcore.fi,
+	jmorris@namei.org, yoshfuji@linux-ipv6.org, kaber@trash.net,
+	johannes@sipsolutions.net, linville@tuxdriver.com, hadi@cyberus.ca,
+	jpirko@redhat.com, eric.dumazet@gmail.com, hagen@jauu.net,
+	randy.dunlap@oracle.com, jkosina@suse.cz, joe@perches.com,
+	u.kleine-koenig@pengutronix.de, ebiederm@xmission.com,
+	gregkh@suse.de, xemul@openvz.org, linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-sctp@vger.kernel.org,
+	netdev@vger.kernel.org, containers@lists.linux-foundation.org,
+	linux-decnet-user@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	linux-security-module@vger.kernel.org
+Subject: Re: [PATCH 07/17] net,rcu: convert
+ call_rcu(inet6_ifa_finish_destroy_rcu) to kfree_rcu()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4D7F38AE.7060708@cn.fujitsu.com>
+References: <4D7F3610.6000809@cn.fujitsu.com>
+	<4D7F38AE.7060708@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 21, 2011 at 03:52:56PM +0100, Rafał Miłecki wrote:
-> 2011/3/21 Greg KH <greg@kroah.com>:
-> > I have no objections to what you want at all, why do you think I do?
-> > I'm just handling getting the stuff in drivers/staging/ out of there,
-> > that's it.  I trust the rest of you all to handle the design decisions
-> > properly.
-> >
-> > And as there is no code here yet to complain about, I fail to see any
-> > problem yet :)
+From: Lai Jiangshan <laijs@cn.fujitsu.com>
+Date: Tue, 15 Mar 2011 18:00:14 +0800
+
 > 
-> It was not directly to you, I believe you already many things to worry
-> about, and are not really interested in getting into another driver
-> layout :)
+> 
+> The rcu callback inet6_ifa_finish_destroy_rcu() just calls a kfree(),
+> so we use kfree_rcu() instead of the call_rcu(inet6_ifa_finish_destroy_rcu).
+> 
+> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
 
-Then why was I the only one on the "To:" line?  Please be more careful
-in the future.
-
-> I expected Michael and Arend to talk with us (mostly me and George)
-> about current situation.
-
-For some reason, there was a seprate thread without the mailing list on
-it about this topic where Michael did discuss this.  Maybe he will
-summarize that here for everyone else now.
-
-thanks,
-
-greg k-h
+Acked-by: David S. Miller <davem@davemloft.net>
