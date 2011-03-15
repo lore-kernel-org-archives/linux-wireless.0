@@ -1,93 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53093 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755663Ab1CIQaw (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48968 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944Ab1COHrl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 11:30:52 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: bloat-devel@lists.bufferbloat.net, me@bobcopeland.com,
-	mickflemm@gmail.com, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/3] wireless: add support for ethtool_ops->{get,set}_ringparam
-Date: Wed,  9 Mar 2011 11:21:22 -0500
-Message-Id: <1299687684-19638-1-git-send-email-linville@tuxdriver.com>
+	Tue, 15 Mar 2011 03:47:41 -0400
+Received: by wya21 with SMTP id 21so268591wya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 00:47:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110314164812.4c0cfc29@toddler>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<20110314164812.4c0cfc29@toddler>
+Date: Tue, 15 Mar 2011 13:17:40 +0530
+Message-ID: <AANLkTimSZrGCzBaB9K=WVO7faGNM-+qeKEE2qzjkPnSD@mail.gmail.com>
+Subject: Re: Could ath9k and rt2800pci bugs be related?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tony Houghton <h@realh.co.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/cfg80211.h |    4 ++++
- net/wireless/ethtool.c |   33 +++++++++++++++++++++++++++++++++
- 2 files changed, 37 insertions(+), 0 deletions(-)
+On Mon, Mar 14, 2011 at 10:18 PM, Tony Houghton <h@realh.co.uk> wrote:
+> [I am no longer subscribed to the list so please Cc me]
+>
+> I'm the person who reported that my system kept freezing when shutting
+> down my AR9285 wireless with kernel 2.6.35 or newer.
+>
+> I've just bought an Acer Aspire Revo 3700 and this had very similar
+> symptoms with a different adapter. Luckily another customer had posted
+> about it on the vendor's website and his fix works for me. The fix is to
+> blacklist the rt2800pci module and the rt2860sta driver seems to work
+> quite happily without it.
+>
+> It looks as if rt2800pci was introduced somewhere between 2.6.32 and
+> 2.6.34 and I experienced the crashes with 2.6.35 (Mint 10/Ubuntu 10.10)
+> and 2.6.37 (Debian unstable), but not with 2.6.32 (Debian squeeze) which
+> doesn't have that module.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1ac5786..25f546f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1364,6 +1364,10 @@ struct cfg80211_ops {
- 
- 	int	(*set_antenna)(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant);
- 	int	(*get_antenna)(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant);
-+
-+	int	(*set_ringparam)(struct wiphy *wiphy, u32 tx, u32 rx);
-+	void	(*get_ringparam)(struct wiphy *wiphy,
-+				 u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
- };
- 
- /*
-diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-index ca4c825..9bde4d1 100644
---- a/net/wireless/ethtool.c
-+++ b/net/wireless/ethtool.c
-@@ -1,5 +1,6 @@
- #include <linux/utsname.h>
- #include <net/cfg80211.h>
-+#include "core.h"
- #include "ethtool.h"
- 
- static void cfg80211_get_drvinfo(struct net_device *dev,
-@@ -37,9 +38,41 @@ static void cfg80211_get_regs(struct net_device *dev, struct ethtool_regs *regs,
- 	regs->len = 0;
- }
- 
-+static void cfg80211_get_ringparam(struct net_device *dev,
-+				   struct ethtool_ringparam *rp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	memset(rp, 0, sizeof(*rp));
-+
-+	if (rdev->ops->get_ringparam)
-+		rdev->ops->get_ringparam(wdev->wiphy,
-+					 &rp->tx_pending, &rp->tx_max_pending,
-+					 &rp->rx_pending, &rp->rx_max_pending);
-+}
-+
-+static int cfg80211_set_ringparam(struct net_device *dev,
-+				  struct ethtool_ringparam *rp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+
-+	if (rp->rx_mini_pending != 0 || rp->rx_jumbo_pending != 0)
-+		return -EINVAL;
-+
-+	if (rdev->ops->set_ringparam)
-+		return rdev->ops->set_ringparam(wdev->wiphy,
-+						rp->tx_pending, rp->rx_pending);
-+
-+	return -ENOTSUPP;
-+}
-+
- const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_drvinfo = cfg80211_get_drvinfo,
- 	.get_regs_len = cfg80211_get_regs_len,
- 	.get_regs = cfg80211_get_regs,
- 	.get_link = ethtool_op_get_link,
-+	.get_ringparam = cfg80211_get_ringparam,
-+	.set_ringparam = cfg80211_set_ringparam,
- };
--- 
-1.7.4
+can you please check by disabling the supicious rt modules and see
+whether this problems happens.
+for quick check please try with the latest compat wireless.
 
+>
+> It's probably just coincidence, but I was struck by how similar the
+> symptoms are and wondered whether these different drivers have anything
+> in common?
+>
+> lspci output:
+>
+> 02:00.0 Network controller [0280]: RaLink RT3090 Wireless 802.11n 1T/1R PCIe [1814:3090]
+>        Subsystem: Lite-On Communications Inc Device [11ad:6622]
+>        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>        Latency: 0, Cache Line Size: 32 bytes
+>        Interrupt: pin A routed to IRQ 18
+>        Region 0: Memory at febf0000 (32-bit, non-prefetchable) [size=64K]
+>        Capabilities: <access denied>
+>        Kernel driver in use: rt2860
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
