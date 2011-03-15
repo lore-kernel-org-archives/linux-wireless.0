@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54234 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932216Ab1CVVmH (ORCPT
+Received: from web57405.mail.re1.yahoo.com ([66.196.100.56]:47304 "HELO
+	web57405.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758012Ab1COPfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2011 17:42:07 -0400
-Subject: Re: [PATCH 5/5 v4] mac80211: New notification to discover mesh
- peer candidates.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1300479732-25920-6-git-send-email-javier@cozybit.com>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
-	 <1300479732-25920-6-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Mar 2011 22:42:03 +0100
-Message-ID: <1300830123.3746.50.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Mar 2011 11:35:04 -0400
+Message-ID: <6781.8657.qm@web57405.mail.re1.yahoo.com>
+Date: Tue, 15 Mar 2011 08:35:01 -0700 (PDT)
+From: Joe Gunn <armadefuego@yahoo.com>
+Subject: Flag this message [PATCH 2.6.38-rc8-wl 1/1] orinoco: Clear dangling pointer on hardware busy
+To: orinoco-devel@lists.sourceforge.net
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-03-18 at 13:22 -0700, Javier Cardona wrote:
+On hardware busy the scan request pointer should be cleared, as higher levels will release. This avoids a crash when that pointer is erroneously used later.
 
-> @@ -1170,6 +1182,7 @@ enum nl80211_iftype {
->   * @NL80211_STA_FLAG_WME: station is WME/QoS capable
->   * @NL80211_STA_FLAG_MFP: station uses management frame protection
->   * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
-> + * @NL80211_STA_FLAG_AUTHENTICATED: station is authenticated
->   * @__NL80211_STA_FLAG_AFTER_LAST: internal use
+Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
+---
+When the hardware is busy the error is propagated to higher levels on the stack. Those layers release the buffer. Therefore the copy of the pointer must be erased. Otherwise subsequent events checking this pointer ma crash.
+---
+diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
+index 09fae2f..1eff4dc 100644
+--- a/drivers/net/wireless/orinoco/cfg.c
++++ b/drivers/net/wireless/orinoco/cfg.c
+@@ -151,8 +151,18 @@ static int orinoco_scan(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EBUSY;
+ 
+ 	priv->scan_request = request;
++	DEBUG(3, "orinoco_scan():"
++		" scan_request %p wiphy %p, dev %p\n",
++		priv->scan_request,
++		priv->scan_request->wiphy,
++		priv->scan_request->dev
++		);
+ 
+ 	err = orinoco_hw_trigger_scan(priv, request->ssids);
++	/* On EBUSY the hardware is busy. We aren't processing the request */
++	if ( err == -EBUSY) {
++		priv->scan_request = NULL;
++	}
+ 
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
+index e99ca1c..698e9ff 100644
+--- a/drivers/net/wireless/orinoco/scan.c
++++ b/drivers/net/wireless/orinoco/scan.c
+@@ -230,6 +230,12 @@ void orinoco_add_hostscan_results(struct orinoco_private *priv,
+ 
+  scan_abort:
+ 	if (priv->scan_request) {
++		DEBUG(3, "orinoco_add_hostscan_results():"
++			" scan_request %p wiphy %p, dev %p\n",
++			priv->scan_request,
++			priv->scan_request->wiphy,
++			priv->scan_request->dev
++			);
+ 		cfg80211_scan_done(priv->scan_request, abort);
+ 		priv->scan_request = NULL;
+ 	}
+@@ -238,6 +244,12 @@ void orinoco_add_hostscan_results(struct orinoco_private *priv,
+ void orinoco_scan_done(struct orinoco_private *priv, bool abort)
+ {
+ 	if (priv->scan_request) {
++		DEBUG(3, "orinoco_scan_done():"
++			" scan_request %p, wiphy %p, dev %p\n",
++			priv->scan_request,
++			priv->scan_request->wiphy,
++			priv->scan_request->dev
++			);
+ 		cfg80211_scan_done(priv->scan_request, abort);
+ 		priv->scan_request = NULL;
+ 	}
 
-This looks a little odd, but doesn't really matter.
 
 
-> +void cfg80211_notify_new_peer_candidate(struct net_device *dev,
-> +		const u8 *macaddr, const u8* ie, u8 ie_len, gfp_t gfp)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> +	struct cfg80211_event *ev;
-> +	unsigned long flags;
-> +
-> +	ev = kzalloc(sizeof(*ev), gfp);
-> +	if (!ev)
-> +		return;
-> +	ev->type = EVENT_NEW_CANDIDATE;
-> +	memcpy(ev->nc.macaddr, macaddr, ETH_ALEN);
-> +	if (ie_len && ie) {
-> +		ev->nc.ie = kmemdup(ie, ie_len, gfp);
-> +		ev->nc.ie_len = (ev->nc.ie) ? ie_len : 0;
-> +	}
-> +
-> +	spin_lock_irqsave(&wdev->event_lock, flags);
-> +	list_add_tail(&ev->list, &wdev->event_list);
-> +	spin_unlock_irqrestore(&wdev->event_lock, flags);
-> +	queue_work(cfg80211_wq, &rdev->event_work);
-
-Why schedule out here and all the complexity with that? Seems pointless,
-just pass the gfp through to nl80211?
-
-
-Also, this changes the APIs again. Do you think you could collect the
-API changes into a separate patch and combine them in nl80211/cfg80211?
-
-johannes
-
+      
