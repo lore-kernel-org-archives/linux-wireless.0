@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4072 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612Ab1CCIH2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 03:07:28 -0500
-Subject: Re: [PATCH v2] mwifiex: remove PRINTM/HEXDUMP and associated
-From: Joe Perches <joe@perches.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-In-Reply-To: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
-References: <1299105113-3052-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Mar 2011 00:07:26 -0800
-Message-ID: <1299139646.4338.69.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59599 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab1CPOih convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2011 10:38:37 -0400
+Received: by qwk3 with SMTP id 3so1335024qwk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 07:38:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikCxK144u8mMtOFjXK6qRMmb1+eE1gLuYnbMB_A@mail.gmail.com>
+References: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
+	<1300284739-7797-2-git-send-email-lemenkov@gmail.com>
+	<AANLkTima9_VSL4Db1RXSPLRXyoBOwdym9CkJUJrySnSC@mail.gmail.com>
+	<AANLkTikCxK144u8mMtOFjXK6qRMmb1+eE1gLuYnbMB_A@mail.gmail.com>
+Date: Wed, 16 Mar 2011 15:38:36 +0100
+Message-ID: <AANLkTinzWSQA0ujroMLqhSuU7Wf_KQUHrvXbhbaRRmmk@mail.gmail.com>
+Subject: Re: [PATCH 1/4] rt2x00: Add rt2870 device id
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Peter Lemenkov <lemenkov@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-03-02 at 14:31 -0800, Bing Zhao wrote:
-> use pr_debug family APIs instead.
-> MERROR/MFATAL/MMSG: pr_err, pr_warning, pr_notice
+W dniu 16 marca 2011 15:33 użytkownik Peter Lemenkov
+<lemenkov@gmail.com> napisał:
+> 2011/3/16 Rafał Miłecki <zajec5@gmail.com>:
+>> 2011/3/16 Peter Lemenkov <lemenkov@gmail.com>:
+>>> Add ID for Asus USB-N11 Wi-FI adapter. Tested by me.
+>>>
+>>> Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>> Either: the patch or title seems to be incorrect. It looks like you
+>> just moved place where entry was typed...?
+>
+> Yes, it is intended. This device was enlisted under
+> CONFIG_RT2800USB_UNKNOWN previously (nobody was aware whether it works
+> with this driver or not). Now I can confirm that it does work fine.
 
-Trivia:
+Sorry then, that's what happens when you read patches not whole code :)
 
-It looks to me as if all the MFATAL should
-map to KERN_ERR.
-
-Please use pr_fmt
-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-to prefix "mwifiex: " rather than put it each
-format string. 
-
-Please use pr_warn not pr_warning.
-
-I really don't think you need to add another prefix
-string like "err" and "info" and "cmd" to the various
-levels.  The output content is enough to figure it out.
-
-Perhaps use use dev/netdev/wiphy_<level> where it makes
-sense?
-
-You've sometimes added __func__ and sometimes used or
-kept some shortened function name equivalent.  It'd
-probably be better to consistently use __func__ where
-appropriate.
-
+-- 
+Rafał
