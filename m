@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:46177 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab1CAFEO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56278 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462Ab1CPKIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 00:04:14 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [RFC v2 1/2] dynamic debug: add dynamic_hexdump_debug macro
-Date: Mon, 28 Feb 2011 21:06:55 -0800
-Message-Id: <1298956016-30673-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1298956016-30673-1-git-send-email-bzhao@marvell.com>
-References: <1298956016-30673-1-git-send-email-bzhao@marvell.com>
+	Wed, 16 Mar 2011 06:08:19 -0400
+Subject: Re: [PATCH] mac80211: fix comment regarding aggregation buf_size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: John Linville <linville@tuxdriver.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTi=r-iktQVn8b1=iCh0PFDDP=mSVBUeqBfxa5e_B@mail.gmail.com>
+References: <1300268390.3761.14.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=r-iktQVn8b1=iCh0PFDDP=mSVBUeqBfxa5e_B@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Mar 2011 11:09:55 +0100
+Message-ID: <1300270195.3761.18.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dynamic_hexdump_debug(str, buf, len)
+On Wed, 2011-03-16 at 02:47 -0700, Daniel Halperin wrote:
 
-str: "subject string"
-buf: buffer pointer
-len: length of the buffer being printed
+> <dan starts here>
+> 
+> > + *     possible with a buf_size of 8:
+> > + *      - TX: 1.....7
+> > + *      - RX: 2.....7 (lost frame #1),
+> > + *      - TX:         89...1...
+> > + *     which is invalid since #1 was now re-transmitted well past the
+> > + *     buffer size of 7. The correct way to retransmit #1 would be:
+> > + *      - TX:         1       or
+> > + *      - TX:         18
+> > + *     though the standard allows:
+> > + *      - TX:         81
+> > + *     The following might happen, but will violate buffering assumptions as above if frame 1 is lost again
+> > + *      - TX:         189.....
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- include/linux/dynamic_debug.h |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+Oh, oops, yes you're right. Will respin the patch.
 
-diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
-index 0c9653f..429a176 100644
---- a/include/linux/dynamic_debug.h
-+++ b/include/linux/dynamic_debug.h
-@@ -70,6 +70,19 @@ extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
- 		dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__);	\
- 	} while (0)
- 
-+#define dynamic_hexdump_debug(str, buf, len)				\
-+do {									\
-+	static struct _ddebug descriptor				\
-+	__used								\
-+	__attribute__((section("__verbose"), aligned(8))) =		\
-+	{ KBUILD_MODNAME, __func__, __FILE__, str, __LINE__,		\
-+		_DPRINTK_FLAGS_DEFAULT };				\
-+	if (unlikely(descriptor.enabled)) {				\
-+		printk(KERN_DEBUG str);					\
-+		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len);	\
-+	}								\
-+} while (0)
-+
- #else
- 
- static inline int ddebug_remove_module(const char *mod)
-@@ -81,6 +94,15 @@ static inline int ddebug_remove_module(const char *mod)
- 	do { if (0) printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__); } while (0)
- #define dynamic_dev_dbg(dev, fmt, ...)					\
- 	do { if (0) dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__); } while (0)
-+
-+#define dynamic_hexdump_debug(str, buf, len)				\
-+do {									\
-+	if (0) {							\
-+		printk(KERN_DEBUG str);					\
-+		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len);	\
-+	}								\
-+} while (0)
-+
- #endif
- 
- #endif
--- 
-1.6.2.5
+johannes
 
