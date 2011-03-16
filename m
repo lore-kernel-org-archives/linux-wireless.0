@@ -1,874 +1,316 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47110 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754947Ab1C3A4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:56:55 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:56:30 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 08/34] ath6kl: kill Android specific code
-Date: Tue, 29 Mar 2011 17:56:05 -0700
-Message-ID: <1301446591-15236-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dakia2.marvell.com ([65.219.4.35]:38827 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391Ab1CPCmw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2011 22:42:52 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/6] mwifiex: remove addbareject configuration from debugfs
+Date: Tue, 15 Mar 2011 19:46:07 -0700
+Message-Id: <1300243570-6798-4-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1300243570-6798-1-git-send-email-bzhao@marvell.com>
+References: <1300243570-6798-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To get upstream we can't use out of tree defines, kill
-all the androidisms. ath6kl won't be usable on Android
-unless external patches are supported later or Android
-gets their shit together and gets all their crap upstream.
+From: Kiran Divekar <dkiran@marvell.com>
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+The default values will be used instead.
+
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/staging/ath6kl/os/linux/ar6000_android.c   |  386 --------------------
- drivers/staging/ath6kl/os/linux/ar6000_drv.c       |   16 -
- drivers/staging/ath6kl/os/linux/ar6000_pm.c        |   18 -
- drivers/staging/ath6kl/os/linux/eeprom.c           |  213 -----------
- .../staging/ath6kl/os/linux/include/osapi_linux.h  |   43 +---
- .../staging/ath6kl/os/linux/include/wlan_config.h  |    4 -
- drivers/staging/ath6kl/os/linux/wireless_ext.c     |   33 --
- 7 files changed, 1 insertions(+), 712 deletions(-)
- delete mode 100644 drivers/staging/ath6kl/os/linux/ar6000_android.c
+ drivers/net/wireless/mwifiex/11n.c           |   35 ---------
+ drivers/net/wireless/mwifiex/11n.h           |    2 -
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |    6 +--
+ drivers/net/wireless/mwifiex/11n_rxreorder.h |    1 -
+ drivers/net/wireless/mwifiex/README          |   25 -------
+ drivers/net/wireless/mwifiex/debugfs.c       |   98 --------------------------
+ drivers/net/wireless/mwifiex/init.c          |    3 -
+ drivers/net/wireless/mwifiex/main.h          |    1 -
+ 8 files changed, 1 insertions(+), 170 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_android.c b/drivers/staging/ath6kl/os/linux/ar6000_android.c
-deleted file mode 100644
-index 03352b0..0000000
---- a/drivers/staging/ath6kl/os/linux/ar6000_android.c
-+++ /dev/null
-@@ -1,386 +0,0 @@
--//------------------------------------------------------------------------------
--// Copyright (c) 2004-2010 Atheros Communications Inc.
--// All rights reserved.
--//
--// 
--//
--// Permission to use, copy, modify, and/or distribute this software for any
--// purpose with or without fee is hereby granted, provided that the above
--// copyright notice and this permission notice appear in all copies.
--//
--// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
--// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
--// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
--// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
--// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
--// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
--// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
--//
--//
--//
--// Author(s): ="Atheros"
--//------------------------------------------------------------------------------
--#include "ar6000_drv.h"
--#include "htc.h"
--#include <linux/vmalloc.h>
--#include <linux/fs.h>
--
--#ifdef CONFIG_HAS_EARLYSUSPEND
--#include <linux/earlysuspend.h>
--#endif
--
--bool enable_mmc_host_detect_change = false;
--static void ar6000_enable_mmchost_detect_change(int enable);
--
--
--char fwpath[256] = "/system/wifi";
--int wowledon;
--unsigned int enablelogcat;
--
--extern struct net_device *ar6000_devices[];
--extern char ifname[];
--
--const char def_ifname[] = "wlan0";
--module_param_string(fwpath, fwpath, sizeof(fwpath), 0644);
--module_param(enablelogcat, uint, 0644);
--module_param(wowledon, int, 0644);
--
--#ifdef CONFIG_HAS_EARLYSUSPEND
--static int screen_is_off;
--static struct early_suspend ar6k_early_suspend;
--#endif
--
--static int (*ar6000_avail_ev_p)(void *, void *);
--
--#if defined(CONFIG_ANDROID_LOGGER) && (!defined(CONFIG_MMC_MSM))
--int logger_write(const enum logidx index,
--                const unsigned char prio,
--                const char __kernel * const tag,
--                const char __kernel * const fmt,
--                ...)
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index fcf2971..8b58863 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -96,41 +96,6 @@ int mwifiex_11n_ioctl_ht_tx_cfg(struct mwifiex_adapter *adapter,
+ }
+ 
+ /*
+- * IOCTL request handler to set/get add BA reject configuration.
+- *
+- * The configuration can only be set in disconnected state.
+- */
+-int mwifiex_set_get_addba_reject(struct mwifiex_private *priv,
+-				 u16 action, int *addba_reject)
 -{
--    int ret = 0;
--    va_list vargs;
--    struct file *filp = (struct file *)-ENOENT;
--    mm_segment_t oldfs;
--    struct iovec vec[3];
--    int tag_bytes = strlen(tag) + 1, msg_bytes;
--    char *msg;      
--    va_start(vargs, fmt);
--    msg = kvasprintf(GFP_ATOMIC, fmt, vargs);
--    va_end(vargs);
--    if (!msg)
--        return -ENOMEM;
--    if (in_interrupt()) {
--        /* we have no choice since aio_write may be blocked */
--        printk(KERN_ALERT "%s", msg);
--        goto out_free_message;
--    }
--    msg_bytes = strlen(msg) + 1;
--    if (msg_bytes <= 1) /* empty message? */
--        goto out_free_message; /* don't bother, then */
--    if ((msg_bytes + tag_bytes + 1) > 2048) {
--        ret = -E2BIG;
--        goto out_free_message;
--    }
--            
--    vec[0].iov_base  = (unsigned char *) &prio;
--    vec[0].iov_len    = 1;
--    vec[1].iov_base   = (void *) tag;
--    vec[1].iov_len    = strlen(tag) + 1;
--    vec[2].iov_base   = (void *) msg;
--    vec[2].iov_len    = strlen(msg) + 1; 
+-	int i = 0;
+-	int ret = 0;
 -
--    oldfs = get_fs();
--    set_fs(KERNEL_DS);
--    do {
--        filp = filp_open("/dev/log/main", O_WRONLY, S_IRUSR);
--        if (IS_ERR(filp) || !filp->f_op) {
--            AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: filp_open /dev/log/main error\n", __FUNCTION__));
--            ret = -ENOENT;
--            break;
--        }
+-	if (action == HostCmd_ACT_GEN_GET) {
+-		dev_dbg(priv->adapter->dev, "info: GET: addba reject\n");
+-		memcpy(addba_reject, priv->addba_reject, MAX_NUM_TID);
+-	} else {
+-		if (priv->media_connected) {
+-			dev_err(priv->adapter->dev,
+-				"cannot set addba reject in connected state\n");
+-			return -1;
+-		}
 -
--        if (filp->f_op->aio_write) {
--            int nr_segs = sizeof(vec) / sizeof(vec[0]);
--            int len = vec[0].iov_len + vec[1].iov_len + vec[2].iov_len;
--            struct kiocb kiocb;
--            init_sync_kiocb(&kiocb, filp);
--            kiocb.ki_pos = 0;
--            kiocb.ki_left = len;
--            kiocb.ki_nbytes = len;
--            ret = filp->f_op->aio_write(&kiocb, vec, nr_segs, kiocb.ki_pos);
--        }
--        
--    } while (0);
+-		for (i = 0; i < MAX_NUM_TID; i++) {
+-			/* For AMPDU */
+-			if (addba_reject[i] > ADDBA_RSP_STATUS_REJECT) {
+-				ret = -1;
+-				break;
+-			}
 -
--    if (!IS_ERR(filp)) {
--        filp_close(filp, NULL);
--    }
--    set_fs(oldfs);
--out_free_message:
--    kfree(msg);
--    return ret;
--}
--#endif
+-			priv->addba_reject[i] = addba_reject[i];
+-		}
+-	}
 -
--int android_logger_lv(void *module, int mask)
--{
--    switch (mask) {
--    case ATH_DEBUG_ERR:
--        return 6;
--    case ATH_DEBUG_INFO:
--        return 4;
--    case ATH_DEBUG_WARN:
--        return 5; 
--    case ATH_DEBUG_TRC:        
--        return 3; 
--    default:
--#ifdef DEBUG
--        if (!module) {
--            return 3;
--        } else if (module == &GET_ATH_MODULE_DEBUG_VAR_NAME(driver)) {
--            return (mask <=ATH_DEBUG_MAKE_MODULE_MASK(3)) ? 3 : 2;
--        } else if (module == &GET_ATH_MODULE_DEBUG_VAR_NAME(htc)) {
--            return 2;
--        } else {
--            return 3;
--        }
--#else
--        return 3; /* DEBUG */
--#endif
--    }
+-	return ret;
 -}
 -
--static int android_readwrite_file(const char *filename, char *rbuf, const char *wbuf, size_t length)
+-/*
+  * IOCTL request handler to set/get aggregated priority table configuration.
+  *
+  * The configuration can only be set in disconnected state.
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 2ee940f..87c7958 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -57,8 +57,6 @@ int mwifiex_set_get_11n_htcap_cfg(struct mwifiex_private *priv,
+ int mwifiex_11n_ioctl_aggr_prio_tbl(struct mwifiex_private *priv,
+ 				    struct mwifiex_ds_11n_aggr_prio_tbl
+ 				    *aggr_prio_tbl, u16 action);
+-int mwifiex_set_get_addba_reject(struct mwifiex_private *priv,
+-				 u16 action, int *);
+ int mwifiex_11n_ioctl_amsdu_aggr_ctrl(struct mwifiex_adapter *adapter,
+ 				      struct mwifiex_wait_queue *wait_queue,
+ 				      struct mwifiex_ds_11n_amsdu_aggr_ctrl
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 72c626f..8e94e62 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -368,11 +368,7 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
+ 	block_ack_param_set = le16_to_cpu(cmd_addba_req->block_ack_param_set);
+ 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
+ 		>> BLOCKACKPARAM_TID_POS;
+-	if (priv->addba_reject[tid])
+-		add_ba_rsp->status_code =
+-			cpu_to_le16(WLAN_STATUS_REQUEST_DECLINED);
+-	else
+-		add_ba_rsp->status_code = cpu_to_le16(ADDBA_RSP_STATUS_ACCEPT);
++	add_ba_rsp->status_code = cpu_to_le16(ADDBA_RSP_STATUS_ACCEPT);
+ 	block_ack_param_set &= ~IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK;
+ 	/* We donot support AMSDU inside AMPDU, hence reset the bit */
+ 	block_ack_param_set &= ~BLOCKACKPARAM_AMSDU_SUPP_MASK;
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+index 84f3a3a..42f5690 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+@@ -35,7 +35,6 @@
+ #define TYPE_DELBA_RECEIVE		2
+ #define IMMEDIATE_BLOCK_ACK		0x2
+ 
+-#define ADDBA_RSP_STATUS_REJECT 1
+ #define ADDBA_RSP_STATUS_ACCEPT 0
+ 
+ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *,
+diff --git a/drivers/net/wireless/mwifiex/README b/drivers/net/wireless/mwifiex/README
+index 35811d3..288605c 100644
+--- a/drivers/net/wireless/mwifiex/README
++++ b/drivers/net/wireless/mwifiex/README
+@@ -245,31 +245,6 @@ txaggrprio
+ 
+ 	Note:- This command should only be issue in disconnected state.
+ 
+-addbareject
+-	This command is used set/get the addbareject table for all the TIDs.
+-	This command can also be used to enable rejection of ADDBA requests for a given tid.
+-
+-	Usage:
+-	echo "<m0>...<m7>" > addbareject
+-	cat addbareject
+-
+-	where
+-
+-	<mX> - This can be 0/1 for TidX. 1 enables rejection of ADDBA request for TidX and
+-		   0 would accept any ADDBAs for TidX.
+-
+-	eg:
+-	cat addbareject - This command will get the current table.
+-	    [0 0 0 0 0 0 0 0]. ADDBA would be accepted for all TIDs. This is the default state.
+-
+-	echo "0 0 1 1 0 0 0 0" > addbareject - This command will accept ADDBA requests for
+-		Tid [0,1,4,5,6,7] and reject ADDBA requests for Tid [2,3]
+-
+-	echo "1 1 1 1 1 1 1 1" > addbareject - This will enable rejection of ADDBA requests for
+-		all Tids.
+-
+-	Note:- This command should only be issue in disconnected state.
+-
+ txbufcfg
+ 	This command can be used to set max transmit buffer size of firmware. Increasing this
+ 	buffer size is recommended for AMSDU packets. (Default is 2048)
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 0ff3663..b0fa226 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -1305,102 +1305,6 @@ mwifiex_htcapinfo_read(struct file *file, char __user *ubuf,
+ }
+ 
+ /*
+- * Proc addbareject file write handler.
+- *
+- * This function is called when the 'addbareject' file is opened for writing
+- *
+- * This function can be used to set the add BA reject parameters.
+- */
+-static ssize_t
+-mwifiex_addbareject_write(struct file *file, const char __user *ubuf,
+-			  size_t count, loff_t *ppos)
 -{
--    int ret = 0;
--    struct file *filp = (struct file *)-ENOENT;
--    mm_segment_t oldfs;
--    oldfs = get_fs();
--    set_fs(KERNEL_DS);
--    do {
--        int mode = (wbuf) ? O_RDWR : O_RDONLY;
--        filp = filp_open(filename, mode, S_IRUSR);
--        if (IS_ERR(filp) || !filp->f_op) {
--            AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: file %s filp_open error\n", __FUNCTION__, filename));
--            ret = -ENOENT;
--            break;
--        }
--    
--        if (length==0) {
--            /* Read the length of the file only */
--            struct inode    *inode;
+-	struct mwifiex_private *priv =
+-		(struct mwifiex_private *) file->private_data;
+-	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+-	char *buf = (char *) addr;
+-	size_t buf_size = min(count, (size_t) (PAGE_SIZE - 1));
+-	int ret = 0, length = 0;
+-	int *data = NULL;
+-	char *p = NULL;
 -
--            inode = GET_INODE_FROM_FILEP(filp);
--            if (!inode) {
--                AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Get inode from %s failed\n", __FUNCTION__, filename));
--                ret = -ENOENT;
--                break;
--            }
--            ret = i_size_read(inode->i_mapping->host);
--            break;
--        }
--
--        if (wbuf) {
--            if ( (ret=filp->f_op->write(filp, wbuf, length, &filp->f_pos)) < 0) {
--                AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Write %u bytes to file %s error %d\n", __FUNCTION__, 
--                                length, filename, ret));
--                break;
--            }
--        } else {
--            if ( (ret=filp->f_op->read(filp, rbuf, length, &filp->f_pos)) < 0) {
--                AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Read %u bytes from file %s error %d\n", __FUNCTION__,
--                                length, filename, ret));
--                break;
--            }
--        }
--    } while (0);
--
--    if (!IS_ERR(filp)) {
--        filp_close(filp, NULL);
--    }
--    set_fs(oldfs);
--
--    return ret;
--}
--
--int android_request_firmware(const struct firmware **firmware_p, const char *name,
--                     struct device *device)
--{
--    int ret = 0;
--    struct firmware *firmware;
--    char filename[256];
--    const char *raw_filename = name;
--	*firmware_p = firmware = kzalloc(sizeof(*firmware), GFP_KERNEL);
--    if (!firmware) 
+-	if (!buf)
 -		return -ENOMEM;
--	sprintf(filename, "%s/%s", fwpath, raw_filename);
--    do {
--        size_t length, bufsize, bmisize;
 -
--        if ( (ret=android_readwrite_file(filename, NULL, NULL, 0)) < 0) {
--            break;
--        } else {
--            length = ret;
--        }
--    
--        bufsize = ALIGN(length, PAGE_SIZE);
--        bmisize = A_ROUND_UP(length, 4);
--        bufsize = max(bmisize, bufsize);
--        firmware->data = vmalloc(bufsize);
--        firmware->size = length;
--        if (!firmware->data) {
--            AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("%s: Cannot allocate buffer for firmware\n", __FUNCTION__));
--            ret = -ENOMEM;
--            break;
--        }
--    
--        if ( (ret=android_readwrite_file(filename, (char*)firmware->data, NULL, length)) != length) {
--            AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("%s: file read error, ret %d request %d\n", __FUNCTION__, ret, length));
--            ret = -1;
--            break;
--        }
--    
--    } while (0);
+-	data = kzalloc((sizeof(int) * 8), GFP_KERNEL);
+-	if (!data) {
+-		ret = -ENOMEM;
+-		goto done;
+-	}
 -
--    if (ret<0) {
--        if (firmware) {
--            if (firmware->data)
--                vfree(firmware->data);
--            kfree(firmware);
--        }
--        *firmware_p = NULL;
--    } else {
--        ret = 0;
--    }
--    return ret;    
+-	if (copy_from_user(buf, ubuf, buf_size)) {
+-		ret = -EFAULT;
+-		goto done;
+-	}
+-
+-	while (buf) {
+-		p = strsep(&buf, "\t ");
+-		if (!p)
+-			break;
+-		sscanf(p, "%d", (data + length));
+-		length++;
+-
+-	}
+-	if (length != 8) {
+-		ret = -EINVAL;
+-		goto done;
+-	}
+-
+-	ret = mwifiex_set_get_addba_reject(priv, HostCmd_ACT_GEN_SET, data);
+-
+-	if (!ret)
+-		ret = count;
+-
+-done:
+-	kfree(data);
+-	free_page(addr);
+-	return ret;
 -}
 -
--void android_release_firmware(const struct firmware *firmware)
+-/*
+- * Proc addbareject file read handler.
+- *
+- * This function is called when the 'addbareject' file is opened for reading
+- *
+- * This function can be used to get the add BA reject parameters.
+- */
+-static ssize_t
+-mwifiex_addbareject_read(struct file *file, char __user *ubuf,
+-			 size_t count, loff_t *ppos)
 -{
--	if (firmware) {
--        if (firmware->data)
--            vfree(firmware->data);
--        kfree(firmware);
--    }
+-	struct mwifiex_private *priv =
+-		(struct mwifiex_private *) file->private_data;
+-	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+-	char *buf = (char *) addr;
+-	int ret = 0, i = 0, pos = 0;
+-	int *data = kzalloc((sizeof(int) * 8), GFP_KERNEL);
+-
+-	if (!buf) {
+-		ret = -ENOMEM;
+-		goto done;
+-	}
+-
+-	mwifiex_set_get_addba_reject(priv, HostCmd_ACT_GEN_GET, data);
+-
+-	for (i = 0; i < 8; i++)
+-		pos += snprintf(buf + strlen(buf), PAGE_SIZE, "%d ", data[i]);
+-
+-	pos += snprintf(buf + strlen(buf), PAGE_SIZE, "\n ");
+-
+-	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
+-
+-done:
+-	kfree(data);
+-	free_page(addr);
+-	return ret;
 -}
 -
--static int ar6000_android_avail_ev(void *context, void *hif_handle)
--{
--    int ret;
--    ar6000_enable_mmchost_detect_change(0);
--    ret = ar6000_avail_ev_p(context, hif_handle);
--    return ret;
--}
--
--/* Useful for qualcom platform to detect our wlan card for mmc stack */
--static void ar6000_enable_mmchost_detect_change(int enable)
--{
--#ifdef CONFIG_MMC_MSM
--#define MMC_MSM_DEV "msm_sdcc.1"
--    char buf[3];
--    int length;
--
--    if (!enable_mmc_host_detect_change) {
--        return;
--    }
--    length = snprintf(buf, sizeof(buf), "%d\n", enable ? 1 : 0);
--    if (android_readwrite_file("/sys/devices/platform/" MMC_MSM_DEV "/detect_change", 
--                               NULL, buf, length) < 0) {
--        /* fall back to polling */
--        android_readwrite_file("/sys/devices/platform/" MMC_MSM_DEV "/polling", NULL, buf, length);
--    }
--#endif
--}
--
--#ifdef CONFIG_HAS_EARLYSUSPEND
--static void android_early_suspend(struct early_suspend *h)
--{
--    screen_is_off = 1;
--}
--
--static void android_late_resume(struct early_suspend *h)
--{
--    screen_is_off = 0;
--}
--#endif
--
--void android_module_init(OSDRV_CALLBACKS *osdrvCallbacks)
--{
--    if (ifname[0] == '\0')
--        strcpy(ifname, def_ifname);
--#ifdef CONFIG_HAS_EARLYSUSPEND
--    ar6k_early_suspend.suspend = android_early_suspend;
--    ar6k_early_suspend.resume  = android_late_resume;
--    ar6k_early_suspend.level   = EARLY_SUSPEND_LEVEL_BLANK_SCREEN;
--    register_early_suspend(&ar6k_early_suspend);
--#endif
--
--    ar6000_avail_ev_p = osdrvCallbacks->deviceInsertedHandler;
--    osdrvCallbacks->deviceInsertedHandler = ar6000_android_avail_ev;
--
--    ar6000_enable_mmchost_detect_change(1);
--}
--
--void android_module_exit(void)
--{
--#ifdef CONFIG_HAS_EARLYSUSPEND
--    unregister_early_suspend(&ar6k_early_suspend);
--#endif
--    ar6000_enable_mmchost_detect_change(1);
--}
--
--#ifdef CONFIG_PM
--void android_ar6k_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bool isEvent)
--{
--    if (
--#ifdef CONFIG_HAS_EARLYSUSPEND
--        screen_is_off && 
--#endif 
--            skb && ar->arConnected) {
--        bool needWake = false;
--        if (isEvent) {
--            if (A_NETBUF_LEN(skb) >= sizeof(u16)) {
--                u16 cmd = *(const u16 *)A_NETBUF_DATA(skb);
--                switch (cmd) {
--                case WMI_CONNECT_EVENTID:
--                case WMI_DISCONNECT_EVENTID:
--                    needWake = true;
--                    break;
--                default:
--                    /* dont wake lock the system for other event */
--                    break;
--                }
--            }
--        } else if (A_NETBUF_LEN(skb) >= sizeof(ATH_MAC_HDR)) {
--            ATH_MAC_HDR *datap = (ATH_MAC_HDR *)A_NETBUF_DATA(skb);
--            if (!IEEE80211_IS_MULTICAST(datap->dstMac)) {
--                switch (A_BE2CPU16(datap->typeOrLen)) {
--                case 0x0800: /* IP */
--                case 0x888e: /* EAPOL */
--                case 0x88c7: /* RSN_PREAUTH */
--                case 0x88b4: /* WAPI */
--                     needWake = true;
--                     break;
--                case 0x0806: /* ARP is not important to hold wake lock */
--                default:
--                    break;
--                }
--            }
--        }
--        if (needWake) {
--            /* keep host wake up if there is any event and packate comming in*/
--            if (wowledon) {
--                char buf[32];
--                int len = sprintf(buf, "on");
--                android_readwrite_file("/sys/power/state", NULL, buf, len);
--
--                len = sprintf(buf, "%d", 127);
--                android_readwrite_file("/sys/class/leds/lcd-backlight/brightness",
--                                       NULL, buf,len);
--            }
--        }
--    }
--}
--#endif /* CONFIG_PM */
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 3dfbb0d..c938537 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -290,14 +290,6 @@ static void disconnect_timer_handler(unsigned long ptr);
+-/*
+  * Proc antcfg file write handler.
+  *
+  * This function is called when the 'antcfg' file is opened for writing
+@@ -1984,7 +1888,6 @@ MWIFIEX_DFS_FILE_OPS(sleeppd);
+ MWIFIEX_DFS_FILE_OPS(mpactrl);
+ MWIFIEX_DFS_FILE_OPS(qoscfg);
+ MWIFIEX_DFS_FILE_OPS(txratecfg);
+-MWIFIEX_DFS_FILE_OPS(addbareject);
+ MWIFIEX_DFS_FILE_OPS(httxcfg);
+ MWIFIEX_DFS_FILE_OPS(htcapinfo);
+ MWIFIEX_DFS_FILE_READ_OPS(getlog);
+@@ -2020,7 +1923,6 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
+ 	MWIFIEX_DFS_ADD_FILE(mpactrl);
+ 	MWIFIEX_DFS_ADD_FILE(qoscfg);
+ 	MWIFIEX_DFS_ADD_FILE(txratecfg);
+-	MWIFIEX_DFS_ADD_FILE(addbareject);
+ 	MWIFIEX_DFS_ADD_FILE(httxcfg);
+ 	MWIFIEX_DFS_ADD_FILE(htcapinfo);
+ 	MWIFIEX_DFS_ADD_FILE(getlog);
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 48c84d5..0dfc147 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -139,9 +139,6 @@ static int mwifiex_init_priv(struct mwifiex_private *priv)
+ 	priv->curr_bcn_buf = NULL;
+ 	priv->curr_bcn_size = 0;
  
- void read_rssi_compensation_param(struct ar6_softc *ar);
+-	for (i = 0; i < MAX_NUM_TID; i++)
+-		priv->addba_reject[i] = ADDBA_RSP_STATUS_ACCEPT;
+-
+ 	priv->scan_block = false;
  
--    /* for android builds we call external APIs that handle firmware download and configuration */
--#ifdef ANDROID_ENV
--/* !!!! Interim android support to make it easier to patch the default driver for
-- * android use. You must define an external source file ar6000_android.c that handles the following
-- * APIs */
--extern void android_module_init(OSDRV_CALLBACKS *osdrvCallbacks);
--extern void android_module_exit(void);
--#endif
- /*
-  * HTC service connection handlers
-  */
-@@ -660,10 +652,6 @@ ar6000_init_module(void)
- 
-     ar6000_pm_init();
- 
--#ifdef ANDROID_ENV
--    android_module_init(&osdrvCallbacks);
--#endif
--
- #ifdef DEBUG
-     /* Set the debug flags if specified at load time */
-     if(debugflags != 0)
-@@ -719,10 +707,6 @@ ar6000_cleanup_module(void)
- 
-     ar6000_pm_exit();
- 
--#ifdef ANDROID_ENV    
--    android_module_exit();
--#endif
--
-     AR_DEBUG_PRINTF(ATH_DEBUG_INFO,("ar6000_cleanup: success\n"));
- }
- 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_pm.c b/drivers/staging/ath6kl/os/linux/ar6000_pm.c
-index 1a90424..b245909 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_pm.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_pm.c
-@@ -36,9 +36,6 @@
- extern unsigned int wmitimeout;
- extern wait_queue_head_t arEvent;
- 
--#ifdef ANDROID_ENV
--extern void android_ar6k_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bool isEvent);
--#endif
- #undef ATH_MODULE_NAME
- #define ATH_MODULE_NAME pm
- #define  ATH_DEBUG_PM       ATH_DEBUG_MAKE_MODULE_MASK(0)
-@@ -283,10 +280,6 @@ void ar6000_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bool isE
-         /* Wow resume from irq interrupt */
-         AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("%s: WoW resume from irq thread status %d\n", __func__, ar->arWlanPowerState));
-         ar6000_wow_resume(ar);
--    } else {
--#ifdef ANDROID_ENV
--        android_ar6k_check_wow_status(ar, skb, isEvent);
--#endif
-     }
- }
- 
-@@ -373,17 +366,6 @@ ar6000_setup_cut_power_state(struct ar6_softc *ar,  AR6000_WLAN_STATE state)
-                                 sizeof(HIF_DEVICE_POWER_CHANGE_TYPE));
- 
-             if (status == A_PENDING) {
--#ifdef ANDROID_ENV
--                 /* Wait for WMI ready event */
--                u32 timeleft = wait_event_interruptible_timeout(arEvent,
--                            (ar->arWmiReady == true), wmitimeout * HZ);
--                if (!timeleft || signal_pending(current)) {
--                    AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("ar6000 : Failed to get wmi ready \n"));
--                    status = A_ERROR;
--                    break;
--                }
--#endif
--                status = 0;
-             } else if (status == 0) {
-                 ar6000_restart_endpoint(ar->arNetDev);
-                 status = 0;
-diff --git a/drivers/staging/ath6kl/os/linux/eeprom.c b/drivers/staging/ath6kl/os/linux/eeprom.c
-index 4cff9da..96f1724 100644
---- a/drivers/staging/ath6kl/os/linux/eeprom.c
-+++ b/drivers/staging/ath6kl/os/linux/eeprom.c
-@@ -359,216 +359,3 @@ commit_4bytes(int offset, u32 data)
-     request_4byte_write(offset, data);
-     wait_for_eeprom_completion();
- }
--/* ATHENV */
--#ifdef ANDROID_ENV
--void eeprom_ar6000_transfer(struct hif_device *device, char *fake_file, char *p_mac)
--{
--    u32 first_word;
--    u32 board_data_addr;
--    int i;
--
--    printk("%s: Enter\n", __FUNCTION__);
--
--    enable_SI(device);
--    eeprom_type_detect();
--
--    if (fake_file) {
--        /*
--         * Transfer from file to Target RAM.
--         * Fetch source data from file.
--         */
--        mm_segment_t		oldfs;
--        struct file		*filp;
--        struct inode		*inode = NULL;
--        int			length;
--
--        /* open file */
--        oldfs = get_fs();
--        set_fs(KERNEL_DS);
--        filp = filp_open(fake_file, O_RDONLY, S_IRUSR);
--
--        if (IS_ERR(filp)) {
--            printk("%s: file %s filp_open error\n", __FUNCTION__, fake_file);
--            set_fs(oldfs);
--            return;
--        }
--
--        if (!filp->f_op) {
--            printk("%s: File Operation Method Error\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--
--        inode = GET_INODE_FROM_FILEP(filep);
--        if (!inode) {
--            printk("%s: Get inode from filp failed\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--
--        printk("%s file offset opsition: %xh\n", __FUNCTION__, (unsigned)filp->f_pos);
--
--        /* file's size */
--        length = i_size_read(inode->i_mapping->host);
--        printk("%s: length=%d\n", __FUNCTION__, length);
--        if (length != EEPROM_SZ) {
--            printk("%s: The file's size is not as expected\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--
--        /* read data */
--        if (filp->f_op->read(filp, eeprom_data, length, &filp->f_pos) != length) {
--            printk("%s: file read error\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--
--        /* read data out successfully */
--        filp_close(filp, NULL);
--        set_fs(oldfs);
--    } else {
--        /*
--         * Read from EEPROM to file OR transfer from EEPROM to Target RAM.
--         * Fetch EEPROM_SZ Bytes of Board Data, 8 bytes at a time.
--         */
--
--        fetch_8bytes(0, (u32 *)(&eeprom_data[0]));
--
--        /* Check the first word of EEPROM for validity */
--        first_word = *((u32 *)eeprom_data);
--
--        if ((first_word == 0) || (first_word == 0xffffffff)) {
--            printk("Did not find EEPROM with valid Board Data.\n");
--        }
--
--        for (i=8; i<EEPROM_SZ; i+=8) {
--            fetch_8bytes(i, (u32 *)(&eeprom_data[i]));
--        }
--    }
--
--    /* soft mac */
--    if (p_mac) {
--
--        mm_segment_t		oldfs;
--        struct file		*filp;
--        struct inode		*inode = NULL;
--        int			length;
--        
--        /* open file */
--        oldfs = get_fs();
--        set_fs(KERNEL_DS);
--        filp = filp_open(p_mac, O_RDONLY, S_IRUSR);
--        
--        printk("%s try to open file %s\n", __FUNCTION__, p_mac);
--
--        if (IS_ERR(filp)) {
--            printk("%s: file %s filp_open error\n", __FUNCTION__, p_mac);
--            set_fs(oldfs);
--            return;
--        }
--        
--        if (!filp->f_op) {
--            printk("%s: File Operation Method Error\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--        
--        inode = GET_INODE_FROM_FILEP(filep);
--        if (!inode) {
--            printk("%s: Get inode from filp failed\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--        
--        printk("%s file offset opsition: %xh\n", __FUNCTION__, (unsigned)filp->f_pos);
--        
--        /* file's size */
--        length = i_size_read(inode->i_mapping->host);
--        printk("%s: length=%d\n", __FUNCTION__, length);
--        if (length > ATH_SOFT_MAC_TMP_BUF_LEN) {
--            printk("%s: MAC file's size is not as expected\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--        
--        /* read data */
--        if (filp->f_op->read(filp, soft_mac_tmp_buf, length, &filp->f_pos) != length) {
--            printk("%s: file read error\n", __FUNCTION__);
--            filp_close(filp, NULL);
--            set_fs(oldfs);
--            return;
--        }
--
--#if 0
--        /* the data we just read */
--        printk("%s: mac address from the file:\n", __FUNCTION__);
--        for (i = 0; i < length; i++)
--            printk("[%c(0x%x)],", soft_mac_tmp_buf[i], soft_mac_tmp_buf[i]);
--        printk("\n");
--#endif
--
--        /* read data out successfully */
--        filp_close(filp, NULL);
--        set_fs(oldfs);
--
--        /* convert mac address */
--        if (!wmic_ether_aton(soft_mac_tmp_buf, mac_addr)) {
--            printk("%s: convert mac value fail\n", __FUNCTION__);
--            return;
--        }
--
--#if 0
--        /* the converted mac address */
--        printk("%s: the converted mac value\n", __FUNCTION__);
--        for (i = 0; i < ATH_MAC_LEN; i++)
--            printk("[0x%x],", mac_addr[i]);
--        printk("\n");
--#endif
--    }
--    /* soft mac */
--
--    /* Determine where in Target RAM to write Board Data */
--    BMI_read_mem( HOST_INTEREST_ITEM_ADDRESS(hi_board_data), &board_data_addr);
--    if (board_data_addr == 0) {
--        printk("hi_board_data is zero\n");
--    }
--
--    /* soft mac */
--#if 1
--    /* Update MAC address in RAM */
--    if (p_mac) {
--	    update_mac(eeprom_data, EEPROM_SZ, mac_addr);
--    }
--#endif
--#if 0
--    /* mac address in eeprom array */
--    printk("%s: mac values in eeprom array\n", __FUNCTION__);
--    for (i = 10; i < 10 + 6; i++)
--        printk("[0x%x],", eeprom_data[i]);
--    printk("\n");
--#endif
--    /* soft mac */
--
--    /* Write EEPROM data to Target RAM */
--    BMI_write_mem(board_data_addr, ((u8 *)eeprom_data), EEPROM_SZ);
--
--    /* Record the fact that Board Data IS initialized */
--    {
--       u32 one = 1;
--       BMI_write_mem(HOST_INTEREST_ITEM_ADDRESS(hi_board_data_initialized),
--                     (u8 *)&one, sizeof(u32));
--    }
--
--    disable_SI();
--}
--#endif
--/* ATHENV */
--
-diff --git a/drivers/staging/ath6kl/os/linux/include/osapi_linux.h b/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
-index ff9d06e..07078b4 100644
---- a/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
-+++ b/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
-@@ -80,31 +80,9 @@
- #define A_MALLOC(size)                  kmalloc((size), GFP_KERNEL)
- #define A_MALLOC_NOWAIT(size)           kmalloc((size), GFP_ATOMIC)
- 
--#if defined(ANDROID_ENV) && defined(CONFIG_ANDROID_LOGGER)
--extern unsigned int enablelogcat;
--extern int android_logger_lv(void* module, int mask);
--enum logidx { LOG_MAIN_IDX = 0 };
--extern int logger_write(const enum logidx idx, 
--                const unsigned char prio,
--                const char __kernel * const tag,
--                const char __kernel * const fmt,
--                ...);
--#define A_ANDROID_PRINTF(mask, module, tags, args...) do {  \
--    if (enablelogcat) \
--        logger_write(LOG_MAIN_IDX, android_logger_lv(module, mask), tags, args); \
--    else \
--        printk(KERN_ALERT args); \
--} while (0)
--#ifdef DEBUG
--#define A_LOGGER_MODULE_NAME(x) #x
--#define A_LOGGER(mask, mod, args...) \
--    A_ANDROID_PRINTF(mask, &GET_ATH_MODULE_DEBUG_VAR_NAME(mod), "ar6k_" A_LOGGER_MODULE_NAME(mod), args);
--#endif 
--#define A_PRINTF(args...) A_ANDROID_PRINTF(ATH_DEBUG_INFO, NULL, "ar6k_driver", args)
--#else
- #define A_LOGGER(mask, mod, args...)    printk(KERN_ALERT args)
- #define A_PRINTF(args...)               printk(KERN_ALERT args)
--#endif /* ANDROID */
-+
- #define A_PRINTF_LOG(args...)           printk(args)
- #define A_SPRINTF(buf, args...)			sprintf (buf, args)
- 
-@@ -210,17 +188,8 @@ extern unsigned int panic_on_assert;
- #define A_ASSERT(expr)
- #endif /* DEBUG */
- 
--#ifdef ANDROID_ENV
--struct firmware;
--int android_request_firmware(const struct firmware **firmware_p, const char *filename,
--                     struct device *device);
--void android_release_firmware(const struct firmware *firmware);
--#define A_REQUEST_FIRMWARE(_ppf, _pfile, _dev) android_request_firmware(_ppf, _pfile, _dev)
--#define A_RELEASE_FIRMWARE(_pf) android_release_firmware(_pf)
--#else
- #define A_REQUEST_FIRMWARE(_ppf, _pfile, _dev) request_firmware(_ppf, _pfile, _dev)
- #define A_RELEASE_FIRMWARE(_pf) release_firmware(_pf)
--#endif 
- 
- /*
-  * Initialization of the network buffer subsystem
-@@ -364,17 +333,7 @@ static inline void *A_ALIGN_TO_CACHE_LINE(void *ptr) {
- #define A_MEMZERO(addr, len)            memset((addr), 0, (len))
- #define A_MALLOC(size)                  malloc(size)
- 
--#ifdef ANDROID
--#ifndef err
--#include <errno.h>
--#define err(_s, args...) do { \
--    fprintf(stderr, "%s: line %d ", __FILE__, __LINE__); \
--    fprintf(stderr, args); fprintf(stderr, ": %d\n", errno); \
--    exit(_s); } while (0)
--#endif
--#else
- #include <err.h>
--#endif
- 
- #endif /* __KERNEL__ */
- 
-diff --git a/drivers/staging/ath6kl/os/linux/include/wlan_config.h b/drivers/staging/ath6kl/os/linux/include/wlan_config.h
-index 2de5cef..98951bb 100644
---- a/drivers/staging/ath6kl/os/linux/include/wlan_config.h
-+++ b/drivers/staging/ath6kl/os/linux/include/wlan_config.h
-@@ -56,11 +56,7 @@
-  * If the firmware successly roams within the disconnect timeout
-  * it sends a new connect event
-  */
--#ifdef ANDROID_ENV
--#define WLAN_CONFIG_DISCONNECT_TIMEOUT 3
--#else
- #define WLAN_CONFIG_DISCONNECT_TIMEOUT 10
--#endif /* ANDROID_ENV */ 
- 
- /*
-  * This configuration item disables 11n support. 
-diff --git a/drivers/staging/ath6kl/os/linux/wireless_ext.c b/drivers/staging/ath6kl/os/linux/wireless_ext.c
-index 4b77943..5af09f1 100644
---- a/drivers/staging/ath6kl/os/linux/wireless_ext.c
-+++ b/drivers/staging/ath6kl/os/linux/wireless_ext.c
-@@ -2499,39 +2499,6 @@ ar6000_ioctl_siwscan(struct net_device *dev,
-         }
-     }
- 
--#ifdef ANDROID_ENV
--#if WIRELESS_EXT >= 18
--    if (data->pointer && (data->length == sizeof(struct iw_scan_req)))
--    {
--        if ((data->flags & IW_SCAN_THIS_ESSID) == IW_SCAN_THIS_ESSID)
--        {
--            struct iw_scan_req req;
--            if (copy_from_user(&req, data->pointer, sizeof(struct iw_scan_req)))
--                return -EIO;
--            if (wmi_probedSsid_cmd(ar->arWmi, 1, SPECIFIC_SSID_FLAG, req.essid_len, req.essid) != 0)
--                return -EIO;
--            ar->scanSpecificSsid = true;
--        }
--        else
--        {
--            if (ar->scanSpecificSsid) {
--                if (wmi_probedSsid_cmd(ar->arWmi, 1, DISABLE_SSID_FLAG, 0, NULL) != 0)
--                    return -EIO;
--                 ar->scanSpecificSsid = false;
--            }
--        }
--    }
--    else
--    {
--        if (ar->scanSpecificSsid) {
--            if (wmi_probedSsid_cmd(ar->arWmi, 1, DISABLE_SSID_FLAG, 0, NULL) != 0)
--                return -EIO;
--             ar->scanSpecificSsid = false;
--        }
--    }
--#endif
--#endif /* ANDROID_ENV */
--
-     if (wmi_startscan_cmd(ar->arWmi, WMI_LONG_SCAN, false, false, \
-                           0, 0, 0, NULL) != 0) {
-         ret = -EIO;
+ 	ret = mwifiex_add_bss_prio_tbl(priv);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 9272fa4..035c01a 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -454,7 +454,6 @@ struct mwifiex_private {
+ 	/* spin lock for tx_ba_stream_tbl_ptr queue */
+ 	spinlock_t tx_ba_stream_tbl_lock;
+ 	struct mwifiex_tx_aggr aggr_prio_tbl[MAX_NUM_TID];
+-	u8 addba_reject[MAX_NUM_TID];
+ 	struct mwifiex_add_ba_param add_ba_param;
+ 	u16 rx_seq[MAX_NUM_TID];
+ 	struct list_head rx_reorder_tbl_ptr;
 -- 
-1.7.0.4
+1.7.0.2
 
