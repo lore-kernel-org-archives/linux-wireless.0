@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f51.google.com ([74.125.83.51]:36460 "EHLO
-	mail-gw0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752200Ab1CFPiW convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:49758 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272Ab1CPXHY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 10:38:22 -0500
-Received: by gwb15 with SMTP id 15so2073019gwb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 07:38:22 -0800 (PST)
+	Wed, 16 Mar 2011 19:07:24 -0400
+From: Mihai =?utf-8?q?Don=C8=9Bu?= <mihai.dontu@gmail.com>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: [b43] usb device disconnects automatically after 1s
+Date: Thu, 17 Mar 2011 01:06:58 +0200
+Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <201103170018.32061.mihai.dontu@gmail.com> <201103170022.24290.mihai.dontu@gmail.com> <AANLkTi=-B0e4VT_v+F23Q+hG_zn=JnVbmVHnFpETVrZu@mail.gmail.com>
+In-Reply-To: <AANLkTi=-B0e4VT_v+F23Q+hG_zn=JnVbmVHnFpETVrZu@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik8TYGmg3hekoN546ToRDxi5HJeoq75R29WfSxt@mail.gmail.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
- <1299421940-26292-15-git-send-email-shahar_levi@ti.com> <AANLkTik8TYGmg3hekoN546ToRDxi5HJeoq75R29WfSxt@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 6 Mar 2011 17:38:07 +0200
-Message-ID: <AANLkTi=0BLW-CC1TeyT35ZtfaZnBav1LxczRbQ0KmDYj@mail.gmail.com>
-Subject: Re: [PATCH 14/15] wl12xx: 1281/1283 support - disable TX aggregation
- for AP mode in wl128x
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201103170106.58746.mihai.dontu@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ relooping the list ]
+On Thursday 17 March 2011 00:35:02 Rafa≈Ç Mi≈Çecki wrote:
+> 2011/3/16 Mihai Don»õu <mihai.dontu@gmail.com>:
+> > Added linux-usb and linux-wireless to CC.
+> > 
+> > On Thursday 17 March 2011 00:18:31 Mihai Don»õu wrote:
+> >> Hi,
+> >> 
+> >> I have just upgraded to 2.6.38 and discovered that I can't use my
+> >> wireless device (BCM4312 802.11a/b/g). I press Fn + F2, the bluetooth
+> >> led lights and after a second it turns off by itself. In dmesg I'm
+> >> seeing the following:
+> >> 
+> >> [   88.167212] usb 1-2.2: new full speed USB device using ehci_hcd and
+> >> address 5
+> >> [   88.782330] usb 1-2.2: USB disconnect, address 5
+> >> 
+> >> I switched to 2.6.37 until I'll have some time to bisect this. In the
+> >> mean time I have attached the output of lspci, interrupts and dmesg.
+> 
+> I suspect it's WMI related. What is your machine?
 
-On Sun, Mar 6, 2011 at 17:36, Arik Nemtsov <arik@wizery.com> wrote:
->
->
-> On Sun, Mar 6, 2011 at 16:32, Shahar Levi <shahar_levi@ti.com> wrote:
->>
->> From: Arik Nemtsov <arik@wizery.com>
->>
->> This is a workaround for the HW bug we're encountering when operating
->> with 48Mhz SDIO clocks. This workaround is currently employed by the MCP
->> driver as well.
->>
->> This is not healthy for CPU usage, and UDP TX seems hurt by this change.
->> TCP RX/TX seems unchanged from Trio or the 1-spare-block FW variant.
->>
->> With this workaround we get a working AP on Blaze.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->> †drivers/net/wireless/wl12xx/tx.c | † †5 +++++
->> †1 files changed, 5 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
->> index 9c0ec06..831248e 100644
->> --- a/drivers/net/wireless/wl12xx/tx.c
->> +++ b/drivers/net/wireless/wl12xx/tx.c
->> @@ -568,6 +568,11 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
->> † † † † † † † †}
->> † † † † † † † †buf_offset += ret;
->> † † † † † † † †wl->tx_packets_count++;
->> +
->> + † † † † † † † /* Disable packet aggregation for 1283 AP-mode */
->> + † † † † † † † if (wl->chip.id == CHIP_ID_1283_PG20 &&
->> + † † † † † † † † † wl->bss_type == BSS_TYPE_AP_BSS)
->> + † † † † † † † † † † † break;
->> † † † †}
->>
->> †out_ack:
->> --
->> 1.7.0.4
->>
->
-> This bug has already been resolved. Luca - please disregard this workaround.
-> Regards,
-> Arik
+It's a Dell Latitude D520 but I can't find a link with full specs (in 
+English).
+
+> Please check:
+> https://bugzilla.kernel.org/show_bug.cgi?id=31002
+> http://comments.gmane.org/gmane.linux.acpi.devel/49577
+> 
+> I can't help you more, I just noticed such a issue reported on ACPI
+> ML, you have to dig into this yourself (or someone else may help you).
+
+Thanks for the links. I'll see if I can get anywhere from there.
+
+-- 
+Mihai Don»õu
