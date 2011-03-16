@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38913 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758748Ab1CCUGP (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45382
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751095Ab1CPRiP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2011 15:06:15 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 89156540186
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Mar 2011 15:09:37 -0500 (EST)
-Subject: Compat-wireless release for 2011-03-03 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110303200613.BEA6F4652C@repository3.orbit-lab.org>
-Date: Thu,  3 Mar 2011 15:06:13 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 16 Mar 2011 13:38:15 -0400
+Date: Wed, 16 Mar 2011 10:38:52 -0700 (PDT)
+Message-Id: <20110316.103852.193714733.davem@davemloft.net>
+To: tgraf@infradead.org
+Cc: jpirko@redhat.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	eric.dumazet@gmail.com, linville@tuxdriver.com, kaber@trash.net
+Subject: Re: net-next-2.6 status...
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110316084739.GD26145@canuck.infradead.org>
+References: <20110316073803.GB2780@psychotron.redhat.com>
+	<20110316084022.GA2845@psychotron.brq.redhat.com>
+	<20110316084739.GD26145@canuck.infradead.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   81e5185..9d8e201  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 2bda37d...880ce2e akpm-end   -> origin/akpm-end  (forced update)
-   1954cf0..b7498f3  history    -> origin/history
- + 7be2aad...2afa434 master     -> origin/master  (forced update)
- * [new tag]         next-20110303 -> next-20110303
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+From: Thomas Graf <tgraf@infradead.org>
+Date: Wed, 16 Mar 2011 04:47:39 -0400
 
-compat-wireless code metrics
+> On Wed, Mar 16, 2011 at 09:40:23AM +0100, Jiri Pirko wrote:
+>> >What do you suggest? To remove unused flags and leave gaps there or to
+>> >not to remove the flags at all?
+>> 
+>> Well, the following comment:
+>> <quote>
+>> /* Private (from user) interface flags (netdevice->priv_flags). */
+>> </quote>
+>> leads me to think that these flags should not be used by userspace.
+>> So maybe it may not be problem to change those values.
+> 
+> These flags should be moved to linux/netdevice.h
 
-    831898 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1560 - % of code consists of backport work
+We've had them exposed in a header file without __KERNEL__ protection
+for a long time, the cat is therefore out of the bag and it's too late
+to just remove them from user visibility as if they were not there.
