@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52446 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751238Ab1CSMzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2011 08:55:49 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 6/7] ath9k_hw: force rx chainmask to 7 on AR9100
-Date: Sat, 19 Mar 2011 13:55:42 +0100
-Message-Id: <1300539343-75509-6-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1300539343-75509-5-git-send-email-nbd@openwrt.org>
-References: <1300539343-75509-1-git-send-email-nbd@openwrt.org>
- <1300539343-75509-2-git-send-email-nbd@openwrt.org>
- <1300539343-75509-3-git-send-email-nbd@openwrt.org>
- <1300539343-75509-4-git-send-email-nbd@openwrt.org>
- <1300539343-75509-5-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:38875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445Ab1CPJiL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2011 05:38:11 -0400
+Subject: [PATCH] mac80211: fix comment regarding aggregation buf_size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Mar 2011 10:39:50 +0100
+Message-ID: <1300268390.3761.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most AR9100 devices already have a chainmask of 7 (three antennas), however
-on the ones that don't (rx and tx chainmask set to 5), problems with IQ
-mismatch calibration have been observed.
-This shows up as tx queue hangs (and subsequent hardware resets) if traffic
-is sent during this type of calibration.
-Forcing the rx chainmask to 7 fixes the calibration issues with no apparent
-negative side effects on throughput and stability.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+The description for buf_size was misleading and
+just said you couldn't TX larger aggregates, but
+of course you can't TX aggregates in a way that
+would exceed the window either, which is possible
+even if the aggregates are shorter than that.
+
+Expand the description, thanks to Emmanuel for
+explaining this to me.
+
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ include/net/mac80211.h |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 175c36f..8b86568 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1869,6 +1869,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	    !(AR_SREV_9271(ah)))
- 		/* CB71: GPIO 0 is pulled down to indicate 3 rx chains */
- 		pCap->rx_chainmask = ath9k_hw_gpio_get(ah, 0) ? 0x5 : 0x7;
-+	else if (AR_SREV_9100(ah))
-+		pCap->rx_chainmask = 0x7;
- 	else
- 		/* Use rx_chainmask from EEPROM. */
- 		pCap->rx_chainmask = ah->eep_ops->get_eeprom(ah, EEP_RX_MASK);
--- 
-1.7.3.2
+--- a/include/net/mac80211.h	2011-03-16 10:30:26.000000000 +0100
++++ b/include/net/mac80211.h	2011-03-16 10:37:49.000000000 +0100
+@@ -1753,8 +1753,17 @@ enum ieee80211_ampdu_mlme_action {
+  * 	that TX/RX_STOP can pass NULL for this parameter.
+  *	The @buf_size parameter is only valid when the action is set to
+  *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's reorder
+- *	buffer size (number of subframes) for this session -- aggregates
+- *	containing more subframes than this may not be transmitted to the peer.
++ *	buffer size (number of subframes) for this session -- the driver
++ *	may neither send aggregates containing more subframes than this
++ *	nor send aggregates in a way that lost frames would exceed the
++ *	buffer size. If just limiting the aggregate size, this would be
++ *	possible with a buf_size of 8:
++ *	 - TX: 1......8
++ *	 - RX:  2.....8 (lost frame #1)
++ *	 - TX:         9...1...
++ *	which is invalid since #1 was now re-transmitted well past the
++ *	buffer size of 8. The correct way to retransmit #1 would be:
++ *	 - TX:         19......
+  *	Returns a negative error code on failure.
+  *	The callback can sleep.
+  *
+
 
