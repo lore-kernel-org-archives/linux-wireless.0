@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:49139 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320Ab1CJShh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42900 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967Ab1CPOqA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 13:37:37 -0500
-Received: by gyh20 with SMTP id 20so797018gyh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 10:37:36 -0800 (PST)
+	Wed, 16 Mar 2011 10:46:00 -0400
+Date: Wed, 16 Mar 2011 10:33:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Peter Lemenkov <lemenkov@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@redhat.com>,
+	rt2x00-dev <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH 1/4] rt2x00: Add rt2870 device id
+Message-ID: <20110316143350.GA7727@tuxdriver.com>
+References: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
+ <1300284739-7797-2-git-send-email-lemenkov@gmail.com>
+ <AANLkTima9_VSL4Db1RXSPLRXyoBOwdym9CkJUJrySnSC@mail.gmail.com>
 MIME-Version: 1.0
-Date: Thu, 10 Mar 2011 19:37:36 +0100
-Message-ID: <AANLkTimrW002Q86KWOdh0SYsZ5xLDve+gxmwehe4tc6N@mail.gmail.com>
-Subject: Status of Broadcom 4353?
-From: "Chen, Xianwen" <xianwen.chen@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTima9_VSL4Db1RXSPLRXyoBOwdym9CkJUJrySnSC@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+On Wed, Mar 16, 2011 at 03:28:04PM +0100, Rafał Miłecki wrote:
+> 2011/3/16 Peter Lemenkov <lemenkov@gmail.com>:
+> > Add ID for Asus USB-N11 Wi-FI adapter. Tested by me.
+> >
+> > Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+> > ---
+> >  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> > index 197a36c..03a5308 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> > @@ -719,6 +719,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+> >        { USB_DEVICE(0x0b05, 0x1732), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        { USB_DEVICE(0x0b05, 0x1742), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        { USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
+> > +       { USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        /* AzureWave */
+> >        { USB_DEVICE(0x13d3, 0x3247), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        { USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
+> > @@ -913,7 +914,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+> >        { USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        { USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        { USB_DEVICE(0x0b05, 0x1790), USB_DEVICE_DATA(&rt2800usb_ops) },
+> > -       { USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        /* AzureWave */
+> >        { USB_DEVICE(0x13d3, 0x3262), USB_DEVICE_DATA(&rt2800usb_ops) },
+> >        { USB_DEVICE(0x13d3, 0x3284), USB_DEVICE_DATA(&rt2800usb_ops) },
+> 
+> Either: the patch or title seems to be incorrect. It looks like you
+> just moved place where entry was typed...?
 
-Thanks for keeping up good work on wireless support in Linux all these
-years. I can still recall the joy when Realtek 8187 became part of
-kernel supported driver a few years ago -- it actually was the main
-reason I switched from NetBSD to Linux.
+He moved it out of the UNKNOWN block.
 
-I now have a laptop from my employer, on which I sneaked Linux in. The
-issue is that the wireless adapter seems not to be recognized:
-
-lspci -vnn | grep 14e4
->> 02:00.0 Network controller [0280]: Broadcom Corporation Device [14e4:4353] (rev 01)
-
-Though the new Broadcom driver seems to be more appropriate, I
-actually compiled both the old and the new drivers. Further reading on
-  http://linuxwireless.org/en/users/Drivers/brcm8021
-and
-  http://wireless.kernel.org/en/users/Drivers/b43
-suggests that 4353 is not currently supported! :-(
-
-What is the current status of Broadcom 4353? I'm curious and actually
-eager to know. Any information will be appreciated!
-
-Have a good day fellas!
-
-Xianwen
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
