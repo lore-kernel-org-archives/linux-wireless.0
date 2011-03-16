@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:60444 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab1BOAEh convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46438 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607Ab1CPIro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Feb 2011 19:04:37 -0500
-Received: by qwa26 with SMTP id 26so3547006qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Feb 2011 16:04:36 -0800 (PST)
+	Wed, 16 Mar 2011 04:47:44 -0400
+Date: Wed, 16 Mar 2011 04:47:39 -0400
+From: Thomas Graf <tgraf@infradead.org>
+To: Jiri Pirko <jpirko@redhat.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	eric.dumazet@gmail.com, linville@tuxdriver.com, kaber@trash.net
+Subject: Re: net-next-2.6 status...
+Message-ID: <20110316084739.GD26145@canuck.infradead.org>
+References: <20110315.160124.104058374.davem@davemloft.net>
+ <20110316065008.GA2780@psychotron.redhat.com>
+ <20110316.000251.189704695.davem@davemloft.net>
+ <20110316073803.GB2780@psychotron.redhat.com>
+ <20110316084022.GA2845@psychotron.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1297727969.5683.21.camel@maggie>
-References: <1297725710.5683.17.camel@maggie>
-	<AANLkTimjkFJrWpubECRRNybmvYdcAh3UUbMOa0iv166g@mail.gmail.com>
-	<1297727969.5683.21.camel@maggie>
-Date: Tue, 15 Feb 2011 01:04:36 +0100
-Message-ID: <AANLkTikQx_NTMxQ+XpL-3BKWkZMERs_A-aQf0mKBHaSg@mail.gmail.com>
-Subject: Re: [PATCH] ssb: Make ssb_wait_bit multi-bit safe
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110316084022.GA2845@psychotron.brq.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 15 lutego 2011 00:59 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Tue, 2011-02-15 at 00:44 +0100, Rafał Miłecki wrote:
->> 2011/2/15 Michael Büsch <mb@bu3sch.de>:
->> > ssb_wait_bit was designed for only one-bit bitmasks.
->> > People start using it for multi-bit bitmasks. Make the "set" case
->> > is safe for this. The "unset" case is already safe.
->>
->> Thanks :)
->
-> This should not change the behavior of your patch, though,
-> as you only add an "unset" case, which was already correct.
->
-> So this doesn't fix an actual bug but rather hardens the code
-> for future use.
+On Wed, Mar 16, 2011 at 09:40:23AM +0100, Jiri Pirko wrote:
+> >What do you suggest? To remove unused flags and leave gaps there or to
+> >not to remove the flags at all?
+> 
+> Well, the following comment:
+> <quote>
+> /* Private (from user) interface flags (netdevice->priv_flags). */
+> </quote>
+> leads me to think that these flags should not be used by userspace.
+> So maybe it may not be problem to change those values.
 
-Yes, I can see that :)
-
--- 
-Rafał
+These flags should be moved to linux/netdevice.h
