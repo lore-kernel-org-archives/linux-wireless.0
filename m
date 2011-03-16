@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:39906 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933268Ab1CWU3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 16:29:02 -0400
-Date: Wed, 23 Mar 2011 13:28:32 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>,
-	Vipin Mehta <vmehta@atheros.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Kalle Valo <kvalo@adurom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	devel@linuxdriverproject.org,
-	Jouni Malinen <Jouni.Malinen@atheros.com>
-Subject: Re: Update on Android PM enhancements - CONFIG_HAS_EARLYSUSPEND and
- friends
-Message-ID: <20110323202832.GB7409@kroah.com>
-References: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTik69v+gdPzwdMSyVnvHMKbWquvfCFvHLmLu-bBB@mail.gmail.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:35407 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750951Ab1CPTG5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2011 15:06:57 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id D985654017C
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 15:10:45 -0400 (EDT)
+Subject: Compat-wireless release for 2011-03-16 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110316190656.0558240EA9@repository3.orbit-lab.org>
+Date: Wed, 16 Mar 2011 15:06:55 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 23, 2011 at 01:05:47PM -0700, Luis R. Rodriguez wrote:
-> Arve,
-> 
-> What ever happened with your series on the Android PM extensions you
-> had submitted in 2009 [1] ? I'm working on ath6kl right now and I'm
-> going to remove all that early suspend crap as its not upstream and I
-> want to get ath6kl into upstream proper. Do you have plans for a
-> replacement? Since the thread covers wake locks, have you ironed out
-> what you are going to do with that as well?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 68e17d8...19f72f1 akpm-end   -> origin/akpm-end  (forced update)
+   dc1b83a..76ca078  akpm-start -> origin/akpm-start
+   e3786d7..22c1b5a  history    -> origin/history
+ + f69358a...3cf254e master     -> origin/master  (forced update)
+   dc1b83a..76ca078  stable     -> origin/stable
+ * [new tag]         next-20110316 -> next-20110316
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.38    -> v2.6.38
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Wake locks are all taken care of, see:
-	http://lwn.net/Articles/416690/
-for the details.
+compat-wireless code metrics
 
-thanks,
-
-greg k-h
+    832392 - Total upstream lines of code being pulled
+      2175 - backport code changes
+      1891 - backport code additions
+       284 - backport code deletions
+      7442 - backport from compat module
+      9617 - total backport code
+    1.1553 - % of code consists of backport work
