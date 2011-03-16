@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40409 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131Ab1CJV4S convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42726
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751656Ab1CPHCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 16:56:18 -0500
-Received: by fxm17 with SMTP id 17so439152fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 13:56:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1299764499-76251-4-git-send-email-nbd@openwrt.org>
-References: <1299764499-76251-1-git-send-email-nbd@openwrt.org>
-	<1299764499-76251-2-git-send-email-nbd@openwrt.org>
-	<1299764499-76251-3-git-send-email-nbd@openwrt.org>
-	<1299764499-76251-4-git-send-email-nbd@openwrt.org>
-Date: Thu, 10 Mar 2011 16:55:46 -0500
-Message-ID: <AANLkTik8CVL-XQvLxORWBcwyW8ZwT6Kk78HoyMAfpgmi@mail.gmail.com>
-Subject: Re: [PATCH v2 4/4] ath9k: improve reliability of beacon transmission
- and stuck beacon handling
-From: Mark Mentovai <mark@moxienet.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, vasanth@atheros.com
-Content-Type: text/plain; charset=windows-1252
+	Wed, 16 Mar 2011 03:02:14 -0400
+Date: Wed, 16 Mar 2011 00:02:51 -0700 (PDT)
+Message-Id: <20110316.000251.189704695.davem@davemloft.net>
+To: jpirko@redhat.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, eric.dumazet@vger.kernel.org,
+	linville@tuxdriver.com, kaber@trash.net
+Subject: Re: net-next-2.6 status...
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110316065008.GA2780@psychotron.redhat.com>
+References: <20110315.160124.104058374.davem@davemloft.net>
+	<20110316065008.GA2780@psychotron.redhat.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-[...]
-> +bool ath9k_hw_stop_dma_queue(struct ath_hw *ah, u32 q)
-[...]
-> -                               ath_err(common,
-> -                                       "Failed to stop TX DMA in 100 msec after killing last frame\n");
+From: Jiri Pirko <jpirko@redhat.com>
+Date: Wed, 16 Mar 2011 07:50:09 +0100
 
-Are you concerned about getting rid of this error that
-ath9k_hw_stoptxdma used to print? It doesn’t seem like anything else
-in the remaining code that uses it (ath_beacon_tasklet and
-ath9k_set_beaconing_status) will produce an error.
+>>Jiri, I know there is your patch set there, but I think you and Changli
+>>still need to go back and forth one more time wrt. orig_dev semantics.
+>>Since you have been posting this patch set for some time I'm still
+>>willing to apply it for this merge window, but please make haste and
+>>work out the remaining discussion.  Thank you.
+> 
+> Dave, you can apply the rest of the series and leave only the first
+> patch (af_packet) out. There's no dependency. We will figure out things
+> around origdev later.
 
-Based on the message you sent with patch 2/4, “I can no longer trigger
-these messages on AR9380, and on AR9280 they become much more rare,”
-and the fact that you left the message intact in that patch’s
-ath_drain_all_txq, I wonder it’s appropriate to remove the message
-from this function.
+I was about to do that but I've found other problems.
+
+You cannot make the modifications you make to linux/if.h, those
+interface flags are visible to userspace.
