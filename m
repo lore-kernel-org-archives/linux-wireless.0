@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64566 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756593Ab1CBSSk (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:60208 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117Ab1CPFJU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 13:18:40 -0500
-Received: by fxm17 with SMTP id 17so259395fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 10:18:38 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Michael Buesch <mb@bu3sch.de>, kvalo@adurom.com
-Subject: Re: Powersave broken on p54
-Date: Wed, 2 Mar 2011 19:18:30 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1299003142.6461.12.camel@maggie> <201103021813.52719.chunkeey@googlemail.com> <1299086257.13604.17.camel@marge>
-In-Reply-To: <1299086257.13604.17.camel@marge>
+	Wed, 16 Mar 2011 01:09:20 -0400
+Received: by wya21 with SMTP id 21so1275513wya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 22:09:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201103021918.30528.chunkeey@googlemail.com>
+In-Reply-To: <20110315171543.3723e07f@realh.co.uk>
+References: <20110224182022.57e32862@toddler>
+	<20110224200203.GB17412@elie>
+	<20110314164812.4c0cfc29@toddler>
+	<AANLkTimSZrGCzBaB9K=WVO7faGNM-+qeKEE2qzjkPnSD@mail.gmail.com>
+	<20110315131907.6f06a221@toddler>
+	<AANLkTi=Gub1JAO21qtRjxVWrtc6Masp1siF3NHntgcvp@mail.gmail.com>
+	<20110315151746.421c04b3@toddler>
+	<AANLkTinmD3aJphAcge0xunk4sS4pec20u3PSKTE0Og6=@mail.gmail.com>
+	<20110315171543.3723e07f@realh.co.uk>
+Date: Wed, 16 Mar 2011 10:39:19 +0530
+Message-ID: <AANLkTikTX6eRY2znHLOWLoZo=ryVkN9hpgjE0JYf=UTz@mail.gmail.com>
+Subject: Re: Could ath9k and rt2800pci bugs be related?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Tony Houghton <h@realh.co.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 March 2011 18:17:37 Michael Buesch wrote:
-> On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
-> > sure there was the rssi->dbm update (I hope you've already updated
-> > your eeprom image.)
-> 
-> What change to the eeprom is needed? My eeprom doesn't
-> contain any rssi info (see recent NULL ptr fix).
-
-I think you should (re-)add it, I don't know what the
-firmware is doing with it, but maybe Kalle knows more?
-
-see "p54spi: update sample eeprom"
-6c1cef43fb9d4979f9f7e0dcc71f61921730149b
-
-(Note: If the rssi values are missing, the driver uses
-the default for Indigo/Duette/Frisbee and XBow RF.
-But these parameter could confuse p54spi's Longbow RF?)
-
-> > No idea, it looks like the ps-poll is broken, because
-> > "iwconfig wlanX power timeout 10" fixes the long delays
-> > almost immediately. [let's see if there's more]
-> 
-> So maybe it's a generic mac80211 bug? Are there other
-> devices with PS issues?
-Not sure, don't have any hardware to play with ATM.
-But maybe the attached "hack" helps a bit?
----
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index 2fab7d2..df56a82 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -615,8 +615,8 @@ int p54_set_ps(struct p54_common *priv)
- 	psm->mode = cpu_to_le16(mode);
- 	psm->aid = cpu_to_le16(priv->aid);
- 	for (i = 0; i < ARRAY_SIZE(psm->intervals); i++) {
--		psm->intervals[i].interval =
--			cpu_to_le16(priv->hw->conf.listen_interval);
-+		psm->intervals[i].interval = cpu_to_le16(1);
-+//			cpu_to_le16(priv->hw->conf.listen_interval);
- 		psm->intervals[i].periods = cpu_to_le16(1);
- 	}
- 
+On Tue, Mar 15, 2011 at 10:45 PM, Tony Houghton <h@realh.co.uk> wrote:
+> On Tue, 15 Mar 2011 21:47:14 +0530
+> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+>
+>> i dont know what to say, may be you can look at
+>> vim /drivers/net/wireless/ath/ath9k/pci.c
+>> and
+>> vim /net/mac80211/pm.c
+>> let me also see if i can get the problem reproduced
+>
+> When I installed wireless-compat it didn't replace all the modules it
+> provides, only the ones I'd activated with driver-select ath9k. I didn't
+> notice whether mac80211 drivers got replaced too. If I want to alter
+> pm.c do I need to add anything to the driver-select line to make sure my
+> altered version gets installed?
+>
+No it won't be necessary. recompilation takes care of it.
