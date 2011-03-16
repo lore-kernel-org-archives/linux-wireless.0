@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:44932 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756816Ab1CATeF (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43720 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130Ab1CPOMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 14:34:05 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 1 Mar 2011 11:33:55 -0800
-Subject: RE: [RFC v2 1/2] dynamic debug: add dynamic_hexdump_debug macro
-Message-ID: <477F20668A386D41ADCC57781B1F704307F5150529@SC-VEXCH1.marvell.com>
-References: <1298956016-30673-1-git-send-email-bzhao@marvell.com>
-	 <1298956016-30673-2-git-send-email-bzhao@marvell.com>
- <1298957138.4367.3.camel@Joe-Laptop>
-In-Reply-To: <1298957138.4367.3.camel@Joe-Laptop>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 16 Mar 2011 10:12:49 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 15so1544936bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 07:12:49 -0700 (PDT)
+From: Peter Lemenkov <lemenkov@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@redhat.com>,
+	rt2x00-dev <users@rt2x00.serialmonkey.com>,
+	Peter Lemenkov <lemenkov@gmail.com>
+Subject: [PATCH 1/4] rt2x00: Add rt2870 device id
+Date: Wed, 16 Mar 2011 17:12:15 +0300
+Message-Id: <1300284739-7797-2-git-send-email-lemenkov@gmail.com>
+In-Reply-To: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
+References: <1300284739-7797-1-git-send-email-lemenkov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9lLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvZSBQZXJj
-aGVzIFttYWlsdG86am9lQHBlcmNoZXMuY29tXQ0KPiBTZW50OiBNb25kYXksIEZlYnJ1YXJ5IDI4
-LCAyMDExIDk6MjYgUE0NCj4gVG86IEJpbmcgWmhhbw0KPiBDYzogbGludXgta2VybmVsQHZnZXIu
-a2VybmVsLm9yZzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZp
-bGxlOyBKb2hhbm5lcyBCZXJnOw0KPiBBbWl0a3VtYXIgS2Fyd2FyOyBLaXJhbiBEaXZla2FyOyBG
-cmFuayBIdWFuZw0KPiBTdWJqZWN0OiBSZTogW1JGQyB2MiAxLzJdIGR5bmFtaWMgZGVidWc6IGFk
-ZCBkeW5hbWljX2hleGR1bXBfZGVidWcgbWFjcm8NCj4gDQo+IE9uIE1vbiwgMjAxMS0wMi0yOCBh
-dCAyMTowNiAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+IGR5bmFtaWNfaGV4ZHVtcF9kZWJ1
-ZyhzdHIsIGJ1ZiwgbGVuKQ0KPiANCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9keW5h
-bWljX2RlYnVnLmggYi9pbmNsdWRlL2xpbnV4L2R5bmFtaWNfZGVidWcuaA0KPiA+ICsjZGVmaW5l
-IGR5bmFtaWNfaGV4ZHVtcF9kZWJ1ZyhzdHIsIGJ1ZiwgbGVuKQkJCQlcDQo+ID4gK2RvIHsJCQkJ
-CQkJCQlcDQo+ID4gKwlzdGF0aWMgc3RydWN0IF9kZGVidWcgZGVzY3JpcHRvcgkJCQlcDQo+ID4g
-KwlfX3VzZWQJCQkJCQkJCVwNCj4gPiArCV9fYXR0cmlidXRlX18oKHNlY3Rpb24oIl9fdmVyYm9z
-ZSIpLCBhbGlnbmVkKDgpKSkgPQkJXA0KPiA+ICsJeyBLQlVJTERfTU9ETkFNRSwgX19mdW5jX18s
-IF9fRklMRV9fLCBzdHIsIF9fTElORV9fLAkJXA0KPiA+ICsJCV9EUFJJTlRLX0ZMQUdTX0RFRkFV
-TFQgfTsJCQkJXA0KPiA+ICsJaWYgKHVubGlrZWx5KGRlc2NyaXB0b3IuZW5hYmxlZCkpIHsJCQkJ
-XA0KPiA+ICsJCXByaW50ayhLRVJOX0RFQlVHIHN0cik7CQkJCQlcDQo+ID4gKwkJcHJpbnRfaGV4
-X2R1bXBfYnl0ZXMoIiIsIERVTVBfUFJFRklYX09GRlNFVCwgYnVmLCBsZW4pOwlcDQo+IA0KPiBQ
-ZXJoYXBzDQo+IAkJcHJpbnRfaGV4X2R1bXAoc3RyLCBEVU1QX1BSRUZJWF9PRkZTRVQsIGJ1Ziwg
-bGVuKTsNCg0KSSB3YW50ZWQgdG8gcHJpbnQgdGhlICJzdHIiIGFzIGEgc3ViamVjdCBsaW5lLCBs
-aWtlIHRoaXM6DQoNCm13aWZpZXggZGF0YTogdHhfYnVmOg0KMDAwMDAwMDA6IDM0IDhjIDI0IGEw
-IGZmIGZmIGZmIGZmIDM2IDcyIDI0IGEwIGZmIGZmIGZmIGZmICA0LiQuLi4uLjZyJC4uLi4uDQow
-MDAwMDAxMDogZDcgN2YgMjQgYTAgZmYgZmYgZmYgZmYgODAgOGUgMjQgYTAgZmYgZmYgZmYgZmYg
-IC4uJC4uLi4uLi4kLi4uLi4NCjAwMDAwMDIwOiBkZiA3ZCAyNCBhMCBmZiBmZiAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgLn0kLi4uDQoNClRoZSAic3RyIiB3aWxsIHNlcnZlIGFzIHRo
-ZSBwcmVmaXggc3RyaW5ncyBpZiB3ZSB1c2UNCnByaW50X2hleF9kdW1wKEtFUk5fREVCVUcsIHN0
-ciwgRFVNUF9QUkVGSVhfT0ZGU0VULCAxNiwgMSwgYnVmLCBsZW4sIHRydWUpOw0KDQptd2lmaWV4
-IGRhdGE6IHR4X2J1ZjowMDAwMDAwMDogMzQgOGMgMjQgYTAgZmYgZmYgZmYgZmYgMzYgNzIgMjQg
-YTAgZmYgZmYgZmYgZmYgIDQuJC4uLi4uNnIkLi4uLi4NCm13aWZpZXggZGF0YTogdHhfYnVmOjAw
-MDAwMDEwOiBkNyA3ZiAyNCBhMCBmZiBmZiBmZiBmZiA4MCA4ZSAyNCBhMCBmZiBmZiBmZiBmZiAg
-Li4kLi4uLi4uLiQuLi4uLg0KbXdpZmlleCBkYXRhOiB0eF9idWY6MDAwMDAwMjA6IGRmIDdkIDI0
-IGEwIGZmIGZmICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAufSQuLi4NCg0KSSdtIG9r
-YXkgd2l0aCB0aGlzIGZvcm1hdCB0b28uDQoNClRoYW5rcywNCg0KQmluZw0KDQo=
+Add ID for Asus USB-N11 Wi-FI adapter. Tested by me.
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 197a36c..03a5308 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -719,6 +719,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0b05, 0x1732), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0b05, 0x1742), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3247), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -913,7 +914,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0b05, 0x1790), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3262), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x13d3, 0x3284), USB_DEVICE_DATA(&rt2800usb_ops) },
+-- 
+1.7.4
+
