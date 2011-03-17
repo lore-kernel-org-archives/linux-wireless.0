@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45694 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28345 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753221Ab1CYQUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 12:20:15 -0400
-Date: Fri, 25 Mar 2011 17:19:42 +0100
+	id S1754501Ab1CQPft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2011 11:35:49 -0400
+Date: Thu, 17 Mar 2011 16:34:34 +0100
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 01/12] iwlegacy: MAINTAINERS
-Message-ID: <20110325161941.GA2493@redhat.com>
-References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
- <1301062456-17249-2-git-send-email-wey-yi.w.guy@intel.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Subject: Re: Problem with BCM943224
+Message-ID: <20110317153433.GA4326@redhat.com>
+References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
+ <4D77A06E.3050902@lwfinger.net>
+ <AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
+ <4D77AD18.60804@lwfinger.net>
+ <AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
+ <4D77B4B6.8030603@lwfinger.net>
+ <AANLkTinEC5b6-vP_zc2RE2Juc8YFx8nkEK7isvQw+UVX@mail.gmail.com>
+ <20110310092753.GA2323@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1301062456-17249-2-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20110310092753.GA2323@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 25, 2011 at 07:14:05AM -0700, Wey-Yi Guy wrote:
-> Add iwlegacy driver to MAINTAINERS file and mark as 'Orphan'
-I'll take these.
-
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  MAINTAINERS |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
+On Thu, Mar 10, 2011 at 10:27:53AM +0100, Stanislaw Gruszka wrote:
+> > Stanisław: I remember you telling that you have such a adapter. Do you
+> > maybe have access to some BCM943224/BCM94313 card? Could you test that
+> > combo for me, please?
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 95482e9..12698b3 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -3322,6 +3322,16 @@ F:	Documentation/wimax/README.i2400m
->  F:	drivers/net/wimax/i2400m/
->  F:	include/linux/wimax/i2400m.h
->  
-> +INTEL PRO/WIRELESS 3945ABG/BG NETWORK CONNECTION SUPPORT
-> +L:	linux-wireless@vger.kernel.org
-> +S:	Orphan
-> +F:	drivers/net/wireless/iwlegacy/
-> +
-> +INTEL WIRELESS WIFI 4965AGN NETWORK CONNECTION SUPPORT
-> +L:	linux-wireless@vger.kernel.org
-> +S:	Orphan
-> +F:	drivers/net/wireless/iwlegacy/
-Since path is the same it should be one entry,
-I will post patch soon.
+> I have new laptop at home with some bcm device, don't know exacly what
+> version, but most likely is somehting that you listed or similar. I'll
+> test and let you now next week. I planned to replace wireless adapter
+> on that laptop anyway.
 
-There are some iwlegacy bugs, which seem to be 2.6.34 -> 2.6.35
-regression. I'm not seeing other way to fix them as moving
-iwlegacy code back to 2.6.34 level. I plan to do this ...
+BCM943224HMS works here with hwtools.net PCI-E Adapter Ver 2.03.
 
 Stanislaw
