@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45603 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752925Ab1C3SDf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752908Ab1CQJan (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 14:03:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.39-rc1] b43: allocate receive buffers big enough for max frame len + offset
-Date: Wed, 30 Mar 2011 14:02:46 -0400
-Message-Id: <1301508166-7692-1-git-send-email-linville@tuxdriver.com>
+	Thu, 17 Mar 2011 05:30:43 -0400
+Subject: Re: [PATCH 00/11] remove configuration APIs from debugfs (part 2)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1300320574-10793-1-git-send-email-bzhao@marvell.com>
+References: <1300320574-10793-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Mar 2011 10:32:23 +0100
+Message-ID: <1300354343.3774.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise, skb_put inside of dma_rx can fail...
+On Wed, 2011-03-16 at 17:09 -0700, Bing Zhao wrote:
+> This series removes some of the configuration APIs plus some WEP code
+> cleanups
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/b43/dma.c |    2 +-
- drivers/net/wireless/b43/dma.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I obviously have no issues with this, but you might want to keep the git
+history for afterwards for when I suppose you'll start working on actual
+APIs for these features?
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 3d5566e..ff0f5ba 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1536,7 +1536,7 @@ static void dma_rx(struct b43_dmaring *ring, int *slot)
- 		dmaaddr = meta->dmaaddr;
- 		goto drop_recycle_buffer;
- 	}
--	if (unlikely(len > ring->rx_buffersize)) {
-+	if (unlikely(len + ring->frameoffset > ring->rx_buffersize)) {
- 		/* The data did not fit into one descriptor buffer
- 		 * and is split over multiple buffers.
- 		 * This should never happen, as we try to allocate buffers
-diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
-index a01c210..e8a80a1 100644
---- a/drivers/net/wireless/b43/dma.h
-+++ b/drivers/net/wireless/b43/dma.h
-@@ -163,7 +163,7 @@ struct b43_dmadesc_generic {
- /* DMA engine tuning knobs */
- #define B43_TXRING_SLOTS		256
- #define B43_RXRING_SLOTS		64
--#define B43_DMA0_RX_BUFFERSIZE		IEEE80211_MAX_FRAME_LEN
-+#define B43_DMA0_RX_BUFFERSIZE		(B43_DMA0_RX_FRAMEOFFSET + IEEE80211_MAX_FRAME_LEN)
- 
- /* Pointer poison */
- #define B43_DMA_PTR_POISON		((void *)ERR_PTR(-ENOMEM))
--- 
-1.7.4
+johannes
 
