@@ -1,107 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47522 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755053Ab1COOZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 10:25:28 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2011 07:25:05 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 2/4] ath9k_hw: Fix throughput drops in HT40 mode for AR9287 chips
-Date: Tue, 15 Mar 2011 19:55:36 +0530
-Message-ID: <1300199138-11851-2-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1300199138-11851-1-git-send-email-rmanoharan@atheros.com>
-References: <1300199138-11851-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from dakia2.marvell.com ([65.219.4.35]:42452 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751315Ab1CQAGP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2011 20:06:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 00/11] remove configuration APIs from debugfs (part 2)
+Date: Wed, 16 Mar 2011 17:09:23 -0700
+Message-Id: <1300320574-10793-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doing adc gain calibration for AR9287 chips is causing
-throughput drops in HT40 mode. Remove ADC Gain from supported
-calibration list.
+This series removes some of the configuration APIs plus some WEP code
+cleanups
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |   43 ++++++++++++++++++++-----
- 1 files changed, 35 insertions(+), 8 deletions(-)
+Amitkumar Karwar (7):
+  mwifiex: remove mpactrl command from debugfs
+  mwifiex: remove antcfg command from debugfs
+  mwifiex: remove esuppmode command from debugfs
+  mwifiex: remove passphrase command from debugfs
+  mwifiex: remove unnecessary flag ewpa_enabled
+  mwifiex: remove some redundant WEP key handling
+  mwifiex: optimize add_key callback function
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 76388c6..cb611b2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -26,6 +26,27 @@ enum ar9002_cal_types {
- 	IQ_MISMATCH_CAL = BIT(2),
- };
- 
-+static bool ar9002_hw_is_cal_supported(struct ath_hw *ah,
-+				struct ath9k_channel *chan,
-+				enum ar9002_cal_types cal_type)
-+{
-+	bool supported = false;
-+	switch (ah->supp_cals & cal_type) {
-+	case IQ_MISMATCH_CAL:
-+		/* Run IQ Mismatch for non-CCK only */
-+		if (!IS_CHAN_B(chan))
-+			supported = true;
-+		break;
-+	case ADC_GAIN_CAL:
-+	case ADC_DC_CAL:
-+		/* Run ADC Gain Cal for non-CCK & non 2GHz-HT20 only */
-+		if (!IS_CHAN_B(chan) &&
-+		    !(IS_CHAN_2GHZ(chan) && IS_CHAN_HT20(chan)))
-+			supported = true;
-+		break;
-+	}
-+	return supported;
-+}
- 
- static void ar9002_hw_setup_calibration(struct ath_hw *ah,
- 					struct ath9k_cal_list *currCal)
-@@ -858,26 +879,32 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
- 		ah->supp_cals = IQ_MISMATCH_CAL;
- 
--		if (AR_SREV_9160_10_OR_LATER(ah) &&
--		    !(IS_CHAN_2GHZ(chan) && IS_CHAN_HT20(chan))) {
-+		if (AR_SREV_9160_10_OR_LATER(ah))
- 			ah->supp_cals |= ADC_GAIN_CAL | ADC_DC_CAL;
- 
-+		if (AR_SREV_9287(ah))
-+			ah->supp_cals &= ~ADC_GAIN_CAL;
- 
-+		if (ar9002_hw_is_cal_supported(ah, chan, ADC_GAIN_CAL)) {
- 			INIT_CAL(&ah->adcgain_caldata);
- 			INSERT_CAL(ah, &ah->adcgain_caldata);
- 			ath_dbg(common, ATH_DBG_CALIBRATE,
--				"enabling ADC Gain Calibration.\n");
-+					"enabling ADC Gain Calibration.\n");
-+		}
- 
-+		if (ar9002_hw_is_cal_supported(ah, chan, ADC_DC_CAL)) {
- 			INIT_CAL(&ah->adcdc_caldata);
- 			INSERT_CAL(ah, &ah->adcdc_caldata);
- 			ath_dbg(common, ATH_DBG_CALIBRATE,
--				"enabling ADC DC Calibration.\n");
-+					"enabling ADC DC Calibration.\n");
- 		}
- 
--		INIT_CAL(&ah->iq_caldata);
--		INSERT_CAL(ah, &ah->iq_caldata);
--		ath_dbg(common, ATH_DBG_CALIBRATE,
--			"enabling IQ Calibration.\n");
-+		if (ar9002_hw_is_cal_supported(ah, chan, IQ_MISMATCH_CAL)) {
-+			INIT_CAL(&ah->iq_caldata);
-+			INSERT_CAL(ah, &ah->iq_caldata);
-+			ath_dbg(common, ATH_DBG_CALIBRATE,
-+					"enabling IQ Calibration.\n");
-+		}
- 
- 		ah->cal_list_curr = ah->cal_list;
- 
--- 
-1.7.4.1
+Marc Yang (2):
+  mwifiex: remove txratecfg command from debugfs
+  mwifiex: remove httxcfg command from debugfs
+
+Yogesh Ashok Powar (2):
+  mwifiex: remove txbufcfg command from debugfs
+  mwifiex: remove amsduaggrctrl command from debugfs
+
+ drivers/net/wireless/mwifiex/11n.c         |   45 --
+ drivers/net/wireless/mwifiex/11n.h         |    8 -
+ drivers/net/wireless/mwifiex/README        |  291 -----------
+ drivers/net/wireless/mwifiex/cfg80211.c    |    3 -
+ drivers/net/wireless/mwifiex/debugfs.c     |  695 -------------------------
+ drivers/net/wireless/mwifiex/decl.h        |    4 -
+ drivers/net/wireless/mwifiex/fw.h          |   95 ----
+ drivers/net/wireless/mwifiex/init.c        |    1 -
+ drivers/net/wireless/mwifiex/ioctl.h       |   42 --
+ drivers/net/wireless/mwifiex/join.c        |   97 +----
+ drivers/net/wireless/mwifiex/main.c        |  113 ----
+ drivers/net/wireless/mwifiex/main.h        |   39 --
+ drivers/net/wireless/mwifiex/scan.c        |   84 +---
+ drivers/net/wireless/mwifiex/sdio.c        |  119 -----
+ drivers/net/wireless/mwifiex/sta_cmd.c     |  176 -------
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  202 --------
+ drivers/net/wireless/mwifiex/sta_event.c   |    1 -
+ drivers/net/wireless/mwifiex/sta_ioctl.c   |  766 +---------------------------
+ drivers/net/wireless/mwifiex/wmm.c         |    5 +-
+ 19 files changed, 32 insertions(+), 2754 deletions(-)
 
