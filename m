@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59902 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932811Ab1CWNAj (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64239 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754961Ab1CQSii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 09:00:39 -0400
-Subject: Re: [PATCH] cfg80211: Add nl80211 event for deletion of a station
- entry
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110323125513.GB26467@jm.kir.nu>
-References: <20110323125513.GB26467@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Mar 2011 14:00:29 +0100
-Message-ID: <1300885229.3790.39.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 17 Mar 2011 14:38:38 -0400
+Received: by iyb26 with SMTP id 26so3106408iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:38:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=GPbB6EbWCGGjRupwsBLMaVt=ymO5hb9eU-Q+r@mail.gmail.com>
+References: <1298635263-4883-1-git-send-email-vnatarajan@atheros.com> <AANLkTi=GPbB6EbWCGGjRupwsBLMaVt=ymO5hb9eU-Q+r@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 17 Mar 2011 11:38:18 -0700
+Message-ID: <AANLkTinVaFcD8L9kOjPW-y7pVxR0ReHsLBy6=SG=8OJC@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k_hw: Fix pcie_serdes setting for AR9485 1.1 version.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jack Lee <jack.lee@atheros.com>,
+	Carl Huang <carl.huang@atheros.com>,
+	David Quan <david.quan@atheros.com>,
+	Nael Atallah <nael.atallah@atheros.com>,
+	Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Mar 16, 2011 at 5:04 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Feb 25, 2011 at 4:01 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>
+> Was this a stable fix? If not why not?
 
-> +void nl80211_send_sta_del_event(struct cfg80211_registered_device *rdev,
-> +				struct net_device *dev, const u8 *mac_addr,
-> +				gfp_t gfp)
-> +{
-> +	struct sk_buff *msg;
-> +	void *hdr;
-> +
-> +	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-> +	if (!msg)
-> +		return;
-> +
-> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_STATION);
-> +	if (!hdr) {
-> +		nlmsg_free(msg);
-> +		return;
-> +	}
-> +
-> +	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
-> +	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-> +
-> +	if (genlmsg_end(msg, hdr) < 0) {
-> +		nlmsg_free(msg);
-> +		return;
-> +	}
-> +
-> +	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-> +				nl80211_mlme_mcgrp.id, gfp);
-> +	return;
-> +
-> + nla_put_failure:
-> +	genlmsg_cancel(msg, hdr);
-> +}
+This certainly smells like a stable fix, this seems similar to this other fix:
 
-I bet you just copied that, but isn't that leaking the message?
+commit 58c5296991d233f2e492aa7a884635bba478cf12
+Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+Date:   Thu Jan 13 18:19:29 2011 -0800
 
-johannes
+    ath9k_hw: ASPM interoperability fix for AR9380/AR9382
 
+    There is an interoperability with AR9382/AR9380 in L1 state with a
+    few root complexes which can cause a hang. This is fixed by
+    setting some work around bits on the PCIE PHY. We fix by using
+    a new ini array to modify these bits when the radio is idle.
+
+    Cc: stable@kernel.org
+    Cc: Jack Lee <jack.lee@atheros.com>
+    Cc: Carl Huang <carl.huang@atheros.com>
+    Cc: David Quan <david.quan@atheros.com>
+    Cc: Nael Atallah <nael.atallah@atheros.com>
+    Cc: Sarvesh Shrivastava <sarvesh.shrivastava@atheros.com>
+    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Without this patch I believe we will get AR9485 hanging in L1 state
+with some root complexes. Can someone confirm?
+
+Vivek, in the future can you please elaborate a little more on the
+commit log entries and if its a "fix" of some sort elaborate on the
+impact of not applying th patch.
+
+Thanks,
+
+  Luis
