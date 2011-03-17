@@ -1,83 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:48496 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589Ab1C1Pk4 (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:43406 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900Ab1CQPGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 11:40:56 -0400
-Date: Mon, 28 Mar 2011 12:40:47 -0300
-From: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Hin-Tak Leung <htl10@users.sourceforge.net>,
-	wu zhangjin <wuzhangjin@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Roman Mamedov <rm@romanrm.ru>
-Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
-Message-ID: <20110328154046.GB2333@herton-IdeaPad-Y430>
-References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
- <4D8E5BA3.1090909@users.sourceforge.net>
- <AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com>
- <4D8E8B1E.3030709@users.sourceforge.net>
- <4D8FBE88.3050907@lwfinger.net>
+	Thu, 17 Mar 2011 11:06:44 -0400
+Received: by gyf1 with SMTP id 1so1140567gyf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 08:06:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D8FBE88.3050907@lwfinger.net>
+In-Reply-To: <1300354167.3774.0.camel@jlt3.sipsolutions.net>
+References: <AANLkTimQRgAr9aY_zs0L7hjXhECiR9w8V5Y7fbwrJ1DX@mail.gmail.com>
+	<1300354167.3774.0.camel@jlt3.sipsolutions.net>
+Date: Thu, 17 Mar 2011 08:06:42 -0700
+Message-ID: <AANLkTi=doS4LtZ3k9f6Lw+RhXOq5iF22-B9w1rGOMuMw@mail.gmail.com>
+Subject: Re: [PATCH] iw: Add send callback with optional debug handler
+From: Sean Robinson <seankrobinson@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary=000e0cd5cf7252b30c049eaf02cb
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 27, 2011 at 05:47:36PM -0500, Larry Finger wrote:
-> On 03/26/2011 07:55 PM, Hin-Tak Leung wrote:
-> >wu zhangjin wrote:
-> >>On Sun, Mar 27, 2011 at 5:33 AM, Hin-Tak Leung
-> >><htl10@users.sourceforge.net> wrote:
-> >>>Wu Zhangjin wrote:
-> >>>>led can not be turned off normally when rfkill is blocked, the cause is
-> >>>>the led_turn_off() function exit as not expected:
-> >>>Hmm. While this sounds more sensible, is it needed? And what does the
-> >>>windows driver do?
-> >>>
-> >>>I think there are two kind of LEDs - one that comes on and off with the
-> >>>rfkill switch; Larry or Herton makes the 2nd one, if there is one, blink
-> >>>while there is traffic (and stay steady on otherwise).
-> >>
-> >>I have used this driver on the YeeLoong netbook(only support Linux),
-> >>there is only one LED for rtl8187, when there is traffic, it blinks
-> >>perfectly, but If press the hotkey to turn off the rf, the network
-> >>interface is down, but the LED is still light, then, the users may
-> >>mistakenly think the hotkey or rfkill support doesn't work or simply
-> >>think the interface is still on. So, that's why we may need to fix it.
-> >
-> >My laptop (a Toshiba one) has the other kind of LED - the LED only comes on and
-> >off in relation to the rfkill switch, and does not blink with traffic. I think
-> >Herton or Larry has some devices with both types.
+--000e0cd5cf7252b30c049eaf02cb
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I had one via based netbook with proper led, but don't have it anymore.
+  I have made the test syntax change you recommended and attached the
+gzipped 'git format-patch'.
 
-> >
-> >Hmm, I seem to have the impression that there is code somewhere for switching a
-> >singular LED's behavior of the driver between one or the other, by echo'ing into
-> >sysfs or some other trickery? Or would that be a desired approach if that's not
-> >done at the moment?
-> 
-> My rtl8187 devices are both external USB sticks, thus they have no
-> interaction with a radio-kill switch. I will test your patch to make
-> sure it does no harm to my system.
-> 
-> I think the commit message should be revised. A simple statement
-> like "the LED does not turn off when the rfkill switch is off"
-> should be sufficient.
+On Thu, Mar 17, 2011 at 2:29 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-03-16 at 17:28 -0700, Sean Robinson wrote:
+>> libnl supports callbacks for send and recv. =C2=A0This patch enables cal=
+lbacks
+>> for sent messages and uses the debug callback for the --debug option, as
+>> the recv callbacks do.
+>
+> I can't apply this, the patch is corrupted.
+>
+>> =C2=A0 =C2=A0 =C2=A0 cb =3D nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_D=
+EFAULT);
+>> - =C2=A0 =C2=A0 if (!cb) {
+>> + =C2=A0 =C2=A0 s_cb =3D nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFA=
+ULT);
+>> + =C2=A0 =C2=A0 if (!(cb && s_cb)) {
+>
+> I think (!cb || !s_cb) would be easier to read.
+>
+> johannes
+>
+>
+>
 
-The patch should work, but I wonder if we should be fiddling with priv->vif
-for this, perhaps we should not assume vif to be valid after
-rtl8187_remove_interface (I don't see problems with current
-rtl8187/mac80211 code on a quick look, but...)
 
-I cleaner solution may be to use a priv->mode like p54.
 
-> 
-> Larry
-> 
+--=20
+Sean Robinson
+WiFi Radar - http://wifi-radar.berlios.de
+Python WiFi - http://pythonwifi.wikispot.org
+pymnl - http://pymnl.wikispot.org
 
--- 
-[]'s
-Herton
+--000e0cd5cf7252b30c049eaf02cb
+Content-Type: application/x-gzip;
+	name="0001-Add-send-callbacks-with-optional-debug-handler.patch.gz"
+Content-Disposition: attachment;
+	filename="0001-Add-send-callbacks-with-optional-debug-handler.patch.gz"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gldt7d350
+
+H4sICB0igk0CAzAwMDEtQWRkLXNlbmQtY2FsbGJhY2tzLXdpdGgtb3B0aW9uYWwtZGVidWctaGFu
+ZGxlci5wYXRjaACtVNty0zAQfY6+YuEpaWwjJ07iplxaLoWHwjC0fQJGo5sdUcfKWDJth/LvrJQU
+MvDCMHiSyFrtOXvOSsppZ9cgy0OuD+dTKqaV4kXFuaITMZOzouCzspTzhS7E4YTDW9vCud5AvgBK
+l/EDE0pzcoo0S1ziLXywwrQOEx87nF51u+lxveamyaRdPyUvuddLuFj1SWB6yzskyXOgi+WsXBY5
+pHRBKTnvxRct/RI+vj+5ePHmM5woBU63CiRvGsHllYNr41dgN97YljegtOhrWPFWNbojpDGibcD1
+m43tvNtDVbbbEmEmdFp+zQDVGAcb7uUKdMtFo/cAZAfwsNbO8RrXArJ3+OJXelf3Pj3Sh3Cabhe2
++hLgjoRwKLgnRtmMkHNTt1qltqpScfv3jUzTlIC5ziTcAT5zGIcHYzlUJlrAZtRaJTADBOsuCHHD
+8Qgbj6obvZ2nI0KUqSpUXBsP/FGkFHEgplX6Biazw2lR5lk2o3LKiwnklM6LIijY5ROsfI85PoYU
+EQkKCsMCMOA890aiDA+MbfeIybUaOt/10kPblHSS5yykaTiIQ4Jb0a/BKGbaTe/xRdwmBL4RGEjU
+7WGHRRo4wJ8EDtZxB5/Au8uzM5w6PEC4cISIn3WYFJgtjsj4t5hjIbqfuXY1Uro6RINwpb8adYP0
+9D6iuy4By3hXy6Noe1pS9DuelnlS/l/bg+8EgnOB9aNihmfIyqG5Zttz9gzenbEXz9nLV88vX8Py
+5+z05PLsYnRE0oGpYPhAihG2EM2zf6ca31PB3R08CEyjuC2DatOh1QrtqdiahxUeVq3AW4glgstW
++8a0V7/uwKf24Sg0dIAQVDSJ77VFjO09qzqtWdyE0N+CFuFYFXT+3/sbLKGC0X51lIJmsUfOyivt
+mcOvFMPIkz7dxROIHcC2IHTrIazgPwzjvbcM7+oG75r+A4auovFdZXgM9LfqeL1Ini2yIssJ+QH5
+el2jrQUAAA==
+--000e0cd5cf7252b30c049eaf02cb--
