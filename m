@@ -1,84 +1,302 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:47324 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159Ab1CGCOY (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:42468 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521Ab1CQAGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 21:14:24 -0500
-Received: by yxs7 with SMTP id 7so1452952yxs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2011 18:14:23 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19828.16246.623659.384085@gargle.gargle.HOWL>
-Date: Mon, 7 Mar 2011 07:44:14 +0530
+	Wed, 16 Mar 2011 20:06:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
-Subject: [RFC 15/34] ath9k_htc: Sync struct ath9k_htc_target_vif with FW
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Marc Yang <yangyang@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 02/11] mwifiex: remove httxcfg command from debugfs
+Date: Wed, 16 Mar 2011 17:09:25 -0700
+Message-Id: <1300320574-10793-3-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1300320574-10793-1-git-send-email-bzhao@marvell.com>
+References: <1300320574-10793-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+From: Marc Yang <yangyang@marvell.com>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+The default setting is 0x20:
+Bit 5: Short GI in 20 MHz enabled
+
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |   11 ++---------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++++----
- 2 files changed, 6 insertions(+), 13 deletions(-)
+ drivers/net/wireless/mwifiex/11n.c       |   22 ---------
+ drivers/net/wireless/mwifiex/11n.h       |    4 --
+ drivers/net/wireless/mwifiex/README      |   35 --------------
+ drivers/net/wireless/mwifiex/debugfs.c   |   72 ------------------------------
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   59 ------------------------
+ 5 files changed, 0 insertions(+), 192 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 72aa04e..b134d41 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -117,17 +117,10 @@ struct ath9k_htc_cap_target {
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index c118669..68de8e7 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -49,28 +49,6 @@ int mwifiex_11n_ioctl_amsdu_aggr_ctrl(struct mwifiex_adapter *adapter,
+ }
  
- struct ath9k_htc_target_vif {
- 	u8 index;
--	u8 des_bssid[ETH_ALEN];
--	__be32 opmode;
-+	u8 opmode;
- 	u8 myaddr[ETH_ALEN];
--	u8 bssid[ETH_ALEN];
--	u32 flags;
--	u32 flags_ext;
--	u16 ps_sta;
--	__be16 rtsthreshold;
- 	u8 ath_cap;
--	u8 node;
--	s8 mcast_rate;
-+	__be16 rtsthreshold;
- } __packed;
+ /*
+- * IOCTL request handler to set/get 11n Tx configuration.
+- *
+- * This function prepares the correct firmware command and
+- * issues it.
+- */
+-int mwifiex_11n_ioctl_ht_tx_cfg(struct mwifiex_adapter *adapter,
+-				struct mwifiex_wait_queue *wait_queue,
+-				struct mwifiex_ds_11n_tx_cfg *tx_cfg,
+-				u16 action)
+-{
+-	int ret = 0;
+-	struct mwifiex_private *priv = adapter->priv[wait_queue->bss_index];
+-
+-	ret = mwifiex_prepare_cmd(priv, HostCmd_CMD_11N_CFG, action, 0,
+-				  wait_queue, tx_cfg);
+-	if (!ret)
+-		ret = -EINPROGRESS;
+-
+-	return ret;
+-}
+-
+-/*
+  * Fills HT capability information field, AMPDU Parameters field, HT extended
+  * capability field, and supported MCS set fields.
+  *
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index c06e620..d9f03bb 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -48,10 +48,6 @@ void mwifiex_cfg_tx_buf(struct mwifiex_private *priv,
+ 			struct mwifiex_bssdescriptor *bss_desc);
+ void mwifiex_fill_cap_info(struct mwifiex_private *,
+ 			   struct mwifiex_ie_types_htcap *);
+-int mwifiex_11n_ioctl_ht_tx_cfg(struct mwifiex_adapter *adapter,
+-				struct mwifiex_wait_queue *wait_queue,
+-				struct mwifiex_ds_11n_tx_cfg *tx_cfg,
+-				u16 action);
+ int mwifiex_set_get_11n_htcap_cfg(struct mwifiex_private *priv,
+ 				  u16 action, int *htcap_cfg);
+ int mwifiex_11n_ioctl_amsdu_aggr_ctrl(struct mwifiex_adapter *adapter,
+diff --git a/drivers/net/wireless/mwifiex/README b/drivers/net/wireless/mwifiex/README
+index 374df48..366338c 100644
+--- a/drivers/net/wireless/mwifiex/README
++++ b/drivers/net/wireless/mwifiex/README
+@@ -399,41 +399,6 @@ sleeppd
+ 		cat sleeppd 	                : Get sleep period configuration
+ 		echo "10" > sleeppd             : Set sleep period to 10 ms
  
- #define ATH_HTC_STA_AUTH  0x0001
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 9bb20f3..4002267 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -349,7 +349,7 @@ static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
- 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
- 	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
+-
+-httxcfg
+-        This command is used to configure various 11n specific configration
+-        for transmit (such as Short GI, Channel BW and Green field support)
+-	Usage:
+-
+-	echo "<m>" > httxcfg
+-	cat httxcfg
+-
+-        where <m>
+-        This is a bitmap and should be used as following
+-                Bit 15-7: Reserved set to 0
+-                Bit 6: Short GI in 40 Mhz enable/disable
+-                Bit 5: Short GI in 20 Mhz enable/disable
+-                Bit 4: Green field enable/disble
+-                Bit 3-2: Reserved set to 0
+-                Bit 1: 20/40 Mhz enable disable.
+-                Bit 0: Reserved set to 0
+-
+-        When Bit 1 is set then firmware could transmit in 20Mhz or 40Mhz based
+-        on rate adaptation. When this bit is reset then firmware will only
+-        transmit in 20Mhz.
+-
+-        echo "0x62" > httxcfg
+-        This will enable 20/40 and Short GI but will disable Green field.
+-
+-        echo "0x30" > httxcfg
+-        This will enable Short GI and Green field.
+-
+-        The default value is 0x20
+-
+-        Note:- If 20/40 MHz support is disabled in htcapinfo, device will not transmit
+-        in 40 MHz even 20/40 MHz is enabled in httxcfg.
+-
+-
+ getlog
+         This command is used to get the statistics available in the station.
+ 	Usage:
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 1809c44..d01a1fc 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -914,76 +914,6 @@ mwifiex_qoscfg_read(struct file *file, char __user *ubuf,
+ }
  
--	hvif.opmode = cpu_to_be32(HTC_M_MONITOR);
-+	hvif.opmode = HTC_M_MONITOR;
- 	hvif.index = ffz(priv->vif_slot);
+ /*
+- * Proc httxcfg file write handler.
+- *
+- * This function is called when the 'httxcfg' file is opened for writing
+- *
+- * This function can be used to set the HT Tx configuration parameters.
+- */
+-static ssize_t
+-mwifiex_httxcfg_write(struct file *file,
+-		      const char __user *ubuf, size_t count, loff_t *ppos)
+-{
+-	struct mwifiex_private *priv =
+-		(struct mwifiex_private *) file->private_data;
+-	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+-	char *buf = (char *) addr;
+-	size_t buf_size = min(count, (size_t) (PAGE_SIZE - 1));
+-	int httxcfg = 0;
+-	int ret = 0;
+-
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	if (copy_from_user(buf, ubuf, buf_size)) {
+-		ret = -EFAULT;
+-		goto done;
+-	}
+-
+-	sscanf(buf, "%x", &httxcfg);
+-
+-	ret = mwifiex_set_11n_httx_cfg(priv, httxcfg);
+-
+-	if (!ret)
+-		ret = count;
+-
+-done:
+-	free_page(addr);
+-	return ret;
+-}
+-
+-/*
+- * Proc httxcfg file read handler.
+- *
+- * This function is called when the 'httxcfg' file is opened for reading
+- *
+- * This function can be used to get the HT Tx configuration parameters.
+- */
+-static ssize_t
+-mwifiex_httxcfg_read(struct file *file, char __user *ubuf,
+-		     size_t count, loff_t *ppos)
+-{
+-	struct mwifiex_private *priv =
+-		(struct mwifiex_private *) file->private_data;
+-	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+-	char *buf = (char *) addr;
+-	int pos = 0, ret = 0;
+-	int httxcfg = 0;
+-
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	mwifiex_get_11n_httx_cfg(priv, &httxcfg);
+-
+-	pos += snprintf(buf, PAGE_SIZE, "%x\n", httxcfg);
+-
+-	ret = simple_read_from_buffer(ubuf, count, ppos, buf, pos);
+-
+-	free_page(addr);
+-	return ret;
+-}
+-
+-/*
+  * Proc antcfg file write handler.
+  *
+  * This function is called when the 'antcfg' file is opened for writing
+@@ -1564,7 +1494,6 @@ MWIFIEX_DFS_FILE_OPS(amsduaggrctrl);
+ MWIFIEX_DFS_FILE_OPS(sleeppd);
+ MWIFIEX_DFS_FILE_OPS(mpactrl);
+ MWIFIEX_DFS_FILE_OPS(qoscfg);
+-MWIFIEX_DFS_FILE_OPS(httxcfg);
+ MWIFIEX_DFS_FILE_READ_OPS(getlog);
+ MWIFIEX_DFS_FILE_OPS(antcfg);
+ MWIFIEX_DFS_FILE_OPS(regrdwr);
+@@ -1595,7 +1524,6 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
+ 	MWIFIEX_DFS_ADD_FILE(sleeppd);
+ 	MWIFIEX_DFS_ADD_FILE(mpactrl);
+ 	MWIFIEX_DFS_ADD_FILE(qoscfg);
+-	MWIFIEX_DFS_ADD_FILE(httxcfg);
+ 	MWIFIEX_DFS_ADD_FILE(getlog);
+ 	MWIFIEX_DFS_ADD_FILE(antcfg);
+ 	MWIFIEX_DFS_ADD_FILE(regrdwr);
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index b880a00..3d38e87 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -2862,65 +2862,6 @@ done:
+ }
  
- 	WMI_CMD_BUF(WMI_VAP_CREATE_CMDID, &hvif);
-@@ -1039,13 +1039,13 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		hvif.opmode = cpu_to_be32(HTC_M_STA);
-+		hvif.opmode = HTC_M_STA;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
-+		hvif.opmode = HTC_M_IBSS;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
-+		hvif.opmode = HTC_M_HOSTAP;
- 		break;
- 	default:
- 		ath_err(common,
+ /*
+- * Sends IOCTL request to set 11n HT Tx configurations.
+- *
+- * This function allocates the IOCTL request buffer, fills it
+- * with requisite parameters and calls the IOCTL handler.
+- */
+-int
+-mwifiex_set_11n_httx_cfg(struct mwifiex_private *priv, int data)
+-{
+-	struct mwifiex_wait_queue *wait = NULL;
+-	struct mwifiex_ds_11n_tx_cfg tx_cfg;
+-	int status = 0;
+-	int ret = 0;
+-
+-	wait = mwifiex_alloc_fill_wait_queue(priv, MWIFIEX_IOCTL_WAIT);
+-	if (!wait)
+-		return -ENOMEM;
+-
+-	tx_cfg.tx_htcap = data;
+-	status = mwifiex_11n_ioctl_ht_tx_cfg(priv->adapter, wait, &tx_cfg,
+-					     HostCmd_ACT_GEN_SET);
+-
+-	ret = mwifiex_request_ioctl(priv, wait, status, MWIFIEX_IOCTL_WAIT);
+-
+-	kfree(wait);
+-	return ret;
+-}
+-
+-/*
+- * Sends IOCTL request to get 11n HT Tx configurations.
+- *
+- * This function allocates the IOCTL request buffer, fills it
+- * with requisite parameters and calls the IOCTL handler.
+- */
+-int
+-mwifiex_get_11n_httx_cfg(struct mwifiex_private *priv, int *data)
+-{
+-	struct mwifiex_wait_queue *wait = NULL;
+-	struct mwifiex_ds_11n_tx_cfg tx_cfg;
+-	int status = 0;
+-	int ret = 0;
+-
+-	wait = mwifiex_alloc_fill_wait_queue(priv, MWIFIEX_IOCTL_WAIT);
+-	if (!wait)
+-		return -ENOMEM;
+-
+-	status = mwifiex_11n_ioctl_ht_tx_cfg(priv->adapter, wait, &tx_cfg,
+-					     HostCmd_ACT_GEN_GET);
+-
+-	ret = mwifiex_request_ioctl(priv, wait, status, MWIFIEX_IOCTL_WAIT);
+-	if (ret)
+-		goto done;
+-
+-	*data = tx_cfg.tx_htcap;
+-done:
+-	kfree(wait);
+-	return ret;
+-}
+-
+-/*
+  * Set eWPA mode if passphrase/psk is set
+  */
+ int mwifiex_set_ewpa_mode_from_passphrase(struct mwifiex_private *priv,
 -- 
-1.7.4.1
+1.7.0.2
 
