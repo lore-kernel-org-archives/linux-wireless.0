@@ -1,36 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:33324 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752370Ab1CGLdI (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:45081 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752516Ab1CQAeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2011 06:33:08 -0500
+	Wed, 16 Mar 2011 20:34:07 -0400
+Received: by wya21 with SMTP id 21so2266058wya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2011 17:34:05 -0700 (PDT)
+Message-ID: <4D8156F9.8020609@gmail.com>
+Date: Thu, 17 Mar 2011 00:34:01 +0000
+From: Dave Kilroy <kilroyd@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <op.vryqz6qt3ri7v4@arend-laptop>
-References: <AANLkTinhThfS587rkX4y1UbJLQzQKEWGfrFArUVGD3Ew@mail.gmail.com>
-	<op.vryqz6qt3ri7v4@arend-laptop>
-Date: Mon, 7 Mar 2011 12:33:07 +0100
-Message-ID: <AANLkTinbrbkUO-ycAsX4cLEoM6avPeiYEZZ-zKtavfqq@mail.gmail.com>
-Subject: Re: brcm80211: the system freezes if booted with laptop wifi switch
- to OFF
-From: Francis Moreau <francis.moro@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Gunn <armadefuego@yahoo.com>
+CC: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2.6.38-rc8-wl 1/1] orinoco:  Reduce lock contention by
+ reporting static errors before locking
+References: <297417.86150.qm@web57403.mail.re1.yahoo.com>
+In-Reply-To: <297417.86150.qm@web57403.mail.re1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 7, 2011 at 8:56 AM, Arend van Spriel <arend@broadcom.com> wrote:
+On 15/03/2011 15:53, Joe Gunn wrote:
+> Check for static error issues before obtaining lock to reduce lock contention
+> Signed-off-by: Joseph J. Gunn<armadefuego@yahoo.com>
+> ---
+> diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+> index e793679..c1fe0b5 100644
+> --- a/drivers/net/wireless/orinoco/wext.c
+> +++ b/drivers/net/wireless/orinoco/wext.c
+> @@ -161,36 +161,17 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
+>   	static const u8 off_addr[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+>   	static const u8 any_addr[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 >
-> Some time ago we (broadcom) submitted a patch for rfkill functionality (ie.
-> wifi switch) to staging-2.6 repository. I looked up the tagged version you
-> are referring to in the linux-next repository and it seems that the patch I
-> mentioned is not included in there.
+> -	if (orinoco_lock(priv,&flags) != 0)
+> -		return -EBUSY;
+> -
+> -	/* Enable automatic roaming - no sanity checks are needed */
+> -	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
+> -	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
+> -		priv->bssid_fixed = 0;
+> -		memset(priv->desired_bssid, 0, ETH_ALEN);
+> -
+> -		/* "off" means keep existing connection */
+> -		if (ap_addr->sa_data[0] == 0) {
+> -			__orinoco_hw_set_wap(priv);
+> -			err = 0;
+> -		}
+> -		goto out;
+> -	}
+> -
+>   	if (priv->firmware_type == FIRMWARE_TYPE_AGERE) {
+>   		printk(KERN_WARNING "%s: Lucent/Agere firmware doesn't "
+>   		       "support manual roaming\n",
+>   		       dev->name);
+> -		err = -EOPNOTSUPP;
+> -		goto out;
+> +		return(-EOPNOTSUPP);
+>   	}
+>
+>   	if (priv->iw_mode != NL80211_IFTYPE_STATION) {
+>   		printk(KERN_WARNING "%s: Manual roaming supported only in "
+>   		       "managed mode\n", dev->name);
+> -		err = -EOPNOTSUPP;
+> -		goto out;
+> +		return(-EOPNOTSUPP);
+>   	}
+>
+>   	/* Intersil firmware hangs without Desired ESSID */
+> @@ -198,10 +179,27 @@ static int orinoco_ioctl_setwap(struct net_device *dev,
+>   	    strlen(priv->desired_essid) == 0) {
 
-Would it be possible to submit it one more time ?
+I avoided changing the locking too much when I was modifying this driver 
+as I wasn't clear on whether the locks needed to protect concurrent wext 
+calls from each other. Since all the wext calls hold the lock over the 
+entirety of the callback, I assumed that is what they were doing.
 
-Thanks
--- 
-Francis
+In this particular change, the strlen here may give you one result, but 
+it may have been changed by the time you take the lock. Also the test on 
+priv->iw_mode above may have been invalidated as well.
+
+
+Dave.
+
+>   		printk(KERN_WARNING "%s: Desired ESSID must be set for "
+>   		       "manual roaming\n", dev->name);
+> -		err = -EOPNOTSUPP;
+> +		return(-EOPNOTSUPP);
+> +	}
+> +
+> +	if (orinoco_lock(priv,&flags) != 0)
+> +		return -EBUSY;
+> +
+> +	/* Enable automatic roaming - no sanity checks are needed */
+> +	if (memcmp(&ap_addr->sa_data, off_addr, ETH_ALEN) == 0 ||
+> +	    memcmp(&ap_addr->sa_data, any_addr, ETH_ALEN) == 0) {
+> +		priv->bssid_fixed = 0;
+> +		memset(priv->desired_bssid, 0, ETH_ALEN);
+> +
+> +		/* "off" means keep existing connection */
+> +		if (ap_addr->sa_data[0] == 0) {
+> +			__orinoco_hw_set_wap(priv);
+> +			err = 0;
+> +		}
+>   		goto out;
+>   	}
+>
+> +
+>   	/* Finally, enable manual roaming */
+>   	priv->bssid_fixed = 1;
+>   	memcpy(priv->desired_bssid,&ap_addr->sa_data, ETH_ALEN);
+
