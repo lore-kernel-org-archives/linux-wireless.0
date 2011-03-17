@@ -1,41 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37564 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474Ab1CQUJN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2011 16:09:13 -0400
-Received: by bwz15 with SMTP id 15so2787675bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 13:09:11 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Juan Carlos Garza <juancarlosgarza@gmail.com>
-Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers in AP and IBSS
-Date: Thu, 17 Mar 2011 21:07:25 +0100
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com> <201103171316.02636.helmut.schaa@googlemail.com> <AANLkTi=Gm-apOyop22UgFMgoQE_+maEQgrMDdH-kTxZq@mail.gmail.com>
-In-Reply-To: <AANLkTi=Gm-apOyop22UgFMgoQE_+maEQgrMDdH-kTxZq@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201103172107.25316.helmut.schaa@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754781Ab1CQQnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2011 12:43:18 -0400
+Subject: Re: [PATCH RESEND] libertas_spi: Add support for suspend/resume
+From: Dan Williams <dcbw@redhat.com>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marek Vasut <marek.vasut@gmail.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Colin McCabe <colin@cozybit.com>
+Date: Thu, 17 Mar 2011 11:44:27 -0500
+In-Reply-To: <1300286506-13318-1-git-send-email-anarsoul@gmail.com>
+References: <20110315204155.GE2542@tuxdriver.com>
+	 <1300286506-13318-1-git-send-email-anarsoul@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1300380270.11539.8.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 17. März 2011 schrieb Juan Carlos Garza:
-> Warning - TX status report missed for queue 0 entry 42
-> Mar 17 17:10:26 LS817 kernel: phy0 -> rt2x00queue_flush_queue: Warning
-> - Queue 0 failed to flush
+On Wed, 2011-03-16 at 16:41 +0200, Vasily Khoruzhick wrote:
+> Add support for suspend/resume in if_spi.
+> 
+> Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
 
-Looks as if some tx status reports got lost and that triggered the
-watchdog. There are some experimental patches in the rt2x00 experimental
-tree ([1], [2], [3] and [4]) that might mitigate some of these issues.
+Unless Marek chimes in, I don't have a problem with this patch if it
+fixes the problem.  The one issue I can see is that if userspace isn't
+ready yet, the request_firmware() call will fail because we're not
+caching firmware anywhere, and we probably shouldn't be since the
+firmware is large.  I'm not sure there's a good solution without caching
+firmware though, but I don't want that to block the patch...
 
-Mind to try these out and report back if they improve the behavior
-under load?
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Thanks,
-Helmut
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |   65 ++++++++++++++++++++++++++++++++
+>  1 files changed, 65 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index f6c2cd6..078ef43 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -57,6 +57,7 @@ struct if_spi_card {
+>  	/* Handles all SPI communication (except for FW load) */
+>  	struct workqueue_struct		*workqueue;
+>  	struct work_struct		packet_work;
+> +	struct work_struct		resume_work;
+>  
+>  	u8				cmd_buffer[IF_SPI_CMD_BUF_SIZE];
+>  
+> @@ -68,6 +69,9 @@ struct if_spi_card {
+>  
+>  	/* Protects cmd_packet_list and data_packet_list */
+>  	spinlock_t			buffer_lock;
+> +
+> +	/* True is card suspended */
+> +	u8				suspended;
+>  };
+>  
+>  static void free_if_spi_card(struct if_spi_card *card)
+> @@ -1057,6 +1061,28 @@ out:
+>  	return err;
+>  }
+>  
+> +static void if_spi_resume_worker(struct work_struct *work)
+> +{
+> +	struct if_spi_card *card;
+> +
+> +	card = container_of(work, struct if_spi_card, resume_work);
+> +
+> +	if (card->suspended) {
+> +		if (card->pdata->setup)
+> +			card->pdata->setup(card->spi);
+> +
+> +		/* Init card ... */
+> +		if_spi_init_card(card);
+> +
+> +		enable_irq(card->spi->irq);
+> +
+> +		/* And resume it ... */
+> +		lbs_resume(card->priv);
+> +
+> +		card->suspended = 0;
+> +	}
+> +}
+> +
+>  static int __devinit if_spi_probe(struct spi_device *spi)
+>  {
+>  	struct if_spi_card *card;
+> @@ -1107,6 +1133,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+>  		goto free_card;
+>  	}
+>  	card->priv = priv;
+> +	priv->setup_fw_on_resume = 1;
+>  	priv->card = card;
+>  	priv->hw_host_to_card = if_spi_host_to_card;
+>  	priv->enter_deep_sleep = NULL;
+> @@ -1117,6 +1144,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+>  	/* Initialize interrupt handling stuff. */
+>  	card->workqueue = create_workqueue("libertas_spi");
+>  	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
+> +	INIT_WORK(&card->resume_work, if_spi_resume_worker);
+>  
+>  	err = request_irq(spi->irq, if_spi_host_interrupt,
+>  			IRQF_TRIGGER_FALLING, "libertas_spi", card);
+> @@ -1161,6 +1189,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+>  	lbs_deb_spi("libertas_spi_remove\n");
+>  	lbs_deb_enter(LBS_DEB_SPI);
+>  
+> +	cancel_work_sync(&card->resume_work);
+> +
+>  	lbs_stop_card(priv);
+>  	lbs_remove_card(priv); /* will call free_netdev */
+>  
+> @@ -1174,6 +1204,40 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
+>  	return 0;
+>  }
+>  
+> +static int if_spi_suspend(struct device *dev)
+> +{
+> +	struct spi_device *spi = to_spi_device(dev);
+> +	struct if_spi_card *card = spi_get_drvdata(spi);
+> +
+> +	if (!card->suspended) {
+> +		lbs_suspend(card->priv);
+> +		flush_workqueue(card->workqueue);
+> +		disable_irq(spi->irq);
+> +
+> +		if (card->pdata->teardown)
+> +			card->pdata->teardown(spi);
+> +		card->suspended = 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int if_spi_resume(struct device *dev)
+> +{
+> +	struct spi_device *spi = to_spi_device(dev);
+> +	struct if_spi_card *card = spi_get_drvdata(spi);
+> +
+> +	/* Schedule delayed work */
+> +	schedule_work(&card->resume_work);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dev_pm_ops if_spi_pm_ops = {
+> +	.suspend	= if_spi_suspend,
+> +	.resume		= if_spi_resume,
+> +};
+> +
+>  static struct spi_driver libertas_spi_driver = {
+>  	.probe	= if_spi_probe,
+>  	.remove = __devexit_p(libertas_spi_remove),
+> @@ -1181,6 +1245,7 @@ static struct spi_driver libertas_spi_driver = {
+>  		.name	= "libertas_spi",
+>  		.bus	= &spi_bus_type,
+>  		.owner	= THIS_MODULE,
+> +		.pm	= &if_spi_pm_ops,
+>  	},
+>  };
+>  
 
-[1] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=878a2bbc20100d8bccf84cc058373fe7de2e6501
-[2] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=4f3ab1e88d8b5ce4852d075016ca784a00383452
-[3] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c8cb3a0af064fb5d9cbbaa16bd2f308ba3b90ceb
-[4] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=66b096e6ad64f718425d2de9a70d82ba187d7db4
+
