@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38871 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756315Ab1CBJsd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752910Ab1CQJ1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 04:48:33 -0500
-Received: by bwz15 with SMTP id 15so5409512bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 01:48:32 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, coelho@ti.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] wl12xx: Correctly set up protection if non-GF STAs are present
-Date: Wed,  2 Mar 2011 10:46:46 +0100
-Message-Id: <1299059206-3919-1-git-send-email-helmut.schaa@googlemail.com>
+	Thu, 17 Mar 2011 05:27:46 -0400
+Subject: Re: [PATCH] iw: Add send callback with optional debug handler
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sean Robinson <seankrobinson@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimQRgAr9aY_zs0L7hjXhECiR9w8V5Y7fbwrJ1DX@mail.gmail.com>
+References: <AANLkTimQRgAr9aY_zs0L7hjXhECiR9w8V5Y7fbwrJ1DX@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Mar 2011 10:29:27 +0100
+Message-ID: <1300354167.3774.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2011-03-16 at 17:28 -0700, Sean Robinson wrote:
+> libnl supports callbacks for send and recv.  This patch enables callbacks
+> for sent messages and uses the debug callback for the --debug option, as
+> the recv callbacks do.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
+I can't apply this, the patch is corrupted.
 
-I don't know wl12xx as all and I don't have such a device. This is based on the
-assumption that setting acx->gf_protection to 1 enables protection for GF
-transmissions. So, this is only compile tested.
+>  	cb = nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFAULT);
+> -	if (!cb) {
+> +	s_cb = nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFAULT);
+> +	if (!(cb && s_cb)) {
 
-It just popped up while discussing HT operation mode handling in hostapd.
+I think (!cb || !s_cb) would be easier to read.
 
-Please review.
- 
-Thanks,
-Helmut
+johannes
 
- drivers/net/wireless/wl12xx/acx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 3badc6b..a3db755 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1361,7 +1361,8 @@ int wl1271_acx_set_ht_information(struct wl1271 *wl,
- 	acx->ht_protection =
- 		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
- 	acx->rifs_mode = 0;
--	acx->gf_protection = 0;
-+	acx->gf_protection =
-+		!!(ht_operation_mode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
- 	acx->ht_tx_burst_limit = 0;
- 	acx->dual_cts_protection = 0;
- 
--- 
-1.7.1
 
