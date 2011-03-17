@@ -1,29 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nexicom.net ([216.168.96.13]:37844 "EHLO smtp.nexicom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020Ab1C2FJR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 01:09:17 -0400
-Received: from mail.lockie.ca (dyn-dsl-lh-98-124-36-5.nexicom.net [98.124.36.5])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p2T59DgE025209
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 01:09:14 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 9B1781E037F
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 01:09:12 -0400 (EDT)
-Message-ID: <4D91697C.2050603@lockie.ca>
-Date: Tue, 29 Mar 2011 01:09:16 -0400
-From: James <bjlockie@lockie.ca>
+Received: from netrider.rowland.org ([192.131.102.5]:46065 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753014Ab1CQCgz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2011 22:36:55 -0400
+Date: Wed, 16 Mar 2011 22:36:54 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Mihai =?utf-8?q?Don=C8=9Bu?= <mihai.dontu@gmail.com>
+cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	<linux-kernel@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [b43] usb device disconnects automatically after 1s
+In-Reply-To: <201103170106.58746.mihai.dontu@gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1103162235400.2388-100000@netrider.rowland.org>
 MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: regdomain
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am in Canada so is 0x10 right?
-Is there a tool I can use to read the EEPROM?
+On Thu, 17 Mar 2011, Mihai Donțu wrote:
 
-ath: EEPROM regdomain: 0x10
-ath: EEPROM indicates we should expect a direct regpair map
-ath: Country alpha2 being used: CO
-ath: Regpair used: 0x10
+> On Thursday 17 March 2011 00:35:02 Rafał Miłecki wrote:
+> > 2011/3/16 Mihai Donțu <mihai.dontu@gmail.com>:
+> > > Added linux-usb and linux-wireless to CC.
+> > > 
+> > > On Thursday 17 March 2011 00:18:31 Mihai Donțu wrote:
+> > >> Hi,
+> > >> 
+> > >> I have just upgraded to 2.6.38 and discovered that I can't use my
+> > >> wireless device (BCM4312 802.11a/b/g). I press Fn + F2, the bluetooth
+> > >> led lights and after a second it turns off by itself. In dmesg I'm
+> > >> seeing the following:
+> > >> 
+> > >> [   88.167212] usb 1-2.2: new full speed USB device using ehci_hcd and
+> > >> address 5
+> > >> [   88.782330] usb 1-2.2: USB disconnect, address 5
+> > >> 
+> > >> I switched to 2.6.37 until I'll have some time to bisect this. In the
+> > >> mean time I have attached the output of lspci, interrupts and dmesg.
+> > 
+> > I suspect it's WMI related. What is your machine?
+> 
+> It's a Dell Latitude D520 but I can't find a link with full specs (in 
+> English).
+> 
+> > Please check:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=31002
+> > http://comments.gmane.org/gmane.linux.acpi.devel/49577
+> > 
+> > I can't help you more, I just noticed such a issue reported on ACPI
+> > ML, you have to dig into this yourself (or someone else may help you).
+> 
+> Thanks for the links. I'll see if I can get anywhere from there.
+
+Another thing you can try is to get usbmon traces under both 2.6.37 and 
+2.6.38.  Instructions are in the kernel source file 
+Documentation/usb/usbmon.txt.
+
+Alan Stern
 
