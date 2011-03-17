@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lider.pardus.org.tr ([193.140.100.216]:54153 "EHLO
-	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038Ab1CKJWa (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37564 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754474Ab1CQUJN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 04:22:30 -0500
-Message-ID: <4D79E8E3.7040602@pardus.org.tr>
-Date: Fri, 11 Mar 2011 11:18:27 +0200
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+	Thu, 17 Mar 2011 16:09:13 -0400
+Received: by bwz15 with SMTP id 15so2787675bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 13:09:11 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Juan Carlos Garza <juancarlosgarza@gmail.com>
+Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers in AP and IBSS
+Date: Thu, 17 Mar 2011 21:07:25 +0100
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com> <201103171316.02636.helmut.schaa@googlemail.com> <AANLkTi=Gm-apOyop22UgFMgoQE_+maEQgrMDdH-kTxZq@mail.gmail.com>
+In-Reply-To: <AANLkTi=Gm-apOyop22UgFMgoQE_+maEQgrMDdH-kTxZq@mail.gmail.com>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ivdoorn@gmail.com, Johannes Stezenbach <js@sig21.net>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: Unplugging usb wlan (rt73usb) hangs the system
-References: <4D6E7B55.6010905@pardus.org.tr> <20110309100651.GA23594@redhat.com> <4D77539A.90300@pardus.org.tr> <20110309103633.GB23594@redhat.com>
-In-Reply-To: <20110309103633.GB23594@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103172107.25316.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-09-03-2011 12:36 tarihinde, Stanislaw Gruszka yazdÄ±:
-> Plese test also that one.
-> commit 070192dd2975c0e97bbdeac7623b755235c6db7d
-> Author: Ivo van Doorn<ivdoorn@gmail.com>
-> Date:   Thu Nov 4 20:41:05 2010 +0100
->
->      rt2x00: Fix crash on USB unplug
->
+Am Donnerstag, 17. März 2011 schrieb Juan Carlos Garza:
+> Warning - TX status report missed for queue 0 entry 42
+> Mar 17 17:10:26 LS817 kernel: phy0 -> rt2x00queue_flush_queue: Warning
+> - Queue 0 failed to flush
 
-OK applied 2 commits on top of 2.6.37.3 and tested with an Edimax and an 
-Asus stick, no problem so far.
-But I wonder why are they still in wireless-next? They are quite old 
-commits dating from November, shouldn't they already
-be merged to the linux-2.6 tree?
+Looks as if some tx status reports got lost and that triggered the
+watchdog. There are some experimental patches in the rt2x00 experimental
+tree ([1], [2], [3] and [4]) that might mitigate some of these issues.
 
-AFAIK they have to be first applied to linux-2.6 in order to be pulled 
-to 2.6.3x.y stable trees.
+Mind to try these out and report back if they improve the behavior
+under load?
 
-Thanks
-Ozan Caglayan
+Thanks,
+Helmut
 
+[1] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=878a2bbc20100d8bccf84cc058373fe7de2e6501
+[2] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=4f3ab1e88d8b5ce4852d075016ca784a00383452
+[3] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c8cb3a0af064fb5d9cbbaa16bd2f308ba3b90ceb
+[4] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=66b096e6ad64f718425d2de9a70d82ba187d7db4
