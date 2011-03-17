@@ -1,108 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10700 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753685Ab1CYObi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 10:31:38 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/12] iwlwifi: add RATE_MCS_RATE_MSK
-Date: Fri, 25 Mar 2011 07:14:11 -0700
-Message-Id: <1301062456-17249-8-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42318 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755302Ab1CQS7V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2011 14:59:21 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so3123030iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 11:59:21 -0700 (PDT)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
+	Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH 8/9] mwl8k: Check outgoing rate for a station to decide if ampdu can be created
+Date: Thu, 17 Mar 2011 11:58:48 -0700
+Message-Id: <1300388329-15380-8-git-send-email-brian@cozybit.com>
+In-Reply-To: <1300388329-15380-1-git-send-email-brian@cozybit.com>
+References: <1300388329-15380-1-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Halperin <dhalperi@cs.washington.edu>
+From: Nishant Sarmukadam <nishants@marvell.com>
 
-Throughout the code we use rate_n_flags & 0xff to extract the lower byte
-of the rate_n_flags u32 that contains the information about the rate.
-Add a #define and remove the use of the magic number.
+If the outgoing packet rate to a particular HT station is <=6.5
+Mbps, do not attempt to create an ampdu. Also, if the outgoing
+rate is legacy rate, do not create an ampdu.
 
-Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   15 ++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 ++
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mwl8k.c |   60 +++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 57 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 63b58ec..e394e49 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -115,13 +115,18 @@ const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
- 	/* FIXME:RS:          ^^    should be INV (legacy) */
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index b90178d..5473f4c 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -291,6 +291,7 @@ struct mwl8k_vif {
+ struct mwl8k_sta {
+ 	/* Index into station database. Returned by UPDATE_STADB.  */
+ 	u8 peer_id;
++	u8 is_ampdu_allowed;
  };
+ #define MWL8K_STA(_sta) ((struct mwl8k_sta *)&((_sta)->drv_priv))
  
-+static inline u8 rs_extract_rate(u32 rate_n_flags)
-+{
-+	return (u8)(rate_n_flags & RATE_MCS_RATE_MSK);
-+}
+@@ -1517,6 +1518,27 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 		     MWL8K_TXD_STATUS_OK_RETRY |		\
+ 		     MWL8K_TXD_STATUS_OK_MORE_RETRY))
+ 
++/* The firmware will fill in the rate information
++ * for each packet that gets queued in the hardware
++ * in this structure
++ */
 +
- static int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
++struct rateinfo {
++	__le16  format:1;
++	__le16  short_gi:1;
++	__le16  band_width:1;
++	__le16  rate_id_mcs:6;
++	__le16  adv_coding:2;
++	__le16  antenna:2;
++	__le16  act_sub_chan:2;
++	__le16  preamble_type:1;
++	__le16  power_id:4;
++	__le16  antenna2:1;
++	__le16  reserved:1;
++	__le16  tx_bf_frame:1;
++	__le16  green_field:1;
++} __packed;
++
+ static int
+ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
  {
- 	int idx = 0;
+@@ -1533,6 +1555,11 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
+ 		struct sk_buff *skb;
+ 		struct ieee80211_tx_info *info;
+ 		u32 status;
++		struct ieee80211_sta *sta;
++		struct mwl8k_sta *sta_info = NULL;
++		u16 rate_info;
++		struct rateinfo *rate;
++		struct ieee80211_hdr *wh;
  
- 	/* HT rate format */
- 	if (rate_n_flags & RATE_MCS_HT_MSK) {
--		idx = (rate_n_flags & 0xff);
-+		idx = rs_extract_rate(rate_n_flags);
+ 		tx = txq->head;
+ 		tx_desc = txq->txd + tx;
+@@ -1561,11 +1588,34 @@ mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int limit, int force)
  
- 		if (idx >= IWL_RATE_MIMO3_6M_PLCP)
- 			idx = idx - IWL_RATE_MIMO3_6M_PLCP;
-@@ -138,7 +143,8 @@ static int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
- 	/* legacy rate format, search for match in table */
- 	} else {
- 		for (idx = 0; idx < ARRAY_SIZE(iwl_rates); idx++)
--			if (iwl_rates[idx].plcp == (rate_n_flags & 0xFF))
-+			if (iwl_rates[idx].plcp ==
-+					rs_extract_rate(rate_n_flags))
- 				return idx;
+ 		mwl8k_remove_dma_header(skb, tx_desc->qos_control);
+ 
++		wh = (struct ieee80211_hdr *) skb->data;
++
+ 		/* Mark descriptor as unused */
+ 		tx_desc->pkt_phys_addr = 0;
+ 		tx_desc->pkt_len = 0;
+ 
+ 		info = IEEE80211_SKB_CB(skb);
++		if (ieee80211_is_data(wh->frame_control)) {
++			sta = info->control.sta;
++			if (sta) {
++				sta_info = MWL8K_STA(sta);
++				BUG_ON(sta_info == NULL);
++				rate_info = le16_to_cpu(tx_desc->rate_info);
++				rate = (struct rateinfo *)&rate_info;
++				/* If rate is < 6.5 Mpbs for an ht station
++				 * do not form an ampdu. If the station is a
++				 * legacy station (format = 0), do not form an
++				 * ampdu
++				 */
++				if (rate->rate_id_mcs < 1 ||
++				    rate->format == 0) {
++					sta_info->is_ampdu_allowed = false;
++				} else {
++					sta_info->is_ampdu_allowed = true;
++				}
++			}
++		}
++
+ 		ieee80211_tx_info_clear_status(info);
+ 
+ 		/* Rate control is happening in the firmware.
+@@ -1784,9 +1834,11 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 			 * prevents sequence number mismatch at the recepient
+ 			 * as described above.
+ 			 */
+-			stream = mwl8k_add_stream(hw, sta, tid);
+-			if (stream != NULL)
+-				start_ba_session = true;
++			if (MWL8K_STA(sta)->is_ampdu_allowed) {
++				stream = mwl8k_add_stream(hw, sta, tid);
++				if (stream != NULL)
++					start_ba_session = true;
++			}
+ 		}
+ 		spin_unlock(&priv->stream_lock);
  	}
+@@ -4719,6 +4771,8 @@ static int mwl8k_sta_add(struct ieee80211_hw *hw,
+ 		ret = mwl8k_cmd_update_stadb_add(hw, vif, sta);
+ 		if (ret >= 0) {
+ 			MWL8K_STA(sta)->peer_id = ret;
++			if (sta->ht_cap.ht_supported)
++				MWL8K_STA(sta)->is_ampdu_allowed = true;
+ 			ret = 0;
+ 		}
  
-@@ -239,11 +245,6 @@ static const struct iwl_rate_mcs_info iwl_rate_mcs[IWL_RATE_COUNT] = {
- 
- #define MCS_INDEX_PER_STREAM	(8)
- 
--static inline u8 rs_extract_rate(u32 rate_n_flags)
--{
--	return (u8)(rate_n_flags & 0xFF);
--}
--
- static void rs_rate_scale_clear_window(struct iwl_rate_scale_data *window)
- {
- 	window->data = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 4f7c9ce..39313ac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -310,7 +310,7 @@ static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
- 
- static inline u8 iwl_hw_get_rate(__le32 rate_n_flags)
- {
--	return le32_to_cpu(rate_n_flags) & 0xFF;
-+	return le32_to_cpu(rate_n_flags) & RATE_MCS_RATE_MSK;
- }
- 
- static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index ca42ffa..2883915 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -324,6 +324,8 @@ struct iwl3945_power_per_rate {
- #define RATE_MCS_SPATIAL_MSK 0x18
- #define RATE_MCS_HT_DUP_POS 5
- #define RATE_MCS_HT_DUP_MSK 0x20
-+/* Both legacy and HT use bits 7:0 as the CCK/OFDM rate or HT MCS */
-+#define RATE_MCS_RATE_MSK 0xff
- 
- /* Bit 8: (1) HT format, (0) legacy format in bits 7:0 */
- #define RATE_MCS_FLAGS_POS 8
 -- 
-1.7.0.4
+1.7.1.1
 
