@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58270 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106Ab1CHRyt convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:43885 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756494Ab1CROUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 12:54:49 -0500
-Received: by iyb26 with SMTP id 26so5051523iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2011 09:54:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1299604680.3734.4.camel@jlt3.sipsolutions.net>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	<20110304134648.GB9866@tuxdriver.com>
-	<1299251879.24333.3.camel@wwguy-ubuntu>
-	<AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-	<AANLkTi=+jfk5+tWewwnx+SHj+FQAXd03sPC3mDW32GUK@mail.gmail.com>
-	<AANLkTikUE-LLSBNH=cNmPZ+Wenff5RxKcfK0kJXp9Wk+@mail.gmail.com>
-	<1299334144.3826.8.camel@jlt3.sipsolutions.net>
-	<AANLkTikQHUq95e9=3tG5WrayaxUu+K1FdAftJ3y72BTn@mail.gmail.com>
-	<1299597447.4676.25.camel@jlt3.sipsolutions.net>
-	<AANLkTinj1f0Kx5X6eqYEdyzT_3XLbtbLtwbp7jPN2LSH@mail.gmail.com>
-	<1299602750.3734.2.camel@jlt3.sipsolutions.net>
-	<AANLkTimBfOM8yxdh_Z4Bw_ww4WRtQXzdoEx6ZL_TT5YU@mail.gmail.com>
-	<1299604680.3734.4.camel@jlt3.sipsolutions.net>
-Date: Tue, 8 Mar 2011 17:54:48 +0000
-Message-ID: <AANLkTimgroA-LoAR1WftEZxNnBHtUwSGENpdWMEPMKaF@mail.gmail.com>
-Subject: Re: 2.6.38-rc7, iwlagn warning
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 18 Mar 2011 10:20:31 -0400
+Received: by mail-wy0-f169.google.com with SMTP id 19so4196239wyf.28
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 07:20:30 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: shahar_levi@ti.com, ruthyz@ti.com
+Subject: [PATCH v2 13/14] wl12xx: 1281/1283 support - enable chip support
+Date: Fri, 18 Mar 2011 16:19:28 +0200
+Message-Id: <1300457969-19601-14-git-send-email-coelho@ti.com>
+In-Reply-To: <1300457969-19601-1-git-send-email-coelho@ti.com>
+References: <1300457969-19601-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2011 17:18, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-03-08 at 17:13 +0000, Mathias Burén wrote:
->
->> 1299604089.756872: WPS: UUID based on MAC address - hexdump(len=16):
->> cc fa a1 31 39 a7 5c 33 96 d8 eb 09 dd fe 7f 0f
->> 1299604089.768927: ssid - hexdump_ascii(len=11):
->>      55 62 75 6e 74 75 41 64 68 6f 63                  UbuntuAdhoc
->> 1299604094.005785: ssid - hexdump_ascii(len=11):
->>      55 62 75 6e 74 75 41 64 68 6f 63                  UbuntuAdhoc
->>
->> Anything else I can try/provide?
->
-> Could you do the -dddt thing as explained on the link I had before?
->
-> Obviously, we're now looking for the cause -- while the warning still
-> shouldn't happen *even if userspace is misbehaving*. The trace will
-> hopefully help me figure out why we get the warning, I'll look at it
-> later.
->
-> johannes
->
->
+From: Shahar Levi <shahar_levi@ti.com>
 
-I think the wpa_supplicant log file is generated correctly now, see:
-http://www.2shared.com/file/QTkhZ1VC/wpa_supplicant.html
+Add support to wl128x chip via chip id
 
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Reviewed-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig     |    2 +-
+ drivers/net/wireless/wl12xx/main.c      |    9 +++++++++
+ drivers/net/wireless/wl12xx/sdio_test.c |    5 +++++
+ 3 files changed, 15 insertions(+), 1 deletions(-)
 
-Kind regards,
-// Mathias
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 692ebff..35ce7b0 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -3,7 +3,7 @@ menuconfig WL12XX_MENU
+ 	depends on MAC80211 && EXPERIMENTAL
+ 	---help---
+ 	  This will enable TI wl12xx driver support for the following chips:
+-	  wl1271 and wl1273.
++	  wl1271, wl1273, wl1281 and wl1283.
+ 	  The drivers make use of the mac80211 stack.
+ 
+ config WL12XX
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 9a7ca65..0b9d41f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1007,6 +1007,15 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		if (ret < 0)
+ 			goto out;
+ 		break;
++	case CHIP_ID_1283_PG20:
++		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1283 PG20)",
++			     wl->chip.id);
++
++		ret = wl1271_setup(wl);
++		if (ret < 0)
++			goto out;
++		break;
++	case CHIP_ID_1283_PG10:
+ 	default:
+ 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
+ 		ret = -ENODEV;
+diff --git a/drivers/net/wireless/wl12xx/sdio_test.c b/drivers/net/wireless/wl12xx/sdio_test.c
+index c02c870..968249a 100644
+--- a/drivers/net/wireless/wl12xx/sdio_test.c
++++ b/drivers/net/wireless/wl12xx/sdio_test.c
+@@ -293,6 +293,11 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		wl1271_notice("chip id 0x%x (1271 PG20)",
+ 				wl->chip.id);
+ 		break;
++	case CHIP_ID_1283_PG20:
++		wl1271_notice("chip id 0x%x (1283 PG20)",
++				wl->chip.id);
++		break;
++	case CHIP_ID_1283_PG10:
+ 	default:
+ 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
+ 		return -ENODEV;
+-- 
+1.7.1
+
