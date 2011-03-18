@@ -1,72 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:30764 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756095Ab1CRWvX (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:60506 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756716Ab1CROUO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 18:51:23 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000028944.msg
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 00:50:19 +0200
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <AANLkTi=5nwO-xsCok3_R494qFGH-W5CwteP3j5Np9ZK0@mail.gmail.com>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	 <1300453433.13499.18.camel@dev.znau.edu.ua>
-	 <AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	 <1300460342.13499.60.camel@dev.znau.edu.ua>
-	 <AANLkTimboGmJNdHHbzWdSGf14jenn+yag944A8GBEXtc@mail.gmail.com>
-	 <1300483139.15919.42.camel@dev.znau.edu.ua>
-	 <AANLkTi=5nwO-xsCok3_R494qFGH-W5CwteP3j5Np9ZK0@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 19 Mar 2011 00:50:28 +0200
-Message-Id: <1300488628.16395.42.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+	Fri, 18 Mar 2011 10:20:14 -0400
+Received: by mail-wy0-f180.google.com with SMTP id 26so3723995wyj.25
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 07:20:04 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: shahar_levi@ti.com, ruthyz@ti.com
+Subject: [PATCH v2 03/14] wl12xx: 1281/1283 support - Add Definitions
+Date: Fri, 18 Mar 2011 16:19:18 +0200
+Message-Id: <1300457969-19601-4-git-send-email-coelho@ti.com>
+In-Reply-To: <1300457969-19601-1-git-send-email-coelho@ti.com>
+References: <1300457969-19601-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Shahar Levi <shahar_levi@ti.com>
 
-В Птн, 18/03/2011 в 23:42 +0100, Rafał Miłecki пишет:
-> 2011/3/18 George Kashperko <george@znau.edu.ua>:
-> > Well, I see this as following. In generic host life time there are
-> > several states. These states are following:
-> > 1. Host just started up, underlying backplane is powered up, we issued
-> > backplane detect/scan. At this point at least some minimal windowed
-> > access is up (if such required), not yet cores/devices are known.
-> > 2. Backplane got identified, scanned, individual cores/devices
-> > recognised, buscommon and buscore are registered with kernel to get them
-> > matched with drivers, and then probed and set up.
-> > 3. Buscommon and buscore are driven, host can finish with host specific
-> > workarounds, both buscommon and buscore can get their _init entry points
-> > called, we can setup host device irq routine, finally we can expose the
-> > rest cores/devices to kernel.
-> >
-> > With that in mind here is my general host ops design pseudo code:
-> > struct host_ops {
-> >        /* Init call we should get once both buscommon and buscore drivers are bound (state #3) */
-> >        int (*init)(struct bcmb_bus *bus);
-> >
-> >        /* Regular backplane access ops */
-> >        u8 (*read(8|16|32))(struct bcmb_bus *bus, bcmb_addr_t addr);
-> >        void (*write(8|16|32))(struct bcmb_bus *bus, bcmb_addr_t addr, u(8|16|32) val);
-> >
-> >        /* For some theoretically hard-to-set-up before scan hosts we could keep scan_read32 */
-> >        u32 scan_read32(struct bcmb_bus *bus, bcmb_addr_t addr);
-> > };
-> 
-> I don't think it makes much sense. If init is going to be called in
-> state #3, what about some pre-init? set_master, request_region, xtal,
-> iomap?
-> 
-These are already done by host-device driver in its _probe.
-After you done with that you alloc your host-specific bcmb_pci_host
-struct and call something like bcmb_add_bus(host, &my_host_ops);
+Definitions to support wl128x:
+  - New FW file name
+  - Chip ID
+  - New PLL Configuration Algorithm macros that will be used at wl128x
+    boot stage
+  - Rename NVS macro name: wl127x and wl128x are using the same NVS
+    file name. However, the ini parameters between them are
+    different. The driver will validate the correct NVS size in
+    wl1271_boot_upload_nvs().
 
-Have nice day,
-George
+[Cleaned up some of the definitions. -- Luca]
 
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Reviewed-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/boot.h      |   48 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/conf.h      |    4 ++-
+ drivers/net/wireless/wl12xx/main.c      |    2 +-
+ drivers/net/wireless/wl12xx/reg.h       |   15 +--------
+ drivers/net/wireless/wl12xx/sdio.c      |    1 +
+ drivers/net/wireless/wl12xx/sdio_test.c |    2 +-
+ drivers/net/wireless/wl12xx/spi.c       |    1 +
+ drivers/net/wireless/wl12xx/wl12xx.h    |    8 ++++-
+ 8 files changed, 64 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/boot.h b/drivers/net/wireless/wl12xx/boot.h
+index 17229b8..1f5ee31 100644
+--- a/drivers/net/wireless/wl12xx/boot.h
++++ b/drivers/net/wireless/wl12xx/boot.h
+@@ -74,4 +74,52 @@ struct wl1271_static_data {
+ #define FREF_CLK_POLARITY_BITS 0xfffff8ff
+ #define CLK_REQ_OUTN_SEL       0x700
+ 
++/* PLL configuration algorithm for wl128x */
++#define SYS_CLK_CFG_REG              0x2200
++/* Bit[0]   -  0-TCXO,  1-FREF */
++#define MCS_PLL_CLK_SEL_FREF         BIT(0)
++/* Bit[3:2] - 01-TCXO, 10-FREF */
++#define WL_CLK_REQ_TYPE_FREF         BIT(3)
++#define WL_CLK_REQ_TYPE_PG2          (BIT(3) | BIT(2))
++/* Bit[4]   -  0-TCXO,  1-FREF */
++#define PRCM_CM_EN_MUX_WLAN_FREF     BIT(4)
++
++#define TCXO_ILOAD_INT_REG           0x2264
++#define TCXO_CLK_DETECT_REG          0x2266
++
++#define TCXO_DET_FAILED              BIT(4)
++
++#define FREF_ILOAD_INT_REG           0x2084
++#define FREF_CLK_DETECT_REG          0x2086
++#define FREF_CLK_DETECT_FAIL         BIT(4)
++
++/* Use this reg for masking during driver access */
++#define WL_SPARE_REG                 0x2320
++#define WL_SPARE_VAL                 BIT(2)
++/* Bit[6:5:3] -  mask wl write SYS_CLK_CFG[8:5:2:4] */
++#define WL_SPARE_MASK_8526           (BIT(6) | BIT(5) | BIT(3))
++
++#define PLL_LOCK_COUNTERS_REG        0xD8C
++#define PLL_LOCK_COUNTERS_COEX       0x0F
++#define PLL_LOCK_COUNTERS_MCS        0xF0
++#define MCS_PLL_OVERRIDE_REG         0xD90
++#define MCS_PLL_CONFIG_REG           0xD92
++#define MCS_SEL_IN_FREQ_MASK         0x0070
++#define MCS_SEL_IN_FREQ_SHIFT        4
++#define MCS_PLL_CONFIG_REG_VAL       0x73
++
++#define MCS_PLL_M_REG                0xD94
++#define MCS_PLL_N_REG                0xD96
++#define MCS_PLL_M_REG_VAL            0xC8
++#define MCS_PLL_N_REG_VAL            0x07
++
++#define SDIO_IO_DS                   0xd14
++
++/* SDIO/wSPI DS configuration values */
++#define HCI_IO_DS_8MA                0
++#define HCI_IO_DS_4MA                1 /* default */
++#define HCI_IO_DS_6MA                2
++#define HCI_IO_DS_2MA                3
++/* end PLL configuration algorithm for wl128x */
++
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 856a8a2..a00f22c 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1004,7 +1004,9 @@ enum {
+ 	CONF_REF_CLK_19_2_E,
+ 	CONF_REF_CLK_26_E,
+ 	CONF_REF_CLK_38_4_E,
+-	CONF_REF_CLK_52_E
++	CONF_REF_CLK_52_E,
++	CONF_REF_CLK_38_4_M_XTAL,
++	CONF_REF_CLK_26_M_XTAL,
+ };
+ 
+ enum single_dual_band_enum {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8b3c8d1..b0c4935 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -838,7 +838,7 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
+ 	const struct firmware *fw;
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, WL1271_NVS_NAME, wl1271_wl_to_dev(wl));
++	ret = request_firmware(&fw, WL12XX_NVS_NAME, wl1271_wl_to_dev(wl));
+ 
+ 	if (ret < 0) {
+ 		wl1271_error("could not get nvs file: %d", ret);
+diff --git a/drivers/net/wireless/wl12xx/reg.h b/drivers/net/wireless/wl12xx/reg.h
+index 9909607..440a4ee 100644
+--- a/drivers/net/wireless/wl12xx/reg.h
++++ b/drivers/net/wireless/wl12xx/reg.h
+@@ -207,6 +207,8 @@
+ 
+ #define CHIP_ID_1271_PG10              (0x4030101)
+ #define CHIP_ID_1271_PG20              (0x4030111)
++#define CHIP_ID_1283_PG10              (0x05030101)
++#define CHIP_ID_1283_PG20              (0x05030111)
+ 
+ #define ENABLE                         (REGISTERS_BASE + 0x5450)
+ 
+@@ -452,24 +454,11 @@
+ #define HI_CFG_UART_TX_OUT_GPIO_14  0x00000200
+ #define HI_CFG_UART_TX_OUT_GPIO_7   0x00000400
+ 
+-/*
+- * NOTE: USE_ACTIVE_HIGH compilation flag should be defined in makefile
+- *       for platforms using active high interrupt level
+- */
+-#ifdef USE_ACTIVE_HIGH
+ #define HI_CFG_DEF_VAL              \
+ 	(HI_CFG_UART_ENABLE |        \
+ 	HI_CFG_RST232_ENABLE |      \
+ 	HI_CFG_CLOCK_REQ_SELECT |   \
+ 	HI_CFG_HOST_INT_ENABLE)
+-#else
+-#define HI_CFG_DEF_VAL              \
+-	(HI_CFG_UART_ENABLE |        \
+-	HI_CFG_RST232_ENABLE |      \
+-	HI_CFG_CLOCK_REQ_SELECT |   \
+-	HI_CFG_HOST_INT_ENABLE)
+-
+-#endif
+ 
+ #define REF_FREQ_19_2                       0
+ #define REF_FREQ_26_0                       1
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 5b9dbea..58d0208 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -343,4 +343,5 @@ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL1271_FW_NAME);
++MODULE_FIRMWARE(WL128X_FW_NAME);
+ MODULE_FIRMWARE(WL1271_AP_FW_NAME);
+diff --git a/drivers/net/wireless/wl12xx/sdio_test.c b/drivers/net/wireless/wl12xx/sdio_test.c
+index 9fcbd3d..01adf1b 100644
+--- a/drivers/net/wireless/wl12xx/sdio_test.c
++++ b/drivers/net/wireless/wl12xx/sdio_test.c
+@@ -227,7 +227,7 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
+ 	const struct firmware *fw;
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, WL1271_NVS_NAME, wl1271_wl_to_dev(wl));
++	ret = request_firmware(&fw, WL12XX_NVS_NAME, wl1271_wl_to_dev(wl));
+ 
+ 	if (ret < 0) {
+ 		wl1271_error("could not get nvs file: %d", ret);
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 18cf017..2993715 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -490,5 +490,6 @@ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL1271_FW_NAME);
++MODULE_FIRMWARE(WL128X_FW_NAME);
+ MODULE_FIRMWARE(WL1271_AP_FW_NAME);
+ MODULE_ALIAS("spi:wl1271");
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 86be83e..a2e899d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -131,9 +131,15 @@ extern u32 wl12xx_debug_level;
+ 
+ 
+ #define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
++#define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
+ #define WL1271_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
+ 
+-#define WL1271_NVS_NAME "ti-connectivity/wl1271-nvs.bin"
++/*
++ * wl127x and wl128x are using the same NVS file name. However, the
++ * ini parameters between them are different.  The driver validates
++ * the correct NVS size in wl1271_boot_upload_nvs().
++ */
++#define WL12XX_NVS_NAME "ti-connectivity/wl1271-nvs.bin"
+ 
+ #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+ #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
+-- 
+1.7.1
 
