@@ -1,25 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56680 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978Ab1CWR3b (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:54832 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756311Ab1CRJBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2011 13:29:31 -0400
-Received: by bwz15 with SMTP id 15so6862422bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2011 10:29:30 -0700 (PDT)
+	Fri, 18 Mar 2011 05:01:13 -0400
+Received: by iwn34 with SMTP id 34so3747660iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 02:01:13 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 23 Mar 2011 13:29:30 -0400
-Message-ID: <AANLkTi=j4G_+6r9LJj4mz=y8WLLOk4FLtvucjW3ya7=F@mail.gmail.com>
-Subject: brcm80211 with bcm4329
-From: OB Lutz <ob.lutz@gmail.com>
-To: wireless <linux-wireless@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4D831ACF.5030506@cs.drexel.edu>
+References: <4D831ACF.5030506@cs.drexel.edu>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 18 Mar 2011 02:00:53 -0700
+Message-ID: <AANLkTimwAb8cEEyZSNUgwxZS2deOLv_ZWa1HOi9cnJTL@mail.gmail.com>
+Subject: Re: [PATCH] ath3k: Add ASUS BT Support
+To: Lee Trager <lt73@cs.drexel.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What is the current state of brcm80211's brcmfmac drivers for bcm4329
-SDIO devices? Are AP or Ad-Hoc modes supported? Is multi VIF
-supported, in any combination?
+On Fri, Mar 18, 2011 at 1:41 AM, Lee Trager <lt73@cs.drexel.edu> wrote:
+> The ASUS USB Bluetooth module that comes with my motherboard(ASUS P8P67
+> Pro) is simply a re-branded Atheros AR3011. This patch add support for
+> it in the driver
+>
+> Signed-off-by: Lee Trager <lt73@cs.drexel.edu>
 
-Thanks
--Brian
+Please resubmit with Cc: stable@kernel.org on the commit log entry
+(not the e-mail)
+
+  Luis
