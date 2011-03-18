@@ -1,80 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web57405.mail.re1.yahoo.com ([66.196.100.56]:47304 "HELO
-	web57405.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758012Ab1COPfE (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:62781 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757074Ab1CRRgB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2011 11:35:04 -0400
-Message-ID: <6781.8657.qm@web57405.mail.re1.yahoo.com>
-Date: Tue, 15 Mar 2011 08:35:01 -0700 (PDT)
-From: Joe Gunn <armadefuego@yahoo.com>
-Subject: Flag this message [PATCH 2.6.38-rc8-wl 1/1] orinoco: Clear dangling pointer on hardware busy
-To: orinoco-devel@lists.sourceforge.net
-Cc: linux-wireless@vger.kernel.org
+	Fri, 18 Mar 2011 13:36:01 -0400
+Received: by gyf1 with SMTP id 1so1662952gyf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 10:36:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1300416312-16808-1-git-send-email-lrodriguez@atheros.com>
+References: <1300416312-16808-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 18 Mar 2011 10:35:40 -0700
+Message-ID: <AANLkTik8iUxgniVHB2UBC359GxrmAxUTLGL-_eZ7Gtom@mail.gmail.com>
+Subject: Re: [PATCH] ath6kl: fix device registration ordering
+To: gregkh@suse.de
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, vmehta@atheros.com,
+	devel@linuxdriverproject.org, naveen.singh@atheros.com,
+	stable@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On hardware busy the scan request pointer should be cleared, as higher levels will release. This avoids a crash when that pointer is erroneously used later.
+On Thu, Mar 17, 2011 at 7:45 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> Defer device registration to cfg80211 until it is ready.
+> This fixes a race against udev whereby device events
+> (both udev and RTNL) might be emitted with an unregistered
+> device specification (wlan%d).
+>
+> This fixes a race on ath6kl on systems where the device
+> boots up really quickly to the the point udev and the
+> respective userspace daemon tries to start mucking with
+> the device prior to the device being initialized properly.
+>
+> This fixes this bug:
+>
+> http://code.google.com/p/chromium-os/issues/detail?id=13159
+>
+> Without this loading of ath6kl will fail.
+>
+> Cc: stable@kernel.org
+> Cc: Naveen Singh <naveen.singh@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Signed-off-by: Joseph J. Gunn <armadefuego@yahoo.com>
----
-When the hardware is busy the error is propagated to higher levels on the stack. Those layers release the buffer. Therefore the copy of the pointer must be erased. Otherwise subsequent events checking this pointer ma crash.
----
-diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
-index 09fae2f..1eff4dc 100644
---- a/drivers/net/wireless/orinoco/cfg.c
-+++ b/drivers/net/wireless/orinoco/cfg.c
-@@ -151,8 +151,18 @@ static int orinoco_scan(struct wiphy *wiphy, struct net_device *dev,
- 		return -EBUSY;
- 
- 	priv->scan_request = request;
-+	DEBUG(3, "orinoco_scan():"
-+		" scan_request %p wiphy %p, dev %p\n",
-+		priv->scan_request,
-+		priv->scan_request->wiphy,
-+		priv->scan_request->dev
-+		);
- 
- 	err = orinoco_hw_trigger_scan(priv, request->ssids);
-+	/* On EBUSY the hardware is busy. We aren't processing the request */
-+	if ( err == -EBUSY) {
-+		priv->scan_request = NULL;
-+	}
- 
- 	return err;
- }
-diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
-index e99ca1c..698e9ff 100644
---- a/drivers/net/wireless/orinoco/scan.c
-+++ b/drivers/net/wireless/orinoco/scan.c
-@@ -230,6 +230,12 @@ void orinoco_add_hostscan_results(struct orinoco_private *priv,
- 
-  scan_abort:
- 	if (priv->scan_request) {
-+		DEBUG(3, "orinoco_add_hostscan_results():"
-+			" scan_request %p wiphy %p, dev %p\n",
-+			priv->scan_request,
-+			priv->scan_request->wiphy,
-+			priv->scan_request->dev
-+			);
- 		cfg80211_scan_done(priv->scan_request, abort);
- 		priv->scan_request = NULL;
- 	}
-@@ -238,6 +244,12 @@ void orinoco_add_hostscan_results(struct orinoco_private *priv,
- void orinoco_scan_done(struct orinoco_private *priv, bool abort)
- {
- 	if (priv->scan_request) {
-+		DEBUG(3, "orinoco_scan_done():"
-+			" scan_request %p, wiphy %p, dev %p\n",
-+			priv->scan_request,
-+			priv->scan_request->wiphy,
-+			priv->scan_request->dev
-+			);
- 		cfg80211_scan_done(priv->scan_request, abort);
- 		priv->scan_request = NULL;
- 	}
+Please disregard this for now, I am testing ath6k right now on x86_64
+where it has a failure upon load and it oopses, likely due to this
+patch and what I believe is wiphy_unregister() being called twice.
+I'll fix the oops first and then resubmit a v2. If you do not hit a
+failure upon load though then the patch would help your issues with
+udev, but still we must handle the failure cases better. My failure
+are because I'm using an x86_64 box to test ath6kl and its buggy
+there.
 
-
-
-      
+  Luis
