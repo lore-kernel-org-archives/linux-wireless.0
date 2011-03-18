@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20476 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757016Ab1CNR73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:59:29 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:59:06 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 11/38] ath6kl: remove-typedef HIF_MBOX_PROPERTIES
-Date: Mon, 14 Mar 2011 10:58:45 -0700
-Message-ID: <1300125552-24422-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-References: <1300125552-24422-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59323 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757055Ab1CRUXG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 16:23:06 -0400
+Received: by mail-iw0-f174.google.com with SMTP id 34so4370073iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 13:23:06 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/5 v4] mac80211: Let user space receive and send mesh auth/deauth frames
+Date: Fri, 18 Mar 2011 13:22:09 -0700
+Message-Id: <1300479732-25920-3-git-send-email-javier@cozybit.com>
+In-Reply-To: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s HIF_MBOX_PROPERTIES \
-	"struct hif_mbox_properties" drivers/staging/ath6kl/
 
-Tested-by: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/staging/ath6kl/include/hif.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/include/hif.h b/drivers/staging/ath6kl/include/hif.h
-index 61e4392..4f9be8a 100644
---- a/drivers/staging/ath6kl/include/hif.h
-+++ b/drivers/staging/ath6kl/include/hif.h
-@@ -223,10 +223,10 @@ typedef enum {
-  * 
-  */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 562d298..0ae9b22 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -545,7 +545,9 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 	},
+ 	[NL80211_IFTYPE_MESH_POINT] = {
+ 		.tx = 0xffff,
+-		.rx = BIT(IEEE80211_STYPE_ACTION >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++			BIT(IEEE80211_STYPE_AUTH >> 4) |
++			BIT(IEEE80211_STYPE_DEAUTH >> 4),
+ 	},
+ };
  
--typedef struct {
-+struct hif_mbox_properties {
-     u32 ExtendedAddress;  /* extended address for larger writes */
-     u32 ExtendedSize;
--} HIF_MBOX_PROPERTIES;
-+};
- 
- #define HIF_MBOX_FLAG_NO_BUNDLING   (1 << 0)   /* do not allow bundling over the mailbox */
- 
-@@ -240,7 +240,7 @@ struct hif_device_mbox_info {
-                                    and ARRAY of 32-bit words */
-     
-         /* the following describe extended mailbox properties */
--    HIF_MBOX_PROPERTIES MboxProp[4];
-+    struct hif_mbox_properties MboxProp[4];
-         /* if the HIF supports the GMbox extended address region it can report it
-          * here, some interfaces cannot support the GMBOX address range and not set this */
-     u32 GMboxAddress;
 -- 
-1.7.4.15.g7811d
+1.7.1
 
