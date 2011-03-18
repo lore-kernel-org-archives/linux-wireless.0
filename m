@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26323 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753135Ab1C1U5T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2011 16:57:19 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2011 13:56:55 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/9] ath9k/ath9k_htc: pending stable patches for 2.6.37.y
-Date: Mon, 28 Mar 2011 13:57:06 -0700
-Message-ID: <1301345835-11401-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39877 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932721Ab1CRXaB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 19:30:01 -0400
+Received: by bwz15 with SMTP id 15so3762279bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 16:30:00 -0700 (PDT)
+Message-ID: <4D83EAF5.7030205@gmail.com>
+Date: Sat, 19 Mar 2011 00:29:57 +0100
+From: Till Kamppeter <till.kamppeter@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Matt Smith <Matt.Smith@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Greg KH <greg@kroah.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Driver Backport <lf_driver_backport@lists.linux-foundation.org>
+Subject: Re: Google Summer of Code 2011 - The Linux Foundation is Accepted
+ as Mentoring Organization
+References: <4D83E3F6.9040202@gmail.com> <AANLkTi=zv377vkyFCoaSvkD1e-Rx+OK1nRMPvyr2wRGM@mail.gmail.com>
+In-Reply-To: <AANLkTi=zv377vkyFCoaSvkD1e-Rx+OK1nRMPvyr2wRGM@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg,
+On 03/19/2011 12:26 AM, Luis R. Rodriguez wrote:
+> So one idea I was thinking about was that of using P2P to enable
+> phones to grant a central box tethering capabilities to their 3G
+> connection, while the central box acts as a regular AP. This can be
+> useful on trains to enable users to share their internet and aggregate
+> their connections together. So the project would consist of the
+> utilities and hooks to get these boxen easily deployed anywhere.
+>
+> Since cell phones tend to beacon on the same channel, channel 6, the
+> central box would only be able to aggregate more than 3G connection by
+> having different phones establish a P2P connection on the same
+> channel. Not sure how many connections this limits us to then. It
+> would also be nice to get the AP to function as a regular AP on
+> something other than channel 6 so I guess we'd need the central box to
+> do P2P with multichannel operation. That support likely won't hit
+> upstream for a while.. so hrmm..
+>
+> Just an idea, maybe next year.
 
-here are a few stable patches were required backport and also
-a few which are marked as stable but which have not yet been
-propagated to the older stable trees. I've been carrying these
-on the compat-wireless-2.6.37 release for a while now so they
-have gotten some consumption and only now just got a chance to
-send them over to you.
+I would simply post it.
 
-Felix Fietkau (2):
-  ath9k_hw: fix potential spurious tx error bit interpretation
-  ath9k: add missing ps wakeup/restore calls
-
-Luis R. Rodriguez (5):
-  ath9k: simplify hw reset locking
-  ath9k: move the PCU lock to the sc structure
-  ath9k: content DMA start / stop through the PCU lock
-  ath9k: Fix power save count imbalance on ath_radio_enable()
-  ath9k_hw: ASPM interoperability fix for AR9380/AR9382
-
-Mohammed Shafi Shajakhan (1):
-  ath9k: Fix memory leak due to failed PAPRD frames
-
-Stanislaw Gruszka (1):
-  ath9k_htc: fix race conditions when stop device
-
- drivers/net/wireless/ath/ath9k/ar9002_mac.c        |   21 +++--
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    4 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c      |    3 -
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   19 +++-
- drivers/net/wireless/ath/ath9k/init.c              |    1 -
- drivers/net/wireless/ath/ath9k/main.c              |   85 +++++++++----------
- drivers/net/wireless/ath/ath9k/recv.c              |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c              |    2 -
- 10 files changed, 71 insertions(+), 71 deletions(-)
-
--- 
-1.7.4.15.g7811d
-
+    Till
