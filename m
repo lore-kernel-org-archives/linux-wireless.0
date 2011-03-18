@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:56016 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753377Ab1CHHnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 02:43:55 -0500
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: Powersave broken on p54
-References: <1299003142.6461.12.camel@maggie>
-	<201103021813.52719.chunkeey@googlemail.com>
-	<1299086257.13604.17.camel@marge>
-	<201103021918.30528.chunkeey@googlemail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 08 Mar 2011 09:43:53 +0200
-In-Reply-To: <201103021918.30528.chunkeey@googlemail.com> (Christian Lamparter's message of "Wed\, 2 Mar 2011 19\:18\:30 +0100")
-Message-ID: <87oc5m2h1i.fsf@purkki.adurom.net>
+Received: from nm2.bullet.mail.ird.yahoo.com ([77.238.189.59]:21933 "HELO
+	nm2.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754184Ab1CRFS1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 01:18:27 -0400
+Message-ID: <813132.20275.qm@web29506.mail.ird.yahoo.com>
+Date: Fri, 18 Mar 2011 05:18:25 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: rtl8187b throughput-related regression in 2.6.35.x fixed in 2.6.37.x
+To: Larry Finger <Larry.Finger@lwfinger.net>, herton@mandriva.com.br
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
+Hi Larry/Herton/John,
 
-> On Wednesday 02 March 2011 18:17:37 Michael Buesch wrote:
->> On Wed, 2011-03-02 at 18:13 +0100, Christian Lamparter wrote:
->> > sure there was the rssi->dbm update (I hope you've already updated
->> > your eeprom image.)
->> 
->> What change to the eeprom is needed? My eeprom doesn't
->> contain any rssi info (see recent NULL ptr fix).
->
-> I think you should (re-)add it, I don't know what the
-> firmware is doing with it, but maybe Kalle knows more?
+There appears to be some kind of throughput related regression in 2.6.35.x (11-85-ish fedora, current long-term maintainance kernel) which is fixed by putting compat-wireless 2.6.37.x (4) on. I just thought I should mention this, in case somebody files a bug about rtl8187(b) being too slow, that putting compat-wireless on might help.
 
-Most probably it's just to get good rssi values for received frames
-which is passed to the host. I doubt that the rssi calibration values
-are used anything useful inside the firmware. But as always, anything
-is possible :)
+My AP machine was out for almost a year so I have not been using my rtl8187b for a while. When I finally got that fixed, after a while I noticed the throughput between the two machines was low (60KB/s, or 0.5Mb/s, although iwconfig says rate=11Mb/s, etc). Putting compat-wireless on gets me back the throughput I expect from a year ago (400KB/s+ onwards, or a few Mb/s at least). So 2.6.31.x a year ago was okay, 2.6.37.x is okay, but there appear to be something not quite right with 2.6.35.x in the middle. There are too many changes, and it is probably not important since current-ish kernel head is okay.
 
--- 
-Kalle Valo
+Regards,
+Hin-Tak
+
+
+      
