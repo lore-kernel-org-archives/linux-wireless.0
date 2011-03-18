@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64192 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980Ab1CBROa convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37156 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571Ab1CRSEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 12:14:30 -0500
-Received: by fxm17 with SMTP id 17so194664fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2011 09:14:29 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>
-Subject: Re: Powersave broken on p54
-Date: Wed, 2 Mar 2011 18:13:52 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1299003142.6461.12.camel@maggie>
-In-Reply-To: <1299003142.6461.12.camel@maggie>
+	Fri, 18 Mar 2011 14:04:09 -0400
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [RTF] iwmc3200wifi: fix device registration ordering for cfg80211
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201103021813.52719.chunkeey@googlemail.com>
+Content-Type: text/plain;
+ charset=UTF-8;
+ format=flowed
+Date: Fri, 18 Mar 2011 20:03:59 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>, <gregkh@suse.de>,
+	<linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	<devel@linuxdriverproject.org>, <naveen.singh@atheros.com>,
+	<stable@kernel.org>
+In-Reply-To: <AANLkTimHyHuTnHfTddsbtiBL1CdxjJDtoJ7gnuVhxbNQ@mail.gmail.com>
+References: <1300417820-19029-1-git-send-email-lrodriguez@atheros.com>
+ <AANLkTi=58JJNoYG7232ykiOnAK2TX18ROxrfYQir3Wwe@mail.gmail.com>
+ <20110318135058.GE5103@tuxdriver.com>
+ <AANLkTi=jnL3EO3CDw8KEePnA7+xQZ9JBBDHcPCGsDKD9@mail.gmail.com>
+ <AANLkTimHyHuTnHfTddsbtiBL1CdxjJDtoJ7gnuVhxbNQ@mail.gmail.com>
+Message-ID: <a86de09887dbbf9a5e6d1d1018521a5d@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 March 2011 19:12:22 Michael Büsch wrote:
-> Hi,
-> 
-> I'm using compat-wireless-2011-02-25 on my p54-spi device (n810).
-> Powersave is pretty much completely broken with this release.
-> With an older release from several weeks ago it used to work, though.
-hmm, several weeks ago? Not alot was changed in the last few weeks,
-sure there was the rssi->dbm update (I hope you've already updated
-your eeprom image.) Then p54_flush and some tx_flag updates, but
-the driver's PS code was not touched.
+ On Fri, 18 Mar 2011 10:41:53 -0700, Luis R. Rodriguez wrote:
+>> On Fri, Mar 18, 2011 at 6:50 AM, John W. Linville
+>>> Does anyone even have this hardware?
 
-> As soon as I enable PS, the link gets horrible latencies of
-> about 20 seconds or more per ping packet, for example.
-> It also saves hardly any power. (measured on the power supply).
-> 
-> Any ideas what could go wrong here?
-No idea, it looks like the ps-poll is broken, because
-"iwconfig wlanX power timeout 10" fixes the long delays
-almost immediately. [let's see if there's more]
+ I don't think it even exists any more.
 
-Regards,
-	Chr
+> So similarly here we can likely hit a case where we hit the double
+> wiphy_unregister() twice and I think we'd oops. My preference is to
+> make wiphy_unregister() re-entrant and let us detect when the device
+> already was unregistered. Johannes?
+
+ I don't like that, it encourages sloppy driver writing. Seriously,
+ why is it so hard to properly write the code?
+
+ You can fail during init, or you can properly deregister, and that's
+ about it, no?
+
+ johannes
+
