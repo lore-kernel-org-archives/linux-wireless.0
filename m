@@ -1,114 +1,465 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:43059 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752486Ab1CRPRz convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:52596 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110Ab1CRLC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 11:17:55 -0400
-Received: by qyg14 with SMTP id 14so3472258qyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 08:17:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1300460342.13499.60.camel@dev.znau.edu.ua>
-References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
-	<1300453433.13499.18.camel@dev.znau.edu.ua>
-	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
-	<1300460342.13499.60.camel@dev.znau.edu.ua>
-Date: Fri, 18 Mar 2011 16:17:35 +0100
-Message-ID: <AANLkTi=2qBhKfJZ8a2GEgx_4aJL_85FKODUX31BddmN1@mail.gmail.com>
-Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: George Kashperko <george@znau.edu.ua>
-Cc: linux-wireless@vger.kernel.org,
+	Fri, 18 Mar 2011 07:02:57 -0400
+Received: by bwz15 with SMTP id 15so3230945bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 04:02:55 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC][PATCH] ssb: separate common scanning functions
+Date: Fri, 18 Mar 2011 13:02:53 +0100
+Message-Id: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/18 George Kashperko <george@znau.edu.ua>:
->> 2011/3/18 George Kashperko <george@znau.edu.ua>:
->> > Current ssb code ideology isn't really good place to start with support
->> > for ai backplanes. Its really great to see you willing to get ai
->> > supported in mainline but I'm sure this should be done apart from the
->> > ssb code and not even with one as the design decisions origin. Several
->> > concepts the ssb is based on are not designed to support anything else
->> > than ocp/sb and will require workarounds to suport ai.
->> > Thanks to Michael I had a time to think over the possibly code
->> > abstraction for shared sb and ai support. And while I'm still sure the
->> > patchwork for ai over ssb support is of good use as some intermediate
->> > decision to support ai-based hardware in sertain distributions but now I
->> > support Michael in that such (hopefully) a temporary buildups should not
->> > be in mainline.
->>
->> Please, give some concrete arguments, which part of design does not match AI.
-> SSB design is core-centric, where all the bus activities are made in
-> regard to the cores. This mostly is correct as most of the time
-> bus/drivers code work with cores.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+To keep ssb clean and avoid bigger code duplications, my idea is to:
+1) Rename ssb directory to bcmb (like Broadcom's bus)
+2) Have two *separated* drivers in it: ssb and ai
+3) Share common function between ssb and ai
+Example of such a common functions can be translating enum to *char and
+(re)mapping MMIO.
+---
+ drivers/ssb/Makefile      |    2 +-
+ drivers/ssb/bcmb_scan.c   |  182 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ssb/bcmb_scan.h   |   13 +++
+ drivers/ssb/scan.c        |  163 ----------------------------------------
+ drivers/ssb/ssb_private.h |    3 +-
+ 5 files changed, 197 insertions(+), 166 deletions(-)
+ create mode 100644 drivers/ssb/bcmb_scan.c
+ create mode 100644 drivers/ssb/bcmb_scan.h
 
-So finally, is there anything wrong about that?
-
-
-> At the same time ssb model completely
-> ignores the fact that each sb backplane core is a composite device
-> consisting of the core itself and the core agent. In sb the agent
-> registers space is referenced by manuals available and the Broadcom SDK
-> code as one starting at 0x0F00 offset from the main core registers space
-> beginning (actually I beleive this is true for sb revisions prior to 2.3
-> and this range is actually 0x0C00-0x0FFF at least for sb rev. 2.3 and
-> above). This is neglible for embedded backplanes as the whole backplane
-> physical address space is accessed simultaneously, completely ignored by
-> the ssb code for pci-hosted sb backplanes as only sliding bar0 window #1
-> is utilised for backplane access, workarounded with
-> select_core_and_segment in pcmcia host code.
-> With axi introduced we have agents registers' spaces in completely
-> different physical backplane pages, apart from the main core registers
-> space. This is still have no impact for embeddables, will require bar0
-> window #2 adjustment with each core switch (and here you will be
-> required to have backplane specific processing in pci host code) and I
-> don't really know how this could be workarounded for other hosts without
-> them to know which exactly backplane they run and how should it be
-> treaten.
-> The clean solution I see here is to have host code apart from
-> backplane-specific processing. The way to accomplish this is obvious as
-> actual host device responsibility is not to switch cores but rather
-> provide mappings into physical address space of the backplane regardless
-> of the target request being made to core, sprom/otp, agent or whatever.
-> This makes much cleaner model than that provided by ssb.
-
-Yes, I noticed this already. Sill, after analyzing pci.c it seems we
-will duplicate ssb_pci_xtal, ssb_pci_switch_coreidx and all SPROM
-functions. We will just have different ssb_pci_switch_core and we will
-drop old SPROMs layouts support.
-
-My idea: separate functions we can share (ssb_pci_xtal,
-ssb_pci_switch_coreidx, most of the SPROM functions) and create
-separated PCI host drivers.
-
-
->> My patch has shown we need to duplicate 40% of SSB's scanning code.
->> What for example about pci.c? Which functions from that file won't be
->> duplicated in totally separated?
->>
-> Going further in extending ssb to support ai will either require the
-> host to be confident of the backplane type and layout (see
-> drivers/staging/brcm80211/utils for the good example of messup it will
-> lead to) or will reguire the backplane-specific code to break into the
-> host code (brcm80211/utils again).
-
-I don't want to extend ssb, I said that with my patch message. I
-wanted separated drivers sharing some functions, please take a look at
-my comment included in patch. I think we could also create *separated*
-host drivers sharing most of the code.
-
-
-> Current ssb code is two-layer - in two words its about cores on host.
-> This makes sertain hosts to know everyting about cores, but at the same
-> time it let the cores to be abstract from the hosts. Building ai support
-> over this model will make hosts to know even more about cores, but if
-> done right it will still keep the cores autonomous.
-> At the same time host-backplane-core model provide better code
-> separation, little-to-nothing code duplication and let host, backplane
-> and core code writers avoid workarounds required for current ssb model.
-
+diff --git a/drivers/ssb/Makefile b/drivers/ssb/Makefile
+index 656e58b..a91045e 100644
+--- a/drivers/ssb/Makefile
++++ b/drivers/ssb/Makefile
+@@ -1,5 +1,5 @@
+ # core
+-ssb-y					+= main.o scan.o
++ssb-y					+= main.o bcmb_scan.o scan.o
+ ssb-$(CONFIG_SSB_EMBEDDED)		+= embedded.o
+ ssb-$(CONFIG_SSB_SPROM)			+= sprom.o
+ 
+diff --git a/drivers/ssb/bcmb_scan.c b/drivers/ssb/bcmb_scan.c
+new file mode 100644
+index 0000000..17b93f7
+--- /dev/null
++++ b/drivers/ssb/bcmb_scan.c
+@@ -0,0 +1,182 @@
++/*
++ * Sonics Silicon Backplane
++ * Bus scanning
++ *
++ * Copyright (C) 2005-2007 Michael Buesch <mb@bu3sch.de>
++ * Copyright (C) 2005 Martin Langer <martin-langer@gmx.de>
++ * Copyright (C) 2005 Stefano Brivio <st3@riseup.net>
++ * Copyright (C) 2005 Danny van Dyk <kugelfang@gentoo.org>
++ * Copyright (C) 2005 Andreas Jaggi <andreas.jaggi@waterwave.ch>
++ * Copyright (C) 2006 Broadcom Corporation.
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include <linux/ssb/ssb.h>
++#include <linux/pci.h>
++#include <linux/io.h>
++
++#include "bcmb_scan.h"
++
++#include "ssb_private.h"
++
++const char *ssb_core_name(u16 coreid)
++{
++	switch (coreid) {
++	case SSB_DEV_CHIPCOMMON:
++		return "ChipCommon";
++	case SSB_DEV_ILINE20:
++		return "ILine 20";
++	case SSB_DEV_SDRAM:
++		return "SDRAM";
++	case SSB_DEV_PCI:
++		return "PCI";
++	case SSB_DEV_MIPS:
++		return "MIPS";
++	case SSB_DEV_ETHERNET:
++		return "Fast Ethernet";
++	case SSB_DEV_V90:
++		return "V90";
++	case SSB_DEV_USB11_HOSTDEV:
++		return "USB 1.1 Hostdev";
++	case SSB_DEV_ADSL:
++		return "ADSL";
++	case SSB_DEV_ILINE100:
++		return "ILine 100";
++	case SSB_DEV_IPSEC:
++		return "IPSEC";
++	case SSB_DEV_PCMCIA:
++		return "PCMCIA";
++	case SSB_DEV_INTERNAL_MEM:
++		return "Internal Memory";
++	case SSB_DEV_MEMC_SDRAM:
++		return "MEMC SDRAM";
++	case SSB_DEV_EXTIF:
++		return "EXTIF";
++	case SSB_DEV_80211:
++		return "IEEE 802.11";
++	case SSB_DEV_MIPS_3302:
++		return "MIPS 3302";
++	case SSB_DEV_USB11_HOST:
++		return "USB 1.1 Host";
++	case SSB_DEV_USB11_DEV:
++		return "USB 1.1 Device";
++	case SSB_DEV_USB20_HOST:
++		return "USB 2.0 Host";
++	case SSB_DEV_USB20_DEV:
++		return "USB 2.0 Device";
++	case SSB_DEV_SDIO_HOST:
++		return "SDIO Host";
++	case SSB_DEV_ROBOSWITCH:
++		return "Roboswitch";
++	case SSB_DEV_PARA_ATA:
++		return "PATA";
++	case SSB_DEV_SATA_XORDMA:
++		return "SATA XOR-DMA";
++	case SSB_DEV_ETHERNET_GBIT:
++		return "GBit Ethernet";
++	case SSB_DEV_PCIE:
++		return "PCI-E";
++	case SSB_DEV_MIMO_PHY:
++		return "MIMO PHY";
++	case SSB_DEV_SRAM_CTRLR:
++		return "SRAM Controller";
++	case SSB_DEV_MINI_MACPHY:
++		return "Mini MACPHY";
++	case SSB_DEV_ARM_1176:
++		return "ARM 1176";
++	case SSB_DEV_ARM_7TDMI:
++		return "ARM 7TDMI";
++	}
++	return "UNKNOWN";
++}
++
++u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
++		       u16 offset)
++{
++	u32 lo, hi;
++
++	switch (bus->bustype) {
++	case SSB_BUSTYPE_SSB:
++		offset += current_coreidx * SSB_CORE_SIZE;
++		break;
++	case SSB_BUSTYPE_PCI:
++		break;
++	case SSB_BUSTYPE_PCMCIA:
++		if (offset >= 0x800) {
++			ssb_pcmcia_switch_segment(bus, 1);
++			offset -= 0x800;
++		} else
++			ssb_pcmcia_switch_segment(bus, 0);
++		lo = readw(bus->mmio + offset);
++		hi = readw(bus->mmio + offset + 2);
++		return lo | (hi << 16);
++	case SSB_BUSTYPE_SDIO:
++		offset += current_coreidx * SSB_CORE_SIZE;
++		return ssb_sdio_scan_read32(bus, offset);
++	}
++	return readl(bus->mmio + offset);
++}
++
++int scan_switchcore(struct ssb_bus *bus, u8 coreidx)
++{
++	switch (bus->bustype) {
++	case SSB_BUSTYPE_SSB:
++		break;
++	case SSB_BUSTYPE_PCI:
++		return ssb_pci_switch_coreidx(bus, coreidx);
++	case SSB_BUSTYPE_PCMCIA:
++		return ssb_pcmcia_switch_coreidx(bus, coreidx);
++	case SSB_BUSTYPE_SDIO:
++		return ssb_sdio_scan_switch_coreidx(bus, coreidx);
++	}
++	return 0;
++}
++
++void ssb_iounmap(struct ssb_bus *bus)
++{
++	switch (bus->bustype) {
++	case SSB_BUSTYPE_SSB:
++	case SSB_BUSTYPE_PCMCIA:
++		iounmap(bus->mmio);
++		break;
++	case SSB_BUSTYPE_PCI:
++#ifdef CONFIG_SSB_PCIHOST
++		pci_iounmap(bus->host_pci, bus->mmio);
++#else
++		SSB_BUG_ON(1); /* Can't reach this code. */
++#endif
++		break;
++	case SSB_BUSTYPE_SDIO:
++		break;
++	}
++	bus->mmio = NULL;
++	bus->mapped_device = NULL;
++}
++
++void __iomem *ssb_ioremap(struct ssb_bus *bus, unsigned long baseaddr)
++{
++	void __iomem *mmio = NULL;
++
++	switch (bus->bustype) {
++	case SSB_BUSTYPE_SSB:
++		/* Only map the first core for now. */
++		/* fallthrough... */
++	case SSB_BUSTYPE_PCMCIA:
++		mmio = ioremap(baseaddr, SSB_CORE_SIZE);
++		break;
++	case SSB_BUSTYPE_PCI:
++#ifdef CONFIG_SSB_PCIHOST
++		mmio = pci_iomap(bus->host_pci, 0, ~0UL);
++#else
++		SSB_BUG_ON(1); /* Can't reach this code. */
++#endif
++		break;
++	case SSB_BUSTYPE_SDIO:
++		/* Nothing to ioremap in the SDIO case, just fake it */
++		mmio = (void __iomem *)baseaddr;
++		break;
++	}
++
++	return mmio;
++}
+diff --git a/drivers/ssb/bcmb_scan.h b/drivers/ssb/bcmb_scan.h
+new file mode 100644
+index 0000000..f1fd16c
+--- /dev/null
++++ b/drivers/ssb/bcmb_scan.h
+@@ -0,0 +1,13 @@
++#ifndef BCMB_SCAN_H_
++#define BCMB_SCAN_H_
++
++extern const char *ssb_core_name(u16 coreid);
++
++extern u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
++			    u16 offset);
++extern int scan_switchcore(struct ssb_bus *bus, u8 coreidx);
++
++extern void ssb_iounmap(struct ssb_bus *bus);
++extern void __iomem *ssb_ioremap(struct ssb_bus *bus, unsigned long baseaddr);
++
++#endif
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index 29884c0..0087795 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -22,78 +22,6 @@
+ 
+ #include "ssb_private.h"
+ 
+-
+-const char *ssb_core_name(u16 coreid)
+-{
+-	switch (coreid) {
+-	case SSB_DEV_CHIPCOMMON:
+-		return "ChipCommon";
+-	case SSB_DEV_ILINE20:
+-		return "ILine 20";
+-	case SSB_DEV_SDRAM:
+-		return "SDRAM";
+-	case SSB_DEV_PCI:
+-		return "PCI";
+-	case SSB_DEV_MIPS:
+-		return "MIPS";
+-	case SSB_DEV_ETHERNET:
+-		return "Fast Ethernet";
+-	case SSB_DEV_V90:
+-		return "V90";
+-	case SSB_DEV_USB11_HOSTDEV:
+-		return "USB 1.1 Hostdev";
+-	case SSB_DEV_ADSL:
+-		return "ADSL";
+-	case SSB_DEV_ILINE100:
+-		return "ILine 100";
+-	case SSB_DEV_IPSEC:
+-		return "IPSEC";
+-	case SSB_DEV_PCMCIA:
+-		return "PCMCIA";
+-	case SSB_DEV_INTERNAL_MEM:
+-		return "Internal Memory";
+-	case SSB_DEV_MEMC_SDRAM:
+-		return "MEMC SDRAM";
+-	case SSB_DEV_EXTIF:
+-		return "EXTIF";
+-	case SSB_DEV_80211:
+-		return "IEEE 802.11";
+-	case SSB_DEV_MIPS_3302:
+-		return "MIPS 3302";
+-	case SSB_DEV_USB11_HOST:
+-		return "USB 1.1 Host";
+-	case SSB_DEV_USB11_DEV:
+-		return "USB 1.1 Device";
+-	case SSB_DEV_USB20_HOST:
+-		return "USB 2.0 Host";
+-	case SSB_DEV_USB20_DEV:
+-		return "USB 2.0 Device";
+-	case SSB_DEV_SDIO_HOST:
+-		return "SDIO Host";
+-	case SSB_DEV_ROBOSWITCH:
+-		return "Roboswitch";
+-	case SSB_DEV_PARA_ATA:
+-		return "PATA";
+-	case SSB_DEV_SATA_XORDMA:
+-		return "SATA XOR-DMA";
+-	case SSB_DEV_ETHERNET_GBIT:
+-		return "GBit Ethernet";
+-	case SSB_DEV_PCIE:
+-		return "PCI-E";
+-	case SSB_DEV_MIMO_PHY:
+-		return "MIMO PHY";
+-	case SSB_DEV_SRAM_CTRLR:
+-		return "SRAM Controller";
+-	case SSB_DEV_MINI_MACPHY:
+-		return "Mini MACPHY";
+-	case SSB_DEV_ARM_1176:
+-		return "ARM 1176";
+-	case SSB_DEV_ARM_7TDMI:
+-		return "ARM 7TDMI";
+-	}
+-	return "UNKNOWN";
+-}
+-
+ static u16 pcidev_to_chipid(struct pci_dev *pci_dev)
+ {
+ 	u16 chipid_fallback = 0;
+@@ -157,97 +85,6 @@ static u8 chipid_to_nrcores(u16 chipid)
+ 	return 1;
+ }
+ 
+-static u32 scan_read32(struct ssb_bus *bus, u8 current_coreidx,
+-		       u16 offset)
+-{
+-	u32 lo, hi;
+-
+-	switch (bus->bustype) {
+-	case SSB_BUSTYPE_SSB:
+-		offset += current_coreidx * SSB_CORE_SIZE;
+-		break;
+-	case SSB_BUSTYPE_PCI:
+-		break;
+-	case SSB_BUSTYPE_PCMCIA:
+-		if (offset >= 0x800) {
+-			ssb_pcmcia_switch_segment(bus, 1);
+-			offset -= 0x800;
+-		} else
+-			ssb_pcmcia_switch_segment(bus, 0);
+-		lo = readw(bus->mmio + offset);
+-		hi = readw(bus->mmio + offset + 2);
+-		return lo | (hi << 16);
+-	case SSB_BUSTYPE_SDIO:
+-		offset += current_coreidx * SSB_CORE_SIZE;
+-		return ssb_sdio_scan_read32(bus, offset);
+-	}
+-	return readl(bus->mmio + offset);
+-}
+-
+-static int scan_switchcore(struct ssb_bus *bus, u8 coreidx)
+-{
+-	switch (bus->bustype) {
+-	case SSB_BUSTYPE_SSB:
+-		break;
+-	case SSB_BUSTYPE_PCI:
+-		return ssb_pci_switch_coreidx(bus, coreidx);
+-	case SSB_BUSTYPE_PCMCIA:
+-		return ssb_pcmcia_switch_coreidx(bus, coreidx);
+-	case SSB_BUSTYPE_SDIO:
+-		return ssb_sdio_scan_switch_coreidx(bus, coreidx);
+-	}
+-	return 0;
+-}
+-
+-void ssb_iounmap(struct ssb_bus *bus)
+-{
+-	switch (bus->bustype) {
+-	case SSB_BUSTYPE_SSB:
+-	case SSB_BUSTYPE_PCMCIA:
+-		iounmap(bus->mmio);
+-		break;
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		pci_iounmap(bus->host_pci, bus->mmio);
+-#else
+-		SSB_BUG_ON(1); /* Can't reach this code. */
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SDIO:
+-		break;
+-	}
+-	bus->mmio = NULL;
+-	bus->mapped_device = NULL;
+-}
+-
+-static void __iomem *ssb_ioremap(struct ssb_bus *bus,
+-				 unsigned long baseaddr)
+-{
+-	void __iomem *mmio = NULL;
+-
+-	switch (bus->bustype) {
+-	case SSB_BUSTYPE_SSB:
+-		/* Only map the first core for now. */
+-		/* fallthrough... */
+-	case SSB_BUSTYPE_PCMCIA:
+-		mmio = ioremap(baseaddr, SSB_CORE_SIZE);
+-		break;
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		mmio = pci_iomap(bus->host_pci, 0, ~0UL);
+-#else
+-		SSB_BUG_ON(1); /* Can't reach this code. */
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SDIO:
+-		/* Nothing to ioremap in the SDIO case, just fake it */
+-		mmio = (void __iomem *)baseaddr;
+-		break;
+-	}
+-
+-	return mmio;
+-}
+-
+ static int we_support_multiple_80211_cores(struct ssb_bus *bus)
+ {
+ 	/* More than one 802.11 core is only supported by special chips.
+diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
+index 0331139..929a722 100644
+--- a/drivers/ssb/ssb_private.h
++++ b/drivers/ssb/ssb_private.h
+@@ -4,6 +4,7 @@
+ #include <linux/ssb/ssb.h>
+ #include <linux/types.h>
+ 
++#include "bcmb_scan.h"
+ 
+ #define PFX	"ssb: "
+ 
+@@ -156,10 +157,8 @@ static inline int ssb_sdio_init(struct ssb_bus *bus)
+ 
+ 
+ /* scan.c */
+-extern const char *ssb_core_name(u16 coreid);
+ extern int ssb_bus_scan(struct ssb_bus *bus,
+ 			unsigned long baseaddr);
+-extern void ssb_iounmap(struct ssb_bus *ssb);
+ 
+ 
+ /* sprom.c */
 -- 
-Rafał
+1.7.3.4
+
