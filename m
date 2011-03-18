@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:55272 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751251Ab1CJJ0V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 04:26:21 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 01:25:59 -0800
-Date: Thu, 10 Mar 2011 14:55:59 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 3/4] ath9k: fix the .flush driver op implementation
-Message-ID: <20110310092559.GC28100@vasanth-laptop>
-References: <1299717303-42430-1-git-send-email-nbd@openwrt.org> <1299717303-42430-2-git-send-email-nbd@openwrt.org> <1299717303-42430-3-git-send-email-nbd@openwrt.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:65167 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752712Ab1CREM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 00:12:29 -0400
+Message-ID: <4D82DC17.2090106@cn.fujitsu.com>
+Date: Fri, 18 Mar 2011 12:14:15 +0800
+From: Lai Jiangshan <laijs@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1299717303-42430-3-git-send-email-nbd@openwrt.org>
+To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 35/36] net/mac80211,rcu: convert call_rcu(work_free_rcu) to
+ kfree_rcu()
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 10, 2011 at 06:05:02AM +0530, Felix Fietkau wrote:
-> ath9k has a timeout of 60ms for the flush, but instead waiting 60 ms for
-> all tx activity to finish, it resets it for every single queue.
 
-No, it does not do reset for every queue.
 
-> +	for (j = 0; j < timeout; j++) {
-> +		int npend = 0;
-> +		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
-> +			if (!ATH_TXQ_SETUP(sc, i))
-> +				continue;
->  
-> -		if (drop || ath9k_has_pending_frames(sc, txq)) {
-> -			ath_dbg(common, ATH_DBG_QUEUE, "Drop frames from hw queue:%d\n",
-> -				txq->axq_qnum);
-> -			spin_lock_bh(&txq->axq_lock);
-> -			txq->txq_flush_inprogress = true;
-> -			spin_unlock_bh(&txq->axq_lock);
-> -
-> -			ath9k_ps_wakeup(sc);
-> -			ath9k_hw_stoptxdma(ah, txq->axq_qnum);
-> -			npend = ath9k_hw_numtxpending(ah, txq->axq_qnum);
-> -			ath9k_ps_restore(sc);
-> -			if (npend)
-> -				break;
-> -
-> -			ath_draintxq(sc, txq, false);
-> -			txq->txq_flush_inprogress = false;
-> +			npend += ath9k_has_pending_frames(sc, &sc->tx.txq[i]);
->  		}
-> -	}
->  
-> -	if (npend) {
-> -		ath_reset(sc, false);
-> -		txq->txq_flush_inprogress = false;
-> +		if (!npend)
-> +		    goto out;
-> +
-> +		usleep_range(1000, 2000);
+The rcu callback work_free_rcu() just calls a kfree(),
+so we use kfree_rcu() instead of the call_rcu(work_free_rcu).
 
-Existing flush gives about 60ms for every q, that is reasonable
-time, but this 60ms for all the queues is too small. This flush
-is also called before sending null func in PS, so reset after
-hw queue stuck is necessary to find the hang early on.
-The usage of txq_flush_inprogress needs to be removed in other
-places in xmit.
+Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+---
+ net/mac80211/work.c |   10 +---------
+ 1 files changed, 1 insertions(+), 9 deletions(-)
 
-Vasanth
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 36305e0..dcc433e 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -66,17 +66,9 @@ static void run_again(struct ieee80211_local *local,
+ 		mod_timer(&local->work_timer, timeout);
+ }
+ 
+-static void work_free_rcu(struct rcu_head *head)
+-{
+-	struct ieee80211_work *wk =
+-		container_of(head, struct ieee80211_work, rcu_head);
+-
+-	kfree(wk);
+-}
+-
+ void free_work(struct ieee80211_work *wk)
+ {
+-	call_rcu(&wk->rcu_head, work_free_rcu);
++	kfree_rcu(wk, rcu_head);
+ }
+ 
+ static int ieee80211_compatible_rates(const u8 *supp_rates, int supp_rates_len,
+-- 
+1.7.4
