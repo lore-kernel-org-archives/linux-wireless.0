@@ -1,104 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:63472 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219Ab1CZWZP convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52929 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800Ab1CRSGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2011 18:25:15 -0400
+	Fri, 18 Mar 2011 14:06:20 -0400
+Received: by iyb26 with SMTP id 26so4242075iyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 11:06:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4D8E5BA3.1090909@users.sourceforge.net>
-References: <1301174394-12642-1-git-send-email-wuzhangjin@gmail.com>
-	<4D8E5BA3.1090909@users.sourceforge.net>
-Date: Sun, 27 Mar 2011 06:25:14 +0800
-Message-ID: <AANLkTind3Va9J_tvZBDAPfbuyQtgxoAE+ZzG6VpU1b1q@mail.gmail.com>
-Subject: Re: [RFC PATCH] rtl8187: Fix led support for rfkill
-From: wu zhangjin <wuzhangjin@gmail.com>
-To: Hin-Tak Leung <htl10@users.sourceforge.net>
-Cc: Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Roman Mamedov <rm@romanrm.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <a86de09887dbbf9a5e6d1d1018521a5d@secure.sipsolutions.net>
+References: <1300417820-19029-1-git-send-email-lrodriguez@atheros.com>
+ <AANLkTi=58JJNoYG7232ykiOnAK2TX18ROxrfYQir3Wwe@mail.gmail.com>
+ <20110318135058.GE5103@tuxdriver.com> <AANLkTi=jnL3EO3CDw8KEePnA7+xQZ9JBBDHcPCGsDKD9@mail.gmail.com>
+ <AANLkTimHyHuTnHfTddsbtiBL1CdxjJDtoJ7gnuVhxbNQ@mail.gmail.com> <a86de09887dbbf9a5e6d1d1018521a5d@secure.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 18 Mar 2011 11:05:59 -0700
+Message-ID: <AANLkTi=d=vkSmEuTSLz-z7Qw=pN1ATrR7abK_XG2EdVa@mail.gmail.com>
+Subject: Re: [RTF] iwmc3200wifi: fix device registration ordering for cfg80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, vmehta@atheros.com,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	devel@linuxdriverproject.org, naveen.singh@atheros.com,
+	stable@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 27, 2011 at 5:33 AM, Hin-Tak Leung
-<htl10@users.sourceforge.net> wrote:
-> Wu Zhangjin wrote:
->>
->> led can not be turned off normally when rfkill is blocked, the cause is
->> the led_turn_off() function exit as not expected:
+On Fri, Mar 18, 2011 at 11:03 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 18 Mar 2011 10:41:53 -0700, Luis R. Rodriguez wrote:
+>>>
+>>> On Fri, Mar 18, 2011 at 6:50 AM, John W. Linville
+>>>>
+>>>> Does anyone even have this hardware?
 >
-> Hmm. While this sounds more sensible, is it needed? And what does the
-> windows driver do?
->
-> I think there are two kind of LEDs - one that comes on and off with the
-> rfkill switch; Larry or Herton makes the 2nd one, if there is one, blink
-> while there is traffic (and stay steady on otherwise).
+> I don't think it even exists any more.
 
-I have used this driver on the YeeLoong netbook(only support Linux),
-there is only one LED for rtl8187, when there is traffic, it blinks
-perfectly, but If press the hotkey to turn off the rf, the network
-interface is down, but the LED is still light, then, the users may
-mistakenly think the hotkey or rfkill support doesn't work or simply
-think the interface is still on. So, that's why we may need to fix it.
+Can the driver be removed?
 
-Regards,
-Wu Zhangjin
+>> So similarly here we can likely hit a case where we hit the double
+>> wiphy_unregister() twice and I think we'd oops. My preference is to
+>> make wiphy_unregister() re-entrant and let us detect when the device
+>> already was unregistered. Johannes?
+>
+> I don't like that, it encourages sloppy driver writing. Seriously,
+> why is it so hard to properly write the code?
+>
+> You can fail during init, or you can properly deregister, and that's
+> about it, no?
 
->
->>
->> drivers/net/wireless/rtl818x/rtl8187/leds.c:
->>
->> static void led_turn_off(struct work_struct *work)
->> {
->>        [...]
->>        /* Don't change the LED, when the device is down. */
->>        if (!priv->vif || priv->vif->type == NL80211_IFTYPE_UNSPECIFIED)
->>                return ;
->>        [...]
->>
->> When rfkill is blocked, the function calling order looks like this:
->>
->> net/mac80211/iface.c:
->>
->> ieee80211_do_stop
->>        -> drv_remove_interface = rtl8187_remove_interface
->>        -> ieee80211_stop_device
->>                -> led_set_brightness
->>                        -> led_turn_off
->>        -> drv_stop = rtl8187_stop
->>
->> rtl8187_remove_interface() set priv->vif to NULL, so, led_turn_off()
->> will return and will not be able to turn off the led. delay the setting
->> of priv->vif to rtl8187_stop() can solve it.
->>
->> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
->> ---
->>  drivers/net/wireless/rtl818x/rtl8187/dev.c |    8 ++++----
->>  1 files changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c
->> b/drivers/net/wireless/rtl818x/rtl8187/dev.c
->> index 2bb5297..1fea0cd 100644
->> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
->> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
->> @@ -1007,6 +1007,9 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
->>        u32 reg;
->>        mutex_lock(&priv->conf_mutex);
->> +
->> +       priv->vif = NULL;
->> +
->>        rtl818x_iowrite16(priv, &priv->map->INT_MASK, 0);
->>        reg = rtl818x_ioread8(priv, &priv->map->CMD);
->> @@ -1067,10 +1070,7 @@ exit:
->>  static void rtl8187_remove_interface(struct ieee80211_hw *dev,
->>                                     struct ieee80211_vif *vif)
->>  {
->> -       struct rtl8187_priv *priv = dev->priv;
->> -       mutex_lock(&priv->conf_mutex);
->> -       priv->vif = NULL;
->> -       mutex_unlock(&priv->conf_mutex);
->> +       /* Nothing to do */
->>  }
->>  static int rtl8187_config(struct ieee80211_hw *dev, u32 changed)
->
+That's fine too.
+
+  Luis
