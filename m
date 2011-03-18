@@ -1,39 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48000 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755447Ab1CHUGd (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:31059 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752488Ab1CRXXR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 15:06:33 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 812695401CC
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Mar 2011 15:10:05 -0500 (EST)
-Subject: Compat-wireless release for 2011-03-08 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110308200631.BA07645935@repository3.orbit-lab.org>
-Date: Tue,  8 Mar 2011 15:06:31 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 18 Mar 2011 19:23:17 -0400
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000028952.msg
+	for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 01:22:14 +0200
+Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <AANLkTimtS9dFMgxzBR0HrXxKs6uRghKi_zaGEP-i5paB@mail.gmail.com>
+References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
+	 <1300453433.13499.18.camel@dev.znau.edu.ua>
+	 <AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
+	 <AANLkTi=EeMKNsi9bxNg4RJre-pP=jqcGpbLPNtggSK0N@mail.gmail.com>
+	 <1300463392.13499.110.camel@dev.znau.edu.ua>
+	 <AANLkTi=GggwyGkDB+cBG-G3O2c5WdfjCpb5pk8=3yDKz@mail.gmail.com>
+	 <1300471917.14872.28.camel@dev.znau.edu.ua>
+	 <AANLkTikQ7W4GdY=USphz3FphyS-yEwN+X+jUPwq9x_6z@mail.gmail.com>
+	 <1300478510.15393.45.camel@dev.znau.edu.ua>
+	 <AANLkTi=1XOxwS4tMc6eMcNGeHf_ZGaAH5MC97JsP7oWP@mail.gmail.com>
+	 <1300488010.16395.37.camel@dev.znau.edu.ua>
+	 <AANLkTimtS9dFMgxzBR0HrXxKs6uRghKi_zaGEP-i5paB@mail.gmail.com>
+Content-Type: text/plain
+Date: Sat, 19 Mar 2011 01:22:24 +0200
+Message-Id: <1300490544.16395.50.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + abdd788...e110091 akpm-end   -> origin/akpm-end  (forced update)
-   fb62c00..214d93b  akpm-start -> origin/akpm-start
-   2ad4b4f..4e20f6f  history    -> origin/history
- + c45165c...50dc6c3 master     -> origin/master  (forced update)
-   fb62c00..214d93b  stable     -> origin/stable
- * [new tag]         next-20110308 -> next-20110308
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-compat-wireless code metrics
+> 2011/3/18 George Kashperko <george@znau.edu.ua>:
+> > Well, here you are:
+> > 1. PCI hosts with PCI buscores prior rev. 13 (8Kb window)
+> > offset  size    type    description
+> > 0x0000  0x1000  sliding controlled with BAR0_WIN1 register
+> > 0x1000  0x0800  fixed   SPROM
+> > 0x1800  0x0400  fixed   PCI core (core registers 0x0000 to 0x03FF range)
+> > 0x1C00  0x0400  fixed   PCI core (agent registers, 0x0C00 to 0x0FFF range)
+> >
+> > 2. PCI hosts with PCI buscores rev. 13 and above and PCIE with
+> > Chipcommon rev. up to 31 (16Kb window)
+> > offset  size    type    description
+> > 0x0000  0x1000  sliding controlled with BAR0_WIN1 register
+> > 0x1000  0x1000  fixed   SPROM
+> > 0x2000  0x1000  fixed   PCI core
+> > 0x3000  0x1000  fixed   Chipcommon core
+> >
+> > 3. PCIE hosts with Chipcommon rev. 32 and above
+> > offset  size    type    description
+> > 0x0000  0x1000  sliding controlled with BAR0_WIN1 register
+> > 0x1000  0x1000  sliding controlled with BAR0_WIN2 register
+> > 0x2000  0x1000  fixed   PCI core
+> > 0x3000  0x1000  fixed   Chipcommon core
+> >
+> > As you can see even if PCI_REVISION can't feed us with guaranteed choice
+> > of either of these 3 layouts we can distingiush between them easily like
+> > following:
+> >
+> > if (pci_is_pcie(dev)) {
+> >        u32 chipid = ioread32(bar0_base + 0x3000);
+> >        if (chipid & 0x10000000)
+> >                /* AXI, Chipcommon rev. is 32+ */
+> >                goto win_3_setup;
+> >        else
+> >                /* SB, Chipcommon rev. is <= 31 */
+> >                goto win_2_setup;
+> > } else {
+> >        u32 idhi = ioread32(bar0_base + 0x1C00 + 0x03FC);
+> >        if (((idhi & 0x00008FF0) >> 4) == 0x804)
+> >                /* PCI core id */
+> >                goto win_1_setup;
+> >        else
+> >                /* Some crap from SPROM area */
+> >                goto win_2_setup;
+> > }
+> >
+> > Therefore we can setup PCI(e) host windows for backplane access prior to
+> > scanning.
+> >
+> > As for BAR0_WIN[12] registers, they point to physical base address on
+> > backplane that will be mapped into corresponding 0x1000-size window. And
+> > here again registers don't care what exactly you want to see there. Both
+> > the windows can be controlled independently.
+> >
+> > Finally, you might noticed we don't have SPROM in last 3rd layout. Thats
+> > because it is in Chipcommon registers' space. For layouts #1 & #2 BAR0
+> > range 0x1000 to 0x2000 is either mapped to actual SPROM or to SPROM
+> > shadow in PCI core.
+> 
+> Wohoo, and this is second part of info I really needed, thanks a lot!
+> I think there are mistakes in it, but I just wanted to get the idea of
+> windows. So thanks a lot.
+> 
+> As for mistakes:
+> 1) The split is not 1-31 vs. 32-... I believe it is 1-30 vs. 31-...
+> 2) On chipco >= 31 SSB SPROM seems to be 0x800
+> Maybe sth more...
+> 
+Watch bcmsrom.c for #define SROM_OFFSET
 
-    831955 - Total upstream lines of code being pulled
-      2175 - backport code changes
-      1891 - backport code additions
-       284 - backport code deletions
-      7442 - backport from compat module
-      9617 - total backport code
-    1.1560 - % of code consists of backport work
+For Chipcommons rev. >31 (the same as >=32) SPROM is in Chipcommon at
+0x0800 offset - 0x3800 offset of BAR0 (if CAP_SPROM capability bit is
+set), otherwise SPROM is unavailable.
+For Chipcommons rev. <=31 (the same as <32) SPROM is mapped to 0x1000
+offset of BAR0.
+
+Have nice day,
+George
+
+
