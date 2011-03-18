@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42882 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754079Ab1CEU0M (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39593 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756651Ab1CROA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 15:26:12 -0500
-Subject: Re: [PATCH 1/4 v3] mac80211: Enable mesh security from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1299356245-13926-1-git-send-email-javier@cozybit.com>
-References: <1299288252-28314-2-git-send-email-thomas@cozybit.com>
-	 <1299356245-13926-1-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 05 Mar 2011 21:26:09 +0100
-Message-ID: <1299356769.29845.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 18 Mar 2011 10:00:57 -0400
+Date: Fri, 18 Mar 2011 09:47:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	Greg KH <greg@kroah.com>
+Subject: Re: Cherry picking patches made easy for stable compat-wireless
+Message-ID: <20110318134752.GC5103@tuxdriver.com>
+References: <AANLkTimmzYbAHobz-NtwHoGZpgOZBbLb1MbUpSb_8Jbp@mail.gmail.com>
+ <AANLkTinridEbFghCB8n0ed5HR3f3n-2++EpK09T2jSvs@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTinridEbFghCB8n0ed5HR3f3n-2++EpK09T2jSvs@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-03-05 at 12:17 -0800, Javier Cardona wrote:
-> Userspace can enable mesh security by providing an RSN IE and setting
-> the MESH_SETUP_ENABLE_SECURITY flag.
+On Thu, Mar 17, 2011 at 06:26:57PM -0700, Luis R. Rodriguez wrote:
+> On Wed, Mar 16, 2011 at 3:47 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > Cc: compat@orbit-lab.org
 > 
-> Also, rename vendor_ie to just ie to reflect that the same attribute may
-> be used to pass other IEs, like for instance RSN.
-> 
-> Changes from v2: (from Johannes)
->  - Fix API backward compatibilty of NL80211_MESH_SETUP_IE
->  - Remove check for presence of RSN IE
+> Poke :)
 
-Should be after --- really :-)
+Sorry, distracted...
 
-> + * @is_secure: or not
+As far as I'm concerned, you can Cc anyone you want in the changelog.
 
-Given what we just discussed over in the other thread, should we rename
-this to "userspace_station_mgmt" or something like that?
-
-Also, does it make sense to advertise support for this somehow?
-Otherwise the new tools will have strange failure cases on older
-kernels; and I can also imagine situations where the mesh APIs are in
-firmware or so that can't cope with userspace station mgmt.
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
