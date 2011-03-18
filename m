@@ -1,87 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:34130 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753717Ab1CFO2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2011 09:28:23 -0500
-Received: from dlep33.itg.ti.com ([157.170.170.112])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id p26ESMaU019840
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 6 Mar 2011 08:28:22 -0600
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 11/15] wl12xx: 1281/1283 support - Add chip interrupt pacing
-Date: Sun,  6 Mar 2011 16:32:16 +0200
-Message-Id: <1299421940-26292-12-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
-References: <1299421940-26292-1-git-send-email-shahar_levi@ti.com>
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:52942 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756755Ab1CROUf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 10:20:35 -0400
+Received: by mail-ww0-f52.google.com with SMTP id 40so4500377wwj.21
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 07:20:07 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: shahar_levi@ti.com, ruthyz@ti.com
+Subject: [PATCH v2 05/14] wl12xx: 1281/1283 support - add block size handling for sdio and spi
+Date: Fri, 18 Mar 2011 16:19:20 +0200
+Message-Id: <1300457969-19601-6-git-send-email-coelho@ti.com>
+In-Reply-To: <1300457969-19601-1-git-send-email-coelho@ti.com>
+References: <1300457969-19601-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set data path interrupt pacing for wl128x
+Add the the set_block_size op in the SDIO and in the SPI modules.
+Since it is only used with SDIO, just explicitly set the op to NULL in
+spi.c
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/wl12xx/acx.c  |    8 +++++++-
- drivers/net/wireless/wl12xx/conf.h |   10 +++++++++-
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 3 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/sdio.c |   18 +++++++++++++++++-
+ drivers/net/wireless/wl12xx/spi.c  |    3 ++-
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index e970b71..4341f6e 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -943,8 +943,14 @@ int wl1271_acx_tx_config_options(struct wl1271 *wl)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 58d0208..55dc6e3 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -51,6 +51,18 @@ static const struct sdio_device_id wl1271_devices[] = {
+ };
+ MODULE_DEVICE_TABLE(sdio, wl1271_devices);
  
-+	if (wl->chip.id == CHIP_ID_1283_PG20)
-+		acx->tx_compl_threshold =
-+			cpu_to_le16(wl->conf.tx.wl128x_tx_compl_threshold);
-+	else
-+		acx->tx_compl_threshold =
-+			cpu_to_le16(wl->conf.tx.wl127x_tx_compl_threshold);
++/* The max SDIO block size is 256 when working with tx padding to SDIO block */
++#define TX_PAD_SDIO_BLK_SIZE                  256
 +
- 	acx->tx_compl_timeout = cpu_to_le16(wl->conf.tx.tx_compl_timeout);
--	acx->tx_compl_threshold = cpu_to_le16(wl->conf.tx.tx_compl_threshold);
- 	ret = wl1271_cmd_configure(wl, ACX_TX_CONFIG_OPT, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1271_warning("Setting of tx options failed: %d", ret);
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 743bd0b..ef8b220 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -714,7 +714,15 @@ struct conf_tx_settings {
- 	 *
- 	 * Range: u16
- 	 */
--	u16 tx_compl_threshold;
-+	u16 wl127x_tx_compl_threshold;
++static void wl1271_sdio_set_block_size(struct wl1271 *wl)
++{
++	wl->block_size = TX_PAD_SDIO_BLK_SIZE;
 +
-+	/*
-+	 * Completed TX packet count which requires to issue the TX-Complete
-+	 * interrupt.
-+	 *
-+	 * Range: u16
-+	 */
-+	u16 wl128x_tx_compl_threshold;
++	sdio_claim_host(wl->if_priv);
++	sdio_set_block_size(wl->if_priv, TX_PAD_SDIO_BLK_SIZE);
++	sdio_release_host(wl->if_priv);
++}
++
+ static inline struct sdio_func *wl_to_func(struct wl1271 *wl)
+ {
+ 	return wl->if_priv;
+@@ -166,6 +178,9 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
+ 	sdio_claim_host(func);
+ 	sdio_enable_func(func);
  
- 	/*
- 	 * The rate used for control messages and scanning on the 2.4GHz band
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f8e9e3f..6fda932 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -233,7 +233,8 @@ static struct conf_drv_settings default_conf = {
- 		},
- 		.frag_threshold              = IEEE80211_MAX_FRAG_THRESHOLD,
- 		.tx_compl_timeout            = 700,
--		.tx_compl_threshold          = 4,
-+		.wl127x_tx_compl_threshold   = 4,
-+		.wl128x_tx_compl_threshold   = 3,
- 		.basic_rate                  = CONF_HW_BIT_RATE_1MBPS,
- 		.basic_rate_5                = CONF_HW_BIT_RATE_6MBPS,
- 		.tmpl_short_retry_limit      = 10,
++	/* Set the default block size in case it was modified */
++	sdio_set_block_size(func, 0);
++
+ out:
+ 	return ret;
+ }
+@@ -203,7 +218,8 @@ static struct wl1271_if_operations sdio_ops = {
+ 	.power		= wl1271_sdio_set_power,
+ 	.dev		= wl1271_sdio_wl_to_dev,
+ 	.enable_irq	= wl1271_sdio_enable_interrupts,
+-	.disable_irq	= wl1271_sdio_disable_interrupts
++	.disable_irq	= wl1271_sdio_disable_interrupts,
++	.set_block_size = wl1271_sdio_set_block_size,
+ };
+ 
+ static int __devinit wl1271_probe(struct sdio_func *func,
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 2993715..2a57583 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -355,7 +355,8 @@ static struct wl1271_if_operations spi_ops = {
+ 	.power		= wl1271_spi_set_power,
+ 	.dev		= wl1271_spi_wl_to_dev,
+ 	.enable_irq	= wl1271_spi_enable_interrupts,
+-	.disable_irq	= wl1271_spi_disable_interrupts
++	.disable_irq	= wl1271_spi_disable_interrupts,
++	.set_block_size = NULL,
+ };
+ 
+ static int __devinit wl1271_probe(struct spi_device *spi)
 -- 
-1.7.0.4
+1.7.1
 
