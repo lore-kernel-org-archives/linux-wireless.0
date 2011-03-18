@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:29957 "EHLO mail.atheros.com"
+Received: from bar.sig21.net ([80.81.252.164]:45972 "EHLO bar.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755359Ab1CKC4T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 21:56:19 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2011 18:55:56 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <gregkh@suse.de>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <naveen.singh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 08/20] ath6kl: remove-typedef AR6K_ASYNC_REG_IO_BUFFER
-Date: Thu, 10 Mar 2011 18:55:35 -0800
-Message-ID: <1299812147-12069-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
-References: <1299812147-12069-1-git-send-email-lrodriguez@atheros.com>
+	id S1757182Ab1CRRM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 13:12:29 -0400
+Date: Fri, 18 Mar 2011 18:12:23 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Juan Carlos Garza <juancarlosgarza@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers
+ in AP and IBSS
+Message-ID: <20110318171222.GB12889@sig21.net>
+References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com>
+ <201103171316.02636.helmut.schaa@googlemail.com>
+ <AANLkTi=Gm-apOyop22UgFMgoQE_+maEQgrMDdH-kTxZq@mail.gmail.com>
+ <201103172107.25316.helmut.schaa@googlemail.com>
+ <AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-remove-typedef -s AR6K_ASYNC_REG_IO_BUFFER \
-	"struct ar6k_async_reg_io_buffer" drivers/staging/ath6kl/
+Hi Juan Carlos,
 
-Cc: Naveen Singh <naveen.singh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/htc2/AR6000/ar6k.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Fri, Mar 18, 2011 at 04:23:15PM +0100, Juan Carlos Garza wrote:
+> I applied the patches (manually), and tested the stick.
+> 
+> The transfer of big loads now is successful. The
+> "rt2800_txdone_entry_check:" warnings are still there, but they are
+> less frequent (just like in the example i gave you with the laptop
+> where it succeeded with the unpatched driver), some 5 warnings every
+> 1, 2 or 3 seconds.
 
-diff --git a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-index 19d8e70..e0c3926 100644
---- a/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-+++ b/drivers/staging/ath6kl/htc2/AR6000/ar6k.h
-@@ -89,12 +89,12 @@ typedef PREPACK struct _AR6K_GMBOX_CTRL_REGISTERS {
- #define AR6K_MIN_TRANSFER_SIZE_PER_SCATTER      4*1024
- 
- /* buffers for ASYNC I/O */
--typedef struct AR6K_ASYNC_REG_IO_BUFFER {
-+struct ar6k_async_reg_io_buffer {
-     HTC_PACKET    HtcPacket;   /* we use an HTC packet as a wrapper for our async register-based I/O */
-     u8 _Pad1[A_CACHE_LINE_PAD];
-     u8 Buffer[AR6K_REG_IO_BUFFER_SIZE];  /* cache-line safe with pads around */
-     u8 _Pad2[A_CACHE_LINE_PAD];
--} AR6K_ASYNC_REG_IO_BUFFER;
-+};
- 
- typedef struct _AR6K_GMBOX_INFO { 
-     void        *pProtocolContext;
-@@ -119,7 +119,7 @@ typedef struct _AR6K_DEVICE {
-     HIF_PENDING_EVENTS_FUNC     GetPendingEventsFunc;
-     void                        *HTCContext;
-     HTC_PACKET_QUEUE            RegisterIOList;
--    AR6K_ASYNC_REG_IO_BUFFER    RegIOBuffers[AR6K_MAX_REG_IO_BUFFERS];
-+    struct ar6k_async_reg_io_buffer    RegIOBuffers[AR6K_MAX_REG_IO_BUFFERS];
-     void                        (*TargetFailureCallback)(void *Context);
-     int                    (*MessagePendingCallback)(void *Context,
-                                                           u32 LookAheads[],
--- 
-1.7.4.15.g7811d
+Thanks for testing!  The occational "tx status missed" is unavoidable
+due to hardware limitations.  My patches reduce the number of them,
+but more importantly they fix a few issues with TX (status) timeout handling.
+(IIRC false positives in TX timeout check, and fluash would wait for
+TX queue empty which would never happen without the timer to reap
+the status queue.)
 
+I tested a lot with these patches and they work stable for me, however I
+must admit I'm not sure why they help in your case (i.e. why does
+bulk transfer stall without these patches?).
+
+
+Johannes
