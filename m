@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45319 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757489Ab1CAUhD (ORCPT
+Received: from mail.academy.zt.ua ([82.207.120.245]:15335 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752724Ab1CRO7w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 15:37:03 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 22so4952627wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2011 12:37:02 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [RFC 9/9] wl12xx_sdio: declare support for NL80211_WOW_TRIGGER_ANYTHING trigger
-Date: Tue,  1 Mar 2011 22:36:44 +0200
-Message-Id: <1299011804-13899-10-git-send-email-eliad@wizery.com>
-In-Reply-To: <1299011804-13899-1-git-send-email-eliad@wizery.com>
-References: <1299011804-13899-1-git-send-email-eliad@wizery.com>
+	Fri, 18 Mar 2011 10:59:52 -0400
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000028856.msg
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 16:58:49 +0200
+Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+In-Reply-To: <AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
+References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
+	 <1300453433.13499.18.camel@dev.znau.edu.ua>
+	 <AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 18 Mar 2011 16:59:02 +0200
+Message-Id: <1300460342.13499.60.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Finally, declare support for NL80211_WOW_TRIGGER_ANYTHING.
+> 2011/3/18 George Kashperko <george@znau.edu.ua>:
+> > Current ssb code ideology isn't really good place to start with support
+> > for ai backplanes. Its really great to see you willing to get ai
+> > supported in mainline but I'm sure this should be done apart from the
+> > ssb code and not even with one as the design decisions origin. Several
+> > concepts the ssb is based on are not designed to support anything else
+> > than ocp/sb and will require workarounds to suport ai.
+> > Thanks to Michael I had a time to think over the possibly code
+> > abstraction for shared sb and ai support. And while I'm still sure the
+> > patchwork for ai over ssb support is of good use as some intermediate
+> > decision to support ai-based hardware in sertain distributions but now I
+> > support Michael in that such (hopefully) a temporary buildups should not
+> > be in mainline.
+> 
+> Please, give some concrete arguments, which part of design does not match AI.
+SSB design is core-centric, where all the bus activities are made in
+regard to the cores. This mostly is correct as most of the time
+bus/drivers code work with cores. At the same time ssb model completely
+ignores the fact that each sb backplane core is a composite device
+consisting of the core itself and the core agent. In sb the agent
+registers space is referenced by manuals available and the Broadcom SDK
+code as one starting at 0x0F00 offset from the main core registers space
+beginning (actually I beleive this is true for sb revisions prior to 2.3
+and this range is actually 0x0C00-0x0FFF at least for sb rev. 2.3 and
+above). This is neglible for embedded backplanes as the whole backplane
+physical address space is accessed simultaneously, completely ignored by
+the ssb code for pci-hosted sb backplanes as only sliding bar0 window #1
+is utilised for backplane access, workarounded with
+select_core_and_segment in pcmcia host code.
+With axi introduced we have agents registers' spaces in completely
+different physical backplane pages, apart from the main core registers
+space. This is still have no impact for embeddables, will require bar0
+window #2 adjustment with each core switch (and here you will be
+required to have backplane specific processing in pci host code) and I
+don't really know how this could be workarounded for other hosts without
+them to know which exactly backplane they run and how should it be
+treaten.
+The clean solution I see here is to have host code apart from
+backplane-specific processing. The way to accomplish this is obvious as
+actual host device responsibility is not to switch cores but rather
+provide mappings into physical address space of the backplane regardless
+of the target request being made to core, sprom/otp, agent or whatever.
+This makes much cleaner model than that provided by ssb.
 
-Since this feature requires the ability to stay awake while the host
-is suspended, the support should be declared per-interface (sdio
-will support it if it supports the MMC_PM_KEEP_POWER capability)
+> 
+> My patch has shown we need to duplicate 40% of SSB's scanning code.
+> What for example about pci.c? Which functions from that file won't be
+> duplicated in totally separated?
+> 
+Going further in extending ssb to support ai will either require the
+host to be confident of the backplane type and layout (see
+drivers/staging/brcm80211/utils for the good example of messup it will
+lead to) or will reguire the backplane-specific code to break into the
+host code (brcm80211/utils again).
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/sdio.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+Current ssb code is two-layer - in two words its about cores on host.
+This makes sertain hosts to know everyting about cores, but at the same
+time it let the cores to be abstract from the hosts. Building ai support
+over this model will make hosts to know even more about cores, but if
+done right it will still keep the cores autonomous.
+At the same time host-backplane-core model provide better code
+separation, little-to-nothing code duplication and let host, backplane
+and core code writers avoid workarounds required for current ssb model.
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index f5d4b21..0a5b05d 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -237,6 +237,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	struct ieee80211_hw *hw;
- 	const struct wl12xx_platform_data *wlan_data;
- 	struct wl1271 *wl;
-+	mmc_pm_flag_t flags;
- 	int ret;
- 
- 	/* We are only able to handle the wlan function */
-@@ -278,6 +279,14 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 
- 	disable_irq(wl->irq);
- 
-+	/* if sdio can keep power while host is suspended, enable wow */
-+	flags = sdio_get_host_pm_caps(func);
-+	wl1271_debug(DEBUG_SDIO, "sdio PM caps = 0x%x", flags);
-+
-+	if (flags & MMC_PM_KEEP_POWER)
-+		hw->wiphy->supported_wow_triggers =
-+					NL80211_WOW_TRIGGER_ANYTHING;
-+
- 	ret = wl1271_init_ieee80211(wl);
- 	if (ret)
- 		goto out_irq;
--- 
-1.7.0.4
+Have nice day,
+George
+
 
