@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30307 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754677Ab1CYRJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2011 13:09:53 -0400
-Subject: Re: [PATCH 01/12] iwlegacy: MAINTAINERS
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20110325161941.GA2493@redhat.com>
-References: <1301062456-17249-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1301062456-17249-2-git-send-email-wey-yi.w.guy@intel.com>
-	 <20110325161941.GA2493@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Mar 2011 10:07:29 -0700
-Message-ID: <1301072849.9139.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33182 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756359Ab1CRSHV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 14:07:21 -0400
+Received: by bwz15 with SMTP id 15so3563914bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 11:07:20 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Stezenbach <js@sig21.net>
+Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers in AP and IBSS
+Date: Fri, 18 Mar 2011 19:05:31 +0100
+Cc: Juan Carlos Garza <juancarlosgarza@gmail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com> <AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com> <20110318171222.GB12889@sig21.net>
+In-Reply-To: <20110318171222.GB12889@sig21.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103181905.32058.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Hi Johannes,
 
-On Fri, 2011-03-25 at 09:19 -0700, Stanislaw Gruszka wrote:
-> On Fri, Mar 25, 2011 at 07:14:05AM -0700, Wey-Yi Guy wrote:
-> > Add iwlegacy driver to MAINTAINERS file and mark as 'Orphan'
-> I'll take these.
-> 
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> >  MAINTAINERS |   10 ++++++++++
-> >  1 files changed, 10 insertions(+), 0 deletions(-)
+Am Freitag, 18. März 2011 schrieb Johannes Stezenbach:
+> On Fri, Mar 18, 2011 at 04:23:15PM +0100, Juan Carlos Garza wrote:
+> > I applied the patches (manually), and tested the stick.
 > > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 95482e9..12698b3 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -3322,6 +3322,16 @@ F:	Documentation/wimax/README.i2400m
-> >  F:	drivers/net/wimax/i2400m/
-> >  F:	include/linux/wimax/i2400m.h
-> >  
-> > +INTEL PRO/WIRELESS 3945ABG/BG NETWORK CONNECTION SUPPORT
-> > +L:	linux-wireless@vger.kernel.org
-> > +S:	Orphan
-> > +F:	drivers/net/wireless/iwlegacy/
-> > +
-> > +INTEL WIRELESS WIFI 4965AGN NETWORK CONNECTION SUPPORT
-> > +L:	linux-wireless@vger.kernel.org
-> > +S:	Orphan
-> > +F:	drivers/net/wireless/iwlegacy/
-> Since path is the same it should be one entry,
-> I will post patch soon.
+> > The transfer of big loads now is successful. The
+> > "rt2800_txdone_entry_check:" warnings are still there, but they are
+> > less frequent (just like in the example i gave you with the laptop
+> > where it succeeded with the unpatched driver), some 5 warnings every
+> > 1, 2 or 3 seconds.
 > 
-> There are some iwlegacy bugs, which seem to be 2.6.34 -> 2.6.35
-> regression. I'm not seeing other way to fix them as moving
-> iwlegacy code back to 2.6.34 level. I plan to do this ...
+> Thanks for testing!  The occational "tx status missed" is unavoidable
+> due to hardware limitations.  My patches reduce the number of them,
+> but more importantly they fix a few issues with TX (status) timeout handling.
+> (IIRC false positives in TX timeout check, and fluash would wait for
+> TX queue empty which would never happen without the timer to reap
+> the status queue.)
 > 
-Thank you very much for taking on the responsibilities
+> I tested a lot with these patches and they work stable for me, however I
+> must admit I'm not sure why they help in your case (i.e. why does
+> bulk transfer stall without these patches?).
 
-Wey
+Just an assumption: In rt2800pci I had the problem that the tx status register
+sometimes suffered from overflows. And I was able to avoid the overflow by
+reading the TX_STA_FIFO register fast enough (in hard irq context).
 
+And I guess your patch also changed the timing of TX_STA_FIFO reads is
+rt2800usb and thus reduces the number of overflows.
 
+However, this is just a shot in the dark.
+
+Helmut
