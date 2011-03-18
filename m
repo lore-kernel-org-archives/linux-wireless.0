@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:64190 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076Ab1CEJks (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58826 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756284Ab1CRQBG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 04:40:48 -0500
-From: bookjovi@gmail.com
-To: bookjovi@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING
-	[WIREL...),
-	Johannes Berg <johannes@sipsolutions.net> (maintainer:MAC80211),
-	"David S. Miller" <davem@davemloft.net> (maintainer:NETWORKING
-	[GENERAL]),
-	linux-wireless@vger.kernel.org (open list:NETWORKING [WIREL...),
-	netdev@vger.kernel.org (open list:NETWORKING [GENERAL]),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] net: mac80211: fix compilation warning
-Date: Wed,  2 Mar 2011 18:32:33 -0500
-Message-Id: <1299108754-5492-1-git-send-email-bookjovi@gmail.com>
+	Fri, 18 Mar 2011 12:01:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <larry.finger@lwfinger.net>,
+	Al Viro <viro@ZenIV.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+Subject: [PATCH] rtlwifi: use correct argument order for memset in efuse.c
+Date: Fri, 18 Mar 2011 11:52:46 -0400
+Message-Id: <1300463566-16689-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jovi Zhang <bookjovi@gmail.com>
-
-this commit fix compilation warning as following:
-net/mac80211/tx.c:1753: warning: unused variable mppath
-
-Signed-off-by: Jovi Zhang <bookjovi@gmail.com>
+Reported-by: Al Viro <viro@ZenIV.linux.org.uk>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: stable@kernel.org
 ---
- net/mac80211/tx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rtlwifi/efuse.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b0beaa5..e87b07f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1750,7 +1750,6 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	__le16 fc;
- 	struct ieee80211_hdr hdr;
- 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
--	struct mesh_path *mppath = NULL;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
-@@ -1805,6 +1804,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		break;
- #ifdef CONFIG_MAC80211_MESH
- 	case NL80211_IFTYPE_MESH_POINT:
-+		struct mesh_path *mppath = NULL;
-+
- 		if (!sdata->u.mesh.mshcfg.dot11MeshTTL) {
- 			/* Do not send frames with mesh_ttl == 0 */
- 			sdata->u.mesh.mshstats.dropped_frames_ttl++;
+diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
+index 4f92cba..ef91905 100644
+--- a/drivers/net/wireless/rtlwifi/efuse.c
++++ b/drivers/net/wireless/rtlwifi/efuse.c
+@@ -479,8 +479,8 @@ void rtl_efuse_shadow_map_update(struct ieee80211_hw *hw)
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 
+ 	if (rtlefuse->autoload_failflag == true) {
+-		memset((void *)(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0]), 128,
+-		       0xFF);
++		memset((void *)(&rtlefuse->efuse_map[EFUSE_INIT_MAP][0]), 0xFF,
++		       128);
+ 	} else
+ 		efuse_read_all_map(hw, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0]);
+ 
+@@ -694,8 +694,8 @@ static int efuse_pg_packet_read(struct ieee80211_hw *hw, u8 offset, u8 *data)
+ 	if (offset > 15)
+ 		return false;
+ 
+-	memset((void *)data, PGPKT_DATA_SIZE * sizeof(u8), 0xff);
+-	memset((void *)tmpdata, PGPKT_DATA_SIZE * sizeof(u8), 0xff);
++	memset((void *)data, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
++	memset((void *)tmpdata, 0xff, PGPKT_DATA_SIZE * sizeof(u8));
+ 
+ 	while (bcontinual && (efuse_addr < EFUSE_MAX_SIZE)) {
+ 		if (readstate & PG_STATE_HEADER) {
+@@ -862,7 +862,7 @@ static void efuse_write_data_case2(struct ieee80211_hw *hw, u16 *efuse_addr,
+ 
+ 		tmp_word_cnts = efuse_calculate_word_cnts(tmp_pkt.word_en);
+ 
+-		memset((void *)originaldata, 8 * sizeof(u8), 0xff);
++		memset((void *)originaldata, 0xff, 8 * sizeof(u8));
+ 
+ 		if (efuse_pg_packet_read(hw, tmp_pkt.offset, originaldata)) {
+ 			badworden = efuse_word_enable_data_write(hw,
+@@ -917,7 +917,7 @@ static int efuse_pg_packet_write(struct ieee80211_hw *hw,
+ 	target_pkt.offset = offset;
+ 	target_pkt.word_en = word_en;
+ 
+-	memset((void *)target_pkt.data, 8 * sizeof(u8), 0xFF);
++	memset((void *)target_pkt.data, 0xFF, 8 * sizeof(u8));
+ 
+ 	efuse_word_enable_data_read(word_en, data, target_pkt.data);
+ 	target_word_cnts = efuse_calculate_word_cnts(target_pkt.word_en);
+@@ -1022,7 +1022,7 @@ static u8 efuse_word_enable_data_write(struct ieee80211_hw *hw,
+ 	u8 badworden = 0x0F;
+ 	u8 tmpdata[8];
+ 
+-	memset((void *)tmpdata, PGPKT_DATA_SIZE, 0xff);
++	memset((void *)tmpdata, 0xff, PGPKT_DATA_SIZE);
+ 	RT_TRACE(rtlpriv, COMP_EFUSE, DBG_LOUD,
+ 		 ("word_en = %x efuse_addr=%x\n", word_en, efuse_addr));
+ 
 -- 
-1.7.2.3
+1.7.4
 
