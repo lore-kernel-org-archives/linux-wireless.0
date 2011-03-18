@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:61288 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757196Ab1CISED convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:47797 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932694Ab1CRVxA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2011 13:04:03 -0500
-Received: by qyg14 with SMTP id 14so702682qyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2011 10:04:01 -0800 (PST)
+	Fri, 18 Mar 2011 17:53:00 -0400
+Received: by qwk3 with SMTP id 3so3122827qwk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 14:52:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4D77B4B6.8030603@lwfinger.net>
-References: <AANLkTim9hhX1VV93X7-+61hNsxit=AJiHgrt9ByWg9+V@mail.gmail.com>
-	<4D77A06E.3050902@lwfinger.net>
-	<AANLkTinYp64QZ5o1-=xP_ehVhLPwDLR+gQnQk7MADHFA@mail.gmail.com>
-	<4D77AD18.60804@lwfinger.net>
-	<AANLkTingWDXtuxWtQwkVFbhOnfHmAPsp1KsyQWJcRBqR@mail.gmail.com>
-	<4D77B4B6.8030603@lwfinger.net>
-Date: Wed, 9 Mar 2011 19:04:01 +0100
-Message-ID: <AANLkTinEC5b6-vP_zc2RE2Juc8YFx8nkEK7isvQw+UVX@mail.gmail.com>
-Subject: Re: Problem with BCM943224
+In-Reply-To: <1300478510.15393.45.camel@dev.znau.edu.ua>
+References: <1300449773-11255-1-git-send-email-zajec5@gmail.com>
+	<1300453433.13499.18.camel@dev.znau.edu.ua>
+	<AANLkTimG8G_BsqoAUYWfRETfU1ndu_i87WjkXx+v_sNE@mail.gmail.com>
+	<AANLkTi=EeMKNsi9bxNg4RJre-pP=jqcGpbLPNtggSK0N@mail.gmail.com>
+	<1300463392.13499.110.camel@dev.znau.edu.ua>
+	<AANLkTi=GggwyGkDB+cBG-G3O2c5WdfjCpb5pk8=3yDKz@mail.gmail.com>
+	<1300471917.14872.28.camel@dev.znau.edu.ua>
+	<AANLkTikQ7W4GdY=USphz3FphyS-yEwN+X+jUPwq9x_6z@mail.gmail.com>
+	<1300478510.15393.45.camel@dev.znau.edu.ua>
+Date: Fri, 18 Mar 2011 22:52:59 +0100
+Message-ID: <AANLkTi=1XOxwS4tMc6eMcNGeHf_ZGaAH5MC97JsP7oWP@mail.gmail.com>
+Subject: Re: [RFC][PATCH] ssb: separate common scanning functions
 From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: George Kashperko <george@znau.edu.ua>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you think buying some more expensive adapter could help? The newest
-offered by hwtools seems to be:
-http://www.hwtools.net/Adapter/MP2H.html
-(ver 2.2). It is not so expensive at all, $15 without shipping.
+2011/3/18 George Kashperko <george@znau.edu.ua>:
+>  - read pci revision id/vendor id (pci_read_config_word), if required
+> to decide if second window is sliding or sprom (actually rev_id should
+> be sufficient for that) read offset 0x0000 from bar0 offset to get
+> chipid register value
 
-I've already written to them with question about BCM943224
-compatibility (they don't have that chipset on their list).
+Could you say something about WIN1 and WIN2? What are they for, can we
+use them somehow separately? What do you mean by second window being
+SPROM? We read sprom without any special window magic:
+sprom[i] = ioread16(bus->mmio + bus->sprom_offset + (i * 2));
 
-Stanisław: I remember you telling that you have such a adapter. Do you
-maybe have access to some BCM943224/BCM94313 card? Could you test that
-combo for me, please?
-
-The only other solution I can see is to buy motherboard with mini PCIe
-slot. There are some *D410P* (BLKD410PT, BOXD410PT, BLKD410PTL,
-D410PT) and D510MO having such a slow (and Atom CPU.... :/). Kernel
-compilation would be disaster but I think I could live with that. Do
-you think such a boards would be compatible with Broadcom's cards?
+My understanding is limited to that:
+If we want to use device with CORE_ADDR and WRAP_ADDR we have to write
+CORE_ADDR to BAR0_WIN and WRAP_ADDR to BAR0_WIN2. Then we can use
+readl/writel.
 
 -- 
 Rafał
