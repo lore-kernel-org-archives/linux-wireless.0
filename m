@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:45972 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757182Ab1CRRM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 13:12:29 -0400
-Date: Fri, 18 Mar 2011 18:12:23 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Juan Carlos Garza <juancarlosgarza@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] rt2800usb stops working with big file transfers
- in AP and IBSS
-Message-ID: <20110318171222.GB12889@sig21.net>
-References: <AANLkTik9wfkskAHEpmsm4_gPM0FFBf=q8OVXM99NBRjO@mail.gmail.com>
- <201103171316.02636.helmut.schaa@googlemail.com>
- <AANLkTi=Gm-apOyop22UgFMgoQE_+maEQgrMDdH-kTxZq@mail.gmail.com>
- <201103172107.25316.helmut.schaa@googlemail.com>
- <AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=u3dw1D1-+-Cy9aEPc2H1MAF+cUi=ucvMTNrNc@mail.gmail.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:45050 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756902Ab1CRQdk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2011 12:33:40 -0400
+Date: Fri, 18 Mar 2011 09:33:02 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] wireless: fix 80211 kernel-doc warnings
+Message-Id: <20110318093302.9e4a0d44.randy.dunlap@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Juan Carlos,
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-On Fri, Mar 18, 2011 at 04:23:15PM +0100, Juan Carlos Garza wrote:
-> I applied the patches (manually), and tested the stick.
-> 
-> The transfer of big loads now is successful. The
-> "rt2800_txdone_entry_check:" warnings are still there, but they are
-> less frequent (just like in the example i gave you with the laptop
-> where it succeeded with the unpatched driver), some 5 warnings every
-> 1, 2 or 3 seconds.
+Fix many of each of these warnings:
 
-Thanks for testing!  The occational "tx status missed" is unavoidable
-due to hardware limitations.  My patches reduce the number of them,
-but more importantly they fix a few issues with TX (status) timeout handling.
-(IIRC false positives in TX timeout check, and fluash would wait for
-TX queue empty which would never happen without the timer to reap
-the status queue.)
+Warning(include/net/cfg80211.h:519): No description found for parameter 'rxrate'
+Warning(include/net/mac80211.h:1163): bad line: 
 
-I tested a lot with these patches and they work stable for me, however I
-must admit I'm not sure why they help in your case (i.e. why does
-bulk transfer stall without these patches?).
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+Corrections welcome.
 
+ include/net/cfg80211.h |    3 ++-
+ include/net/mac80211.h |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-Johannes
+--- linux-2.6.38-git4.orig/include/net/cfg80211.h
++++ linux-2.6.38-git4/include/net/cfg80211.h
+@@ -486,7 +486,8 @@ struct rate_info {
+  * @plink_state: mesh peer link state
+  * @signal: signal strength of last received packet in dBm
+  * @signal_avg: signal strength average in dBm
+- * @txrate: current unicast bitrate to this station
++ * @txrate: current unicast bitrate from this station
++ * @rxrate: current unicast bitrate to this station
+  * @rx_packets: packets received from this station
+  * @tx_packets: packets transmitted to this station
+  * @tx_retries: cumulative retry counts
+--- linux-2.6.38-git4.orig/include/net/mac80211.h
++++ linux-2.6.38-git4/include/net/mac80211.h
+@@ -1160,7 +1160,7 @@ enum ieee80211_hw_flags {
+  * @napi_weight: weight used for NAPI polling.  You must specify an
+  *	appropriate value here if a napi_poll operation is provided
+  *	by your driver.
+-
++ *
+  * @max_rx_aggregation_subframes: maximum buffer size (number of
+  *	sub-frames) to be used for A-MPDU block ack receiver
+  *	aggregation.
