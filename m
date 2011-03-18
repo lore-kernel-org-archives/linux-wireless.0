@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59802 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657Ab1CUO1v convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:32968 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829Ab1CRAUN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 10:27:51 -0400
-Received: by qwk3 with SMTP id 3so4170097qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 07:27:50 -0700 (PDT)
+	Thu, 17 Mar 2011 20:20:13 -0400
+Received: by iyb26 with SMTP id 26so3401122iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2011 17:20:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110321140505.GA7321@kroah.com>
-References: <20110319214234.GA5152@kroah.com>
-	<1300573336.11949.25.camel@maggie>
-	<20110319234524.GA7493@kroah.com>
-	<op.vsmyhmei3ri7v4@arend-laptop>
-	<20110320145421.GA13962@kroah.com>
-	<op.vsnd1a1i3ri7v4@arend-laptop>
-	<20110320162200.GA17030@kroah.com>
-	<op.vsng7q1j3ri7v4@arend-laptop>
-	<20110320185216.GD19375@kroah.com>
-	<AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
-	<20110321140505.GA7321@kroah.com>
-Date: Mon, 21 Mar 2011 15:27:49 +0100
-Message-ID: <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
-Subject: Re: new utility kernel module for detecting cores in newer chipsets
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	John Linville <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1296119711-4024-4-git-send-email-vnatarajan@atheros.com>
+References: <1296119711-4024-1-git-send-email-vnatarajan@atheros.com>
+ <1296119711-4024-2-git-send-email-vnatarajan@atheros.com> <1296119711-4024-3-git-send-email-vnatarajan@atheros.com>
+ <1296119711-4024-4-git-send-email-vnatarajan@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 17 Mar 2011 17:19:53 -0700
+Message-ID: <AANLkTim=KNYmEVddpNRD33iOYiMBh+x0WnegBWD0i3FO@mail.gmail.com>
+Subject: Re: [PATCH 4/5] ath9k: Fix a locking related issue.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/3/21 Greg KH <greg@kroah.com>:
-> On Mon, Mar 21, 2011 at 11:12:55AM +0100, Rafał Miłecki wrote:
->> Sorry, but you seem to be deaf to my and George's comments.
+On Thu, Jan 27, 2011 at 1:15 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+> Spin_lock has been tried to be acquired twice from ath9k_tasklet
+> to ath_reset which resulted in a machine freeze.
 >
-> Me?
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+
+Was this a stable fix? :(
+
+
+>  drivers/net/wireless/ath/ath9k/xmit.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
 >
->> What's wrong with that?
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index c73452d..84673fb 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -564,8 +564,11 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
 >
-> What's wrong with what?  You provided no context in this message, so I
-> have absolutely no idea what you are referring to.
+>        rcu_read_unlock();
 >
-> totally confused,
-
-Did you receive two following e-mails (in this thread):
-1) From: Rafał Miłecki <zajec5@gmail.com>
-Date: 20 03 2011 10:55
-2) From: George Kashperko <george@znau.edu.ua>
-Date: 20 03 2011 14:07
-?
-
-The case is, we discussed ssb/ai driver layout few days ago. George
-shared idea of layout I agree with, nobody shared any objections. If
-everything goes fine, we should have nicely modularized driver/project
-supporting Broadcom's buses.
-
-In this situation I'm not really interested is simple ai driver
-stripped from brcm80211. According to me, it would led to harder
-maintenance and harder implementation of support for such a driver in
-b43.
-
--- 
-Rafał
+> -       if (needreset)
+> +       if (needreset) {
+> +               spin_unlock_bh(&sc->sc_pcu_lock);
+>                ath_reset(sc, false);
+> +               spin_lock_bh(&sc->sc_pcu_lock);
+> +       }
+>  }
+>
+>  static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+> --
+> 1.6.3.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
