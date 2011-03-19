@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:51473 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753171Ab1CKScI convert rfc822-to-8bit
+Received: from web161615.mail.bf1.yahoo.com ([98.139.211.137]:47076 "HELO
+	web161615.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750985Ab1CSXce convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2011 13:32:08 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>, Greg KH <greg@kroah.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Fri, 11 Mar 2011 10:31:26 -0800
-Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <477F20668A386D41ADCC57781B1F704307F5244DCE@SC-VEXCH1.marvell.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
- <1291380780.3499.119.camel@jlt3.sipsolutions.net>
- <477F20668A386D41ADCC57781B1F704307F51C401C@SC-VEXCH1.marvell.com>
- <1299833115.3755.1.camel@jlt3.sipsolutions.net>
- <20110311141230.GA14583@tuxdriver.com>
-In-Reply-To: <20110311141230.GA14583@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 19 Mar 2011 19:32:34 -0400
+Message-ID: <625424.27965.qm@web161615.mail.bf1.yahoo.com>
+Date: Sat, 19 Mar 2011 16:32:32 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Bug#618930: High network latency with ralink usb wireless device
+To: Richard Kettlewell <rjk@greenend.org.uk>,
+	Johannes Stezenbach <js@sig21.net>
+Cc: linux-wireless@vger.kernel.org, 618930@bugs.debian.org,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20110319223159.GA19576@sig21.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> -----Original Message-----
-> From: John W. Linville [mailto:linville@tuxdriver.com]
-> Sent: Friday, March 11, 2011 6:13 AM
-> To: Johannes Berg
-> Cc: Bing Zhao; linux-wireless@vger.kernel.org; Dan Williams; David Woodhouse; Amitkumar Karwar; Kiran
-> Divekar; Greg KH; David S. Miller
-> Subject: Re: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-> 
-> On Fri, Mar 11, 2011 at 09:45:15AM +0100, Johannes Berg wrote:
-> > Hi,
-> >
-> > > During the past 3 months, we have made 56 mwifiex patches (listed
-> > > below) since the initial mwifiex driver submission. Most of these
-> > > patches address the above issues; and the ioctl multiple abstraction
-> > > layers and the static forward declarations as you commented in another
-> > > e-mail. Some other patches are for code cleanups, mainly coding style.
-> >
-> > I've only loosely followed these patches, but I'm sure the driver is in
-> > *much* better shape now. If you think you're done, it'd be worthwhile to
-> > just resubmit the entire driver in its new version.
-> >
-> > johannes
-> 
-> Agreed -- please resubmit the driver as either a single patch
-> for inclusion or possibly as a small series of patches grouped by
-> functionality for further review.
-
-Thanks to John and Johannes. I will prepare the patch and resend.
-
-Bing
 
 > 
-> Thanks!
+> I sent a patch to disable power save by default, but then
+> work started
+> to fix it instead, but then stalled.  Seems like
+> 2.6.38 shipped with
+> broken power save enabled by default.  Plese read the
+> discussion
+> following my RFC patch:
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/thread.html#3017
 > 
-> John
-> --
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+> You can test if power saving causes your issue by
+> disabling
+> it with "iwconfig wlan0 power off".
+> 
+
+Hi Johannes
+
+Does this patch touches on lost and duplicate packets with rt3070 USB as well?
+
+Walter
+
+
+      
