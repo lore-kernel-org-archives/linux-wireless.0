@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:50813 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756258Ab1C3XMN (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:44153 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755828Ab1CSBiP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2011 19:12:13 -0400
+	Fri, 18 Mar 2011 21:38:15 -0400
+Date: Fri, 18 Mar 2011 21:38:13 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Mihai =?utf-8?q?Don=C8=9Bu?= <mihai.dontu@gmail.com>
+cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	<linux-kernel@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [b43] usb device disconnects automatically after 1s
+In-Reply-To: <201103190048.27759.mihai.dontu@gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1103182132040.20570-100000@netrider.rowland.org>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 30 Mar 2011 16:11:53 -0700
-Message-ID: <AANLkTi=CmYAYO5awFvdcO07qcj6oiOV8B+NoYSEkddbF@mail.gmail.com>
-Subject: compat-wireless for 2.6.38.2
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new stable update has been made so we get the extra stuff sucked in.
-The vanilla release:
+On Sat, 19 Mar 2011, Mihai Donțu wrote:
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38.2-2.tar.bz2
+> > Another thing you can try is to get usbmon traces under both 2.6.37 and
+> > 2.6.38.  Instructions are in the kernel source file
+> > Documentation/usb/usbmon.txt.
+> 
+> I'm unable to get a usbmon dump on 2.6.37. Strangely, the only USB device 
+> making noise (on 0u) is my mouse's wireless receiver. I had no such problem on 
+> 2.6.38 though.
 
-And then this "-ns" release:
+I noticed your config has CONFIG_USB_EHCI_TT_NEWSCHED disabled.  You 
+really should enable it (although I doubt that it is responsible for 
+this problem, since 2.6.37 works without it).
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.38/compat-wireless-2.6.38.2-2-ns.tar.bz2
+The 2.6.38 usbmon trace shows pretty much what you might expect: The 
+device connects and is initialized and enumerated normally, then 2 
+seconds later it disconnects.  We really need to see a 2.6.37 usbmon 
+trace to compare for differences.
 
-has these extra patches applied:
+Can you try again?  If usbmon isn't working, there's something _very_ 
+strange going on.
 
-mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.38.y)$ ls -1
-linux-next-cherry-picks/
-0001a-ath9k_hw-Add-a-function-to-read-sqsum_dvc.patch
-0001b-ath9k-Fix-a-PLL-hang-issue-observed-with-AR9485.patch
-0001c-ath9k-Cancel-pll_work-while-disabling-radio.patch
-0002-ath9k-Fix-incorrect-GPIO-LED-pin-for-AR9485.patch
-0003-ath9k_hw-Read-noise-floor-only-for-available-chains-.patch
-0004-ath9k_hw-Improve-idle-power-consumption-for-AR9485.patch
-0005-ath9k_hw-Increase-the-wait-count-for-nf-load.patch
-0006-ath9k_hw-fix-REG_SET_BIT-and-REG_CLR_BIT-for-multipl.patch
-0007-ath9k-fix-stopping-tx-dma-on-reset.patch
-0008-ath9k-disable-beaconing-before-stopping-beacon-queue.patch
-0009-ath9k-improve-reliability-of-beacon-transmission-and.patch
-0010-ath9k-fix-aggregation-related-interoperability-issue.patch
-0011-staging-Fix-some-incorrect-use-of-positive-error-cod.patch
-0012-staging-ath6kl-Fixing-a-NULL-pointer-exception.patch
-0013-staging-ath6kl-Fixing-key-settings-for-WPA-WPA2.patch
-0014-staging-ath6kl-Return-correct-scan-complete-status.patch
-0015-staging-ath6kl-Fixing-target-crash-due-to-mismatch-c.patch
-0016-staging-ath6kl-Fixing-driver-initialization-for-manu.patch
-0017-staging-ath6kl-Consolidating-hardware-configuration.patch
-0018-staging-ath6kl-Adding-support-for-txop-bursting-enab.patch
-0019-staging-ath6kl-Fixing-a-memory-leak.patch
-0020-staging-ath6kl-Fixing-a-memory-leak.patch
-0021-staging-ath6kl-Add-configuration-for-excessive-TX-re.patch
-0022-staging-ath6kl-Fixing-memory-leak.patch
-0023-staging-ath6kl-Fixing-the-cached-copy-of-the-BSS-fil.patch
-0024-staging-ath6kl-Adding-state-in-driver-to-track-the-s.patch
-0025-staging-ath6kl-Fixing-accidental-overwriting-of-prob.patch
-0026-staging-ath6kl-Fixing-disappearing-of-scan-list-due-.patch
-0027-staging-ath6kl-buffer-overflow-in-SEND_FRAME-ioctl.patch
-0028-staging-ath6kl-Eliminate-cfg80211-warnings.patch
-README
-mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.38.y)$ ls -1
-pending-stable/
-0006-ath9k-Fix-kernel-panic-in-AR2427.patch
-0007-mac80211-initialize-sta-last_rx-in-sta_info_alloc.patch
-0008-mac80211-fix-a-crash-in-minstrel_ht-in-HT-mode-with-.patch
-0009-ath9k-fix-a-chip-wakeup-related-crash-in-ath9k_start.patch
-backports
-README
-mcgrof@tux ~/devel/compat-wireless-2.6 (git::linux-2.6.38.y)$ ls -1
-pending-stable/backports/
-0010-iwlegacy-fix-bugs-in-change_interface.patch
+Alan Stern
 
-  Luis
