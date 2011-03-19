@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:53733 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754216Ab1CVAI0 convert rfc822-to-8bit (ORCPT
+Received: from mail.cs.drexel.edu ([129.25.8.238]:52573 "EHLO
+	mail.cs.drexel.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755101Ab1CSJAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 20:08:26 -0400
-Received: by pxi2 with SMTP id 2so1270157pxi.10
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 17:08:26 -0700 (PDT)
+	Sat, 19 Mar 2011 05:00:07 -0400
+Message-ID: <4D847091.4010408@cs.drexel.edu>
+Date: Sat, 19 Mar 2011 05:00:01 -0400
+From: Lee Trager <lt73@cs.drexel.edu>
 MIME-Version: 1.0
-In-Reply-To: <87aagovhsl.fsf@purkki.adurom.net>
-References: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com>
-	<87aagovhsl.fsf@purkki.adurom.net>
-Date: Mon, 21 Mar 2011 17:08:25 -0700
-Message-ID: <AANLkTikyir_RtupUoszFOxPKPfPek2qzyE8bbMEcg-=X@mail.gmail.com>
-Subject: Re: terminology questions
-From: Sean Robinson <seankrobinson@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath3k: Add ASUS BT Support
+References: <4D831ACF.5030506@cs.drexel.edu> <AANLkTimwAb8cEEyZSNUgwxZS2deOLv_ZWa1HOi9cnJTL@mail.gmail.com> <AANLkTimiTViSeaJFCKM9sz3wHaA74RLMgVXNRMKQp1PL@mail.gmail.com>
+In-Reply-To: <AANLkTimiTViSeaJFCKM9sz3wHaA74RLMgVXNRMKQp1PL@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 21, 2011 at 4:23 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> Sean Robinson <seankrobinson@gmail.com> writes:
->
->> What is a station?
->
-> You got an answer already. But in principle all devices supporting
-> IEEE 802.11 are stations (or STAs) in the standard.
->
->> How does a station relate to an AP?
->
-> AP is a station as are all clients.
->
->>  What are the delineations between mac80211/cfg80211/nl80211?
->
-> mac80211 is an IEEE 802.11 stack for softmac devices.
->
-> cfg80211 is a new (relatively speaking) component for managing
-> configuration of IEEE 802.11 devices (used by both mac80211 and
-> fullmac device drivers).
->
-> nl80211 is a new (again relatively speaking) netlink based user space
-> interface (protocol?) for managing IEEE 802.11 devices. cfg80211
-> implements the kernel side of this interface. From user space at least
-> wpasupplicant and iw use this interface, but in principle any
-> application can use it.
->
+OK, thanks. I just posted here because the Linux-wireless web page has a
+page on this driver, I thought it was odd but submitted here anyway.
 
-  Thank you, Kalle.  I have updated the Glossary page with my
-interpretation of your answers.
+Lee
 
-  And, thank you, Daniel.  I downloaded the IEEE doc.  While the
-definitions are useful, the chapter 5 overview of how everything is
-related was really helpful.
+On 03/18/11 05:01, Luis R. Rodriguez wrote:
+> On Fri, Mar 18, 2011 at 2:00 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Fri, Mar 18, 2011 at 1:41 AM, Lee Trager <lt73@cs.drexel.edu> wrote:
+>>> The ASUS USB Bluetooth module that comes with my motherboard(ASUS P8P67
+>>> Pro) is simply a re-branded Atheros AR3011. This patch add support for
+>>> it in the driver
+>>>
+>>> Signed-off-by: Lee Trager <lt73@cs.drexel.edu>
+>>
+>> Please resubmit with Cc: stable@kernel.org on the commit log entry
+>> (not the e-mail)
+> 
+> Also you want this to go through the BT maintainer, and Cc linux-bluetooth.
+> 
+> BLUETOOTH DRIVERS
+> M:      Marcel Holtmann <marcel@holtmann.org>
+> M:      Gustavo F. Padovan <padovan@profusion.mobi>
+> L:      linux-bluetooth@vger.kernel.org
+> W:      http://www.bluez.org/
+> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git
+> S:      Maintained
+> F:      drivers/bluetooth/
+> 
+>   Luis
 
-  And I repeat my intent to curate the Glossary for a while.  So, if
-anyone else has terms to add or that need a fuller explanation, please
-let me know.
-
--- 
-Sean Robinson
-WiFi Radar - http://wifi-radar.berlios.de
-Python WiFi - http://pythonwifi.wikispot.org
-pymnl - http://pymnl.wikispot.org
