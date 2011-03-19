@@ -1,194 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57771 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab1CDWXt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2011 17:23:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <1299251879.24333.3.camel@wwguy-ubuntu>
-References: <AANLkTin0PGOfHr3AvQk-BAhyMY7ihYMU1-wX4RJG=1YT@mail.gmail.com>
-	<20110304134648.GB9866@tuxdriver.com>
-	<1299251879.24333.3.camel@wwguy-ubuntu>
-Date: Fri, 4 Mar 2011 22:23:48 +0000
-Message-ID: <AANLkTinfCc0e4BtBxoq7MHtgv54HJk-yU=gQj9Xm_=R9@mail.gmail.com>
-Subject: Re: 2.6.38-rc7, iwlagn crash
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:52447 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410Ab1CSMzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Mar 2011 08:55:49 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 7/7] ath9k: remove the pending frames ath_txq_schedule workaround
+Date: Sat, 19 Mar 2011 13:55:43 +0100
+Message-Id: <1300539343-75509-7-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1300539343-75509-6-git-send-email-nbd@openwrt.org>
+References: <1300539343-75509-1-git-send-email-nbd@openwrt.org>
+ <1300539343-75509-2-git-send-email-nbd@openwrt.org>
+ <1300539343-75509-3-git-send-email-nbd@openwrt.org>
+ <1300539343-75509-4-git-send-email-nbd@openwrt.org>
+ <1300539343-75509-5-git-send-email-nbd@openwrt.org>
+ <1300539343-75509-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 March 2011 15:17, wwguy <wey-yi.w.guy@intel.com> wrote:
-> On Fri, 2011-03-04 at 05:46 -0800, John W. Linville wrote:
->> Cc'ing Wey-yi and linux-wireless...anyone else having problems with
->> iwlagn and IBSS?
->>
->> On Fri, Mar 04, 2011 at 03:27:22AM +0000, Mathias Burén wrote:
->> > Hi,
->> >
->> > (please cc as not subscribed)
->> >
->> >
->> >
->> > I think the crash happens when the phone attempts to get an IP, at
->> > least that's what the phone says right after/at the crash. Any ideas?
->> >
->> >
-> forwarding to my team to work on it, any additional information you can
-> provide?
->
-> It is in IBSS mode, do you have any information can shared with us on
-> your phone's model, setup, and ...
-> if you can load the module with debug=0x43fff and provide the dmesg log,
-> it will be very helpful
->
-> Thanks
-> Wey
->
->
->
+This workaround called ath_txq_schedule whenever there were still pending
+frames for a queue, but the queue depth was zero. Because of its its high
+false positive probability (e.g. with paused TIDs) and because it is in
+the way of other pending work (AP powersave fixes), it is better to remove
+this code entirely.
 
-Hi,
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   27 ---------------------------
+ 1 files changed, 0 insertions(+), 27 deletions(-)
 
-The phone is a Samsung Galaxy S (with "modded" wpa_supplicant to see
-adhoc networks). I created a new adhoc network in Ubuntu using the
-NetworkManager applet, with SSID "UbuntuAdhoc", band "automatic",
-BSSID (blank) and no security. Under IPV4 settings I set it to "Shared
-to other computers". Unfortunately I get this when trying to load the
-module with debug:
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ef22096..65f1217 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2144,33 +2144,6 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 				} else {
+ 					txq->axq_tx_inprogress = true;
+ 				}
+-			} else {
+-				/* If the queue has pending buffers, then it
+-				 * should be doing tx work (and have axq_depth).
+-				 * Shouldn't get to this state I think..but
+-				 * we do.
+-				 */
+-				if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) &&
+-				    (txq->pending_frames > 0 ||
+-				     !list_empty(&txq->axq_acq) ||
+-				     txq->stopped)) {
+-					ath_err(ath9k_hw_common(sc->sc_ah),
+-						"txq: %p axq_qnum: %u,"
+-						" mac80211_qnum: %i"
+-						" axq_link: %p"
+-						" pending frames: %i"
+-						" axq_acq empty: %i"
+-						" stopped: %i"
+-						" axq_depth: 0  Attempting to"
+-						" restart tx logic.\n",
+-						txq, txq->axq_qnum,
+-						txq->mac80211_qnum,
+-						txq->axq_link,
+-						txq->pending_frames,
+-						list_empty(&txq->axq_acq),
+-						txq->stopped);
+-					ath_txq_schedule(sc, txq);
+-				}
+ 			}
+ 			spin_unlock_bh(&txq->axq_lock);
+ 		}
+-- 
+1.7.3.2
 
-$ sudo modprobe -v iwlagn debug=0x43fff
-insmod /lib/modules/2.6.38-020638rc7-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
-11n_disable=1 debug=0x43fff
-FATAL: Error inserting iwlagn
-(/lib/modules/2.6.38-020638rc7-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko):
-Unknown symbol in module, or unknown parameter (see dmesg)
-[  447.551540] iwlagn: Unknown parameter `debug'
-
-$ sudo modprobe -v iwlagn
-insmod /lib/modules/2.6.38-020638rc7-generic/kernel/drivers/net/wireless/iwlwifi/iwlagn.ko
-11n_disable=1
-
-
-[  501.570685] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
-Linux, in-tree:
-[  501.570688] iwlagn: Copyright(c) 2003-2010 Intel Corporation
-[  501.570760] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[  501.570772] iwlagn 0000:03:00.0: setting latency timer to 64
-[  501.570809] iwlagn 0000:03:00.0: Detected Intel(R) Centrino(R)
-Advanced-N 6200 AGN, REV=0x74
-[  501.580698] iwlagn 0000:03:00.0: device EEPROM VER=0x436, CALIB=0x6
-[  501.580703] iwlagn 0000:03:00.0: Device SKU: 0Xb
-[  501.580739] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24
-802.11a channels
-[  501.580836] iwlagn 0000:03:00.0: irq 44 for MSI/MSI-X
-[  501.583936] iwlagn 0000:03:00.0: loaded firmware version 9.221.4.1
-build 25532
-[  501.584236] cfg80211: Ignoring regulatory request Set by core since
-the driver uses its own custom regulatory domain
-[  501.584392] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-
-Here I create the adhoc network in network manager:
-
-[  536.509700] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  536.858139] cfg80211: Found new beacon on frequency: 2472 MHz (Ch 13) on phy0
-[  536.947735] cfg80211: Found new beacon on frequency: 5180 MHz (Ch 36) on phy0
-[  537.041220] cfg80211: Found new beacon on frequency: 5200 MHz (Ch 40) on phy0
-[  537.079114] cfg80211: Found new beacon on frequency: 5220 MHz (Ch 44) on phy0
-[  537.175392] cfg80211: Found new beacon on frequency: 5240 MHz (Ch 48) on phy0
-[  538.973811] cfg80211: Found new beacon on frequency: 5745 MHz (Ch
-149) on phy0
-[  539.203969] cfg80211: Found new beacon on frequency: 5785 MHz (Ch
-157) on phy0
-[  539.289182] cfg80211: Found new beacon on frequency: 5805 MHz (Ch
-161) on phy0
-[  571.156548] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  599.156798] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[  599.161234] wlan0: Trigger new scan to find an IBSS to join
-[  604.131831] wlan0: Trigger new scan to find an IBSS to join
-[  607.103522] wlan0: Creating new IBSS network, BSSID 42:dd:e6:af:fb:19
-[  607.104488] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-[  607.105407] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-[  608.501173] wlan0: Trigger new scan to find an IBSS to join
-[  609.190883] wlan0: no IPv6 routers present
-[  613.397068] wlan0: Trigger new scan to find an IBSS to join
-[  616.303044] wlan0: Creating new IBSS network, BSSID ae:eb:cb:59:18:ec
-[  616.313716] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-[  616.314529] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-[  617.681034] wlan0: Trigger new scan to find an IBSS to join
-[  622.736806] wlan0: Trigger new scan to find an IBSS to join
-[  625.708399] wlan0: Creating new IBSS network, BSSID 46:b6:a0:1b:c4:7f
-[  625.761157] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-[  625.762035] iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-[  627.438640] iwlagn 0000:03:00.0: Error sending REPLY_RXON_TIMING:
-time out after 500ms.
-[  627.438648] iwlagn 0000:03:00.0: Failed to send timing (-110)!
-[  627.438651] ------------[ cut here ]------------
-[  627.438668] WARNING: at
-/home/kernel-ppa/COD/linux/drivers/net/wireless/iwlwifi/iwl-core.c:1898
-iwl_mac_change_interface+0x12e/0x130 [iwlcore]()
-[  627.438672] Hardware name: 4384BB3
-[  627.438674] Modules linked in: nf_nat_h323 nf_conntrack_h323
-nf_nat_pptp nf_conntrack_pptp nf_conntrack_proto_gre nf_nat_proto_gre
-nf_nat_tftp nf_conntrack_tftp nf_nat_sip nf_conntrack_sip nf_nat_irc
-nf_nat_ftp iwlagn iwlcore mac80211 cfg80211 xt_limit xt_tcpudp ipt_LOG
-ipt_MASQUERADE xt_DSCP ipt_REJECT nf_conntrack_irc nf_conntrack_ftp
-xt_state binfmt_misc vboxnetadp vboxnetflt vboxdrv microcode
-parport_pc ppdev iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack
-nf_defrag_ipv4 iptable_mangle iptable_filter ip_tables x_tables
-snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_intel snd_hda_codec
-snd_hwdep snd_pcm snd_seq_midi joydev snd_rawmidi hdaps thinkpad_ec
-snd_seq_midi_event arc4 snd_seq snd_timer uvcvideo videodev
-snd_seq_device psmouse v4l2_compat_ioctl32 thinkpad_acpi tpm_tis tpm
-tpm_bios nvram lp serio_raw parport snd soundcore intel_ips
-snd_page_alloc sha256_generic aesni_intel cryptd aes_x86_64
-aes_generic dm_crypt usbhid hid i915 firewire_ohci ahci drm_kms_helper
-e1000e libahci drm sdhci_pci firewire_core sdhci crc_itu_t
-i2c_algo_bit video [last unloaded: cfg80211]
-[  627.438764] Pid: 1203, comm: NetworkManager Not tainted
-2.6.38-020638rc7-generic #201103020909
-[  627.438767] Call Trace:
-[  627.438778]  [<ffffffffa0294c7e>] ?
-iwl_mac_change_interface+0x12e/0x130 [iwlcore]
-[  627.438787]  [<ffffffffa0294c7e>] ?
-iwl_mac_change_interface+0x12e/0x130 [iwlcore]
-[  627.438796]  [<ffffffff81065430>] ? warn_slowpath_common+0x90/0xc0
-[  627.438801]  [<ffffffff8106547a>] ? warn_slowpath_null+0x1a/0x20
-[  627.438809]  [<ffffffffa0294c7e>] ?
-iwl_mac_change_interface+0x12e/0x130 [iwlcore]
-[  627.438827]  [<ffffffffa02589ec>] ?
-ieee80211_runtime_change_iftype+0xdc/0x180 [mac80211]
-[  627.438840]  [<ffffffffa0258b85>] ?
-ieee80211_if_change_type+0xf5/0x120 [mac80211]
-[  627.438854]  [<ffffffffa025b95b>] ?
-ieee80211_change_iface+0x3b/0x130 [mac80211]
-[  627.438865]  [<ffffffffa020a898>] ?
-cfg80211_change_iface+0xe8/0x1c0 [cfg80211]
-[  627.438877]  [<ffffffffa02228f6>] ? cfg80211_wext_siwmode+0xa6/0xf0
-[cfg80211]
-[  627.438884]  [<ffffffff8158a4cb>] ? ioctl_standard_call+0x6b/0xf0
-[  627.438889]  [<ffffffff8158a460>] ? ioctl_standard_call+0x0/0xf0
-[  627.438893]  [<ffffffff81589882>] ? wireless_process_ioctl+0x102/0x130
-[  627.438898]  [<ffffffff8158afe0>] ? ioctl_private_call+0x0/0xa0
-[  627.438902]  [<ffffffff8158afe0>] ? ioctl_private_call+0x0/0xa0
-[  627.438907]  [<ffffffff8158a460>] ? ioctl_standard_call+0x0/0xf0
-[  627.438911]  [<ffffffff8158991c>] ? wext_ioctl_dispatch+0x6c/0x90
-[  627.438916]  [<ffffffff81589b66>] ? wext_handle_ioctl+0x46/0x90
-[  627.438922]  [<ffffffff814c687b>] ? dev_ioctl+0x28b/0x2a0
-[  627.438927]  [<ffffffff814ad25f>] ? sock_ioctl+0xbf/0x280
-[  627.438933]  [<ffffffff811704bd>] ? vfs_ioctl+0x1d/0x50
-[  627.438937]  [<ffffffff81170f79>] ? do_vfs_ioctl+0x69/0x1d0
-[  627.438940]  [<ffffffff81171174>] ? sys_ioctl+0x94/0xa0
-[  627.438945]  [<ffffffff8100c002>] ? system_call_fastpath+0x16/0x1b
-[  627.438949] ---[ end trace c7a5b9f525294bcc ]---
-[  627.552179] wlan0: Trigger new scan to find an IBSS to join
-
-Hm, not much I can do without recompiling the module with debug
-support? Is there a way I can do this without recompiling the kernel?
-
-Kind regards,
-// Mathias
