@@ -1,75 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:59323 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756947Ab1CRUWy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2011 16:22:54 -0400
-Received: by iwn34 with SMTP id 34so4370073iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2011 13:22:53 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/5 v4] {mac|nl}80211: Support for SAE mesh authentication in userspace
-Date: Fri, 18 Mar 2011 13:22:07 -0700
-Message-Id: <1300479732-25920-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
+Received: from bar.sig21.net ([80.81.252.164]:41255 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757666Ab1CSWcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Mar 2011 18:32:03 -0400
+Date: Sat, 19 Mar 2011 23:31:59 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Richard Kettlewell <rjk@greenend.org.uk>
+Cc: linux-wireless@vger.kernel.org, 618930@bugs.debian.org,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: Bug#618930: High network latency with ralink usb wireless
+ device
+Message-ID: <20110319223159.GA19576@sig21.net>
+References: <4D84E433.70001@greenend.org.uk>
+ <1300555815.26693.83.camel@localhost>
+ <4D84EC90.4090803@greenend.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4D84EC90.4090803@greenend.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds support for SAE authentication of mesh peers in userspace.  A
-fork of wpa_supplicant that can authenticate mesh peers is available here:
-https://github.com/cozybit/hostap-sae  .  Our intent is to work with hostap
-maintainers to merge that functionality upstream soon.
+On Sat, Mar 19, 2011 at 05:49:04PM +0000, Richard Kettlewell wrote:
+> (see also bugs.debian.org/618930
+...
+> I have a TP-Link TL-WN321G USB wireless adapter, which is a badged
+> Ralink RT2070.  Under Debian's 2.6.32 this worked smoothly with
+> rt2870sta.  On upgrading to Debian's 2.6.38, however, only rt2800usb
+> was available and with that I found that ping latency is around
+> 600ms.
+...
+>           Power Management:on
 
-A simpler daemon is also available here:  https://github.com/cozybit/authsae.
+I sent a patch to disable power save by default, but then work started
+to fix it instead, but then stalled.  Seems like 2.6.38 shipped with
+broken power save enabled by default.  Plese read the discussion
+following my RFC patch:
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/thread.html#3017
 
-They both require the changes proposed in this series to operate.  Also, both
-are based on the SAE reference implementation from Dan Harkins available here:
-http://sourceforge.net/projects/authsae/
+You can test if power saving causes your issue by disabling
+it with "iwconfig wlan0 power off".
 
-v2: (all suggested by Johannes)
- - Userspace actually creates the stations instead of setting the AUTH flag.
- - Fix hole that would allow peer links between secured and open peers.
- - Pass multiple IEs through generic IE nl80211 attribute
- - Remove SAE constant
-
-v3: (again Johannes)
- - Fix API backward compatibilty of NL80211_MESH_SETUP_IE
- - Remove check for presence of RSN IE
-
-v4: (also hinted by Johannes)
- - New peer event to avoid having to scan for mesh peer candidates
- - NEW_STATION command can also accept a PLINK_ACTION argument to
-   trigger or block peer link establishment immediately after an authenticated
-   station is created.
-
-Javier Cardona (5):
-  mac80211: Enable mesh security from userspace
-  mac80211: Let user space receive and send mesh auth/deauth frames
-  mac80211: Accept mesh auth frames before a peer link has been
-    established
-  mac80211: Let userspace create stations when mesh security is enabled
-  mac80211: New notification to discover mesh peer candidates.
-
- include/linux/nl80211.h    |   27 +++++++++++++++++---
- include/net/cfg80211.h     |   39 +++++++++++++++++++++++++---
- net/mac80211/cfg.c         |   22 ++++++++++------
- net/mac80211/ieee80211_i.h |    5 ++-
- net/mac80211/main.c        |    4 ++-
- net/mac80211/mesh.c        |   14 ++++++----
- net/mac80211/mesh.h        |    3 +-
- net/mac80211/mesh_plink.c  |   35 ++++++++++++++++++++-----
- net/mac80211/rx.c          |    3 +-
- net/mac80211/tx.c          |    2 +-
- net/wireless/core.h        |    6 ++++
- net/wireless/mesh.c        |   46 ++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.c     |   60 +++++++++++++++++++++++++++++++++++++++----
- net/wireless/nl80211.h     |    4 +++
- net/wireless/util.c        |    5 +++
- 15 files changed, 232 insertions(+), 43 deletions(-)
-
+Johannes
