@@ -1,123 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:35828 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754086Ab1C3DGu (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53111 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756735Ab1CSQYI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 23:06:50 -0400
-Received: by mail-gw0-f46.google.com with SMTP id a18so357556gwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 20:06:50 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com
-Subject: [PATCH v5 02/10] nl80211: Add userspace authentication  flag to mesh setup
-Date: Tue, 29 Mar 2011 19:05:59 -0700
-Message-Id: <1301450767-27045-3-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
-References: <1301450767-27045-1-git-send-email-thomas@cozybit.com>
+	Sat, 19 Mar 2011 12:24:08 -0400
+Received: by iwn34 with SMTP id 34so5023459iwn.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 09:24:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com>
+References: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Sat, 19 Mar 2011 09:23:48 -0700
+Message-ID: <AANLkTimnA8LE6FgVx4sVLUxCV52_YzKm4fzAXoUHz339@mail.gmail.com>
+Subject: Re: terminology questions
+To: Sean Robinson <seankrobinson@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Sat, Mar 19, 2011 at 9:18 AM, Sean Robinson <seankrobinson@gmail.com> wrote:
+>  I am working on writing various components for user-space control of
+> nl80211 devices.  I have had some difficulty understanding the
+> terminology that is taken for granted in source files for and
+> documentation about nl80211/cfg80211.  So, in the interest of learning
+> the terms used I am volunteering to edit the glossary page
+> <http://wireless.kernel.org/en/developers/Documentation/Glossary> on
+> the Linux wireless wiki, for at least a brief time (1-2 months).  As I
+> learn a new definition for an appropriate term, I will add it the the
+> Glossary.
+>
+>  If you have encountered a word or phrase about the Linux wireless
+> system for which you need(ed) a definition.  Please let me know and I
+> will add it to the list of terms to define.
+>
+>  Can anyone answer (or point me to more resources for) the following
+> questions that I can use to update the Glossary?  What is a station?
+> How does a station relate to an AP?  What are the delineations between
+> mac80211/cfg80211/nl80211?
+>
 
-During mesh setup, use NL80211_MESH_SETUP_USERSPACE_AUTH flag to create
-a secure mesh and route management frames to userspace.
+You might want to start with the IEEE 802.11-2007 standards document
+(free for download at
+http://standards.ieee.org/about/get/802/802.11.html).  That has many
+of the definitions you will want, e.g., station is defined as 3.136 in
+their Definitions section.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- include/linux/nl80211.h    |    4 ++++
- include/net/cfg80211.h     |    2 ++
- net/mac80211/cfg.c         |    1 +
- net/mac80211/ieee80211_i.h |    1 +
- net/wireless/nl80211.c     |    2 ++
- 5 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 82ef17d..91e3a8d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1691,6 +1691,9 @@ enum nl80211_meshconf_params {
-  * robust security network ie, or a vendor specific information element that
-  * vendors will use to identify the path selection methods and metrics in use.
-  *
-+ * @NL80211_MESH_SETUP_USERSPACE_AUTH: Enable this option if an authentication
-+ * daemon will be authenticating mesh candidates.
-+ *
-  * @NL80211_MESH_SETUP_ATTR_MAX: highest possible mesh setup attribute number
-  * @__NL80211_MESH_SETUP_ATTR_AFTER_LAST: Internal use
-  */
-@@ -1699,6 +1702,7 @@ enum nl80211_mesh_setup_params {
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL,
- 	NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC,
- 	NL80211_MESH_SETUP_IE,
-+	NL80211_MESH_SETUP_USERSPACE_AUTH,
- 
- 	/* keep last */
- 	__NL80211_MESH_SETUP_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1714943..2334985 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -656,6 +656,7 @@ struct mesh_config {
-  * @path_metric: which metric to use
-  * @ie: vendor information elements (optional)
-  * @ie_len: length of vendor information elements
-+ * @is_secure: or not
-  *
-  * These parameters are fixed when the mesh is created.
-  */
-@@ -666,6 +667,7 @@ struct mesh_setup {
- 	u8  path_metric;
- 	const u8 *ie;
- 	u8 ie_len;
-+	bool is_secure;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f2f345a..4f73085 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1042,6 +1042,7 @@ static int copy_mesh_setup(struct ieee80211_if_mesh *ifmsh,
- 	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
- 	ifmsh->mesh_pp_id = setup->path_sel_proto;
- 	ifmsh->mesh_pm_id = setup->path_metric;
-+	ifmsh->is_secure = setup->is_secure;
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d0fafde..7d1cb36 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -490,6 +490,7 @@ struct ieee80211_if_mesh {
- 	bool accepting_plinks;
- 	const u8 *ie;
- 	u8 ie_len;
-+	bool is_secure;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f251089..5878f2b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2804,6 +2804,7 @@ static const struct nla_policy
- 	nl80211_mesh_setup_params_policy[NL80211_MESH_SETUP_ATTR_MAX+1] = {
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_PATH_SEL] = { .type = NLA_U8 },
- 	[NL80211_MESH_SETUP_ENABLE_VENDOR_METRIC] = { .type = NLA_U8 },
-+	[NL80211_MESH_SETUP_USERSPACE_AUTH] = { .type = NLA_FLAG },
- 	[NL80211_MESH_SETUP_IE] = { .type = NLA_BINARY,
- 		.len = IEEE80211_MAX_DATA_LEN },
- };
-@@ -2915,6 +2916,7 @@ static int nl80211_parse_mesh_setup(struct genl_info *info,
- 		setup->ie = nla_data(ieattr);
- 		setup->ie_len = nla_len(ieattr);
- 	}
-+	setup->is_secure = nla_get_flag(tb[NL80211_MESH_SETUP_USERSPACE_AUTH]);
- 
- 	return 0;
- }
--- 
-1.7.4.1
-
+Dan
