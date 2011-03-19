@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:45748 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754031Ab1CSQSJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2011 12:18:09 -0400
-Received: by pvg12 with SMTP id 12so586456pvg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 09:18:08 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:4799 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751465Ab1CSMOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Mar 2011 08:14:06 -0400
+Subject: new utility kernel module for detecting cores in newer chipsets
+References: <op.vslagcb13ri7v4@arend-laptop>
+To: "Greg KH" <greg@kroah.com>
+Date: Sat, 19 Mar 2011 13:13:48 +0100
+cc: linuxdriverproject <devel@linuxdriverproject.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Date: Sat, 19 Mar 2011 09:18:07 -0700
-Message-ID: <AANLkTiniNj9vcYdSBpp+28zMDJEN-=hq40_1zxcrg74J@mail.gmail.com>
-Subject: terminology questions
-From: Sean Robinson <seankrobinson@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vslaxakc3ri7v4@arend-laptop>
+In-Reply-To: <op.vslagcb13ri7v4@arend-laptop>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  I am working on writing various components for user-space control of
-nl80211 devices.  I have had some difficulty understanding the
-terminology that is taken for granted in source files for and
-documentation about nl80211/cfg80211.  So, in the interest of learning
-the terms used I am volunteering to edit the glossary page
-<http://wireless.kernel.org/en/developers/Documentation/Glossary> on
-the Linux wireless wiki, for at least a brief time (1-2 months).  As I
-learn a new definition for an appropriate term, I will add it the the
-Glossary.
++ mailing lists
 
-  If you have encountered a word or phrase about the Linux wireless
-system for which you need(ed) a definition.  Please let me know and I
-will add it to the list of terms to define.
+Hi Greg,
 
-  Can anyone answer (or point me to more resources for) the following
-questions that I can use to update the Glossary?  What is a station?
-How does a station relate to an AP?  What are the delineations between
-mac80211/cfg80211/nl80211?
+There has been several discussion in the community (mainly by b43 and ssb
+developers, I believe) to add support for chip core interconnect used in
+newer Broadcom chips.  Our brcm80211 drivers already have this support and
+we have isolated that functionality in a separate kernel module called
+brcmaxi to provide it to other drivers. Currently, I have it located under
+drivers/staging/brcm80211 as I am not sure whether or not its purpose
+justifies a separate folder (under staging or not).
 
-  Thank you for your help.
+What are your thoughts about this? I would like to know before submitting
+a patch for this.
+
+Gr. AvS
+
 
 -- 
-Sean Robinson
-WiFi Radar - http://wifi-radar.berlios.de
-Python WiFi - http://pythonwifi.wikispot.org
-pymnl - http://pymnl.wikispot.org
+"The most merciful thing in the world, I think, is the inability of the  
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
