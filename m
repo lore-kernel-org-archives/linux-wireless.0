@@ -1,112 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:54380 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752693Ab1CAFgM (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:62896 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753473Ab1CSQLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2011 00:36:12 -0500
-Date: Mon, 28 Feb 2011 23:36:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH V2] rtl8187: Change rate-control feedback
-Message-ID: <4d6c85c9.Gv0aZxorarbTk25I%Larry.Finger@lwfinger.net>
+	Sat, 19 Mar 2011 12:11:47 -0400
+Received: by bwz15 with SMTP id 15so4094523bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2011 09:11:46 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ignacy Gawedzki <i@lri.fr>
+Subject: Re: Dividing by a non-static value in carl9170-fw?
+Date: Sat, 19 Mar 2011 16:43:46 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20110116031600.GA21973@zenon.in.qult.net> <201103190303.07310.chunkeey@googlemail.com> <20110319092237.GA19163@zenon.in.qult.net>
+In-Reply-To: <20110319092237.GA19163@zenon.in.qult.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201103191643.46628.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for the RTL8187L chips returns IEEE80211_TX_STAT_ACK for all
-packets, even if the maximum number of retries was exhausted. In addition
-it fails to setup max_rates in the ieee80211_hw struct, This behavior
-may be responsible for the problems noted in Bug 14168. As the bug is very
-old, testers have not been found, and I do not have the case where the
-indicated signal is less than -70 dBm.
+On Saturday 19 March 2011 10:22:37 Ignacy Gawedzki wrote:
+> On Sat, Mar 19, 2011 at 03:03:06AM +0100, thus spake Christian Lamparter:
+> > On Saturday 19 March 2011 02:22:44 Ignacy Gawedzki wrote:
+> > > If you define the global variables as volatile, then the optimization is
+> > > forbidden and you should get the bogus results.
+> > 
+> > ???
+> > No, "global" is enough. As long as you don't select "const".
+> > (In fact there's more of a story behind "const volatile"
+> > than you might think, or have you ever wondered why carl9170
+> > still ships with gcc 4.4 instead of 4.5? Anyway that's OT)
+> 
+> As a rule of thumb, I remembered that "volatile" tells the compiler "you're
+> not the only one to manage that variable, don't make any assumptions about its
+> current value", as could be the case if the variable is allocated in some
+> shared memory segment/register/whatever and might change "on its own".
+> Anyway, in the case at hand, it seems to make a difference.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
----
+why not give it a try ;). define a and b as global variables, initialize them
+and try if a/b needs __udiv or not. you'll be surprised that no c-compiler
+(unless a buggy one) will even think about this sort of "constant"
+optimization.
 
-V1 => V2: Protect against zero divide, and the case where the 16-bit retry
-	  counter wraps to zero. The latter is unlikely, but tested for
-	  completeness.
----
+OT: the use of volatile is ill-reputed and many people have complained
+about it throughout the history.
+http://lwn.net/Articles/233482/ [which ended up in:]
+http://kernel.org/doc/Documentation/volatile-considered-harmful.txt
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -869,23 +869,35 @@ static void rtl8187_work(struct work_str
- 	/* The RTL8187 returns the retry count through register 0xFFFA. In
- 	 * addition, it appears to be a cumulative retry count, not the
- 	 * value for the current TX packet. When multiple TX entries are
--	 * queued, the retry count will be valid for the last one in the queue.
--	 * The "error" should not matter for purposes of rate setting. */
-+	 * waiting in the queue, the retry count will be the total for all.
-+	 * The "error" may matter for purposes of rate setting, but there is
-+	 * no other choice with this hardware.
-+	 */
- 	struct rtl8187_priv *priv = container_of(work, struct rtl8187_priv,
- 				    work.work);
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_hw *dev = priv->dev;
- 	static u16 retry;
- 	u16 tmp;
-+	u16 avg_retry;
-+	int length;
- 
- 	mutex_lock(&priv->conf_mutex);
- 	tmp = rtl818x_ioread16(priv, (__le16 *)0xFFFA);
-+	length = skb_queue_len(&priv->b_tx_status.queue);
-+	if (unlikely(!length))
-+		length = 1;
-+	if (unlikely(tmp < retry))
-+		tmp = retry;
-+	avg_retry = (tmp - retry) / length;
- 	while (skb_queue_len(&priv->b_tx_status.queue) > 0) {
- 		struct sk_buff *old_skb;
- 
- 		old_skb = skb_dequeue(&priv->b_tx_status.queue);
- 		info = IEEE80211_SKB_CB(old_skb);
--		info->status.rates[0].count = tmp - retry + 1;
-+		info->status.rates[0].count = avg_retry + 1;
-+		if (info->status.rates[0].count > RETRY_COUNT)
-+			info->flags &= ~IEEE80211_TX_STAT_ACK;
- 		ieee80211_tx_status_irqsafe(dev, old_skb);
- 	}
- 	retry = tmp;
-@@ -931,8 +943,8 @@ static int rtl8187_start(struct ieee8021
- 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
- 				  RTL818X_TX_CONF_HW_SEQNUM |
- 				  RTL818X_TX_CONF_DISREQQSIZE |
--				  (7 << 8  /* short retry limit */) |
--				  (7 << 0  /* long retry limit */) |
-+				  (RETRY_COUNT << 8  /* short retry limit */) |
-+				  (RETRY_COUNT << 0  /* long retry limit */) |
- 				  (7 << 21 /* MAX TX DMA */));
- 		rtl8187_init_urbs(dev);
- 		rtl8187b_init_status_urb(dev);
-@@ -1376,6 +1388,9 @@ static int __devinit rtl8187_probe(struc
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		     IEEE80211_HW_SIGNAL_DBM |
- 		     IEEE80211_HW_RX_INCLUDES_FCS;
-+	/* Initialize rate-control variables */
-+	dev->max_rates = 1;
-+	dev->max_rate_tries = RETRY_COUNT;
- 
- 	eeprom.data = dev;
- 	eeprom.register_read = rtl8187_eeprom_register_read;
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/rtl8187.h
-@@ -35,6 +35,8 @@
- #define RFKILL_MASK_8187_89_97	0x2
- #define RFKILL_MASK_8198	0x4
- 
-+#define RETRY_COUNT		7
-+
- struct rtl8187_rx_info {
- 	struct urb *urb;
- 	struct ieee80211_hw *dev;
+the only reason why we get away with it is because most of
+it is locked up behind accessor functions in include/io.h & dma.h
+and it should remain that way.
+
+> BTW, it seems you have some detailed technical documentation about the AR9170
+> at your disposal.  I was wondering whether this is something available
+> publicly or not.  Could be an interesting read at times. =)
+There are a lot of easy accessible docs about the CPU on the net. In fact you
+can even get Verilog/VHDL code of various SH2-clones without any problem.
+But that's about it, for information about the MAC/USB I have to rely on
+Chen.
+
+Best regards,
+	Christian
