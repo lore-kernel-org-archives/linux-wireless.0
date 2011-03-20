@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55341 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753525Ab1CETOK convert rfc822-to-8bit (ORCPT
+Received: from chiark.greenend.org.uk ([212.13.197.229]:53997 "EHLO
+	chiark.greenend.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567Ab1CTJMl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2011 14:14:10 -0500
-Received: by vxi39 with SMTP id 39so2862460vxi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Mar 2011 11:14:10 -0800 (PST)
+	Sun, 20 Mar 2011 05:12:41 -0400
+Message-ID: <4D85C506.1060003@greenend.org.uk>
+Date: Sun, 20 Mar 2011 09:12:38 +0000
+From: Richard Kettlewell <rjk@greenend.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <1299333700.3826.2.camel@jlt3.sipsolutions.net>
-References: <1299288252-28314-1-git-send-email-thomas@cozybit.com>
- <1299288252-28314-5-git-send-email-thomas@cozybit.com> <1299333700.3826.2.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Sat, 5 Mar 2011 11:13:50 -0800
-Message-ID: <AANLkTi=B42wkh2khdPNyyJvy01E2PmtzGunhPtJSNyeD@mail.gmail.com>
-Subject: Re: [PATCH 4/4 v2] mac80211: Let userspace create stations when mesh
- security is enabled
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Stezenbach <js@sig21.net>
+CC: linux-wireless@vger.kernel.org, 618930@bugs.debian.org,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: Bug#618930: High network latency with ralink usb wireless device
+References: <4D84E433.70001@greenend.org.uk> <1300555815.26693.83.camel@localhost> <4D84EC90.4090803@greenend.org.uk> <20110319223159.GA19576@sig21.net>
+In-Reply-To: <20110319223159.GA19576@sig21.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 5, 2011 at 6:01 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-03-04 at 17:24 -0800, Thomas Pedersen wrote:
+On 19/03/2011 22:31, Johannes Stezenbach wrote:
+
+> I sent a patch to disable power save by default, but then work started
+> to fix it instead, but then stalled.  Seems like 2.6.38 shipped with
+> broken power save enabled by default.  Plese read the discussion
+> following my RFC patch:
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-January/thread.html#3017
 >
->> +++ b/net/mac80211/mesh_plink.c
->> @@ -105,7 +105,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
->>       if (!sta)
->>               return NULL;
->>
->> -     sta->flags = WLAN_STA_AUTHORIZED;
->> +     sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
->>       sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
->>       rate_control_rate_init(sta);
->
-> This is just for consistency now, right? The AUTH flag isn't tested, but
-> stations from userspace will have it set, afaiu?
+> You can test if power saving causes your issue by disabling
+> it with "iwconfig wlan0 power off".
 
-Right.
+That does the trick - thanks!
 
+richard@sfere:~$ ssh violeer uname -a
+Linux violeer 2.6.38-1-686 #1 SMP Wed Mar 16 17:37:47 UTC 2011 i686 
+GNU/Linux
+richard@sfere:~$ ping -qc10 violeer
+PING violeer.wlan.anjou.terraraq.org.uk (172.31.59.138) 56(84) bytes of 
+data.
 
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+--- violeer.wlan.anjou.terraraq.org.uk ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9016ms
+rtt min/avg/max/mdev = 0.919/0.981/1.089/0.057 ms
+richard@sfere:~$
+
+ttfn/rjk
