@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38280 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab1CBNpj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2011 08:45:39 -0500
-Date: Wed, 2 Mar 2011 08:38:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hubert Tonneau <hubert.tonneau@fullpliant.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 32 bits executables with 64 bits kernel wifi issue
-Message-ID: <20110302133848.GA2536@tuxdriver.com>
-References: <0B3412811@briare1.fullpliant.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:4924 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596Ab1CTREi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Mar 2011 13:04:38 -0400
+cc: "Greg KH" <greg@kroah.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?utf-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+References: <op.vslagcb13ri7v4@arend-laptop>
+ <op.vslaxakc3ri7v4@arend-laptop>
+ <AANLkTim8SHdE8b9_gFLwbeEJM-uDegBDxU+AUJEb_rfc@mail.gmail.com>
+ <1300626438.16689.21.camel@dev.znau.edu.ua>
+Subject: Re: new utility kernel module for detecting cores in newer
+ chipsets
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"George Kashperko" <george@znau.edu.ua>
+Date: Sun, 20 Mar 2011 18:04:18 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0B3412811@briare1.fullpliant.org>
+From: "Arend van Spriel" <arend@broadcom.com>
+Message-ID: <op.vsni1gbi3ri7v4@arend-laptop>
+In-Reply-To: <1300626438.16689.21.camel@dev.znau.edu.ua>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed;
+ delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 02, 2011 at 11:54:07AM +0000, Hubert Tonneau wrote:
-> Hi,
-> 
-> If I use a 32 bits kernel, then I can connect to any Wifi box,
-> but if I use a 64 bits kernel with 32 bits executables,
-> it will connect on some Wifi boxes (french Freebox), but fail to connect to others (french Livebox).
-> 
-> The wifi driver used is iwl3945.
-> When connection fails, WPA supplicant will report successfull association,
-> but udhcpc will fail to get a lease.
-> It does not seem to be related to a peticular kernel release: I tested with 2.6.36.4,
-> but get the same problem with 2.6.32.28 64 bits.
-> 
-> Regards,
-> Hubert Tonneau
+On Sun, 20 Mar 2011 14:07:18 +0100, George Kashperko <george@znau.edu.ua>
+wrote:
 
-We have had a number of 32/64 compatibility problems with the wireless
-extensions API in the past.  I wonder if this is another one?
+>> I don't want to have support for AI in 10 places, even if this is
+>> about staging area.
+>>
+> Agree here completely. The only arguable point here I think could be
+> that AXI and SB should be different drivers but honestly they are too
+> much similar softwire-wise to even be placed in separate directories if
+> only bus managing code model is designed well.
 
-Does your version of wpa_supplicant support the "-Dnl80211" option
-(instead of "-Dwext")?  It might be worth trying that to see if it
-works better?
+Agree and a valid point at that as one would typically need either ssb or
+axi support. If with a little refactoring the ssb tree can provide two
+separate drivers that is fine by me if the axi flavour is not burdened by
+shortcomings of the the ssb driver, which you are said to have pointed out
+(I missed most of the discussion about this, sorry). In brcm80211 we have
+two drivers and one typically needs the ssb support and the other axi
+support. We abstracted the core access (not judging how well we did that)
+with an additional layer but there is actually no need when having
+separate drivers requiring either one or the other interconnect support.
 
-John
+Depending on the driver it may depend on one of them or both, but with two
+separate modules this choice is up to the driver which makes most sense to
+me.
+
+Gr. AvS
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+"The most merciful thing in the world, I think, is the inability of the
+human
+mind to correlate all its contents." - "The Call of Cthulhu"
+
