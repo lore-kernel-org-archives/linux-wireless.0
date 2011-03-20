@@ -1,101 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47175 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755351Ab1C3A5i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2011 20:57:38 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2011 17:57:14 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <greg@kroah.com>
-CC: <devel@linuxdriverproject.org>, <linux-wireless@vger.kernel.org>,
-	<vmehta@atheros.com>, <nsingh@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 25/34] ath6kl: remove useless plat_setup_power() calls
-Date: Tue, 29 Mar 2011 17:56:22 -0700
-Message-ID: <1301446591-15236-26-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-References: <1301446591-15236-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from mail.academy.zt.ua ([82.207.120.245]:53947 "EHLO
+	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241Ab1CTNI1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Mar 2011 09:08:27 -0400
+Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
+	with ESMTP id md50000029095.msg
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2011 15:07:22 +0200
+Subject: Re: new utility kernel module for detecting cores in newer chipsets
+From: George Kashperko <george@znau.edu.ua>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Greg KH <greg@kroah.com>,
+	linuxdriverproject <devel@linuxdriverproject.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	George Kashperko <george@znau.edu.ua>
+In-Reply-To: <AANLkTim8SHdE8b9_gFLwbeEJM-uDegBDxU+AUJEb_rfc@mail.gmail.com>
+References: <op.vslagcb13ri7v4@arend-laptop>
+	 <op.vslaxakc3ri7v4@arend-laptop>
+	 <AANLkTim8SHdE8b9_gFLwbeEJM-uDegBDxU+AUJEb_rfc@mail.gmail.com>
 Content-Type: text/plain
+Date: Sun, 20 Mar 2011 15:07:18 +0200
+Message-Id: <1300626438.16689.21.camel@dev.znau.edu.ua>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These map to do nothing.
+> 2011/3/19 Arend van Spriel <arend@broadcom.com>:
+> > + mailing lists
+> >
+> > Hi Greg,
+> >
+> > There has been several discussion in the community (mainly by b43 and ssb
+> > developers, I believe) to add support for chip core interconnect used in
+> > newer Broadcom chips.  Our brcm80211 drivers already have this support and
+> > we have isolated that functionality in a separate kernel module called
+> > brcmaxi to provide it to other drivers. Currently, I have it located under
+> > drivers/staging/brcm80211 as I am not sure whether or not its purpose
+> > justifies a separate folder (under staging or not).
+> >
+> > What are your thoughts about this? I would like to know before submitting
+> > a patch for this.
+> 
+> Well, I've this AI support rewritten and isolated here too. It's not
+> about having the code but designing it well.
+> 
+> George Kashperko shared idea of really nice design layout for buses.
+> He pointed problems with ssb driver, explained how everything works.
+> With his layout it should be easy to support SSB and AI with very
+> minimal, if any, additional hacks. Nobody pointed any problems with
+> his layout.
+Its not just a raw idea. Already implemented it in code. ATM I have bus
+glue with three working drivers for chipcommons with pmu r0, r1 and r5,
+drivers for mips33k, mips74k and pcie rev.13+ buscommons, embedded and
+pcie hosts drivers. Now working on sprom configuration driver.
+Still planning for clean glue for PCMCIA/SDIO hosts, some unified
+approach for interrupts management and multifunctional pci(e) devices.
 
-Cc: Naveen Singh <nsingh@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c       |    3 ---
- drivers/staging/ath6kl/os/linux/ar6000_pm.c        |    6 ------
- .../staging/ath6kl/os/linux/include/wlan_config.h  |    6 ------
- 3 files changed, 0 insertions(+), 15 deletions(-)
+And the only one actual problem I faced was not the algorythm for AXI
+SROM parsing (which is obvious as soon you figure out the SROM layout
+and actually is much simpler and cleaner than that in
+brcm80211/utils/aiutils.c)
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index 5f73182..056acae 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -2017,9 +2017,6 @@ ar6000_destroy(struct net_device *dev, unsigned int unregister)
-     if (ar->arWlanPowerState != WLAN_POWER_STATE_CUT_PWR) {
-         /* only stop endpoint if we are not stop it in suspend_ev */
-         ar6000_stop_endpoint(dev, false, true);
--    } else {
--        /* clear up the platform power state before rmmod */
--        plat_setup_power(1,0);
-     }
- 
-     ar->arWlanState = WLAN_DISABLED;
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_pm.c b/drivers/staging/ath6kl/os/linux/ar6000_pm.c
-index be401aa..eeb3807 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_pm.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_pm.c
-@@ -304,13 +304,11 @@ int ar6000_power_change_ev(void *context, u32 config)
- 
- static int ar6000_pm_probe(struct platform_device *pdev)
- {
--    plat_setup_power(1,1);
-     return 0;
- }
- 
- static int ar6000_pm_remove(struct platform_device *pdev)
- {
--    plat_setup_power(0,1);
-     return 0;
- }
- 
-@@ -352,8 +350,6 @@ ar6000_setup_cut_power_state(struct ar6_softc *ar,  AR6000_WLAN_STATE state)
-                 break;
-             }
- 
--            plat_setup_power(1,0);
--
-             /* Change the state to ON */
-             ar->arWlanPowerState = WLAN_POWER_STATE_ON;
- 
-@@ -385,8 +381,6 @@ ar6000_setup_cut_power_state(struct ar6_softc *ar,  AR6000_WLAN_STATE state)
-                                 &config,
-                                 sizeof(HIF_DEVICE_POWER_CHANGE_TYPE));
- 
--            plat_setup_power(0,0);
--
-             ar->arWlanPowerState = WLAN_POWER_STATE_CUT_PWR;
-         }
-     } while (0);
-diff --git a/drivers/staging/ath6kl/os/linux/include/wlan_config.h b/drivers/staging/ath6kl/os/linux/include/wlan_config.h
-index 98951bb..c1fe0c6 100644
---- a/drivers/staging/ath6kl/os/linux/include/wlan_config.h
-+++ b/drivers/staging/ath6kl/os/linux/include/wlan_config.h
-@@ -105,10 +105,4 @@
-  */
- #define WLAN_CONFIG_DISABLE_TX_BURSTING     0
- 
--/*
-- * Platform specific function to power ON/OFF AR6000 
-- * and enable/disable SDIO card detection
-- */
--#define plat_setup_power(on, detect)
--
- #endif /* _HOST_WLAN_CONFIG_H_ */
--- 
-1.7.0.4
+The problem is technical background information absence for both SB and
+AXI. The only truly open doc with SB information is BCM44XX programmers
+guide. And for AXI there is nothing at all except staging80211 and
+number of GPL'ed firmware sources for embedded routers. Half the time I
+spent designing the model was documentation writing which I hate the
+most.
+
+Well, I understand its a business model Broadcom tends to run and we
+can't do anything with that, but honestly even here I don't really
+understand the purpose of "UNPUBLISHED PROPRIETARY" tags in some sources
+of GPL'ed firmwares. E. g. etcgmac.c which is the only closed part left
+to finally get bcm4716s' supported with openwrt.
+
+> I don't want to have support for AI in 10 places, even if this is
+> about staging area.
+> 
+Agree here completely. The only arguable point here I think could be
+that AXI and SB should be different drivers but honestly they are too
+much similar softwire-wise to even be placed in separate directories if
+only bus managing code model is designed well.
+
+Have nice day,
+George
+
 
