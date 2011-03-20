@@ -1,122 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.academy.zt.ua ([82.207.120.245]:26959 "EHLO
-	mail.academy.zt.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657Ab1CUQ0u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2011 12:26:50 -0400
-Received: from [10.0.2.42] by mail.academy.zt.ua (Cipher SSLv3:RC4-MD5:128) (MDaemon PRO v11.0.3)
-	with ESMTP id md50000029385.msg
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 18:25:46 +0200
-Subject: Re: new utility kernel module for detecting cores in newer chipsets
-From: George Kashperko <george@znau.edu.ua>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	John Linville <linville@tuxdriver.com>,
-	George Kashperko <george@znau.edu.ua>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTimaRXjzbYP53uHYfJaiX6Z1iy5Qm14g+w_OiJEs@mail.gmail.com>
-References: <20110319214234.GA5152@kroah.com>
-	 <1300573336.11949.25.camel@maggie> <20110319234524.GA7493@kroah.com>
-	 <op.vsmyhmei3ri7v4@arend-laptop> <20110320145421.GA13962@kroah.com>
-	 <op.vsnd1a1i3ri7v4@arend-laptop> <20110320162200.GA17030@kroah.com>
-	 <op.vsng7q1j3ri7v4@arend-laptop> <20110320185216.GD19375@kroah.com>
-	 <AANLkTimEGR-8zhbMQpcAzYkuZ8fHkhj1bOQrb3rShfsP@mail.gmail.com>
-	 <20110321140505.GA7321@kroah.com>
-	 <AANLkTi=1eGo7uvP8Uy32yQezhGJTHYkHpEyX9vF=PujF@mail.gmail.com>
-	 <op.vso77ddp3ri7v4@arend-laptop>
-	 <AANLkTimaRXjzbYP53uHYfJaiX6Z1iy5Qm14g+w_OiJEs@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 21 Mar 2011 18:25:36 +0200
-Message-Id: <1300724736.3866.33.camel@dev.znau.edu.ua>
-Mime-Version: 1.0
+Received: from smtp.nexicom.net ([216.168.96.13]:60242 "EHLO smtp.nexicom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751186Ab1CTWGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Mar 2011 18:06:07 -0400
+Received: from mail.lockie.ca (dyn-dsl-lh-98-124-36-5.nexicom.net [98.124.36.5])
+	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p2KM5t5Q018354
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2011 18:06:01 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.lockie.ca (Postfix) with ESMTP id AB0B71E0426
+	for <linux-wireless@vger.kernel.org>; Sun, 20 Mar 2011 18:05:54 -0400 (EDT)
+Message-ID: <4D867A43.9020205@lockie.ca>
+Date: Sun, 20 Mar 2011 18:05:55 -0400
+From: James <bjlockie@lockie.ca>
+MIME-Version: 1.0
+To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: kernel-2.6.38
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 2011/3/21 Arend van Spriel <arend@broadcom.com>:
-> > On Mon, 21 Mar 2011 15:27:49 +0100, Rafał Miłecki <zajec5@gmail.com> wrote:
-> >
-> >> The case is, we discussed ssb/ai driver layout few days ago. George
-> >> shared idea of layout I agree with, nobody shared any objections. If
-> >> everything goes fine, we should have nicely modularized driver/project
-> >> supporting Broadcom's buses.
-> >
-> > Hi Rafał,
-> >
-> > Does this give us one module supporting both buses or does it provide two
-> > kernel modules (my preference)? I did ask you and George this question
-> > earlier but I seem to have missed the response from you or George.
-> 
-> I'm still waiting for George to respond and share his code.
-> 
-> 
-> >> In this situation I'm not really interested is simple ai driver
-> >> stripped from brcm80211. According to me, it would led to harder
-> >> maintenance and harder implementation of support for such a driver in
-> >> b43.
-> >
-> > I can imagine from b43 perspective the only good implementation would be to
-> > stick with the current b43<->ssb interface. So what will you do when another
-> > type of SoC interconnect is introduced. Forcing that in the same API as
-> > well? If you and George propose a new carefully considered API covering the
-> > functional capabilities of the current (and possibly future) interconnect
-> > buses I am all for that.
-> >
-> > To summarize this, my main issue (and Michael's, I think) is with the
-> > dependency being imposed between ai and ssb. Having two completely
-> > independent modules really makes more sense.
-> 
-> This really depends on new interconnect. If it will be totally
-> different, I'll vote for totally different driver. In case of SSB and
-> AI, driver layout is similar, it seems George managed to write sth
-> nice.
-> 
-> George?
-Hi there. Much surprised with such a resonance on the topic. Sorry for
-being so late with participating with discussion - work background
-requires me sometimes to move around alot - this week is the time for
-trips.
-If you extremely hurry with that I will make my testings sources
-available lately this evening as soon as get to my workpad. But just to
-warn you its not that I planned for final "release" just glue I used to
-work edge things out. As for final code I plan to finish with it next
-weekends - yet again I will move al lot this week and will have much
-time to think on the subject but not actually work on it.
+ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 17
+ath9k 0000:02:09.0: PCI INT A -> Link[LNKB] -> GSI 17 (level, low) -> IRQ 17
+nvidia: module license 'NVIDIA' taints kernel.
+Disabling lock debugging due to kernel taint
+irq 17: nobody cared (try booting with the "irqpoll" option)
+Pid: 1138, comm: modprobe Tainted: P            2.6.38 #1
+Call Trace:
+ <IRQ>  [<ffffffff81054e0d>] ? __report_bad_irq+0x30/0x7d
+ [<ffffffff81054f5f>] ? note_interrupt+0x105/0x172
+ [<ffffffff8105587b>] ? handle_fasteoi_irq+0x98/0xbc
+ [<ffffffff81004442>] ? handle_irq+0x17/0x1d
+ [<ffffffff81003b2c>] ? do_IRQ+0x45/0xaa
+ [<ffffffff8134d453>] ? ret_from_intr+0x0/0xe
+ <EOI>  [<ffffffff811456e2>] ? __bitmap_weight+0x1d/0x61
+ [<ffffffff810522ca>] ? load_module+0x1065/0x10ac
+ [<ffffffff81052353>] ? sys_init_module+0x42/0x1d3
+ [<ffffffff81001dfb>] ? system_call_fastpath+0x16/0x1b
+handlers:
+[<ffffffffa00c2d7f>] (ath_isr+0x0/0x1e1 [ath9k])
+Disabling IRQ #17
 
-Yet again sorry for making you wait.
-
-Now back to subject. I curious about sertain things I see here which
-make the most contradictary ones. That ones regarding why AI and SB
-should be separate modules etc.
-Would be much appreciated if you hear my mind on that (under hear I mean
-not just read). Some time ago here in earlier AI rfcs' threads I already
-tried to cover the reason why am I sure they should not just share
-single code base but also be coupled together.
-AI and SB interconnects are really totally diffeent hardware base. But
-they stick to the single architecture model. Very much the same as PCI
-and PCIE are (see what I'm trying to do here?). This model is not AI or
-SB exclusive and in short looks like following (here I'm sorry for
-making you read the things you know already, but I do it just because I
-see that ones of you see on subject through Broadcom SDK while others do
-the same through linux/ssb):
-Bus devices coupled under the entity we tend to call cores. The cores
-managed from the system bus side with means of the host. The cores
-managed from the backplane side with means of agents. The core devices
-exposed to system and managed with same drivers regardless the
-backplane. The agents system dont supposted to know about and doing the
-same enable/disable/reset but in somewhat different way. The fact is (as
-at least I see it) that here we want to keep things apart just because
-one set of agents is called SB (or e. g. PCI) while the other is called
-AXI (or lets say PCIE).
-Yes, linux/ssb model design can't cover this. The linux/bcmb (or hnd as
-I finally named it - grrr really dont like these 3 letters -.-) might do
-better as it is designed to do that. Btw in way which is completely
-different from ssb and Broadcom SDK one.
-
-Here much sorry need to get back to work. Will be back late in evening.
-
-Have nice day,
-George
-
+ath: Failed to stop TX DMA in 100 msec after killing last frame
+ath: Failed to stop TX DMA!
+ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+ath: Could not stop RX, we could be confusing the DMA engine when we
+start RX up
+------------[ cut here ]------------
+WARNING: at drivers/net/wireless/ath/ath9k/recv.c:536
+ath_stoprecv+0xc5/0xd6 [ath9k]()
+Hardware name: To Be Filled By O.E.M.
+Modules linked in: nvidia(P) ath9k mac80211 ath9k_common ath9k_hw ath
+cfg80211
+Pid: 12, comm: kworker/u:1 Tainted: P            2.6.38 #1
+Call Trace:
+ [<ffffffff8102bb86>] ? warn_slowpath_common+0x78/0x8c
+ [<ffffffffa00c5074>] ? ath_stoprecv+0xc5/0xd6 [ath9k]
+ [<ffffffffa00c2743>] ? ath_set_channel+0xaf/0x20d [ath9k]
+ [<ffffffffa00c2c7a>] ? ath9k_config+0x3d9/0x4de [ath9k]
+ [<ffffffffa00906da>] ? ieee80211_scan_work+0x2eb/0x47f [mac80211]
+ [<ffffffffa00903ef>] ? ieee80211_scan_work+0x0/0x47f [mac80211]
+ [<ffffffff8103d25e>] ? process_one_work+0x20e/0x34e
+ [<ffffffff8103d79d>] ? worker_thread+0x1c9/0x340
+ [<ffffffff810218c6>] ? __wake_up_common+0x41/0x78
+ [<ffffffff8103d5d4>] ? worker_thread+0x0/0x340
+ [<ffffffff8103d5d4>] ? worker_thread+0x0/0x340
+ [<ffffffff8104031b>] ? kthread+0x7a/0x82
+ [<ffffffff81002b54>] ? kernel_thread_helper+0x4/0x10
+ [<ffffffff810402a1>] ? kthread+0x0/0x82
+ [<ffffffff81002b50>] ? kernel_thread_helper+0x0/0x10
+---[ end trace 2b4fd6ac45e0da09 ]---
+ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
 
