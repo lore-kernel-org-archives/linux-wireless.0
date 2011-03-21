@@ -1,108 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:50353 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750818Ab1CHLTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2011 06:19:11 -0500
-Subject: Re: SSB bus driver documentation?
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <AANLkTikVN8QZjYc0jX4zcpO=xUwt4d8mfkPZkPSLvnMe@mail.gmail.com> (sfid-20110308_120113_587954_FFFFFFFFCCCD7736)
-References: <AANLkTikky+cwYO+S_QSebnyQRV9TftbeNZDzVN8EAT_7@mail.gmail.com>
-	 <1299539491.7802.18.camel@marge>
-	 <AANLkTikVN8QZjYc0jX4zcpO=xUwt4d8mfkPZkPSLvnMe@mail.gmail.com>
-	 (sfid-20110308_120113_587954_FFFFFFFFCCCD7736)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Mar 2011 12:19:04 +0100
-Message-ID: <1299583144.7627.14.camel@maggie>
-Mime-Version: 1.0
+Received: from smtp-out.google.com ([74.125.121.67]:50677 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754337Ab1CUViP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 17:38:15 -0400
+Received: from kpbe14.cbf.corp.google.com (kpbe14.cbf.corp.google.com [172.25.105.78])
+	by smtp-out.google.com with ESMTP id p2LLcD44002547
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 14:38:14 -0700
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by kpbe14.cbf.corp.google.com with ESMTP id p2LLcCMb022280
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 14:38:13 -0700
+From: Paul Stewart <pstew@google.com>
+Date: Mon, 21 Mar 2011 14:16:02 -0700
+Subject: [PATCH 2/4] cfg80211: Add station info to station struct
+To: linux-wireless@vger.kernel.org
+Message-Id: <20110321213812.991BF1FFB0@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-03-08 at 12:01 +0100, Rafał Miłecki wrote: 
-> OK, today that ssb code makes more sense to me, thanks for help.
-> 
-> 
-> I'd like to ask few more questions:
-> 1) In case of PCI host we have b43_pci_bridge that loads ssb. What
-> about other hosts? I don't see any IDs table in sdio.c or pcmcia.c.
+Signed-off-by: Paul Stewart <pstew@google.com>
+---
+ include/net/cfg80211.h |   34 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-That part is in b43. b43_pci_bridge is only in SSB, because it is
-shared between b43 and b43legacy.
-
-> 2) Could you say a word more about pcihost_wrapper? What is this for?
-> I can see we use that in pci bridge. What we can't call
-> ssb_bus_pcibus_register directly?
-
-It's just a library of common PCI initialization functions. It's
-used from b43_pci_bridge and from b44's PCI init code.
-
-> 3) What is embedded.c?
-
-A collection of functions for embedded devices (SSB without host bus),
-only.
-
-> 1) main.c::ssb_modinit
-> Hacks for bridge and gige (both being not modules) are not documented.
-> New developer have no idea why we call b43_pci_ssb_bridge_init and
-> ssb_gige_init. Tracking that calls lead to even more confusion.
-
-Well, it's pretty obvious what those functions do, if you know how
-the kernel device driver model works. They register device drivers.
-Which is done in the modinit function in almost all drivers.
-
-And I don't think those calls are "hacks". It's pretty standard stuff.
-
-> 2) ssb.h::ssb_bustype
-> SSB_BUSTYPE_SSB,
-> SSB_BUSTYPE_PCI,
-> SSB_BUSTYPE_PCMCIA,
-> SSB_BUSTYPE_SDIO,
-> I think first define is confusing. Is sounds like SSB being host for
-> SSB, or whatever... I think it should be sth like SSB_BUSTYPE_SYSTEM,
-> SSB_BUSTYPE_NONE, SSB_BUSTYPE_NATIVE, SSB_BUSTYPE_EMBEDDED, or sth.
-
-Well, SSB_BUSTYPE_NONE probably is the best choice of all of those.
-
-It should actually be SSB_HOSTBUSTYPE_...
-
-But it's probably not worth changing.
-
-> 3) main.c::ssb_ssb_ops
-> We keep all host-specific ops in separated files, but not in this
-> case. OK, it makes some sense as this one is not for host, but I think
-> it makes main.c more complicated and we can not compile SSB without
-> it. I think we could build every PC kernel without this, right?
-
-I think your goal was to reduce complexity? Now you want to increase it
-just to save some 20 bytes? Could put it into embedded.c, if you
-care.
-
-> 4) scan.c::scan_switchcore
-> Why we don't have ops->switchcore? We could get rid of that switch
-> with simple pointer.
-
-No. scan.c is special in that almost nothing is initialized, yet.
-That is why we have custom read and switch core helpers here.
-
-We do _not_ need core switch as an ops pointer, because after scanning
-the core switch is _completely_ hidden in the read/write ops
-implementations.
-
-> 5) scan.c::scan_read32
-> I'm not sure about this yet... but do we need that here? Shouldn't
-> scan.c focus on just scanning? It's just one another "offset +=
-> current_coreidx * SSB_CORE_SIZE;" calculation.
-> 
-> 
-> I criticized scan.c::scan_read32, but could you say why do we need
-> that specific read at all?
-
-Because ops is not usable, yet. The task of scan is to create the
-ssb_devices. The ops expect an ssb_device as argument. We can't
-pass an ssb_device that we're about to detect.
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b2b9d28..4299a38 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -422,6 +422,7 @@ struct station_parameters {
+  * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
+  * @STATION_INFO_SIGNAL_AVG: @signal_avg filled
+  * @STATION_INFO_RX_BITRATE: @rxrate fields are filled
++ * @STATION_INFO_BSS_PARAM: @bss_param filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -439,6 +440,7 @@ enum station_info_flags {
+ 	STATION_INFO_RX_DROP_MISC	= 1<<12,
+ 	STATION_INFO_SIGNAL_AVG		= 1<<13,
+ 	STATION_INFO_RX_BITRATE		= 1<<14,
++	STATION_INFO_BSS_PARAM          = 1<<15,
+ };
+ 
+ /**
+@@ -473,6 +475,37 @@ struct rate_info {
+ };
+ 
+ /**
++ * enum station_info_rate_flags - bitrate info flags
++ *
++ * Used by the driver to indicate the specific rate transmission
++ * type for 802.11n transmissions.
++ *
++ * @BSS_PARAM_FLAGS_CTS_PROT: whether CTS protection is enabled
++ * @BSS_PARAM_FLAGS_SHORT_PREAMBLE: whether short preamble is enabled
++ * @BSS_PARAM_FLAGS_SHORT_SLOT_TIME: whether short slot time is enabled
++ */
++enum bss_param_flags {
++	BSS_PARAM_FLAGS_CTS_PROT	= 1<<0,
++	BSS_PARAM_FLAGS_SHORT_PREAMBLE	= 1<<1,
++	BSS_PARAM_FLAGS_SHORT_SLOT_TIME	= 1<<2,
++};
++
++/**
++ * struct sta_bss_parameters - BSS parameters for the attached station
++ *
++ * Information about the currently associated BSS
++ *
++ * @flags: bitflag of flags from &enum bss_param_flags
++ * @dtim_period: DTIM period for the BSS
++ * @beacon_interval: beacon interval
++ */
++struct sta_bss_parameters {
++	u8 flags;
++	u8 dtim_period;
++	u16 beacon_interval;
++};
++
++/**
+  * struct station_info - station information
+  *
+  * Station information filled by driver for get_station() and dump_station.
+@@ -515,6 +548,7 @@ struct station_info {
+ 	u32 tx_retries;
+ 	u32 tx_failed;
+ 	u32 rx_dropped_misc;
++	struct sta_bss_parameters bss_param;
+ 
+ 	int generation;
+ };
 -- 
-Greetings Michael.
+1.7.3.1
 
