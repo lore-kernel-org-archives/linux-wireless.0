@@ -1,133 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:47429 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874Ab1CNRjB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2011 13:39:01 -0400
-Received: by iwn34 with SMTP id 34so5151923iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2011 10:39:00 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:55020 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753349Ab1CUM53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 08:57:29 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 05:57:06 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>, <Russell.Hu@Atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	<stable@kernel.org>
+Subject: [PATCH] ath9k: Fix kernel panic in AR2427
+Date: Mon, 21 Mar 2011 18:27:21 +0530
+Message-ID: <1300712241-7542-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1300119843.3802.21.camel@jlt3.sipsolutions.net>
-References: <AANLkTi=taszKd9-kyijN100oEegnFi=0u5L4WCp7R_sJ@mail.gmail.com> <1300119843.3802.21.camel@jlt3.sipsolutions.net>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, 14 Mar 2011 10:38:40 -0700
-Message-ID: <AANLkTinnCD9eFJ2r21SOGd3zNj1dxmrXa_xqbEoq8--w@mail.gmail.com>
-Subject: Re: bug: iwlwifi, aggregation, and mac80211's reorder buffer
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 14, 2011 at 9:24 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2011-03-11 at 00:11 -0800, Daniel Halperin wrote:
->
->> One thing that Intel does that ath9k does not is transmit packets out
->> of sequence number order inside a batch.  (This is legal in the 802.11
->> standard).
->
-> Even if that's legal it seems very strange? Do you have packet captures
-> of this by any chance?
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-I can acquire and send you some logs. I'm not sure whether packet logs
-work -- last I checked [3 yrs ago] iwlwifi monitor mode didn't pick up
-agg batches to other destinations -- and I'm not sure where in the
-stack packet logs fall when taken on the host (e.g., before or after
-the reorder buffer?).
+Kernel panic occurs just after AR2427 establishes connection with AP.
+Unless aggregation is enabled we don't initialize the TID structure.
+Thus accesing the elements of the TID structure when aggregation is
+disabled, leads to NULL pointer dereferencing.
 
-What I did log was the reported sequence numbers from
-iwlagn_tx_status_reply_tx. What you see is:
+[  191.320358] Call Trace:
+[  191.320364]  [<fd250ea7>] ? ath9k_tx+0xa7/0x200 [ath9k]
+[  191.320376]  [<fd1ec7fc>] ? __ieee80211_tx+0x5c/0x1e0 [mac80211]
+[  191.320386]  [<fd1edd2b>] ? ieee80211_tx+0x7b/0x90 [mac80211]
+[  191.320395]  [<fd1edddd>] ? ieee80211_xmit+0x9d/0x1d0 [mac80211]
+[  191.320401]  [<c014218f>] ? wake_up_state+0xf/0x20
+[  191.320405]  [<c015dbc8>] ? signal_wake_up+0x28/0x40
+[  191.320410]  [<c012a578>] ? default_spin_lock_flags+0x8/0x10
+[  191.320420]  [<fd1ee308>] ? ieee80211_subif_start_xmit+0x2e8/0x7c0
+[mac80211]
+[  191.320425]  [<c058f905>] ? do_page_fault+0x295/0x3a0
+[  191.320431]  [<c04c4a3d>] ? dev_hard_start_xmit+0x1ad/0x210
+[  191.320436]  [<c04d96b5>] ? sch_direct_xmit+0x105/0x170
+[  191.320445]  [<fd1f161a>] ? get_sta_flags+0x2a/0x40 [mac80211]
+[  191.320449]  [<c04c780f>] ? dev_queue_xmit+0x37f/0x4b0
+[  191.320452]  [<c04d75b0>] ? eth_header+0x0/0xb0
+[  191.320456]  [<c04cc479>] ? neigh_resolve_output+0xe9/0x310
+[  191.320461]  [<c053d295>] ? ip6_output_finish+0xa5/0x110
+[  191.320464]  [<c053e354>] ? ip6_output2+0x134/0x250
+[  191.320468]  [<c053f7dd>] ? ip6_output+0x6d/0x100
+[  191.320471]  [<c0559665>] ? mld_sendpack+0x395/0x3e0
+[  191.320475]  [<c0557f81>] ? add_grhead+0x31/0xa0
+[  191.320478]  [<c055a83c>] ? mld_send_cr+0x1bc/0x2b0
+[  191.320482]  [<c01535d9>] ? irq_exit+0x39/0x70
+[  191.320485]  [<c055a940>] ? mld_ifc_timer_expire+0x10/0x40
+[  191.320489]  [<c015b92e>] ? run_timer_softirq+0x13e/0x2c0
+[  191.320493]  [<c0103a30>] ? common_interrupt+0x30/0x40
+[  191.320498]  [<c055a930>] ? mld_ifc_timer_expire+0x0/0x40
+[  191.320502]  [<c0153358>] ? __do_softirq+0x98/0x1b0
+[  191.320506]  [<c01534b5>] ? do_softirq+0x45/0x50
+[  191.320509]  [<c0153605>] ? irq_exit+0x65/0x70
+[  191.320513]  [<c05917dc>] ? smp_apic_timer_interrupt+0x5c/0x8b
+[  191.320516]  [<c0103df1>] ? apic_timer_interrupt+0x31/0x40
+[  191.320521]  [<c016007b>] ? k_getrusage+0x12b/0x2f0
+[  191.320525]  [<c039e384>] ? acpi_idle_enter_simple+0x117/0x148
+[  191.320529]  [<c04a20da>] ? cpuidle_idle_call+0x7a/0x100
+[  191.320532]  [<c01021d4>] ? cpu_idle+0x94/0xd0
+[  191.320536]  [<c057ab88>] ? rest_init+0x58/0x60
+[  191.320541]  [<c07a58ec>] ? start_kernel+0x351/0x357
+[  191.320544]  [<c07a53c7>] ? unknown_bootoption+0x0/0x19e
+[  191.320548]  [<c07a50aa>] ? i386_start_kernel+0xaa/0xb1
+[  191.320550] Code: 03 66 3d 00 03 0f 84 7c 02 00 00 83 c3 18 0f b6 03
+8b 4d e0 89 c3 83 e3 0f 6b c3 48 89 5d d8 8d 04 06 8d 50 0c 89 55 d0 8b
+40 20 <8b> 00 3b 01 0f 85 8e 02 00 00 f6 47 20 40 0f 84 29 ff ff ff 8b
+[  191.320634] EIP: [<fd2586d4>] ath_tx_start+0x474/0x770 [ath9k] SS:ESP
+0068:c0761a90
+[  191.320642] CR2: 0000000000000000
+[  191.320647] ---[ end trace 9296ef23b9076ece ]---
+[  191.320650] Kernel panic - not syncing: Fatal exception in interrupt
 
-enqueued frame 1
-enqueued frame 2
-enqueued frame 3
-enqueued frame 4
-...
-enqueued frame 31
-<got compressed block-ack only missing frame 2>
+Cc: stable@kernel.org
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-enqueued frame 32
-enqueued frame 33
-enqueued frame 34
-enqueued frame 35
-enqueued frame 36
-enqueued frame 2
-enqueued frame 37
-enqueued frame 38
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ef22096..26734e5 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1725,8 +1725,8 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 	u8 tidno;
+ 
+ 	spin_lock_bh(&txctl->txq->axq_lock);
+-
+-	if (ieee80211_is_data_qos(hdr->frame_control) && txctl->an) {
++	if ((sc->sc_flags & SC_OP_TXAGGR) && txctl->an &&
++		ieee80211_is_data_qos(hdr->frame_control)) {
+ 		tidno = ieee80211_get_qos_ctl(hdr)[0] &
+ 			IEEE80211_QOS_CTL_TID_MASK;
+ 		tid = ATH_AN_2_TID(txctl->an, tidno);
+-- 
+1.7.0.4
 
-In other words, it looks like the scheduler hardware is preloading
-some of these frames before it gets the compressed BA, allowing the
-window to be larger than 31 frames.  Here, even if frame 2 is
-received, mac80211 will have already dumped through frame 36: RX of
-frame 33 causes it to shift the window past 2 and thus dump the
-entirely successfully received window from 3 through 36.
-
-I'll get logs to confirm this a bit later.  (this example is made up
-and assumes iwlwifi's default limit of 31 frames)
-
->> I figured that one explanation for the TCP SACKs would be
->> if, somehow, frames got released to the network stack out of order;
->> indeed, many of the "holes" covered by the SACKs are filled quickly
->> (within ~4ms, about the length of one aggregation batch).  Note that
->> iwlwifi defaults to an aggregation frame limit, hence buffer size, of
->> 31 frames.  mac80211 honors this buffer size specification by
->> releasing frames to the network stack that are >= 31 sequence numbers
->> below the highest received frame.
->>
->> It looks like Intel doesn't honor its own frame limit, as I often saw
->> it have more than 31 frames outstanding, causing mac80211 on the
->> receiver to release many frames early.  Changing iwlwifi's default agg
->> limit to 63 frames on both ends dramatically reduced the prevalence of
->> SACKs/TCP retransmissions and improved avg TCP performance to ~100
->> Mbps (ranging 83-110).
->
-> Great ... what if you just change the mac80211 code like you suggested?
-> Does that already help, by making the receiver have a larger window?
-
-Yes. The mac80211 code change I suggested makes Intel work better
-regardless of Intel's frame limit.
-
->> (2) Is there a way to make iwlwifi honor the aggregation limit?  I
->> know that agg is controlled by a hardware scheduler, so this may be
->> difficult.
->
-> Heh. I'd hope it already does but I guess if it doesn't then there's
-> little we can do (but internally report a bug). This is actually not
-> just a throughput problem, but also a correctness issue, since some
-> devices do not allow for receiving long aggregates!
-
-Yep. It looks like Intel correctly sends only 31 frames in a batch,
-but lets more than 31 frames be in the **window** as described above.
-
->> (3) mac80211's reorder buffer code could probably also be relaxed.  It
->> probably wouldn't hurt to have the buffer be twice the transmitter's
->> advertised buffer, and might compensate for devices that don't
->> properly honor frame limits.
->
-> Well, it doesn't make sense to go above 64, no? Can't have reordering
-> across aggregates.
-
-I think that's true, yes.  When I said "twice" I meant min(2*RX
-bufsize, 64).  Twice makes sense when the default is 31 ;).
-
->> Also, mac80211 only flushes the reorder
->> buffer every 100 ms.  That seems like a LONG time given that batches
->> are limited to 4ms -- 100ms is room for at least 10, maybe 20
->> retransmissions to attempt to fill in the holes(!).
->
-> Yeah that's true, but you don't really know how much time there is
-> between retries, bluetooth for example might block the retransmission
-> for quite a while.
-
-Fair enough.
-
->> (4) even after this fix, I see a few SACKs, and even when there aren't
->> SACKs I still see TCP "dead time" up to ~100ms.  What else would you
->> use to debug this setup?
-
-It's been several days more of debugging so I'm not *positive*, but I
-believe "after this fix" probably meant the iwlwifi->63 change, and
-maybe also the mac80211->64 change.
-
-Dan
