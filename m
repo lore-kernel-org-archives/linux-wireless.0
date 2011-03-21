@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28303 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751606Ab1CJRAv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2011 12:00:51 -0500
-Subject: Re: [patch] libertas: fix write past end of array in mesh_id_get()
-From: Dan Williams <dcbw@redhat.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: javier@cozybit.com, "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org
-Date: Thu, 10 Mar 2011 11:02:02 -0600
-In-Reply-To: <20110310152326.GA2008@bicker>
-References: <20110310152326.GA2008@bicker>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1299776524.17443.14.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45278 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753450Ab1CUOJ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2011 10:09:56 -0400
+Received: by bwz15 with SMTP id 15so5040302bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2011 07:09:54 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: Minor optimization in tx status handling
+Date: Mon, 21 Mar 2011 15:07:55 +0100
+Message-Id: <1300716475-9830-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-03-10 at 18:23 +0300, Dan Carpenter wrote:
-> defs.meshie.val.mesh_id is 32 chars long.  It's not supposed to be NUL
-> terminated.  This code puts a terminator on the end to make it easier to
-> print to sysfs.  The problem is that if the mesh_id fills the entire
-> buffer the original code puts the terminator one spot past the end.
-> 
-> The way the original code was written, there was a check to make sure
-> that maxlen was less than PAGE_SIZE.  Since we know that maxlen is at
-> most 34 chars, I just removed the check.
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
+ieee80211_tx_status iterates over all tx rates the driver reports back
+in order to
+1) mark tx rates as invalid if the driver cannot have tried that rate
+2) find the actually used tx rate for the final retransmission
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+By leaving the for loop when the first invalid rate index is found we
+can move the rates_idx assignment after the loop and therefore save
+a few assignments and conditionals.
 
-> diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-> index acf3bf6..9d097b9 100644
-> --- a/drivers/net/wireless/libertas/mesh.c
-> +++ b/drivers/net/wireless/libertas/mesh.c
-> @@ -918,7 +918,6 @@ static ssize_t mesh_id_get(struct device *dev, struct device_attribute *attr,
->  			   char *buf)
->  {
->  	struct mrvl_mesh_defaults defs;
-> -	int maxlen;
->  	int ret;
->  
->  	ret = mesh_get_default_parameters(dev, &defs);
-> @@ -931,13 +930,11 @@ static ssize_t mesh_id_get(struct device *dev, struct device_attribute *attr,
->  		defs.meshie.val.mesh_id_len = IEEE80211_MAX_SSID_LEN;
->  	}
->  
-> -	/* SSID not null terminated: reserve room for \0 + \n */
-> -	maxlen = defs.meshie.val.mesh_id_len + 2;
-> -	maxlen = (PAGE_SIZE > maxlen) ? maxlen : PAGE_SIZE;
-> +	memcpy(buf, defs.meshie.val.mesh_id, defs.meshie.val.mesh_id_len);
-> +	buf[defs.meshie.val.mesh_id_len] = '\n';
-> +	buf[defs.meshie.val.mesh_id_len + 1] = '\0';
->  
-> -	defs.meshie.val.mesh_id[defs.meshie.val.mesh_id_len] = '\0';
-> -
-> -	return snprintf(buf, maxlen, "%s\n", defs.meshie.val.mesh_id);
-> +	return defs.meshie.val.mesh_id_len + 1;
->  }
->  
->  /**
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/status.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index b936dd2..3ed3c83 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -189,16 +189,19 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	bool acked;
+ 
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+-		/* the HW cannot have attempted that rate */
+-		if (i >= hw->max_report_rates) {
++		if (info->status.rates[i].idx < 0) {
++			break;
++		} else if (i >= hw->max_report_rates) {
++			/* the HW cannot have attempted that rate */
+ 			info->status.rates[i].idx = -1;
+ 			info->status.rates[i].count = 0;
+-		} else if (info->status.rates[i].idx >= 0) {
+-			rates_idx = i;
++			break;
+ 		}
+ 
+ 		retry_count += info->status.rates[i].count;
+ 	}
++	rates_idx = i - 1;
++
+ 	if (retry_count < 0)
+ 		retry_count = 0;
+ 
+-- 
+1.7.3.4
 
